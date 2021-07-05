@@ -18,6 +18,8 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <utility>
 
 #include "utils/crypto/EncryptionUtils.h"
 #include "Exception.h"

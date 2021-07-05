@@ -65,12 +65,12 @@ void Aes256EcbCipher::encrypt(unsigned char *data) const {
   int ciphertext_len = 0;
   int len;
 
-  if(1 != EVP_EncryptUpdate(ctx.get(), data, &len, data, BLOCK_SIZE)) {
+  if (1 != EVP_EncryptUpdate(ctx.get(), data, &len, data, BLOCK_SIZE)) {
     handleError("Could not update cipher content");
   }
   ciphertext_len += len;
 
-  if(1 != EVP_EncryptFinal_ex(ctx.get(), data + len, &len)) {
+  if (1 != EVP_EncryptFinal_ex(ctx.get(), data + len, &len)) {
     handleError("Could not finalize encryption");
   }
   ciphertext_len += len;
@@ -95,12 +95,12 @@ void Aes256EcbCipher::decrypt(unsigned char *data) const {
   int plaintext_len = 0;
   int len;
 
-  if(1 != EVP_DecryptUpdate(ctx.get(), data, &len, data, BLOCK_SIZE)) {
+  if (1 != EVP_DecryptUpdate(ctx.get(), data, &len, data, BLOCK_SIZE)) {
     handleError("Could not update cipher content");
   }
   plaintext_len += len;
 
-  if(1 != EVP_DecryptFinal_ex(ctx.get(), data + len, &len)) {
+  if (1 != EVP_DecryptFinal_ex(ctx.get(), data + len, &len)) {
     handleError("Could not finalize decryption");
   }
   plaintext_len += len;
