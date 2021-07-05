@@ -49,7 +49,7 @@ class Aes256EcbCipher {
 
   static Bytes generateKey();
 
-  bool equals(const Aes256EcbCipher& other) const;
+  bool hasEqualKey(const Aes256EcbCipher& other) const;
 
  private:
   template<typename ...Args>
