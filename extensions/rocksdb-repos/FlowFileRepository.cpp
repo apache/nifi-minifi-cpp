@@ -236,8 +236,8 @@ void FlowFileRepository::initialize_repository() {
     logger_->log_error("Could not delete existing checkpoint directory '%s'", checkpoint_dir_);
     return;
   }
-  rocksdb::Checkpoint* checkpoint = nullptr;
-  rocksdb::Status checkpoint_status = opendb->NewCheckpoint(&checkpoint);
+  std::unique_ptr<rocksdb::Checkpoint> checkpoint;
+  rocksdb::Status checkpoint_status = opendb->NewCheckpoint(checkpoint);
   if (!checkpoint_status.ok()) {
     logger_->log_error("Could not create checkpoint object: %s", checkpoint_status.ToString());
     return;
@@ -247,7 +247,7 @@ void FlowFileRepository::initialize_repository() {
     logger_->log_error("Could not initialize checkpoint: %s", checkpoint_status.ToString());
     return;
   }
-  checkpoint_ = std::unique_ptr<rocksdb::Checkpoint>(checkpoint);
+  checkpoint_ = std::move(checkpoint);
   logger_->log_trace("Created checkpoint in directory '%s'", checkpoint_dir_);
 }
 
