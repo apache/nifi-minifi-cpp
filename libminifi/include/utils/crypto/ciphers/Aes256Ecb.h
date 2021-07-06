@@ -39,6 +39,7 @@ class CipherError : public Exception {
 
 class Aes256EcbCipher {
   static std::shared_ptr<core::logging::Logger> logger_;
+
  public:
   static constexpr size_t BLOCK_SIZE = 16;
   static constexpr size_t KEY_SIZE = 32;
