@@ -44,8 +44,8 @@ class Aes256EcbCipher {
   static constexpr size_t KEY_SIZE = 32;
 
   explicit Aes256EcbCipher(Bytes encryption_key);
-  void encrypt(unsigned char* data) const;
-  void decrypt(unsigned char* data) const;
+  void encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const;
+  void decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const;
 
   static Bytes generateKey();
 
@@ -58,6 +58,9 @@ class Aes256EcbCipher {
     logger_->log_error("%s", error_msg);
     throw CipherError(error_msg);
   }
+
+  static void handleOpenSSLError(const char* msg);
+
   const Bytes encryption_key_;
 };
 

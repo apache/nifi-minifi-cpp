@@ -40,68 +40,80 @@ Aes256EcbCipher::Aes256EcbCipher(Bytes encryption_key) : encryption_key_(std::mo
   }
 }
 
+void Aes256EcbCipher::handleOpenSSLError(const char* msg) {
+  std::array<char, 128> errmsg = {0};
+  const auto errcode = ERR_peek_last_error();
+  if (!errcode) {
+    handleError("%s: %s", msg, "Unknown OpenSSL error");
+  }
+  ERR_error_string_n(errcode, errmsg.data(), errmsg.size());
+  handleError("%s: %s", msg, errmsg.data());
+}
+
 Bytes Aes256EcbCipher::generateKey() {
   unsigned char key[KEY_SIZE];
   if (1 != RAND_bytes(key, KEY_SIZE)) {
-    handleError("Couldn't generate key");
+    handleOpenSSLError("Couldn't generate key");
   }
   return Bytes(key, key + KEY_SIZE);
 }
 
-void Aes256EcbCipher::encrypt(unsigned char *data) const {
+void Aes256EcbCipher::encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const {
+  gsl_Expects(data.size() == BLOCK_SIZE);
   EVP_CIPHER_CTX_ptr ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
   if (!ctx) {
-    handleError("Could not create cipher context");
+    handleOpenSSLError("Could not create cipher context");
   }
 
   if (1 != EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_ecb(), nullptr, encryption_key_.data(), nullptr)) {
-    handleError("Could not initialize encryption cipher context");
+    handleOpenSSLError("Could not initialize encryption cipher context");
   }
 
   if (1 != EVP_CIPHER_CTX_set_padding(ctx.get(), 0)) {
-    handleError("Could not disable padding for cipher");
+    handleOpenSSLError("Could not disable padding for cipher");
   }
 
   int ciphertext_len = 0;
   int len;
 
-  if (1 != EVP_EncryptUpdate(ctx.get(), data, &len, data, BLOCK_SIZE)) {
-    handleError("Could not update cipher content");
+  if (1 != EVP_EncryptUpdate(ctx.get(), data.begin(), &len, data.begin(), data.size())) {
+    handleOpenSSLError("Could not update cipher content");
   }
   ciphertext_len += len;
 
-  if (1 != EVP_EncryptFinal_ex(ctx.get(), data + len, &len)) {
-    handleError("Could not finalize encryption");
+  if (1 != EVP_EncryptFinal_ex(ctx.get(), data.begin() + len, &len)) {
+    handleOpenSSLError("Could not finalize encryption");
   }
   ciphertext_len += len;
 
   gsl_Expects(ciphertext_len == BLOCK_SIZE);
 }
 
-void Aes256EcbCipher::decrypt(unsigned char *data) const {
+void Aes256EcbCipher::decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const {
+  gsl_Expects(data.size() == BLOCK_SIZE);
   EVP_CIPHER_CTX_ptr ctx(EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free);
   if (!ctx) {
-    handleError("Could not create cipher context");
+    handleOpenSSLError("Could not create cipher context");
   }
 
   if (1 != EVP_DecryptInit_ex(ctx.get(), EVP_aes_256_ecb(), nullptr, encryption_key_.data(), nullptr)) {
-    handleError("Could not initialize decryption cipher context");
+    handleOpenSSLError("Could not initialize decryption cipher context");
   }
 
   if (1 != EVP_CIPHER_CTX_set_padding(ctx.get(), 0)) {
-    handleError("Could not disable padding for cipher");
+    handleOpenSSLError("Could not disable padding for cipher");
   }
 
   int plaintext_len = 0;
   int len;
 
-  if (1 != EVP_DecryptUpdate(ctx.get(), data, &len, data, BLOCK_SIZE)) {
-    handleError("Could not update cipher content");
+  if (1 != EVP_DecryptUpdate(ctx.get(), data.begin(), &len, data.begin(), data.size())) {
+    handleOpenSSLError("Could not update cipher content");
   }
   plaintext_len += len;
 
-  if (1 != EVP_DecryptFinal_ex(ctx.get(), data + len, &len)) {
-    handleError("Could not finalize decryption");
+  if (1 != EVP_DecryptFinal_ex(ctx.get(), data.begin() + len, &len)) {
+    handleOpenSSLError("Could not finalize decryption");
   }
   plaintext_len += len;
 

@@ -85,7 +85,7 @@ std::shared_ptr<rocksdb::Env> createEncryptingEnv(const utils::crypto::Encryptio
 
 rocksdb::Status AES256BlockCipher::Encrypt(char *data) {
   try {
-    cipher_impl_.encrypt(reinterpret_cast<unsigned char*>(data));
+    cipher_impl_.encrypt({reinterpret_cast<unsigned char*>(data), Aes256EcbCipher::BLOCK_SIZE});
     return rocksdb::Status::OK();
   } catch (const utils::crypto::CipherError& error) {
     logger_->log_error("Error while encrypting in database '%s': %s", database_, error.what());
@@ -95,7 +95,7 @@ rocksdb::Status AES256BlockCipher::Encrypt(char *data) {
 
 rocksdb::Status AES256BlockCipher::Decrypt(char *data) {
   try {
-    cipher_impl_.decrypt(reinterpret_cast<unsigned char*>(data));
+    cipher_impl_.decrypt({reinterpret_cast<unsigned char*>(data), Aes256EcbCipher::BLOCK_SIZE});
     return rocksdb::Status::OK();
   } catch (const utils::crypto::CipherError& error) {
     logger_->log_error("Error while decrypting in database '%s': %s", database_, error.what());
