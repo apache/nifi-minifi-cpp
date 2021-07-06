@@ -65,6 +65,8 @@ void Aes256EcbCipher::encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
     handleOpenSSLError("Could not initialize encryption cipher context");
   }
 
+  // EVP_EncryptFinal_ex pads the data even if there is none thus data that
+  // is exactly BLOCK_SIZE long would result in 2*BLOCK_SIZE ciphertext
   if (1 != EVP_CIPHER_CTX_set_padding(ctx.get(), 0)) {
     handleOpenSSLError("Could not disable padding for cipher");
   }
@@ -96,6 +98,7 @@ void Aes256EcbCipher::decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
     handleOpenSSLError("Could not initialize decryption cipher context");
   }
 
+  // as we did not use padding during encryption
   if (1 != EVP_CIPHER_CTX_set_padding(ctx.get(), 0)) {
     handleOpenSSLError("Could not disable padding for cipher");
   }
@@ -116,9 +119,9 @@ void Aes256EcbCipher::decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
   gsl_Expects(plaintext_len == BLOCK_SIZE);
 }
 
-bool Aes256EcbCipher::hasEqualKey(const Aes256EcbCipher &other) const {
+bool Aes256EcbCipher::operator==(const Aes256EcbCipher &other) const {
+  gsl_Expects(encryption_key_.size() == KEY_SIZE);
   if (encryption_key_.size() != other.encryption_key_.size()) return false;
-  if (encryption_key_.size() != KEY_SIZE) return false;
   return CRYPTO_memcmp(encryption_key_.data(), other.encryption_key_.data(), KEY_SIZE) == 0;
 }
 

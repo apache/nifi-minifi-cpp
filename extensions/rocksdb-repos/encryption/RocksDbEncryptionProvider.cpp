@@ -45,8 +45,8 @@ class AES256BlockCipher final : public rocksdb::BlockCipher {
     return Aes256EcbCipher::BLOCK_SIZE;
   }
 
-  bool hasEqualKey(const AES256BlockCipher& other) const {
-    return cipher_impl_.hasEqualKey(other.cipher_impl_);
+  bool operator==(const AES256BlockCipher& other) const {
+    return cipher_impl_ == other.cipher_impl_;
   }
 
   rocksdb::Status Encrypt(char *data) override;
@@ -63,7 +63,7 @@ class EncryptingEnv : public rocksdb::EnvWrapper {
   EncryptingEnv(Env* target, std::shared_ptr<AES256BlockCipher> cipher) : EnvWrapper(target), env_(target), cipher_(std::move(cipher)) {}
 
   bool hasEqualKey(const EncryptingEnv& other) const {
-    return cipher_->hasEqualKey(*other.cipher_);
+    return *cipher_ == *other.cipher_;
   }
 
  private:
