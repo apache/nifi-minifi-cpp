@@ -384,7 +384,7 @@ $ # It is recommended that you install bison from source as HomeBrew now uses an
       version of cmake or other software, or
       incompatibility with other extensions
 
-    Enter choice [ A - Y or 1-7 ]
+    Enter choice [ A - Z or 1-7 ]
   ```
 
 - Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change

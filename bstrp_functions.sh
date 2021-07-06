@@ -413,7 +413,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  echo -n "Enter choice [ A - Y or 1-7 ] "
+  echo -n "Enter choice [ A - Z or 1-7 ] "
   read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
@@ -463,7 +463,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-X or 1-7...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-Z or 1-7...${NO_COLOR}" && sleep 2
   esac
 }
 

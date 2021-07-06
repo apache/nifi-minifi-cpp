@@ -593,7 +593,7 @@ endif()
 
 
 if (NOT DISABLE_CURL AND ENABLE_PYTHON AND NOT WIN32)
-  if (ENABLE_NANOFI)
+	if (ENABLE_NANOFI)
 		add_subdirectory(python/library)
 	else()
 		message(FATAL_ERROR "Nanofi, a dependency of the python extension is disabled, therefore Python extension cannot be enabled.")
