@@ -113,6 +113,8 @@ utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, co
       return utils::nullopt;
     }
     gsl_Expects(db_instance);
+    // the patcher could have internal resources the we need to keep alive
+    // as long as the database is open (e.g. custom environment)
     db_options_patch_ = db_options_patch;
     impl_.reset(db_instance);
     for (size_t cf_idx{0}; cf_idx < column_handles.size(); ++cf_idx) {

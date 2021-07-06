@@ -40,13 +40,6 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
     }
   };
 
-  static std::shared_ptr<rocksdb::MergeOperator> transform(const std::shared_ptr<rocksdb::MergeOperator>& other) {
-    if (other && std::strcmp(other->Name(), "StringAppender") == 0) {
-      return other;
-    }
-    return std::make_shared<StringAppender>();
-  }
-
   bool Merge(const rocksdb::Slice& /*key*/, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* /*logger*/) const override;
 
   const char* Name() const override {

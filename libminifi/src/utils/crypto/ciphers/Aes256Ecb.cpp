@@ -51,11 +51,7 @@ void Aes256EcbCipher::handleOpenSSLError(const char* msg) {
 }
 
 Bytes Aes256EcbCipher::generateKey() {
-  unsigned char key[KEY_SIZE];
-  if (1 != RAND_bytes(key, KEY_SIZE)) {
-    handleOpenSSLError("Couldn't generate key");
-  }
-  return Bytes(key, key + KEY_SIZE);
+  return utils::crypto::randomBytes(KEY_SIZE);
 }
 
 void Aes256EcbCipher::encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) const {
