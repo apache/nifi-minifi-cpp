@@ -327,7 +327,7 @@ add_disabled_option AZURE_ENABLED ${FALSE} "ENABLE_AZURE"
 
 add_disabled_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
 
-add_disabled_option NANOFI_ENABLED ${TRUE} "ENABLE_NANOFI"
+add_disabled_option NANOFI_ENABLED ${FALSE} "ENABLE_NANOFI"
 set_dependency PYTHON_ENABLED NANOFI_ENABLED
 
 USE_SHARED_LIBS=${TRUE}

@@ -50,7 +50,7 @@ option(ENABLE_OPS "Enable Operations/zlib Tools" ON)
 option(ENABLE_JNI "Instructs the build system to enable the JNI extension" OFF)
 option(ENABLE_OPENCV "Instructs the build system to enable the OpenCV extension" OFF)
 option(ENABLE_OPC "Instructs the build system to enable the OPC extension" OFF)
-option(ENABLE_NANOFI "Instructs the build system to enable nanofi library" ON)
+option(ENABLE_NANOFI "Instructs the build system to enable nanofi library" OFF)
 option(BUILD_SHARED_LIBS "Build yaml cpp shared lib" OFF)
 
 option(BUILD_ROCKSDB "Instructs the build system to use RocksDB from the third party directory" ON)
