@@ -166,6 +166,8 @@ folder. You may specify your own path in place of these defaults.
      nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
 	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
 
+#### Shared database
+
 It is also possible to use a single database to store multiple repositories with the `minifidb://` scheme.
 This could help with migration and centralize agent state persistence. In the scheme the final path segment designates the
 column family in the repository, while the preceding path indicates the directory the rocksdb database is
@@ -188,6 +190,25 @@ Moreover the `"default"` name is restricted and should not be used.
 	 ^ error: using the same database directory without the "minifidb://" scheme
 	 nifi.state.manangement.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/default
 	 ^ error: "default" is restricted
+
+### Configuring Repository encryption
+
+It is possible to provide rocksdb-backed repositories a key to request their
+encryption.
+
+    in conf/bootstrap.conf
+    nifi.flowfile.repository.encryption.key=805D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E
+    nifi.database.content.repository.encryption.key=
+    # nifi.state.management.provider.local.encryption.key=
+
+In the above configuration the first line will cause `FlowFileRepository` to use the specified `256` bit key.
+The second line will trigger the generation of a random (`256` bit) key persisted back into `conf/bootstrap.conf`, which `DatabaseContentRepository` will then use for encryption.
+(This way one can request encryption while not bothering with what key to use.)
+Finally, as the last line is commented out, it will make the state manager use plaintext storage, and not trigger encryption.
+
+#### Mixing encryption with shared backend
+
+When multiple repositories use the same directory (as with `minifidb://` scheme) they should either be all plaintext or all encrypted with the same key.
 
 ### Configuring Volatile and NO-OP Repositories
 Each of the repositories can be configured to be volatile ( state kept in memory and flushed

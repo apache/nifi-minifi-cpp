@@ -37,6 +37,11 @@ class CipherError : public Exception {
   explicit CipherError(const std::string& error_msg) : Exception(ExceptionType::GENERAL_EXCEPTION, error_msg) {}
 };
 
+/**
+ * This cipher in itself is unsafe to use to encrypt sensitive data.
+ * Consider this cipher as a building block for more secure modes
+ * of operations (CTR, CBC, etc.)
+ */
 class Aes256EcbCipher {
   static std::shared_ptr<core::logging::Logger> logger_;
 

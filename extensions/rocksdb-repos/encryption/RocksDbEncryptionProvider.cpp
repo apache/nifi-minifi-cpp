@@ -30,6 +30,9 @@ namespace repository {
 using utils::crypto::Bytes;
 using utils::crypto::Aes256EcbCipher;
 
+/**
+ * This cipher is used by rocksdb to implement a CTR encryption scheme.
+ */
 class AES256BlockCipher final : public rocksdb::BlockCipher {
   static std::shared_ptr<logging::Logger> logger_;
  public:
