@@ -1,0 +1,55 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- Properties:
+    Input Directory: /tmp/input
+  auto-terminated relationships list: []
+  class: org.apache.nifi.processors.standard.GetFile
+  id: 7fd166aa-0662-4c42-affa-88f6fb39807f
+  name: GetFile
+  penalization period: 30 sec
+  run duration nanos: 0
+  scheduling period: 2 sec
+  scheduling strategy: TIMER_DRIVEN
+  yield period: 1 sec
+- Properties:
+    Batch Size: '10'
+    Client Name: test-client
+    Compress Codec: none
+    Delivery Guarantee: '1'
+    Known Brokers: kafka-broker:9092
+    Message Timeout: 12 sec
+    Request Timeout: 10 sec
+    Topic Name: test
+  auto-terminated relationships list: []
+  class: org.apache.nifi.processors.standard.PublishKafka
+  id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848
+  name: PublishKafka
+  penalization period: 30 sec
+  run duration nanos: 0
+  scheduling strategy: EVENT_DRIVEN
+  yield period: 1 sec
+Connections:
+- destination id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848
+  drop empty: 'false'
+  name: d61e509d-03a7-4c70-a7cf-6676d8047825
+  source id: 7fd166aa-0662-4c42-affa-88f6fb39807f
+  source relationship name: success
+Controller Services: []
+Remote Processing Groups: []

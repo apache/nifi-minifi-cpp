@@ -1,0 +1,54 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- Properties:
+    Input Directory: /tmp/input
+  auto-terminated relationships list: []
+  class: org.apache.nifi.processors.standard.GetFile
+  id: d5fef466-fef0-4d90-814e-9c19a67e454a
+  name: GetFile
+  penalization period: 30 sec
+  run duration nanos: 0
+  scheduling period: 2 sec
+  scheduling strategy: TIMER_DRIVEN
+  yield period: 1 sec
+- Properties:
+    Blob: test-blob
+    Storage Account Name: test-account
+    Storage Account Key: test-key
+    Container Name: test-container
+    Create Container: 'true'
+  auto-terminated relationships list:
+  - success
+  - failure
+  class: org.apache.nifi.processors.standard.PutAzureBlobStorage
+  id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
+  name: PutAzureBlobStorage
+  penalization period: 30 sec
+  run duration nanos: 0
+  scheduling strategy: EVENT_DRIVEN
+  yield period: 1 sec
+Connections:
+- destination id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
+  drop empty: 'false'
+  name: 0ec20f45-96f9-43f6-928d-68e850082618
+  source id: d5fef466-fef0-4d90-814e-9c19a67e454a
+  source relationship name: success
+Controller Services: []
+Remote Processing Groups: []
