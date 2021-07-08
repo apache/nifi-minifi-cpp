@@ -44,7 +44,7 @@ TEST_CASE("TestRegexUtils::invalid_construction", "[regex2]") {
   std::string rgx2 = "[Invalid)A(F)";
   std::vector<Regex::Mode> mode = {Regex::Mode::ICASE};
   Regex r1(rgx1, mode);
-  REQUIRE_THROWS_WITH(Regex r2(rgx2, mode), Catch::Contains("Regex Operation"));
+  REQUIRE_THROWS_WITH(Regex(rgx2, mode), Catch::Contains("Regex Operation"));
 }
 
 TEST_CASE("TestRegexUtils::empty_input", "[regex3]") {

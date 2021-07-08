@@ -30,7 +30,6 @@ TEST_CASE("Test tailfile delimited. Empty file", "[tailfileDelimitedEmptyFileTes
     TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
-    const char * delimiter = ";";
 
     // Create empty file
     FileManager fm(file);
@@ -46,7 +45,6 @@ TEST_CASE("Test tailfile delimited. File has less than 4096 chars", "[tailfileDe
     TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
-    const char * delimiter = ";";
 
     FileManager fm(file);
     fm.WriteNChars(34, 'a');
@@ -68,7 +66,6 @@ TEST_CASE("Test tailfile delimited. Simple test", "[tailfileDelimitedSimpleTest]
     TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
-    const char * delimiter = ";";
 
     // Write 8192 bytes to the file
     FileManager fm(file);
@@ -108,7 +105,6 @@ TEST_CASE("Test tailfile delimited. trailing non delimited string", "[tailfileNo
     TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
-    const char * delimiter = ";";
 
     // Write 8192 bytes to the file
     FileManager fm(file);
@@ -151,7 +147,6 @@ TEST_CASE("Test tailfile delimited 4096 chars non delimited", "[tailfileDelimite
     TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
-    const char * delimiter = ";";
 
     // Write 4096 bytes to the file
     FileManager fm(file);
@@ -215,7 +210,6 @@ TEST_CASE("Test tailfile delimited. string starting with delimiter", "[tailfileD
     TestControllerWithTemporaryWorkingDirectory test_controller;
     TailFileTestResourceManager mgr("TailFileDelimited", on_trigger_tailfiledelimited);
     const char * file = "./e.txt";
-    const char * delimiter = ";";
 
     // Write 8192 bytes to the file
     FileManager fm(file);

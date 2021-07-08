@@ -194,6 +194,14 @@ struct dereference_t {
 
 constexpr detail::dereference_t dereference{};
 
+
+#if __cpp_lib_remove_cvref >= 201711L
+using std::remove_cvref_t;
+#else
+template<typename T>
+using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+#endif
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

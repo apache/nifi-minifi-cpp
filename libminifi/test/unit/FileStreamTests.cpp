@@ -234,8 +234,6 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
   std::vector<uint8_t> readBuffer;
   REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
 
-  uint8_t* data = readBuffer.data();
-
   stream.seek(0);
 
   std::vector<uint8_t> verifybuffer;

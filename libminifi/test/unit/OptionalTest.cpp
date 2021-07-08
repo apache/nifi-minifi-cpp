@@ -58,5 +58,5 @@ TEST_CASE("optional orElse", "[optional or else]") {
   REQUIRE(7 == test2.value());
   REQUIRE(3 == test3.value());
   REQUIRE(!test4);
-  REQUIRE_THROWS_AS(utils::optional<bool>{} | utils::orElse([]{ throw ex{}; }), const ex&);
+  REQUIRE_THROWS_AS(utils::optional<bool>{} | utils::orElse([]{ throw ex{}; }), ex);
 }

@@ -97,7 +97,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test required property not set", "[
     plan->setProperty(s3_processor, "Region", "");
   }
 
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test proxy setting", "[awsS3Proxy]") {

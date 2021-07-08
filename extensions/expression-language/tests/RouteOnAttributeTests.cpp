@@ -31,7 +31,7 @@ TEST_CASE("RouteOnAttributeMatchedTest", "[routeOnAttributeMatchedTest]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  const auto &generate_proc = plan->addProcessor("GenerateFlowFile", "generate");
+  plan->addProcessor("GenerateFlowFile", "generate");
 
   const auto &update_proc = plan->addProcessor("UpdateAttribute", "update", core::Relationship("success", "description"), true);
   plan->setProperty(update_proc, "route_condition_attr", "true", true);
@@ -43,7 +43,7 @@ TEST_CASE("RouteOnAttributeMatchedTest", "[routeOnAttributeMatchedTest]") {
   const auto &update_matched_proc = plan->addProcessor("UpdateAttribute", "update_matched", core::Relationship("route_matched", "description"), true);
   plan->setProperty(update_matched_proc, "route_check_attr", "good", true);
 
-  const auto &log_proc = plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
 
   testController.runSession(plan, false);  // generate
   testController.runSession(plan, false);  // update
@@ -66,7 +66,7 @@ TEST_CASE("RouteOnAttributeUnmatchedTest", "[routeOnAttributeUnmatchedTest]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  const auto &generate_proc = plan->addProcessor("GenerateFlowFile", "generate");
+  plan->addProcessor("GenerateFlowFile", "generate");
 
   const auto &update_proc = plan->addProcessor("UpdateAttribute", "update", core::Relationship("success", "description"), true);
   plan->setProperty(update_proc, "route_condition_attr", "false", true);
@@ -77,7 +77,7 @@ TEST_CASE("RouteOnAttributeUnmatchedTest", "[routeOnAttributeUnmatchedTest]") {
   const auto &update_matched_proc = plan->addProcessor("UpdateAttribute", "update_matched", core::Relationship("unmatched", "description"), true);
   plan->setProperty(update_matched_proc, "route_check_attr", "good", true);
 
-  const auto &log_proc = plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
 
   testController.runSession(plan, false);  // generate
   testController.runSession(plan, false);  // update

@@ -66,16 +66,9 @@ TEST_CASE("ConsumeWindowsEventLog constructor works", "[create]") {
   TestController test_controller;
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
-  REQUIRE_NOTHROW(ConsumeWindowsEventLog processor_one("one"));
-
-  REQUIRE_NOTHROW(
-    utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
-    ConsumeWindowsEventLog processor_two("two", uuid);
-  );  // NOLINT
-
-  REQUIRE_NOTHROW(
-    auto processor = test_plan->addProcessor("ConsumeWindowsEventLog", "cwel");
-  );  // NOLINT
+  REQUIRE_NOTHROW(ConsumeWindowsEventLog("one"));
+  REQUIRE_NOTHROW(ConsumeWindowsEventLog("two", utils::IdGenerator::getIdGenerator()->generate()));
+  REQUIRE_NOTHROW(test_plan->addProcessor("ConsumeWindowsEventLog", "cwel"));
 }
 
 TEST_CASE("ConsumeWindowsEventLog properties work with default values", "[create][properties]") {

@@ -189,7 +189,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   "\n";
 
   std::istringstream configYamlStream(CONFIG_YAML_NO_RPG_PORT_ID);
-  REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), std::invalid_argument&);
+  REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), std::invalid_argument);
 }
 }
 
@@ -316,7 +316,7 @@ NiFi Properties Overrides: {}
       )";
   std::istringstream configYamlStream(TEST_CONFIG_YAML);
 
-  REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), minifi::Exception&);
+  REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), minifi::Exception);
 }
 
 TEST_CASE("Test YAML v3 Config Processing", "[YamlConfiguration3]") {

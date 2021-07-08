@@ -29,9 +29,9 @@ TEST_CASE("UpdateAttributeTest", "[updateAttributeTest]") {
   LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  const auto &generate_proc = plan->addProcessor("GenerateFlowFile", "generate");
+  plan->addProcessor("GenerateFlowFile", "generate");
   const auto &update_proc = plan->addProcessor("UpdateAttribute", "update", core::Relationship("success", "description"), true);
-  const auto &log_proc = plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
+  plan->addProcessor("LogAttribute", "log", core::Relationship("success", "description"), true);
 
   plan->setProperty(update_proc, "test_attr_1", "test_val_1", true);
   plan->setProperty(update_proc, "test_attr_2", "test_val_2", true);

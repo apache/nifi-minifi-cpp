@@ -47,7 +47,7 @@ TEST_CASE("Test Invalid not found", "[tv2]") {
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
-  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<std::string>("type"), minifi::c2::PayloadParseException&);
+  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<std::string>("type"), minifi::c2::PayloadParseException);
 }
 
 
@@ -62,7 +62,7 @@ TEST_CASE("Test Invalid coercion", "[tv3]") {
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
-  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<uint64_t>("type"), minifi::c2::PayloadParseException&);
+  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheese").getAs<uint64_t>("type"), minifi::c2::PayloadParseException);
 }
 
 TEST_CASE("Test Invalid not there", "[tv4]") {
@@ -76,7 +76,7 @@ TEST_CASE("Test Invalid not there", "[tv4]") {
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
-  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheeses").getAs<uint64_t>("type"), minifi::c2::PayloadParseException&);
+  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("cheeses").getAs<uint64_t>("type"), minifi::c2::PayloadParseException);
 }
 
 TEST_CASE("Test typed conversions", "[tv5]") {
@@ -111,5 +111,5 @@ TEST_CASE("Test Invalid not there deep", "[tv6]") {
   payload2.addContent(std::move(response));
   payload.addPayload(std::move(payload2));
   payload.addPayload(minifi::c2::C2Payload(minifi::c2::Operation::ACKNOWLEDGE, chips));
-  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("chips").getAs<uint64_t>("type"), minifi::c2::PayloadParseException&);
+  REQUIRE_THROWS_AS(minifi::c2::PayloadParser::getInstance(payload).in("chips").getAs<uint64_t>("type"), minifi::c2::PayloadParseException);
 }

@@ -40,6 +40,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "utils/gsl.h"
 #include "utils/PropertyErrors.h"
 #include "utils/IntegrationTestUtils.h"
 
@@ -134,7 +135,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
     // one CREATE, one MODIFY, and one FF contents, as we use the same
     // underlying repo for both provenance and flowFileRepo
-    REQUIRE(repo->getRepoMap().size() == 3 * i);
+    REQUIRE(repo->getRepoMap().size() == gsl::narrow<size_t>(3 * i));
   }
 }
 
@@ -343,7 +344,7 @@ TEST_CASE("LogAttributeTestInvalid", "[TestLogAttribute]") {
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
-  REQUIRE_THROWS_AS(plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "-1"), utils::internal::ParseException&);
+  REQUIRE_THROWS_AS(plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "-1"), utils::internal::ParseException);
   LogTestController::getInstance().reset();
 }
 
