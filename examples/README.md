@@ -82,8 +82,18 @@ The flow: ListS3 &#10132; FetchS3Object &#10132; LogAttribute
 
 ### Transfer data to remote Nifi instance
 
-Using  the [site_to_site_config.yml](site_to_site_config.yml) flow configuration MiNiFi transfers data received from the GetFile processor to a remote NiFi instance located at `http://nifi:8080/nifi`.
+Using the [site_to_site_config.yml](site_to_site_config.yml) flow configuration MiNiFi transfers data received from the GetFile processor to a remote NiFi instance located at `http://nifi:8080/nifi`.
 
 ### [Site-2-Site Bi-directional Configuration](BidirectionalSiteToSite/README.md)
 
 ## Windows Specific Processors
+
+### Consuming Windows event logs
+
+Using the [cwel_config.yml](cwel_config.yml) flow configuration MiNiFi queries all Windows system events and puts them to the `C:\temp\` directory in flattened JSON format.
+
+The flow: ConsumeWindowsEventLog &#10132; PutFile
+
+### Reading system performance data
+
+Using the [pdh_config.yml](pdh_config.yml) flow configuration MiNiFi reads CPU and Disk performance data through Windows' Performance Data Helper (PDH) component and puts the data to the `C:\temp\` directory in a compact JSON format.

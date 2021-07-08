@@ -17,47 +17,46 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
-  name: LogAttribute
-  class: org.apache.nifi.minifi.processors.LogAttribute
+- id: 2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27
+  name: ConsumeWindowsEventLog
+  class: org.apache.nifi.minifi.processors.PerformanceDataMonitor
   max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1000 ms
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
-  auto-terminated relationships list:
-  - success
-  Properties:
-    Attributes to Ignore:
-    Attributes to Log:
-    FlowFiles To Log: '1'
-    Hexencode Payload: 'false'
-    Log Level:
-    Log Payload: 'false'
-    Log Prefix:
-    Maximum Payload Line Length: '80'
-- id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
-  name: TailFile
-  class: org.apache.nifi.minifi.processors.TailFile
-  max concurrent tasks: 1
-  scheduling strategy: TIMER_DRIVEN
-  scheduling period: 1000 ms
+  scheduling period: 10000 ms
   penalization period: 30000 ms
   yield period: 1000 ms
   run duration nanos: 0
   auto-terminated relationships list: []
   Properties:
-    File to Tail: /tmp/test_file.log
-    Initial Start Position: Beginning of File
-    Input Delimiter: \n
-    tail-mode: Single file
+    Predefined Groups: "Disk,CPU"
+    Custom PDH Counters: "\\System\\Processes,\\Process(*)\\ID Process,\\Process(*)\\Private Bytes"
+    Output Format: "JSON"
+    Output Compactness: "Compact"
+- id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
+  name: PutFile
+  class: org.apache.nifi.minifi.processors.PutFile
+  max concurrent tasks: 1
+  scheduling strategy: EVENT_DRIVEN
+  penalization period: 30000 ms
+  yield period: 1000 ms
+  run duration nanos: 0
+  auto-terminated relationships list:
+  - failure
+  - success
+  Properties:
+    Conflict Resolution Strategy: fail
+    Create Missing Directories: 'true'
+    Directory: C:\temp\
 Connections:
-- id: eda7f758-c548-46d6-aba0-faa6e9937d8c
-  name: TailFile/success/LogAttribute
-  source id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
+- id: 098a56ba-f4bf-4323-a3f3-6f8a5e3586bf
+  name: ConsumeWindowsEventLog/success/PutFile
+  source id: 2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27
   source relationship names:
   - success
-  destination id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
+  destination id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
+  max work queue size: 10000
+  max work queue data size: 10 MB
+  flowfile expiration: 0 seconds
+  queue prioritizer class: ''
 Controller Services: []
 Remote Process Groups: []
