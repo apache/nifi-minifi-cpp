@@ -38,7 +38,7 @@ Processors:
     Request Timeout: 10 sec
     Topic Name: test
 Connections:
-- name: d61e509d-03a7-4c70-a7cf-6676d8047825
+- name: GetFile/success/PublishKafka
   source id: 7fd166aa-0662-4c42-affa-88f6fb39807f
   source relationship name: success
   destination id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848

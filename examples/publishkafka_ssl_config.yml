@@ -47,7 +47,7 @@ Processors:
     Security Protocol: ssl
     Topic Name: test
 Connections:
-- name: 54c70a6d-d9d9-4709-9747-1ab47edad3c5
+- name: GetFile/success/PublishKafka
   source id: a78f9d7d-cc68-4f30-aac1-ee716d42bf9d
   source relationship name: success
   destination id: 8c0791c7-920c-4541-bcde-f5d559f42ed2
