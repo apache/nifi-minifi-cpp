@@ -37,6 +37,8 @@ The following examples show simple flow configurations for several common use ca
   - [List and Fetch Content from AWS S3 Bucket](#list-and-fetch-content-from-aws-s3-bucket)
 - [SQL Operations](#sql-operations)
   - [Query Database Table](#query-database-table)
+- [System Log Operations](#system-log-operations)
+  - [Consume Journal Logs](#consume-journal-logs)
 
 ## Filesystem Operations
 
@@ -59,6 +61,14 @@ The flow: TailFile &#10132; success &#10132; LogAttribute
 Using the [cwel_config.yml](cwel_config.yml) flow configuration MiNiFi queries all Windows system events and puts them to the `C:\temp\` directory in flattened JSON format.
 
 The flow: ConsumeWindowsEventLog &#10132; PutFile
+
+## Linux Specific Processors
+
+### Consume Journal Messages
+
+Using the [consumejournald_config.yml](consumejournald_config.yml) flow configuration MiNiFi reads incoming journal messages and logs the attributes on `info` level.
+
+The flow: ConsumeJournald &#10132; LogAttribute
 
 ### Reading System Performance Data
 

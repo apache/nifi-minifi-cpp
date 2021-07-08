@@ -1,0 +1,43 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the \"License\"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Consume journal messages
+  id: 66fbb65d-8b11-43a9-aaad-746a07d2fe35
+  class: org.apache.nifi.minifi.extensions.systemd.ConsumeJournald
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 5 sec
+- name: Log attributes to info level
+  id: f7281113-9576-4680-9a87-a8e961101b5c
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list: [success]
+  Properties:
+    FlowFiles To Log: 0
+    Log Level: info
+    Log Payload: true
+    Log Prefix: '====='
+    Maxumim Payload Line Length: 0
+Connections:
+- name: ConsumeJournald/success/LogAttribute
+  id: f57713d9-fa0b-4416-948d-4b316b1a1c0d
+  source name: ConsumeJournald
+  source id: 66fbb65d-8b11-43a9-aaad-746a07d2fe35
+  source relationship name: success
+  destination id: f7281113-9576-4680-9a87-a8e961101b5c
+Remote Processing Groups: []
+Provenance Reporting:
