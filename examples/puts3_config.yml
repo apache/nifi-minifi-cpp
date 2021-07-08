@@ -17,56 +17,29 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- Properties:
-    Input Directory: /tmp/input
-  auto-terminated relationships list: []
-  class: org.apache.nifi.processors.standard.GetFile
+- name: Get files from /tmp/input
   id: bfd376a8-c845-453b-9f74-4cf6f3a95e74
-  name: GetFile
-  penalization period: 30 sec
-  run duration nanos: 0
+  class: org.apache.nifi.processors.standard.GetFile
   scheduling period: 2 sec
   scheduling strategy: TIMER_DRIVEN
-  yield period: 1 sec
-- Properties:
-    Access Key: test_access_key
-    Bucket: test_bucket
-    Secret Key: test_secret
-  auto-terminated relationships list:
-  - failure
-  class: org.apache.nifi.processors.standard.PutS3Object
+  Properties:
+    Input Directory: /tmp/input
+- name: Upload to S3 test_bucket
   id: 8c9e2512-e814-4b73-ac5c-f33753332128
-  name: PutS3Object
-  penalization period: 30 sec
-  run duration nanos: 0
+  class: org.apache.nifi.processors.standard.PutS3Object
   scheduling period: 1 sec
   scheduling strategy: TIMER_DRIVEN
-  yield period: 1 sec
-- Properties:
-    Directory: /tmp/output
-    Directory Permissions: '777'
-    Permissions: '777'
   auto-terminated relationships list:
   - success
   - failure
-  class: org.apache.nifi.processors.standard.PutFile
-  id: d7dbc3af-ee24-4bc0-8c63-90e0f3185e0f
-  name: PutFile
-  penalization period: 30 sec
-  run duration nanos: 0
-  scheduling period: 1 sec
-  scheduling strategy: EVENT_DRIVEN
-  yield period: 1 sec
+  Properties:
+    Access Key: test_access_key
+    Bucket: test_bucket
+    Secret Key: test_secret
 Connections:
-- destination id: 8c9e2512-e814-4b73-ac5c-f33753332128
-  drop empty: 'false'
-  name: cc62a4a5-3a43-4725-8d05-d0b3e65d1ee6
+- name: GetFile/success/PutS3Object
   source id: bfd376a8-c845-453b-9f74-4cf6f3a95e74
   source relationship name: success
-- destination id: d7dbc3af-ee24-4bc0-8c63-90e0f3185e0f
-  drop empty: 'false'
-  name: 345a70dc-5add-41a7-9a46-6e83826003e4
-  source id: 8c9e2512-e814-4b73-ac5c-f33753332128
-  source relationship name: success
+  destination id: 8c9e2512-e814-4b73-ac5c-f33753332128
 Controller Services: []
 Remote Processing Groups: []

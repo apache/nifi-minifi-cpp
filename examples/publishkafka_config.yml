@@ -17,18 +17,18 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- Properties:
-    Input Directory: /tmp/input
-  auto-terminated relationships list: []
-  class: org.apache.nifi.processors.standard.GetFile
+- name: Get files from /tmp/input
   id: 7fd166aa-0662-4c42-affa-88f6fb39807f
-  name: GetFile
-  penalization period: 30 sec
-  run duration nanos: 0
+  class: org.apache.nifi.processors.standard.GetFile
   scheduling period: 2 sec
   scheduling strategy: TIMER_DRIVEN
-  yield period: 1 sec
-- Properties:
+  Properties:
+    Input Directory: /tmp/input
+- name: Publish messages to Kafka topic test
+  id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848
+  class: org.apache.nifi.processors.standard.PublishKafka
+  scheduling strategy: EVENT_DRIVEN
+  Properties:
     Batch Size: '10'
     Client Name: test-client
     Compress Codec: none
@@ -37,19 +37,10 @@ Processors:
     Message Timeout: 12 sec
     Request Timeout: 10 sec
     Topic Name: test
-  auto-terminated relationships list: []
-  class: org.apache.nifi.processors.standard.PublishKafka
-  id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848
-  name: PublishKafka
-  penalization period: 30 sec
-  run duration nanos: 0
-  scheduling strategy: EVENT_DRIVEN
-  yield period: 1 sec
 Connections:
-- destination id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848
-  drop empty: 'false'
-  name: d61e509d-03a7-4c70-a7cf-6676d8047825
+- name: d61e509d-03a7-4c70-a7cf-6676d8047825
   source id: 7fd166aa-0662-4c42-affa-88f6fb39807f
   source relationship name: success
+  destination id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848
 Controller Services: []
 Remote Processing Groups: []

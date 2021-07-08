@@ -17,17 +17,13 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- Properties:
-    Input Directory: /tmp/input
-  auto-terminated relationships list: []
-  class: org.apache.nifi.processors.standard.GetFile
+- name: Get files from /tmp/input
   id: 45c2a56e-7c29-42f3-8c1d-89c0c84a6ee7
-  name: GetFile
-  penalization period: 30 sec
-  run duration nanos: 0
-  scheduling period: 2 sec
+  class: org.apache.nifi.processors.standard.GetFile
   scheduling strategy: TIMER_DRIVEN
-  yield period: 1 sec
+  scheduling period: 2 sec
+  Properties:
+    Input Directory: /tmp/input
 Remote Processing Groups:
 - Input Ports:
   - Properties: {}
@@ -40,9 +36,8 @@ Remote Processing Groups:
   url: http://nifi:8080/nifi
   yield period: 3 sec
 Connections:
-- destination id: 4222cd3a-746e-3497-abd0-b7695faa750c
-  drop empty: 'false'
-  name: 001d6605-c353-4a20-8534-8663f31d1c8d
+- name: GetFile/success/RPG
   source id: 45c2a56e-7c29-42f3-8c1d-89c0c84a6ee7
   source relationship name: success
+  destination id: 4222cd3a-746e-3497-abd0-b7695faa750c
 Controller Services: []

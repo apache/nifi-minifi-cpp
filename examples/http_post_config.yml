@@ -17,43 +17,34 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- Properties:
-    Input Directory: /tmp/input
-    Keep Source File: 'true'
-  auto-terminated relationships list: []
-  class: org.apache.nifi.processors.standard.GetFile
+- name: Get files from /tmp/input
   id: 962790e7-ea35-4096-9362-96f527288669
-  name: GetFile
-  penalization period: 30 sec
-  run duration nanos: 0
+  class: org.apache.nifi.processors.standard.GetFile
   scheduling period: 2 sec
   scheduling strategy: TIMER_DRIVEN
-  yield period: 1 sec
-- Properties:
-    HTTP Method: POST
-    Remote URL: http://1.2.3.4:8080/contentListener
+  Properties:
+    Input Directory: /tmp/input
+    Keep Source File: 'true'
+- name: Invoke POST request on remote URL
+  id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+  class: org.apache.nifi.processors.standard.InvokeHTTP
+  scheduling strategy: EVENT_DRIVEN
   auto-terminated relationships list:
   - success
   - response
   - retry
   - no retry
-  class: org.apache.nifi.processors.standard.InvokeHTTP
-  id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
-  name: InvokeHTTP
-  penalization period: 30 sec
-  run duration nanos: 0
-  scheduling strategy: EVENT_DRIVEN
-  yield period: 1 sec
+  Properties:
+    HTTP Method: POST
+    Remote URL: http://1.2.3.4:8080/contentListener
 Connections:
-- destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
-  drop empty: 'false'
-  name: 1c8ded29-0d06-4dd4-bd14-88df3e5e10e1
+- name: GetFile/success/InvokeHTTP
   source id: 962790e7-ea35-4096-9362-96f527288669
   source relationship name: success
-- destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
-  drop empty: 'false'
-  name: b5e0d1e9-2ca5-4d22-883a-5a558fd36c4b
+  destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+- name: InvokeHTTP/failure/InvokeHTTP
   source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
   source relationship name: failure
+  destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
 Controller Services: []
 Remote Processing Groups: []

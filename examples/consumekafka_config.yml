@@ -17,7 +17,12 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- Properties:
+- name: Consume Kafka messages from ConsumeKafkaTest topic
+  id: 37d6e8e5-6284-423e-8620-c5168a71add7
+  class: org.apache.nifi.processors.standard.ConsumeKafka
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  Properties:
     Group ID: test_group
     Honor Transactions: 'true'
     Kafka Brokers: kafka-broker:9092
@@ -28,32 +33,19 @@ Processors:
     Session Timeout: 60 sec
     Topic Name Format: Names
     Topic Names: ConsumeKafkaTest
-  auto-terminated relationships list: []
-  class: org.apache.nifi.processors.standard.ConsumeKafka
-  id: 37d6e8e5-6284-423e-8620-c5168a71add7
-  name: ConsumeKafka
-  penalization period: 30 sec
-  run duration nanos: 0
-  scheduling period: 1 sec
-  scheduling strategy: TIMER_DRIVEN
-  yield period: 1 sec
-- Properties:
-    Directory: /tmp/output
+- name: Put files to /tmp/output
+  class: org.apache.nifi.processors.standard.PutFile
+  id: 7f9c6f0b-e936-499e-b659-acfaf6872772
   auto-terminated relationships list:
   - success
   - failure
-  class: org.apache.nifi.processors.standard.PutFile
-  id: 7f9c6f0b-e936-499e-b659-acfaf6872772
-  name: PutFile
-  penalization period: 30 sec
-  run duration nanos: 0
   scheduling strategy: EVENT_DRIVEN
-  yield period: 1 sec
+  Properties:
+    Directory: /tmp/output
 Connections:
-- destination id: 7f9c6f0b-e936-499e-b659-acfaf6872772
-  drop empty: 'false'
-  name: db42e983-1f74-42a0-bacd-6bcf4cd22c9d
+- name: ConsumeKafka/success/PutFile
   source id: 37d6e8e5-6284-423e-8620-c5168a71add7
   source relationship name: success
+  destination id: 7f9c6f0b-e936-499e-b659-acfaf6872772
 Controller Services: []
 Remote Processing Groups: []

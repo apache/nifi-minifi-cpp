@@ -17,81 +17,50 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- id: 6ccd8be9-4aa3-4b86-ae10-0a68668f1c25
-  name: FetchS3Object
+- name: Fetch S3 object from test_bucket
+  id: 6ccd8be9-4aa3-4b86-ae10-0a68668f1c25
   class: org.apache.nifi.minifi.aws.processors.FetchS3Object
-  max concurrent tasks: 1
   scheduling strategy: EVENT_DRIVEN
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
   auto-terminated relationships list:
   - failure
   Properties:
     AWS Credentials Provider service: AWSCredentialsService
     Bucket: test_bucket
     Communications Timeout: 30 sec
-- id: 6f2c20f5-e990-4d9f-bfd6-f7471e3df469
-  name: ListS3
+- name: List test_bucket S3 bucket
+  id: 6f2c20f5-e990-4d9f-bfd6-f7471e3df469
   class: org.apache.nifi.minifi.aws.processors.ListS3
-  max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 10000 ms
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
-  auto-terminated relationships list: []
   Properties:
     AWS Credentials Provider service: AWSCredentialsService
     Bucket: test_bucket
     Communications Timeout: 30 sec
-- id: 73fd7f54-7639-4f27-b20b-889708f493cb
-  name: LogAttribute
+- name: Log S3 object attributes
+  id: 73fd7f54-7639-4f27-b20b-889708f493cb
   class: org.apache.nifi.minifi.processors.LogAttribute
-  max concurrent tasks: 1
   scheduling strategy: EVENT_DRIVEN
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
   auto-terminated relationships list:
   - success
   Properties:
-    Attributes to Ignore:
-    Attributes to Log:
-    FlowFiles To Log: '1'
-    Hexencode Payload: 'false'
-    Log Level:
-    Log Payload: 'false'
-    Log Prefix:
-    Maximum Payload Line Length: '80'
+    FlowFiles To Log: '0'
 Controller Services:
-- id: 2094d776-2006-4d02-9bb9-28eac9d0fc95
-  name: AWSCredentialsService
-  type: org.apache.nifi.minifi.aws.controllers.AWSCredentialsService
+- name: AWSCredentialsService
+  id: 2094d776-2006-4d02-9bb9-28eac9d0fc95
+  class: org.apache.nifi.minifi.aws.controllers.AWSCredentialsService
   Properties:
-    Access Key:
-    Credentials File:
-    Secret Key:
     Use Default Credentials: 'true'
 Connections:
-- id: 2c13ddd6-543e-4e37-a295-e4cb8fe85fa5
-  name: FetchS3Object/success/LogAttribute
+- name: FetchS3Object/success/LogAttribute
+  id: 2c13ddd6-543e-4e37-a295-e4cb8fe85fa5
   source id: 6ccd8be9-4aa3-4b86-ae10-0a68668f1c25
   source relationship names:
   - success
   destination id: 73fd7f54-7639-4f27-b20b-889708f493cb
-  max work queue size: 10000
-  max work queue data size: 10 MB
-  flowfile expiration: 0 seconds
-  queue prioritizer class: ''
-- id: 7895c12e-9657-4baa-a8ec-6b8cb11f32cd
-  name: ListS3/success/FetchS3Object
+- name: ListS3/success/FetchS3Object
+  id: 7895c12e-9657-4baa-a8ec-6b8cb11f32cd
   source id: 6f2c20f5-e990-4d9f-bfd6-f7471e3df469
   source relationship names:
   - success
   destination id: 6ccd8be9-4aa3-4b86-ae10-0a68668f1c25
-  max work queue size: 10000
-  max work queue data size: 10 MB
-  flowfile expiration: 0 seconds
-  queue prioritizer class: ''
 Remote Process Groups: []

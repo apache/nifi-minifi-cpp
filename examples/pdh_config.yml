@@ -17,29 +17,20 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- id: 2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27
-  name: ConsumeWindowsEventLog
+- name: Read disk and CPU performance data
+  id: 2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27
   class: org.apache.nifi.minifi.processors.PerformanceDataMonitor
-  max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 10000 ms
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
-  auto-terminated relationships list: []
   Properties:
     Predefined Groups: "Disk,CPU"
     Custom PDH Counters: "\\System\\Processes,\\Process(*)\\ID Process,\\Process(*)\\Private Bytes"
     Output Format: "JSON"
     Output Compactness: "Compact"
-- id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
-  name: PutFile
+- name: Put files to C:\temp\
+  id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
   class: org.apache.nifi.minifi.processors.PutFile
-  max concurrent tasks: 1
   scheduling strategy: EVENT_DRIVEN
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
   auto-terminated relationships list:
   - failure
   - success
@@ -48,15 +39,11 @@ Processors:
     Create Missing Directories: 'true'
     Directory: C:\temp\
 Connections:
-- id: 098a56ba-f4bf-4323-a3f3-6f8a5e3586bf
-  name: ConsumeWindowsEventLog/success/PutFile
+- name: ConsumeWindowsEventLog/success/PutFile
+  id: 098a56ba-f4bf-4323-a3f3-6f8a5e3586bf
   source id: 2f2a3b47-f5ba-49f6-82b5-bc1c86b96e27
   source relationship names:
   - success
   destination id: e143601d-de4f-44ba-a6ec-d1f97d77ec94
-  max work queue size: 10000
-  max work queue data size: 10 MB
-  flowfile expiration: 0 seconds
-  queue prioritizer class: ''
 Controller Services: []
 Remote Process Groups: []

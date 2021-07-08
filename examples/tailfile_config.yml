@@ -17,44 +17,28 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
-  name: LogAttribute
+- name: Log tailfile attributes
+  id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
   class: org.apache.nifi.minifi.processors.LogAttribute
-  max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1000 ms
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
   auto-terminated relationships list:
   - success
   Properties:
-    Attributes to Ignore:
-    Attributes to Log:
-    FlowFiles To Log: '1'
-    Hexencode Payload: 'false'
-    Log Level:
-    Log Payload: 'false'
-    Log Prefix:
-    Maximum Payload Line Length: '80'
-- id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
-  name: TailFile
+    FlowFiles To Log: '0'
+- name: Tail /tmp/test_file.log
+  id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
   class: org.apache.nifi.minifi.processors.TailFile
-  max concurrent tasks: 1
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1000 ms
-  penalization period: 30000 ms
-  yield period: 1000 ms
-  run duration nanos: 0
-  auto-terminated relationships list: []
   Properties:
     File to Tail: /tmp/test_file.log
     Initial Start Position: Beginning of File
     Input Delimiter: \n
     tail-mode: Single file
 Connections:
-- id: eda7f758-c548-46d6-aba0-faa6e9937d8c
-  name: TailFile/success/LogAttribute
+- name: TailFile/success/LogAttribute
+  id: eda7f758-c548-46d6-aba0-faa6e9937d8c
   source id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
   source relationship names:
   - success

@@ -17,38 +17,30 @@ MiNiFi Config Version: 3
 Flow Controller:
   name: MiNiFi Flow
 Processors:
-- Properties:
-    Input Directory: /tmp/input
-  auto-terminated relationships list: []
-  class: org.apache.nifi.processors.standard.GetFile
+- name: Get files from /tmp/input
   id: d5fef466-fef0-4d90-814e-9c19a67e454a
-  name: GetFile
-  penalization period: 30 sec
-  run duration nanos: 0
-  scheduling period: 2 sec
+  class: org.apache.nifi.processors.standard.GetFile
   scheduling strategy: TIMER_DRIVEN
-  yield period: 1 sec
-- Properties:
+  scheduling period: 2 sec
+  Properties:
+    Input Directory: /tmp/input
+- name: Upload Blob to test-container in Azure Storage
+  id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
+  class: org.apache.nifi.processors.standard.PutAzureBlobStorage
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+  - failure
+  Properties:
     Blob: test-blob
     Storage Account Name: test-account
     Storage Account Key: test-key
     Container Name: test-container
     Create Container: 'true'
-  auto-terminated relationships list:
-  - success
-  - failure
-  class: org.apache.nifi.processors.standard.PutAzureBlobStorage
-  id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
-  name: PutAzureBlobStorage
-  penalization period: 30 sec
-  run duration nanos: 0
-  scheduling strategy: EVENT_DRIVEN
-  yield period: 1 sec
 Connections:
-- destination id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
-  drop empty: 'false'
-  name: 0ec20f45-96f9-43f6-928d-68e850082618
+- name: GetFile/success/PutAzureBlobStorage
   source id: d5fef466-fef0-4d90-814e-9c19a67e454a
   source relationship name: success
+  destination id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
 Controller Services: []
 Remote Processing Groups: []
