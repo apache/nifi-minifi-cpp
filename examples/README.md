@@ -98,8 +98,12 @@ The flow: ConsumeWindowsEventLog &#10132; PutFile
 
 Using the [pdh_config.yml](pdh_config.yml) flow configuration MiNiFi reads CPU and Disk performance data through Windows' Performance Data Helper (PDH) component and puts the data to the `C:\temp\` directory in a compact JSON format.
 
+The flow: PerformanceDataMonitor &#10132; PutFile
+
 ## SQL Operations
 
 ### Query Database Table
 
 Using the [querydbtable_config.yml](querydbtable_config.yml) flow configuration MiNiFi queries the `id` and `name` columns of the `users` table with a `where` clause and the results are put in the `/tmp/output` directory. The database connection data is set in the `ODBCService` controller service.
+
+The flow: QueryDatabaseTable &#10132; PutFile
