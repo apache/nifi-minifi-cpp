@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-#include "DatabaseContentRepository.h"
-#include "encryption/RocksDbEncryptionProvider.h"
-
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "DatabaseContentRepository.h"
+#include "encryption/RocksDbEncryptionProvider.h"
 #include "RocksDbStream.h"
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"

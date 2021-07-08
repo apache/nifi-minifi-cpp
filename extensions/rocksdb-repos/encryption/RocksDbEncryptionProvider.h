@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <string>
+#include <memory>
+
 #include "rocksdb/env_encryption.h"
 #include "utils/crypto/EncryptionUtils.h"
 #include "logging/Logger.h"

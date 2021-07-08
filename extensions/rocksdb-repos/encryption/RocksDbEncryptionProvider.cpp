@@ -16,6 +16,10 @@
  * limitations under the License.
  */
 
+#include <string>
+#include <utility>
+#include <memory>
+
 #include "RocksDbEncryptionProvider.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
 #include "logging/LoggerConfiguration.h"
@@ -35,6 +39,7 @@ using utils::crypto::Aes256EcbCipher;
  */
 class AES256BlockCipher final : public rocksdb::BlockCipher {
   static std::shared_ptr<logging::Logger> logger_;
+
  public:
   AES256BlockCipher(std::string database, Aes256EcbCipher cipher_impl)
       : database_(std::move(database)),
