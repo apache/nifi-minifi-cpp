@@ -32,12 +32,13 @@ namespace repository {
 
 class StringAppender : public rocksdb::AssociativeMergeOperator {
  public:
-  static std::shared_ptr<rocksdb::MergeOperator> transform(const std::shared_ptr<rocksdb::MergeOperator>& other) {
-    if (other && std::strcmp(other->Name(), "StringAppender") == 0) {
-      return other;
+  struct Eq {
+    bool operator()(const std::shared_ptr<rocksdb::MergeOperator>& lhs, const std::shared_ptr<rocksdb::MergeOperator>& rhs) const {
+      if (lhs == rhs) return true;
+      if (!lhs || !rhs) return false;
+      return std::strcmp(lhs->Name(), rhs->Name()) == 0;
     }
-    return std::make_shared<StringAppender>();
-  }
+  };
 
   bool Merge(const rocksdb::Slice& /*key*/, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* /*logger*/) const override;
 

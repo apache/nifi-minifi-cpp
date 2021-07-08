@@ -1,0 +1,88 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <string>
+#include <memory>
+#include "utils/crypto/EncryptionManager.h"
+#include "properties/Properties.h"
+#include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/crypto/ciphers/XSalsa20.h"
+#include "utils/crypto/ciphers/Aes256Ecb.h"
+#include "core/logging/LoggerConfiguration.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace utils {
+namespace crypto {
+
+#ifdef WIN32
+constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "\\conf\\bootstrap.conf";
+#else
+constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
+#endif  // WIN32
+
+std::shared_ptr<core::logging::Logger> EncryptionManager::logger_{core::logging::LoggerFactory<EncryptionManager>::getLogger()};
+
+utils::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std::string &key_name) const {
+  return readKey(key_name)
+         | utils::map([] (const Bytes& key) {return XSalsa20Cipher{key};});
+}
+
+utils::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
+  utils::optional<Bytes> key = readKey(key_name);
+  if (!key) {
+    logger_->log_info("No encryption key found for '%s'", key_name);
+    return {};
+  }
+  if (key->empty()) {
+    // generate new key
+    logger_->log_info("Generating encryption key '%s'", key_name);
+    key = Aes256EcbCipher::generateKey();
+    writeKey(key_name, key.value());
+  } else {
+    logger_->log_info("Using existing encryption key '%s'", key_name);
+  }
+  return Aes256EcbCipher{key.value()};
+}
+
+
+utils::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) const {
+  minifi::Properties bootstrap_conf;
+  bootstrap_conf.setHome(key_dir_);
+  bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
+  return bootstrap_conf.getString(key_name)
+         | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
+         | utils::map(&utils::crypto::stringToBytes);
+}
+
+bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) const {
+  minifi::Properties bootstrap_conf;
+  bootstrap_conf.setHome(key_dir_);
+  bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
+  bootstrap_conf.set(key_name, utils::StringUtils::to_hex(key));
+  return bootstrap_conf.persistProperties();
+}
+
+}  // namespace crypto
+}  // namespace utils
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

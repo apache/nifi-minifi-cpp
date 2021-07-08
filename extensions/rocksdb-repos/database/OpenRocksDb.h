@@ -67,6 +67,8 @@ class OpenRocksDb {
 
   rocksdb::Status NewCheckpoint(rocksdb::Checkpoint** checkpoint);
 
+  rocksdb::Status NewCheckpoint(std::unique_ptr<rocksdb::Checkpoint>& checkpoint);
+
   rocksdb::Status FlushWAL(bool sync);
 
   rocksdb::DB* get();

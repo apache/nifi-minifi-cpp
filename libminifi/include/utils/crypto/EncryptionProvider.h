@@ -15,11 +15,15 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <utility>
 #include <string>
-#include "utils/EncryptionProvider.h"
-#include "properties/Properties.h"
+#include <memory>
+#include "utils/crypto/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
-#include "utils/StringUtils.h"
+#include "utils/crypto/ciphers/XSalsa20.h"
+#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -28,27 +32,24 @@ namespace minifi {
 namespace utils {
 namespace crypto {
 
-namespace {
+class EncryptionProvider {
+ public:
+  explicit EncryptionProvider(Bytes key) : cipher_impl_(std::move(key)) {}
+  explicit EncryptionProvider(XSalsa20Cipher cipher_impl) : cipher_impl_(std::move(cipher_impl)) {}
 
-#ifdef WIN32
-constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "\\conf\\bootstrap.conf";
-#else
-constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
-#endif  // WIN32
+  static utils::optional<EncryptionProvider> create(const std::string& home_path);
 
-constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
+  std::string encrypt(const std::string& data) const {
+    return cipher_impl_.encrypt(data);
+  }
 
-}  // namespace
+  std::string decrypt(const std::string& data) const {
+    return cipher_impl_.decrypt(data);
+  }
 
-utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
-  minifi::Properties bootstrap_conf;
-  bootstrap_conf.setHome(home_path);
-  bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
-  return bootstrap_conf.getString(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
-    | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
-    | utils::map(&utils::crypto::stringToBytes)
-    | utils::map([](const utils::crypto::Bytes &encryption_key_bytes) { return EncryptionProvider{encryption_key_bytes}; });
-}
+ private:
+  const XSalsa20Cipher cipher_impl_;
+};
 
 }  // namespace crypto
 }  // namespace utils

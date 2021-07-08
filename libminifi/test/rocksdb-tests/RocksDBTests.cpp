@@ -21,6 +21,7 @@
 #include "../../extensions/rocksdb-repos/database/ColumnHandle.h"
 #include "IntegrationTestUtils.h"
 #include "database/StringAppender.h"
+#include "../../extensions/rocksdb-repos/encryption/RocksDbEncryptionProvider.h"
 
 #undef NDEBUG
 
@@ -180,7 +181,7 @@ TEST_CASE_METHOD(RocksDBTest, "Sanity check: merge fails without merge_operator"
 
 TEST_CASE_METHOD(RocksDBTest, "Column options are applied", "[rocksDBTest9]") {
   auto cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts) {
-    cf_opts.transform<StringAppender>(&rocksdb::ColumnFamilyOptions::merge_operator);
+    cf_opts.set(&rocksdb::ColumnFamilyOptions::merge_operator, std::make_shared<StringAppender>(), StringAppender::Eq{});
   };
   std::string db_uri;
   SECTION("Named column") {
@@ -203,4 +204,50 @@ TEST_CASE_METHOD(RocksDBTest, "Column options are applied", "[rocksDBTest9]") {
   std::string value;
   REQUIRE(opendb->Get({}, "a", &value).ok());
   REQUIRE(value == "firstsecond");
+}
+
+minifi::internal::DBOptionsPatch createEncrSetter(const utils::Path& home_dir, const std::string& db_name, const std::string& key_name) {
+  auto env = core::repository::createEncryptingEnv(utils::crypto::EncryptionManager{home_dir.str()}, core::repository::DbEncryptionOptions{db_name, key_name});
+  REQUIRE(env);
+  return [env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+    db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
+    db_opts.set(&rocksdb::DBOptions::env, env.get(), core::repository::EncryptionEq{});
+  };
+}
+
+void withDefaultEnv(minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
+  db_opts.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
+}
+
+TEST_CASE_METHOD(RocksDBTest, "Error is logged if different encryption keys are used", "[rocksDBTest10]") {
+  utils::Path home_dir = createTempDirectory("/var/tmp/test.XXXXXX");
+  utils::file::FileUtils::create_dir((home_dir / "conf").str());
+  std::ofstream{(home_dir / "conf" / "bootstrap.conf").str()}
+    << "encryption.key.one=" << "805D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n"
+    << "encryption.key.two=" << "905D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n";
+
+  auto db_opt_1 = createEncrSetter(home_dir, "one", "encryption.key.one");
+  auto col_1 = minifi::internal::RocksDatabase::create(db_opt_1, {}, "minifidb://" + db_dir + "/column_one");
+  REQUIRE(col_1->open());
+
+  SECTION("Using the same encryption key is OK") {
+    auto db_opt_2 = createEncrSetter(home_dir, "two", "encryption.key.one");
+    auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two");
+    REQUIRE(col_2->open());
+  }
+
+  SECTION("Using different encryption key") {
+    auto db_opt_2 = createEncrSetter(home_dir, "two", "encryption.key.two");
+    auto col_2 = minifi::internal::RocksDatabase::create(db_opt_2, {}, "minifidb://" + db_dir + "/column_two");
+    REQUIRE_FALSE(col_2->open());
+    REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1}, "Database '" + db_dir + "' has already been opened using a different configuration"));
+  }
+
+  SECTION("Using no encryption key") {
+    auto col_2 = minifi::internal::RocksDatabase::create(withDefaultEnv, {}, "minifidb://" + db_dir + "/column_two");
+    REQUIRE_FALSE(col_2->open());
+    REQUIRE(utils::verifyLogLinePresenceInPollTime(
+        std::chrono::seconds{1}, "Database '" + db_dir + "' has already been opened using a different configuration"));
+  }
 }

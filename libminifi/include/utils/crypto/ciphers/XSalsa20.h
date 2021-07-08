@@ -14,38 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <istream>
 #include <string>
-#include <vector>
+#include <utility>
 
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
-#include "properties/PropertiesFile.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace encrypt_config {
+namespace utils {
+namespace crypto {
 
-class ConfigFile : public PropertiesFile {
+class XSalsa20Cipher {
  public:
-  using PropertiesFile::PropertiesFile;
+  explicit XSalsa20Cipher(Bytes encryption_key) : encryption_key_(std::move(encryption_key)) {}
 
-  std::vector<std::string> getSensitiveProperties() const;
+  std::string encrypt(const std::string& data) const {
+    return utils::crypto::encrypt(data, encryption_key_);
+  }
+
+  std::string decrypt(const std::string& data) const {
+    return utils::crypto::decrypt(data, encryption_key_);
+  }
 
  private:
-  friend class ConfigFileTestAccessor;
-  friend bool operator==(const ConfigFile&, const ConfigFile&);
-  static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
-                                                  const std::vector<std::string>& additional_properties);
+  const Bytes encryption_key_;
 };
 
-}  // namespace encrypt_config
+}  // namespace crypto
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

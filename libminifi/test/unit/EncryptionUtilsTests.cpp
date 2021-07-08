@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "utils/EncryptionUtils.h"
+#include "utils/crypto/EncryptionUtils.h"
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
 

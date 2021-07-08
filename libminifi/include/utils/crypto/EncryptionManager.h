@@ -19,8 +19,12 @@
 
 #include <utility>
 #include <string>
-#include "utils/EncryptionUtils.h"
+#include <memory>
+#include "utils/crypto/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
+#include "utils/crypto/ciphers/XSalsa20.h"
+#include "utils/crypto/ciphers/Aes256Ecb.h"
+#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -29,23 +33,18 @@ namespace minifi {
 namespace utils {
 namespace crypto {
 
-class EncryptionProvider {
+class EncryptionManager {
+  static std::shared_ptr<core::logging::Logger> logger_;
  public:
-  explicit EncryptionProvider(Bytes encryption_key)
-      : encryption_key_(std::move(encryption_key)) {}
+  explicit EncryptionManager(std::string key_dir) : key_dir_(std::move(key_dir)) {}
 
-  static utils::optional<EncryptionProvider> create(const std::string& home_path);
-
-  std::string encrypt(const std::string& data) const {
-    return utils::crypto::encrypt(data, encryption_key_);
-  }
-
-  std::string decrypt(const std::string& data) const {
-    return utils::crypto::decrypt(data, encryption_key_);
-  }
-
+  utils::optional<XSalsa20Cipher> createXSalsa20Cipher(const std::string& key_name) const;
+  utils::optional<Aes256EcbCipher> createAes256EcbCipher(const std::string& key_name) const;
  private:
-  const Bytes encryption_key_;
+  utils::optional<Bytes> readKey(const std::string& key_name) const;
+  bool writeKey(const std::string& key_name, const Bytes& key) const;
+
+  std::string key_dir_;
 };
 
 }  // namespace crypto

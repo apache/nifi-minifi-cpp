@@ -19,9 +19,9 @@
 #include <string>
 #include <utility>
 
-#include "utils/EncryptionUtils.h"
+#include "utils/crypto/EncryptionUtils.h"
 #include "utils/OptionalUtils.h"
-#include "utils/EncryptionProvider.h"
+#include "utils/crypto/EncryptionProvider.h"
 
 namespace org {
 namespace apache {

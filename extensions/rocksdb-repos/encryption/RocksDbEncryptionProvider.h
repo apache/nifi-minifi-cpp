@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -14,38 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <istream>
 #include <string>
-#include <vector>
+#include <memory>
 
+#include "rocksdb/env_encryption.h"
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
-#include "properties/PropertiesFile.h"
+#include "logging/Logger.h"
+#include "utils/crypto/EncryptionManager.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace encrypt_config {
+namespace core {
+namespace repository {
 
-class ConfigFile : public PropertiesFile {
- public:
-  using PropertiesFile::PropertiesFile;
-
-  std::vector<std::string> getSensitiveProperties() const;
-
- private:
-  friend class ConfigFileTestAccessor;
-  friend bool operator==(const ConfigFile&, const ConfigFile&);
-  static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
-                                                  const std::vector<std::string>& additional_properties);
+struct DbEncryptionOptions {
+  std::string database;
+  std::string encryption_key_name;
 };
 
-}  // namespace encrypt_config
+std::shared_ptr<rocksdb::Env> createEncryptingEnv(const utils::crypto::EncryptionManager& manager, const DbEncryptionOptions& options);
+
+struct EncryptionEq {
+  bool operator()(const rocksdb::Env* lhs, const rocksdb::Env* rhs) const;
+};
+
+}  // namespace repository
+}  // namespace core
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

@@ -22,7 +22,7 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
-#include "utils/EncryptionProvider.h"
+#include "utils/crypto/EncryptionProvider.h"
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");

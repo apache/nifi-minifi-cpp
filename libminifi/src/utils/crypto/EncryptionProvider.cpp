@@ -14,38 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include <istream>
-#include <string>
-#include <vector>
-
-#include "utils/crypto/EncryptionUtils.h"
+#include <memory>
+#include "utils/crypto/EncryptionProvider.h"
 #include "utils/OptionalUtils.h"
-#include "properties/PropertiesFile.h"
+#include "utils/crypto/EncryptionManager.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-namespace encrypt_config {
+namespace utils {
+namespace crypto {
 
-class ConfigFile : public PropertiesFile {
- public:
-  using PropertiesFile::PropertiesFile;
+constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
-  std::vector<std::string> getSensitiveProperties() const;
+utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
+  return EncryptionManager{home_path}.createXSalsa20Cipher(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
+    | utils::map([] (const XSalsa20Cipher& cipher) {return EncryptionProvider{cipher};});
+}
 
- private:
-  friend class ConfigFileTestAccessor;
-  friend bool operator==(const ConfigFile&, const ConfigFile&);
-  static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
-                                                  const std::vector<std::string>& additional_properties);
-};
-
-}  // namespace encrypt_config
+}  // namespace crypto
+}  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-

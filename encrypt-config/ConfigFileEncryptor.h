@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ConfigFile.h"
-#include "utils/EncryptionUtils.h"
+#include "utils/crypto/EncryptionUtils.h"
 #include "Utils.h"
 
 namespace org {
