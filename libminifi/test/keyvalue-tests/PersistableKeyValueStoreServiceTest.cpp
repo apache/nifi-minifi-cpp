@@ -19,8 +19,8 @@
 #define CATCH_CONFIG_RUNNER
 #include <vector>
 #include <memory>
-#include <utility>
 #include <string>
+#include <type_traits>
 
 #include "catch.hpp"
 
@@ -33,17 +33,14 @@
 
 static std::string config_yaml; // NOLINT
 
-static inline void configYamlHandler(Catch::ConfigData&, const std::string& path) {
-  config_yaml = path;
-}
-
 int main(int argc, char* argv[]) {
   Catch::Session session;
 
-  auto& cli = const_cast<Catch::Clara::CommandLine<Catch::ConfigData>&>(session.cli());
-  cli["--config-yaml"]
-      .describe("path to the config.yaml containing the PersistableKeyValueStoreService controller service configuration")
-      .bind(&configYamlHandler, "path");
+  const auto& const_cli = session.cli();
+  auto& cli = const_cast<minifi::utils::remove_cvref_t<decltype(const_cli)>&>(const_cli);
+  cli |= Catch::clara::Opt{config_yaml, "config-yaml"}
+      ["--config-yaml"]
+      ("path to the config.yaml containing the PersistableKeyValueStoreService controller service configuration");
 
   int ret = session.applyCommandLine(argc, argv);
   if (ret != 0) {

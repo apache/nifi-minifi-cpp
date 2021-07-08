@@ -50,7 +50,8 @@ TEST_CASE("Test tailfile chunk size 4096, file size 8KB", "[tailfileChunk8KBFile
     set_standalone_property(proc, "file_path", file);
     set_standalone_property(proc, "chunk_size", chunksize);
 
-    flow_file_record * new_ff = invoke(proc);
+    flow_file_record* new_ff = invoke(proc);
+    free(new_ff);
 
     char uuid_str[37];
     get_proc_uuid_from_processor(proc, uuid_str);
@@ -82,7 +83,8 @@ TEST_CASE("Test tailfile chunk size 4096, file size less than 8KB", "[tailfileCh
     set_standalone_property(proc, "file_path", file);
     set_standalone_property(proc, "chunk_size", chunksize);
 
-    flow_file_record * new_ff = invoke(proc);
+    flow_file_record* new_ff = invoke(proc);
+    free(new_ff);
 
     char uuid_str[37];
     get_proc_uuid_from_processor(proc, uuid_str);
@@ -117,7 +119,8 @@ TEST_CASE("Test tailfile chunk size 512, file size equal to 4608B", "[tailfileCh
     set_standalone_property(proc, "file_path", file);
     set_standalone_property(proc, "chunk_size", chunksize);
 
-    flow_file_record * new_ff = invoke(proc);
+    flow_file_record* new_ff = invoke(proc);
+    free(new_ff);
 
     char uuid_str[37];
     get_proc_uuid_from_processor(proc, uuid_str);

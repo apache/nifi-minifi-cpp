@@ -104,14 +104,14 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test required property not set", "[aw
     plan->setProperty(s3_processor, "Server Side Encryption", "");
   }
 
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
 }
 
 TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Test incomplete credentials in credentials service", "[awsS3Config]") {
   setBucket();
   plan->setProperty(aws_credentials_service, "Secret Key", "secret");
   setCredentialsService();
-  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception&);
+  REQUIRE_THROWS_AS(test_controller.runSession(plan, true), minifi::Exception);
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "AWS Credentials have not been set!"));
 
   // Test that no invalid credentials file was set from previous properties

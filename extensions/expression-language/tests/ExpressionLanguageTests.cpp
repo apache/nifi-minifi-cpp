@@ -36,6 +36,7 @@
 #include <UpdateAttribute.h>
 #include "core/FlowFile.h"
 #include <LogAttribute.h>
+#include "utils/gsl.h"
 #include "TestBase.h"
 
 namespace expression = org::apache::nifi::minifi::expression;
@@ -1256,7 +1257,7 @@ TEST_CASE("Now Date", "[expressionNowDate]") {
   struct tm lt;
   localtime_r(&t, &lt);
 
-  REQUIRE((lt.tm_year + 1900) == expr(expression::Parameters{ flow_file_a }).asUnsignedLong());
+  REQUIRE(gsl::narrow<uint64_t>(lt.tm_year + 1900) == expr(expression::Parameters{ flow_file_a }).asUnsignedLong());
 }
 
 TEST_CASE("Format Date", "[expressionFormatDate]") {

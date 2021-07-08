@@ -35,7 +35,6 @@ class FileManager {
 public:
     FileManager(const std::string& filePath) {
         assert(!filePath.empty() && "filePath provided cannot be empty!");
-        struct stat statbuff;
         assert(!is_directory(filePath.c_str()) && "Provided file is not a filepath");
         filePath_ = filePath;
         remove(filePath_.c_str());
@@ -154,6 +153,7 @@ struct processor_params * invoke_processor(TailFileTestResourceManager& mgr, con
     set_standalone_property(proc, "delimiter", ";");
 
     flow_file_record * new_ff = invoke(proc);
+    free(new_ff);
 
     char uuid_str[37];
     get_proc_uuid_from_processor(proc, uuid_str);

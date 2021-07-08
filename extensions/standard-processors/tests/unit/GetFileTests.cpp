@@ -120,7 +120,7 @@ TEST_CASE("GetFile onSchedule() throws if the required Directory property is not
   LogTestController::getInstance().setTrace<processors::GetFile>();
   auto plan = test_controller.createPlan();
   auto get_file = plan->addProcessor("GetFile", "Get");
-  REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception&);
+  REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception);
 }
 
 TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {

@@ -17,6 +17,7 @@
  */
 
 
+#include "utils/gsl.h"
 #include "utils/OsUtils.h"
 #include "../TestBase.h"
 
@@ -32,8 +33,8 @@ TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
     std::cout << "Physical Memory used by the system: " << ram_usage_by_system << " bytes" << std::endl;
     std::cout << "Total Physical Memory in the system: " << ram_total << " bytes" << std::endl;
   }
-  REQUIRE(ram_usage_by_process >= v.size());
-  REQUIRE(v.size()*2 >= ram_usage_by_process);
+  REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(v.size()));
+  REQUIRE(gsl::narrow<int64_t>(v.size()*2) >= ram_usage_by_process);
   REQUIRE(ram_usage_by_system >= ram_usage_by_process);
   REQUIRE(ram_total >= ram_usage_by_system);
 }
@@ -44,7 +45,7 @@ size_t GetTotalMemoryLegacy() {
 }
 
 TEST_CASE("Test new and legacy total system memory query equivalency") {
-  REQUIRE(GetTotalMemoryLegacy() == utils::OsUtils::getSystemTotalPhysicalMemory());
+  REQUIRE(gsl::narrow<int64_t>(GetTotalMemoryLegacy()) == utils::OsUtils::getSystemTotalPhysicalMemory());
 }
 #endif
 

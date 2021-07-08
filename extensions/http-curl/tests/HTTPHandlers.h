@@ -420,6 +420,7 @@ class HeartbeatHandler : public ServerAwareHandler {
         auto group = minifi::BuildDescription::getClassDescriptions(str);
         for (const auto& proc : group.processors_) {
           assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
+          (void)proc;
           found = true;
         }
       }

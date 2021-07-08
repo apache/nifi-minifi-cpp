@@ -51,37 +51,37 @@ TEST_CASE("Decryptor will throw if the value is incorrect", "[decrypt]") {
 
   REQUIRE_THROWS_AS(decryptor.decrypt(  // this is not even close
       "some totally incorrect value"),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // separator missing
       "l3WY1V27knTiPa6jVX0jrq4qjmKsySOuErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // separator wrong
       "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu__ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // more than one separator
       "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo=||extra+stuff"),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // nonce is off by one char
       "L3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // ciphertext is off by one char
       "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||erntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // nonce is too short
       "l3WY1V27knTiPa6jVX0rq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // nonce is too long
       "l3WY1V27knTiPa6jVX0jrq4qjmKsySOup||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // ciphertext-and-mac is too short
       "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // ciphertext-and-mac is too long
       "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUUU5EyMloTtSytKk9a5xNKo="),
-      std::exception&);
+      std::exception);
   REQUIRE_THROWS_AS(decryptor.decrypt(  // correct format but random value
       "81hf/4bHIRVd2pYglniBW3zOUcaLe+Cw||mkN2sKHS+nepRTcBhOJ5tFW4GXvaywYLD8xzIEbCP0lgUA6Qf3jZ/oMi"),
-      std::exception&);
+      std::exception);
 }
 
 TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProperties]") {

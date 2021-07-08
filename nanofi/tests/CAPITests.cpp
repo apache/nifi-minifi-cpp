@@ -167,7 +167,7 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
 
   uint8_t* content = (uint8_t*)malloc(record->size* sizeof(uint8_t));
 
-  REQUIRE(get_content(record, content, record->size) == record->size);
+  REQUIRE(get_content(record, content, static_cast<int>(record->size)) == static_cast<int>(record->size));
 
   REQUIRE(test_file_content == std::string(reinterpret_cast<char*>(content), record->size));
 
@@ -234,7 +234,7 @@ TEST_CASE("Test manipulation of attributes", "[testAttributes]") {
   attr_set.size = attr_size;
   attr_set.attributes = (attribute*) malloc(attr_set.size * sizeof(attribute));  // NOLINT
 
-  REQUIRE(get_all_attributes(record, &attr_set) == attr_set.size);
+  REQUIRE(get_all_attributes(record, &attr_set) == static_cast<int>(attr_set.size));
 
   bool test_attr_found = false;
   bool updated_attr_found = false;

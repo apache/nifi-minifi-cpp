@@ -230,7 +230,6 @@ TEST_CASE("Extend the waiting period during shutdown", "[TestFlow4]") {
   testController.startFlow();
 
   // wait for the source processor to enqueue its flowFiles
-  std::size_t flow_file_count = 0;
   auto flowFilesEnqueued = [&] { return root->getTotalFlowFileCount() >= 3; };
   REQUIRE(verifyWithBusyWait(std::chrono::milliseconds{500}, flowFilesEnqueued));
 

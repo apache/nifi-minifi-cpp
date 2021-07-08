@@ -178,7 +178,7 @@ TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
 std::atomic<uint8_t> counter;
 std::mt19937_64 seed { std::random_device { }() };
 bool createSocket() {
-  int mine = counter++;
+  counter++;
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
 
   std::uniform_int_distribution<> distribution { 10, 100 };

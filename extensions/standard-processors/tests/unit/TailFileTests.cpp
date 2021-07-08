@@ -1746,5 +1746,5 @@ TEST_CASE("Initial Start Position is set to invalid or empty value", "[initialSt
     plan->setProperty(tailfile, org::apache::nifi::minifi::processors::TailFile::InitialStartPosition.getName(), "Invalid Value");
   }
 
-  REQUIRE_THROWS_AS(testController.runSession(plan), minifi::Exception&);
+  REQUIRE_THROWS_AS(testController.runSession(plan), minifi::Exception);
 }

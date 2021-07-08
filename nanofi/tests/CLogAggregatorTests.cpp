@@ -111,7 +111,6 @@ TEST_CASE("Test string tokenizer only delimiter character string", "[stringToken
 TEST_CASE("Test string tokenizer for a delimited string less than 4096 bytes", "[testDelimitedStringTokenizer]") {
     std::vector<std::string> slist = {"this", "is a", "delimited", "string", ""};
     std::string delimitedString = join_strings(slist, "-");
-    int len = strlen(delimitedString.c_str());
     char delim = '-';
     struct token_list tokens = tokenize_string_tailfile(delimitedString.c_str(), delim);
     REQUIRE(tokens.has_non_delimited_token == 0);

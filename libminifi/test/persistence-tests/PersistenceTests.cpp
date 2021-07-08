@@ -233,11 +233,8 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
     REQUIRE(expired.empty());
 
     auto content = flow.read(file);
-    auto isOneOfPossibleResults =
-        Catch::Equals("_Header_one_Demarcator_two_Demarcator_three_Footer_")
-        || Catch::Equals("_Header_two_Demarcator_one_Demarcator_three_Footer_");
-
-    REQUIRE_THAT(content, isOneOfPossibleResults);
+    // See important note about matchers at: https://github.com/catchorg/Catch2/blob/e8cdfdca87ebacd993befdd08ea6aa7e8068ef3d/docs/matchers.md#using-matchers
+    REQUIRE_THAT(content, Catch::Equals("_Header_one_Demarcator_two_Demarcator_three_Footer_") || Catch::Equals("_Header_two_Demarcator_one_Demarcator_three_Footer_"));
   }
 }
 

@@ -20,6 +20,7 @@
 #include <memory>
 #include <regex>
 #include <string>
+#include <utility>
 
 #include "utils/ByteArrayCallback.h"
 #include "FlowFileRecord.h"
