@@ -19,7 +19,6 @@
 #include "utils/TestUtils.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "utils/ChecksumCalculator.h"
-#include "utils/gsl.h"
 
 using org::apache::nifi::minifi::state::response::ConfigurationChecksums;
 
@@ -42,7 +41,7 @@ TEST_CASE("If one checksum calculator is added, we get a node with one child", "
   checksum_calculator.setFileLocation(file_location);
 
   ConfigurationChecksums configuration_checksums;
-  configuration_checksums.addChecksumCalculator(gsl::make_not_null(&checksum_calculator));
+  configuration_checksums.addChecksumCalculator(checksum_calculator);
 
   const auto serialized_response_nodes = configuration_checksums.serialize();
 
@@ -67,8 +66,8 @@ TEST_CASE("If two checksum calculators are added, we get a node with two childre
   checksum_calculator_2.setFileLocation(file_location_2);
 
   ConfigurationChecksums configuration_checksums;
-  configuration_checksums.addChecksumCalculator(gsl::make_not_null(&checksum_calculator_1));
-  configuration_checksums.addChecksumCalculator(gsl::make_not_null(&checksum_calculator_2));
+  configuration_checksums.addChecksumCalculator(checksum_calculator_1);
+  configuration_checksums.addChecksumCalculator(checksum_calculator_2);
 
   const auto serialized_response_nodes = configuration_checksums.serialize();
 

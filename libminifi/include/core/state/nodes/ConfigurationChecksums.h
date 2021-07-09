@@ -37,7 +37,7 @@ class ConfigurationChecksums : public ResponseNode {
   ConfigurationChecksums() = default;
   explicit ConfigurationChecksums(const std::string& name, const utils::Identifier& uuid = {}) : ResponseNode(name, uuid) {}
 
-  void addChecksumCalculator(gsl::not_null<utils::ChecksumCalculator*> checksum_calculator);
+  void addChecksumCalculator(utils::ChecksumCalculator& checksum_calculator);
 
   std::string getName() const override { return "configurationChecksums"; }
   std::vector<SerializedResponseNode> serialize() override;

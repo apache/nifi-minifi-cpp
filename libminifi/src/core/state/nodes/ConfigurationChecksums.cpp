@@ -24,8 +24,8 @@ namespace minifi {
 namespace state {
 namespace response {
 
-void ConfigurationChecksums::addChecksumCalculator(gsl::not_null<utils::ChecksumCalculator*> checksum_calculator) {
-  checksum_calculators_.push_back(checksum_calculator);
+void ConfigurationChecksums::addChecksumCalculator(utils::ChecksumCalculator& checksum_calculator) {
+  checksum_calculators_.push_back(gsl::make_not_null(&checksum_calculator));
 }
 
 std::vector<SerializedResponseNode> ConfigurationChecksums::serialize() {

@@ -41,7 +41,6 @@
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
 #include "utils/ChecksumCalculator.h"
-#include "utils/gsl.h"
 #include "utils/OptionalUtils.h"
 
 namespace org {
@@ -165,7 +164,7 @@ class FlowConfiguration : public CoreComponent {
     }
   }
 
-  gsl::not_null<utils::ChecksumCalculator*> getChecksumCalculator() { return gsl::make_not_null(&checksum_calculator_); }
+  utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
  protected:
   void registerResource(const std::string &resource_function) {
