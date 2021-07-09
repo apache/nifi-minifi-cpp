@@ -42,16 +42,12 @@ void ChecksumCalculator::setFileLocation(const std::string& file_location) {
 }
 
 std::string ChecksumCalculator::getFileName() const {
-  if (!file_name_) {
-    throw std::logic_error("File name not set in ChecksumCalculator!");
-  }
+  gsl_Expects(file_name_);
   return *file_name_;
 }
 
 std::string ChecksumCalculator::getChecksum() {
-  if (!file_location_) {
-    throw std::logic_error("File location not set in ChecksumCalculator!");
-  }
+  gsl_Expects(file_location_);
   if (!checksum_) {
     checksum_ = computeChecksum(*file_location_);
   }
