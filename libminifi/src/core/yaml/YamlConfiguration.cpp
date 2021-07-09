@@ -107,6 +107,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
   auto group = createProcessGroup(headerNode, is_root);
   YAML::Node processorsNode = yamlNode[CONFIG_YAML_PROCESSORS_KEY];
   YAML::Node connectionsNode = yamlNode[yaml::YamlConnectionParser::CONFIG_YAML_CONNECTIONS_KEY];
+  YAML::Node funnelsNode = yamlNode[CONFIG_YAML_FUNNELS_KEY];
   YAML::Node remoteProcessingGroupsNode = [&] {
     // assignment is not supported on invalid Yaml nodes
     YAML::Node candidate = yamlNode[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
@@ -119,6 +120,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
 
   parseProcessorNodeYaml(processorsNode, group.get());
   parseRemoteProcessGroupYaml(remoteProcessingGroupsNode, group.get());
+  parseFunnelsYaml(funnelsNode, group.get());
   // parse connections last to give feedback if the source and/or destination
   // is not in the same process group
   parseConnectionYaml(connectionsNode, group.get());
@@ -811,6 +813,39 @@ void YamlConfiguration::parsePropertiesNodeYaml(const YAML::Node& propertiesNode
   }
 
   validateComponentProperties(processor, component_name, yaml_section);
+}
+
+void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGroup* parent) {
+  if (!parent) {
+    logger_->log_error("parseFunnelsYaml: no parent group was provided");
+    return;
+  }
+  if (!node || !node.IsSequence()) {
+    return;
+  }
+
+  for (YAML::const_iterator iter = node.begin(); iter != node.end(); ++iter) {
+    YAML::Node funnel_node = iter->as<YAML::Node>();
+    std::shared_ptr<core::Processor> funnel = nullptr;
+
+    // Configure basic connection
+    std::string id = getOrGenerateId(funnel_node);
+
+    // Default name to be same as ID
+    std::string name = funnel_node["name"].as<std::string>(id);
+
+    const utils::optional<utils::Identifier> uuid = utils::Identifier::parse(id);
+    if (!uuid) {
+      logger_->log_debug("Incorrect connection UUID format.");
+      throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");
+    }
+
+    funnel = createFunnel(name, uuid.value());
+    logger_->log_debug("Created funnel with UUID %s and name %s", id, name);
+    funnel->setScheduledState(core::RUNNING);
+    funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
+    parent->addProcessor(funnel);
+  }
 }
 
 void YamlConfiguration::validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component, const std::string &component_name, const std::string &yaml_section) const {

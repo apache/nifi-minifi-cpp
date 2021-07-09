@@ -52,6 +52,9 @@ class YamlConnectionParser {
   [[nodiscard]] uint64_t getFlowFileExpirationFromYaml() const;
   [[nodiscard]] bool getDropEmptyFromYaml() const;
  private:
+  void addNewRelationshipToConnection(const std::string& relationship_name, const std::shared_ptr<minifi::Connection>& connection) const;
+  void addFunnelConnection(const std::shared_ptr<minifi::Connection>& connection) const;
+
   const YAML::Node& connectionNode_;
   const std::string& name_;
   gsl::not_null<core::ProcessGroup*> parent_;

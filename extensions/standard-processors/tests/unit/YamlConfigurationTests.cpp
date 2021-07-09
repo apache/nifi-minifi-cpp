@@ -774,3 +774,92 @@ TEST_CASE("Test Regex Property 2", "[YamlConfigurationRegexProperty2]") {
 }
 
 #endif  // YAML_CONFIGURATION_USE_REGEX
+
+TEST_CASE("Test YAML Config With Funnel", "[YamlConfiguration]") {
+  TestController test_controller;
+
+  std::shared_ptr<core::Repository> testProvRepo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> testFlowFileRepo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+
+  static const std::string CONFIG_YAML_WITH_FUNNEL = ""
+      "MiNiFi Config Version: 3\n"
+      "Flow Controller:\n"
+      "  name: root\n"
+      "  comment: ''\n"
+      "Processors:\n"
+      "- id: 0eac51eb-d76c-4ba6-9f0c-351795b2d243\n"
+      "  name: GenerateFlowFile1\n"
+      "  class: org.apache.nifi.minifi.processors.GenerateFlowFile\n"
+      "  max concurrent tasks: 1\n"
+      "  scheduling strategy: TIMER_DRIVEN\n"
+      "  scheduling period: 10000 ms\n"
+      "  Properties:\n"
+      "    Batch Size: '1'\n"
+      "    Custom Text: custom1\n"
+      "    Data Format: Binary\n"
+      "    File Size: 1 kB\n"
+      "    Unique FlowFiles: 'true'\n"
+      "- id: 5ec49d9b-673d-4c6f-9108-ab4acce0c1dc\n"
+      "  name: GenerateFlowFile2\n"
+      "  class: org.apache.nifi.minifi.processors.GenerateFlowFile\n"
+      "  max concurrent tasks: 1\n"
+      "  scheduling strategy: TIMER_DRIVEN\n"
+      "  scheduling period: 10000 ms\n"
+      "  Properties:\n"
+      "    Batch Size: '1'\n"
+      "    Custom Text: other2\n"
+      "    Data Format: Binary\n"
+      "    File Size: 1 kB\n"
+      "    Unique FlowFiles: 'true'\n"
+      "- id: 695658ba-5b6e-4c7d-9c95-5a980b622c1f\n"
+      "  name: LogAttribute\n"
+      "  class: org.apache.nifi.minifi.processors.LogAttribute\n"
+      "  max concurrent tasks: 1\n"
+      "  scheduling strategy: EVENT_DRIVEN\n"
+      "  auto-terminated relationships list:\n"
+      "  - success\n"
+      "  Properties:\n"
+      "    FlowFiles To Log: '0'\n"
+      "Funnels:\n"
+      "- id: 01a2f910-7050-41c1-8528-942764e7591d\n"
+      "Connections:\n"
+      "- id: 97c6bdfb-3909-499f-9ae5-011cbe8cadaf\n"
+      "  name: 01a2f910-7050-41c1-8528-942764e7591d//LogAttribute\n"
+      "  source id: 01a2f910-7050-41c1-8528-942764e7591d\n"
+      "  destination id: 695658ba-5b6e-4c7d-9c95-5a980b622c1f\n"
+      "- id: 353e6bd5-5fca-494f-ae99-02572352c47a\n"
+      "  name: GenerateFlowFile2/success/01a2f910-7050-41c1-8528-942764e7591d\n"
+      "  source id: 5ec49d9b-673d-4c6f-9108-ab4acce0c1dc\n"
+      "  source relationship names:\n"
+      "  - success\n"
+      "  destination id: 01a2f910-7050-41c1-8528-942764e7591d\n"
+      "- id: 9c02c302-eb4f-4aac-98ed-0f6720a4ff1b\n"
+      "  name: GenerateFlowFile1/success/01a2f910-7050-41c1-8528-942764e7591d\n"
+      "  source id: 0eac51eb-d76c-4ba6-9f0c-351795b2d243\n"
+      "  source relationship names:\n"
+      "  - success\n"
+      "  destination id: 01a2f910-7050-41c1-8528-942764e7591d\n"
+      "Remote Process Groups: []\n";
+
+  std::istringstream configYamlStream(CONFIG_YAML_WITH_FUNNEL);
+  std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);
+
+  REQUIRE(rootFlowConfig);
+  REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile1"));
+  REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile2"));
+  REQUIRE(rootFlowConfig->findProcessorById(utils::Identifier::parse("01a2f910-7050-41c1-8528-942764e7591d").value()));
+
+  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
+  rootFlowConfig->getConnections(connectionMap);
+  REQUIRE(6 == connectionMap.size());
+  for (auto it : connectionMap) {
+    REQUIRE(it.second);
+    REQUIRE(!it.second->getUUIDStr().empty());
+    REQUIRE(it.second->getDestination());
+    REQUIRE(it.second->getSource());
+  }
+}

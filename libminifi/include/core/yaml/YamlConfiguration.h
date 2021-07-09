@@ -48,6 +48,7 @@ namespace core {
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY "Remote Processing Groups"
 #define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 "Remote Process Groups"
 #define CONFIG_YAML_PROVENANCE_REPORT_KEY "Provenance Reporting"
+#define CONFIG_YAML_FUNNELS_KEY "Funnels"
 
 #define YAML_CONFIGURATION_USE_REGEX
 
@@ -247,6 +248,17 @@ class YamlConfiguration : public FlowConfiguration {
    * @param processor      the Processor to which to add the resulting properties
    */
   void parsePropertiesNodeYaml(const YAML::Node& propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string& component_name, const std::string& yaml_section);
+
+  /**
+   * Parses the Funnels section of a configuration YAML.
+   * The resulting Funnels are added to the parent ProcessGroup.
+   *
+   * @param node   the YAML::Node containing the Funnels section
+   *                 of the configuration YAML
+   * @param parent the root node of flow configuration to which
+   *                 to add the funnels that are parsed
+   */
+  void parseFunnelsYaml(const YAML::Node& node, core::ProcessGroup* parent);
 
   /**
    * A helper function for parsing or generating optional id fields.
