@@ -87,11 +87,9 @@ TEST_CASE("PDHCounterArraysAddingToQueryTests", "[pdhcounterarraysaddingtoqueryt
   PdhOpenQueryA(nullptr, 0, &pdh_query);
   auto cleanup = gsl::finally([&pdh_query] { PdhCloseQuery(pdh_query); });
 
-  PDH_HQUERY unopened_pdh_query;
 
   TestablePDHCounterArray valid_counter("\\Processor(*)\\% Processor Time");
   REQUIRE(ERROR_SUCCESS == valid_counter.addToQuery(pdh_query));
-  REQUIRE_FALSE(ERROR_SUCCESS == valid_counter.addToQuery(unopened_pdh_query));
 
   TestablePDHCounterArray counter_with_invalid_object_name("\\SomethingInvalid(*)\\% Processor Time");
   REQUIRE(PDH_CSTATUS_NO_OBJECT == counter_with_invalid_object_name.addToQuery(pdh_query));
