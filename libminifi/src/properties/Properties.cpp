@@ -88,6 +88,7 @@ void Properties::loadConfigureFile(const char *fileName) {
   for (const auto& line : PropertiesFile{file}) {
     properties_[line.getKey()] = {utils::StringUtils::replaceEnvironmentVariables(line.getValue()), false};
   }
+  checksum_calculator_.setFileLocation(properties_file_);
   dirty_ = false;
 }
 
@@ -125,8 +126,9 @@ bool Properties::persistProperties() {
   }
 
   const std::string backup = properties_file_ + ".bak";
-  if (!utils::file::FileUtils::copy_file(properties_file_, backup) && !utils::file::FileUtils::copy_file(new_file, properties_file_)) {
+  if (utils::file::FileUtils::copy_file(properties_file_, backup) == 0 && utils::file::FileUtils::copy_file(new_file, properties_file_) == 0) {
     logger_->log_info("Persisted %s", properties_file_);
+    checksum_calculator_.invalidateChecksum();
     dirty_ = false;
     return true;
   }

@@ -40,6 +40,7 @@
 #include "io/StreamFactory.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
+#include "utils/ChecksumCalculator.h"
 #include "utils/OptionalUtils.h"
 
 namespace org {
@@ -92,6 +93,7 @@ class FlowConfiguration : public CoreComponent {
         logger_->log_error("Couldn't find config file \"%s\".", *path);
         config_path_ = path;
       }
+      checksum_calculator_.setFileLocation(*config_path_);
     }
 
     // it is okay if this has already been called
@@ -162,6 +164,8 @@ class FlowConfiguration : public CoreComponent {
     }
   }
 
+  utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
+
  protected:
   void registerResource(const std::string &resource_function) {
     core::ClassLoader::getDefaultClassLoader().registerResource("", resource_function);
@@ -185,8 +189,8 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<state::response::FlowVersion> flow_version_;
-
   std::shared_ptr<utils::file::FileSystem> filesystem_;
+  utils::ChecksumCalculator checksum_calculator_;
 
  private:
   std::shared_ptr<logging::Logger> logger_;
