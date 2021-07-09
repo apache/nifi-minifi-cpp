@@ -69,11 +69,8 @@ TEST_CASE("PDHCountersAddingToQueryTests", "[pdhcountersaddingtoquerytests]") {
   PdhOpenQueryA(nullptr, 0, &pdh_query);
   auto cleanup = gsl::finally([&pdh_query] { PdhCloseQuery(pdh_query); });
 
-  PDH_HQUERY unopened_pdh_query;
-
   TestablePDHCounter valid_counter("\\System\\Threads");
   REQUIRE(ERROR_SUCCESS == valid_counter.addToQuery(pdh_query));
-  REQUIRE_FALSE(ERROR_SUCCESS == valid_counter.addToQuery(unopened_pdh_query));
 
   TestablePDHCounter counter_with_invalid_object_name("\\Invalid\\Threads");
   REQUIRE(PDH_CSTATUS_NO_OBJECT == counter_with_invalid_object_name.addToQuery(pdh_query));
