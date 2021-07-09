@@ -32,8 +32,8 @@ namespace {
 int main(int argc, char* argv[]) {
   Catch::Session session;
 
-  auto cli = session.cli() |
-      Catch::clara::Opt{config_yaml, "config-yaml"}
+  auto cli = session.cli()
+      | Catch::clara::Opt{config_yaml, "config-yaml"}
           ["--config-yaml"]
           ("path to the config.yaml containing the UnorderedMapKeyValueStoreServiceTest controller service configuration");
   session.cli(cli);
