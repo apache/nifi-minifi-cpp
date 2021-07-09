@@ -38,6 +38,7 @@ namespace utils {
 void ChecksumCalculator::setFileLocation(const std::string& file_location) {
   file_location_ = file_location;
   file_name_ = utils::file::get_child_path(file_location);
+  invalidateChecksum();
 }
 
 std::string ChecksumCalculator::getFileName() const {

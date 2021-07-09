@@ -69,6 +69,20 @@ TEST_CASE("The checksum can be reset and recomputed", "[ChecksumCalculator]") {
   REQUIRE(checksum_calculator.getChecksum() == CHECKSUM_FOR_TWO_LINES_OF_TEXT);  // now it is updated
 }
 
+TEST_CASE("If the file location is updated, the checksum will be recomputed", "[ChecksumCalculator]") {
+  TestController test_controller;
+  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
+
+  utils::ChecksumCalculator checksum_calculator;
+  checksum_calculator.setFileLocation(file_location);
+  REQUIRE(checksum_calculator.getChecksum() == CHECKSUM_FOR_ONE_LINE_OF_TEXT);
+
+  std::string other_file_location = utils::putFileToDir(test_dir, "long.txt", "one line of text\nanother line of text\n");
+  checksum_calculator.setFileLocation(other_file_location);
+  REQUIRE(checksum_calculator.getChecksum() == CHECKSUM_FOR_TWO_LINES_OF_TEXT);
+}
+
 TEST_CASE("Checksums can be computed for binary (eg. encrypted) files, too", "[ChecksumCalculator]") {
   TestController test_controller;
   std::string test_dir = utils::createTempDir(&test_controller);
