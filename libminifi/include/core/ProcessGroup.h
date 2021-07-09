@@ -29,6 +29,7 @@
 #include <set>
 
 #include "Processor.h"
+#include "Funnel.h"
 #include "Exception.h"
 #include "TimerDrivenSchedulingAgent.h"
 #include "EventDrivenSchedulingAgent.h"

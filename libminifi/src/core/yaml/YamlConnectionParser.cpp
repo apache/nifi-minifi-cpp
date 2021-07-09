@@ -29,24 +29,48 @@ namespace yaml {
 // This is no longer needed in c++17
 constexpr const char* YamlConnectionParser::CONFIG_YAML_CONNECTIONS_KEY;
 
+void YamlConnectionParser::addNewRelationshipToConnection(const std::string& relationship_name, const std::shared_ptr<minifi::Connection>& connection) const {
+  core::Relationship relationship(relationship_name, "");
+  logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
+  connection->addRelationship(std::move(relationship));
+}
+
+void YamlConnectionParser::addFunnelRelationshipToConnection(const std::shared_ptr<minifi::Connection>& connection) const {
+  utils::Identifier srcUUID;
+  try {
+    srcUUID = getSourceUUIDFromYaml();
+  } catch(const std::exception&) {
+    return;
+  }
+  auto processor = parent_->findProcessorById(srcUUID);
+  if (!processor) {
+    logger_->log_error("Could not find processor with id %s", srcUUID.to_string());
+    return;
+  }
+
+  auto& processor_ref = *processor.get();
+  if (typeid(minifi::core::Funnel) == typeid(processor_ref)) {
+    addNewRelationshipToConnection(minifi::core::Funnel::Success.getName(), connection);
+  }
+}
+
 void YamlConnectionParser::configureConnectionSourceRelationshipsFromYaml(const std::shared_ptr<minifi::Connection>& connection) const {
-  auto addNewRelationshipToConnection = [&] (const std::string& relationship_name) {
-    core::Relationship relationship(relationship_name, "");
-    logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
-    connection->addRelationship(std::move(relationship));
-  };
   // Configure connection source
-  if (connectionNode_.as<YAML::Node>()["source relationship name"]) {
-    addNewRelationshipToConnection(connectionNode_["source relationship name"].as<std::string>());
+  if (connectionNode_.as<YAML::Node>()["source relationship name"] && !connectionNode_["source relationship name"].as<std::string>().empty()) {
+    addNewRelationshipToConnection(connectionNode_["source relationship name"].as<std::string>(), connection);
   } else if (connectionNode_.as<YAML::Node>()["source relationship names"]) {
     auto relList = connectionNode_["source relationship names"];
-      if (relList.IsSequence()) {
-        for (const auto &rel : relList) {
-          addNewRelationshipToConnection(rel.as<std::string>());
-        }
-      } else {
-        addNewRelationshipToConnection(relList.as<std::string>());
+    if (relList.IsSequence() && relList.begin() != relList.end()) {
+      for (const auto &rel : relList) {
+        addNewRelationshipToConnection(rel.as<std::string>(), connection);
       }
+    } else if (!relList.IsSequence() && !relList.as<std::string>().empty()) {
+      addNewRelationshipToConnection(relList.as<std::string>(), connection);
+    } else {
+      addFunnelRelationshipToConnection(connection);
+    }
+  } else {
+    addFunnelRelationshipToConnection(connection);
   }
 }
 
