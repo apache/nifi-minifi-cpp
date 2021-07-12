@@ -31,7 +31,7 @@
 #endif
 
 #if defined(WIN32) && defined(GetObject)
-#undef GetObject
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 #endif
 
 namespace org {

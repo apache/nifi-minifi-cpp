@@ -22,11 +22,6 @@
 #include "HeartbeatReporter.h"
 #include "C2Payload.h"
 
-#ifdef RAPIDJSON_ASSERT
-#undef RAPIDJSON_ASSERT
-#endif
-#define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
-
 #include "rapidjson/document.h"
 
 namespace org {
