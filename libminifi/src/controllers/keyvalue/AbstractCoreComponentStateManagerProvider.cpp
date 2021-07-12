@@ -24,6 +24,10 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
+#ifdef GetObject
+#undef GetObject
+#endif /* GetObject -> GetObject[AW] on windows */
+
 namespace org {
 namespace apache {
 namespace nifi {

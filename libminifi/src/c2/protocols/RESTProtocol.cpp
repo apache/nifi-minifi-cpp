@@ -34,6 +34,10 @@
 #include "core/TypedValues.h"
 #include "utils/gsl.h"
 
+#ifdef GetObject
+#undef GetObject
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
