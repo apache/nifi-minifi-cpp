@@ -28,6 +28,9 @@ Processors:
   id: 8a534b4a-2b4a-4e1e-ab07-8a09fa08f848
   class: org.apache.nifi.processors.standard.PublishKafka
   scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+  - failure
   Properties:
     Batch Size: '10'
     Client Name: test-client

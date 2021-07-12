@@ -27,10 +27,10 @@ Processors:
 - name: Publish messages to Kafka topic test
   id: 8c0791c7-920c-4541-bcde-f5d559f42ed2
   class: org.apache.nifi.processors.standard.PublishKafka
-  scheduling period: 1 sec
   scheduling strategy: EVENT_DRIVEN
   auto-terminated relationships list:
   - success
+  - failure
   Properties:
     Batch Size: 10
     Client Name: test_client

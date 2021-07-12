@@ -22,7 +22,7 @@ Processors:
   class: org.apache.nifi.minifi.extensions.systemd.ConsumeJournald
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 5 sec
-- name: Log attributes to info level
+- name: Log messages to info level
   id: f7281113-9576-4680-9a87-a8e961101b5c
   class: org.apache.nifi.minifi.processors.LogAttribute
   scheduling strategy: EVENT_DRIVEN
@@ -36,7 +36,6 @@ Processors:
 Connections:
 - name: ConsumeJournald/success/LogAttribute
   id: f57713d9-fa0b-4416-948d-4b316b1a1c0d
-  source name: ConsumeJournald
   source id: 66fbb65d-8b11-43a9-aaad-746a07d2fe35
   source relationship name: success
   destination id: f7281113-9576-4680-9a87-a8e961101b5c

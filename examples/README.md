@@ -38,7 +38,7 @@ The following examples show simple flow configurations for several common use ca
 - [SQL Operations](#sql-operations)
   - [Query Database Table](#query-database-table)
 - [System Log Operations](#system-log-operations)
-  - [Consume Journal Logs](#consume-journal-logs)
+  - [Consume Systemd-Journald System Journal Messages](#consume-systemd-journald-system-journal-messages)
 
 ## Filesystem Operations
 
@@ -64,9 +64,9 @@ The flow: ConsumeWindowsEventLog &#10132; PutFile
 
 ## Linux Specific Processors
 
-### Consume Journal Messages
+### Consume Systemd-Journald System Journal Messages
 
-Using the [consumejournald_config.yml](consumejournald_config.yml) flow configuration MiNiFi reads incoming journal messages and logs the attributes on `info` level.
+Using the [consumejournald_config.yml](consumejournald_config.yml) flow configuration MiNiFi reads systemd-journald journal messages and logs them on `info` level.
 
 The flow: ConsumeJournald &#10132; LogAttribute
 

@@ -22,6 +22,8 @@ Processors:
   class: org.apache.nifi.processors.standard.ConsumeKafka
   scheduling strategy: TIMER_DRIVEN
   scheduling period: 1 sec
+  auto-terminated relationships list:
+  - failure
   Properties:
     Group ID: test_group
     Honor Transactions: 'true'
