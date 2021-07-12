@@ -32,7 +32,6 @@ Processors:
   auto-terminated relationships list:
   - success
   - response
-  - retry
   - no retry
   Properties:
     HTTP Method: POST
@@ -45,6 +44,11 @@ Connections:
 - name: InvokeHTTP/failure/InvokeHTTP
   source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
   source relationship name: failure
+  destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+- name: InvokeHTTP/retry/InvokeHTTP
+  id: c8a96f1d-48cd-4ee3-8a2f-081c3e3c7bcd
+  source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+  source relationship names: retry
   destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
 Controller Services: []
 Remote Processing Groups: []
