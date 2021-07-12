@@ -276,7 +276,7 @@ target_include_directories(concurrentqueue SYSTEM INTERFACE "${CMAKE_CURRENT_SOU
 
 # RapidJSON
 add_library(RapidJSON INTERFACE)
-target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-1.1.0/include")
+target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-48fbd8cd202ca54031fe799db2ad44ffa8e77c13/include")
 
 # Cron
 add_library(cron INTERFACE)
