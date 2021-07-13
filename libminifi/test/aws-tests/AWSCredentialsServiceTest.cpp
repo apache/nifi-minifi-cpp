@@ -101,4 +101,4 @@ TEST_CASE_METHOD(AWSCredentialsServiceTestAccessor, "Test credentials from defau
   REQUIRE_FALSE(aws_credentials_impl->getAWSCredentials()->IsExpired());
 }
 
-}
+}  // namespace
