@@ -38,9 +38,6 @@
 #include "coap2/address.h"
 #include "protocols/RESTSender.h"
 
-#undef RAPIDJSON_ASSERT
-#define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
-
 namespace org {
 namespace apache {
 namespace nifi {

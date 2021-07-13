@@ -31,9 +31,6 @@ namespace nifi {
 namespace minifi {
 namespace c2 {
 
-#undef RAPIDJSON_ASSERT
-#define RAPIDJSON_ASSERT(x) if(!(x)) throw std::logic_error("rapidjson exception"); //NOLINT
-
 /**
  * Purpose and Justification: Encapsulates the restful protocol that is built upon C2Protocol.
  *
