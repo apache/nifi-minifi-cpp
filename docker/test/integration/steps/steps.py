@@ -1,6 +1,7 @@
 from minifi.core.FileSystemObserver import FileSystemObserver
 from minifi.core.RemoteProcessGroup import RemoteProcessGroup
 from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback
+from minifi.core.Funnel import Funnel
 
 from minifi.processors.ConsumeKafka import ConsumeKafka
 from minifi.processors.DeleteS3Object import DeleteS3Object
@@ -35,26 +36,39 @@ def step_impl(context, directory):
 
 
 # MiNiFi cluster setups
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{cluster_name}\" flow")
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow")
-def step_impl(context, processor_type, property, property_value, cluster_name):
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{cluster_name}\" flow")
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow")
+def step_impl(context, processor_type, property, property_value, cluster_name, processor_name):
     logging.info("Acquiring " + cluster_name)
     cluster = context.test.acquire_cluster(cluster_name)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
-    processor.set_name(processor_type)
+    processor.set_name(processor_name)
     if property:
         processor.set_property(property, property_value)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
-    if cluster.get_flow() is None:
+    if not cluster.get_start_nodes():
         cluster.set_name(cluster_name)
-        cluster.set_flow(processor)
+        cluster.add_start_node(processor)
+
+
+@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{cluster_name}\" flow")
+@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow")
+def step_impl(context, processor_type, property, property_value, cluster_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, cluster_name=cluster_name, processor_name=processor_type))
 
 
 @given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\"")
 def step_impl(context, processor_type, property, property_value):
     context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
                           format(processor_type=processor_type, property=property, property_value=property_value, cluster_name="primary_cluster"))
+
+
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\"")
+def step_impl(context, processor_type, property, property_value, processor_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{cluster_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, cluster_name="primary_cluster", processor_name=processor_name))
 
 
 @given("a {processor_type} processor in the \"{cluster_name}\" flow")
@@ -79,8 +93,8 @@ def step_impl(context, cluster_name):
         processor.set_uuid(row["uuid"])
         context.test.add_node(processor)
         # Assume that the first node declared is primary unless specified otherwise
-        if cluster.get_flow() is None:
-            cluster.set_flow(processor)
+        if not cluster.get_start_nodes():
+            cluster.add_start_node(processor)
 
 
 @given("a set of processors")
@@ -152,9 +166,9 @@ def step_impl(context, cluster_name):
     logging.info("Acquiring " + cluster_name)
     cluster = context.test.acquire_cluster(cluster_name)
     # Assume that the first node declared is primary unless specified otherwise
-    if cluster.get_flow() is None:
+    if not cluster.get_start_nodes():
         cluster.set_name(cluster_name)
-        cluster.set_flow(consume_kafka)
+        cluster.add_start_node(consume_kafka)
 
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to \"{property_value}\"")
@@ -250,6 +264,27 @@ def step_impl(context, file_name, content, path):
     context.test.add_test_data(path, content, file_name)
 
 
+@given("a Funnel with the name \"{funnel_name}\" is set up in the flow")
+def step_impl(context, funnel_name):
+    funnel = Funnel()
+    funnel.set_name(funnel_name)
+    context.test.add_node(funnel)
+
+
+@given("in the flow the Funnel with the name \"{source_name}\" is connected to the {destination_name}")
+def step_impl(context, source_name, destination_name):
+    source = context.test.get_or_create_node_by_name(source_name)
+    destination = context.test.get_or_create_node_by_name(destination_name)
+    source.out_proc.connect({'success': destination})
+
+
+@given("\"{processor_name}\" processor is a start node")
+def step_impl(context, processor_name):
+    cluster = context.test.acquire_cluster("primary_cluster")
+    processor = context.test.get_or_create_node_by_name(processor_name)
+    cluster.add_start_node(processor)
+
+
 # NiFi setups
 @given("a NiFi flow \"{cluster_name}\" receiving data from a RemoteProcessGroup \"{source_name}\" on port {port}")
 def step_impl(context, cluster_name, source_name, port):
@@ -260,8 +295,8 @@ def step_impl(context, cluster_name, source_name, port):
     cluster.set_name('nifi')
     cluster.set_engine('nifi')
     # Assume that the first node declared is primary unless specified otherwise
-    if cluster.get_flow() is None:
-        cluster.set_flow(source)
+    if not cluster.get_start_nodes():
+        cluster.add_start_node(source)
 
 
 @given("in the \"{cluster_name}\" flow the \"{relationship}\" relationship of the {source_name} processor is connected to the {destination_name}")
@@ -270,8 +305,8 @@ def step_impl(context, cluster_name, relationship, source_name, destination_name
     source = context.test.get_or_create_node_by_name(source_name)
     destination = context.test.get_or_create_node_by_name(destination_name)
     source.out_proc.connect({relationship: destination})
-    if cluster.get_flow() is None:
-        cluster.set_flow(source)
+    if not cluster.get_start_nodes():
+        cluster.add_start_node(source)
 
 
 # HTTP proxy setup
@@ -281,7 +316,6 @@ def step_impl(context, cluster_name):
     cluster = context.test.acquire_cluster(cluster_name)
     cluster.set_name(cluster_name)
     cluster.set_engine("http-proxy")
-    cluster.set_flow(None)
 
 
 # TLS
@@ -307,7 +341,6 @@ def step_impl(context, cluster_name):
     cluster = context.test.acquire_cluster(cluster_name)
     cluster.set_name(cluster_name)
     cluster.set_engine("kafka-broker")
-    cluster.set_flow(None)
 
 
 # s3 setup
@@ -317,7 +350,6 @@ def step_impl(context, cluster_name):
     cluster = context.test.acquire_cluster(cluster_name)
     cluster.set_name(cluster_name)
     cluster.set_engine("s3-server")
-    cluster.set_flow(None)
 
 
 # azure storage setup
@@ -326,7 +358,6 @@ def step_impl(context, cluster_name):
     cluster = context.test.acquire_cluster(cluster_name)
     cluster.set_name(cluster_name)
     cluster.set_engine("azure-storage-server")
-    cluster.set_flow(None)
 
 
 @given("the kafka broker \"{cluster_name}\" is started")

@@ -24,7 +24,7 @@ class SingleNodeDockerCluster(Cluster):
         self.minifi_version = os.environ['MINIFI_VERSION']
         self.nifi_version = '1.7.0'
         self.engine = 'minifi-cpp'
-        self.flow = None
+        self.start_nodes = []
         self.name = None
         self.vols = {}
         self.minifi_root = '/opt/minifi/nifi-minifi-cpp-' + self.minifi_version
@@ -66,11 +66,11 @@ class SingleNodeDockerCluster(Cluster):
     def get_engine(self):
         return self.engine
 
-    def get_flow(self):
-        return self.flow
+    def get_start_nodes(self):
+        return self.start_nodes
 
-    def set_flow(self, flow):
-        self.flow = flow
+    def add_start_node(self, node):
+        self.start_nodes.append(node)
 
     def set_directory_bindings(self, bindings):
         self.vols = bindings
@@ -158,7 +158,7 @@ class SingleNodeDockerCluster(Cluster):
                            minifi_root=self.minifi_root))
 
         serializer = Minifi_flow_yaml_serializer()
-        test_flow_yaml = serializer.serialize(self.flow)
+        test_flow_yaml = serializer.serialize(self.start_nodes)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
 
         conf_file_buffer = BytesIO()
@@ -205,7 +205,7 @@ class SingleNodeDockerCluster(Cluster):
                            nifi_root=self.nifi_root))
 
         serializer = Nifi_flow_xml_serializer()
-        test_flow_xml = serializer.serialize(self.flow, self.nifi_version)
+        test_flow_xml = serializer.serialize(self.start_nodes, self.nifi_version)
         logging.info('Using generated flow config xml:\n%s', test_flow_xml)
 
         conf_file_buffer = BytesIO()

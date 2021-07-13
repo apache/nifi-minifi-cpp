@@ -3,10 +3,20 @@ import yaml
 
 from ..core.Processor import Processor
 from ..core.InputPort import InputPort
+from ..core.Funnel import Funnel
 
 
 class Minifi_flow_yaml_serializer:
-    def serialize(self, connectable, root=None, visited=None):
+    def serialize(self, start_nodes):
+        res = None
+        visited = None
+
+        for node in start_nodes:
+            res, visited = self._serialize(node, res, visited)
+
+        return yaml.dump(res, default_flow_style=False)
+
+    def _serialize(self, connectable, root=None, visited=None):
         if visited is None:
             visited = []
 
@@ -16,6 +26,7 @@ class Minifi_flow_yaml_serializer:
                     'name': 'MiNiFi Flow'
                 },
                 'Processors': [],
+                'Funnels': [],
                 'Connections': [],
                 'Remote Processing Groups': [],
                 'Controller Services': []
@@ -84,6 +95,11 @@ class Minifi_flow_yaml_serializer:
                     'Properties': svc.properties
                 })
 
+        if isinstance(connectable, Funnel):
+            res['Funnels'].append({
+                'id': str(connectable.uuid)
+            })
+
         for conn_name in connectable.connections:
             conn_procs = connectable.connections[conn_name]
 
@@ -92,21 +108,22 @@ class Minifi_flow_yaml_serializer:
                     res['Connections'].append({
                         'name': str(uuid.uuid4()),
                         'source id': str(connectable.uuid),
-                        'source relationship name': conn_name,
                         'destination id': str(proc.uuid),
                         'drop empty': ("true" if proc.drop_empty_flowfiles else "false")
                     })
+                    if (str(connectable.uuid) not in [x['id'] for x in res['Funnels']]):
+                        res['Connections'][-1]['source relationship name'] = conn_name
                     if proc not in visited:
-                        self.serialize(proc, res, visited)
+                        self._serialize(proc, res, visited)
             else:
                 res['Connections'].append({
                     'name': str(uuid.uuid4()),
                     'source id': str(connectable.uuid),
-                    'source relationship name': conn_name,
                     'destination id': str(conn_procs.uuid)
                 })
+                if (str(connectable.uuid) not in [x['id'] for x in res['Funnels']]):
+                    res['Connections'][-1]['source relationship name'] = conn_name
                 if conn_procs not in visited:
-                    self.serialize(conn_procs, res, visited)
+                    self._serialize(conn_procs, res, visited)
 
-        if root is None:
-            return yaml.dump(res, default_flow_style=False)
+        return (res, visited)
