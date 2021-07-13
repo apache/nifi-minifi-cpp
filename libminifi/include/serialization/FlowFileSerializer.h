@@ -42,11 +42,11 @@ class InputStreamCallback;
 
 class FlowFileSerializer {
  public:
-  using FlowFileReader = std::function<int(const std::shared_ptr<core::FlowFile>&, InputStreamCallback*)>;
+  using FlowFileReader = std::function<int64_t(const std::shared_ptr<core::FlowFile>&, InputStreamCallback*)>;
 
   explicit FlowFileSerializer(FlowFileReader reader) : reader_(std::move(reader)) {}
 
-  virtual int serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) = 0;
+  virtual int64_t serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) = 0;
 
   virtual ~FlowFileSerializer() = default;
 

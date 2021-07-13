@@ -61,7 +61,7 @@ size_t FlowFileV3Serializer::writeString(const std::string &str, const std::shar
   return sum;
 }
 
-int FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
+int64_t FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
   size_t sum = 0;
   {
     const auto ret = out->write(MAGIC_HEADER, sizeof(MAGIC_HEADER));
@@ -98,7 +98,7 @@ int FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& flowF
     if (ret < 0) return -1;
     sum += gsl::narrow<size_t>(ret);
   }
-  return gsl::narrow<int>(sum);
+  return gsl::narrow<int64_t>(sum);
 }
 
 } /* namespace minifi */

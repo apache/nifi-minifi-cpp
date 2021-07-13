@@ -77,11 +77,13 @@ class BinaryConcatenationMerge : public MergeBin {
         std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer) :
       header_(header), footer_(footer), demarcator_(demarcator), flows_(flows), serializer_(serializer) {
     }
+
     std::string &header_;
     std::string &footer_;
     std::string &demarcator_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     FlowFileSerializer& serializer_;
+
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       size_t write_size_sum = 0;
       if (!header_.empty()) {
@@ -98,7 +100,7 @@ class BinaryConcatenationMerge : public MergeBin {
             return -1;
           write_size_sum += write_ret;
         }
-        int len = serializer_.serialize(flow, stream);
+        const auto len = serializer_.serialize(flow, stream);
         if (len < 0)
           return len;
         write_size_sum += gsl::narrow<size_t>(len);
@@ -231,7 +233,7 @@ class ArchiveMerge {
             }
           }
         }
-        int ret = serializer_.serialize(flow, std::make_shared<ArchiveWriter>(arch, entry));
+        const auto ret = serializer_.serialize(flow, std::make_shared<ArchiveWriter>(arch, entry));
         if (ret < 0) {
           return ret;
         }
