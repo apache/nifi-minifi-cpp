@@ -46,6 +46,10 @@
 #include "core/Relationship.h"
 #include "utils/HTTPClient.h"
 
+#ifdef GetObject
+#undef GetObject
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {

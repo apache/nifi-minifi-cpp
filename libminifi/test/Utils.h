@@ -20,6 +20,10 @@
 #include <utility>
 #include "rapidjson/document.h"
 
+#ifdef GetObject
+#undef GetObject
+#endif
+
 #define FIELD_ACCESSOR(field) \
   template<typename T> \
   static auto get_##field(T&& instance) -> decltype((std::forward<T>(instance).field)) { \
