@@ -17,6 +17,9 @@
  */
 #pragma once
 
+#include <string>
+#include <memory>
+
 #include "Processor.h"
 
 namespace org {
