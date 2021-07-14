@@ -826,9 +826,7 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
 
   for (YAML::const_iterator iter = node.begin(); iter != node.end(); ++iter) {
     YAML::Node funnel_node = iter->as<YAML::Node>();
-    std::shared_ptr<core::Processor> funnel = nullptr;
 
-    // Configure basic connection
     std::string id = getOrGenerateId(funnel_node);
 
     // Default name to be same as ID
@@ -840,7 +838,7 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");
     }
 
-    funnel = createFunnel(name, uuid.value());
+    std::shared_ptr<core::Processor> funnel = std::make_shared<core::Funnel>(name, uuid.value());
     logger_->log_debug("Created funnel with UUID %s and name %s", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);

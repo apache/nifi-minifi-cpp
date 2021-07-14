@@ -119,8 +119,6 @@ class FlowConfiguration : public CoreComponent {
   // Create Provenance Report Task
   std::shared_ptr<core::Processor> createProvenanceReportTask(void);
 
-  std::shared_ptr<core::Processor> createFunnel(const std::string& name, const utils::Identifier& uuid) const;
-
   std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
     return flow_version_;
   }

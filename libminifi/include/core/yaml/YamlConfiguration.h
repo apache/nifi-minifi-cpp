@@ -42,13 +42,13 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-#define CONFIG_YAML_FLOW_CONTROLLER_KEY "Flow Controller"
-#define CONFIG_YAML_PROCESSORS_KEY "Processors"
-#define CONFIG_YAML_CONTROLLER_SERVICES_KEY "Controller Services"
-#define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY "Remote Processing Groups"
-#define CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 "Remote Process Groups"
-#define CONFIG_YAML_PROVENANCE_REPORT_KEY "Provenance Reporting"
-#define CONFIG_YAML_FUNNELS_KEY "Funnels"
+static constexpr char const* CONFIG_YAML_FLOW_CONTROLLER_KEY = "Flow Controller";
+static constexpr char const* CONFIG_YAML_PROCESSORS_KEY = "Processors";
+static constexpr char const* CONFIG_YAML_CONTROLLER_SERVICES_KEY = "Controller Services";
+static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY = "Remote Processing Groups";
+static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 = "Remote Process Groups";
+static constexpr char const* CONFIG_YAML_PROVENANCE_REPORT_KEY = "Provenance Reporting";
+static constexpr char const* CONFIG_YAML_FUNNELS_KEY = "Funnels";
 
 #define YAML_CONFIGURATION_USE_REGEX
 

@@ -1,5 +1,5 @@
 Feature: Core flow functionalities
-  Test core flow configurations functionalities
+  Test core flow configuration functionalities
 
   Background:
     Given the content of "/tmp/output" is monitored

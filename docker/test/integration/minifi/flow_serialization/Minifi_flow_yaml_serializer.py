@@ -12,11 +12,11 @@ class Minifi_flow_yaml_serializer:
         visited = None
 
         for node in start_nodes:
-            res, visited = self._serialize(node, res, visited)
+            res, visited = self.serialize_node(node, res, visited)
 
         return yaml.dump(res, default_flow_style=False)
 
-    def _serialize(self, connectable, root=None, visited=None):
+    def serialize_node(self, connectable, root=None, visited=None):
         if visited is None:
             visited = []
 
@@ -114,7 +114,7 @@ class Minifi_flow_yaml_serializer:
                     if (str(connectable.uuid) not in [x['id'] for x in res['Funnels']]):
                         res['Connections'][-1]['source relationship name'] = conn_name
                     if proc not in visited:
-                        self._serialize(proc, res, visited)
+                        self.serialize_node(proc, res, visited)
             else:
                 res['Connections'].append({
                     'name': str(uuid.uuid4()),
@@ -124,6 +124,6 @@ class Minifi_flow_yaml_serializer:
                 if (str(connectable.uuid) not in [x['id'] for x in res['Funnels']]):
                     res['Connections'][-1]['source relationship name'] = conn_name
                 if conn_procs not in visited:
-                    self._serialize(conn_procs, res, visited)
+                    self.serialize_node(conn_procs, res, visited)
 
         return (res, visited)

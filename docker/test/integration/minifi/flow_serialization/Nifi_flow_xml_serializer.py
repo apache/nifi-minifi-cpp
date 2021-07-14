@@ -13,11 +13,11 @@ class Nifi_flow_xml_serializer:
         visited = None
 
         for node in start_nodes:
-            res, visited = self._serialize(node, nifi_version, res, visited)
+            res, visited = self.serialize_node(node, nifi_version, res, visited)
 
         return ('<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + "\n" + elementTree.tostring(res, encoding='utf-8').decode('utf-8'))
 
-    def _serialize(self, connectable, nifi_version=None, root=None, visited=None):
+    def serialize_node(self, connectable, nifi_version=None, root=None, visited=None):
         if visited is None:
             visited = []
 
@@ -244,7 +244,7 @@ class Nifi_flow_xml_serializer:
                     """ res.iterfind('rootGroup').next().append(connection) """
 
                     if conn_destination not in visited:
-                        self._serialize(conn_destination, nifi_version, res, visited)
+                        self.serialize_node(conn_destination, nifi_version, res, visited)
             else:
                 connection = self.build_nifi_flow_xml_connection_element(
                     res,
@@ -258,7 +258,7 @@ class Nifi_flow_xml_serializer:
                 """ res.iterfind('rootGroup').next().append(connection) """
 
                 if conn_destinations not in visited:
-                    self._serialize(conn_destinations, nifi_version, res, visited)
+                    self.serialize_node(conn_destinations, nifi_version, res, visited)
 
         return (res, visited)
 
