@@ -35,7 +35,7 @@ void YamlConnectionParser::addNewRelationshipToConnection(const std::string& rel
   connection->addRelationship(std::move(relationship));
 }
 
-void YamlConnectionParser::addFunnelConnection(const std::shared_ptr<minifi::Connection>& connection) const {
+void YamlConnectionParser::addFunnelRelationshipToConnection(const std::shared_ptr<minifi::Connection>& connection) const {
   utils::Identifier srcUUID;
   try {
     srcUUID = getSourceUUIDFromYaml();
@@ -47,7 +47,7 @@ void YamlConnectionParser::addFunnelConnection(const std::shared_ptr<minifi::Con
     return;
   }
   if (std::dynamic_pointer_cast<minifi::core::Funnel>(processor)) {
-    addNewRelationshipToConnection("success", connection);
+    addNewRelationshipToConnection(minifi::core::Funnel::Success.getName(), connection);
   }
 }
 
@@ -65,7 +65,7 @@ void YamlConnectionParser::configureConnectionSourceRelationshipsFromYaml(const 
       addNewRelationshipToConnection(relList.as<std::string>(), connection);
     }
   } else {
-    addFunnelConnection(connection);
+    addFunnelRelationshipToConnection(connection);
   }
 }
 
