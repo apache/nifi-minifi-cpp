@@ -25,6 +25,7 @@
 #include "services/DatabaseService.h"
 #include "core/Resource.h"
 #include "data/DatabaseConnectors.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -49,7 +50,7 @@ class MockODBCService : public DatabaseService {
   }
 
   std::unique_ptr<sql::Connection> getConnection() const {
-    return std::unique_ptr<sql::Connection>(new MockODBCConnection(connection_string_));
+    return minifi::utils::make_unique<sql::MockODBCConnection>(connection_string_);
   }
 
  private:
