@@ -830,6 +830,7 @@ TEST_CASE("Test YAML Config With Funnel", "[YamlConfiguration]") {
       "- id: 97c6bdfb-3909-499f-9ae5-011cbe8cadaf\n"
       "  name: 01a2f910-7050-41c1-8528-942764e7591d//LogAttribute\n"
       "  source id: 01a2f910-7050-41c1-8528-942764e7591d\n"
+      "  source relationship names: []\n"
       "  destination id: 695658ba-5b6e-4c7d-9c95-5a980b622c1f\n"
       "- id: 353e6bd5-5fca-494f-ae99-02572352c47a\n"
       "  name: GenerateFlowFile2/success/01a2f910-7050-41c1-8528-942764e7591d\n"

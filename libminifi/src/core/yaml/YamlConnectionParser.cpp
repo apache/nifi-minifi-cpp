@@ -53,16 +53,18 @@ void YamlConnectionParser::addFunnelRelationshipToConnection(const std::shared_p
 
 void YamlConnectionParser::configureConnectionSourceRelationshipsFromYaml(const std::shared_ptr<minifi::Connection>& connection) const {
   // Configure connection source
-  if (connectionNode_.as<YAML::Node>()["source relationship name"]) {
+  if (connectionNode_.as<YAML::Node>()["source relationship name"] && !connectionNode_["source relationship name"].as<std::string>().empty()) {
     addNewRelationshipToConnection(connectionNode_["source relationship name"].as<std::string>(), connection);
   } else if (connectionNode_.as<YAML::Node>()["source relationship names"]) {
     auto relList = connectionNode_["source relationship names"];
-    if (relList.IsSequence()) {
+    if (relList.IsSequence() && relList.begin() != relList.end()) {
       for (const auto &rel : relList) {
         addNewRelationshipToConnection(rel.as<std::string>(), connection);
       }
-    } else {
+    } else if (!relList.IsSequence() && !relList.as<std::string>().empty()) {
       addNewRelationshipToConnection(relList.as<std::string>(), connection);
+    } else {
+      addFunnelRelationshipToConnection(connection);
     }
   } else {
     addFunnelRelationshipToConnection(connection);
