@@ -26,7 +26,7 @@ jobs:
       - id: setup_env
         name: setup enviroment
         run: |
-          echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:/usr/loca/opt/flex/bin:$PATH" >> $GITHUB_ENV
+          echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
           sudo xcode-select -switch /Applications/Xcode_12.app
       - name: build
@@ -35,6 +35,7 @@ jobs:
           export PKG_CONFIG_PATH="/usr/local/opt/lua@5.3/lib/pkgconfig"
           export LDFLAGS="-L/usr/local/opt/flex/lib"
           export CPPFLAGS="-I/usr/local/opt/flex/include"
+          # CPPFLAGS are not recognized by cmake, so we have to force them to CFLAGS and CXXFLAGS to have flex 2.6 working
           ./bootstrap.sh -e -t && cd build  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="${CPPFLAGS} ${CFLAGS}" -DCMAKE_CXX_FLAGS="${CPPFLAGS} ${CXXFLAGS}" -DENABLE_LUA_SCRIPTING=1 -DENABLE_SQL=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_RULE_MESSAGES=OFF -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=OFF .. && cmake --build . --parallel 4
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j4 --output-on-failure"
@@ -114,7 +115,7 @@ jobs:
           cd build
           export CC=gcc-11
           export CXX=g++-11
-          cmake -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_BUSTACHE=ON -DENABLE_SQL=ON -DENABLE_PCAP=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON ..
+          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DENABLE_BUSTACHE=ON -DENABLE_SQL=ON -DENABLE_PCAP=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON ..
           make -j4 VERBOSE=1
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j2 --output-on-failure"
@@ -152,7 +153,7 @@ jobs:
           cd build
           export CC=clang
           export CXX=clang++
-          cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_NANOFI=ON -DENABLE_JNI=ON -DENABLE_SENSORS=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX ..
+          cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_NANOFI=ON -DENABLE_JNI=ON -DENABLE_SENSORS=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON ..
           cmake --build . --parallel 4
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
@@ -249,7 +250,7 @@ jobs:
           cd build
           export CC=gcc-11
           export CXX=g++-11
-          cmake -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DSTRICT_GSL_CHECKS=AUDIT ..
+          cmake -DSTRICT_GSL_CHECKS=AUDIT ..
           make u18
   docker_integration_tests:
     name: "Docker integration tests"
