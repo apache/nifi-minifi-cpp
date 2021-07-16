@@ -46,10 +46,7 @@
 #include "core/Relationship.h"
 #include "utils/HTTPClient.h"
 
-#ifdef GetObject
-#undef GetObject
-#endif
-
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 namespace org {
 namespace apache {
 namespace nifi {

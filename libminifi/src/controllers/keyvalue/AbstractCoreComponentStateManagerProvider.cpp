@@ -24,9 +24,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-#ifdef GetObject
-#undef GetObject
-#endif /* GetObject -> GetObject[AW] on windows */
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
 namespace org {
 namespace apache {

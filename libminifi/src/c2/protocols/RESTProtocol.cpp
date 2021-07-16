@@ -18,7 +18,7 @@
 
 #ifdef WIN32
 #pragma push_macro("GetObject")
-#undef GetObject
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 #endif
 
 #include "c2/protocols/RESTProtocol.h"
@@ -34,9 +34,7 @@
 #include "core/TypedValues.h"
 #include "utils/gsl.h"
 
-#ifdef GetObject
-#undef GetObject
-#endif
+#undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
 namespace org {
 namespace apache {
