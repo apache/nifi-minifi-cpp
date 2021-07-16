@@ -36,11 +36,13 @@ COPY . ${MINIFI_BASE_DIR}
 
 FROM build_deps AS release
 ARG ENABLE_JNI
-# Perform the build
-RUN cd $MINIFI_BASE_DIR \
-	&& ./bootstrap.sh -e -t \
-	&& rm -rf build \
-	&& mkdir build \
-	&& cd build \
-	&& cmake -DUSE_SHARED_LIBS= -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
+# Run bootstrap
+RUN cd $MINIFI_BASE_DIR && ./bootstrap.sh -t
+
+ENV CC gcc-11
+ENV CXX g++-11
+
+# Build
+RUN cd $MINIFI_BASE_DIR/build \
+	&& cmake -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX -DUSE_SHARED_LIBS= -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
 	&& make -j$(nproc) package

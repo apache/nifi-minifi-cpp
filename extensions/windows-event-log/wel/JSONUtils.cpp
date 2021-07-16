@@ -23,6 +23,9 @@
 
 #include <pugixml.hpp>
 
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"

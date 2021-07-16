@@ -34,7 +34,9 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
             -DWITH_GFLAGS=OFF
             -DUSE_RTTI=1
             -DROCKSDB_BUILD_SHARED=OFF
-            -DFAIL_ON_WARNINGS=OFF)
+            -DFAIL_ON_WARNINGS=OFF
+            -DCMAKE_CXX_STANDARD=17  # RocksDB fails to build in C++20 mode on GCC 11: https://godbolt.org/z/YeMcEzs8W
+            )
     if(PORTABLE)
         list(APPEND ROCKSDB_CMAKE_ARGS -DPORTABLE=ON)
     endif()
@@ -45,8 +47,8 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             rocksdb-external
-            URL "https://github.com/facebook/rocksdb/archive/v6.14.5.tar.gz"
-            URL_HASH "SHA256=885399c11e303d3fa46e75d75e97a97a7eeaa71304e7f5c069590161dbbcff0d"
+            URL "https://github.com/facebook/rocksdb/archive/v6.20.3.tar.gz"
+            URL_HASH "SHA256=c6502c7aae641b7e20fafa6c2b92273d935d2b7b2707135ebd9a67b092169dca"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/rocksdb-src"
             CMAKE_ARGS ${ROCKSDB_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/rocksdb-install/${BYPRODUCT}"

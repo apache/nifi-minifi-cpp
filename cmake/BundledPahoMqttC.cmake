@@ -17,7 +17,8 @@
 
 function(use_bundled_pahomqttc SOURCE_DIR BINARY_DIR)
     # Define patch step
-    set(PC git reset --hard HEAD && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/paho.mqtt.c/paho.mqtt.c.patch")
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/paho.mqtt.c/paho.mqtt.c.patch")
+    set(PAHO_MQTT_C_PATCH_COMMAND "${Patch_EXECUTABLE}" -p1 -R -s -f --dry-run -i "${PATCH_FILE}" || "${Patch_EXECUTABLE}" -p1 -N -i "${PATCH_FILE}")
 
     # Define byproducts
     if (WIN32)
@@ -48,7 +49,7 @@ function(use_bundled_pahomqttc SOURCE_DIR BINARY_DIR)
             SOURCE_DIR "${BINARY_DIR}/thirdparty/paho.mqtt.c-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${PAHOMQTTC_CMAKE_ARGS}
-            PATCH_COMMAND ${PC}
+            PATCH_COMMAND ${PAHO_MQTT_C_PATCH_COMMAND}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/paho.mqtt.c-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
     )

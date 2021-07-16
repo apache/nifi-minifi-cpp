@@ -20,6 +20,9 @@
 
 #include <functional>
 
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 
 #include "SQLWriter.h"

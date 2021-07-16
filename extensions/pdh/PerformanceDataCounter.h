@@ -17,6 +17,10 @@
 #pragma once
 
 #include <string>
+
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 
 namespace org {

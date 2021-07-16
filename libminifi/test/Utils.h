@@ -16,8 +16,16 @@
  */
 #pragma once
 
+#ifdef GetObject
+#undef GetObject
+#endif
+
 #include <string>
 #include <utility>
+
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson

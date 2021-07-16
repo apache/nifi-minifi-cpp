@@ -18105,7 +18105,7 @@ namespace sol {
 				return;
 			const char* metakey = &usertype_traits<Base>::metatable()[0];
 			const char* gcmetakey = &usertype_traits<Base>::gc_table()[0];
-			const char* basewalkkey = is_index ? detail::base_class_index_propogation_key() : detail::base_class_new_index_propogation_key();
+			const char* basewalkkey = is_index ? static_cast<const char*>(detail::base_class_index_propogation_key()) : static_cast<const char*>(detail::base_class_new_index_propogation_key());
 
 			luaL_getmetatable(L, metakey);
 			if (type_of(L, -1) == type::lua_nil) {

@@ -80,7 +80,7 @@ utils::optional<spdlog::level::level_enum> parse_log_level(const std::string& le
   } else if (utils::StringUtils::equalsIgnoreCase(level_name, "off")) {
     return spdlog::level::off;
   }
-  return {};
+  return utils::nullopt;
 }
 
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {

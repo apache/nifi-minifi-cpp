@@ -26,6 +26,8 @@
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
+namespace chr = std::chrono;
+
 constexpr const char* ConsumeJournald::CURSOR_KEY;
 const core::Relationship ConsumeJournald::Success("success", "Successfully consumed journal messages.");
 
@@ -163,7 +165,7 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
         flow_file->setAttribute(std::move(field.name), std::move(field.value));
       }
     }
-    if (include_timestamp_) flow_file->setAttribute("timestamp", date::format(timestamp_format_, msg.timestamp));
+    if (include_timestamp_) flow_file->setAttribute("timestamp", date::format(timestamp_format_, chr::floor<chr::microseconds>(msg.timestamp)));
     session->transfer(flow_file, Success);
   }
   session->commit();
@@ -244,7 +246,7 @@ std::string ConsumeJournald::formatSyslogMessage(const journal_message& msg) con
       | utils::map([](const std::string* const pid) { return fmt::format("[{}]", *pid); });
 
   return fmt::format("{} {} {}{}: {}",
-      date::format(timestamp_format_, msg.timestamp),
+      date::format(timestamp_format_, chr::floor<chr::microseconds>(msg.timestamp)),
       (utils::optional_from_ptr(systemd_hostname) | utils::map(utils::dereference)).value_or("unknown_host"),
       (utils::optional_from_ptr(syslog_identifier) | utils::map(utils::dereference)).value_or("unknown_process"),
       pid_string.value_or(std::string{}),

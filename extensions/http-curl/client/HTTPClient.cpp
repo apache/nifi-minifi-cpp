@@ -123,20 +123,16 @@ void HTTPClient::setDisableHostVerification() {
 
 bool HTTPClient::setSpecificSSLVersion(SSLVersion specific_version) {
 #if CURL_AT_LEAST_VERSION(7, 54, 0)
-  CURLcode ret = CURLE_UNKNOWN_OPTION;
+  // bitwise or of different enum types is deprecated in C++20, but the curl api explicitly supports ORing one of CURL_SSLVERSION and one of CURL_SSLVERSION_MAX
   switch (specific_version) {
     case SSLVersion::TLSv1_0:
-      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_0 | CURL_SSLVERSION_MAX_TLSv1_0);
-      break;
+      return CURLE_OK == curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, static_cast<int>(CURL_SSLVERSION_TLSv1_0) | static_cast<int>(CURL_SSLVERSION_MAX_TLSv1_0));
     case SSLVersion::TLSv1_1:
-      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_1 | CURL_SSLVERSION_MAX_TLSv1_1);
-      break;
+      return CURLE_OK == curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, static_cast<int>(CURL_SSLVERSION_TLSv1_1) | static_cast<int>(CURL_SSLVERSION_MAX_TLSv1_1));
     case SSLVersion::TLSv1_2:
-      ret = curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2 | CURL_SSLVERSION_MAX_TLSv1_2);
-      break;
+      return CURLE_OK == curl_easy_setopt(http_session_, CURLOPT_SSLVERSION, static_cast<int>(CURL_SSLVERSION_TLSv1_2) | static_cast<int>(CURL_SSLVERSION_MAX_TLSv1_2));
+    default: return false;
   }
-
-  return ret == CURLE_OK;
 #else
   return false;
 #endif

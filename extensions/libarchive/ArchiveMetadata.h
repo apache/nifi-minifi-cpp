@@ -24,6 +24,9 @@
 #include <vector>
 #include <string>
 
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 

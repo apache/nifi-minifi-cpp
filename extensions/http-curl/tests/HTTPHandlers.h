@@ -25,13 +25,17 @@
 #include <vector>
 #include <map>
 
+#ifdef GetObject
+#undef GetObject
+#endif
+#include "rapidjson/document.h"
+#include "rapidjson/error/en.h"
+
 #include "civetweb.h"
 #include "CivetServer.h"
 #include "concurrentqueue.h"
 #include "CivetStream.h"
 #include "io/CRCStream.h"
-#include "rapidjson/document.h"
-#include "rapidjson/error/en.h"
 #include "HTTPUtils.h"
 #include "ServerAwareHandler.h"
 #include "utils/gsl.h"

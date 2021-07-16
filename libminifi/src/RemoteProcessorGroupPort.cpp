@@ -36,6 +36,9 @@
 #include "Exception.h"
 #include "sitetosite/SiteToSiteFactory.h"
 
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 
 #include "Exception.h"

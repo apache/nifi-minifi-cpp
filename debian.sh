@@ -21,10 +21,17 @@ verify_enable_platform(){
   verify_gcc_enable "$feature"
 }
 add_os_flags() {
-  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND}"
+  #CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND}"
+  :
 }
 bootstrap_cmake(){
-  sudo apt-get -y install cmake
+  sudo bash -c 'source /etc/os-release; grep "$VERSION_CODENAME-backports" /etc/apt/sources.list &>/dev/null || echo "deb http://deb.debian.org/debian $VERSION_CODENAME-backports main" >> /etc/apt/sources.list'
+  sudo apt-get -y update
+  if [ "$VERSION_CODENAME" = buster ]; then
+    sudo apt-get -t buster-backports install -y cmake
+  else
+    sudo apt-get install -y cmake
+  fi
 }
 build_deps(){
   sudo apt-get -y update
@@ -34,7 +41,7 @@ build_deps(){
   if [ "$RETVAL" -ne "0" ]; then
     sudo apt-get install -y libssl-dev > /dev/null
   fi
-  COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev uuid uuid-dev"
+  COMMAND="sudo apt-get -y install gcc g++ zlib1g-dev uuid uuid-dev"
   export DEBIAN_FRONTEND=noninteractive
   INSTALLED=()
   INSTALLED+=("libbz2-dev")

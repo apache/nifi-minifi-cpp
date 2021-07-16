@@ -37,19 +37,22 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     	find_package(PythonLibs 3.0 REQUIRED)
     endif()
 
-    include_directories(${PYTHON_INCLUDE_DIR})
     include(Pybind11)
-
-    include_directories(python)
     add_definitions(-DPYTHON_SUPPORT)
 
     file(GLOB PY_SOURCES  "python/*.cpp")
     add_library(minifi-python-extensions STATIC ${PY_SOURCES})
-
+    target_include_directories(minifi-python-extensions SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
+    target_include_directories(minifi-python-extensions SYSTEM PRIVATE ../../thirdparty/pybind11/include)
+    target_include_directories(minifi-python-extensions PRIVATE python)
     target_link_libraries(minifi-python-extensions ${LIBMINIFI})
     target_link_libraries(minifi-python-extensions ${PYTHON_LIBRARIES})
     target_link_libraries(minifi-python-extensions pybind11)
+    target_compile_options(minifi-python-extensions PUBLIC $<$<CXX_COMPILER_ID:Clang>:-fsized-deallocation>)
     target_link_libraries(minifi-script-extensions minifi-python-extensions)
+    target_include_directories(minifi-script-extensions PRIVATE python)
+    target_include_directories(minifi-script-extensions SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
+    target_include_directories(minifi-script-extensions SYSTEM PRIVATE ../../thirdparty/pybind11/include)
 endif()
 
 if (ENABLE_LUA_SCRIPTING)

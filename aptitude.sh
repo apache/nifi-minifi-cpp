@@ -21,21 +21,34 @@ verify_enable_platform(){
     verify_gcc_enable "$feature"
 }
 add_os_flags() {
-    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND}"
+    CC=gcc
+    CXX=g++
+    if [[ "$OS" = Ubuntu* ]]; then
+        CC=gcc-11
+        CXX=g++-11
+    fi
+    export CC
+    export CXX
+    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_C_COMPILER=$CC -DCMAKE_CXX_COMPILER=$CXX"
 }
 bootstrap_cmake(){
     ## on Ubuntu install the latest CMake
     if [[ "$OS" = Ubuntu* ]]; then
-      echo "Adding KitWare CMake apt repository..."
-      sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
-      wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
-      sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -c --short) main" && sudo apt-get update
+        echo "Adding KitWare CMake apt repository..."
+        sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
+        wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
+        sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -c --short) main" && sudo apt-get update
     fi
     sudo apt-get -y install cmake
 }
 build_deps(){
     ## need to account for debian
-    COMMAND="sudo apt-get -y install cmake gcc g++ zlib1g-dev libssl-dev uuid uuid-dev"
+    compiler_pkgs="gcc g++"
+    if [[ "$OS" = Ubuntu* ]]; then
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        compiler_pkgs="gcc-11 g++-11"
+    fi
+    COMMAND="sudo apt-get -y install cmake $compiler_pkgs zlib1g-dev libssl-dev uuid uuid-dev"
 
     export DEBIAN_FRONTEND=noninteractive
     INSTALLED=()

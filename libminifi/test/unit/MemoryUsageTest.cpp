@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <cstring>
 
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
@@ -24,14 +25,16 @@
 TEST_CASE("Test Physical memory usage", "[testphysicalmemoryusage]") {
   constexpr bool cout_enabled = true;
   std::vector<char> v(30000000);
+  // use v to prevent recent compilers from optimizing out the allocation
+  strcpy(v.data(), " bytes\n");  // NOLINT: "almost always, snprintf is better than strcpy", but formatting is unnecessary here
   const auto ram_usage_by_process = utils::OsUtils::getCurrentProcessPhysicalMemoryUsage();
   const auto ram_usage_by_system = utils::OsUtils::getSystemPhysicalMemoryUsage();
   const auto ram_total = utils::OsUtils::getSystemTotalPhysicalMemory();
 
   if (cout_enabled) {
-    std::cout << "Physical Memory used by this process: " << ram_usage_by_process << " bytes" << std::endl;
-    std::cout << "Physical Memory used by the system: " << ram_usage_by_system << " bytes" << std::endl;
-    std::cout << "Total Physical Memory in the system: " << ram_total << " bytes" << std::endl;
+    std::cout << "Physical Memory used by this process: " << ram_usage_by_process << v.data();
+    std::cout << "Physical Memory used by the system: " << ram_usage_by_system << v.data();
+    std::cout << "Total Physical Memory in the system: " << ram_total << v.data();
   }
   REQUIRE(ram_usage_by_process >= gsl::narrow<int64_t>(v.size()));
   REQUIRE(gsl::narrow<int64_t>(v.size()*2) >= ram_usage_by_process);

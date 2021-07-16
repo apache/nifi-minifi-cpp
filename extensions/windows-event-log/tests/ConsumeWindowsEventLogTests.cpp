@@ -23,6 +23,10 @@
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
+
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 
 #include "CWELTestUtils.h"

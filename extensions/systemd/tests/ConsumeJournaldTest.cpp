@@ -176,7 +176,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     libwrapper_observer->journal.emplace_back("systemd", "Mounted /boot.", 1);
     plan->runCurrentProcessor();
     REQUIRE("6" == get_cursor_position());
-    REQUIRE("2021-04-15T17:17:09.123456000+00:00 test-pc systemd[1]: Mounted /boot." == plan->getContent(plan->getCurrentFlowFile()));
+    REQUIRE("2021-04-15T17:17:09.123456+00:00 test-pc systemd[1]: Mounted /boot." == plan->getContent(plan->getCurrentFlowFile()));
 
     // add two new messages, expect two new flow files
     libwrapper_observer->journal.emplace_back("dbus-daemon", "[system] Successfully activated service 'org.freedesktop.UPower'", 2200);
@@ -199,14 +199,14 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
       const auto content = plan->getContent(flowfile);
       REQUIRE("Linux version 5.10.12-gentoo-x86_64 (root@test-pc.test.local) (x86_64-pc-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0, GNU ld (Gentoo 2.35.2 p1) 2.35.2) #1 SMP Sat Feb 20 03:13:45 CET 2021"  // NOLINT
           == content);
-      REQUIRE("2021-04-15T17:17:03.123456000+00:00" == flowfile->getAttribute("timestamp").value_or("n/a"));
+      REQUIRE("2021-04-15T17:17:03.123456+00:00" == flowfile->getAttribute("timestamp").value_or("n/a"));
     }
     {
       plan->runCurrentProcessor();
       REQUIRE("1" == get_cursor_position());
       const auto content = plan->getContent(plan->getCurrentFlowFile());
       REQUIRE("NX (Execute Disable) protection: active" == content);
-      REQUIRE("2021-04-15T17:17:04.123456000+00:00" == plan->getCurrentFlowFile()->getAttribute("timestamp").value_or("n/a"));
+      REQUIRE("2021-04-15T17:17:04.123456+00:00" == plan->getCurrentFlowFile()->getAttribute("timestamp").value_or("n/a"));
     }
 
     plan->runCurrentProcessor();
@@ -234,7 +234,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
       const auto flowfile = plan->getCurrentFlowFile();
       const auto content = plan->getContent(flowfile);
       REQUIRE("6" == get_cursor_position());
-      REQUIRE("2021-04-15T17:17:09.123456000+00:00" == flowfile->getAttribute("timestamp"));
+      REQUIRE("2021-04-15T17:17:09.123456+00:00" == flowfile->getAttribute("timestamp"));
       REQUIRE("Mounted /boot." == content);
       REQUIRE("test-pc" == flowfile->getAttribute("_HOSTNAME").value_or("n/a"));
       REQUIRE("systemd" == flowfile->getAttribute("SYSLOG_IDENTIFIER").value_or("n/a"));
@@ -255,7 +255,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     // add a flow file, ensure that no timestamp is added to the attributes
     libwrapper_observer->journal.emplace_back("systemd", "Mounted /boot.", 1);
     plan->runCurrentProcessor();
-    REQUIRE("2021-04-15T17:17:09.123456000+00:00 test-pc systemd[1]: Mounted /boot." == plan->getContent(plan->getCurrentFlowFile()));
+    REQUIRE("2021-04-15T17:17:09.123456+00:00 test-pc systemd[1]: Mounted /boot." == plan->getContent(plan->getCurrentFlowFile()));
     REQUIRE(!plan->getCurrentFlowFile()->getAttribute("timestamp").has_value());
   }
   SECTION("Batch Size is honored") {

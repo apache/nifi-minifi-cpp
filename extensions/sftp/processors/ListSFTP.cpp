@@ -48,6 +48,9 @@
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
 
+#ifdef GetObject
+#undef GetObject
+#endif
 #include "rapidjson/document.h"
 #include "rapidjson/ostreamwrapper.h"
 #include "rapidjson/istreamwrapper.h"

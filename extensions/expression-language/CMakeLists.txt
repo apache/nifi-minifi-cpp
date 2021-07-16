@@ -70,6 +70,7 @@ flex_target(
 	el-scanner
 	${CMAKE_CURRENT_SOURCE_DIR}/Scanner.ll
 	${CMAKE_CURRENT_SOURCE_DIR}/Scanner.cpp
+    COMPILE_FLAGS --c++
 )
 
 add_flex_bison_dependency(el-scanner el-parser)

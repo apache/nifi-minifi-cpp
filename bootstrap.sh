@@ -19,7 +19,7 @@
 script_directory="$(cd "$(dirname "$0")" && pwd)"
 
 CMAKE_GLOBAL_MIN_VERSION_MAJOR=3
-CMAKE_GLOBAL_MIN_VERSION_MINOR=7
+CMAKE_GLOBAL_MIN_VERSION_MINOR=16
 CMAKE_GLOBAL_MIN_VERSION_REVISION=0
 
 export RED='\033[0;101m'
@@ -207,6 +207,8 @@ else
   elif [[ "$OS" = Red* ]]; then
     . "${script_directory}/rheldistro.sh"
   elif [[ "$OS" = Amazon* ]]; then
+    . "${script_directory}/centos.sh"
+  elif [[ "$OS" = Rocky* ]]; then
     . "${script_directory}/centos.sh"
   elif [[ "$OS" = CentOS* ]]; then
     . "${script_directory}/centos.sh"
@@ -502,7 +504,7 @@ build_cmake_command(){
 
   CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DBUILD_IDENTIFIER=${BUILD_IDENTIFIER}"
 
-    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=${BUILD_PROFILE}"
+  CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -DCMAKE_BUILD_TYPE=${BUILD_PROFILE}"
 
   add_os_flags
 

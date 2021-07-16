@@ -113,10 +113,9 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 
 #### Utilities
 * CMake 3.16 or greater
-* gcc 4.8.4 or greater
-* g++ 4.8.4 or greater
-* bison 3.0.x (3.2 has been shown to fail builds)
-* flex 2.5 or greater
+* gcc 8 or greater
+* bison 3.0.x+ (3.2 has been shown to fail builds)
+* flex 2.6 or greater
 
 ##### External Projects
 
@@ -128,13 +127,7 @@ versions of LibreSSL, cURL, or zlib are used:
 * automake
 * libtool
 
-**NOTE** if Lua support is enabled, then a C++ compiler with support for C++ 14 must be used. If using GCC, version 6.x or greater is recommended.
-
-**NOTE** if bustache (ApplyTemplate) support is enabled, a recent version of a compiler supporting C++ 11 must be used. GCC versions >= 6.3.1 are known to work.
-
-**NOTE** if Kafka support is enabled, a recent version of a compiler supporting C++ 11 regexes must be used. GCC versions >= 4.9.x are recommended.
-
-**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
+**NOTE** if Expression Language support is enabled, FlexLexer must be in the include path and the version must be compatible with the version of flex used when generating lexer sources. On Mac OS X and FreeBSD, make sure that the system version is overridden with the correct flex version, which may require merging your CPPFLAGS into CFLAGS and CXXFLAGS. Lexer source generation is automatically performed during CMake builds. To re-generate the sources, remove:
 
  * extensions/expression-language/Parser.cpp
  * extensions/expression-language/Parser.hpp
@@ -154,44 +147,21 @@ and rebuild.
 * libgps-dev -- Required if building libGPS support
 * Zlib headers
 
-#### CentOS 6
+#### CentOS 7
 
-Additional environmental preparations are required for CentOS 6 support. Before
+Additional environmental preparations are required for CentOS 7 support. Before
 building, install and enable the devtoolset-6 SCL:
 
 ```
 $ sudo yum install centos-release-scl
-$ sudo yum install devtoolset-6
-$ scl enable devtoolset-6 bash
-```
-
-Additionally, for expression language support, it is recommended to install GNU
-Bison 3.0.4:
-
-```
-$ wget https://ftp.gnu.org/gnu/bison/bison-3.0.4.tar.xz
-$ tar xvf bison-3.0.4.tar.xz
-$ cd bison-3.0.4
-$ ./configure
-$ make
-$ sudo make install
+$ sudo yum install devtoolset-10
+$ scl enable devtoolset-10 bash
 ```
 
 Finally, it is required to add the `-lrt` compiler flag by using the
 `-DCMAKE_CXX_FLAGS=-lrt` flag when invoking cmake.
 
 On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, libcurl, and OpenSSL.
-
-#### SLES
-  SLES 11 requires manual installation of the SDK using the following link:
-    https://www.novell.com/support/kb/doc.php?id=7015337
-  Once these are installed you will need to download and build CMAKE3, OpenSSL1.0,
-  and Python3. Once these are installed follow the cmake procedures. The bootstrap
-  script will not work.
-
-  SLES 12 requires you to enable the SDK module in YAST. It is advised that you use
-  the bootstrap script to help guide installation. Please see the Bootstrapping section
-  below.
 
 #### Windows
   Build and Installation has been tested with Windows 10 using Visual Studio 2019.
@@ -206,7 +176,7 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 * libuuid
 * librocksdb (built and statically linked)
 * libcurl-openssl (If not available or desired, NSS will be used)
-* libssl and libcrypto from openssl (built and statically linked)
+* libssl and libcrypto from libressl (built and statically linked)
 * libarchive (built and statically linked)
 * librdkafka (built and statically linked)
 * Python 3 -- Required, unless Python support is disabled
@@ -217,14 +187,13 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 
 The needed dependencies can be installed with the following commands for:
 
-##### Yum based Linux Distributions
+##### rpm-based Linux Distributions
 
-**NOTE** if a newer compiler is required, such as when Lua support is enabled, it is recommended to use a newer compiler
-using a devtools-* package from the Software Collections (SCL).
+**NOTE** it is recommended to use the newest compiler using the latest devtoolset-*/gcc-toolset-*/llvm-toolset-* packages from the Software Collections (SCL).
 
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
-$ yum install cmake \
+dnf install cmake \
   gcc gcc-c++ \
   git \
   bison \
@@ -240,28 +209,26 @@ $ yum install cmake \
   xz-devel \
   doxygen \
   zlib-devel
-$ # (Optional) for building Python support
-$ yum install python34-devel
-$ # (Optional) for building Lua support
-$ yum install lua-devel
-$ # (Optional) for building USB Camera support
-$ yum install libusb-devel libpng-devel
-$ # (Optional) for building docker image
-$ yum install docker
-$ # (Optional) for system integration tests
-$ yum install docker python-virtualenv
+# (Optional) for building Python support
+dnf install python36-devel
+# (Optional) for building Lua support
+dnf install lua-devel
+# (Optional) for building USB Camera support
+dnf install libusb-devel libpng-devel
+# (Optional) for building docker image
+dnf install docker
+# (Optional) for system integration tests
+dnf install docker python-virtualenv
 # If building with GPS support
-$ yum install gpsd-devel
-$ # (Optional) for PacketCapture Processor
-$ yum install libpcap-devel
-$ #depending on your yum repo you may need to manually build libcurl-openssl if you do not wish to use
-  libcurl with NSS support. By default we will use NSS when libcurl-openssl is not available.
+dnf install gpsd-devel
+# (Optional) for PacketCapture Processor
+dnf install libpcap-devel
 ```
 
 ##### Aptitude based Linux Distributions
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
-$ apt-get install cmake \
+apt install cmake \
   gcc g++ \
   git \
   bison \
@@ -277,26 +244,26 @@ $ apt-get install cmake \
   libbz2-dev liblzma-dev \
   doxygen \
   zlib1g-dev
-$ # (Optional) for building Python support
-$ apt-get install libpython3-dev
-$ # (Optional) for building Lua support
-$ apt-get install liblua5.1-0-dev
-$ # (Optional) for building USB Camera support
-$ apt-get install libusb-1.0.0-0-dev libpng12-dev
-$ # (Optional) for building docker image
-$ apt-get install docker.io
-$ # (Optional) for system integration tests
-$ apt-get install docker.io python-virtualenv
-# If building with GPS support
-$ apt-get install libgps-dev
-$ # (Optional) for PacketCapture Processor
-$ apt-get install libpcap-dev
+# (Optional) for building Python support
+apt install libpython3-dev
+# (Optional) for building Lua support
+apt install liblua5.1-0-dev
+# (Optional) for building USB Camera support
+apt install libusb-1.0.0-0-dev libpng12-dev
+# (Optional) for building docker image
+apt install docker.io
+# (Optional) for system integration tests
+apt install docker.io python-virtualenv
+# (Optional) If building with GPS support
+apt install libgps-dev
+# (Optional) for PacketCapture Processor
+apt install libpcap-dev
 ```
 
 ##### OS X Using Homebrew (with XCode Command Line Tools installed)
 ```
 # ~/Development/code/apache/nifi-minifi-cpp on git:master
-$ brew install cmake \
+brew install cmake \
   flex \
   patch \
   autoconf \
@@ -311,18 +278,18 @@ $ brew install cmake \
   bzip2 \
   doxygen \
   zlib
-$ brew install curl
-$ brew link curl --force
-$ # (Optional) for building USB Camera support
-$ brew install libusb libpng
-$ # (Optional) for building docker image/running system integration tests
-$ # Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
-$ sudo pip install virtualenv
+brew install curl
+brew link curl --force
+# (Optional) for building USB Camera support
+brew install libusb libpng
+# (Optional) for building docker image/running system integration tests
+# Install docker using instructions at https://docs.docker.com/docker-for-mac/install/
+sudo pip install virtualenv
 # If building with GPS support
-$ brew install gpsd
-$ # (Optional) for PacketCapture Processor
-$ sudo brew install libpcap
-$ # It is recommended that you install bison from source as HomeBrew now uses an incompatible version of Bison
+brew install gpsd
+# (Optional) for PacketCapture Processor
+sudo brew install libpcap
+# It is recommended that you install bison from source as HomeBrew now uses an incompatible version of Bison
 ```
 
 
