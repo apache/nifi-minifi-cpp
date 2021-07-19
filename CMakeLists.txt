@@ -516,11 +516,11 @@ if (WIN32)
 endif()
 
 ## OpenCV Extensions
-option(ENABLE_OPENCV "Disables the OpenCV extensions." OFF)
+option(ENABLE_OPENCV "Enables the OpenCV extensions." OFF)
 if (ENABLE_OPENCV)
 	include(BundledOpenCV)
 	use_bundled_opencv(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enabled OpenCV support" "extensions/opencv" "extensions/opencv/tests")
+	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enables OpenCV support" "extensions/opencv" "extensions/opencv/tests")
 endif()
 
 ## Bustache/template extensions
