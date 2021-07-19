@@ -108,7 +108,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             SOURCE_DIR "${BINARY_DIR}/thirdparty/opencv-src"
             PATCH_COMMAND ${PC}
             CMAKE_ARGS ${OPENCV_CMAKE_ARGS}
-            BUILD_BYPRODUCTS "${OPENCV_LIBS}"
+            BUILD_BYPRODUCTS "${BYPRODUCTS}"
             EXCLUDE_FROM_ALL TRUE
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
     )
@@ -120,7 +120,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     else()
         set(OPENCV_INCLUDE_DIR "${OPENCV_BYPRODUCT_DIR}/include/opencv4" CACHE STRING "" FORCE)
     endif()
-    set(OPENCV_LIBRARIES "${OPENCV_LIBS}" CACHE STRING "" FORCE)
+    set(OPENCV_LIBRARIES "${BYPRODUCTS}" CACHE STRING "" FORCE)
 
     # Set exported variables for FindPackage.cmake
     set(PASSTHROUGH_VARIABLES ${PASSTHROUGH_VARIABLES} "-DEXPORTED_OPENCV_INCLUDE_DIR=${OPENCV_INCLUDE_DIR}" CACHE STRING "" FORCE)
