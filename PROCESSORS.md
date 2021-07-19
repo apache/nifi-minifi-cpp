@@ -5,6 +5,7 @@
 
 - [AppendHostInfo](#appendhostinfo)
 - [ApplyTemplate](#applytemplate)
+- [AttributesToJSON](#AttributesToJSON)
 - [BinFiles](#binfiles)
 - [CapturePacket](#capturepacket)
 - [CaptureRTSPFrame](#capturertspframe)
@@ -92,6 +93,27 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |success|success operational on the flow record|
 
+## AttributesToJSON
+
+### Description
+
+Generates a JSON representation of the input FlowFile Attributes. The resulting JSON can be written to either a new Attribute 'JSONAttributes' or written to the FlowFile as content.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Attributes List|||Comma separated list of attributes to be included in the resulting JSON. If this value is left empty then all existing Attributes will be included. This list of attributes is case sensitive. If an attribute specified in the list is not found it will be be emitted to the resulting JSON with an empty string or NULL value.|
+|Attributes Regular Expression|||Regular expression that will be evaluated against the flow file attributes to select the matching attributes. Both the matching attributes and the selected attributes from the Attributes List property will be written in the resulting JSON.|
+|**Destination**|flowfile-attribute|flowfile-attribute<br>flowfile-content<br>|Control if JSON value is written as a new flowfile attribute 'JSONAttributes' or written in the flowfile content. Writing to flowfile content will overwrite any existing flowfile content.|
+|**Include Core Attributes**|true||Determines if the FlowFile core attributes which are contained in every FlowFile should be included in the final JSON value generated.|
+|**Null Value**|false||If true a non existing selected attribute will be NULL in the resulting JSON. If false an empty string will be placed in the JSON.|
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|All FlowFiles received are routed to success|
 
 ## BinFiles
 

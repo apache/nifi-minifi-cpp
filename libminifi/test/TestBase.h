@@ -27,6 +27,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <regex>
 
 #include "ResourceClaim.h"
 #include "utils/file/FileUtils.h"
@@ -154,7 +155,7 @@ class LogTestController {
       std::string str = stream.str();
       found = (str.find(ending) != std::string::npos);
       auto now = std::chrono::system_clock::now();
-      timed_out = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) > std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+      timed_out = (now - start > timeout);
       if (!found && !timed_out) {
         std::this_thread::sleep_for(sleep_interval);
       }
@@ -162,6 +163,31 @@ class LogTestController {
 
     logger_->log_info("%s %s in log output.", found ? "Successfully found" : "Failed to find", ending);
     return found;
+  }
+
+  std::optional<std::smatch> matchesRegex(const std::string &regex_str,
+                std::chrono::seconds timeout = std::chrono::seconds(3),
+                std::chrono::milliseconds sleep_interval = std::chrono::milliseconds(200)) {
+    if (regex_str.length() == 0) {
+      return std::nullopt;
+    }
+    auto start = std::chrono::system_clock::now();
+    bool found = false;
+    bool timed_out = false;
+    std::regex matcher_regex(regex_str);
+    std::smatch match;
+    do {
+      std::string str = log_output.str();
+      found = std::regex_search(str, match, matcher_regex);
+      auto now = std::chrono::system_clock::now();
+      timed_out = (now - start > timeout);
+      if (!found && !timed_out) {
+        std::this_thread::sleep_for(sleep_interval);
+      }
+    } while (!found && !timed_out);
+
+    logger_->log_info("%s %s in log output.", found ? "Successfully matched regex" : "Failed to match regex", regex_str);
+    return found ? std::make_optional<std::smatch>(match) : std::nullopt;
   }
 
   int countOccurrences(const std::string& pattern) {

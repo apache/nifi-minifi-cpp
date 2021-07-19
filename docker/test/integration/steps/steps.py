@@ -508,6 +508,12 @@ def step_impl(context, content, duration):
     context.test.check_for_single_file_with_content_generated(content, timeparse(duration))
 
 
+@then("a flowfile with the JSON content \"{content}\" is placed in the monitored directory in less than {duration}")
+@then("a flowfile with the JSON content '{content}' is placed in the monitored directory in less than {duration}")
+def step_impl(context, content, duration):
+    context.test.check_for_single_json_file_with_content_generated(content, timeparse(duration))
+
+
 @then("at least one flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
 @then("at least one flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
 def step_impl(context, content, duration):
