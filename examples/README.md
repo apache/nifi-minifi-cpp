@@ -22,6 +22,8 @@ The following examples show simple flow configurations for several common use ca
 - [Windows Specific Processors](#windows-specific-processors)
   - [Consuming Windows Event Logs](#consuming-windows-event-logs)
   - [Reading System Performance Data](#reading-system-performance-data)
+- [Linux Specific Processors](#linux-specific-processors)
+  - [Consume Systemd-Journald System Journal Messages](#consume-systemd-journald-system-journal-messages)
 - [HTTP Operations](#http-operations)
   - [HTTP POST Invocation](#http-post-invocation)
 - [Site to Site Operations](#site-to-site-operations)
@@ -37,8 +39,6 @@ The following examples show simple flow configurations for several common use ca
   - [List and Fetch Content from AWS S3 Bucket](#list-and-fetch-content-from-aws-s3-bucket)
 - [SQL Operations](#sql-operations)
   - [Query Database Table](#query-database-table)
-- [System Log Operations](#system-log-operations)
-  - [Consume Systemd-Journald System Journal Messages](#consume-systemd-journald-system-journal-messages)
 
 ## Filesystem Operations
 
@@ -62,6 +62,12 @@ Using the [cwel_config.yml](cwel_config.yml) flow configuration MiNiFi queries a
 
 The flow: ConsumeWindowsEventLog &#10132; PutFile
 
+### Reading System Performance Data
+
+Using the [pdh_config.yml](pdh_config.yml) flow configuration MiNiFi reads CPU and Disk performance data through Windows' Performance Data Helper (PDH) component and puts the data to the `C:\temp\` directory in a compact JSON format.
+
+The flow: PerformanceDataMonitor &#10132; PutFile
+
 ## Linux Specific Processors
 
 ### Consume Systemd-Journald System Journal Messages
@@ -69,12 +75,6 @@ The flow: ConsumeWindowsEventLog &#10132; PutFile
 Using the [consumejournald_config.yml](consumejournald_config.yml) flow configuration MiNiFi reads systemd-journald journal messages and logs them on `info` level.
 
 The flow: ConsumeJournald &#10132; LogAttribute
-
-### Reading System Performance Data
-
-Using the [pdh_config.yml](pdh_config.yml) flow configuration MiNiFi reads CPU and Disk performance data through Windows' Performance Data Helper (PDH) component and puts the data to the `C:\temp\` directory in a compact JSON format.
-
-The flow: PerformanceDataMonitor &#10132; PutFile
 
 ## HTTP Operations
 
