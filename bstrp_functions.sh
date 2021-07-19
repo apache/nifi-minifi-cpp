@@ -69,6 +69,10 @@ add_multi_option(){
 	done
 }
 
+set_dependency(){
+  DEPENDS_ON+=("$1:$2")
+}
+
 set_incompatible_with(){
   INCOMPATIBLE_WITH+=("$1:$2")
   INCOMPATIBLE_WITH+=("$2:$1")
@@ -187,6 +191,17 @@ check_compatibility(){
       fi
     fi
   done
+  for option in "${DEPENDS_ON[@]}" ; do
+    OPT=${option%%:*}
+    if [ "$OPT" = "$1" ]; then
+      OTHER_FEATURE=${option#*:}
+      OTHER_FEATURE_VALUE=${!OTHER_FEATURE}
+      if [ "${OTHER_FEATURE_VALUE}" != "Enabled" ]; then
+        echo "false"
+        return
+      fi
+    fi
+  done
   echo "true"
 }
 
@@ -214,6 +229,13 @@ ToggleFeature(){
   ALL_FEATURES_ENABLED="Disabled"
   if [ "${VARIABLE_VALUE}" = "Enabled" ]; then
     eval "$1=${FALSE}"
+    for option in "${DEPENDS_ON[@]}" ; do
+      DEPENDENT_FEATURE=${option%%:*}
+      FEATURE=${option#*:}
+      if [ "$FEATURE" = "$1" ]; then
+        eval "$DEPENDENT_FEATURE=${FALSE}"
+      fi
+    done
   else
     for option in "${CMAKE_MIN_VERSION[@]}" ; do
       OPT=${option%%:*}
@@ -368,6 +390,7 @@ show_supported_features() {
   echo "W. Openwsman Support ...........$(print_feature_status OPENWSMAN_ENABLED)"
   echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
   echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
+  echo "Z. NanoFi Support ..............$(print_feature_status NANOFI_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -390,7 +413,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  echo -n "Enter choice [ A - Y or 1-7 ] "
+  echo -n "Enter choice [ A - Z or 1-7 ] "
   read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
@@ -421,6 +444,7 @@ read_feature_options(){
     w) ToggleFeature OPENWSMAN_ENABLED ;;
     x) ToggleFeature AZURE_ENABLED ;;
     y) ToggleFeature SYSTEMD_ENABLED ;;
+    z) ToggleFeature NANOFI_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
@@ -439,7 +463,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-X or 1-7...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-Z or 1-7...${NO_COLOR}" && sleep 2
   esac
 }
 

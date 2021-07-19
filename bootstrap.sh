@@ -39,6 +39,7 @@ export CMAKE_MIN_VERSION=()
 export INCOMPATIBLE_WITH=()
 export DEPLOY_LIMITS=()
 export DEPENDENCIES=()
+export DEPENDS_ON=()
 
 CORES=1
 BUILD="false"
@@ -325,6 +326,9 @@ add_dependency OPC_ENABLED "mbedtls"
 add_disabled_option AZURE_ENABLED ${FALSE} "ENABLE_AZURE"
 
 add_disabled_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
+
+add_disabled_option NANOFI_ENABLED ${FALSE} "ENABLE_NANOFI"
+set_dependency PYTHON_ENABLED NANOFI_ENABLED
 
 USE_SHARED_LIBS=${TRUE}
 ASAN_ENABLED=${FALSE}
