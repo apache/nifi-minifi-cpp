@@ -1,0 +1,46 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Get files from /tmp/input
+  id: d5fef466-fef0-4d90-814e-9c19a67e454a
+  class: org.apache.nifi.processors.standard.GetFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 2 sec
+  Properties:
+    Input Directory: /tmp/input
+- name: Upload Blob to test-container in Azure Storage
+  id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
+  class: org.apache.nifi.processors.standard.PutAzureBlobStorage
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+  - failure
+  Properties:
+    Blob: test-blob
+    Storage Account Name: test-account
+    Storage Account Key: test-key
+    Container Name: test-container
+    Create Container: 'true'
+Connections:
+- name: GetFile/success/PutAzureBlobStorage
+  source id: d5fef466-fef0-4d90-814e-9c19a67e454a
+  source relationship name: success
+  destination id: e7b3f9c6-d1ee-4d9b-b676-48c872cc7ae3
+Controller Services: []
+Remote Processing Groups: []

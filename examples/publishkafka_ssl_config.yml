@@ -1,0 +1,55 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Get files from /tmp/input
+  id: a78f9d7d-cc68-4f30-aac1-ee716d42bf9d
+  class: org.apache.nifi.processors.standard.GetFile
+  scheduling period: 2 sec
+  scheduling strategy: TIMER_DRIVEN
+  Properties:
+    Input Directory: /tmp/input
+- name: Publish messages to Kafka topic test
+  id: 8c0791c7-920c-4541-bcde-f5d559f42ed2
+  class: org.apache.nifi.processors.standard.PublishKafka
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+  - failure
+  Properties:
+    Batch Size: 10
+    Client Name: test_client
+    Compress Codec: none
+    Delivery Guarantee: 1
+    Known Brokers: kafka-broker:9093
+    Message Timeout: 12 sec
+    Message Timeout Phrase: 12 sec
+    Request Timeout: 10 sec
+    Security CA Key: /tmp/resources/certs/ca-cert
+    Security Cert: /tmp/resources/certs/client_test_client_client.pem
+    Security Pass Phrase: abcdefgh
+    Security Private Key: /tmp/resources/certs/client_test_client_client.key
+    Security Protocol: ssl
+    Topic Name: test
+Connections:
+- name: GetFile/success/PublishKafka
+  source id: a78f9d7d-cc68-4f30-aac1-ee716d42bf9d
+  source relationship name: success
+  destination id: 8c0791c7-920c-4541-bcde-f5d559f42ed2
+Controller Services: []
+Remote Processing Groups: []

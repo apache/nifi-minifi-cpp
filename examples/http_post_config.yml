@@ -1,0 +1,85 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Get files from /tmp/input
+  id: 962790e7-ea35-4096-9362-96f527288669
+  class: org.apache.nifi.processors.standard.GetFile
+  scheduling period: 2 sec
+  scheduling strategy: TIMER_DRIVEN
+  Properties:
+    Input Directory: /tmp/input
+    Keep Source File: 'true'
+- name: Invoke POST request on remote URL
+  id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+  class: org.apache.nifi.processors.standard.InvokeHTTP
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+  - response
+  Properties:
+    HTTP Method: POST
+    Remote URL: http://1.2.3.4:8080/contentListener
+- name: Retry on HTTP 5xx status codes
+  id: 3b1c6971-541b-4530-9f72-175757500699
+  class: org.apache.nifi.processors.standard.RetryFlowFile
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - failure
+  Properties:
+    Maximum Retries: 5
+- name: Log failed flow files
+  id: 1f669bb0-6d50-41e6-9230-90c1cc3e21f9
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list: [success]
+  Properties:
+    FlowFiles To Log: 0
+    Log Level: warn
+    Log Prefix: '=== Failed HTTP request ==='
+    Maxumim Payload Line Length: 0
+Connections:
+- name: GetFile/success/InvokeHTTP
+  source id: 962790e7-ea35-4096-9362-96f527288669
+  source relationship name: success
+  destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+- name: InvokeHTTP/failure/InvokeHTTP
+  source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+  source relationship name: failure
+  destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+- name: InvokeHTTP/retry/RetryFlowFile
+  id: c8a96f1d-48cd-4ee3-8a2f-081c3e3c7bcd
+  source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+  source relationship names: retry
+  destination id: 3b1c6971-541b-4530-9f72-175757500699
+- name: RetryFlowFile/retry/InvokeHTTP
+  id: cadf51f0-3468-423a-9d12-5c40270aa7ca
+  source id: 3b1c6971-541b-4530-9f72-175757500699
+  source relationship names: retry
+  destination id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+- name: RetryFlowFile/retries_exceeded/LogAttribute
+  id: 160fc0f4-6efe-4274-8bc7-2a416570bdeb
+  source id: 3b1c6971-541b-4530-9f72-175757500699
+  source relationship names: retries_exceeded
+  destination id: 1f669bb0-6d50-41e6-9230-90c1cc3e21f9
+- name: InvokeHTTP/no retry/LogAttribute
+  source id: 33b373b6-6f19-4194-b45a-1ef73c357a8e
+  source relationship name: no retry
+  destination id: 1f669bb0-6d50-41e6-9230-90c1cc3e21f9
+Controller Services: []
+Remote Processing Groups: []

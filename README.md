@@ -38,6 +38,7 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
 - [Operations](#operations)
 - [Issue Tracking](#issue-tracking)
 - [Documentation](#documentation)
+- [Examples](#examples)
 - [License](#license)
 
 ## Features
@@ -587,6 +588,9 @@ See https://issues.apache.org/jira/projects/MINIFICPP/issues for the issue track
 
 ## Documentation
 See https://nifi.apache.org/minifi for the latest documentation.
+
+## Examples
+See our [examples page](examples/README.md) for flow examples.
 
 ## Contributing
 

@@ -1,0 +1,52 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Query users table
+  id: 0bd6ebcd-7fef-47e3-8e36-4413d39d01d5
+  class: org.apache.nifi.processors.standard.QueryDatabaseTable
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  Properties:
+    Columns to Return: id,name
+    DB Controller Service: ODBCService
+    Output Format: JSON
+    Table Name: users
+    Where Clause: id = 1
+- name: Put files to /tmp/output
+  id: 32700228-e078-42a6-89d7-03e4e478c9da
+  class: org.apache.nifi.processors.standard.PutFile
+  scheduling strategy: EVENT_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list:
+  - success
+  - failure
+  Properties:
+    Directory: /tmp/output
+Controller Services:
+- name: ODBCService
+  id: 64fafacd-74ad-4c3b-b1cc-a816ef128e09
+  class: ODBCService
+  Properties:
+    Connection String: Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;
+Connections:
+- name: QueryDatabaseTable/success/PutFile
+  destination id: 32700228-e078-42a6-89d7-03e4e478c9da
+  source id: 0bd6ebcd-7fef-47e3-8e36-4413d39d01d5
+  source relationship name: success
+Remote Processing Groups: []

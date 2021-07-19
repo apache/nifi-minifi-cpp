@@ -1,0 +1,53 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Consume Kafka messages from ConsumeKafkaTest topic
+  id: 37d6e8e5-6284-423e-8620-c5168a71add7
+  class: org.apache.nifi.processors.standard.ConsumeKafka
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1 sec
+  auto-terminated relationships list:
+  - failure
+  Properties:
+    Group ID: test_group
+    Honor Transactions: 'true'
+    Kafka Brokers: kafka-broker:9092
+    Key Attribute Encoding: UTF-8
+    Max Poll Time: 4 sec
+    Message Header Encoding: UTF-8
+    Offset Reset: earliest
+    Session Timeout: 60 sec
+    Topic Name Format: Names
+    Topic Names: ConsumeKafkaTest
+- name: Put files to /tmp/output
+  class: org.apache.nifi.processors.standard.PutFile
+  id: 7f9c6f0b-e936-499e-b659-acfaf6872772
+  auto-terminated relationships list:
+  - success
+  - failure
+  scheduling strategy: EVENT_DRIVEN
+  Properties:
+    Directory: /tmp/output
+Connections:
+- name: ConsumeKafka/success/PutFile
+  source id: 37d6e8e5-6284-423e-8620-c5168a71add7
+  source relationship name: success
+  destination id: 7f9c6f0b-e936-499e-b659-acfaf6872772
+Controller Services: []
+Remote Processing Groups: []

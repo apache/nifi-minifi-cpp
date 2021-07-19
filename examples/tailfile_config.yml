@@ -1,0 +1,47 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+- name: Log tailfile attributes
+  id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  auto-terminated relationships list:
+  - success
+  Properties:
+    FlowFiles To Log: '0'
+- name: Tail /tmp/test_file.log
+  id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
+  class: org.apache.nifi.minifi.processors.TailFile
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 1000 ms
+  Properties:
+    File to Tail: /tmp/test_file.log
+    Initial Start Position: Beginning of File
+    Input Delimiter: \n
+    tail-mode: Single file
+Connections:
+- name: TailFile/success/LogAttribute
+  id: eda7f758-c548-46d6-aba0-faa6e9937d8c
+  source id: 0ef22940-ac0a-4813-9ad9-fe41c2b51fff
+  source relationship names:
+  - success
+  destination id: 41141af1-3c43-4fa4-8236-2b207b0fe9d8
+Controller Services: []
+Remote Process Groups: []
