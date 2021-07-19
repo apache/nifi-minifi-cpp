@@ -290,7 +290,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
   }
 }
 
-int ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback) {
+int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback) {
   try {
     std::shared_ptr<ResourceClaim> claim = nullptr;
 
@@ -317,7 +317,7 @@ int ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStrea
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
-    return gsl::narrow<int>(ret);
+    return ret;
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
