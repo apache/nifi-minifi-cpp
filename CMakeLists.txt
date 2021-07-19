@@ -177,6 +177,15 @@ endfunction()
 # Find patch executable
 find_package(Patch REQUIRED)
 
+# Setup passthrough args used by third parties
+if (WIN32)
+	set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
+	set(PASSTHROUGH_CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w")
+else()
+	set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+	set(PASSTHROUGH_CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+endif()
+
 set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
 		-DANDROID_PLATFORM=${ANDROID_PLATFORM}
 		-DANDROID_STL=${ANDROID_STL}
@@ -184,8 +193,8 @@ set(PASSTHROUGH_CMAKE_ARGS -DANDROID_ABI=${ANDROID_ABI}
 		-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 		-DANDROID_NDK=${ANDROID_NDK}
 		-DCMAKE_POSITION_INDEPENDENT_CODE=${CMAKE_POSITION_INDEPENDENT_CODE}
-		-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-		-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+		-DCMAKE_C_FLAGS=${PASSTHROUGH_CMAKE_C_FLAGS}
+		-DCMAKE_CXX_FLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS}
 		-DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
 		-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
 		-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -310,9 +319,14 @@ target_include_directories(optional-lite SYSTEM INTERFACE "${CMAKE_CURRENT_SOURC
 # date
 include(Date)
 
-# Setup passthrough args used by third parties
-set(PASSTHROUGH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-set(PASSTHROUGH_CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+# Update passthrough args used in configurations in patch commands
+if (WIN32)
+	set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
+	set(PASSTHROUGH_CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /w")
+else()
+	set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+	set(PASSTHROUGH_CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -w")
+endif()
 
 # Setup warning flags
 if(MSVC)
@@ -502,9 +516,11 @@ if (WIN32)
 endif()
 
 ## OpenCV Extensions
-option(ENABLE_OPENCV "Disables the OpenCV extensions." OFF)
+option(ENABLE_OPENCV "Enables the OpenCV extensions." OFF)
 if (ENABLE_OPENCV)
-	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enabled OpenCV support" "extensions/opencv" "extensions/opencv/tests")
+	include(BundledOpenCV)
+	use_bundled_opencv(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enables OpenCV support" "extensions/opencv" "extensions/opencv/tests")
 endif()
 
 ## Bustache/template extensions
