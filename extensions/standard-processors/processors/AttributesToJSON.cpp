@@ -86,7 +86,7 @@ void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSe
   attribute_list_ = utils::StringUtils::split(attributes, ",");
   context->getProperty(AttributesRegularExpression.getName(), attributes_regular_expression_str_);
   if (!attributes_regular_expression_str_.empty()) {
-    attributes_regular_expression_ = std::regex(attributes_regular_expression_str_);
+    attributes_regular_expression_ = utils::Regex(attributes_regular_expression_str_);
   }
   context->getProperty(Destination.getName(), destination_);
   context->getProperty(IncludeCoreAttributes.getName(), include_core_attributes_);
@@ -97,11 +97,11 @@ bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute)
   return !include_core_attributes_ && CORE_ATTRIBUTES.find(attribute) != CORE_ATTRIBUTES.end();
 }
 
-bool AttributesToJSON::matchesAttributeRegex(const std::string& attribute) const {
-  return attributes_regular_expression_str_.empty() || std::regex_search(attribute, attributes_regular_expression_);
+bool AttributesToJSON::matchesAttributeRegex(const std::string& attribute) {
+  return attributes_regular_expression_str_.empty() || attributes_regular_expression_.match(attribute);
 }
 
-void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) const {
+void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) {
   if (isCoreAttributeToBeFiltered(key)) {
     logger_->log_debug("Core attribute '%s' will not be included in the attributes JSON.", key);
     return;
@@ -118,7 +118,7 @@ void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const s
   document.AddMember(json_key, json_val, document.GetAllocator());
 }
 
-std::string AttributesToJSON::buildAttributeJsonData(std::map<std::string, std::string>&& attributes) const {
+std::string AttributesToJSON::buildAttributeJsonData(std::map<std::string, std::string>&& attributes) {
   auto root = rapidjson::Document(rapidjson::kObjectType);
   if (!attribute_list_.empty()) {
     for (const auto& attribute : attribute_list_) {

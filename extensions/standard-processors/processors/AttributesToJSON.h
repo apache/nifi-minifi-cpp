@@ -23,13 +23,13 @@
 #include <string>
 #include <unordered_set>
 #include <memory>
-#include <regex>
 #include <map>
 
 #include "rapidjson/document.h"
 #include "core/Processor.h"
 #include "core/Property.h"
 #include "core/logging/Logger.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -78,14 +78,14 @@ class AttributesToJSON : public core::Processor {
   };
 
   bool isCoreAttributeToBeFiltered(const std::string& attribute) const;
-  bool matchesAttributeRegex(const std::string& attribute) const;
-  void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) const;
-  std::string buildAttributeJsonData(std::map<std::string, std::string>&& attributes) const;
+  bool matchesAttributeRegex(const std::string& attribute);
+  void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value);
+  std::string buildAttributeJsonData(std::map<std::string, std::string>&& attributes);
 
   std::shared_ptr<logging::Logger> logger_;
   std::vector<std::string> attribute_list_;
   std::string attributes_regular_expression_str_;
-  std::regex attributes_regular_expression_;
+  utils::Regex attributes_regular_expression_;
   std::string destination_;
   bool include_core_attributes_ = true;
   bool null_value_ = false;
