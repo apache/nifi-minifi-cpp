@@ -174,6 +174,9 @@ function(append_third_party_passthrough_args OUTPUT EXTERNALPROJECT_CMAKE_ARGS)
 	set(${OUTPUT} ${EXTERNALPROJECT_CMAKE_ARGS} PARENT_SCOPE)
 endfunction()
 
+# Find bash executable
+find_package(Bash REQUIRED)
+
 # Find patch executable
 find_package(Patch REQUIRED)
 

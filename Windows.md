@@ -25,7 +25,7 @@ The project previously required OpenSSL to be installed. If you follow our build
 
  - Visual Studio 2019
  - [CMake](https://cmake.org/download/)
- - [Git](https://git-scm.com/download/win)
+ - [Git](https://git-scm.com/download/win) (the build process requires the bash.exe and patch.exe tools packaged with Git)
  - (Optional) [WiX Toolset](https://wixtoolset.org/releases/) (only for building the MSI)
  - (Optional) JDK (only for JNI support)
 
