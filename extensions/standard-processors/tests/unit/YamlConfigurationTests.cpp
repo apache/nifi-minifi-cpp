@@ -785,66 +785,68 @@ TEST_CASE("Test YAML Config With Funnel", "[YamlConfiguration]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
 
-  static const std::string CONFIG_YAML_WITH_FUNNEL = ""
-      "MiNiFi Config Version: 3\n"
-      "Flow Controller:\n"
-      "  name: root\n"
-      "  comment: ''\n"
-      "Processors:\n"
-      "- id: 0eac51eb-d76c-4ba6-9f0c-351795b2d243\n"
-      "  name: GenerateFlowFile1\n"
-      "  class: org.apache.nifi.minifi.processors.GenerateFlowFile\n"
-      "  max concurrent tasks: 1\n"
-      "  scheduling strategy: TIMER_DRIVEN\n"
-      "  scheduling period: 10000 ms\n"
-      "  Properties:\n"
-      "    Batch Size: '1'\n"
-      "    Custom Text: custom1\n"
-      "    Data Format: Binary\n"
-      "    File Size: 1 kB\n"
-      "    Unique FlowFiles: 'true'\n"
-      "- id: 5ec49d9b-673d-4c6f-9108-ab4acce0c1dc\n"
-      "  name: GenerateFlowFile2\n"
-      "  class: org.apache.nifi.minifi.processors.GenerateFlowFile\n"
-      "  max concurrent tasks: 1\n"
-      "  scheduling strategy: TIMER_DRIVEN\n"
-      "  scheduling period: 10000 ms\n"
-      "  Properties:\n"
-      "    Batch Size: '1'\n"
-      "    Custom Text: other2\n"
-      "    Data Format: Binary\n"
-      "    File Size: 1 kB\n"
-      "    Unique FlowFiles: 'true'\n"
-      "- id: 695658ba-5b6e-4c7d-9c95-5a980b622c1f\n"
-      "  name: LogAttribute\n"
-      "  class: org.apache.nifi.minifi.processors.LogAttribute\n"
-      "  max concurrent tasks: 1\n"
-      "  scheduling strategy: EVENT_DRIVEN\n"
-      "  auto-terminated relationships list:\n"
-      "  - success\n"
-      "  Properties:\n"
-      "    FlowFiles To Log: '0'\n"
-      "Funnels:\n"
-      "- id: 01a2f910-7050-41c1-8528-942764e7591d\n"
-      "Connections:\n"
-      "- id: 97c6bdfb-3909-499f-9ae5-011cbe8cadaf\n"
-      "  name: 01a2f910-7050-41c1-8528-942764e7591d//LogAttribute\n"
-      "  source id: 01a2f910-7050-41c1-8528-942764e7591d\n"
-      "  source relationship names: []\n"
-      "  destination id: 695658ba-5b6e-4c7d-9c95-5a980b622c1f\n"
-      "- id: 353e6bd5-5fca-494f-ae99-02572352c47a\n"
-      "  name: GenerateFlowFile2/success/01a2f910-7050-41c1-8528-942764e7591d\n"
-      "  source id: 5ec49d9b-673d-4c6f-9108-ab4acce0c1dc\n"
-      "  source relationship names:\n"
-      "  - success\n"
-      "  destination id: 01a2f910-7050-41c1-8528-942764e7591d\n"
-      "- id: 9c02c302-eb4f-4aac-98ed-0f6720a4ff1b\n"
-      "  name: GenerateFlowFile1/success/01a2f910-7050-41c1-8528-942764e7591d\n"
-      "  source id: 0eac51eb-d76c-4ba6-9f0c-351795b2d243\n"
-      "  source relationship names:\n"
-      "  - success\n"
-      "  destination id: 01a2f910-7050-41c1-8528-942764e7591d\n"
-      "Remote Process Groups: []\n";
+  static const std::string CONFIG_YAML_WITH_FUNNEL =
+    R"(
+MiNiFi Config Version: 3
+Flow Controller:
+  name: root
+  comment: ''
+Processors:
+- id: 0eac51eb-d76c-4ba6-9f0c-351795b2d243
+  name: GenerateFlowFile1
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10000 ms
+  Properties:
+    Batch Size: '1'
+    Custom Text: custom1
+    Data Format: Binary
+    File Size: 1 kB
+    Unique FlowFiles: 'true'
+- id: 5ec49d9b-673d-4c6f-9108-ab4acce0c1dc
+  name: GenerateFlowFile2
+  class: org.apache.nifi.minifi.processors.GenerateFlowFile
+  max concurrent tasks: 1
+  scheduling strategy: TIMER_DRIVEN
+  scheduling period: 10000 ms
+  Properties:
+    Batch Size: '1'
+    Custom Text: other2
+    Data Format: Binary
+    File Size: 1 kB
+    Unique FlowFiles: 'true'
+- id: 695658ba-5b6e-4c7d-9c95-5a980b622c1f
+  name: LogAttribute
+  class: org.apache.nifi.minifi.processors.LogAttribute
+  max concurrent tasks: 1
+  scheduling strategy: EVENT_DRIVEN
+  auto-terminated relationships list:
+  - success
+  Properties:
+    FlowFiles To Log: '0'
+Funnels:
+- id: 01a2f910-7050-41c1-8528-942764e7591d
+Connections:
+- id: 97c6bdfb-3909-499f-9ae5-011cbe8cadaf
+  name: 01a2f910-7050-41c1-8528-942764e7591d//LogAttribute
+  source id: 01a2f910-7050-41c1-8528-942764e7591d
+  source relationship names: []
+  destination id: 695658ba-5b6e-4c7d-9c95-5a980b622c1f
+- id: 353e6bd5-5fca-494f-ae99-02572352c47a
+  name: GenerateFlowFile2/success/01a2f910-7050-41c1-8528-942764e7591d
+  source id: 5ec49d9b-673d-4c6f-9108-ab4acce0c1dc
+  source relationship names:
+  - success
+  destination id: 01a2f910-7050-41c1-8528-942764e7591d
+- id: 9c02c302-eb4f-4aac-98ed-0f6720a4ff1b
+  name: GenerateFlowFile1/success/01a2f910-7050-41c1-8528-942764e7591d
+  source id: 0eac51eb-d76c-4ba6-9f0c-351795b2d243
+  source relationship names:
+  - success
+  destination id: 01a2f910-7050-41c1-8528-942764e7591d
+Remote Process Groups: []
+    )";
 
   std::istringstream configYamlStream(CONFIG_YAML_WITH_FUNNEL);
   std::unique_ptr<core::ProcessGroup> rootFlowConfig = yamlConfig.getYamlRoot(configYamlStream);

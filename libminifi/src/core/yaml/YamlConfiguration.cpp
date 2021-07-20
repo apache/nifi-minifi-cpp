@@ -824,8 +824,9 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
     return;
   }
 
-  for (YAML::const_iterator iter = node.begin(); iter != node.end(); ++iter) {
-    YAML::Node funnel_node = iter->as<YAML::Node>();
+  for (const auto& element : node) {
+  // for (YAML::const_iterator iter = node.begin(); iter != node.end(); ++iter) {
+    YAML::Node funnel_node = element.as<YAML::Node>();
 
     std::string id = getOrGenerateId(funnel_node);
 

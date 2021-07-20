@@ -264,14 +264,14 @@ def step_impl(context, file_name, content, path):
     context.test.add_test_data(path, content, file_name)
 
 
-@given("a Funnel with the name \"{funnel_name}\" is set up in the flow")
+@given("a Funnel with the name \"{funnel_name}\" is set up")
 def step_impl(context, funnel_name):
     funnel = Funnel()
     funnel.set_name(funnel_name)
     context.test.add_node(funnel)
 
 
-@given("in the flow the Funnel with the name \"{source_name}\" is connected to the {destination_name}")
+@given("the Funnel with the name \"{source_name}\" is connected to the {destination_name}")
 def step_impl(context, source_name, destination_name):
     source = context.test.get_or_create_node_by_name(source_name)
     destination = context.test.get_or_create_node_by_name(destination_name)
