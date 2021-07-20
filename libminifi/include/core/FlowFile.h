@@ -22,6 +22,7 @@
 #include <memory>
 #include <optional>
 #include <set>
+#include <unordered_set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -310,6 +311,10 @@ struct SpecialFlowAttribute {
   static const std::string ALTERNATE_IDENTIFIER;
   // Flow identifier
   static const std::string FLOW_ID;
+
+  static std::unordered_set<std::string> getSpecialFlowAttributes() {
+    return {PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID};
+  }
 };
 
 }  // namespace core

@@ -21,10 +21,12 @@
 
 #include <vector>
 #include <string>
-#include <set>
+#include <unordered_set>
 #include <memory>
 #include <regex>
+#include <map>
 
+#include "rapidjson/document.h"
 #include "core/Processor.h"
 #include "core/Property.h"
 #include "core/logging/Logger.h"
@@ -37,7 +39,7 @@ namespace processors {
 
 class AttributesToJSON : public core::Processor {
  public:
-  static const std::set<std::string> CORE_ATTRIBUTES;
+  static const std::unordered_set<std::string> CORE_ATTRIBUTES;
 
   explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid),
@@ -74,6 +76,11 @@ class AttributesToJSON : public core::Processor {
    private:
     std::string json_data_;
   };
+
+  bool isCoreAttributeToBeFiltered(const std::string& attribute) const;
+  bool matchesAttributeRegex(const std::string& attribute) const;
+  void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) const;
+  std::string buildAttributeJsonData(std::map<std::string, std::string>&& attributes) const;
 
   std::shared_ptr<logging::Logger> logger_;
   std::vector<std::string> attribute_list_;

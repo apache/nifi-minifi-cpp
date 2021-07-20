@@ -68,14 +68,14 @@ class AttributesToJSONTestFixture {
   std::vector<std::string> getOutputFileContents() {
     std::vector<std::string> file_contents;
 
-    auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
+    auto callback = [&file_contents](const std::string& path, const std::string& filename) -> bool {
       std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
       std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
       file_contents.push_back(file_content);
       return true;
     };
 
-    utils::file::FileUtils::list_dir(dir_, lambda, plan_->getLogger(), false);
+    utils::file::FileUtils::list_dir(dir_, callback, plan_->getLogger(), false);
 
     return file_contents;
   }
@@ -141,6 +141,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in fl
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0].size() == expected_content.size());
   REQUIRE(file_contents[0] == expected_content);
+  REQUIRE(!LogTestController::getInstance().contains("key:JSONAttributes", std::chrono::seconds(0), std::chrono::milliseconds(0)));
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Do not include core attributes in JSON", "[AttributesToJSONTests]") {
