@@ -61,7 +61,7 @@ const core::Property AttributesToJSON::IncludeCoreAttributes(
 
 const core::Property AttributesToJSON::NullValue(
   core::PropertyBuilder::createProperty("Null Value")
-    ->withDescription("If true a non existing or empty attribute will be NULL in the resulting JSON. If false an empty string will be placed in the JSON")
+    ->withDescription("If true a non existing or empty attribute will be NULL in the resulting JSON. If false an empty string will be placed in the JSON.")
     ->isRequired(true)
     ->withDefaultValue<bool>(false)
     ->build());
