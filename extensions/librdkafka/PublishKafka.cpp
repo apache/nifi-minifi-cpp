@@ -553,11 +553,18 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
 void PublishKafka::notifyStop() {
   logger_->log_debug("notifyStop called");
   interrupted_ = true;
-  std::lock_guard<std::mutex> conn_lock(connection_mutex_);
-  std::lock_guard<std::mutex> lock(messages_mutex_);
-  for (auto& messages : messages_set_) {
-    messages->interrupt();
+  {
+    // Normally when we need both connection_mutex_ and messages_mutex_, we need to take connection_mutex_ first to avoid a deadlock.
+    // It's not possible to do that here, because we need to interrupt the messages while onTrigger is running and holding connection_mutex_.
+    // For this reason, we take messages_mutex_ only, interrupt the messages, then release the lock to let a possibly running onTrigger take it and finish.
+    // After onTrigger finishes, we can take connection_mutex_ and close the connection without needing to wait for message finishes/timeouts in onTrigger.
+    // A possible new onTrigger between our critical sections won't produce more messages because we set interrupted_ = true above.
+    std::lock_guard<std::mutex> lock(messages_mutex_);
+    for (auto& messages : messages_set_) {
+      messages->interrupt();
+    }
   }
+  std::lock_guard<std::mutex> conn_lock(connection_mutex_);
   conn_.reset();
 }
 
