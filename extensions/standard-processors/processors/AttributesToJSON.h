@@ -39,11 +39,10 @@ namespace processors {
 
 class AttributesToJSON : public core::Processor {
  public:
-  static const std::unordered_set<std::string> CORE_ATTRIBUTES;
-
   explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()) {
+        logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()),
+        core_attributes_(core::SpecialFlowAttribute::getSpecialFlowAttributes()) {
   }
   static constexpr char const* ProcessorName = "AttributesToJSON";
   // Supported Properties
@@ -83,6 +82,7 @@ class AttributesToJSON : public core::Processor {
   std::string buildAttributeJsonData(std::map<std::string, std::string>&& attributes);
 
   std::shared_ptr<logging::Logger> logger_;
+  const std::unordered_set<std::string> core_attributes_;
   std::vector<std::string> attribute_list_;
   std::string attributes_regular_expression_str_;
   utils::Regex attributes_regular_expression_;

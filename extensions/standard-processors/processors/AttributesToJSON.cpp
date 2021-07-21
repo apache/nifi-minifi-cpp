@@ -28,8 +28,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::unordered_set<std::string> AttributesToJSON::CORE_ATTRIBUTES(core::SpecialFlowAttribute::getSpecialFlowAttributes());
-
 const core::Property AttributesToJSON::AttributesList(
   core::PropertyBuilder::createProperty("Attributes List")
     ->withDescription("Comma separated list of attributes to be included in the resulting JSON. "
@@ -94,7 +92,7 @@ void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSe
 }
 
 bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute) const {
-  return !include_core_attributes_ && CORE_ATTRIBUTES.find(attribute) != CORE_ATTRIBUTES.end();
+  return !include_core_attributes_ && core_attributes_.find(attribute) != core_attributes_.end();
 }
 
 bool AttributesToJSON::matchesAttributeRegex(const std::string& attribute) {
