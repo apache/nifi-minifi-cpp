@@ -90,7 +90,7 @@ jobs:
   ubuntu_20_04:
     name: "ubuntu-20.04"
     runs-on: ubuntu-20.04
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - id: checkout
         uses: actions/checkout@v2
