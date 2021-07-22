@@ -113,8 +113,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Description |
 | - | - |
-|success|Successfully converted attributes to JSON|
-|failure|Failed to convert attributes to JSON|
+|success|All FlowFiles received are routed to success|
 
 ## BinFiles
 

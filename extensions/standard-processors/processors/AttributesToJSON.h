@@ -57,7 +57,6 @@ class AttributesToJSON : public core::Processor {
 
   // Supported Relationships
   static core::Relationship Success;
-  static core::Relationship Failure;
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* sessionFactory) override;
@@ -89,7 +88,7 @@ class AttributesToJSON : public core::Processor {
   std::vector<std::string> attribute_list_;
   std::string attributes_regular_expression_str_;
   utils::Regex attributes_regular_expression_;
-  std::string destination_;
+  bool write_to_attribute_ = true;
   bool include_core_attributes_ = true;
   bool null_value_ = false;
 };

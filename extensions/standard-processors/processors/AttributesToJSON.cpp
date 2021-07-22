@@ -67,8 +67,7 @@ const core::Property AttributesToJSON::NullValue(
     ->withDefaultValue<bool>(false)
     ->build());
 
-core::Relationship AttributesToJSON::Success("success", "Successfully converted attributes to JSON");
-core::Relationship AttributesToJSON::Failure("failure", "Failed to convert attributes to JSON");
+core::Relationship AttributesToJSON::Success("success", "All FlowFiles received are routed to success");
 
 void AttributesToJSON::initialize() {
   setSupportedProperties({
@@ -78,7 +77,7 @@ void AttributesToJSON::initialize() {
     IncludeCoreAttributes,
     NullValue
   });
-  setSupportedRelationships({Success, Failure});
+  setSupportedRelationships({Success});
 }
 
 void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -89,7 +88,7 @@ void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSe
   if (!attributes_regular_expression_str_.empty()) {
     attributes_regular_expression_ = utils::Regex(attributes_regular_expression_str_);
   }
-  destination_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, Destination.getName(), DESTINATIONS);
+  write_to_attribute_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, Destination.getName(), DESTINATIONS) == "flowfile-attribute";
   context->getProperty(IncludeCoreAttributes.getName(), include_core_attributes_);
   context->getProperty(NullValue.getName(), null_value_);
 }
@@ -144,23 +143,15 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
   }
 
   auto json_data = buildAttributeJsonData(flow_file->getAttributes());
-  if (destination_ == "flowfile-attribute") {
+  if (write_to_attribute_) {
     logger_->log_debug("Writing the following attribute data to JSONAttributes attribute: %s", json_data);
     session->putAttribute(flow_file, "JSONAttributes", json_data);
     session->transfer(flow_file, Success);
-  } else if (destination_ == "flowfile-content") {
+  } else {
     logger_->log_debug("Writing the following attribute data to flowfile: %s", json_data);
     AttributesToJSON::WriteCallback callback(json_data);
-    try {
-      session->write(flow_file, &callback);
-      session->transfer(flow_file, Success);
-    } catch(const std::exception&) {
-      logger_->log_error("Failed to write attributes to flow file!");
-      session->transfer(flow_file, Failure);
-    }
-  } else {
-    logger_->log_error("Unimplemented destination was set in AttributesToJSON's Destination property");
-    session->transfer(flow_file, Failure);
+    session->write(flow_file, &callback);
+    session->transfer(flow_file, Success);
   }
 }
 
