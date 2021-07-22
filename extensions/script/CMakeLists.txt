@@ -38,7 +38,7 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     endif()
 
     include_directories(${PYTHON_INCLUDE_DIR})
-    include_directories(SYSTEM ../../thirdparty/pybind11/include)
+    include(Pybind11)
 
     include_directories(python)
     add_definitions(-DPYTHON_SUPPORT)
@@ -48,6 +48,7 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
 
     target_link_libraries(minifi-python-extensions ${LIBMINIFI})
     target_link_libraries(minifi-python-extensions ${PYTHON_LIBRARIES})
+    target_link_libraries(minifi-python-extensions pybind11)
     target_link_libraries(minifi-script-extensions minifi-python-extensions)
 endif()
 
