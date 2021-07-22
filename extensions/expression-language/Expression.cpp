@@ -25,10 +25,6 @@
 #include <functional>
 #include <string>
 
-#ifdef GetObject
-#undef GetObject
-#endif
-
 #include "rapidjson/reader.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/document.h"

@@ -22,10 +22,6 @@
 #include <memory>
 #include <utility>
 
-#ifdef GetObject
-#undef GetObject
-#endif
-
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
 

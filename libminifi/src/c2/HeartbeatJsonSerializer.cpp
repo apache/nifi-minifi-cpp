@@ -17,9 +17,6 @@
 
 #include "c2/HeartbeatJsonSerializer.h"
 
-#ifdef GetObject
-#undef GetObject
-#endif
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"

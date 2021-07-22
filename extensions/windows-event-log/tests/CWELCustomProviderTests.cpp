@@ -28,9 +28,6 @@
 #include "wel/UniqueEvtHandle.h"
 #include "IntegrationTestUtils.h"
 
-#ifdef GetObject
-#undef GetObject
-#endif
 #include "rapidjson/document.h"
 
 #include "CWELTestUtils.h"

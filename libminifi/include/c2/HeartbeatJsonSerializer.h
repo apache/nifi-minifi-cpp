@@ -22,9 +22,6 @@
 #include "HeartbeatReporter.h"
 #include "C2Payload.h"
 
-#ifdef GetObject
-#undef GetObject
-#endif
 #include "rapidjson/document.h"
 
 namespace org {

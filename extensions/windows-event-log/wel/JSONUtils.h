@@ -22,9 +22,6 @@
 
 #include "pugixml.hpp"
 
-#ifdef GetObject
-#undef GetObject
-#endif
 #include "rapidjson/document.h"
 
 namespace org {
