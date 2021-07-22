@@ -40,6 +40,8 @@ namespace jni {
 #endif
 JVMCreator::~JVMCreator() = default;
 
+REGISTER_INTERNAL_RESOURCE(JVMCreator);
+
 } /* namespace jni */
 } /* namespace minifi */
 } /* namespace nifi */

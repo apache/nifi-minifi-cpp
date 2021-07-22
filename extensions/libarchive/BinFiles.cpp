@@ -374,6 +374,8 @@ std::set<std::shared_ptr<core::Connectable>> BinFiles::getOutGoingConnections(co
   return result;
 }
 
+REGISTER_RESOURCE(BinFiles, "Bins flow files into buckets based on the number of entries or size of entries");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

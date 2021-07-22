@@ -15,33 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "SFTPLoader.h"
-#include "core/FlowConfiguration.h"
+
+#include "core/extension/Extension.h"
 #include "client/SFTPClient.h"
 
-bool SFTPFactoryInitializer::initialize() {
-  if (libssh2_init(0) != 0) {
-    return false;
+class SFTPExtension : core::extension::Extension {
+ public:
+  using Extension::Extension;
+  bool doInitialize(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) override {
+    if (libssh2_init(0) != 0) {
+      return false;
+    }
+    if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
+      libssh2_exit();
+      return false;
+    }
+    return true;
   }
-  if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
+
+  void doDeinitialize() override {
+    curl_global_cleanup();
     libssh2_exit();
-    return false;
   }
-  return true;
-}
+};
 
-void SFTPFactoryInitializer::deinitialize() {
-  curl_global_cleanup();
-  libssh2_exit();
-}
-
-
-bool SFTPFactory::added = core::FlowConfiguration::add_static_func("createSFTPFactory");
-
-extern "C" {
-
-void *createSFTPFactory(void) {
-  return new SFTPFactory();
-}
-
-}
+REGISTER_EXTENSION(SFTPExtension);

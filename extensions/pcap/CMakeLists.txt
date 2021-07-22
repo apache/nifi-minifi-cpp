@@ -51,8 +51,7 @@ set(PCAPPLUSPLUS_LIB_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist")
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-pcap STATIC ${SOURCES})
-set_property(TARGET minifi-pcap PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-pcap SHARED ${SOURCES})
 
 add_dependencies(minifi-pcap pcappp)
 

@@ -430,6 +430,8 @@ void HTTPClient::setFollowRedirects(bool follow) {
   curl_easy_setopt(http_session_, CURLOPT_FOLLOWLOCATION, follow);
 }
 
+REGISTER_INTERNAL_RESOURCE(HTTPClient);
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

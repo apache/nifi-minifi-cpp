@@ -30,6 +30,7 @@
 #include "io/StreamFactory.h"
 #include "utils/Id.h"
 #include "utils/HTTPClient.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -224,8 +225,8 @@ typedef struct {
 // Request Type Str
 class SiteToSiteRequest {
  public:
-  static const char *RequestTypeStr[MAX_REQUEST_TYPE];
-  static RespondCodeContext respondCodeContext[21];
+  MINIFIAPI static const char *RequestTypeStr[MAX_REQUEST_TYPE];
+  MINIFIAPI static RespondCodeContext respondCodeContext[21];
 };
 
 
@@ -324,7 +325,7 @@ class Transaction {
   // A global unique identifier
   utils::Identifier uuid_;
 
-  static std::shared_ptr<utils::IdGenerator> id_generator_;
+  MINIFIAPI static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
 class SiteToSiteClientConfiguration {

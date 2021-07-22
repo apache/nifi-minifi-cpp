@@ -39,15 +39,7 @@ if(WIN32)
 endif()
 add_executable(minifiexe ${MINIFIEXE_SOURCES})
 
-if (NOT USE_SHARED_LIBS)
-	if (LIBC_STATIC)
-		set_target_properties(minifiexe PROPERTIES LINK_SEARCH_START_STATIC 1)
-	endif(LIBC_STATIC)
-endif(NOT USE_SHARED_LIBS)
 target_link_libraries(minifiexe Threads::Threads)
-
-target_wholearchive_library(minifiexe core-minifi)
-target_wholearchive_library(minifiexe minifi)
 
 target_link_libraries(minifiexe yaml-cpp)
 if(NOT WIN32 AND ENABLE_JNI AND NOT DISABLE_JEMALLOC)
@@ -59,19 +51,10 @@ if (WIN32)
   	target_link_libraries(minifiexe semaphore)
 endif()
 
-if (NOT USE_SHARED_LIBS)
-	if (LIBC_STATIC)
-		target_link_libraries(minifiexe -static-libgcc -static-libstdc++)
-		set_target_properties(minifiexe PROPERTIES LINK_SEARCH_END_STATIC 1)
-	endif(LIBC_STATIC)
-endif(NOT USE_SHARED_LIBS)
-
 get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
-foreach(EXTENSION ${extensions})
-	message("Linking MiNiFiMain against ${EXTENSION}")
-	target_wholearchive_library(minifiexe ${EXTENSION})
-endforeach()
+target_link_libraries(minifiexe spdlog libsodium gsl-lite optional-lite ${LIBMINIFI})
 
+set_target_properties(minifiexe PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set_target_properties(minifiexe PROPERTIES OUTPUT_NAME minifi)
 set_target_properties(minifiexe PROPERTIES ENABLE_EXPORTS True)
 
@@ -81,4 +64,12 @@ add_custom_command(TARGET minifiexe POST_BUILD
 else()
 #add_custom_command(TARGET minifiexe POST_BUILD
 #           COMMAND type ${CMAKE_BINARY_DIR}/all.log)
+endif()
+
+if (NOT WIN32)
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+		target_link_options(minifiexe PRIVATE "-Wl,--disable-new-dtags")
+	endif()
+	set_target_properties(minifiexe PROPERTIES INSTALL_RPATH "$ORIGIN")
+	install(TARGETS minifiexe RUNTIME DESTINATION bin COMPONENT bin)
 endif()

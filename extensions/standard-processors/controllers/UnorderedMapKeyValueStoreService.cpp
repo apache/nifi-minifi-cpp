@@ -98,6 +98,8 @@ bool UnorderedMapKeyValueStoreService::update(const std::string& key, const std:
   return true;
 }
 
+REGISTER_RESOURCE(UnorderedMapKeyValueStoreService, "A key-value service implemented by a locked std::unordered_map<std::string, std::string>");
+
 } /* namespace controllers */
 } /* namespace minifi */
 } /* namespace nifi */

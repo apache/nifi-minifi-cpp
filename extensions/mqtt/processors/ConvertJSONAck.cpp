@@ -104,6 +104,8 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   session->transfer(flow, Success);
 }
 
+REGISTER_INTERNAL_RESOURCE(ConvertJSONAck);
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

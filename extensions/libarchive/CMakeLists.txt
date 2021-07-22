@@ -21,8 +21,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-archive-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-archive-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-archive-extensions SHARED ${SOURCES})
 
 target_link_libraries(minifi-archive-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-archive-extensions LibArchive::LibArchive)

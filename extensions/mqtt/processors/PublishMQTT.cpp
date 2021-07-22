@@ -99,6 +99,8 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 }
 
+REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -32,6 +32,7 @@
 #ifdef WIN32
 #include <ws2tcpip.h>
 #include <winsock2.h>
+#pragma comment(lib, "Ws2_32.lib")
 #endif
 #include "properties/Configure.h"
 #include "io/tls/TLSSocket.h"

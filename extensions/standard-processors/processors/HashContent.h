@@ -40,6 +40,7 @@
 #include "core/Resource.h"
 #include "io/BaseStream.h"
 #include "utils/StringUtils.h"
+#include "utils/Export.h"
 
 using HashReturnType = std::pair<std::string, int64_t>;
 
@@ -142,14 +143,14 @@ class HashContent : public core::Processor {
     logger_ = logging::LoggerFactory<HashContent>::getLogger();
   }
   //! Processor Name
-  static constexpr char const* ProcessorName = "HashContent";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "HashContent";
   //! Supported Properties
-  static core::Property HashAttribute;
-  static core::Property HashAlgorithm;
-  static core::Property FailOnEmpty;
+  EXTENSIONAPI static core::Property HashAttribute;
+  EXTENSIONAPI static core::Property HashAlgorithm;
+  EXTENSIONAPI static core::Property FailOnEmpty;
   //! Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Failure;
 
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
 
@@ -180,8 +181,6 @@ class HashContent : public core::Processor {
   std::string attrKey_;
   bool failOnEmpty_;
 };
-
-REGISTER_RESOURCE(HashContent,"HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. Configuration options exist to select hashing algorithm and set the name of the attribute."); // NOLINT
 
 }  // namespace processors
 }  // namespace minifi

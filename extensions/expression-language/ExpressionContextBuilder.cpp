@@ -43,6 +43,8 @@ std::shared_ptr<core::ProcessContext> ExpressionContextBuilder::build(const std:
   return std::make_shared<core::ProcessContextExpr>(processor, controller_service_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
 }
 
+REGISTER_INTERNAL_RESOURCE_AS(ExpressionContextBuilder, ("ProcessContextBuilder"));
+
 } /* namespace expressions */
 } /* namespace core */
 } /* namespace minifi */

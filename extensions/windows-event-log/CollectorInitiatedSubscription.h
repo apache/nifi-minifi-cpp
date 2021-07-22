@@ -107,8 +107,6 @@ class CollectorInitiatedSubscription : public core::Processor {
   SupportedProperty<uint64_t> inactiveDurationToReconnect_;
 };
 
-REGISTER_RESOURCE(CollectorInitiatedSubscription, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -31,6 +31,7 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "utils/gsl.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -54,16 +55,16 @@ class GenerateFlowFile : public core::Processor {
   // Destructor
   ~GenerateFlowFile() override = default;
   // Processor Name
-  static constexpr char const* ProcessorName = "GenerateFlowFile";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "GenerateFlowFile";
   // Supported Properties
-  static core::Property FileSize;
-  static core::Property BatchSize;
-  static core::Property DataFormat;
-  static core::Property UniqueFlowFiles;
-  static core::Property CustomText;
-  static const char *DATA_FORMAT_TEXT;
+  EXTENSIONAPI static core::Property FileSize;
+  EXTENSIONAPI static core::Property BatchSize;
+  EXTENSIONAPI static core::Property DataFormat;
+  EXTENSIONAPI static core::Property UniqueFlowFiles;
+  EXTENSIONAPI static core::Property CustomText;
+  EXTENSIONAPI static const char *DATA_FORMAT_TEXT;
   // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Success;
   // Nest Callback Class for write stream
   class WriteCallback : public OutputStreamCallback {
    public:
@@ -101,8 +102,6 @@ class GenerateFlowFile : public core::Processor {
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");
 
 }  // namespace processors
 }  // namespace minifi

@@ -29,6 +29,8 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
+std::string get_sftp_test_dir();
+
 class SFTPTestServer {
  public:
   SFTPTestServer(const std::string& working_directory,

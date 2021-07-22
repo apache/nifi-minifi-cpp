@@ -59,7 +59,7 @@ namespace minifi {
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                                std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                               std::shared_ptr<core::ContentRepository> content_repo, const std::string /*name*/, bool headless_mode,
+                               std::shared_ptr<core::ContentRepository> content_repo, const std::string /*name*/, bool /*headless_mode*/,
                                std::shared_ptr<utils::file::FileSystem> filesystem)
     : core::controller::ForwardingControllerServiceProvider(core::getClassName<FlowController>()),
       c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo),
@@ -80,25 +80,13 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   initialized_ = false;
 
   protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
-
-  if (!headless_mode) {
-    initializeExternalComponents();
-  }
 }
 
-void FlowController::initializeExternalComponents() {
-  auto jvmCreator = core::ClassLoader::getDefaultClassLoader().instantiate("JVMCreator", "JVMCreator");
-  if (nullptr != jvmCreator) {
-    logger_->log_debug("JVMCreator loaded...");
-    jvmCreator->configure(configuration_);
-  }
-
-  auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
-  if (nullptr != pythoncreator) {
-    logger_->log_debug("PythonCreator loaded...");
-    pythoncreator->configure(configuration_);
-  }
-}
+FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
+                 std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
+                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem)
+      : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration),
+                       std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, false, std::move(filesystem)) {}
 
 std::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
   std::string shutdown_timeout_str;

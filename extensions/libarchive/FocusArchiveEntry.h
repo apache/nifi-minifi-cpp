@@ -32,6 +32,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
 #include "utils/file/FileManager.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -53,11 +54,11 @@ class FocusArchiveEntry : public core::Processor {
   //! Destructor
   virtual ~FocusArchiveEntry()   = default;
   //! Processor Name
-  static constexpr char const* ProcessorName = "FocusArchiveEntry";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "FocusArchiveEntry";
   //! Supported Properties
-  static core::Property Path;
+  EXTENSIONAPI static core::Property Path;
   //! Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Success;
 
   //! OnTrigger method, implemented by NiFi FocusArchiveEntry
   virtual void onTrigger(core::ProcessContext *context,
@@ -86,10 +87,6 @@ class FocusArchiveEntry : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
-
-REGISTER_RESOURCE(FocusArchiveEntry, "Allows manipulation of entries within an archive (e.g. TAR) by focusing on one entry within the archive at a time. "
-    "When an archive entry is focused, that entry is treated as the content of the FlowFile and may be manipulated independently of the rest of the archive."
-    " To restore the FlowFile to its original state, use UnfocusArchiveEntry.");
 
 } /* namespace processors */
 } /* namespace minifi */

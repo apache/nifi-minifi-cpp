@@ -57,38 +57,38 @@ class PublishKafka : public core::Processor {
   static constexpr char const* ProcessorName = "PublishKafka";
 
   // Supported Properties
-  static const core::Property SeedBrokers;
-  static const core::Property Topic;
-  static const core::Property DeliveryGuarantee;
-  static const core::Property MaxMessageSize;
-  static const core::Property RequestTimeOut;
-  static const core::Property MessageTimeOut;
-  static const core::Property ClientName;
-  static const core::Property BatchSize;
-  static const core::Property TargetBatchPayloadSize;
-  static const core::Property AttributeNameRegex;
-  static const core::Property QueueBufferMaxTime;
-  static const core::Property QueueBufferMaxSize;
-  static const core::Property QueueBufferMaxMessage;
-  static const core::Property CompressCodec;
-  static const core::Property MaxFlowSegSize;
-  static const core::Property SSLContextService;
-  static const core::Property SecurityProtocol;
-  static const core::Property SecurityCA;
-  static const core::Property SecurityCert;
-  static const core::Property SecurityPrivateKey;
-  static const core::Property SecurityPrivateKeyPassWord;
-  static const core::Property KerberosServiceName;
-  static const core::Property KerberosPrincipal;
-  static const core::Property KerberosKeytabPath;
-  static const core::Property KafkaKey;
-  static const core::Property MessageKeyField;
-  static const core::Property DebugContexts;
-  static const core::Property FailEmptyFlowFiles;
+  EXTENSIONAPI static const core::Property SeedBrokers;
+  EXTENSIONAPI static const core::Property Topic;
+  EXTENSIONAPI static const core::Property DeliveryGuarantee;
+  EXTENSIONAPI static const core::Property MaxMessageSize;
+  EXTENSIONAPI static const core::Property RequestTimeOut;
+  EXTENSIONAPI static const core::Property MessageTimeOut;
+  EXTENSIONAPI static const core::Property ClientName;
+  EXTENSIONAPI static const core::Property BatchSize;
+  EXTENSIONAPI static const core::Property TargetBatchPayloadSize;
+  EXTENSIONAPI static const core::Property AttributeNameRegex;
+  EXTENSIONAPI static const core::Property QueueBufferMaxTime;
+  EXTENSIONAPI static const core::Property QueueBufferMaxSize;
+  EXTENSIONAPI static const core::Property QueueBufferMaxMessage;
+  EXTENSIONAPI static const core::Property CompressCodec;
+  EXTENSIONAPI static const core::Property MaxFlowSegSize;
+  EXTENSIONAPI static const core::Property SSLContextService;
+  EXTENSIONAPI static const core::Property SecurityProtocol;
+  EXTENSIONAPI static const core::Property SecurityCA;
+  EXTENSIONAPI static const core::Property SecurityCert;
+  EXTENSIONAPI static const core::Property SecurityPrivateKey;
+  EXTENSIONAPI static const core::Property SecurityPrivateKeyPassWord;
+  EXTENSIONAPI static const core::Property KerberosServiceName;
+  EXTENSIONAPI static const core::Property KerberosPrincipal;
+  EXTENSIONAPI static const core::Property KerberosKeytabPath;
+  EXTENSIONAPI static const core::Property KafkaKey;
+  EXTENSIONAPI static const core::Property MessageKeyField;
+  EXTENSIONAPI static const core::Property DebugContexts;
+  EXTENSIONAPI static const core::Property FailEmptyFlowFiles;
 
   // Supported Relationships
-  static const core::Relationship Failure;
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Success;
 
   explicit PublishKafka(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(std::move(name), uuid) {
@@ -135,9 +135,6 @@ class PublishKafka : public core::Processor {
   std::mutex messages_mutex_;  // If both connection_mutex_ and messages_mutex_ are needed, always take connection_mutex_ first to avoid deadlock
   std::set<std::shared_ptr<Messages>> messages_set_;
 };
-
-REGISTER_RESOURCE(PublishKafka, "This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. The content of a FlowFile becomes the contents of a Kafka message. "
-                  "This message is optionally assigned a key by using the <Kafka Key> Property.");
 
 }  // namespace processors
 }  // namespace minifi

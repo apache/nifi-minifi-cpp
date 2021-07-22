@@ -38,19 +38,17 @@ class PutSQL: public SQLProcessor {
   explicit PutSQL(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Processor Name
-  static const std::string ProcessorName;
+  EXTENSIONAPI static const std::string ProcessorName;
 
   void processOnSchedule(core::ProcessContext& context) override;
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
 
-  static const core::Property SQLStatement;
+  EXTENSIONAPI static const core::Property SQLStatement;
 
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
 };
-
-REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
 
 }  // namespace processors
 }  // namespace minifi

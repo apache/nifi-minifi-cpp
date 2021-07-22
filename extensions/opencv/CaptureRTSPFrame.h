@@ -29,6 +29,7 @@
 #include "core/Resource.h"
 #include "core/Processor.h"
 #include "utils/gsl.h"
+#include "utils/Export.h"
 
 
 namespace org {
@@ -44,15 +45,15 @@ class CaptureRTSPFrame : public core::Processor {
         logger_(logging::LoggerFactory<CaptureRTSPFrame>::getLogger()) {
   }
 
-  static core::Property RTSPUsername;
-  static core::Property RTSPPassword;
-  static core::Property RTSPHostname;
-  static core::Property RTSPURI;
-  static core::Property RTSPPort;
-  static core::Property ImageEncoding;
+  EXTENSIONAPI static core::Property RTSPUsername;
+  EXTENSIONAPI static core::Property RTSPPassword;
+  EXTENSIONAPI static core::Property RTSPHostname;
+  EXTENSIONAPI static core::Property RTSPURI;
+  EXTENSIONAPI static core::Property RTSPPort;
+  EXTENSIONAPI static core::Property ImageEncoding;
 
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Failure;
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
@@ -130,8 +131,6 @@ class CaptureRTSPFrame : public core::Processor {
 //
 //  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
 };
-
-REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT
 
 } /* namespace processors */
 } /* namespace minifi */

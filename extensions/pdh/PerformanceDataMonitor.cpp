@@ -336,6 +336,8 @@ void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<co
   setupDecimalPlacesFromProperties(context);
 }
 
+REGISTER_RESOURCE(PerformanceDataMonitor, "This processor can create FlowFiles with various performance data through Performance Data Helper. (Windows only)");
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

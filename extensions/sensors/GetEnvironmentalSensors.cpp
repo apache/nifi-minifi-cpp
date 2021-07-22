@@ -142,6 +142,8 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
   }
 }
 
+REGISTER_RESOURCE(GetEnvironmentalSensors, "Provides sensor information from known sensors to include humidity and pressure data");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

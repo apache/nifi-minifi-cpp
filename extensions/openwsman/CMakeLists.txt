@@ -21,9 +21,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "processors/*.cpp")
 
-add_library(minifi-openwsman STATIC ${SOURCES})
-
-set_property(TARGET minifi-openwsman PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-openwsman SHARED ${SOURCES})
 
 target_link_libraries(minifi-openwsman ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-openwsman OpenWSMAN::libwsman CIVETWEB::civetweb-cpp CIVETWEB::c-library LibXml2::LibXml2)

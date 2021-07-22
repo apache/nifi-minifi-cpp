@@ -41,7 +41,6 @@
 
 TEST_CASE("GPSD Create", "[gpsdtest1]") {
   TestController testController;
-  core::ClassLoader::getDefaultClassLoader().registerResource("", "createGPSFactory");
 
   LogTestController::getInstance().setTrace<minifi::processors::GetGPS>();
 

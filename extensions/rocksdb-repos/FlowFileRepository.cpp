@@ -259,6 +259,8 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
   initialize_repository();
 }
 
+REGISTER_INTERNAL_RESOURCE_AS(FlowFileRepository, ("FlowFileRepository", "flowfilerepository"));
+
 } /* namespace repository */
 } /* namespace core */
 } /* namespace minifi */

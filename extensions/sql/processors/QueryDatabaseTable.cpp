@@ -297,6 +297,7 @@ bool QueryDatabaseTable::saveState() {
   return state_manager_->set(state_map);
 }
 
+REGISTER_RESOURCE(QueryDatabaseTable, "QueryDatabaseTable to execute SELECT statement via ODBC.");
 
 }  // namespace processors
 }  // namespace minifi

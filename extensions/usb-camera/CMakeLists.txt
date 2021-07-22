@@ -49,8 +49,7 @@ endif()
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-usb-camera-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-usb-camera-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-usb-camera-extensions SHARED ${SOURCES})
 
 target_link_libraries(minifi-usb-camera-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-usb-camera-extensions libuvc PNG::PNG)

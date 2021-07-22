@@ -108,6 +108,11 @@ LoggerConfiguration::LoggerConfiguration()
   loggers.push_back(logger_);
 }
 
+LoggerConfiguration& LoggerConfiguration::getConfiguration() {
+  static LoggerConfiguration instance;
+  return instance;
+}
+
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
   std::lock_guard<std::mutex> lock(mutex);
   root_namespace_ = initialize_namespaces(logger_properties);
@@ -159,6 +164,10 @@ std::shared_ptr<Logger> LoggerConfiguration::getLogger(const std::string &name, 
   std::shared_ptr<LoggerImpl> result = std::make_shared<LoggerImpl>(adjusted_name, controller_, get_logger(logger_, root_namespace_, adjusted_name, formatter_));
   loggers.push_back(result);
   return result;
+}
+
+std::shared_ptr<spdlog::logger> LoggerConfiguration::getSpdlogLogger(const std::string& name) {
+  return spdlog::get(name);
 }
 
 std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties) {

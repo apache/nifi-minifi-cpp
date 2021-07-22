@@ -227,6 +227,8 @@ std::string CompressContent::toMimeType(CompressionFormat format) {
   throw Exception(GENERAL_EXCEPTION, "Invalid compression format");
 }
 
+REGISTER_RESOURCE(CompressContent, "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#define EXTENSION_LIST "*minifi-*,!*jni*"
+
 #undef NDEBUG
 #include <cassert>
 #include <chrono>

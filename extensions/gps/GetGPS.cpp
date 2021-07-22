@@ -149,6 +149,8 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
   }
 }
 
+REGISTER_RESOURCE(GetGPS, "Obtains GPS coordinates from the GPSDHost and port.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

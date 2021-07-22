@@ -103,6 +103,8 @@ void ConvertUpdate::initialize() {
   setSupportedRelationships(relationships);
 }
 
+REGISTER_INTERNAL_RESOURCE(ConvertUpdate);
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

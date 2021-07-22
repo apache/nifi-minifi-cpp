@@ -249,6 +249,8 @@ bool UnorderedMapPersistableKeyValueStoreService::load() {
   return true;
 }
 
+REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, "A persistable key-value service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file");
+
 }  // namespace controllers
 }  // namespace minifi
 }  // namespace nifi

@@ -182,6 +182,8 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::R
   return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
 }
 
+REGISTER_INTERNAL_RESOURCE_AS(DatabaseContentRepository, ("DatabaseContentRepository", "databasecontentrepository"));
+
 } /* namespace repository */
 } /* namespace core */
 } /* namespace minifi */

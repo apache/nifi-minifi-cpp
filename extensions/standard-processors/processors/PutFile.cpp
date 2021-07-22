@@ -364,6 +364,8 @@ PutFile::ReadCallback::~ReadCallback() {
   std::remove(tmp_file_.c_str());
 }
 
+REGISTER_RESOURCE(PutFile, "Writes the contents of a FlowFile to the local file system");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

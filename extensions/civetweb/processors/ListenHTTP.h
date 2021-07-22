@@ -35,6 +35,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/gsl.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -61,20 +62,20 @@ class ListenHTTP : public core::Processor {
   // Destructor
   ~ListenHTTP() override;
   // Processor Name
-  static constexpr char const *ProcessorName = "ListenHTTP";
+  EXTENSIONAPI static constexpr char const *ProcessorName = "ListenHTTP";
   // Supported Properties
-  static core::Property BasePath;
-  static core::Property Port;
-  static core::Property AuthorizedDNPattern;
-  static core::Property SSLCertificate;
-  static core::Property SSLCertificateAuthority;
-  static core::Property SSLVerifyPeer;
-  static core::Property SSLMinimumVersion;
-  static core::Property HeadersAsAttributesRegex;
-  static core::Property BatchSize;
-  static core::Property BufferSize;
+  EXTENSIONAPI static core::Property BasePath;
+  EXTENSIONAPI static core::Property Port;
+  EXTENSIONAPI static core::Property AuthorizedDNPattern;
+  EXTENSIONAPI static core::Property SSLCertificate;
+  EXTENSIONAPI static core::Property SSLCertificateAuthority;
+  EXTENSIONAPI static core::Property SSLVerifyPeer;
+  EXTENSIONAPI static core::Property SSLMinimumVersion;
+  EXTENSIONAPI static core::Property HeadersAsAttributesRegex;
+  EXTENSIONAPI static core::Property BatchSize;
+  EXTENSIONAPI static core::Property BufferSize;
   // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Success;
 
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
@@ -212,13 +213,6 @@ class ListenHTTP : public core::Processor {
   std::string listeningPort;
   uint64_t batch_size_;
 };
-
-REGISTER_RESOURCE(ListenHTTP, "Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service will be "
-    "http://{hostname}:{port}/contentListener. Only HEAD, POST, and GET requests are supported. PUT, and DELETE will result in an error and the HTTP response status code 405."
-    " The response body text for all requests, by default, is empty (length of 0). A static response body can be set for a given URI by sending input files to ListenHTTP with "
-    "the http.type attribute set to response_body. The response body FlowFile filename attribute is appended to the Base Path property (separated by a /) when mapped to incoming requests. "
-    "The mime.type attribute of the response body FlowFile is used for the Content-type header in responses. Response body content can be cleared by sending an empty (size 0) "
-    "FlowFile for a given URI mapping.");
 
 } /* namespace processors */
 } /* namespace minifi */

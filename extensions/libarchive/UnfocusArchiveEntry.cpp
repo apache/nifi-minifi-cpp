@@ -234,6 +234,8 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::Ba
   return nlen;
 }
 
+REGISTER_RESOURCE(UnfocusArchiveEntry, "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

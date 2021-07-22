@@ -160,9 +160,6 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   bool loadState();
 };
 
-REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
-                                                       "Windows hosts can be set up to connect and forward Event Logs to this processor.");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,16 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "SensorLoader.h"
 
-#include "core/FlowConfiguration.h"
+#pragma once
 
-bool SensorFactory::added = core::FlowConfiguration::add_static_func("createSensorFactory");
+#include "Module.h"
 
-extern "C" {
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace core {
+namespace extension {
 
-void *createSensorFactory(void) {
-  return new SensorFactory();
-}
+class Executable : public Module {
+ public:
+  Executable(): Module("executable") {}
+  ~Executable() override = default;
+};
 
-}
+}  // namespace extension
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

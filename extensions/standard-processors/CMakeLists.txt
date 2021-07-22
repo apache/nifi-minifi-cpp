@@ -22,8 +22,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "processors/*.cpp" "controllers/*.cpp" )
 
-add_library(minifi-standard-processors STATIC ${SOURCES})
-set_property(TARGET minifi-standard-processors PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-standard-processors SHARED ${SOURCES})
 
 include(RangeV3)
 target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3)

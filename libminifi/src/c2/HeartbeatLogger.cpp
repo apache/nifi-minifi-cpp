@@ -40,6 +40,8 @@ void HeartbeatLogger::initialize(core::controller::ControllerServiceProvider* co
   RESTProtocol::initialize(controller, configure);
 }
 
+REGISTER_RESOURCE(HeartbeatLogger, "Logs heartbeats at TRACE level.");
+
 }  // namespace c2
 }  // namespace minifi
 }  // namespace nifi

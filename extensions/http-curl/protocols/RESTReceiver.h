@@ -92,8 +92,6 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(RESTReceiver, "Provides a webserver to display C2 heartbeat information");
-
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

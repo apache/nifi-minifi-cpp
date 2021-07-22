@@ -62,7 +62,7 @@ function(use_bundled_libcoap SOURCE_DIR BINARY_DIR)
                 INSTALL_COMMAND make install
                 BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libcoap-install/${BYPRODUCT}"
                 CONFIGURE_COMMAND ""
-                PATCH_COMMAND ./autogen.sh && ./configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" --disable-examples --disable-dtls --disable-tests --disable-documentation --prefix=${BINARY_DIR}/thirdparty/libcoap-install
+                PATCH_COMMAND ./autogen.sh && ./configure "CFLAGS=${PASSTHROUGH_CMAKE_C_FLAGS} -fPIC" "CXXFLAGS=${PASSTHROUGH_CMAKE_CXX_FLAGS} -fPIC" --with-pic --disable-examples --disable-dtls --disable-tests --disable-documentation --prefix=${BINARY_DIR}/thirdparty/libcoap-install
                 STEP_TARGETS build
                 EXCLUDE_FROM_ALL TRUE
         )

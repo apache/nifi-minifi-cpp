@@ -58,8 +58,6 @@ class ODBCService : public DatabaseService {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database connection");
-
 } /* namespace controllers */
 } /* namespace sql */
 } /* namespace minifi */

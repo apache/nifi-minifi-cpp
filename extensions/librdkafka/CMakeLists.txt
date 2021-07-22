@@ -21,8 +21,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-rdkafka-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-rdkafka-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-rdkafka-extensions SHARED ${SOURCES})
 
 target_link_libraries(minifi-rdkafka-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-rdkafka-extensions librdkafka)

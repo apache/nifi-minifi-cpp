@@ -59,8 +59,6 @@ class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(AgentPrinter, "Encapsulates printing agent information.");
-
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

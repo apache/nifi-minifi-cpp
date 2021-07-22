@@ -89,6 +89,9 @@ void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& 
     session->transfer(flow_file_, Success);
   }
 }
+
+REGISTER_RESOURCE(GetMovementSensors, "Defines a processor that is able to retrieve sensor information from a class of known servo sensors");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

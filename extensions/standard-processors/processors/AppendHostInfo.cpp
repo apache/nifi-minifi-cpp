@@ -119,6 +119,8 @@ void AppendHostInfo::refreshHostInfo() {
   }
 }
 
+REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

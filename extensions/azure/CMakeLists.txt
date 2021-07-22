@@ -21,7 +21,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp" "storage/*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 
-add_library(minifi-azure STATIC ${SOURCES})
+add_library(minifi-azure SHARED ${SOURCES})
 
 target_compile_features(minifi-azure PUBLIC cxx_std_14)
 
@@ -33,6 +33,10 @@ target_include_directories(minifi-azure BEFORE PRIVATE ${CMAKE_SOURCE_DIR}/exten
 target_link_libraries(minifi-azure ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-azure CURL::libcurl LibXml2::LibXml2)
 target_link_libraries(minifi-azure AZURE::azure-storage-blobs AZURE::azure-storage-common AZURE::azure-core)
+
+if (WIN32)
+  target_link_libraries(minifi-azure crypt32.lib bcrypt.lib)
+endif()
 
 SET (AZURE-EXTENSION minifi-azure PARENT_SCOPE)
 register_extension(minifi-azure)

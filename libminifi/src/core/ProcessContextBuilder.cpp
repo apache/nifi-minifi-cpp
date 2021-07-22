@@ -77,6 +77,8 @@ std::shared_ptr<core::ProcessContext> ProcessContextBuilder::build(const std::sh
   return std::make_shared<core::ProcessContext>(processor, controller_service_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
 }
 
+REGISTER_INTERNAL_RESOURCE(ProcessContextBuilder);
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

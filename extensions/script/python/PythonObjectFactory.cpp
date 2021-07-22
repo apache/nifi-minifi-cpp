@@ -15,15 +15,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ArchiveLoader.h"
-#include "core/FlowConfiguration.h"
+#include "PythonObjectFactory.h"
 
-bool ArchiveFactory::added = core::FlowConfiguration::add_static_func("createArchiveFactory");
-
-extern "C" {
-
-void *createArchiveFactory(void) {
-  return new ArchiveFactory();
-}
-
-}

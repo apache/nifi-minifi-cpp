@@ -34,6 +34,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -211,28 +212,28 @@ class BinFiles : public core::Processor {
   // Processor Name
   static constexpr char const* ProcessorName = "BinFiles";
   // Supported Properties
-  static core::Property MinSize;
-  static core::Property MaxSize;
-  static core::Property MinEntries;
-  static core::Property MaxEntries;
-  static core::Property MaxBinCount;
-  static core::Property MaxBinAge;
-  static core::Property BatchSize;
+  EXTENSIONAPI static core::Property MinSize;
+  EXTENSIONAPI static core::Property MaxSize;
+  EXTENSIONAPI static core::Property MinEntries;
+  EXTENSIONAPI static core::Property MaxEntries;
+  EXTENSIONAPI static core::Property MaxBinCount;
+  EXTENSIONAPI static core::Property MaxBinAge;
+  EXTENSIONAPI static core::Property BatchSize;
 
   // Supported Relationships
-  static core::Relationship Failure;
-  static core::Relationship Original;
+  EXTENSIONAPI static core::Relationship Failure;
+  EXTENSIONAPI static core::Relationship Original;
 
   // attributes
-  static const char *FRAGMENT_ID_ATTRIBUTE;
-  static const char *FRAGMENT_INDEX_ATTRIBUTE;
-  static const char *FRAGMENT_COUNT_ATTRIBUTE;
+  EXTENSIONAPI static const char *FRAGMENT_ID_ATTRIBUTE;
+  EXTENSIONAPI static const char *FRAGMENT_INDEX_ATTRIBUTE;
+  EXTENSIONAPI static const char *FRAGMENT_COUNT_ATTRIBUTE;
 
-  static const char *SEGMENT_ID_ATTRIBUTE;
-  static const char *SEGMENT_INDEX_ATTRIBUTE;
-  static const char *SEGMENT_COUNT_ATTRIBUTE;
-  static const char *SEGMENT_ORIGINAL_FILENAME;
-  static const char *TAR_PERMISSIONS_ATTRIBUTE;
+  EXTENSIONAPI static const char *SEGMENT_ID_ATTRIBUTE;
+  EXTENSIONAPI static const char *SEGMENT_INDEX_ATTRIBUTE;
+  EXTENSIONAPI static const char *SEGMENT_COUNT_ATTRIBUTE;
+  EXTENSIONAPI static const char *SEGMENT_ORIGINAL_FILENAME;
+  EXTENSIONAPI static const char *TAR_PERMISSIONS_ATTRIBUTE;
 
  public:
   /**
@@ -292,8 +293,6 @@ class BinFiles : public core::Processor {
   uint32_t maxBinCount_{100};
   FlowFileStore file_store_;
 };
-
-REGISTER_RESOURCE(BinFiles, "Bins flow files into buckets based on the number of entries or size of entries");
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -104,10 +104,6 @@ class TFApplyGraph : public core::Processor {
   moodycamel::ConcurrentQueue<std::shared_ptr<TFContext>> tf_context_q_;
 };
 
-REGISTER_RESOURCE(TFApplyGraph, "Applies a TensorFlow graph to the tensor protobuf supplied as input. The tensor is fed into the node specified by the Input Node property. "
-    "The output FlowFile is a tensor protobuf extracted from the node specified by the Output Node property. TensorFlow graphs are read dynamically by feeding a graph "
-    "protobuf to the processor with the tf.type property set to graph."); // NOLINT
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

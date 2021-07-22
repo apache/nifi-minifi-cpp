@@ -108,6 +108,8 @@ void JavaControllerService::onEnable() {
   nar_loader_ = std::unique_ptr<NarClassLoader>(new NarClassLoader(shared_from_this(), narClassLoaderClazz, nardir, narscratch, nardocs));
 }
 
+REGISTER_RESOURCE(JavaControllerService, "Allows specification of nars to be used within referenced processors. ");
+
 } /* namespace controllers */
 } /* namespace jni */
 } /* namespace minifi */

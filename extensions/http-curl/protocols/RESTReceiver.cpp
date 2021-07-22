@@ -108,6 +108,8 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
   return server;
 }
 
+REGISTER_RESOURCE(RESTReceiver, "Provides a webserver to display C2 heartbeat information");
+
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

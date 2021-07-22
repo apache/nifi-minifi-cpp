@@ -45,6 +45,8 @@ void CallbackProcessor::onTrigger(core::ProcessContext *context, core::ProcessSe
  }
 }
 
+REGISTER_RESOURCE(CallbackProcessor, "");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -27,6 +27,9 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 
+#include "FocusArchiveEntry.h"
+#include "UnfocusArchiveEntry.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -43,23 +46,23 @@ class ManipulateArchive : public core::Processor {
     logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
   }
   virtual ~ManipulateArchive() = default;
-  static constexpr char const* ProcessorName = "ManipulateArchive";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "ManipulateArchive";
 
   // Supported operations
-  static char const* OPERATION_REMOVE;
-  static char const* OPERATION_COPY;
-  static char const* OPERATION_MOVE;
-  static char const* OPERATION_TOUCH;
+  EXTENSIONAPI static char const* OPERATION_REMOVE;
+  EXTENSIONAPI static char const* OPERATION_COPY;
+  EXTENSIONAPI static char const* OPERATION_MOVE;
+  EXTENSIONAPI static char const* OPERATION_TOUCH;
 
   // Supported Properties
-  static core::Property Operation;
-  static core::Property Target;
-  static core::Property Destination;
-  static core::Property Before;
-  static core::Property After;
+  EXTENSIONAPI static core::Property Operation;
+  EXTENSIONAPI static core::Property Target;
+  EXTENSIONAPI static core::Property Destination;
+  EXTENSIONAPI static core::Property Before;
+  EXTENSIONAPI static core::Property After;
   // Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Failure;
 
   // OnTrigger method, implemented by NiFi ManipulateArchive
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
@@ -72,8 +75,6 @@ class ManipulateArchive : public core::Processor {
   std::shared_ptr<Logger> logger_;
   std::string before_, after_, operation_, destination_, targetEntry_;
 };
-
-REGISTER_RESOURCE(ManipulateArchive, "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.");
 
 } /* namespace processors */
 } /* namespace minifi */

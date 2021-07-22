@@ -71,8 +71,6 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(RESTSender, "Encapsulates the restful protocol that is built upon C2Protocol.");
-
 }  // namespace c2
 }  // namespace minifi
 }  // namespace nifi

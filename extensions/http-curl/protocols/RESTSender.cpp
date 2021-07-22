@@ -153,6 +153,8 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   }
 }
 
+REGISTER_RESOURCE(RESTSender, "Encapsulates the restful protocol that is built upon C2Protocol.");
+
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

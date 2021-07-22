@@ -25,6 +25,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
+#include "core/Resource.h"
 
 #include "CoapResponse.h"
 #include "CoapMessaging.h"
@@ -107,6 +108,7 @@ class CoapConnectorService : public core::controller::ControllerService {
 
   std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CoapConnectorService>::getLogger() };
 };
+
 } /* namespace controllers */
 } /* namespace coap */
 } /* namespace minifi */

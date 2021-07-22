@@ -105,6 +105,8 @@ void ExecuteJavaControllerService::onEnable() {
   }
 }
 
+REGISTER_RESOURCE(ExecuteJavaControllerService, "ExecuteJavaClass runs NiFi Controller services given a provided system path ");
+
 } /* namespace controllers */
 } /* namespace jni */
 } /* namespace minifi */

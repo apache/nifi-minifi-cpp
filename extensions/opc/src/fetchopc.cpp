@@ -238,6 +238,8 @@ namespace processors {
     session->transfer(flowFile, Success);
   }
 
+REGISTER_RESOURCE(FetchOPCProcessor, "Fetches OPC-UA node");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

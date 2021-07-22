@@ -75,8 +75,6 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");
-
 }  // namespace controllers
 }  // namespace azure
 }  // namespace minifi

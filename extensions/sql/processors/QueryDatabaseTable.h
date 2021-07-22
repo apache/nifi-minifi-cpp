@@ -41,23 +41,23 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  public:
   explicit QueryDatabaseTable(const std::string& name, const utils::Identifier& uuid = {});
 
-  static const std::string RESULT_TABLE_NAME;
-  static const std::string RESULT_ROW_COUNT;
+  EXTENSIONAPI static const std::string RESULT_TABLE_NAME;
+  EXTENSIONAPI static const std::string RESULT_ROW_COUNT;
 
-  static const std::string TABLENAME_KEY;
-  static const std::string MAXVALUE_KEY_PREFIX;
+  EXTENSIONAPI static const std::string TABLENAME_KEY;
+  EXTENSIONAPI static const std::string MAXVALUE_KEY_PREFIX;
 
   //! Processor Name
-  static const std::string ProcessorName;
+  EXTENSIONAPI static const std::string ProcessorName;
 
-  static const core::Property TableName;
-  static const core::Property ColumnNames;
-  static const core::Property MaxValueColumnNames;
-  static const core::Property WhereClause;
+  EXTENSIONAPI static const core::Property TableName;
+  EXTENSIONAPI static const core::Property ColumnNames;
+  EXTENSIONAPI static const core::Property MaxValueColumnNames;
+  EXTENSIONAPI static const core::Property WhereClause;
 
-  static const std::string InitialMaxValueDynamicPropertyPrefix;
+  EXTENSIONAPI static const std::string InitialMaxValueDynamicPropertyPrefix;
 
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
 
   bool supportsDynamicProperties() override {
     return true;
@@ -89,8 +89,6 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   std::vector<std::string> max_value_columns_;
   std::unordered_map<std::string, std::string> max_values_;
 };
-
-REGISTER_RESOURCE(QueryDatabaseTable, "QueryDatabaseTable to execute SELECT statement via ODBC.");
 
 }  // namespace processors
 }  // namespace minifi

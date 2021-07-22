@@ -108,8 +108,6 @@ class FetchS3Object : public S3Processor {
   bool requester_pays_ = false;
 };
 
-REGISTER_RESOURCE(FetchS3Object, "This Processor retrieves the contents of an S3 Object and writes it to the content of a FlowFile.");
-
 }  // namespace processors
 }  // namespace aws
 }  // namespace minifi

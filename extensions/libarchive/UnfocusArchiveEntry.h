@@ -83,8 +83,6 @@ class UnfocusArchiveEntry : public core::Processor {
   std::shared_ptr<Logger> logger_;
 };
 
-REGISTER_RESOURCE(UnfocusArchiveEntry, "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

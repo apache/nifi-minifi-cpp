@@ -36,6 +36,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/SSLContextService.h"
 #include "utils/gsl.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -189,21 +190,21 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 // Destructor
   ~GetTCP() override = default;
 // Processor Name
-  static constexpr char const* ProcessorName = "GetTCP";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "GetTCP";
 
   // Supported Properties
-  static core::Property EndpointList;
-  static core::Property ConcurrentHandlers;
-  static core::Property ReconnectInterval;
-  static core::Property StayConnected;
-  static core::Property ReceiveBufferSize;
-  static core::Property SSLContextService;
-  static core::Property ConnectionAttemptLimit;
-  static core::Property EndOfMessageByte;
+  EXTENSIONAPI static core::Property EndpointList;
+  EXTENSIONAPI static core::Property ConcurrentHandlers;
+  EXTENSIONAPI static core::Property ReconnectInterval;
+  EXTENSIONAPI static core::Property StayConnected;
+  EXTENSIONAPI static core::Property ReceiveBufferSize;
+  EXTENSIONAPI static core::Property SSLContextService;
+  EXTENSIONAPI static core::Property ConnectionAttemptLimit;
+  EXTENSIONAPI static core::Property EndOfMessageByte;
 
   // Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship Partial;
+  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Partial;
 
  public:
   /**
@@ -276,9 +277,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves one or more byte messages from clients");
-
 
 }  // namespace processors
 }  // namespace minifi

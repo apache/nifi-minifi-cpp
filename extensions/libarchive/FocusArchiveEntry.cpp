@@ -256,6 +256,10 @@ FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, fileut
 
 FocusArchiveEntry::ReadCallback::~ReadCallback() = default;
 
+REGISTER_RESOURCE(FocusArchiveEntry, "Allows manipulation of entries within an archive (e.g. TAR) by focusing on one entry within the archive at a time. "
+    "When an archive entry is focused, that entry is treated as the content of the FlowFile and may be manipulated independently of the rest of the archive."
+    " To restore the FlowFile to its original state, use UnfocusArchiveEntry.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

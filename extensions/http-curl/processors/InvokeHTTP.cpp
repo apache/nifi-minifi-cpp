@@ -450,6 +450,10 @@ void InvokeHTTP::route(const std::shared_ptr<core::FlowFile> &request, const std
   }
 }
 
+REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
+    "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
+    "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

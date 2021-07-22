@@ -221,6 +221,8 @@ ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile
   buffer_.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
 }
 
+REGISTER_RESOURCE(ExtractText, "Extracts the content of a FlowFile and places it into an attribute.");
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

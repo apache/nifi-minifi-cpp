@@ -98,8 +98,6 @@ class FetchSFTP : public SFTPProcessorBase {
   bool disable_directory_listing_;
 };
 
-REGISTER_RESOURCE(FetchSFTP, "Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

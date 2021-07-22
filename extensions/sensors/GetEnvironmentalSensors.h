@@ -73,8 +73,6 @@ class GetEnvironmentalSensors : public SensorBase {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-REGISTER_RESOURCE(GetEnvironmentalSensors, "Provides sensor information from known sensors to include humidity and pressure data");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

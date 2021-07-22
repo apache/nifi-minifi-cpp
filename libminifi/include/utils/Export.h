@@ -15,13 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "ExpressionLoader.h"
 
-bool ExpressionObjectFactory::added = core::FlowConfiguration::add_static_func("createExpressionFactory");
-extern "C" {
-void *createExpressionFactory(void) {
-  return new ExpressionObjectFactory();
-}
+#pragma once
 
-}
+#ifdef WIN32
+  #ifdef LIBMINIFI
+    #define MINIFIAPI __declspec(dllexport)
+  #else
+    #define MINIFIAPI __declspec(dllimport)
+  #endif
+  #ifdef MODULE_NAME
+    #define EXTENSIONAPI __declspec(dllexport)
+  #else
+    #define EXTENSIONAPI __declspec(dllimport)
+  #endif
+#else
+  #define MINIFIAPI
+  #define EXTENSIONAPI
+#endif

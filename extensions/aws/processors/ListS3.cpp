@@ -291,6 +291,8 @@ void ListS3::ListingState::updateState(const aws::s3::ListedObjectAttributes &ob
   }
 }
 
+REGISTER_RESOURCE(ListS3, "This Processor retrieves a listing of objects from an Amazon S3 bucket.");
+
 }  // namespace processors
 }  // namespace aws
 }  // namespace minifi

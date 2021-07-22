@@ -32,6 +32,7 @@
 #include "Connectable.h"
 #include "WeakReference.h"
 #include "utils/FlatMap.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -294,23 +295,23 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
 // FlowFile Attribute
 struct SpecialFlowAttribute {
   // The flowfile's path indicates the relative directory to which a FlowFile belongs and does not contain the filename
-  static const std::string PATH;
+  MINIFIAPI static const std::string PATH;
   // The flowfile's absolute path indicates the absolute directory to which a FlowFile belongs and does not contain the filename
-  static const std::string ABSOLUTE_PATH;
+  MINIFIAPI static const std::string ABSOLUTE_PATH;
   // The filename of the FlowFile. The filename should not contain any directory structure.
-  static const std::string FILENAME;
+  MINIFIAPI static const std::string FILENAME;
   // A unique UUID assigned to this FlowFile.
-  static const std::string UUID;
+  MINIFIAPI static const std::string UUID;
   // A numeric value indicating the FlowFile priority
-  static const std::string priority;
+  MINIFIAPI static const std::string priority;
   // The MIME Type of this FlowFile
-  static const std::string MIME_TYPE;
+  MINIFIAPI static const std::string MIME_TYPE;
   // Specifies the reason that a FlowFile is being discarded
-  static const std::string DISCARD_REASON;
+  MINIFIAPI static const std::string DISCARD_REASON;
   // Indicates an identifier other than the FlowFile's UUID that is known to refer to this FlowFile.
-  static const std::string ALTERNATE_IDENTIFIER;
+  MINIFIAPI static const std::string ALTERNATE_IDENTIFIER;
   // Flow identifier
-  static const std::string FLOW_ID;
+  MINIFIAPI static const std::string FLOW_ID;
 
   static const auto& getSpecialFlowAttributes() {
     static const std::array<std::string_view, 9> SPECIAL_FLOW_ATTRIBUTES {

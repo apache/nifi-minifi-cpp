@@ -232,6 +232,8 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
   // do nothing.
 }
 
+REGISTER_RESOURCE_AS(ExecuteJavaProcessor, "ExecuteJavaClass runs NiFi processors given a provided system path ", ("ExecuteJavaClass"));
+
 } /* namespace processors */
 } /* namespace jni */
 } /* namespace minifi */

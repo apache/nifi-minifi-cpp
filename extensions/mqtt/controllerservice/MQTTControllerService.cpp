@@ -92,6 +92,8 @@ void MQTTControllerService::initializeProperties() {
   setSupportedProperties(supportedProperties);
 }
 
+REGISTER_INTERNAL_RESOURCE_AS(MQTTControllerService, ("MQTTContextService"));
+
 } /* namespace controllers */
 } /* namespace minifi */
 } /* namespace nifi */

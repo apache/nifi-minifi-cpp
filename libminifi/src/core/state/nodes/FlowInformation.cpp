@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "RocksDBLoader.h"
 
-bool RocksDBFactory::added = core::FlowConfiguration::add_static_func("createRocksDBFactory");
+#include "core/state/nodes/FlowInformation.h"
 
-extern "C" {
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace state {
+namespace response {
 
-void *createRocksDBFactory(void) {
-  return new RocksDBFactory();
-}
+REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID and flow URL deployed to this agent");
 
-}
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

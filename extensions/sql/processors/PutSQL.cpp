@@ -90,6 +90,8 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
   connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
 }
 
+REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

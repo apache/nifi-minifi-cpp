@@ -42,6 +42,7 @@
 #include "FlowFileRecord.h"
 #include "concurrentqueue.h"
 #include "pugixml.hpp"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -71,27 +72,27 @@ class ConsumeWindowsEventLog : public core::Processor {
   virtual ~ConsumeWindowsEventLog();
 
   //! Processor Name
-  static const std::string ProcessorName;
+  EXTENSIONAPI static const std::string ProcessorName;
 
   //! Supported Properties
-  static core::Property Channel;
-  static core::Property Query;
-  static core::Property RenderFormatXML;
-  static core::Property MaxBufferSize;
-  static core::Property InactiveDurationToReconnect;
-  static core::Property IdentifierMatcher;
-  static core::Property IdentifierFunction;
-  static core::Property ResolveAsAttributes;
-  static core::Property EventHeaderDelimiter;
-  static core::Property EventHeader;
-  static core::Property OutputFormat;
-  static core::Property JSONFormat;
-  static core::Property BatchCommitSize;
-  static core::Property BookmarkRootDirectory;
-  static core::Property ProcessOldEvents;
+  EXTENSIONAPI static core::Property Channel;
+  EXTENSIONAPI static core::Property Query;
+  EXTENSIONAPI static core::Property RenderFormatXML;
+  EXTENSIONAPI static core::Property MaxBufferSize;
+  EXTENSIONAPI static core::Property InactiveDurationToReconnect;
+  EXTENSIONAPI static core::Property IdentifierMatcher;
+  EXTENSIONAPI static core::Property IdentifierFunction;
+  EXTENSIONAPI static core::Property ResolveAsAttributes;
+  EXTENSIONAPI static core::Property EventHeaderDelimiter;
+  EXTENSIONAPI static core::Property EventHeader;
+  EXTENSIONAPI static core::Property OutputFormat;
+  EXTENSIONAPI static core::Property JSONFormat;
+  EXTENSIONAPI static core::Property BatchCommitSize;
+  EXTENSIONAPI static core::Property BookmarkRootDirectory;
+  EXTENSIONAPI static core::Property ProcessOldEvents;
 
   //! Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Success;
 
  public:
   /**
@@ -181,8 +182,6 @@ class ConsumeWindowsEventLog : public core::Processor {
   std::string timezone_name_;
   std::string timezone_offset_;  // Represented as UTC offset in (+|-)HH:MM format, like +02:00
 };
-
-REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
 
 }  // namespace processors
 }  // namespace minifi

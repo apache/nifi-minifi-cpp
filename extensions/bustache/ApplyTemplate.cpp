@@ -89,6 +89,9 @@ int64_t ApplyTemplate::WriteCallback::process(const std::shared_ptr<io::BaseStre
   return ostring.length();
 }
 
+REGISTER_RESOURCE(ApplyTemplate, "Applies the mustache template specified by the \"Template\" property and writes the output to the flow file content. "
+    "FlowFile attributes are used as template parameters.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -28,6 +28,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "FlowFileRecord.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -47,21 +48,21 @@ class ExtractText : public core::Processor {
         logger_ = logging::LoggerFactory<ExtractText>::getLogger();
     }
     //! Processor Name
-    static constexpr char const* ProcessorName = "ExtractText";
+    EXTENSIONAPI static constexpr char const* ProcessorName = "ExtractText";
     //! Supported Properties
-    static core::Property Attribute;
-    static core::Property SizeLimit;
+    EXTENSIONAPI static core::Property Attribute;
+    EXTENSIONAPI static core::Property SizeLimit;
 
-    static core::Property RegexMode;
-    static core::Property IgnoreCaptureGroupZero;
-    static core::Property InsensitiveMatch;
-    static core::Property MaxCaptureGroupLen;
-    static core::Property EnableRepeatingCaptureGroup;
+    EXTENSIONAPI static core::Property RegexMode;
+    EXTENSIONAPI static core::Property IgnoreCaptureGroupZero;
+    EXTENSIONAPI static core::Property InsensitiveMatch;
+    EXTENSIONAPI static core::Property MaxCaptureGroupLen;
+    EXTENSIONAPI static core::Property EnableRepeatingCaptureGroup;
 
     //! Supported Relationships
-    static core::Relationship Success;
+    EXTENSIONAPI static core::Relationship Success;
     //! Default maximum bytes to read into an attribute
-    static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
+    EXTENSIONAPI static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
 
     //! OnTrigger method, implemented by NiFi ExtractText
     void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
@@ -93,8 +94,6 @@ class ExtractText : public core::Processor {
     //! Logger
     std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(ExtractText, "Extracts the content of a FlowFile and places it into an attribute.");
 
 }  // namespace processors
 }  // namespace minifi

@@ -105,6 +105,10 @@ void UpdatePolicyControllerService::onEnable() {
   }
   policy_ = builder->build();
 }
+
+REGISTER_RESOURCE(UpdatePolicyControllerService, "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
+    "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.");
+
 }  // namespace controllers
 }  // namespace minifi
 }  // namespace nifi

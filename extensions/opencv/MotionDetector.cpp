@@ -201,6 +201,8 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 void MotionDetector::notifyStop() {
 }
 
+REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images."); // NOLINT
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

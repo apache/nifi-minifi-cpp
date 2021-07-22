@@ -1,0 +1,52 @@
+diff -rupN aws-sdk-cpp-src/aws-cpp-sdk-core/CMakeLists.txt aws-sdk-cpp-src-patched/aws-cpp-sdk-core/CMakeLists.txt
+--- aws-sdk-cpp-src/aws-cpp-sdk-core/CMakeLists.txt	2021-07-19 13:25:02.472816900 +0200
++++ aws-sdk-cpp-src-patched/aws-cpp-sdk-core/CMakeLists.txt	2021-07-19 13:24:17.986828500 +0200
+@@ -507,6 +507,10 @@ if(USE_WINDOWS_DLL_SEMANTICS)
+     endif()
+ endif()
+ 
++if(FORCE_EXPORT_CORE_API)
++    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_CORE_API=__declspec(dllexport)")
++endif()
++
+ set_compiler_flags(${PROJECT_NAME})
+ set_compiler_warnings(${PROJECT_NAME})
+ 
+diff -rupN aws-sdk-cpp-src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h aws-sdk-cpp-src-patched/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h
+--- aws-sdk-cpp-src/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h	2021-07-19 13:25:02.473815700 +0200
++++ aws-sdk-cpp-src-patched/aws-cpp-sdk-core/include/aws/core/Core_EXPORTS.h	2021-07-19 13:24:18.070776900 +0200
+@@ -18,7 +18,7 @@
+         #else // AWS_CORE_EXPORTS
+             #define  AWS_CORE_API __declspec(dllimport)
+         #endif // AWS_CORE_EXPORTS
+-    #else // USE_IMPORT_EXPORT
++    #elif !defined(AWS_CORE_API)
+         #define AWS_CORE_API
+     #endif // USE_IMPORT_EXPORT
+ #else // defined (USE_WINDOWS_DLL_SEMANTICS) || defined (_WIN32)
+diff -rupN aws-sdk-cpp-src/aws-cpp-sdk-s3/CMakeLists.txt aws-sdk-cpp-src-patched/aws-cpp-sdk-s3/CMakeLists.txt
+--- aws-sdk-cpp-src/aws-cpp-sdk-s3/CMakeLists.txt	2021-07-19 13:25:02.474814900 +0200
++++ aws-sdk-cpp-src-patched/aws-cpp-sdk-s3/CMakeLists.txt	2021-07-19 13:23:53.913102900 +0200
+@@ -59,6 +59,10 @@ if(USE_WINDOWS_DLL_SEMANTICS AND BUILD_S
+     target_compile_definitions(${PROJECT_NAME} PRIVATE "AWS_S3_EXPORTS")
+ endif()
+ 
++if(FORCE_EXPORT_S3_API)
++    target_compile_definitions(${PROJECT_NAME} PUBLIC "AWS_S3_API=__declspec(dllexport)")
++endif()
++
+ target_include_directories(${PROJECT_NAME} PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+     $<INSTALL_INTERFACE:include>)
+diff -rupN aws-sdk-cpp-src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h aws-sdk-cpp-src-patched/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h
+--- aws-sdk-cpp-src/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h	2021-07-19 13:25:02.475814200 +0200
++++ aws-sdk-cpp-src-patched/aws-cpp-sdk-s3/include/aws/s3/S3_EXPORTS.h	2021-07-19 13:23:53.918099900 +0200
+@@ -21,7 +21,7 @@
+         #else
+             #define AWS_S3_API __declspec(dllimport)
+         #endif /* AWS_S3_EXPORTS */
+-    #else
++    #elif !defined(AWS_S3_API)
+         #define AWS_S3_API
+     #endif // USE_IMPORT_EXPORT
+ #else // defined (USE_WINDOWS_DLL_SEMANTICS) || defined (WIN32)

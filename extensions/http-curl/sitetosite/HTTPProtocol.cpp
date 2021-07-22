@@ -304,6 +304,8 @@ void HttpSiteToSiteClient::deleteTransaction(const utils::Identifier& transactio
   SiteToSiteClient::deleteTransaction(transactionID);
 }
 
+REGISTER_INTERNAL_RESOURCE_AS(HttpSiteToSiteClient, ("HttpSiteToSiteClient", "HttpProtocol"));
+
 } /* namespace sitetosite */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -130,8 +130,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
 };
 
-REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

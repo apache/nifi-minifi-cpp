@@ -50,6 +50,9 @@ void ProvenanceRepository::run() {
     }
   }
 }
+
+REGISTER_INTERNAL_RESOURCE_AS(ProvenanceRepository, ("ProvenanceRepository", "provenancerepository"));
+
 } /* namespace provenance */
 } /* namespace minifi */
 } /* namespace nifi */

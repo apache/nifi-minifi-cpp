@@ -477,6 +477,8 @@ int64_t GetUSBCamera::RawWriteCallback::process(const std::shared_ptr<io::BaseSt
   return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
+REGISTER_RESOURCE(GetUSBCamera, "Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.");  // NOLINT line length
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

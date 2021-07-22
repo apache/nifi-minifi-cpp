@@ -40,23 +40,21 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
   explicit ExecuteSQL(const std::string& name, const utils::Identifier& uuid = {});
 
   //! Processor Name
-  static const std::string ProcessorName;
+  EXTENSIONAPI static const std::string ProcessorName;
 
   void processOnSchedule(core::ProcessContext& context) override;
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
 
-  static const core::Property SQLSelectQuery;
+  EXTENSIONAPI static const core::Property SQLSelectQuery;
 
-  static const core::Relationship Success;
-  static const core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
 
-  static const std::string RESULT_ROW_COUNT;
-  static const std::string INPUT_FLOW_FILE_UUID;
+  EXTENSIONAPI static const std::string RESULT_ROW_COUNT;
+  EXTENSIONAPI static const std::string INPUT_FLOW_FILE_UUID;
 };
-
-REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");
 
 }  // namespace processors
 }  // namespace minifi

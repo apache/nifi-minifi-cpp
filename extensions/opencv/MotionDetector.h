@@ -70,8 +70,6 @@ class MotionDetector : public core::Processor {
   const double IMG_WIDTH = 500.0;
 };
 
-REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images.");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

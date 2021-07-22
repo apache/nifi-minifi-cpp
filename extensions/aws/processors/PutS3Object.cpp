@@ -287,6 +287,8 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   }
 }
 
+REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");
+
 }  // namespace processors
 }  // namespace aws
 }  // namespace minifi

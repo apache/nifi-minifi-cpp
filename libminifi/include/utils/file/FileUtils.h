@@ -500,13 +500,26 @@ inline void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &lo
 #endif
 }
 
+inline std::string concat_path(const std::string& root, const std::string& child, bool force_posix = false) {
+  if (root.empty()) {
+    return child;
+  }
+  std::stringstream new_path;
+  if (root.back() == get_separator(force_posix)) {
+    new_path << root << child;
+  } else {
+    new_path << root << get_separator(force_posix) << child;
+  }
+  return new_path.str();
+}
+
 /*
  * Provides a platform-independent function to list a directory
  * Callback is called for every file found: first argument is the path of the directory, second is the filename
  * Return value of the callback is used to continue (true) or stop (false) listing
  */
 inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
-                     const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
+                     const std::shared_ptr<logging::Logger> &logger, std::function<bool(const std::string&)> dir_callback) {
   logger->log_debug("Performing file listing against %s", dir);
 #ifndef WIN32
   DIR *d = opendir(dir.c_str());
@@ -518,7 +531,7 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
   struct dirent *entry;
   while ((entry = readdir(d)) != NULL) {
     std::string d_name = entry->d_name;
-    std::string path = dir + get_separator() + d_name;
+    std::string path = concat_path(dir, d_name);
 
     struct stat statbuf;
     if (stat(path.c_str(), &statbuf) != 0) {
@@ -528,8 +541,10 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
 
     if (S_ISDIR(statbuf.st_mode)) {
       // if this is a directory
-      if (recursive && strcmp(d_name.c_str(), "..") != 0 && strcmp(d_name.c_str(), ".") != 0) {
-        list_dir(path, callback, logger, recursive);
+      if (strcmp(d_name.c_str(), "..") != 0 && strcmp(d_name.c_str(), ".") != 0) {
+        if (dir_callback(dir)) {
+          list_dir(path, callback, logger, dir_callback);
+        }
       }
     } else {
       if (!callback(dir, d_name)) {
@@ -553,14 +568,14 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
   do {
     struct _stat64 statbuf {};
     if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
-      std::string path = dir + get_separator() + FindFileData.cFileName;
+      std::string path = concat_path(dir, FindFileData.cFileName);
       if (_stat64(path.c_str(), &statbuf) != 0) {
         logger->log_warn("Failed to stat %s", path);
         continue;
       }
       if (S_ISDIR(statbuf.st_mode)) {
-        if (recursive) {
-          list_dir(path, callback, logger, recursive);
+        if (dir_callback(dir)) {
+          list_dir(path, callback, logger, dir_callback);
         }
       } else {
         if (!callback(dir, FindFileData.cFileName)) {
@@ -571,6 +586,22 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
   } while (FindNextFileA(hFind, &FindFileData));
   FindClose(hFind);
 #endif
+}
+
+inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
+                     const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
+  list_dir(dir, callback, logger, [&] (const std::string&) {
+    return recursive;
+  });
+}
+
+inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const utils::optional<std::string>&)> callback,
+                     const std::shared_ptr<logging::Logger> &logger) {
+  list_dir(dir, [&] (const std::string& dir, const std::string& file) {
+    return callback(dir, file);
+  }, logger, [&] (const std::string&) {
+    return callback(dir, nullopt);
+  });
 }
 
 inline std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<logging::Logger> &logger,
@@ -584,19 +615,6 @@ inline std::vector<std::pair<std::string, std::string>> list_dir_all(const std::
   list_dir(dir, lambda, logger, recursive);
 
   return fileList;
-}
-
-inline std::string concat_path(const std::string& root, const std::string& child, bool force_posix = false) {
-  if (root.empty()) {
-    return child;
-  }
-  std::stringstream new_path;
-  if (root.back() == get_separator(force_posix)) {
-    new_path << root << child;
-  } else {
-    new_path << root << get_separator(force_posix) << child;
-  }
-  return new_path.str();
 }
 
 inline std::string create_temp_directory(char* format) {

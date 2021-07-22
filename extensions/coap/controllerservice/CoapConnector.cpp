@@ -90,6 +90,8 @@ void CoapConnectorService::initializeProperties() {
   setSupportedProperties(supportedProperties);
 }
 
+REGISTER_INTERNAL_RESOURCE(CoapConnectorService);
+
 } /* namespace controllers */
 } /* namespace coap */
 } /* namespace minifi */

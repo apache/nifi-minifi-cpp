@@ -35,12 +35,12 @@ namespace processors {
 
 class FlowFileSource {
  public:
-  static const std::string FRAGMENT_IDENTIFIER;
-  static const std::string FRAGMENT_COUNT;
-  static const std::string FRAGMENT_INDEX;
+  EXTENSIONAPI static const std::string FRAGMENT_IDENTIFIER;
+  EXTENSIONAPI static const std::string FRAGMENT_COUNT;
+  EXTENSIONAPI static const std::string FRAGMENT_INDEX;
 
-  static const core::Property OutputFormat;
-  static const core::Property MaxRowsPerFlowFile;
+  EXTENSIONAPI static const core::Property OutputFormat;
+  EXTENSIONAPI static const core::Property MaxRowsPerFlowFile;
 
   SMART_ENUM(OutputType,
     (JSON, "JSON"),

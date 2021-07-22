@@ -64,6 +64,10 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             -DBUILD_SHARED_LIBS=OFF
             -DENABLE_UNITY_BUILD=${AWS_ENABLE_UNITY_BUILD})
 
+    if(WIN32)
+        list(APPEND AWS_SDK_CPP_CMAKE_ARGS -DFORCE_EXPORT_CORE_API=ON -DFORCE_EXPORT_S3_API=ON)
+    endif()
+
     append_third_party_passthrough_args(AWS_SDK_CPP_CMAKE_ARGS "${AWS_SDK_CPP_CMAKE_ARGS}")
 
     ExternalProject_Add(
@@ -74,6 +78,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             SOURCE_DIR "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
+            PATCH_COMMAND ${AWS_SDK_PC}
             CMAKE_ARGS ${AWS_SDK_CPP_CMAKE_ARGS}
             PATCH_COMMAND ${AWS_SDK_CPP_PATCH_COMMAND}
             BUILD_BYPRODUCTS "${AWSSDK_LIBRARIES_LIST}"

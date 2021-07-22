@@ -65,8 +65,6 @@ class KamikazeProcessor : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(KamikazeProcessor, "This processor can throw exceptions in onTrigger and onSchedule calls based on configration. Only for testing purposes.");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -151,8 +151,6 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(ExecuteJavaControllerService, "ExecuteJavaClass runs NiFi Controller services given a provided system path ");
-
 } /* namespace controllers */
 } /* namespace jni */
 } /* namespace minifi */

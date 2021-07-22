@@ -75,6 +75,8 @@ void KamikazeProcessor::onUnSchedule() {
   logger_->log_error("%s", OnUnScheduleLogStr);
 }
 
+REGISTER_RESOURCE(KamikazeProcessor, "This processor can throw exceptions in onTrigger and onSchedule calls based on configration. Only for testing purposes.");
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

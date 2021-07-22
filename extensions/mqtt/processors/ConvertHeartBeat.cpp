@@ -69,6 +69,8 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   }
 }
 
+REGISTER_INTERNAL_RESOURCE(ConvertHeartBeat);
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

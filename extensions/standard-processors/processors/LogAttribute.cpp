@@ -190,6 +190,8 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("Logged %d flow files", i);
 }
 
+REGISTER_RESOURCE(LogAttribute, "Logs attributes of flow files in the MiNiFi application log.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

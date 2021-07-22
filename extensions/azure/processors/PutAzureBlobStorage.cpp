@@ -257,6 +257,8 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   session->transfer(flow_file, Success);
 }
 
+REGISTER_RESOURCE(PutAzureBlobStorage, "Puts content into an Azure Storage Blob");
+
 }  // namespace processors
 }  // namespace azure
 }  // namespace minifi

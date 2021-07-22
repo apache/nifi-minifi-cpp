@@ -95,6 +95,8 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSes
   }
 }
 
+REGISTER_RESOURCE(RouteOnAttribute, "Routes FlowFiles based on their Attributes using the Attribute Expression Language.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

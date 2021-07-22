@@ -29,6 +29,8 @@
 #include "core/Core.h"
 #include "provenance/Provenance.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

@@ -228,7 +228,7 @@ class NarClassLoader {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
           int nameLength = cd.class_name_.length() - lastOfIdx;
           const auto processorName = cd.class_name_.substr(lastOfIdx, nameLength);
-          if (core::ClassLoader::getDefaultClassLoader().getGroupForClass(processorName).empty()) {
+          if (!core::ClassLoader::getDefaultClassLoader().getGroupForClass(processorName)) {
             minifi::ExternalBuildDescription::addExternalComponent(bundle.getDetails(), cd);
           }
         }

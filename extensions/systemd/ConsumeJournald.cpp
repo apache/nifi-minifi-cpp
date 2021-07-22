@@ -265,6 +265,9 @@ std::string ConsumeJournald::getCursor() const {
   return std::string{cursor.get()};
 }
 
+REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages. Creates one flow file per message."
+    "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute.");
+
 }  // namespace systemd
 }  // namespace extensions
 }  // namespace minifi

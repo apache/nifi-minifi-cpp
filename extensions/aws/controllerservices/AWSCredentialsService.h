@@ -79,8 +79,6 @@ class AWSCredentialsService : public core::controller::ControllerService {
   AWSCredentialsProvider aws_credentials_provider_;
 };
 
-REGISTER_RESOURCE(AWSCredentialsService, "AWS Credentials Management Service");
-
 }  // namespace controllers
 }  // namespace aws
 }  // namespace minifi

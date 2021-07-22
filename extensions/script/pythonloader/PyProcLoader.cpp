@@ -15,15 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "PyProcLoader.h"
+#include "core/extension/Extension.h"
+#include "PythonCreator.h"
+#include "PythonBindings.h"
 
-bool PyProcFactory::added = core::FlowConfiguration::add_static_func("createPyProcFactory");
+class PythonExtension : core::extension::Extension {
+  static minifi::python::PythonCreator& getPythonCreator() {
+    static minifi::python::PythonCreator instance("PythonCreator");
+    return instance;
+  }
+ public:
+  using Extension::Extension;
+  bool doInitialize(const std::shared_ptr<minifi::Configure>& config) override {
+    getPythonCreator().configure(config);
+    return true;
+  }
 
-extern "C" {
+  void doDeinitialize() override {
+    // TODO(adebreceni)
+  }
+};
 
-void *createPyProcFactory(void) {
-  return new PyProcFactory();
-}
+REGISTER_EXTENSION(PythonExtension);
 
-}

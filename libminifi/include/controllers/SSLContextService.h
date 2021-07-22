@@ -42,6 +42,7 @@
 #include "io/validation.h"
 #include "../core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -172,17 +173,17 @@ class SSLContextService : public core::controller::ControllerService {
 
   virtual void onEnable();
 
-  static const core::Property ClientCertificate;
-  static const core::Property PrivateKey;
-  static const core::Property Passphrase;
-  static const core::Property CACertificate;
-  static const core::Property UseSystemCertStore;
+  MINIFIAPI static const core::Property ClientCertificate;
+  MINIFIAPI static const core::Property PrivateKey;
+  MINIFIAPI static const core::Property Passphrase;
+  MINIFIAPI static const core::Property CACertificate;
+  MINIFIAPI static const core::Property UseSystemCertStore;
 #ifdef WIN32
-  static const core::Property CertStoreLocation;
-  static const core::Property ServerCertStore;
-  static const core::Property ClientCertStore;
-  static const core::Property ClientCertCN;
-  static const core::Property ClientCertKeyUsage;
+  MINIFIAPI static const core::Property CertStoreLocation;
+  MINIFIAPI static const core::Property ServerCertStore;
+  MINIFIAPI static const core::Property ClientCertStore;
+  MINIFIAPI static const core::Property ClientCertCN;
+  MINIFIAPI static const core::Property ClientCertKeyUsage;
 #endif  // WIN32
 
  protected:
@@ -236,7 +237,6 @@ class SSLContextService : public core::controller::ControllerService {
   std::shared_ptr<logging::Logger> logger_;
 };
 typedef int (SSLContextService::*ptr)(char *, int, int, void *);
-REGISTER_RESOURCE(SSLContextService, "Controller service that provides SSL/TLS capabilities to consuming interfaces");
 
 }  // namespace controllers
 }  // namespace minifi

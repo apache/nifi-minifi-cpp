@@ -226,6 +226,9 @@ void NetworkPrioritizerService::onEnable() {
     logger_->log_trace("Could not enable ");
   }
 }
+
+REGISTER_RESOURCE(NetworkPrioritizerService, "Enables selection of networking interfaces on defined parameters to include ouput and payload size");
+
 } /* namespace controllers */
 } /* namespace minifi */
 } /* namespace nifi */

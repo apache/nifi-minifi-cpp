@@ -26,11 +26,12 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "ExecutePythonProcessor.h"
-#include "PyProcCreator.h"
+#include "PythonObjectFactory.h"
 #include "agent/agent_version.h"
 #include "agent/build_description.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -48,7 +49,69 @@ class PythonCreator : public minifi::core::CoreComponent {
         logger_(logging::LoggerFactory<PythonCreator>::getLogger()) {
   }
 
-  virtual ~PythonCreator();
+  ~PythonCreator() override {
+    for (const auto& clazz : registered_classes_) {
+      core::getClassLoader().unregisterClass(clazz);
+    }
+  }
+
+  void configure(const std::shared_ptr<Configure> &configuration) override {
+    python::PythonScriptEngine::initialize();
+
+    auto engine = std::make_shared<python::PythonScriptEngine>();
+    utils::optional<std::string> pathListings = configuration ? configuration->get("nifi.python.processor.dir") : utils::nullopt;
+    if (!pathListings) {
+      return;
+    }
+    configure({pathListings.value()});
+
+    for (const auto &path : classpaths_) {
+      const auto scriptname = getScriptName(path);
+      const auto package = getPackage(pathListings.value(), path);
+      std::string classname = scriptname;
+      std::string fullname = "org.apache.nifi.minifi.processors." + scriptname;
+      if (!package.empty()) {
+        fullname = utils::StringUtils::join_pack("org.apache.nifi.minifi.processors.", package, ".", scriptname);
+        classname = fullname;
+      }
+      core::getClassLoader().registerClass(classname, utils::make_unique<PythonObjectFactory>(path, classname));
+      registered_classes_.push_back(classname);
+      try {
+        registerScriptDescription(classname, fullname, path, scriptname);
+      } catch (const std::exception &err) {
+        logger_->log_error("Cannot load %s: %s", scriptname, err.what());
+      }
+    }
+  }
+
+ private:
+  void registerScriptDescription(const std::string& classname, const std::string& fullname, const std::string& path, const std::string& scriptname) {
+    auto processor = core::ClassLoader::getDefaultClassLoader().instantiate<python::processors::ExecutePythonProcessor>(classname, utils::IdGenerator::getIdGenerator()->generate());
+    if (!processor) {
+      logger_->log_error("Couldn't instantiate '%s' python processor", classname);
+      return;
+    }
+    processor->initialize();
+    minifi::BundleDetails details;
+    details.artifact = getFileName(path);
+    details.version = minifi::AgentBuild::VERSION;
+    details.group = "python";
+
+    minifi::ClassDescription description(fullname);
+    description.dynamic_properties_ = processor->getPythonSupportDynamicProperties();
+    description.inputRequirement_ = processor->getInputRequirementAsString();
+    auto properties = processor->getPythonProperties();
+
+    minifi::AgentDocs::putDescription(scriptname, processor->getDescription());
+    for (const auto &prop : properties) {
+      description.class_properties_.insert(std::make_pair(prop.getName(), prop));
+    }
+
+    for (const auto &rel : processor->getSupportedRelationships()) {
+      description.class_relationships_.push_back(rel);
+    }
+    minifi::ExternalBuildDescription::addExternalComponent(details, description);
+  }
 
   void configure(const std::vector<std::string> &pythonFiles) {
     std::vector<std::string> pathOrFiles;
@@ -62,85 +125,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
   }
 
-  void configure(const std::shared_ptr<Configure> &configuration) override {
-    python::PythonScriptEngine::initialize();
-
-    auto engine = std::make_shared<python::PythonScriptEngine>();
-    std::string pathListings;
-
-    // assuming we have the options set and can access the PythonCreator
-
-    if (configuration->get("nifi.python.processor.dir", pathListings)) {
-      std::vector<std::string> paths;
-      paths.emplace_back(pathListings);
-
-      configure(paths);
-
-      for (const auto &path : classpaths_) {
-        const auto &scriptname = getScriptName(path);
-        const auto &package = getPackage(pathListings, path);
-        if (!package.empty()) {
-          std::string script_with_package = "org.apache.nifi.minifi.processors." + package + "." + scriptname;
-          PyProcCreator::getPythonCreator()->addClassName(script_with_package, path);
-        } else {
-          // maintain backwards compatibility with the standard package.
-          PyProcCreator::getPythonCreator()->addClassName(scriptname, path);
-        }
-      }
-
-      core::ClassLoader::getDefaultClassLoader().registerResource("", "createPyProcFactory");
-
-      for (const auto &path : classpaths_) {
-        const auto &scriptName = getScriptName(path);
-
-        utils::Identifier uuid;
-
-        std::string loadName = scriptName;
-        const auto &package = getPackage(pathListings, path);
-
-        if (!package.empty())
-          loadName = "org.apache.nifi.minifi.processors." + package + "." + scriptName;
-
-        auto processor = std::dynamic_pointer_cast<core::Processor>(core::ClassLoader::getDefaultClassLoader().instantiate(loadName, uuid));
-        if (processor) {
-          try {
-            processor->initialize();
-            auto proc = std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(processor);
-            minifi::BundleDetails details;
-            const auto &package = getPackage(pathListings, path);
-            std::string script_with_package = "org.apache.nifi.minifi.processors.";
-            if (!package.empty()) {
-              script_with_package += package + ".";
-            }
-            script_with_package += scriptName;
-            details.artifact = getFileName(path);
-            details.version = minifi::AgentBuild::VERSION;
-            details.group = "python";
-
-            minifi::ClassDescription description(script_with_package);
-            description.dynamic_properties_ = proc->getPythonSupportDynamicProperties();
-            description.inputRequirement_ = proc->getInputRequirementAsString();
-            auto properties = proc->getPythonProperties();
-
-            minifi::AgentDocs::putDescription(scriptName, proc->getDescription());
-            for (const auto &prop : properties) {
-              description.class_properties_.insert(std::make_pair(prop.getName(), prop));
-            }
-
-            for (const auto &rel : proc->getSupportedRelationships()) {
-              description.class_relationships_.push_back(rel);
-            }
-            minifi::ExternalBuildDescription::addExternalComponent(details, description);
-          } catch (const std::exception &e) {
-            logger_->log_warn("Cannot load %s because of %s", scriptName, e.what());
-          }
-        }
-      }
-    }
-  }
-
- private:
-  std::string getPackage(const std::string &basePath, const std::string pythonscript) {
+  std::string getPackage(const std::string& basePath, const std::string& pythonscript) {
     const auto script_directory = getPath(pythonscript);
     const auto loc = script_directory.find_first_of(basePath);
     if (loc != 0 || script_directory.size() <= basePath.size()) {
@@ -173,6 +158,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     return path.substr(0, dot_i);
   }
 
+  std::vector<std::string> registered_classes_;
   std::vector<std::string> classpaths_;
 
   std::shared_ptr<logging::Logger> logger_;

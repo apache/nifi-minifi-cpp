@@ -23,8 +23,7 @@ cmake_minimum_required(VERSION 2.6)
 
 file(GLOB SOURCES "*.cpp")
 
-add_library(minifi-bustache-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-bustache-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-bustache-extensions SHARED ${SOURCES})
 
 target_link_libraries(minifi-bustache-extensions ${LIBMINIFI})
 target_link_libraries(minifi-bustache-extensions BUSTACHE::libbustache)

@@ -18,6 +18,7 @@
 
 #include "./TestBase.h"
 #include "utils/IntegrationTestUtils.h"
+#include "core/extension/ExtensionManager.h"
 
 #include "spdlog/spdlog.h"
 
@@ -32,7 +33,7 @@ void LogTestController::setLevel(const std::string name, spdlog::level::level_en
   if (config && config->shortenClassNames()) {
     utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
   }
-  spdlog::get(adjusted_name)->set_level(level);
+  logging::LoggerConfiguration::getSpdlogLogger(adjusted_name)->set_level(level);
 }
 
 TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo,
@@ -115,7 +116,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
   processor_nodes_.push_back(node);
   // std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
-  auto contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder");
+  auto contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
   contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_services_provider_.get())->withProvenanceRepository(prov_repo_)->withConfiguration(configuration_);
   auto context = contextBuilder->build(node);
   processor_contexts_.push_back(context);
@@ -446,4 +447,3 @@ void TestPlan::validateAnnotations() const {
     processor->validateAnnotations();
   }
 }
-

@@ -290,6 +290,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
 }
 
+REGISTER_INTERNAL_RESOURCE(CoapProtocol);
+
 } /* namespace c2 */
 } /* namespace coap */
 } /* namespace minifi */

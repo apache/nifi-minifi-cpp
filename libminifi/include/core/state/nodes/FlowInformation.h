@@ -259,8 +259,6 @@ class FlowInformation : public FlowMonitor {
  protected:
 };
 
-REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID and flow URL deployed to this agent");
-
 }  // namespace response
 }  // namespace state
 }  // namespace minifi

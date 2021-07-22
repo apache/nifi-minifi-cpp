@@ -29,6 +29,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
+#include "utils/Export.h"
 
 
 namespace org {
@@ -43,8 +44,8 @@ class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKey
 
   ~AbstractAutoPersistingKeyValueStoreService() override;
 
-  static core::Property AlwaysPersist;
-  static core::Property AutoPersistenceInterval;
+  MINIFIAPI static core::Property AlwaysPersist;
+  MINIFIAPI static core::Property AutoPersistenceInterval;
 
   void initialize() override;
   void onEnable() override;

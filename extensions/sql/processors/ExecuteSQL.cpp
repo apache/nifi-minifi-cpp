@@ -121,6 +121,8 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   }
 }
 
+REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

@@ -158,6 +158,8 @@ void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::Proces
   }
 }
 
+REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

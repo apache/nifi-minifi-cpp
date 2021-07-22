@@ -702,6 +702,8 @@ void CollectorInitiatedSubscription::logWindowsError(int line, const std::string
   LocalFree(lpMsg);
 }
 
+REGISTER_RESOURCE(CollectorInitiatedSubscription, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

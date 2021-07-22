@@ -137,7 +137,6 @@ class TailEventLog : public core::Processor {
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 };
-REGISTER_RESOURCE(TailEventLog, "Windows event log reader that functions as a stateful tail of the provided windows event log name");
 
 } /* namespace processors */
 } /* namespace minifi */

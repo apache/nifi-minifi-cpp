@@ -39,6 +39,7 @@
 #include "io/ZlibStream.h"
 #include "utils/Enum.h"
 #include "utils/gsl.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -62,18 +63,18 @@ class CompressContent : public core::Processor {
   // Destructor
   ~CompressContent() override = default;
   // Processor Name
-  static constexpr char const* ProcessorName = "CompressContent";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "CompressContent";
   // Supported Properties
-  static core::Property CompressMode;
-  static core::Property CompressLevel;
-  static core::Property CompressFormat;
-  static core::Property UpdateFileName;
-  static core::Property EncapsulateInTar;
-  static core::Property BatchSize;
+  EXTENSIONAPI static core::Property CompressMode;
+  EXTENSIONAPI static core::Property CompressLevel;
+  EXTENSIONAPI static core::Property CompressFormat;
+  EXTENSIONAPI static core::Property UpdateFileName;
+  EXTENSIONAPI static core::Property EncapsulateInTar;
+  EXTENSIONAPI static core::Property BatchSize;
 
   // Supported Relationships
-  static core::Relationship Failure;
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Failure;
+  EXTENSIONAPI static core::Relationship Success;
 
   static const std::string TAR_EXT;
 
@@ -454,8 +455,6 @@ class CompressContent : public core::Processor {
   static const std::map<std::string, CompressionFormat> compressionFormatMimeTypeMap_;
   static const std::map<CompressionFormat, std::string> fileExtension_;
 };
-
-REGISTER_RESOURCE(CompressContent, "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate");
 
 } /* namespace processors */
 } /* namespace minifi */

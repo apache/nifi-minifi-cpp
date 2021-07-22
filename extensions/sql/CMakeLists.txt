@@ -24,8 +24,7 @@ include_directories(".")
 
 file(GLOB SOURCES  "*.cpp" "services/*.cpp" "processors/*.cpp"  "data/*.cpp")
 
-add_library(minifi-sql STATIC ${SOURCES})
-set_property(TARGET minifi-sql PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-sql SHARED ${SOURCES})
 
 if(WIN32)
 	find_package(ODBC REQUIRED)
@@ -48,7 +47,7 @@ else()
 			CMAKE_COMMAND ""
 			UPDATE_COMMAND ""
 			INSTALL_COMMAND make install
-			CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR}
+			CONFIGURE_COMMAND ./autogen.sh && ./configure --prefix=${IODBC_BYPRODUCT_DIR} --with-pic
 			STEP_TARGETS build
 			BUILD_BYPRODUCTS "${IODBC_BYPRODUCT_DIR}/${IODBC_BYPRODUCT}"
 			EXCLUDE_FROM_ALL TRUE

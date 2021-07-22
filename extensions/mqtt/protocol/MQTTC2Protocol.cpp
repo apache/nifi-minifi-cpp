@@ -96,6 +96,8 @@ C2Payload MQTTC2Protocol::serialize(const C2Payload &payload) {
   return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
 }
 
+REGISTER_INTERNAL_RESOURCE(MQTTC2Protocol);
+
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

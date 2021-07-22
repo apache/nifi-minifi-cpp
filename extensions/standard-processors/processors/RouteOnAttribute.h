@@ -77,8 +77,6 @@ class RouteOnAttribute : public core::Processor {
   std::map<std::string, core::Relationship> route_rels_;
 };
 
-REGISTER_RESOURCE(RouteOnAttribute, "Routes FlowFiles based on their Attributes using the Attribute Expression Language.");
-
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

@@ -88,7 +88,6 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, "A persistable key-value service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file");
 static_assert(std::is_convertible<UnorderedMapKeyValueStoreService*, PersistableKeyValueStoreService*>::value, "UnorderedMapKeyValueStoreService is a PersistableKeyValueStoreService");
 
 }  // namespace controllers

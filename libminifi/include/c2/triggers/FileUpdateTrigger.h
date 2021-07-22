@@ -115,8 +115,6 @@ class FileUpdateTrigger : public C2Trigger {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-// add the trigger to the known resources.
-REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the last write time of a file has been changed.");
 
 }  // namespace c2
 }  // namespace minifi

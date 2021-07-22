@@ -62,6 +62,8 @@ void AzureStorageCredentialsService::onEnable() {
   getProperty(ConnectionString.getName(), credentials_.connection_string);
 }
 
+REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");
+
 }  // namespace controllers
 }  // namespace azure
 }  // namespace minifi

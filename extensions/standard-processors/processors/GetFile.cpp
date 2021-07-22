@@ -284,6 +284,8 @@ int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::Res
   return 0;
 }
 
+REGISTER_RESOURCE(GetFile, "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.");
+
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi

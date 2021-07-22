@@ -33,6 +33,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "ThreadManagementService.h"
 #include "io/NetworkPrioritizer.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -67,11 +68,11 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
     initialize();
   }
 
-  static core::Property NetworkControllers;
-  static core::Property MaxThroughput;
-  static core::Property MaxPayload;
-  static core::Property VerifyInterfaces;
-  static core::Property DefaultPrioritizer;
+  MINIFIAPI static core::Property NetworkControllers;
+  MINIFIAPI static core::Property MaxThroughput;
+  MINIFIAPI static core::Property MaxPayload;
+  MINIFIAPI static core::Property VerifyInterfaces;
+  MINIFIAPI static core::Property DefaultPrioritizer;
 
   void initialize();
 
@@ -129,8 +130,6 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   std::shared_ptr<utils::timeutils::Clock> clock_;
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(NetworkPrioritizerService, "Enables selection of networking interfaces on defined parameters to include ouput and payload size");
 
 }  // namespace controllers
 }  // namespace minifi

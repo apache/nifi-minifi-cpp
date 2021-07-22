@@ -39,7 +39,7 @@ class ExecutePythonProcessorTestBase {
  public:
   ExecutePythonProcessorTestBase() :
     logTestController_(LogTestController::getInstance()),
-    logger_(logging::LoggerFactory<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor>::getLogger()) {
+    logger_(logging::LoggerFactory<ExecutePythonProcessorTestBase>::getLogger()) {
     reInitialize();
   }
   virtual ~ExecutePythonProcessorTestBase() {
@@ -51,7 +51,6 @@ class ExecutePythonProcessorTestBase {
     testController_.reset(new TestController());
     plan_ = testController_->createPlan();
     logTestController_.setDebug<TestPlan>();
-    logTestController_.setDebug<minifi::python::processors::ExecutePythonProcessor>();
     logTestController_.setDebug<minifi::processors::PutFile>();
     logTestController_.setDebug<minifi::processors::PutFile::ReadCallback>();
   }
@@ -114,7 +113,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     const std::string output_dir = testController_->createTempDirectory();
 
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor");
-    plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile.getName(), getScriptFullPath("stateful_processor.py"));
+    plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath("stateful_processor.py"));
 
     addPutFileProcessorToPlan(core::Relationship("success", "description"), output_dir);
     plan_->runNextProcessor();  // ExecutePythonProcessor
@@ -142,10 +141,10 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
   std::shared_ptr<core::Processor> addExecutePythonProcessorToPlan(const std::string& used_as_script_file, const std::string& used_as_script_body) {
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor", core::Relationship("success", "description"), true);
     if ("" != used_as_script_file) {
-      plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile.getName(), getScriptFullPath(used_as_script_file));
+      plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath(used_as_script_file));
     }
     if ("" != used_as_script_body) {
-        plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptBody.getName(), getFileContent(getScriptFullPath(used_as_script_body)));
+        plan_->setProperty(executePythonProcessor, "Script Body", getFileContent(getScriptFullPath(used_as_script_body)));
     }
     return executePythonProcessor;
   }

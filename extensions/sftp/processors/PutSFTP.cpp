@@ -506,6 +506,8 @@ void PutSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, co
   }
 }
 
+REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

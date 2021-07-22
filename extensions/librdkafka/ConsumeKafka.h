@@ -37,28 +37,28 @@ namespace processors {
 
 class ConsumeKafka : public core::Processor {
  public:
-  static constexpr char const* ProcessorName = "ConsumeKafka";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "ConsumeKafka";
 
   // Supported Properties
-  static core::Property KafkaBrokers;
-  static core::Property SecurityProtocol;
-  static core::Property TopicNames;
-  static core::Property TopicNameFormat;
-  static core::Property HonorTransactions;
-  static core::Property GroupID;
-  static core::Property OffsetReset;
-  static core::Property KeyAttributeEncoding;
-  static core::Property MessageDemarcator;
-  static core::Property MessageHeaderEncoding;
-  static core::Property HeadersToAddAsAttributes;
-  static core::Property DuplicateHeaderHandling;
-  static core::Property MaxPollRecords;
-  static core::Property MaxPollTime;
-  static core::Property SessionTimeout;
-  static core::Property SSLContextService;
+  EXTENSIONAPI static core::Property KafkaBrokers;
+  EXTENSIONAPI static core::Property SecurityProtocol;
+  EXTENSIONAPI static core::Property TopicNames;
+  EXTENSIONAPI static core::Property TopicNameFormat;
+  EXTENSIONAPI static core::Property HonorTransactions;
+  EXTENSIONAPI static core::Property GroupID;
+  EXTENSIONAPI static core::Property OffsetReset;
+  EXTENSIONAPI static core::Property KeyAttributeEncoding;
+  EXTENSIONAPI static core::Property MessageDemarcator;
+  EXTENSIONAPI static core::Property MessageHeaderEncoding;
+  EXTENSIONAPI static core::Property HeadersToAddAsAttributes;
+  EXTENSIONAPI static core::Property DuplicateHeaderHandling;
+  EXTENSIONAPI static core::Property MaxPollRecords;
+  EXTENSIONAPI static core::Property MaxPollTime;
+  EXTENSIONAPI static core::Property SessionTimeout;
+  EXTENSIONAPI static core::Property SSLContextService;
 
   // Supported Relationships
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
 
   // Security Protocol allowable values
   static constexpr char const* SECURITY_PROTOCOL_PLAINTEXT = "plaintext";
@@ -185,10 +185,6 @@ class ConsumeKafka : public core::Processor {
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ConsumeKafka>::getLogger()};
 };
-
-REGISTER_RESOURCE(ConsumeKafka, "Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles. "
-    "The application should make sure that the processor is triggered at regular intervals, even if no messages are expected, "
-    "to serve any queued callbacks waiting to be called. Rebalancing can also only happen on trigger."); // NOLINT
 
 }  // namespace processors
 }  // namespace minifi

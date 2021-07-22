@@ -88,8 +88,6 @@ class CallbackProcessor : public core::Processor {
   std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CallbackProcessor>::getLogger() };
 };
 
-REGISTER_RESOURCE(CallbackProcessor, "");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

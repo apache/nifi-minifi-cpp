@@ -67,7 +67,7 @@ function(use_bundled_libxml2 SOURCE_DIR BINARY_DIR)
                 INSTALL_COMMAND make install
                 BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libxml2-install/${BYPRODUCT}"
                 CONFIGURE_COMMAND ""
-                PATCH_COMMAND ./configure --enable-shared=no --enable-static=yes --with-iconv=no --with-zlib=no --with-lzma=no --with-python=no --with-ftp=no --with-http=no --prefix=${BINARY_DIR}/thirdparty/libxml2-install
+                PATCH_COMMAND ./configure --enable-shared=no --enable-static=yes --with-pic=yes --with-iconv=no --with-zlib=no --with-lzma=no --with-python=no --with-ftp=no --with-http=no --prefix=${BINARY_DIR}/thirdparty/libxml2-install
                 STEP_TARGETS build
                 EXCLUDE_FROM_ALL TRUE
         )

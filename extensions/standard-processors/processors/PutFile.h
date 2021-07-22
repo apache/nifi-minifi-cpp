@@ -31,6 +31,7 @@
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -57,17 +58,17 @@ class PutFile : public core::Processor {
   ~PutFile() override = default;
 
   // Supported Properties
-  static core::Property Directory;
-  static core::Property ConflictResolution;
-  static core::Property CreateDirs;
-  static core::Property MaxDestFiles;
+  EXTENSIONAPI static core::Property Directory;
+  EXTENSIONAPI static core::Property ConflictResolution;
+  EXTENSIONAPI static core::Property CreateDirs;
+  EXTENSIONAPI static core::Property MaxDestFiles;
 #ifndef WIN32
-  static core::Property Permissions;
-  static core::Property DirectoryPermissions;
+  EXTENSIONAPI static core::Property Permissions;
+  EXTENSIONAPI static core::Property DirectoryPermissions;
 #endif
   // Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Failure;
 
   /**
    * Function that's executed when the processor is scheduled.
@@ -135,8 +136,6 @@ class PutFile : public core::Processor {
   void getDirectoryPermissions(core::ProcessContext *context);
 #endif
 };
-
-REGISTER_RESOURCE(PutFile, "Writes the contents of a FlowFile to the local file system");
 
 }  // namespace processors
 }  // namespace minifi

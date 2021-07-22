@@ -138,8 +138,6 @@ class GetUSBCamera : public core::Processor {
   void cleanupUvc();
 };
 
-REGISTER_RESOURCE(GetUSBCamera, "Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.");  // NOLINT line length
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

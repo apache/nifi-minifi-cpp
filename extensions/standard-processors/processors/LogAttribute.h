@@ -32,6 +32,7 @@
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -56,18 +57,18 @@ class LogAttribute : public core::Processor {
   // Destructor
   ~LogAttribute() override = default;
   // Processor Name
-  static constexpr char const* ProcessorName = "LogAttribute";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "LogAttribute";
   // Supported Properties
-  static core::Property LogLevel;
-  static core::Property AttributesToLog;
-  static core::Property AttributesToIgnore;
-  static core::Property LogPayload;
-  static core::Property HexencodePayload;
-  static core::Property MaxPayloadLineLength;
-  static core::Property LogPrefix;
-  static core::Property FlowFilesToLog;
+  EXTENSIONAPI static core::Property LogLevel;
+  EXTENSIONAPI static core::Property AttributesToLog;
+  EXTENSIONAPI static core::Property AttributesToIgnore;
+  EXTENSIONAPI static core::Property LogPayload;
+  EXTENSIONAPI static core::Property HexencodePayload;
+  EXTENSIONAPI static core::Property MaxPayloadLineLength;
+  EXTENSIONAPI static core::Property LogPrefix;
+  EXTENSIONAPI static core::Property FlowFilesToLog;
   // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Success;
   enum LogAttrLevel {
     LogAttrLevelTrace,
     LogAttrLevelDebug,
@@ -134,8 +135,6 @@ class LogAttribute : public core::Processor {
   // Logger
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(LogAttribute, "Logs attributes of flow files in the MiNiFi application log.");
 
 }  // namespace processors
 }  // namespace minifi

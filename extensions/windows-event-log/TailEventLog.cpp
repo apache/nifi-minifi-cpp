@@ -125,6 +125,9 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     context->yield();
   }
 }
+
+REGISTER_RESOURCE(TailEventLog, "Windows event log reader that functions as a stateful tail of the provided windows event log name");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -60,6 +60,7 @@
 #include "utils/OsUtils.h"
 #include "utils/NetworkInterfaceInfo.h"
 #include "utils/SystemCpuUsageTracker.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -439,11 +440,9 @@ class DeviceInfoNode : public DeviceInformation {
   std::string hostname_;
   std::string ip_;
   std::string device_id_;
-  static utils::SystemCpuUsageTracker cpu_load_tracker_;
-  static std::mutex cpu_load_tracker_mutex_;
+  MINIFIAPI static utils::SystemCpuUsageTracker cpu_load_tracker_;
+  MINIFIAPI static std::mutex cpu_load_tracker_mutex_;
 };
-
-REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device characteristics to the C2 protocol");
 
 }  // namespace response
 }  // namespace state

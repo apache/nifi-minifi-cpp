@@ -15,15 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "SQLLoader.h"
 
-static auto added = core::FlowConfiguration::add_static_func("createSQLFactory");
+#include "core/state/nodes/ProcessMetrics.h"
 
-extern "C" {
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace state {
+namespace response {
 
-void *createSQLFactory(void) {
-  return new SQLFactory();
-}
+REGISTER_RESOURCE(ProcessMetrics, "Node part of an AST that defines the Processor information and metrics subtree");
 
-}
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

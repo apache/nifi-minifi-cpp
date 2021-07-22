@@ -73,9 +73,6 @@ class ApplyTemplate : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(ApplyTemplate, "Applies the mustache template specified by the \"Template\" property and writes the output to the flow file content. "
-    "FlowFile attributes are used as template parameters.");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

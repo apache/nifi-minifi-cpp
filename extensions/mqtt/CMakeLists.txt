@@ -22,8 +22,7 @@ include_directories(./controllerservice ./processors ./protocol ../../libminifi/
 
 file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
 
-add_library(minifi-mqtt-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-mqtt-extensions SHARED ${SOURCES})
 
 target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
 

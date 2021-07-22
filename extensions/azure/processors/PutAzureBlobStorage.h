@@ -126,8 +126,6 @@ class PutAzureBlobStorage : public core::Processor {
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutAzureBlobStorage>::getLogger()};
 };
 
-REGISTER_RESOURCE(PutAzureBlobStorage, "Puts content into an Azure Storage Blob");
-
 }  // namespace processors
 }  // namespace azure
 }  // namespace minifi

@@ -67,38 +67,10 @@ class FlowConfiguration : public CoreComponent {
    * Constructor that will be used for configuring
    * the flow controller.
    */
-  explicit FlowConfiguration(std::shared_ptr<core::Repository> /*repo*/, std::shared_ptr<core::Repository> flow_file_repo,
+  explicit FlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo,
                              std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
                              std::shared_ptr<Configure> configuration, const std::optional<std::string>& path,
-                             std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>())
-      : CoreComponent(core::getClassName<FlowConfiguration>()),
-        flow_file_repo_(std::move(flow_file_repo)),
-        content_repo_(std::move(content_repo)),
-        stream_factory_(std::move(stream_factory)),
-        configuration_(configuration),
-        filesystem_(std::move(filesystem)),
-        logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
-    controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
-    service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
-    std::string flowUrl = "", bucket_id = "default", flowId = "";
-    configuration->get(Configure::nifi_c2_flow_id, flowId);
-    configuration->get(Configure::nifi_c2_flow_url, flowUrl);
-    flow_version_ = std::make_shared<state::response::FlowVersion>(flowUrl, bucket_id, flowId);
-
-    if (!path) {
-      logger_->log_error("Configuration path is not specified.");
-    } else {
-      config_path_ = utils::file::PathUtils::canonicalize(*path);
-      if (!config_path_) {
-        logger_->log_error("Couldn't find config file \"%s\".", *path);
-        config_path_ = path;
-      }
-      checksum_calculator_.setFileLocation(*config_path_);
-    }
-
-    // it is okay if this has already been called
-    initialize_static_functions();
-  }
+                             std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>());
 
   ~FlowConfiguration() override;
 
@@ -151,30 +123,9 @@ class FlowConfiguration : public CoreComponent {
     return service_provider_;
   }
 
-  static bool add_static_func(std::string functor) {
-    std::lock_guard<std::mutex> lock(get_static_functions().atomic_initialization_);
-    get_static_functions().statics_sl_funcs_.push_back(functor);
-    return true;
-  }
-
-  static void initialize_static_functions() {
-    std::lock_guard<std::mutex> lock(get_static_functions().atomic_initialization_);
-    for (auto sl_func : get_static_functions().statics_sl_funcs_) {
-      core::ClassLoader::getDefaultClassLoader().registerResource("", sl_func);
-    }
-  }
-
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
  protected:
-  void registerResource(const std::string &resource_function) {
-    core::ClassLoader::getDefaultClassLoader().registerResource("", resource_function);
-  }
-
-  void registerResource(const std::string &resource_location, const std::string &resource_function) {
-    core::ClassLoader::getDefaultClassLoader().registerResource(resource_location, resource_function);
-  }
-
   // service provider reference.
   std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
   // based, shared controller service map.

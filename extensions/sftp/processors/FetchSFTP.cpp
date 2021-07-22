@@ -284,6 +284,8 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   put_connection_back_to_cache();
 }
 
+REGISTER_RESOURCE(FetchSFTP, "Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

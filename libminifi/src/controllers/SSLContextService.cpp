@@ -562,6 +562,8 @@ void SSLContextService::initializeProperties() {
   setSupportedProperties(supportedProperties);
 }
 
+REGISTER_RESOURCE(SSLContextService, "Controller service that provides SSL/TLS capabilities to consuming interfaces");
+
 } /* namespace controllers */
 } /* namespace minifi */
 } /* namespace nifi */

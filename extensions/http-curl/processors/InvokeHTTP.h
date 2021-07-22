@@ -31,6 +31,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "../client/HTTPClient.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -52,46 +53,46 @@ class InvokeHTTP : public core::Processor {
   // Destructor
   virtual ~InvokeHTTP();
   // Processor Name
-  static const char *ProcessorName;
-  static std::string DefaultContentType;
+  EXTENSIONAPI static const char *ProcessorName;
+  EXTENSIONAPI static std::string DefaultContentType;
   // Supported Properties
-  static core::Property Method;
-  static core::Property URL;
-  static core::Property ConnectTimeout;
-  static core::Property ReadTimeout;
-  static core::Property DateHeader;
-  static core::Property FollowRedirects;
-  static core::Property AttributesToSend;
-  static core::Property SSLContext;
-  static core::Property ProxyHost;
-  static core::Property ProxyPort;
-  static core::Property ProxyUsername;
-  static core::Property ProxyPassword;
-  static core::Property ContentType;
-  static core::Property SendBody;
-  static core::Property SendMessageBody;
-  static core::Property UseChunkedEncoding;
-  static core::Property DisablePeerVerification;
-  static core::Property PropPutOutputAttributes;
+  EXTENSIONAPI static core::Property Method;
+  EXTENSIONAPI static core::Property URL;
+  EXTENSIONAPI static core::Property ConnectTimeout;
+  EXTENSIONAPI static core::Property ReadTimeout;
+  EXTENSIONAPI static core::Property DateHeader;
+  EXTENSIONAPI static core::Property FollowRedirects;
+  EXTENSIONAPI static core::Property AttributesToSend;
+  EXTENSIONAPI static core::Property SSLContext;
+  EXTENSIONAPI static core::Property ProxyHost;
+  EXTENSIONAPI static core::Property ProxyPort;
+  EXTENSIONAPI static core::Property ProxyUsername;
+  EXTENSIONAPI static core::Property ProxyPassword;
+  EXTENSIONAPI static core::Property ContentType;
+  EXTENSIONAPI static core::Property SendBody;
+  EXTENSIONAPI static core::Property SendMessageBody;
+  EXTENSIONAPI static core::Property UseChunkedEncoding;
+  EXTENSIONAPI static core::Property DisablePeerVerification;
+  EXTENSIONAPI static core::Property PropPutOutputAttributes;
 
-  static core::Property AlwaysOutputResponse;
+  EXTENSIONAPI static core::Property AlwaysOutputResponse;
 
-  static core::Property PenalizeOnNoRetry;
+  EXTENSIONAPI static core::Property PenalizeOnNoRetry;
 
-  static const char* STATUS_CODE;
-  static const char* STATUS_MESSAGE;
-  static const char* RESPONSE_BODY;
-  static const char* REQUEST_URL;
-  static const char* TRANSACTION_ID;
-  static const char* REMOTE_DN;
-  static const char* EXCEPTION_CLASS;
-  static const char* EXCEPTION_MESSAGE;
+  EXTENSIONAPI static const char* STATUS_CODE;
+  EXTENSIONAPI static const char* STATUS_MESSAGE;
+  EXTENSIONAPI static const char* RESPONSE_BODY;
+  EXTENSIONAPI static const char* REQUEST_URL;
+  EXTENSIONAPI static const char* TRANSACTION_ID;
+  EXTENSIONAPI static const char* REMOTE_DN;
+  EXTENSIONAPI static const char* EXCEPTION_CLASS;
+  EXTENSIONAPI static const char* EXCEPTION_MESSAGE;
   // Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship RelResponse;
-  static core::Relationship RelRetry;
-  static core::Relationship RelNoRetry;
-  static core::Relationship RelFailure;
+  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship RelResponse;
+  EXTENSIONAPI static core::Relationship RelRetry;
+  EXTENSIONAPI static core::Relationship RelNoRetry;
+  EXTENSIONAPI static core::Relationship RelFailure;
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
@@ -161,10 +162,6 @@ class InvokeHTTP : public core::Processor {
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<InvokeHTTP>::getLogger()};
 };
-
-REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
-    "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
-    "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
 
 } /* namespace processors */
 } /* namespace minifi */

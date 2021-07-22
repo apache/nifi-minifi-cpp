@@ -119,8 +119,6 @@ class PutSFTP : public SFTPProcessorBase {
   bool processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 };
 
-REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

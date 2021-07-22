@@ -215,6 +215,8 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     session->transfer(flowFile, Success);
 }
 
+REGISTER_RESOURCE(ManipulateArchive, "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

@@ -314,6 +314,8 @@ int16_t GetTCP::getMetricNodes(std::vector<std::shared_ptr<state::response::Resp
   return 0;
 }
 
+REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves one or more byte messages from clients");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

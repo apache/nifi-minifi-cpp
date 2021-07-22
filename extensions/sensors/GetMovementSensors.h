@@ -64,8 +64,6 @@ class GetMovementSensors : public SensorBase {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(GetMovementSensors, "Defines a processor that is able to retrieve sensor information from a class of known servo sensors");
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

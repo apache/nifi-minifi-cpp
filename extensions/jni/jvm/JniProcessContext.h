@@ -61,15 +61,15 @@ struct JniProcessContext {
 extern "C" {
 #endif
 
-DLL_EXPORT jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName);
+jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName);
 
-DLL_EXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames(JNIEnv *env, jobject obj);
+jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getPropertyNames(JNIEnv *env, jobject obj);
 
-DLL_EXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getComponent(JNIEnv *env, jobject obj);
+jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getComponent(JNIEnv *env, jobject obj);
 
-DLL_EXPORT jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getName(JNIEnv *env, jobject obj);
+jstring JNICALL Java_org_apache_nifi_processor_JniProcessContext_getName(JNIEnv *env, jobject obj);
 
-DLL_EXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getControllerServiceLookup(JNIEnv *env, jobject obj);
+jobject JNICALL Java_org_apache_nifi_processor_JniProcessContext_getControllerServiceLookup(JNIEnv *env, jobject obj);
 
 #ifdef __cplusplus
 }
