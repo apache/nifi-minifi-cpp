@@ -24,6 +24,7 @@
 #include <iterator>
 #include <set>
 #include "core/Property.h"
+#include "core/Resource.h"
 #include "io/validation.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
@@ -107,6 +108,8 @@ void JavaControllerService::onEnable() {
 
   nar_loader_ = std::unique_ptr<NarClassLoader>(new NarClassLoader(shared_from_this(), narClassLoaderClazz, nardir, narscratch, nardocs));
 }
+
+REGISTER_RESOURCE(JavaControllerService, "Allows specification of nars to be used within referenced processors. ");
 
 } /* namespace controllers */
 } /* namespace jni */

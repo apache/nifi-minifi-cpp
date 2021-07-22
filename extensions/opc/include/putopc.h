@@ -30,7 +30,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
@@ -93,8 +92,6 @@ class PutOPCProcessor : public BaseOPCProcessor {
 
   opc::OPCNodeDataType nodeDataType_;
 };
-
-REGISTER_RESOURCE(PutOPCProcessor, "Creates/updates  OPC nodes");
 
 } /* namespace processors */
 } /* namespace minifi */

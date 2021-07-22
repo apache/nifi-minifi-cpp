@@ -26,7 +26,6 @@
 
 #include "../jvm/JVMLoader.h"
 #include "NarClassLoader.h"
-#include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "JavaServicer.h"
 #include "io/validation.h"
@@ -159,8 +158,6 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(JavaControllerService, "Allows specification of nars to be used within referenced processors. ");
 
 } /* namespace controllers */
 } /* namespace jni */

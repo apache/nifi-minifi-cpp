@@ -26,6 +26,7 @@
 
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -295,6 +296,8 @@ int16_t ControllerSocketProtocol::heartbeat(const C2Payload &payload) {
 
   return 0;
 }
+
+REGISTER_RESOURCE(ControllerSocketProtocol, "Creates a reporter that can handle basic c2 operations for a localized environment through a simple TCP socket.");
 
 }  // namespace c2
 }  // namespace minifi

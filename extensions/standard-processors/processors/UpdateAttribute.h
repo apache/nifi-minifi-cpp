@@ -28,7 +28,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -73,9 +72,6 @@ class UpdateAttribute : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   std::vector<core::Property> attributes_;
 };
-
-REGISTER_RESOURCE(UpdateAttribute, "This processor updates the attributes of a FlowFile using properties that are added by the user. "
-  "This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the \"basic\" usage in Apache NiFi.");
 
 }  // namespace processors
 }  // namespace minifi

@@ -41,6 +41,8 @@
 
 class LoggerTestAccessor;
 
+class LogTestController;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -68,15 +70,13 @@ struct LoggerNamespace {
 
 class LoggerConfiguration {
   friend class ::LoggerTestAccessor;
+  friend class ::LogTestController;
 
  public:
   /**
    * Gets the current log configuration
    */
-  static LoggerConfiguration& getConfiguration() {
-    static LoggerConfiguration logger_configuration;
-    return logger_configuration;
-  }
+  static LoggerConfiguration& getConfiguration();
 
   static std::unique_ptr<LoggerConfiguration> newInstance() {
     return std::unique_ptr<LoggerConfiguration>(new LoggerConfiguration());
@@ -128,6 +128,8 @@ class LoggerConfiguration {
   static spdlog::sink_ptr create_fallback_sink();
 
   static std::shared_ptr<internal::LoggerNamespace> create_default_root();
+
+  static std::shared_ptr<spdlog::logger> getSpdlogLogger(const std::string& name);
 
   class LoggerImpl : public Logger {
    public:

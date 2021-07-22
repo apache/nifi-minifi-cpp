@@ -17,6 +17,7 @@
  */
 
 #include "JVMCreator.h"
+#include "core/Resource.h"
 
 #ifndef WIN32
 
@@ -39,6 +40,8 @@ namespace jni {
 #define F_OK    0       /* Test for existence.  */
 #endif
 JVMCreator::~JVMCreator() = default;
+
+REGISTER_INTERNAL_RESOURCE(JVMCreator);
 
 } /* namespace jni */
 } /* namespace minifi */

@@ -55,7 +55,7 @@ class TestControllerWithFlow: public TestController{
     controller_ = std::make_shared<minifi::FlowController>(
         prov_repo, ff_repo, configuration_,
         std::move(flow),
-        content_repo, DEFAULT_ROOT_GROUP_NAME, true);
+        content_repo, DEFAULT_ROOT_GROUP_NAME);
   }
 
   void startFlow() {

@@ -30,6 +30,7 @@
 #include "rocksdb/slice.h"
 #include "FlowFileRecord.h"
 #include "utils/gsl.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -258,6 +259,8 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
 
   initialize_repository();
 }
+
+REGISTER_INTERNAL_RESOURCE_AS(FlowFileRepository, ("FlowFileRepository", "flowfilerepository"));
 
 } /* namespace repository */
 } /* namespace core */

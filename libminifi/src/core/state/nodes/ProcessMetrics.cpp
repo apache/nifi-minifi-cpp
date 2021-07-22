@@ -15,15 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "GetGPSLoader.h"
 
-bool GpsFactory::added = core::FlowConfiguration::add_static_func("createGPSFactory");
+#include "core/state/nodes/ProcessMetrics.h"
+#include "core/Resource.h"
 
-extern "C" {
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace state {
+namespace response {
 
-void *createGPSFactory(void) {
-  return new GpsFactory();
-}
+REGISTER_RESOURCE(ProcessMetrics, "Node part of an AST that defines the Processor information and metrics subtree");
 
-}
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

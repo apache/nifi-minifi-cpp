@@ -27,6 +27,7 @@
 #include "utils/gsl.h"
 #include "Exception.h"
 #include "database/StringAppender.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -181,6 +182,8 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::R
   // append is already supported in all modes
   return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
 }
+
+REGISTER_INTERNAL_RESOURCE_AS(DatabaseContentRepository, ("DatabaseContentRepository", "databasecontentrepository"));
 
 } /* namespace repository */
 } /* namespace core */

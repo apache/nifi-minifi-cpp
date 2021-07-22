@@ -29,6 +29,7 @@
 #include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "Exception.h"
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
@@ -120,6 +121,8 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
     session.transfer(new_file, Success);
   }
 }
+
+REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");
 
 }  // namespace processors
 }  // namespace minifi

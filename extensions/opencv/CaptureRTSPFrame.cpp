@@ -17,6 +17,7 @@
 #include <set>
 
 #include "CaptureRTSPFrame.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -173,6 +174,8 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
 
 void CaptureRTSPFrame::notifyStop() {
 }
+
+REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT
 
 } /* namespace processors */
 } /* namespace minifi */

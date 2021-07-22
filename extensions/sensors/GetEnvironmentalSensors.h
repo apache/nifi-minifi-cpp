@@ -27,7 +27,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "utils/Id.h"
 #include "RTIMULib.h"
 #include "SensorBase.h"
@@ -72,8 +71,6 @@ class GetEnvironmentalSensors : public SensorBase {
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
-
-REGISTER_RESOURCE(GetEnvironmentalSensors, "Provides sensor information from known sensors to include humidity and pressure data");
 
 } /* namespace processors */
 } /* namespace minifi */

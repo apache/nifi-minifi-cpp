@@ -18,7 +18,6 @@
 #include <memory>
 #include <string>
 
-#include "PythonBindings.h"
 #include "PythonScriptEngine.h"
 
 namespace org {

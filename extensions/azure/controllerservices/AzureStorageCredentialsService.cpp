@@ -20,6 +20,8 @@
 
 #include <set>
 
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -61,6 +63,8 @@ void AzureStorageCredentialsService::onEnable() {
   getProperty(CommonStorageAccountEndpointSuffix.getName(), credentials_.endpoint_suffix);
   getProperty(ConnectionString.getName(), credentials_.connection_string);
 }
+
+REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");
 
 }  // namespace controllers
 }  // namespace azure

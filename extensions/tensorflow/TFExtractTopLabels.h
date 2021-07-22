@@ -81,8 +81,6 @@ class TFExtractTopLabels : public core::Processor {
   std::mutex labels_mtx_;
 };
 
-REGISTER_RESOURCE(TFExtractTopLabels, "Extracts the top 5 labels for categorical inference models"); // NOLINT
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

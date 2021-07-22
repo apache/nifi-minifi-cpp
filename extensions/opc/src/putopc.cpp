@@ -440,6 +440,8 @@ namespace processors {
     return gsl::narrow<int64_t>(size);
   }
 
+REGISTER_RESOURCE(PutOPCProcessor, "Creates/updates  OPC nodes");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

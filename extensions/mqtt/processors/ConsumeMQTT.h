@@ -28,7 +28,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "concurrentqueue.h"
@@ -129,8 +128,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   uint64_t maxSegSize_;
   moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
 };
-
-REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
 
 } /* namespace processors */
 } /* namespace minifi */

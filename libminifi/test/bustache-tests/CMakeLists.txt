@@ -27,8 +27,8 @@ FOREACH(testfile ${BUSTACHE_INTEGRATION_TESTS})
   target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/standard-processors")
   target_include_directories(${testfilename} SYSTEM PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/thirdparty/bustache/include")
 
-  target_wholearchive_library(${testfilename} minifi-bustache-extensions)
-  target_wholearchive_library(${testfilename} minifi-standard-processors)
+  target_link_libraries(${testfilename} minifi-bustache-extensions)
+  target_link_libraries(${testfilename} minifi-standard-processors)
 
   createTests("${testfilename}")
   target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})

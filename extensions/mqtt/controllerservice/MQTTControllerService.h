@@ -26,7 +26,6 @@
 #include <map>
 #include <string>
 
-#include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"

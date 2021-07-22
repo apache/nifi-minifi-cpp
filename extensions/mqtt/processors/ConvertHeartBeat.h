@@ -62,7 +62,6 @@ class ConvertHeartBeat: public ConvertBase{
   std::shared_ptr<logging::Logger> logger_;
 };
 
-
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

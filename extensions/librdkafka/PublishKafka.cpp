@@ -33,6 +33,7 @@
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -1076,6 +1077,9 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
   });
 }
+
+REGISTER_RESOURCE(PublishKafka, "This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. The content of a FlowFile becomes the contents of a Kafka message. "
+                  "This message is optionally assigned a key by using the <Kafka Key> Property.");
 
 }  // namespace processors
 }  // namespace minifi

@@ -54,13 +54,13 @@ class PerformanceDataMonitor : public core::Processor {
   ~PerformanceDataMonitor() override;
   static constexpr char const* ProcessorName = "PerformanceDataMonitor";
   // Supported Properties
-  static core::Property PredefinedGroups;
-  static core::Property CustomPDHCounters;
-  static core::Property OutputFormatProperty;
-  static core::Property OutputCompactness;
-  static core::Property DecimalPlaces;
+  EXTENSIONAPI static core::Property PredefinedGroups;
+  EXTENSIONAPI static core::Property CustomPDHCounters;
+  EXTENSIONAPI static core::Property OutputFormatProperty;
+  EXTENSIONAPI static core::Property OutputCompactness;
+  EXTENSIONAPI static core::Property DecimalPlaces;
   // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Success;
 
 
  public:
@@ -91,8 +91,6 @@ class PerformanceDataMonitor : public core::Processor {
   PDH_HQUERY pdh_query_;
   std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;
 };
-
-REGISTER_RESOURCE(PerformanceDataMonitor, "This processor can create FlowFiles with various performance data through Performance Data Helper. (Windows only)");
 
 }  // namespace processors
 }  // namespace minifi

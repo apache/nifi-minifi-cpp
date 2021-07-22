@@ -145,9 +145,6 @@ int main(int argc, char **argv) {
 
   uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
 
-  // initialize static functions that were defined apriori
-  core::FlowConfiguration::initialize_static_functions();
-
   std::string graceful_shutdown_seconds;
   std::string prov_repo_class = "provenancerepository";
   std::string flow_repo_class = "flowfilerepository";

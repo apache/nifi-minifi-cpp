@@ -36,6 +36,7 @@
 #include <set>
 #include "utils/StringUtils.h"
 #include "core/TypedValues.h"
+#include "core/Resource.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
@@ -226,6 +227,9 @@ void NetworkPrioritizerService::onEnable() {
     logger_->log_trace("Could not enable ");
   }
 }
+
+REGISTER_RESOURCE(NetworkPrioritizerService, "Enables selection of networking interfaces on defined parameters to include ouput and payload size");
+
 } /* namespace controllers */
 } /* namespace minifi */
 } /* namespace nifi */

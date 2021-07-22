@@ -29,10 +29,7 @@ namespace nifi {
 namespace minifi {
 class AgentDocs {
  private:
-  static std::map<std::string, std::string> &getDescriptions() {
-    static std::map<std::string, std::string> extensions;
-    return extensions;
-  }
+  static std::map<std::string, std::string> &getDescriptions();
 
  public:
   /**

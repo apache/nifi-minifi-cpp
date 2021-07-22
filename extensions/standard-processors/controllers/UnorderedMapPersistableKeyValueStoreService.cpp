@@ -22,6 +22,7 @@
 
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace {
   std::string escape(const std::string& str) {
@@ -248,6 +249,8 @@ bool UnorderedMapPersistableKeyValueStoreService::load() {
   logger_->log_debug("Loaded state from \"%s\"", file_.c_str());
   return true;
 }
+
+REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, "A persistable key-value service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file");
 
 }  // namespace controllers
 }  // namespace minifi

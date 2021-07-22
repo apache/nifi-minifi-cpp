@@ -25,6 +25,7 @@
 #include "utils/HTTPClient.h"
 #include "io/BaseStream.h"
 #include "io/BufferStream.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -102,6 +103,8 @@ void ConvertUpdate::initialize() {
   relationships.insert(Success);
   setSupportedRelationships(relationships);
 }
+
+REGISTER_INTERNAL_RESOURCE(ConvertUpdate);
 
 } /* namespace processors */
 } /* namespace minifi */

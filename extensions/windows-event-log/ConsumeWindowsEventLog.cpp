@@ -41,6 +41,7 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "Bookmark.h"
 #include "utils/Deleters.h"
 
@@ -761,6 +762,8 @@ void ConsumeWindowsEventLog::LogWindowsError(std::string error) const {
 
   LocalFree(lpMsg);
 }
+
+REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
 
 }  // namespace processors
 }  // namespace minifi

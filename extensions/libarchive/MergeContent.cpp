@@ -30,6 +30,7 @@
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
 #include "serialization/FlowFileV3Serializer.h"
 
@@ -433,6 +434,10 @@ void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::
     }
   }
 }
+
+REGISTER_RESOURCE(MergeContent, "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile. "
+    "MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files."
+    "This processor updates the mime.type attribute as appropriate.");
 
 } /* namespace processors */
 } /* namespace minifi */

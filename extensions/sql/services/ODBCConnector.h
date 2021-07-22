@@ -22,7 +22,6 @@
 #include "core/controller/ControllerService.h"
 
 #include "DatabaseService.h"
-#include "core/Resource.h"
 #include "data/SociConnectors.h"
 
 namespace org {
@@ -57,8 +56,6 @@ class ODBCService : public DatabaseService {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database connection");
 
 } /* namespace controllers */
 } /* namespace sql */

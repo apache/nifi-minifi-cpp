@@ -35,7 +35,6 @@ extern "C" {
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
@@ -159,9 +158,6 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   bool persistState() const;
   bool loadState();
 };
-
-REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
-                                                       "Windows hosts can be set up to connect and forward Event Logs to this processor.");
 
 } /* namespace processors */
 } /* namespace minifi */

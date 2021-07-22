@@ -20,7 +20,6 @@
 #include <string>
 #include <mutex>
 #include <memory>
-#include "core/Resource.h"
 #include "c2/protocols/RESTProtocol.h"
 #include "CivetServer.h"
 #include "c2/C2Protocol.h"
@@ -91,8 +90,6 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(RESTReceiver, "Provides a webserver to display C2 heartbeat information");
 
 } /* namespace c2 */
 } /* namespace minifi */

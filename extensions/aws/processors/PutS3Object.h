@@ -150,8 +150,6 @@ class PutS3Object : public S3Processor {
   std::string server_side_encryption_;
 };
 
-REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");
-
 }  // namespace processors
 }  // namespace aws
 }  // namespace minifi

@@ -26,7 +26,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"
@@ -97,8 +96,6 @@ class FetchSFTP : public SFTPProcessorBase {
   bool create_directory_;
   bool disable_directory_listing_;
 };
-
-REGISTER_RESOURCE(FetchSFTP, "Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.");
 
 } /* namespace processors */
 } /* namespace minifi */

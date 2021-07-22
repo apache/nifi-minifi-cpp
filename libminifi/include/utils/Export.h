@@ -15,9 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "PyProcCreator.h"
 
-PyProcCreator *PyProcCreator::getPythonCreator() {
-  static PyProcCreator python_the_creator;
-  return &python_the_creator;
-}
+#pragma once
+
+#ifdef WIN32
+  #ifdef LIBMINIFI
+    #define MINIFIAPI __declspec(dllexport)
+  #else
+    #define MINIFIAPI __declspec(dllimport)
+  #endif
+  #ifdef MODULE_NAME
+    #define EXTENSIONAPI __declspec(dllexport)
+  #else
+    #define EXTENSIONAPI __declspec(dllimport)
+  #endif
+#else
+  #define MINIFIAPI
+  #define EXTENSIONAPI
+#endif

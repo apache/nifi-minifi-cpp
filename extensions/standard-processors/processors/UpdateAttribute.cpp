@@ -24,6 +24,8 @@
 #include <string>
 #include <set>
 
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -76,6 +78,9 @@ void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSess
     yield();
   }
 }
+
+REGISTER_RESOURCE(UpdateAttribute, "This processor updates the attributes of a FlowFile using properties that are added by the user. "
+  "This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the \"basic\" usage in Apache NiFi.");
 
 } /* namespace processors */
 } /* namespace minifi */

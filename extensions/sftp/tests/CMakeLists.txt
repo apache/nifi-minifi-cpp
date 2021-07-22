@@ -42,12 +42,12 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LAN
 		target_include_directories(${testfilename} BEFORE PRIVATE ./tools)
 
 		createTests("${testfilename}")
-		target_link_libraries(${testfilename} ${CATCH_MAIN_LIB} minifi sftp-test-tools)
-		target_wholearchive_library(${testfilename} minifi-sftp)
-		target_wholearchive_library(${testfilename} minifi-expression-language-extensions)
-		target_wholearchive_library(${testfilename} minifi-standard-processors)
+		target_link_libraries(${testfilename} ${CATCH_MAIN_LIB} core-minifi sftp-test-tools)
+		target_link_libraries(${testfilename} minifi-sftp)
+		target_link_libraries(${testfilename} minifi-expression-language-extensions)
+		target_link_libraries(${testfilename} minifi-standard-processors)
 		if (NOT DISABLE_ROCKSDB)
-			target_wholearchive_library(${testfilename} minifi-rocksdb-repos)
+			target_link_libraries(${testfilename} minifi-rocksdb-repos)
 		endif()
 
 		MATH(EXPR SFTP-EXTENSIONS_TEST_COUNT "${SFTP-EXTENSIONS_TEST_COUNT}+1")
@@ -56,7 +56,7 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LAN
 	message("-- Finished building ${SFTP-EXTENSIONS_TEST_COUNT} SFTP related test file(s)...")
 
 	# Copy test resources
-	file(COPY "${CMAKE_SOURCE_DIR}/extensions/sftp/tests/resources" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/")
+	file(COPY "${CMAKE_SOURCE_DIR}/extensions/sftp/tests/resources" DESTINATION "${CMAKE_BINARY_DIR}/bin/sftp-test/")
 
 	add_subdirectory(tools)
 else()

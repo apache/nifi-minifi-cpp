@@ -31,7 +31,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -82,8 +81,6 @@ class UnfocusArchiveEntry : public core::Processor {
   //! Logger
   std::shared_ptr<Logger> logger_;
 };
-
-REGISTER_RESOURCE(UnfocusArchiveEntry, "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.");
 
 } /* namespace processors */
 } /* namespace minifi */

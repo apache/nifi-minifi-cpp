@@ -21,7 +21,6 @@
 #include <string>
 #include <iostream>
 #include <memory>
-#include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"

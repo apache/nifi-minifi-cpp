@@ -31,6 +31,7 @@
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -108,6 +109,8 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
     msg_queue.pop_front();
   }
 }
+
+REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
 
 } /* namespace processors */
 } /* namespace minifi */

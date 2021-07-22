@@ -29,7 +29,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "MQTTClient.h"
@@ -146,8 +145,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   bool retain_;
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.");
 
 } /* namespace processors */
 } /* namespace minifi */

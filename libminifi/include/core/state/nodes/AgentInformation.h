@@ -23,8 +23,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/Resource.h"
-
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <sys/ioctl.h>
@@ -63,6 +61,7 @@
 #include "utils/OsUtils.h"
 #include "utils/ProcessCpuUsageTracker.h"
 #include "core/AgentIdentificationProvider.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -187,7 +186,7 @@ class ComponentManifest : public DeviceInformation {
                 bgroup.value = GROUP_STR;
                 SerializedResponseNode artifact;
                 artifact.name = "artifact";
-                artifact.value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(type);
+                artifact.value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(type).value_or("");
                 allowed_type.children.push_back(typeNode);
                 allowed_type.children.push_back(bgroup);
                 allowed_type.children.push_back(artifact);
@@ -547,8 +546,8 @@ class AgentStatus : public StateMonitorNode {
 
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 
-  static utils::ProcessCpuUsageTracker cpu_load_tracker_;
-  static std::mutex cpu_load_tracker_mutex_;
+  MINIFIAPI static utils::ProcessCpuUsageTracker cpu_load_tracker_;
+  MINIFIAPI static std::mutex cpu_load_tracker_mutex_;
 };
 
 class AgentIdentifier {
@@ -777,8 +776,6 @@ class AgentInformation : public AgentNode {
  protected:
   bool include_agent_status_;
 };
-
-REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.");
 
 }  // namespace response
 }  // namespace state

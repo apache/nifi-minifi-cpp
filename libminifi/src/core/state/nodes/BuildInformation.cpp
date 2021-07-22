@@ -15,15 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ArchiveLoader.h"
-#include "core/FlowConfiguration.h"
 
-bool ArchiveFactory::added = core::FlowConfiguration::add_static_func("createArchiveFactory");
+#include "core/state/nodes/BuildInformation.h"
+#include "core/Resource.h"
 
-extern "C" {
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace state {
+namespace response {
 
-void *createArchiveFactory(void) {
-  return new ArchiveFactory();
-}
+REGISTER_RESOURCE(BuildInformation, "Node part of an AST that defines the pertinent build information for this agent binary");
 
-}
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
+

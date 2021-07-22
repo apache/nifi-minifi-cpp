@@ -28,6 +28,7 @@
 #include <typeinfo>
 #include "utils/ValueParser.h"
 #include "utils/ValueCaster.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -70,13 +71,13 @@ class Value {
     return type_id;
   }
 
-  static const std::type_index UINT64_TYPE;
-  static const std::type_index INT64_TYPE;
-  static const std::type_index UINT32_TYPE;
-  static const std::type_index INT_TYPE;
-  static const std::type_index BOOL_TYPE;
-  static const std::type_index DOUBLE_TYPE;
-  static const std::type_index STRING_TYPE;
+  MINIFIAPI static const std::type_index UINT64_TYPE;
+  MINIFIAPI static const std::type_index INT64_TYPE;
+  MINIFIAPI static const std::type_index UINT32_TYPE;
+  MINIFIAPI static const std::type_index INT_TYPE;
+  MINIFIAPI static const std::type_index BOOL_TYPE;
+  MINIFIAPI static const std::type_index DOUBLE_TYPE;
+  MINIFIAPI static const std::type_index STRING_TYPE;
 
  protected:
   template<typename T>

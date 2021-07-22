@@ -21,8 +21,6 @@
 #include <string>
 #include <vector>
 
-#include "core/Resource.h"
-
 #ifndef WIN32
 
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
@@ -127,8 +125,6 @@ class BuildInformation : public DeviceInformation {
     return serialized;
   }
 };
-
-REGISTER_RESOURCE(BuildInformation, "Node part of an AST that defines the pertinent build information for this agent binary");
 
 }  // namespace response
 }  // namespace state

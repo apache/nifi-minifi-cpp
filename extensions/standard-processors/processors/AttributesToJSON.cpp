@@ -25,6 +25,7 @@
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "range/v3/algorithm/find.hpp"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -170,6 +171,9 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
     session->transfer(flow_file, Success);
   }
 }
+
+REGISTER_RESOURCE(AttributesToJSON, "Generates a JSON representation of the input FlowFile Attributes. "
+  "The resulting JSON can be written to either a new Attribute 'JSONAttributes' or written to the FlowFile as content.");
 
 }  // namespace processors
 }  // namespace minifi

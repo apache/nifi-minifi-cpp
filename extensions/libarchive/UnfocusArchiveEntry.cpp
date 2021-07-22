@@ -31,6 +31,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "utils/gsl.h"
 
 namespace org {
@@ -233,6 +234,8 @@ int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::Ba
   archive_write_free(outputArchive);
   return nlen;
 }
+
+REGISTER_RESOURCE(UnfocusArchiveEntry, "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.");
 
 } /* namespace processors */
 } /* namespace minifi */

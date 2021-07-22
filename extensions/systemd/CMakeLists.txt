@@ -19,8 +19,7 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-add_library(minifi-systemd STATIC ConsumeJournald.cpp WorkerThread.cpp libwrapper/LibWrapper.cpp libwrapper/DlopenWrapper.cpp)
-set_property(TARGET minifi-systemd PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-systemd SHARED ConsumeJournald.cpp WorkerThread.cpp libwrapper/LibWrapper.cpp libwrapper/DlopenWrapper.cpp)
 
 target_link_libraries(minifi-systemd ${LIBMINIFI} Threads::Threads date::date)
 

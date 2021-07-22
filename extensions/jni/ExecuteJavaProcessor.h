@@ -27,7 +27,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "concurrentqueue.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "jvm/JavaControllerService.h"
@@ -295,8 +294,6 @@ class ExecuteJavaProcessor : public core::Processor {
 
   JniInitializationContext init_context_;
 };
-
-REGISTER_RESOURCE(ExecuteJavaProcessor, "ExecuteJavaClass runs NiFi processors given a provided system path ");
 
 } /* namespace processors */
 } /* namespace jni */

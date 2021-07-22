@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "core/state/nodes/DeviceInformation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -26,6 +27,8 @@ namespace response {
 
 utils::SystemCpuUsageTracker DeviceInfoNode::cpu_load_tracker_;
 std::mutex DeviceInfoNode::cpu_load_tracker_mutex_;
+
+REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device characteristics to the C2 protocol");
 
 } /* namespace response */
 } /* namespace state */

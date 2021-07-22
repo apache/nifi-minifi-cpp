@@ -19,7 +19,6 @@
 
 #include <string>
 #include <memory>
-#include "core/Resource.h"
 #include "c2/protocols/RESTProtocol.h"
 #include "c2/C2Protocol.h"
 
@@ -58,8 +57,6 @@ class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(AgentPrinter, "Encapsulates printing agent information.");
 
 } /* namespace c2 */
 } /* namespace minifi */

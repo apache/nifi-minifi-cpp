@@ -36,6 +36,7 @@
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -313,6 +314,8 @@ int16_t GetTCP::getMetricNodes(std::vector<std::shared_ptr<state::response::Resp
   metric_vector.push_back(metrics_);
   return 0;
 }
+
+REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves one or more byte messages from clients");
 
 } /* namespace processors */
 } /* namespace minifi */

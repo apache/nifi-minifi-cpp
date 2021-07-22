@@ -34,6 +34,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/Resource.h"
 #include "GetEnvironmentalSensors.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
@@ -141,6 +142,8 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
     session->transfer(flow_file_, Success);
   }
 }
+
+REGISTER_RESOURCE(GetEnvironmentalSensors, "Provides sensor information from known sensors to include humidity and pressure data");
 
 } /* namespace processors */
 } /* namespace minifi */

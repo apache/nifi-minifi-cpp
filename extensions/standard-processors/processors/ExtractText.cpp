@@ -31,6 +31,7 @@
 #include "ExtractText.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "core/FlowFile.h"
 #include "utils/gsl.h"
 
@@ -220,6 +221,8 @@ ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile
       logger_(std::move(lgr)) {
   buffer_.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
 }
+
+REGISTER_RESOURCE(ExtractText, "Extracts the content of a FlowFile and places it into an attribute.");
 
 }  // namespace processors
 }  // namespace minifi

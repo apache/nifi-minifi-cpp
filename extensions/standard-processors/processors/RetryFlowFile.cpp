@@ -19,6 +19,7 @@
 #include "RetryFlowFile.h"
 
 #include "core/PropertyValidation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -180,6 +181,15 @@ void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext*
     logger_->log_info("Set attribute '%s' of flow file '%s' with value '%s'", attribute.getName(), flow_file->getUUIDStr(), value);
   }
 }
+
+REGISTER_RESOURCE(RetryFlowFile,
+    "FlowFiles passed to this Processor have a 'Retry Attribute' value checked against a configured 'Maximum Retries' value. "
+    "If the current attribute value is below the configured maximum, the FlowFile is passed to a retry relationship. "
+    "The FlowFile may or may not be penalized in that condition. If the FlowFile's attribute value exceeds the configured maximum, "
+    "the FlowFile will be passed to a 'retries_exceeded' relationship. "
+    "WARNING: If the incoming FlowFile has a non-numeric value in the configured 'Retry Attribute' attribute, it will be reset to '1'. "
+    "You may choose to fail the FlowFile instead of performing the reset. Additional dynamic properties can be defined for any attributes "
+    "you wish to add to the FlowFiles transferred to 'retries_exceeded'. These attributes support attribute expression language.");
 
 } /* namespace processors */
 } /* namespace minifi */

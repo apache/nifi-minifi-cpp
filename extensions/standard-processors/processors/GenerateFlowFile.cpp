@@ -40,6 +40,7 @@
 #include "core/ProcessSession.h"
 #include "core/PropertyValidation.h"
 #include "core/TypedValues.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -157,6 +158,8 @@ void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::Proces
     session->transfer(flowFile, Success);
   }
 }
+
+REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");
 
 }  // namespace processors
 }  // namespace minifi

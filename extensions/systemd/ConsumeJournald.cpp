@@ -24,6 +24,7 @@
 #include "spdlog/spdlog.h"  // TODO(szaszm): make fmt directly available
 #include "utils/GeneralUtils.h"
 #include "utils/OptionalUtils.h"
+#include "core/Resource.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
@@ -264,6 +265,9 @@ std::string ConsumeJournald::getCursor() const {
   }();
   return std::string{cursor.get()};
 }
+
+REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages. Creates one flow file per message."
+    "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute.");
 
 }  // namespace systemd
 }  // namespace extensions

@@ -34,6 +34,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyValidation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -148,6 +149,8 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
     throw;
   }
 }
+
+REGISTER_RESOURCE(GetGPS, "Obtains GPS coordinates from the GPSDHost and port.");
 
 } /* namespace processors */
 } /* namespace minifi */

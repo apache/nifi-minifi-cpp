@@ -77,8 +77,6 @@ class DeleteS3Object : public S3Processor {
     const CommonProperties &common_properties) const;
 };
 
-REGISTER_RESOURCE(DeleteS3Object, "This Processor deletes FlowFiles on an Amazon S3 Bucket.");
-
 }  // namespace processors
 }  // namespace aws
 }  // namespace minifi

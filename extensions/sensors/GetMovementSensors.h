@@ -27,7 +27,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "utils/Id.h"
 #include "SensorBase.h"
 #include "RTIMULib.h"
@@ -63,8 +62,6 @@ class GetMovementSensors : public SensorBase {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(GetMovementSensors, "Defines a processor that is able to retrieve sensor information from a class of known servo sensors");
 
 } /* namespace processors */
 } /* namespace minifi */

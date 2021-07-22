@@ -28,8 +28,7 @@ include_directories(${JNI_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "jvm/*.cpp" "*.cpp")
 
-add_library(minifi-jni STATIC ${SOURCES})
-set_property(TARGET minifi-jni PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-jni SHARED ${SOURCES})
 
 set(JNI_FRAMEWORK_JAR_SOURCE "${CMAKE_SOURCE_DIR}/extensions/jni/nifi-framework-jni")
 set(JNI_FRAMEWORK_JAR_BIN "${CMAKE_CURRENT_BINARY_DIR}/" )

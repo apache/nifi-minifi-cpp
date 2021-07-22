@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,15 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "RocksDBLoader.h"
 
-bool RocksDBFactory::added = core::FlowConfiguration::add_static_func("createRocksDBFactory");
+#pragma once
 
-extern "C" {
+#include "Module.h"
 
-void *createRocksDBFactory(void) {
-  return new RocksDBFactory();
-}
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace core {
+namespace extension {
 
-}
+class Executable : public Module {
+ public:
+  Executable(): Module("executable") {}
+  ~Executable() override = default;
+};
+
+}  // namespace extension
+}  // namespace core
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

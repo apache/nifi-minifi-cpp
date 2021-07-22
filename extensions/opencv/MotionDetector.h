@@ -21,7 +21,6 @@
 #include <memory>
 #include <string>
 
-#include "core/Resource.h"
 #include "core/Processor.h"
 #include "opencv2/opencv.hpp"
 #include "opencv2/imgproc.hpp"
@@ -69,8 +68,6 @@ class MotionDetector : public core::Processor {
   // hardcoded width to 500
   const double IMG_WIDTH = 500.0;
 };
-
-REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images.");
 
 } /* namespace processors */
 } /* namespace minifi */

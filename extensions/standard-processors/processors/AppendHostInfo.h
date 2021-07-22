@@ -31,8 +31,8 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -53,12 +53,12 @@ class AppendHostInfo : public core::Processor {
   virtual ~AppendHostInfo() = default;
   static constexpr char const* ProcessorName = "AppendHostInfo";
 
-  static core::Property InterfaceNameFilter;
-  static core::Property HostAttribute;
-  static core::Property IPAttribute;
-  static core::Property RefreshPolicy;
+  EXTENSIONAPI static core::Property InterfaceNameFilter;
+  EXTENSIONAPI static core::Property HostAttribute;
+  EXTENSIONAPI static core::Property IPAttribute;
+  EXTENSIONAPI static core::Property RefreshPolicy;
 
-  static core::Relationship Success;
+  EXTENSIONAPI static core::Relationship Success;
 
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
@@ -79,8 +79,6 @@ class AppendHostInfo : public core::Processor {
   std::string hostname_;
   std::optional<std::string> ipaddresses_;
 };
-
-REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");
 
 }  // namespace processors
 }  // namespace minifi

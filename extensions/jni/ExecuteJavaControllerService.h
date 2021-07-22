@@ -27,7 +27,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "concurrentqueue.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "jvm/JavaControllerService.h"
@@ -150,8 +149,6 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
 
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(ExecuteJavaControllerService, "ExecuteJavaClass runs NiFi Controller services given a provided system path ");
 
 } /* namespace controllers */
 } /* namespace jni */

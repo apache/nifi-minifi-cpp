@@ -24,6 +24,8 @@
 #include <string>
 #include <set>
 
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -94,6 +96,8 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSes
     yield();
   }
 }
+
+REGISTER_RESOURCE(RouteOnAttribute, "Routes FlowFiles based on their Attributes using the Attribute Expression Language.");
 
 } /* namespace processors */
 } /* namespace minifi */

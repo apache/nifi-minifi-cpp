@@ -31,6 +31,7 @@
 #endif
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -363,6 +364,8 @@ PutFile::ReadCallback::~ReadCallback() {
   // Clean up tmp file, if necessary
   std::remove(tmp_file_.c_str());
 }
+
+REGISTER_RESOURCE(PutFile, "Writes the contents of a FlowFile to the local file system");
 
 } /* namespace processors */
 } /* namespace minifi */

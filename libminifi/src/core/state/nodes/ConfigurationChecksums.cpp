@@ -16,6 +16,7 @@
  */
 
 #include "core/state/nodes/ConfigurationChecksums.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -42,6 +43,8 @@ std::vector<SerializedResponseNode> ConfigurationChecksums::serialize() {
 
   return std::vector<SerializedResponseNode>{checksums_node};
 }
+
+REGISTER_RESOURCE(ConfigurationChecksums, "Node part of an AST that defines checksums of configuration files in the C2 protocol");
 
 }  // namespace response
 }  // namespace state

@@ -30,7 +30,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
@@ -97,8 +96,6 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once
   std::unordered_map<std::string, std::string> node_timestamp_;  // Key = Full path, Value = Timestamp
 };
-
-REGISTER_RESOURCE(FetchOPCProcessor, "Fetches OPC-UA node");
 
 } /* namespace processors */
 } /* namespace minifi */

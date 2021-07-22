@@ -26,7 +26,6 @@
 #include "blocks/file_blocks.h"
 #include "blocks/comms.h"
 #include "core/processors.h"
-#include "HTTPCurlLoader.h"
 #include "python_lib.h"
 
 
@@ -36,8 +35,7 @@ extern "C" {
 #endif
 
 
-int init_api(const char *resource) {
-  core::ClassLoader::getDefaultClassLoader().registerResource(resource, "createHttpCurlFactory");
+int init_api(const char * /*resource*/) {
   return 0;
 }
 

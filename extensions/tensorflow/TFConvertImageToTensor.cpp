@@ -344,6 +344,8 @@ int64_t TFConvertImageToTensor::TensorWriteCallback::process(const std::shared_p
   return num_wrote;
 }
 
+REGISTER_RESOURCE(TFConvertImageToTensor, "Converts the input image file into a tensor protobuf. The image will be resized to the given output tensor dimensions."); // NOLINT
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

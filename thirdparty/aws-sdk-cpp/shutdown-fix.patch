@@ -1,0 +1,12 @@
+diff -rupN aws-sdk-cpp-src/crt/aws-crt-cpp/crt/aws-c-io/source/event_loop.c aws-sdk-cpp-src-patched/crt/aws-crt-cpp/crt/aws-c-io/source/event_loop.c
+--- aws-sdk-cpp-src/crt/aws-crt-cpp/crt/aws-c-io/source/event_loop.c	2021-08-09 08:48:51.141882100 +0200
++++ aws-sdk-cpp-src-patched/crt/aws-crt-cpp/crt/aws-c-io/source/event_loop.c	2021-08-09 08:48:08.231072500 +0200
+@@ -114,7 +114,7 @@ static struct aws_event_loop_group *s_ev
+ 
+     el_group->allocator = alloc;
+     aws_ref_count_init(
+-        &el_group->ref_count, el_group, (aws_simple_completion_callback *)s_aws_event_loop_group_shutdown_async);
++        &el_group->ref_count, el_group, (aws_simple_completion_callback *)s_aws_event_loop_group_shutdown_sync);
+ 
+     if (aws_array_list_init_dynamic(&el_group->event_loops, alloc, el_count, sizeof(struct aws_event_loop *))) {
+         goto on_error;

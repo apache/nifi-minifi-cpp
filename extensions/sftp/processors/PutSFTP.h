@@ -32,7 +32,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
@@ -118,8 +117,6 @@ class PutSFTP : public SFTPProcessorBase {
 
   bool processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 };
-
-REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server");
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
     test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(
-      test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
+      test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME);
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 

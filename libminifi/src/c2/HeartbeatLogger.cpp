@@ -16,6 +16,7 @@
  */
 
 #include "c2/HeartbeatLogger.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -39,6 +40,8 @@ void HeartbeatLogger::initialize(core::controller::ControllerServiceProvider* co
   HeartbeatReporter::initialize(controller, updateSink, configure);
   RESTProtocol::initialize(controller, configure);
 }
+
+REGISTER_RESOURCE(HeartbeatLogger, "Logs heartbeats at TRACE level.");
 
 }  // namespace c2
 }  // namespace minifi

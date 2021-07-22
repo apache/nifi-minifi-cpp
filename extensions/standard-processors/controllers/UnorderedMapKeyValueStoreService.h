@@ -28,7 +28,6 @@
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/Resource.h"
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 
 namespace org {
@@ -68,8 +67,6 @@ class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStore
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(UnorderedMapKeyValueStoreService, "A key-value service implemented by a locked std::unordered_map<std::string, std::string>");
 
 }  // namespace controllers
 }  // namespace minifi

@@ -17,6 +17,7 @@
  */
 
 #include "c2/triggers/FileUpdateTrigger.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -42,6 +43,9 @@ C2Payload FileUpdateTrigger::getAction() {
   C2Payload response_payload(Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true);
   return response_payload;
 }
+
+REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the last write time of a file has been changed.");
+
 } /* namespace c2 */
 } /* namespace minifi */
 } /* namespace nifi */

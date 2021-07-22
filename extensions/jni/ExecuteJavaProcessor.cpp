@@ -36,6 +36,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/Resource.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/ByteArrayCallback.h"
@@ -231,6 +232,8 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
 void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& /*session*/) {
   // do nothing.
 }
+
+REGISTER_RESOURCE_AS(ExecuteJavaProcessor, "ExecuteJavaClass runs NiFi processors given a provided system path ", ("ExecuteJavaClass"));
 
 } /* namespace processors */
 } /* namespace jni */

@@ -24,6 +24,7 @@
 #include <vector>
 #include <limits>
 #include "utils/file/FileUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -152,6 +153,8 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }
 }
+
+REGISTER_RESOURCE(RESTSender, "Encapsulates the restful protocol that is built upon C2Protocol.");
 
 } /* namespace c2 */
 } /* namespace minifi */

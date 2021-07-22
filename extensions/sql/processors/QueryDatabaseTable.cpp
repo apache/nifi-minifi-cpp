@@ -30,6 +30,7 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "Exception.h"
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
@@ -297,6 +298,7 @@ bool QueryDatabaseTable::saveState() {
   return state_manager_->set(state_map);
 }
 
+REGISTER_RESOURCE(QueryDatabaseTable, "QueryDatabaseTable to execute SELECT statement via ODBC.");
 
 }  // namespace processors
 }  // namespace minifi

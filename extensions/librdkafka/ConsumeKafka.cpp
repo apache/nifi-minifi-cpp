@@ -21,6 +21,7 @@
 #include <limits>
 
 #include "core/PropertyValidation.h"
+#include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 
@@ -573,6 +574,10 @@ int64_t ConsumeKafka::WriteCallback::process(const std::shared_ptr<io::BaseStrea
   if (io::isError(write_ret)) return -1;
   return gsl::narrow<int64_t>(write_ret);
 }
+
+REGISTER_RESOURCE(ConsumeKafka, "Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles. "
+    "The application should make sure that the processor is triggered at regular intervals, even if no messages are expected, "
+    "to serve any queued callbacks waiting to be called. Rebalancing can also only happen on trigger."); // NOLINT
 
 }  // namespace processors
 }  // namespace minifi

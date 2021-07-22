@@ -15,13 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "ExpressionLoader.h"
 
-bool ExpressionObjectFactory::added = core::FlowConfiguration::add_static_func("createExpressionFactory");
-extern "C" {
-void *createExpressionFactory(void) {
-  return new ExpressionObjectFactory();
-}
+#include "core/state/nodes/FlowInformation.h"
+#include "core/Resource.h"
 
-}
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace state {
+namespace response {
+
+REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID and flow URL deployed to this agent");
+
+}  // namespace response
+}  // namespace state
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define EXTENSION_LIST "*minifi-*,!*http-curl*,!*coap*"
+
 #include <cstdio>
 #include <utility>
 #include <memory>
@@ -40,9 +42,11 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "core/Resource.h"
 #include "utils/gsl.h"
 #include "utils/PropertyErrors.h"
 #include "utils/IntegrationTestUtils.h"
+#include "Utils.h"
 
 TEST_CASE("Test Creation of GetFile", "[getfileCreate]") {
   TestController testController;

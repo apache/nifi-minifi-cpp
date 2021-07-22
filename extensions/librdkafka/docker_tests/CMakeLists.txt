@@ -25,7 +25,7 @@ FOREACH(testfile ${KAFKA_TESTS})
     get_filename_component(testfilename "${testfile}" NAME_WE)
     add_executable("${testfilename}" "${testfile}")
     target_include_directories(${testfilename} PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/extensions/librdkafka/")
-    target_wholearchive_library(${testfilename} minifi-rdkafka-extensions)
+    target_link_libraries(${testfilename} minifi-rdkafka-extensions)
     createTests("${testfilename}")
     MATH(EXPR KAFKA_TEST_COUNT "${KAFKA_TEST_COUNT}+1")
     # The line below handles integration test

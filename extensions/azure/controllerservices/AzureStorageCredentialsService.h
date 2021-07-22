@@ -21,7 +21,6 @@
 #include <string>
 #include <memory>
 
-#include "core/Resource.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureStorageCredentials.h"
@@ -74,8 +73,6 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   storage::AzureStorageCredentials credentials_;
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");
 
 }  // namespace controllers
 }  // namespace azure

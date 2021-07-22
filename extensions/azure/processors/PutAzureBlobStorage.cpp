@@ -25,6 +25,7 @@
 
 #include "storage/AzureBlobStorage.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -256,6 +257,8 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   logger_->log_debug("Successfully uploaded blob '%s' to Azure Storage container '%s'", blob_name, container_name);
   session->transfer(flow_file, Success);
 }
+
+REGISTER_RESOURCE(PutAzureBlobStorage, "Puts content into an Azure Storage Blob");
 
 }  // namespace processors
 }  // namespace azure

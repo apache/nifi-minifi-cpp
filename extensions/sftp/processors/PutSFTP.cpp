@@ -37,6 +37,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
@@ -505,6 +506,8 @@ void PutSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, co
     }
   }
 }
+
+REGISTER_RESOURCE(PutSFTP, "Sends FlowFiles to an SFTP Server");
 
 } /* namespace processors */
 } /* namespace minifi */

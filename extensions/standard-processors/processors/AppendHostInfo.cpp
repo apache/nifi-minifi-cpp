@@ -31,6 +31,7 @@
 #include "core/Property.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
+#include "core/Resource.h"
 #include "io/ClientSocket.h"
 #include "utils/NetworkInterfaceInfo.h"
 
@@ -118,6 +119,8 @@ void AppendHostInfo::refreshHostInfo() {
     ipaddresses_.value().pop_back();  // to remove trailing comma
   }
 }
+
+REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");
 
 } /* namespace processors */
 } /* namespace minifi */

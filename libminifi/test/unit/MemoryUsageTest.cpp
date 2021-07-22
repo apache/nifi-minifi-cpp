@@ -16,6 +16,10 @@
  * limitations under the License.
  */
 
+// loading extensions increases the baseline memory usage
+// as we measure the absolute memory usage that would fail this test
+#define EXTENSION_LIST ""
+
 #include <cstring>
 
 #include "utils/gsl.h"

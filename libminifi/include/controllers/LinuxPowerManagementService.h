@@ -23,7 +23,6 @@
 #include <vector>
 #include <iostream>
 #include <memory>
-#include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
@@ -126,8 +125,6 @@ class LinuxPowerManagerService : public ThreadManagementService {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(LinuxPowerManagerService, "Linux power management service that enables control of power usage in the agent through Linux power management information. Use name \"ThreadPoolManager\" to throttle battery consumption"); // NOLINT
 
 }  // namespace controllers
 }  // namespace minifi

@@ -44,9 +44,8 @@ SFTPTestServer::SFTPTestServer(const std::string& working_directory,
       , server_pid_(-1)
 #endif
 {
-  auto executable_dir = utils::file::FileUtils::get_executable_dir();
-  host_key_file_ = utils::file::FileUtils::concat_path(executable_dir, host_key_file);
-  jar_path_ = utils::file::FileUtils::concat_path(executable_dir, jar_path);
+  host_key_file_ = utils::file::FileUtils::concat_path(get_sftp_test_dir(), host_key_file);
+  jar_path_ = utils::file::FileUtils::concat_path(get_sftp_test_dir(), jar_path);
 }
 
 SFTPTestServer::~SFTPTestServer() {
@@ -142,4 +141,8 @@ bool SFTPTestServer::stop() {
 
 uint16_t SFTPTestServer::getPort() {
   return port_;
+}
+
+std::string get_sftp_test_dir() {
+  return utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "sftp-test");
 }

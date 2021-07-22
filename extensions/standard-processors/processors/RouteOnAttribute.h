@@ -28,7 +28,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -76,8 +75,6 @@ class RouteOnAttribute : public core::Processor {
   std::map<std::string, core::Property> route_properties_;
   std::map<std::string, core::Relationship> route_rels_;
 };
-
-REGISTER_RESOURCE(RouteOnAttribute, "Routes FlowFiles based on their Attributes using the Attribute Expression Language.");
 
 }  // namespace processors
 }  // namespace minifi

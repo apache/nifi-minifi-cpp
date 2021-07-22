@@ -372,5 +372,8 @@ The MQTTController Service can be configured for MQTT connectivity and provide t
          Max Throughput: 1,024,1024
          Max Payload: 1,024,1024
 
+### Extension configuration
+To notify the agent which extensions it should load see [Loading extensions](Extensions.md#Loading extensions).
+
 ### JNI Functionality
 Please see the [JNI Configuration Guide](JNI.md).

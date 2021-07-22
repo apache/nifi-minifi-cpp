@@ -29,6 +29,7 @@
 #include "properties/Properties.h"
 #include "utils/StringUtils.h"
 #include "utils/MapUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -286,6 +287,8 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
     session->transfer(flow_file, Success);
   }
 }
+
+REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");
 
 }  // namespace processors
 }  // namespace aws

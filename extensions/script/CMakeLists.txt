@@ -19,15 +19,9 @@
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-set (OTHER_SOURCES "")
-if (NOT DISABLE_PYTHON_SCRIPTING)
-  set (OTHER_SOURCES "pythonloader/PyProcLoader.cpp")
-endif()
+file(GLOB SOURCES  "ExecuteScript.cpp" "ScriptFlowFile.cpp" "ScriptProcessContext.cpp")
 
-file(GLOB SOURCES  "ExecuteScript.cpp" "ScriptFlowFile.cpp" "ScriptProcessContext.cpp" "${OTHER_SOURCES}")
-
-add_library(minifi-script-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-script-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-script-extensions SHARED ${SOURCES})
 
 target_link_libraries(minifi-script-extensions ${LIBMINIFI} Threads::Threads)
 
@@ -40,15 +34,11 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     include(Pybind11)
     add_definitions(-DPYTHON_SUPPORT)
 
-    file(GLOB PY_SOURCES  "python/*.cpp")
-    add_library(minifi-python-extensions STATIC ${PY_SOURCES})
-    target_include_directories(minifi-python-extensions SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
-    target_include_directories(minifi-python-extensions SYSTEM PRIVATE ../../thirdparty/pybind11/include)
-    target_include_directories(minifi-python-extensions PRIVATE python)
-    target_link_libraries(minifi-python-extensions ${LIBMINIFI})
-    target_link_libraries(minifi-python-extensions ${PYTHON_LIBRARIES})
-    target_link_libraries(minifi-python-extensions pybind11)
-    target_link_libraries(minifi-script-extensions minifi-python-extensions)
+    file(GLOB PY_SOURCES  "python/*.cpp" "pythonloader/PyProcLoader.cpp")
+    target_sources(minifi-script-extensions PRIVATE ${PY_SOURCES})
+    target_link_libraries(minifi-script-extensions ${PYTHON_LIBRARIES})
+    target_link_libraries(minifi-script-extensions pybind11)
+
     target_include_directories(minifi-script-extensions PRIVATE python)
     target_include_directories(minifi-script-extensions SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
     target_include_directories(minifi-script-extensions SYSTEM PRIVATE ../../thirdparty/pybind11/include)
@@ -65,13 +55,10 @@ if (ENABLE_LUA_SCRIPTING)
     add_definitions(-DLUA_SUPPORT)
 
     file(GLOB LUA_SOURCES  "lua/*.cpp")
-    add_library(minifi-lua-extensions STATIC ${LUA_SOURCES})
+    target_sources(minifi-script-extensions PRIVATE ${LUA_SOURCES})
 
-    target_link_libraries(minifi-lua-extensions ${LIBMINIFI})
-    target_link_libraries(minifi-lua-extensions ${LUA_LIBRARIES} sol2)
-    target_link_libraries(minifi-script-extensions minifi-lua-extensions)
-
-    target_compile_features(minifi-lua-extensions PUBLIC cxx_std_14)
+    target_link_libraries(minifi-script-extensions ${LUA_LIBRARIES} sol2)
+    target_compile_features(minifi-script-extensions PUBLIC cxx_std_14)
 endif()
 
 SET (SCRIPTING-EXTENSIONS minifi-script-extensions PARENT_SCOPE)

@@ -35,6 +35,7 @@
 #include "io/StreamFactory.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -103,15 +104,15 @@ class RemoteProcessorGroupPort : public core::Processor {
   virtual ~RemoteProcessorGroupPort() = default;
 
   // Processor Name
-  static const char *ProcessorName;
+  MINIFIAPI static const char *ProcessorName;
   // Supported Properties
-  static core::Property hostName;
-  static core::Property SSLContext;
-  static core::Property port;
-  static core::Property portUUID;
-  static core::Property idleTimeout;
+  MINIFIAPI static core::Property hostName;
+  MINIFIAPI static core::Property SSLContext;
+  MINIFIAPI static core::Property port;
+  MINIFIAPI static core::Property portUUID;
+  MINIFIAPI static core::Property idleTimeout;
   // Supported Relationships
-  static core::Relationship relation;
+  MINIFIAPI static core::Relationship relation;
 
  public:
   virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);

@@ -50,13 +50,6 @@ YamlConfiguration::YamlConfiguration(const std::shared_ptr<core::Repository>& re
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseRootProcessGroupYaml(const YAML::Node& rootFlowNode) {
   auto flowControllerNode = rootFlowNode[CONFIG_YAML_FLOW_CONTROLLER_KEY];
-  auto class_loader_functions = flowControllerNode["Class Loader Functions"];
-  if (class_loader_functions && class_loader_functions.IsSequence()) {
-    for (auto function : class_loader_functions) {
-      registerResource(function.as<std::string>());
-    }
-  }
-
   auto rootGroup = parseProcessGroupYaml(flowControllerNode, rootFlowNode, true);
   this->name_ = rootGroup->getName();
   return rootGroup;
@@ -181,14 +174,6 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
     CONFIG_YAML_PROCESSORS_KEY);
     procCfg.name = procNode["name"].as<std::string>();
     procCfg.id = getOrGenerateId(procNode);
-
-    auto lib_location = procNode["Library Location"];
-    auto lib_function = procNode["Library Function"];
-    if (lib_location && lib_function) {
-      auto lib_location_str = lib_location.as<std::string>();
-      auto lib_function_str = lib_function.as<std::string>();
-      registerResource(lib_location_str, lib_function_str);
-    }
 
     uuid = procCfg.id.c_str();
     logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);

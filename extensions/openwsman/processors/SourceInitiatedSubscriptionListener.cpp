@@ -48,6 +48,7 @@ extern "C" {
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
@@ -915,6 +916,9 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
 void SourceInitiatedSubscriptionListener::notifyStop() {
   server_.release();
 }
+
+REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
+                                                       "Windows hosts can be set up to connect and forward Event Logs to this processor.");
 
 } /* namespace processors */
 } /* namespace minifi */

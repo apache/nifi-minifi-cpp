@@ -23,6 +23,8 @@
 #include <set>
 #include <memory>
 
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -133,6 +135,8 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     session->transfer(flow_file, Failure);
   }
 }
+
+REGISTER_RESOURCE(FetchS3Object, "This Processor retrieves the contents of an S3 Object and writes it to the content of a FlowFile.");
 
 }  // namespace processors
 }  // namespace aws

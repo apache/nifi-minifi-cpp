@@ -17,7 +17,11 @@
  */
 
 #include "ProvenanceRepository.h"
+
 #include <string>
+
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -50,6 +54,9 @@ void ProvenanceRepository::run() {
     }
   }
 }
+
+REGISTER_INTERNAL_RESOURCE_AS(ProvenanceRepository, ("ProvenanceRepository", "provenancerepository"));
+
 } /* namespace provenance */
 } /* namespace minifi */
 } /* namespace nifi */

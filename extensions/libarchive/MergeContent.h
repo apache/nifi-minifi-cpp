@@ -32,6 +32,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "serialization/FlowFileSerializer.h"
 #include "utils/gsl.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -315,20 +316,20 @@ class MergeContent : public processors::BinFiles {
   // Destructor
   ~MergeContent() override = default;
   // Processor Name
-  static constexpr char const* ProcessorName = "MergeContent";
+  EXTENSIONAPI static constexpr char const* ProcessorName = "MergeContent";
   // Supported Properties
-  static core::Property MergeStrategy;
-  static core::Property MergeFormat;
-  static core::Property CorrelationAttributeName;
-  static core::Property DelimiterStrategy;
-  static core::Property KeepPath;
-  static core::Property Header;
-  static core::Property Footer;
-  static core::Property Demarcator;
-  static core::Property AttributeStrategy;
+  EXTENSIONAPI static core::Property MergeStrategy;
+  EXTENSIONAPI static core::Property MergeFormat;
+  EXTENSIONAPI static core::Property CorrelationAttributeName;
+  EXTENSIONAPI static core::Property DelimiterStrategy;
+  EXTENSIONAPI static core::Property KeepPath;
+  EXTENSIONAPI static core::Property Header;
+  EXTENSIONAPI static core::Property Footer;
+  EXTENSIONAPI static core::Property Demarcator;
+  EXTENSIONAPI static core::Property AttributeStrategy;
 
   // Supported Relationships
-  static core::Relationship Merge;
+  EXTENSIONAPI static core::Relationship Merge;
 
  public:
   /**
@@ -373,10 +374,6 @@ class MergeContent : public processors::BinFiles {
   // readContent
   std::string readContent(std::string path);
 };
-
-REGISTER_RESOURCE(MergeContent, "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile. "
-    "MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files."
-    "This processor updates the mime.type attribute as appropriate.");
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -25,9 +25,7 @@ include_directories(${LIBGPS_INCLUDE_DIRS})
 
 file(GLOB SOURCES  "*.cpp")
 
-add_library(minifi-gps STATIC ${SOURCES})
-set_property(TARGET minifi-gps PROPERTY POSITION_INDEPENDENT_CODE ON)
-
+add_library(minifi-gps SHARED ${SOURCES})
 
 # Include UUID
 target_link_libraries(minifi-gps ${LIBMINIFI} )

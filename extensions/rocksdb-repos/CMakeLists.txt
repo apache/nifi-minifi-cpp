@@ -21,8 +21,7 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp" "controllers/*.cpp" "database/*.cpp" "encryption/*.cpp")
 
-add_library(minifi-rocksdb-repos STATIC ${SOURCES})
-set_property(TARGET minifi-rocksdb-repos PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-rocksdb-repos SHARED ${SOURCES})
 
 target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)

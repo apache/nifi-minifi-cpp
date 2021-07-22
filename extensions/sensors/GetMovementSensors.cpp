@@ -33,6 +33,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/Resource.h"
 #include "GetMovementSensors.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
@@ -89,6 +90,9 @@ void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& 
     session->transfer(flow_file_, Success);
   }
 }
+
+REGISTER_RESOURCE(GetMovementSensors, "Defines a processor that is able to retrieve sensor information from a class of known servo sensors");
+
 } /* namespace processors */
 } /* namespace minifi */
 } /* namespace nifi */

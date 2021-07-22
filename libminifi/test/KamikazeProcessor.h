@@ -24,7 +24,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 
 #pragma once
 
@@ -64,8 +63,6 @@ class KamikazeProcessor : public core::Processor {
   // logger instance
   std::shared_ptr<logging::Logger> logger_;
 };
-
-REGISTER_RESOURCE(KamikazeProcessor, "This processor can throw exceptions in onTrigger and onSchedule calls based on configration. Only for testing purposes.");
 
 } /* namespace processors */
 } /* namespace minifi */

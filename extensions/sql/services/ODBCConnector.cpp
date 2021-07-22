@@ -22,6 +22,7 @@
 #include <memory>
 #include <set>
 #include "core/Property.h"
+#include "core/Resource.h"
 #include "ODBCConnector.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
@@ -36,6 +37,8 @@ namespace controllers {
 std::unique_ptr<sql::Connection> ODBCService::getConnection() const {
   return std::unique_ptr<sql::Connection>(new ODBCConnection(connection_string_));
 }
+
+REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database connection");
 
 } /* namespace controllers */
 } /* namespace sql */

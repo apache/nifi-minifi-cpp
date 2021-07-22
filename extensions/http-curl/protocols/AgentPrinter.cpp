@@ -23,6 +23,7 @@
 #include <string>
 
 #include "rapidjson/prettywriter.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -59,6 +60,8 @@ rapidjson::Value AgentPrinter::serializeJsonPayload(const C2Payload &payload, ra
 
   return result;
 }
+
+REGISTER_RESOURCE(AgentPrinter, "Encapsulates printing agent information.");
 
 } /* namespace c2 */
 } /* namespace minifi */

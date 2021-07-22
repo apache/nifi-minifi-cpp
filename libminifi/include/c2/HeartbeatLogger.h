@@ -40,8 +40,6 @@ class HeartbeatLogger : public RESTProtocol, public HeartbeatReporter {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(HeartbeatLogger, "Logs heartbeats at TRACE level.");
-
 }  // namespace c2
 }  // namespace minifi
 }  // namespace nifi

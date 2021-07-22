@@ -23,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "core/Resource.h"
-
 #ifndef WIN32
 #include <sys/resource.h>
 
@@ -96,8 +94,6 @@ class ProcessMetrics : public ResponseNode {
 
  protected:
 };
-
-REGISTER_RESOURCE(ProcessMetrics, "Node part of an AST that defines the Processor information and metrics subtree");
 
 }  // namespace response
 }  // namespace state

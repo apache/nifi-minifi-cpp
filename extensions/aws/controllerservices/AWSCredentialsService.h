@@ -25,7 +25,6 @@
 #include "aws/core/auth/AWSCredentials.h"
 
 #include "utils/AWSInitializer.h"
-#include "core/Resource.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "AWSCredentialsProvider.h"
@@ -78,8 +77,6 @@ class AWSCredentialsService : public core::controller::ControllerService {
   std::optional<Aws::Auth::AWSCredentials> aws_credentials_;
   AWSCredentialsProvider aws_credentials_provider_;
 };
-
-REGISTER_RESOURCE(AWSCredentialsService, "AWS Credentials Management Service");
 
 }  // namespace controllers
 }  // namespace aws

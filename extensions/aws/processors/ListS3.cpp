@@ -27,6 +27,7 @@
 #include <memory>
 
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -290,6 +291,8 @@ void ListS3::ListingState::updateState(const aws::s3::ListedObjectAttributes &ob
     listed_keys.push_back(object_attributes.filename);
   }
 }
+
+REGISTER_RESOURCE(ListS3, "This Processor retrieves a listing of objects from an Amazon S3 bucket.");
 
 }  // namespace processors
 }  // namespace aws

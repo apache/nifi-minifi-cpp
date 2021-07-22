@@ -22,11 +22,16 @@ include_directories(controllerservices processors s3 ${CMAKE_SOURCE_DIR}/extensi
 
 file(GLOB SOURCES "*.cpp" "s3/*.cpp" "controllerservices/*.cpp" "processors/*.cpp" "utils/*.cpp")
 
-add_library(minifi-aws STATIC ${SOURCES})
+add_library(minifi-aws SHARED ${SOURCES})
 
-target_link_libraries(minifi-aws ${LIBMINIFI} Threads::Threads)
+target_link_libraries(minifi-aws PUBLIC ${LIBMINIFI} Threads::Threads)
 
-target_link_libraries(minifi-aws AWS::aws-cpp-sdk-s3)
+target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3)
+target_include_directories(minifi-aws INTERFACE $<TARGET_PROPERTY:AWS::aws-cpp-sdk-s3,INTERFACE_INCLUDE_DIRECTORIES>)
+if(WIN32)
+  target_compile_definitions(minifi-aws INTERFACE "AWS_CORE_API=__declspec(dllimport)")
+  target_compile_definitions(minifi-aws INTERFACE "AWS_S3_API=__declspec(dllimport)")
+endif()
 
 SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
 register_extension(minifi-aws)

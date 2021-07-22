@@ -22,8 +22,7 @@ include_directories(client processors)
 
 file(GLOB SOURCES  "*.cpp" "client/*.cpp" "processors/*.cpp")
 
-add_library(minifi-sftp STATIC ${SOURCES})
-set_property(TARGET minifi-sftp PROPERTY POSITION_INDEPENDENT_CODE ON)
+add_library(minifi-sftp SHARED ${SOURCES})
 
 target_link_libraries(minifi-sftp ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-sftp CURL::libcurl libssh2 RapidJSON)

@@ -68,31 +68,4 @@ class PythonObjectFactory : public core::DefautObjectFactory<minifi::python::pro
   std::string name_;
 };
 
-class PyProcCreator {
- public:
-  void addClassName(const std::string &name, std::string file) {
-    file_mapping_[name] = file;
-  }
-
-  static PyProcCreator *getPythonCreator();
-
-  std::vector<std::string> getClassNames() {
-    std::vector<std::string> class_names;
-    for (const auto &kv : file_mapping_) {
-      class_names.push_back(kv.first);
-    }
-    return class_names;
-  }
-
-  std::unique_ptr<core::ObjectFactory> assign(const std::string &class_name) {
-    auto mapping = file_mapping_.find(class_name);
-    if (mapping != file_mapping_.end()) {
-      return std::unique_ptr<core::ObjectFactory>(new PythonObjectFactory(mapping->second, mapping->first));
-    }
-    return nullptr;
-  }
-
-  std::map<std::string, std::string> file_mapping_;
-};
-
 #pragma GCC visibility pop

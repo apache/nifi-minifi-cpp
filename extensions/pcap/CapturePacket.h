@@ -31,7 +31,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "concurrentqueue.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
@@ -163,10 +162,6 @@ class CapturePacket : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
-
-REGISTER_RESOURCE(CapturePacket, "CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content of a flow file."
-    " Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. "
-    "A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.");
 
 } /* namespace processors */
 } /* namespace minifi */

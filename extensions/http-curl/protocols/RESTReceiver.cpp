@@ -17,12 +17,15 @@
  */
 
 #include "RESTReceiver.h"
+
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -107,6 +110,8 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
 
   return server;
 }
+
+REGISTER_RESOURCE(RESTReceiver, "Provides a webserver to display C2 heartbeat information");
 
 } /* namespace c2 */
 } /* namespace minifi */

@@ -21,6 +21,7 @@
 #include "RocksDbPersistableKeyValueStoreService.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 
 namespace org {
@@ -216,6 +217,9 @@ bool RocksDbPersistableKeyValueStoreService::persist() {
   }
   return opendb->FlushWAL(true /*sync*/).ok();
 }
+
+REGISTER_RESOURCE_AS(RocksDbPersistableKeyValueStoreService, "A key-value service implemented by RocksDB",
+                     ("RocksDbPersistableKeyValueStoreService", "rocksdbpersistablekeyvaluestoreservice"));
 
 } /* namespace controllers */
 } /* namespace minifi */

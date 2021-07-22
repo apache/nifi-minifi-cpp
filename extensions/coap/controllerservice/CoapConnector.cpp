@@ -25,6 +25,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
 #include "core/Property.h"
+#include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
 
@@ -89,6 +90,8 @@ void CoapConnectorService::initializeProperties() {
   supportedProperties.insert(MaxQueueSize);
   setSupportedProperties(supportedProperties);
 }
+
+REGISTER_INTERNAL_RESOURCE(CoapConnectorService);
 
 } /* namespace controllers */
 } /* namespace coap */

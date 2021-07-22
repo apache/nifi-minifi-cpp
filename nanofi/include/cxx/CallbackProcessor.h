@@ -35,7 +35,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org {
@@ -87,8 +86,6 @@ class CallbackProcessor : public core::Processor {
   // Logger
   std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CallbackProcessor>::getLogger() };
 };
-
-REGISTER_RESOURCE(CallbackProcessor, "");
 
 } /* namespace processors */
 } /* namespace minifi */

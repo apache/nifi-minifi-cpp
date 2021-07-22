@@ -24,6 +24,7 @@
 #include <memory>
 #include <set>
 #include "core/Property.h"
+#include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
 
@@ -91,6 +92,8 @@ void MQTTControllerService::initializeProperties() {
   supportedProperties.insert(SecurityProtocol);
   setSupportedProperties(supportedProperties);
 }
+
+REGISTER_INTERNAL_RESOURCE_AS(MQTTControllerService, ("MQTTContextService"));
 
 } /* namespace controllers */
 } /* namespace minifi */

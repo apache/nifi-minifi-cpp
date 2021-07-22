@@ -16,8 +16,13 @@
 # under the License.
 
 function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/c++20-compilation-fixes.patch")
-    set(AWS_SDK_CPP_PATCH_COMMAND "${Patch_EXECUTABLE}" -p1 -R -s -f --dry-run -i "${PATCH_FILE}" || "${Patch_EXECUTABLE}" -p1 -N -i "${PATCH_FILE}")
+    set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/c++20-compilation-fixes.patch")
+    set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/dll-export-injection.patch")
+    set(PATCH_FILE3 "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/shutdown-fix.patch")
+    set(AWS_SDK_CPP_PATCH_COMMAND ${Bash_EXECUTABLE} -c "set -x &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") &&\
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") ")
 
     if (WIN32)
         set(CMAKE_INSTALL_LIBDIR "lib")
@@ -63,6 +68,10 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             -DENABLE_TESTING=OFF
             -DBUILD_SHARED_LIBS=OFF
             -DENABLE_UNITY_BUILD=${AWS_ENABLE_UNITY_BUILD})
+
+    if(WIN32)
+        list(APPEND AWS_SDK_CPP_CMAKE_ARGS -DFORCE_EXPORT_CORE_API=ON -DFORCE_EXPORT_S3_API=ON)
+    endif()
 
     append_third_party_passthrough_args(AWS_SDK_CPP_CMAKE_ARGS "${AWS_SDK_CPP_CMAKE_ARGS}")
 
@@ -110,6 +119,9 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     add_dependencies(AWS::aws-c-io aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-io INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-c-io INTERFACE AWS::aws-c-common)
+    if (WIN32)
+        target_link_libraries(AWS::aws-c-io INTERFACE ncrypt.lib)
+    endif()
 
     add_library(AWS::aws-checksums STATIC IMPORTED)
     set_target_properties(AWS::aws-checksums PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}")

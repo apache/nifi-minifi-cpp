@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,13 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "HTTPCurlLoader.h"
 
-#include "core/FlowConfiguration.h"
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib" )
+#pragma comment(lib, "crypt32.lib" )
+#pragma comment(lib, "Ws2_32.lib")
 
-bool HttpCurlObjectFactory::added = core::FlowConfiguration::add_static_func("createHttpCurlFactory");
-extern "C" {
-void *createHttpCurlFactory(void) {
-  return new HttpCurlObjectFactory();
+#define CURL_STATICLIB
+#include <curl/curl.h>
+#endif
+
+#include "core/extension/Extension.h"
+
+#include "client/HTTPClient.h"
+
+static bool init(const core::extension::ExtensionConfig& /*config*/) {
+  return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
 }
+
+static void deinit() {
+  curl_global_cleanup();
 }
+
+REGISTER_EXTENSION("HttpCurlExtension", init, deinit);

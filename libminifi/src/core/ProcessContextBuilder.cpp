@@ -29,6 +29,7 @@
 #include <thread>
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -76,6 +77,8 @@ std::shared_ptr<ProcessContextBuilder> ProcessContextBuilder::withConfiguration(
 std::shared_ptr<core::ProcessContext> ProcessContextBuilder::build(const std::shared_ptr<ProcessorNode> &processor) {
   return std::make_shared<core::ProcessContext>(processor, controller_service_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
 }
+
+REGISTER_INTERNAL_RESOURCE(ProcessContextBuilder);
 
 } /* namespace core */
 } /* namespace minifi */

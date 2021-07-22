@@ -26,6 +26,7 @@
 #include "utils/StringUtils.h"
 #include "utils/JsonCallback.h"
 #include "utils/OpenTelemetryLogDataModelUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -335,6 +336,8 @@ void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<co
   setupOutputFormatFromProperties(context);
   setupDecimalPlacesFromProperties(context);
 }
+
+REGISTER_RESOURCE(PerformanceDataMonitor, "This processor can create FlowFiles with various performance data through Performance Data Helper. (Windows only)");
 
 }  // namespace processors
 }  // namespace minifi

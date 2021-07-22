@@ -15,16 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "JNILoader.h"
 
-#include "core/FlowConfiguration.h"
+#include "core/extension/Extension.h"
+#include "JVMCreator.h"
 
-bool JNIFactory::added = core::FlowConfiguration::add_static_func("createJNIFactory");
+namespace minifi = org::apache::nifi::minifi;
 
-extern "C" {
-
-void *createJNIFactory(void) {
-  return new JNIFactory();
+static minifi::jni::JVMCreator& getJVMCreator() {
+  static minifi::jni::JVMCreator instance("JVMCreator");
+  return instance;
 }
 
+static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& config) {
+  getJVMCreator().configure(config);
+  return true;
 }
+
+static void deinit() {
+  // TODO(adebreceni): deinitialization is not implemented
+}
+
+REGISTER_EXTENSION("JNIExtension", init, deinit);

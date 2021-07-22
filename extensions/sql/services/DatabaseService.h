@@ -56,7 +56,7 @@ class DatabaseService : public core::controller::ControllerService {
   /**
    * Parameters needed.
    */
-  static core::Property ConnectionString;
+  EXTENSIONAPI static core::Property ConnectionString;
 
   void initialize() override;
 

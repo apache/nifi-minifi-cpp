@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,15 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/FlowConfiguration.h"
-#include "SQLLoader.h"
 
-static auto added = core::FlowConfiguration::add_static_func("createSQLFactory");
+#include "agent/agent_docs.h"
 
-extern "C" {
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
 
-void *createSQLFactory(void) {
-  return new SQLFactory();
+std::map<std::string, std::string>& AgentDocs::getDescriptions() {
+  static std::map<std::string, std::string> extensions;
+  return extensions;
 }
 
-}
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org

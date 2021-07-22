@@ -32,6 +32,7 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 
 #include "utils/gsl.h"
 
@@ -701,6 +702,8 @@ void CollectorInitiatedSubscription::logWindowsError(int line, const std::string
 
   LocalFree(lpMsg);
 }
+
+REGISTER_RESOURCE(CollectorInitiatedSubscription, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
 
 } /* namespace processors */
 } /* namespace minifi */

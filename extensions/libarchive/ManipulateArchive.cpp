@@ -32,6 +32,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
+#include "core/Resource.h"
 #include "utils/file/FileManager.h"
 #include "FocusArchiveEntry.h"
 #include "UnfocusArchiveEntry.h"
@@ -214,6 +215,8 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
 
     session->transfer(flowFile, Success);
 }
+
+REGISTER_RESOURCE(ManipulateArchive, "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.");
 
 } /* namespace processors */
 } /* namespace minifi */

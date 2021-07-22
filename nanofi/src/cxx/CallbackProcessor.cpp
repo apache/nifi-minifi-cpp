@@ -17,6 +17,8 @@
  */
 #include "cxx/CallbackProcessor.h"
 #include "core/cxxstructs.h"
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -44,6 +46,8 @@ void CallbackProcessor::onTrigger(core::ProcessContext *context, core::ProcessSe
    ontrigger_callback_(session, context);
  }
 }
+
+REGISTER_RESOURCE(CallbackProcessor, "");
 
 } /* namespace processors */
 } /* namespace minifi */

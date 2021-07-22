@@ -31,6 +31,7 @@
 #include "io/CRCStream.h"
 #include "sitetosite/Peer.h"
 #include "io/validation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -303,6 +304,8 @@ void HttpSiteToSiteClient::deleteTransaction(const utils::Identifier& transactio
 
   SiteToSiteClient::deleteTransaction(transactionID);
 }
+
+REGISTER_INTERNAL_RESOURCE_AS(HttpSiteToSiteClient, ("HttpSiteToSiteClient", "HttpProtocol"));
 
 } /* namespace sitetosite */
 } /* namespace minifi */

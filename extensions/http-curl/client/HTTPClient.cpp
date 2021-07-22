@@ -28,6 +28,7 @@
 #include "Exception.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -429,6 +430,8 @@ void HTTPClient::setInterface(const std::string &ifc) {
 void HTTPClient::setFollowRedirects(bool follow) {
   curl_easy_setopt(http_session_, CURLOPT_FOLLOWLOCATION, follow);
 }
+
+REGISTER_INTERNAL_RESOURCE(HTTPClient);
 
 }  // namespace utils
 }  // namespace minifi

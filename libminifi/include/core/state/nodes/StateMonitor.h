@@ -31,7 +31,6 @@
 #include "agent/build_description.h"
 #include "Connection.h"
 #include "core/ClassLoader.h"
-#include "core/Resource.h"
 #include "core/state/UpdateController.h"
 #include "io/ClientSocket.h"
 

@@ -24,8 +24,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/Resource.h"
-
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
@@ -258,8 +256,6 @@ class FlowInformation : public FlowMonitor {
 
  protected:
 };
-
-REGISTER_RESOURCE(FlowInformation, "Node part of an AST that defines the flow ID and flow URL deployed to this agent");
 
 }  // namespace response
 }  // namespace state

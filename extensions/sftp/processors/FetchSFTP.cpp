@@ -34,6 +34,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
 #include "ResourceClaim.h"
@@ -283,6 +284,8 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   session->transfer(flow_file, Success);
   put_connection_back_to_cache();
 }
+
+REGISTER_RESOURCE(FetchSFTP, "Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.");
 
 } /* namespace processors */
 } /* namespace minifi */
