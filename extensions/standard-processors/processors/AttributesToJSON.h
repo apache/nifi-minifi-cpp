@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <string>
+#include <set>
 #include <unordered_set>
 #include <memory>
 #include <map>
@@ -39,6 +40,8 @@ namespace processors {
 
 class AttributesToJSON : public core::Processor {
  public:
+  static const std::set<std::string> DESTINATIONS;
+
   explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid),
         logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()),

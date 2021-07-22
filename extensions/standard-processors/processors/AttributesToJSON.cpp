@@ -21,12 +21,15 @@
 
 #include "rapidjson/writer.h"
 #include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
+
+const std::set<std::string> AttributesToJSON::DESTINATIONS({"flowfile-attribute", "flowfile-content"});
 
 const core::Property AttributesToJSON::AttributesList(
   core::PropertyBuilder::createProperty("Attributes List")
@@ -47,7 +50,7 @@ const core::Property AttributesToJSON::Destination(
                       "Writing to flowfile content will overwrite any existing flowfile content.")
     ->isRequired(true)
     ->withDefaultValue<std::string>("flowfile-attribute")
-    ->withAllowableValues<std::string>({"flowfile-attribute", "flowfile-content"})
+    ->withAllowableValues<std::string>(DESTINATIONS)
     ->build());
 
 const core::Property AttributesToJSON::IncludeCoreAttributes(
@@ -86,7 +89,7 @@ void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSe
   if (!attributes_regular_expression_str_.empty()) {
     attributes_regular_expression_ = utils::Regex(attributes_regular_expression_str_);
   }
-  context->getProperty(Destination.getName(), destination_);
+  destination_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, Destination.getName(), DESTINATIONS);
   context->getProperty(IncludeCoreAttributes.getName(), include_core_attributes_);
   context->getProperty(NullValue.getName(), null_value_);
 }
@@ -144,16 +147,21 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
   if (destination_ == "flowfile-attribute") {
     logger_->log_debug("Writing the following attribute data to JSONAttributes attribute: %s", json_data);
     session->putAttribute(flow_file, "JSONAttributes", json_data);
+    session->transfer(flow_file, Success);
   } else if (destination_ == "flowfile-content") {
     logger_->log_debug("Writing the following attribute data to flowfile: %s", json_data);
     AttributesToJSON::WriteCallback callback(json_data);
-    session->write(flow_file, &callback);
+    try {
+      session->write(flow_file, &callback);
+      session->transfer(flow_file, Success);
+    } catch(const std::exception&) {
+      logger_->log_error("Failed to write attributes to flow file!");
+      session->transfer(flow_file, Failure);
+    }
   } else {
     logger_->log_error("Unimplemented destination was set in AttributesToJSON's Destination property");
     session->transfer(flow_file, Failure);
   }
-
-  session->transfer(flow_file, Success);
 }
 
 }  // namespace processors

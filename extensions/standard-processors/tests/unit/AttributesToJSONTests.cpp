@@ -186,4 +186,9 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Regex selected attributes are wri
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"empty_attribute\":\"\",\"my_attribute\":\"my_value\"}"));
 }
 
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "Invalid destination is set", "[AttributesToJSONTests]") {
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination.getName(), "invalid-destination");
+  REQUIRE_THROWS_AS(test_controller_.runSession(plan_), minifi::Exception);
+}
+
 }  // namespace
