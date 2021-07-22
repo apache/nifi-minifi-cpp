@@ -19,8 +19,10 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 #include <unordered_map>
 #include "utils/OptionalUtils.h"
+#include "core/logging/Logger.h"
 
 #ifdef WIN32
 struct _IP_ADAPTER_ADDRESSES_LH;
@@ -34,6 +36,7 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
 namespace utils {
 class NetworkInterfaceInfo {
  public:
@@ -63,6 +66,7 @@ class NetworkInterfaceInfo {
   std::vector<std::string> ip_v6_addresses_;
   bool running_;
   bool loopback_;
+  static std::shared_ptr<core::logging::Logger> logger_;
 };
 } /* namespace utils */
 } /* namespace minifi */

@@ -16,6 +16,7 @@
  */
 #include "utils/NetworkInterfaceInfo.h"
 #include "utils/OsUtils.h"
+#include "core/logging/LoggerConfiguration.h"
 #ifdef WIN32
 #include <Windows.h>
 #include <winsock2.h>
@@ -36,6 +37,8 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
+
+std::shared_ptr<core::logging::Logger> NetworkInterfaceInfo::logger_ = core::logging::LoggerFactory<NetworkInterfaceInfo>::getLogger();
 
 #ifdef WIN32
 namespace {
@@ -89,31 +92,39 @@ std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos
   std::vector<NetworkInterfaceInfo> network_adapters;
 #ifdef WIN32
   ULONG buffer_length = sizeof(IP_ADAPTER_ADDRESSES);
-  if (ERROR_BUFFER_OVERFLOW != GetAdaptersAddresses(0, 0, nullptr, nullptr, &buffer_length))
+  auto get_adapters_err = GetAdaptersAddresses(0, 0, nullptr, nullptr, &buffer_length);
+  if (ERROR_BUFFER_OVERFLOW != get_adapters_err) {
+    logger_->log_error("GetAdaptersAddresses failed: %lu", get_adapters_err);
     return network_adapters;
+  }
   std::vector<char> bytes(buffer_length, 0);
   IP_ADAPTER_ADDRESSES* adapter = reinterpret_cast<IP_ADAPTER_ADDRESSES*>(bytes.data());
-  if (NO_ERROR == GetAdaptersAddresses(0, 0, nullptr, adapter, &buffer_length)) {
-    while (adapter != nullptr) {
-      NetworkInterfaceInfo interface_info(adapter);
-      if (filter(interface_info)) {
-        auto it = std::find_if(network_adapters.begin(), network_adapters.end(), HasName(interface_info.getName()));
-        if (it == network_adapters.end()) {
-          network_adapters.emplace_back(std::move(interface_info));
-        } else {
-          interface_info.moveAddressesInto(*it);
-        }
+  get_adapters_err = GetAdaptersAddresses(0, 0, nullptr, adapter, &buffer_length);
+  if (NO_ERROR != get_adapters_err) {
+    logger_->log_error("GetAdaptersAddresses failed: %lu", get_adapters_err);
+    return network_adapters;
+  }
+  while (adapter != nullptr) {
+    NetworkInterfaceInfo interface_info(adapter);
+    if (filter(interface_info)) {
+      auto it = std::find_if(network_adapters.begin(), network_adapters.end(), HasName(interface_info.getName()));
+      if (it == network_adapters.end()) {
+        network_adapters.emplace_back(std::move(interface_info));
+      } else {
+        interface_info.moveAddressesInto(*it);
       }
-      if (max_interfaces.has_value() && network_adapters.size() >= max_interfaces.value())
-        return network_adapters;
-      adapter = adapter->Next;
     }
+    if (max_interfaces.has_value() && network_adapters.size() >= max_interfaces.value())
+      return network_adapters;
+    adapter = adapter->Next;
   }
 #else
   struct ifaddrs* interface_addresses = nullptr;
   auto cleanup = gsl::finally([interface_addresses] { freeifaddrs(interface_addresses); });
-  if (getifaddrs(&interface_addresses) == -1)
+  if (getifaddrs(&interface_addresses) == -1) {
+    logger_->log_error("getifaddrs failed: %s", std::strerror(errno));
     return network_adapters;
+  }
 
   for (struct ifaddrs* ifa = interface_addresses; ifa != nullptr; ifa = ifa->ifa_next) {
     if (!ifa->ifa_addr)
