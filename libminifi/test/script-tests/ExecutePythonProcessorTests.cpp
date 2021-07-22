@@ -32,9 +32,7 @@
 #include "utils/TestUtils.h"
 
 namespace {
-using org::apache::nifi::minifi::utils::createTempDir;
 using org::apache::nifi::minifi::utils::putFileToDir;
-using org::apache::nifi::minifi::utils::createTempDirWithFile;
 using org::apache::nifi::minifi::utils::getFileContent;
 
 class ExecutePythonProcessorTestBase {
@@ -88,15 +86,18 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
  protected:
   void testSimpleFilePassthrough(const Expectation expectation, const core::Relationship& execute_python_out_conn, const std::string& used_as_script_file, const std::string& used_as_script_body) {
     reInitialize();
-    const std::string input_dir = createTempDirWithFile(testController_.get(), TEST_FILE_NAME, TEST_FILE_CONTENT);
-    const std::string output_dir = createTempDir(testController_.get());
 
+    const std::string input_dir = testController_->createTempDirectory();
+    putFileToDir(input_dir, TEST_FILE_NAME, TEST_FILE_CONTENT);
     addGetFileProcessorToPlan(input_dir);
+
     if (Expectation::PROCESSOR_INITIALIZATION_EXCEPTION == expectation) {
       REQUIRE_THROWS(addExecutePythonProcessorToPlan(used_as_script_file, used_as_script_body));
       return;
     }
     REQUIRE_NOTHROW(addExecutePythonProcessorToPlan(used_as_script_file, used_as_script_body));
+
+    const std::string output_dir = testController_->createTempDirectory();
     addPutFileProcessorToPlan(execute_python_out_conn, output_dir);
 
     plan_->runNextProcessor();  // GetFile
@@ -116,7 +117,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
   }
   void testsStatefulProcessor() {
     reInitialize();
-    const std::string output_dir = createTempDir(testController_.get());
+    const std::string output_dir = testController_->createTempDirectory();
 
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor");
     plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile.getName(), getScriptFullPath("stateful_processor.py"));

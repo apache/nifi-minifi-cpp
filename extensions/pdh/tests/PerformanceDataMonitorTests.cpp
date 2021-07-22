@@ -37,7 +37,7 @@ class PerformanceDataMonitorTester {
  public:
   PerformanceDataMonitorTester() {
     LogTestController::getInstance().setTrace<TestPlan>();
-    dir_ = utils::createTempDir(&test_controller_);
+    dir_ = test_controller_.createTempDirectory();
     plan_ = test_controller_.createPlan();
     performance_monitor_ = plan_->addProcessor("PerformanceDataMonitor", "pdhsys");
     putfile_ = plan_->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);

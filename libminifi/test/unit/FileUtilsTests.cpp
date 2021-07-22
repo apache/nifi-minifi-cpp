@@ -141,8 +141,7 @@ TEST_CASE("TestFileUtils::get_executable_dir", "[TestGetExecutableDir]") {
 TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir";
 
@@ -158,8 +157,7 @@ TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
 TEST_CASE("TestFileUtils::create_dir recursively", "[TestCreateDir]") {
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir" + FileUtils::get_separator() +
     "random_dir2" + FileUtils::get_separator() + "random_dir3";
@@ -174,8 +172,7 @@ TEST_CASE("TestFileUtils::create_dir recursively", "[TestCreateDir]") {
 TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  const std::string tempDir = utils::file::getFullPath(testController.createTempDirectory(format));
+  const std::string tempDir = utils::file::getFullPath(testController.createTempDirectory());
 
   const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
 
@@ -209,8 +206,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
 
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  std::string dir = testController.createTempDirectory(format);
+  std::string dir = testController.createTempDirectory();
 
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::last_write_time(test_file) == 0);
@@ -264,8 +260,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
 TEST_CASE("FileUtils::file_size works", "[file_size]") {
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  std::string dir = testController.createTempDirectory(format);
+  std::string dir = testController.createTempDirectory();
 
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::file_size(test_file) == 0);
@@ -293,8 +288,7 @@ TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
 
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  std::string dir = testController.createTempDirectory(format);
+  std::string dir = testController.createTempDirectory();
 
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
@@ -338,8 +332,7 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
 
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  std::string dir = testController.createTempDirectory(format);
+  std::string dir = testController.createTempDirectory();
 
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
@@ -383,8 +376,7 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
 TEST_CASE("FileUtils::set_permissions", "[TestSetPermissions]") {
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   auto path = dir + FileUtils::get_separator() + "test_file.txt";
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
 
@@ -398,8 +390,7 @@ TEST_CASE("FileUtils::set_permissions", "[TestSetPermissions]") {
 TEST_CASE("FileUtils::exists", "[TestExists]") {
   TestController testController;
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   auto path = dir + FileUtils::get_separator() + "test_file.txt";
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
   auto invalid_path = dir + FileUtils::get_separator() + "test_file2.txt";

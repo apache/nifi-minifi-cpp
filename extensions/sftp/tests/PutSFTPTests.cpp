@@ -61,9 +61,7 @@ constexpr const char* PUBLIC_KEY_AUTH_ERROR_MESSAGE = "Failed to authenticate wi
 
 class PutSFTPTestsFixture {
  public:
-  PutSFTPTestsFixture()
-  : src_dir(strdup("/var/tmp/sftps.XXXXXX"))
-  , dst_dir(strdup("/var/tmp/sftpd.XXXXXX")) {
+  PutSFTPTestsFixture() {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -78,10 +76,10 @@ class PutSFTPTestsFixture {
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
     // Create temporary directories
-    testController.createTempDirectory(src_dir);
-    REQUIRE(src_dir != nullptr);
-    testController.createTempDirectory(dst_dir);
-    REQUIRE(dst_dir != nullptr);
+    src_dir = testController.createTempDirectory();
+    REQUIRE_FALSE(src_dir.empty());
+    dst_dir = testController.createTempDirectory();
+    REQUIRE_FALSE(dst_dir.empty());
 
     // Start SFTP server
     sftp_server = std::unique_ptr<SFTPTestServer>(new SFTPTestServer(dst_dir));
@@ -125,8 +123,6 @@ class PutSFTPTestsFixture {
   }
 
   virtual ~PutSFTPTestsFixture() {
-    free(src_dir);
-    free(dst_dir);
     LogTestController::getInstance().reset();
   }
 
@@ -206,8 +202,8 @@ class PutSFTPTestsFixture {
   }
 
  protected:
-  char *src_dir;
-  char *dst_dir;
+  std::string src_dir;
+  std::string dst_dir;
   std::unique_ptr<SFTPTestServer> sftp_server;
   TestController testController;
   std::shared_ptr<TestPlan> plan;
@@ -735,14 +731,11 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching reaches limit"
 
   sftp_server.reset();
 
-  std::vector<std::vector<char>> dst_dirs;
   std::vector<std::unique_ptr<SFTPTestServer>> sftp_servers;
 
-  std::string tmp_dir_format("/var/tmp/sftpd.XXXXXX");
   for (size_t i = 0; i < 10; i++) {
-    dst_dirs.emplace_back(tmp_dir_format.data(), tmp_dir_format.data() + tmp_dir_format.size() + 1);
-    testController.createTempDirectory(dst_dirs.back().data());
-    sftp_servers.emplace_back(new SFTPTestServer(dst_dirs.back().data()));
+    std::string destination_dir = testController.createTempDirectory();
+    sftp_servers.emplace_back(new SFTPTestServer(destination_dir));
     REQUIRE(true == sftp_servers.back()->start());
     createFile(src_dir, "tstFile" + std::to_string(i) + ".ext", std::to_string(sftp_servers.back()->getPort()));
 

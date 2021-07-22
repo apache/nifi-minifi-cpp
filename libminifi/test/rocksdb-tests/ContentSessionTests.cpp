@@ -31,8 +31,7 @@ template<typename ContentRepositoryClass>
 class ContentSessionController : public TestController {
  public:
   ContentSessionController() {
-    char format[] = "/var/tmp/content_repo.XXXXXX";
-    std::string contentRepoPath = createTempDirectory(format);
+    std::string contentRepoPath = createTempDirectory();
     auto config = std::make_shared<minifi::Configure>();
     config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, contentRepoPath);
     contentRepository = std::make_shared<ContentRepositoryClass>();

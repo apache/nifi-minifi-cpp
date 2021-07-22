@@ -30,8 +30,7 @@ utils::crypto::Bytes encryption_key = utils::crypto::stringToBytes(utils::String
 
 struct FileSystemTest : TestController {
   FileSystemTest() {
-    char format[] = "/var/tmp/fs.XXXXXX";
-    dir = createTempDirectory(format);
+    dir = createTempDirectory();
     encrypted_file = utils::file::FileUtils::concat_path(dir, "encrypted.txt");
     raw_file = utils::file::FileUtils::concat_path(dir, "raw.txt");
     new_file = utils::file::FileUtils::concat_path(dir, "new.txt");

@@ -32,8 +32,7 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setWarn<minifi::processors::GenerateFlowFile>();
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
@@ -78,8 +77,7 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setWarn<minifi::processors::GenerateFlowFile>();
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
@@ -131,8 +129,7 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
   TestController testController;
   LogTestController::getInstance().setTrace<TestPlan>();
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
@@ -169,8 +166,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
   TestController test_controller;
   LogTestController::getInstance().setTrace<TestPlan>();
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = test_controller.createTempDirectory(format);
+  auto dir = test_controller.createTempDirectory();
 
   std::shared_ptr<TestPlan> plan = test_controller.createPlan();
 
@@ -207,8 +203,7 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
   TestController test_controller;
   LogTestController::getInstance().setTrace<TestPlan>();
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = test_controller.createTempDirectory(format);
+  auto dir = test_controller.createTempDirectory();
 
   std::shared_ptr<TestPlan> plan = test_controller.createPlan();
 

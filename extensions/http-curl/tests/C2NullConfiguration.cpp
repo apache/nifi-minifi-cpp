@@ -36,8 +36,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
  public:
   explicit VerifyC2Server(bool isSecure)
       : isSecure(isSecure) {
-    char format[] = "/tmp/ssth.XXXXXX";
-    dir = testController.createTempDirectory(format);
+    dir = testController.createTempDirectory();
   }
 
   void testSetup() override {

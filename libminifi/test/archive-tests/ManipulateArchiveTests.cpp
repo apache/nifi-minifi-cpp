@@ -59,8 +59,8 @@ bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive outpu
     std::shared_ptr<TestPlan> plan = testController.createPlan();
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::string dir1 = [&] {char format[] = "/tmp/gt.XXXXXX"; return testController.createTempDirectory(format); }();
-    std::string dir2 = [&] {char format[] = "/tmp/gt.XXXXXX"; return testController.createTempDirectory(format); }();
+    std::string dir1 = testController.createTempDirectory();
+    std::string dir2 = testController.createTempDirectory();
 
     REQUIRE(!dir1.empty());
     REQUIRE(!dir2.empty());

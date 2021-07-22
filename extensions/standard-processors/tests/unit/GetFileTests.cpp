@@ -53,7 +53,7 @@ GetFileTestController::GetFileTestController() {
   test_plan_ = test_controller_.createPlan();
   auto repo = std::make_shared<TestRepository>();
 
-  auto temp_dir = utils::createTempDir(&test_controller_);
+  auto temp_dir = test_controller_.createTempDirectory();
   REQUIRE(!temp_dir.empty());
 
   // Define test input file
@@ -149,7 +149,7 @@ TEST_CASE("GetFileHiddenPropertyCheck", "[getFileProperty]") {
   LogTestController::getInstance().setTrace<processors::LogAttribute>();
   auto plan = testController.createPlan();
 
-  auto temp_path = minifi::utils::createTempDir(&testController);
+  auto temp_path = testController.createTempDirectory();
   std::string in_file(temp_path + utils::file::FileUtils::get_separator() + "testfifo");
   std::string hidden_in_file(temp_path + utils::file::FileUtils::get_separator() + ".testfifo");
 

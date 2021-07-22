@@ -52,8 +52,7 @@ TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") { // NOLINT
     end
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
@@ -114,12 +113,10 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") { // NOLINT
     end
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
-  char putFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *putFileDir = testController.createTempDirectory(putFileDirFmt);
+  auto putFileDir = testController.createTempDirectory();
   plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
@@ -204,12 +201,10 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") { // NOLINT
     end
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
-  char putFileDirFmt[] = "/tmp/ft.XXXXXX";
-  char *putFileDir = testController.createTempDirectory(putFileDirFmt);
+  auto putFileDir = testController.createTempDirectory();
   plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
@@ -286,8 +281,7 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") { /
     end
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;

@@ -56,9 +56,7 @@
 
 class ListThenFetchSFTPTestsFixture {
  public:
-  ListThenFetchSFTPTestsFixture()
-  : src_dir(strdup("/var/tmp/sftps.XXXXXX"))
-  , dst_dir(strdup("/var/tmp/sftpd.XXXXXX")) {
+  ListThenFetchSFTPTestsFixture() {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -74,10 +72,10 @@ class ListThenFetchSFTPTestsFixture {
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
     // Create temporary directories
-    testController.createTempDirectory(src_dir);
-    REQUIRE(src_dir != nullptr);
-    testController.createTempDirectory(dst_dir);
-    REQUIRE(dst_dir != nullptr);
+    src_dir = testController.createTempDirectory();
+    REQUIRE_FALSE(src_dir.empty());
+    dst_dir = testController.createTempDirectory();
+    REQUIRE_FALSE(dst_dir.empty());
 
     // Start SFTP server
     sftp_server = std::unique_ptr<SFTPTestServer>(new SFTPTestServer(src_dir));
@@ -123,7 +121,7 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(list_sftp, "Minimum File Size", "0 B");
     plan->setProperty(list_sftp, "Target System Timestamp Precision", "Seconds");
     plan->setProperty(list_sftp, "Remote Path", "nifi_test/");
-    plan->setProperty(list_sftp, "State File", std::string(src_dir) + "/state");
+    plan->setProperty(list_sftp, "State File", src_dir + "/state");
 
     // Configure FetchSFTP processor
     plan->setProperty(fetch_sftp, "Hostname", "localhost");
@@ -142,14 +140,12 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(log_attribute, "FlowFiles To Log", "0");
 
     // Configure PutFile processor
-    plan->setProperty(put_file, "Directory", std::string(dst_dir) + "/${path}");
+    plan->setProperty(put_file, "Directory", dst_dir + "/${path}");
     plan->setProperty(put_file, "Conflict Resolution Strategy", processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
 
   virtual ~ListThenFetchSFTPTestsFixture() {
-    free(src_dir);
-    free(dst_dir);
     LogTestController::getInstance().reset();
   }
 
@@ -224,8 +220,8 @@ class ListThenFetchSFTPTestsFixture {
   }
 
  protected:
-  char *src_dir;
-  char *dst_dir;
+  std::string src_dir;
+  std::string dst_dir;
   std::unique_ptr<SFTPTestServer> sftp_server;
   TestController testController;
   std::shared_ptr<TestPlan> plan;

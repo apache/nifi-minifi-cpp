@@ -28,8 +28,7 @@
 class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
  public:
   VerifyC2DescribeCoreComponentState() {
-    char format[] = "/var/tmp/ssth.XXXXXX";
-    temp_dir_ = testController.createTempDirectory(format);
+    temp_dir_ = testController.createTempDirectory();
 
     test_file_1_ = utils::file::FileUtils::concat_path(temp_dir_, "test1.txt");
     test_file_2_ = utils::file::FileUtils::concat_path(temp_dir_, "test2.txt");

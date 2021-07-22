@@ -30,7 +30,7 @@ class FFRepoFixture : public TestController {
     LogTestController::getInstance().setDebug<minifi::FlowFileRecord>();
     LogTestController::getInstance().setDebug<minifi::Connection>();
     LogTestController::getInstance().setTrace<FlowFileRepository>();
-    home_ = createTempDirectory("/var/tmp/testRepo.XXXXXX");
+    home_ = utils::Path{createTempDirectory()};
     repo_dir_ = home_ / "flowfile_repo";
     checkpoint_dir_ = home_ / "checkpoint_dir";
     config_ = std::make_shared<minifi::Configure>();

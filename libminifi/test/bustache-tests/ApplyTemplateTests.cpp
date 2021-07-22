@@ -67,16 +67,16 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
     std::shared_ptr<TestPlan> plan = testController.createPlan();
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    char dir1[] = "/tmp/gt.XXXXXX";  // GetFile source
-    char dir2[] = "/tmp/gt.XXXXXX";  // Template source
-    char dir3[] = "/tmp/gt.XXXXXX";  // PutFile destionation
+    std::string get_file_source_dir = testController.createTempDirectory();
+    std::string template_source_dir = testController.createTempDirectory();
+    std::string put_file_destination_dir = testController.createTempDirectory();
 
-    REQUIRE(!testController.createTempDirectory(dir1).empty());
-    REQUIRE(!testController.createTempDirectory(dir2).empty());
-    REQUIRE(!testController.createTempDirectory(dir3).empty());
+    REQUIRE_FALSE(get_file_source_dir.empty());
+    REQUIRE_FALSE(template_source_dir.empty());
+    REQUIRE_FALSE(put_file_destination_dir.empty());
 
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getFile");
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1);
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), get_file_source_dir);
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
 
     std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ExtractText", "testExtractText", core::Relationship("success", "description"), true);
@@ -85,13 +85,13 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
     std::shared_ptr<core::Processor> atprocessor = plan->addProcessor("ApplyTemplate", "testApplyTemplate", core::Relationship("success", "description"), true);
 
     std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
-    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir3);
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), put_file_destination_dir);
     plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
                       org::apache::nifi::minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
     // Write attribute value to file for GetFile->ExtractText
     std::stringstream ss1;
-    ss1 << dir1 << "/" << TEST_FILE;
+    ss1 << get_file_source_dir << "/" << TEST_FILE;
     std::string test_path = ss1.str();
 
     std::ofstream test_file(test_path);
@@ -101,7 +101,7 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
 
     // Write template to file
     std::stringstream ss2;
-    ss2 << dir2 << "/" << TEMPLATE_FILE;
+    ss2 << template_source_dir << "/" << TEMPLATE_FILE;
     std::string template_path = ss2.str();
 
     std::ofstream template_file(template_path);
@@ -119,7 +119,7 @@ TEST_CASE("Test usage of ApplyTemplate", "[ApplyTemplateTest]") {
 
     // Read contents of file
     std::stringstream ss3;
-    ss3 << dir3 << "/" << TEST_FILE;
+    ss3 << put_file_destination_dir << "/" << TEST_FILE;
     std::string output_path = ss3.str();
 
     std::ifstream output_file(output_path);

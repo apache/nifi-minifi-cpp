@@ -98,8 +98,7 @@ class PutAzureBlobStorageTestsFixture {
     mock_blob_storage_ptr = mock_blob_storage.get();
     put_azure_blob_storage = std::shared_ptr<minifi::azure::processors::PutAzureBlobStorage>(
       new minifi::azure::processors::PutAzureBlobStorage("PutAzureBlobStorage", utils::Identifier(), std::move(mock_blob_storage)));
-    char input_dir_mask[] = "/tmp/gt.XXXXXX";
-    auto input_dir = test_controller.createTempDirectory(input_dir_mask);
+    auto input_dir = test_controller.createTempDirectory();
     std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + "input_data.log");
     input_file_stream << TEST_DATA;
     input_file_stream.close();

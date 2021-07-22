@@ -193,14 +193,12 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   auto plan = testController.createPlan(conf);
   auto repo = std::make_shared<TestRepository>();
 
-  char format[] = "/tmp/gt.XXXXXX";
-  std::string in_dir = testController.createTempDirectory(format);
+  std::string in_dir = testController.createTempDirectory();
   REQUIRE(!in_dir.empty());
 
   std::string in_file(in_dir);
   in_file.append("/file");
-  char formatX[] = "/tmp/gt.XXXXXX";
-  std::string out_dir = testController.createTempDirectory(formatX);
+  std::string out_dir = testController.createTempDirectory();
   REQUIRE(!out_dir.empty());
 
   std::string out_file(out_dir);

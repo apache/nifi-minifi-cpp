@@ -65,10 +65,8 @@ TEST_CASE("PutFileTest", "[getfileputpfile]") {
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2);
+  const auto dir = testController.createTempDirectory();
+  const auto putfiledir = testController.createTempDirectory();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
 
@@ -130,10 +128,8 @@ TEST_CASE("PutFileTestFileExists", "[getfileputpfile]") {
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("failure", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2);
+  const auto dir = testController.createTempDirectory();
+  const auto putfiledir = testController.createTempDirectory();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
 
@@ -195,10 +191,8 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2);
+  const auto dir = testController.createTempDirectory();
+  const auto putfiledir = testController.createTempDirectory();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "ignore");
@@ -263,10 +257,8 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
 
   plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2);
+  const auto dir = testController.createTempDirectory();
+  const auto putfiledir = testController.createTempDirectory();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(), "replace");
@@ -342,10 +334,8 @@ TEST_CASE("PutFileMaxFileCountTest", "[getfileputpfilemaxcount]") {
 
   plan->addProcessor("LogAttribute", "logattribute", { core::Relationship("success", "d"), core::Relationship("failure", "d") }, true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  const auto dir = testController.createTempDirectory(format);
-  char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2);
+  const auto dir = testController.createTempDirectory();
+  const auto putfiledir = testController.createTempDirectory();
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
@@ -409,10 +399,8 @@ TEST_CASE("PutFileEmptyTest", "[EmptyFilePutTest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2);
+  const auto dir = testController.createTempDirectory();
+  const auto putfiledir = testController.createTempDirectory();
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
@@ -444,10 +432,8 @@ TEST_CASE("TestPutFilePermissions", "[PutFilePermissions]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
-  char format2[] = "/tmp/ft.XXXXXX";
-  auto putfiledir = testController.createTempDirectory(format2) + utils::file::FileUtils::get_separator() + "test_dir";
+  const auto dir = testController.createTempDirectory();
+  const auto putfiledir = testController.createTempDirectory() + utils::file::FileUtils::get_separator() + "test_dir";
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
@@ -484,9 +470,9 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
   // Define Directory
-  auto dir = minifi::utils::createTempDir(&testController);
+  auto dir = testController.createTempDirectory();
   // Defining a sub directory
-  auto putfiledir = minifi::utils::createTempDir(&testController) + utils::file::FileUtils::get_separator() + "test_dir";
+  auto putfiledir = testController.createTempDirectory() + utils::file::FileUtils::get_separator() + "test_dir";
 
   plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), putfiledir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);

@@ -40,8 +40,7 @@ TEST_CASE("Import null data") {
   LogTestController::getInstance().setTrace<core::repository::VolatileRepository<minifi::ResourceClaim::Path>>();
   LogTestController::getInstance().setTrace<core::repository::DatabaseContentRepository>();
 
-  char format[] = "/var/tmp/test.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));

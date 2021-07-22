@@ -55,8 +55,7 @@ class SecureSocketTest : public IntegrationBase {
  public:
   explicit SecureSocketTest(bool isSecure)
       : isSecure{ isSecure }, isRunning_{ false } {
-    char format[] = "/tmp/ssth.XXXXXX";
-    dir = testController.createTempDirectory(format);
+    dir = testController.createTempDirectory();
   }
 
   void testSetup() override {

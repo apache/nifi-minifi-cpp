@@ -58,9 +58,7 @@ class UnorderedMapKeyValueStoreServiceTestFixture {
     LogTestController::getInstance().setTrace<minifi::controllers::PersistableKeyValueStoreService>();
     LogTestController::getInstance().setTrace<minifi::controllers::AbstractAutoPersistingKeyValueStoreService>();
 
-    // Create temporary directories
-    char format[] = "/var/tmp/state.XXXXXX";
-    const auto state_dir = testController.createTempDirectory(format);
+    const auto state_dir = testController.createTempDirectory();
     REQUIRE(!state_dir.empty());
 #ifdef WIN32
     REQUIRE(0 == _chdir(state_dir.c_str()));

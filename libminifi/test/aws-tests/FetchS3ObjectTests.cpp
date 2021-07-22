@@ -37,7 +37,7 @@ class FetchS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws
       "PutFile",
       core::Relationship("success", "d"),
       true);
-    output_dir = createTempDir(&test_controller);
+    output_dir = test_controller.createTempDirectory();
     plan->setProperty(putfile, "Directory", output_dir);
   }
 

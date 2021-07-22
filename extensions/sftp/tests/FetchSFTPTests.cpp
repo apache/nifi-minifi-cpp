@@ -58,9 +58,7 @@
 
 class FetchSFTPTestsFixture {
  public:
-  FetchSFTPTestsFixture()
-  : src_dir(strdup("/var/tmp/sftps.XXXXXX"))
-  , dst_dir(strdup("/var/tmp/sftpd.XXXXXX")) {
+  FetchSFTPTestsFixture() {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -75,10 +73,10 @@ class FetchSFTPTestsFixture {
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
     // Create temporary directories
-    testController.createTempDirectory(src_dir);
-    REQUIRE(src_dir != nullptr);
-    testController.createTempDirectory(dst_dir);
-    REQUIRE(dst_dir != nullptr);
+    src_dir = testController.createTempDirectory();
+    REQUIRE_FALSE(src_dir.empty());
+    dst_dir = testController.createTempDirectory();
+    REQUIRE_FALSE(dst_dir.empty());
 
     // Start SFTP server
     sftp_server = std::unique_ptr<SFTPTestServer>(new SFTPTestServer(src_dir));
@@ -126,14 +124,12 @@ class FetchSFTPTestsFixture {
     plan->setProperty(fetch_sftp, "Use Compression", "false");
 
     // Configure PutFile processor
-    plan->setProperty(put_file, "Directory", std::string(dst_dir) + "/${path}");
+    plan->setProperty(put_file, "Directory", dst_dir + "/${path}");
     plan->setProperty(put_file, "Conflict Resolution Strategy", processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
 
   virtual ~FetchSFTPTestsFixture() {
-    free(src_dir);
-    free(dst_dir);
     LogTestController::getInstance().reset();
   }
 
@@ -192,8 +188,8 @@ class FetchSFTPTestsFixture {
   }
 
  protected:
-  char *src_dir;
-  char *dst_dir;
+  std::string src_dir;
+  std::string dst_dir;
   std::unique_ptr<SFTPTestServer> sftp_server;
   TestController testController;
   std::shared_ptr<TestPlan> plan;
@@ -262,7 +258,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch non-readable file", "[F
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
-  REQUIRE(0 == chmod((std::string(src_dir) + "/vfs/nifi_test/tstFile.ext").c_str(), 0000));
+  REQUIRE(0 == chmod((src_dir + "/vfs/nifi_test/tstFile.ext").c_str(), 0000));
 
   testController.runSession(plan, true);
 
@@ -317,7 +313,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
   /* By making the parent directory non-writable we make it impossible do delete the source file */
-  REQUIRE(0 == chmod((std::string(src_dir) + "/vfs/nifi_test").c_str(), 0500));
+  REQUIRE(0 == chmod((src_dir + "/vfs/nifi_test").c_str(), 0500));
 
   testController.runSession(plan, true);
 

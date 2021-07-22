@@ -62,9 +62,7 @@ void verifyMaxKeyCount(const minifi::provenance::ProvenanceRepository& repo, uin
 
 TEST_CASE("Test size limit", "[sizeLimitTest]") {
   TestController testController;
-
-  char dirtemplate[] = "/var/tmp/db.XXXXXX";
-  auto temp_dir = testController.createTempDirectory(dirtemplate);
+  auto temp_dir = testController.createTempDirectory();
   REQUIRE(!temp_dir.empty());
 
   // 60 sec, 100 KB - going to exceed the size limit
@@ -85,9 +83,7 @@ TEST_CASE("Test size limit", "[sizeLimitTest]") {
 
 TEST_CASE("Test time limit", "[timeLimitTest]") {
   TestController testController;
-
-  char dirtemplate[] = "/var/tmp/db.XXXXXX";
-  auto temp_dir = testController.createTempDirectory(dirtemplate);
+  auto temp_dir = testController.createTempDirectory();
   REQUIRE(!temp_dir.empty());
 
   // 1 sec, 100 MB - going to exceed TTL

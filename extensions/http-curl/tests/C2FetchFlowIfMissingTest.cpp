@@ -24,8 +24,7 @@
 
 int main(int argc, char **argv) {
   TestController controller;
-  char format[] = "/var/tmp/c2.XXXXXX";
-  std::string minifi_home = controller.createTempDirectory(format);
+  std::string minifi_home = controller.createTempDirectory();
   const cmd_args args = parse_cmdline_args(argc, argv);
   C2FlowProvider handler(args.test_file);
   VerifyFlowFetched harness(10000);

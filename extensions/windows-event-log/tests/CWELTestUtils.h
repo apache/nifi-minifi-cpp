@@ -56,7 +56,7 @@ class OutputFormatTestController : public TestController {
       test_plan->setProperty(cwel_processor, ConsumeWindowsEventLog::JSONFormat.getName(), json_format_.value());
     }
 
-    auto dir = utils::createTempDir(this);
+    auto dir = createTempDirectory();
 
     auto put_file = test_plan->addProcessor("PutFile", "putFile", Success, true);
     test_plan->setProperty(put_file, PutFile::Directory.getName(), dir);

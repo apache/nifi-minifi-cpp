@@ -35,8 +35,7 @@
 class TailFileTestHarness : public IntegrationBase {
  public:
   TailFileTestHarness() : IntegrationBase(1000) {
-    char format[] = "/tmp/ssth.XXXXXX";
-    dir = testController.createTempDirectory(format);
+    dir = testController.createTempDirectory();
 
     statefile = dir + utils::file::FileUtils::get_separator();
     statefile += "statefile";
