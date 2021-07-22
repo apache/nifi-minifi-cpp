@@ -150,7 +150,7 @@ and rebuild.
 #### CentOS 7
 
 Additional environmental preparations are required for CentOS 7 support. Before
-building, install and enable the devtoolset-6 SCL:
+building, install and enable the devtoolset-10 SCL:
 
 ```
 $ sudo yum install centos-release-scl
