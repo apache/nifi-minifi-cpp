@@ -83,7 +83,7 @@ ExtensionManager& ExtensionManager::get() {
 
 bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
   static bool initialized = ([&] {
-    logger_->log_error("Initializing extensions");
+    logger_->log_trace("Initializing extensions");
     // initialize executable
     active_module_->initialize(config);
     utils::optional<std::string> pattern = config ? config->get(nifi_extension_path) : utils::nullopt;

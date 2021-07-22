@@ -37,13 +37,13 @@ Extension::~Extension() {
 }
 
 ExtensionInitializer::ExtensionInitializer(Extension* extension, const ExtensionConfig& config): extension_(extension) {
-  init_logger->log_error("Initializing extension: %s", extension_->getName());
+  init_logger->log_trace("Initializing extension: %s", extension_->getName());
   if (!extension_->doInitialize(config)) {
     throw std::runtime_error("Failed to initialize extension");
   }
 }
 ExtensionInitializer::~ExtensionInitializer() {
-  init_logger->log_error("Deinitializing extension: %s", extension_->getName());
+  init_logger->log_trace("Deinitializing extension: %s", extension_->getName());
   extension_->doDeinitialize();
 }
 

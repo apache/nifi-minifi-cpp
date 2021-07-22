@@ -58,13 +58,13 @@ bool DynamicLibrary::load() {
     logger_->log_error("Failed to load extension '%s' at '%s': %s", name_, library_path_, dlerror());
     return false;
   } else {
-    logger_->log_info("Loaded extension '%s' at '%s'", name_, library_path_);
+    logger_->log_trace("Loaded extension '%s' at '%s'", name_, library_path_);
     return true;
   }
 }
 
 bool DynamicLibrary::unload() {
-  logger_->log_error("Unloading library '%s' at '%s'", name_, library_path_);
+  logger_->log_trace("Unloading library '%s' at '%s'", name_, library_path_);
   if (!handle_) {
     logger_->log_error("Extension does not have a handle_ '%s' at '%s'", name_, library_path_);
     return true;
@@ -74,12 +74,12 @@ bool DynamicLibrary::unload() {
     logger_->log_error("Failed to unload extension '%s' at '%': %s", name_, library_path_, dlerror());
     return false;
   }
-  logger_->log_error("Unloaded extension '%s' at '%s'", name_, library_path_);
+  logger_->log_trace("Unloaded extension '%s' at '%s'", name_, library_path_);
   handle_ = nullptr;
   return true;
 }
 
-DynamicLibrary::~DynamicLibrary() {}
+DynamicLibrary::~DynamicLibrary() = default;
 
 #ifdef WIN32
 
