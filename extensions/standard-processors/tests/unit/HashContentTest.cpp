@@ -131,6 +131,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
 }
 
 TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
+  using processors::HashContent;
   TestController testController;
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GetFile>();
@@ -145,19 +146,31 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 
   std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
                                                                      core::Relationship("success", "description"), true);
-  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute.getName(), MD5_ATTR);
-  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm.getName(), "MD5");
-  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::FailOnEmpty.getName(), "true");
+  plan->setProperty(md5processor, HashContent::HashAttribute.getName(), MD5_ATTR);
+  plan->setProperty(md5processor, HashContent::HashAlgorithm.getName(), "MD5");
+
+  md5processor->setAutoTerminatedRelationships({HashContent::Success, HashContent::Failure});
 
   std::stringstream stream_dir;
   stream_dir << tempdir << utils::file::FileUtils::get_separator() << TEST_FILE;
   std::string test_file_path = stream_dir.str();
   std::ofstream test_file(test_file_path, std::ios::binary);
 
-  plan->runNextProcessor();
-  plan->runNextProcessor();
+  SECTION("with an empty file and fail on empty property set to false") {
+    plan->setProperty(md5processor, HashContent::FailOnEmpty.getName(), "false");
 
-  REQUIRE(LogTestController::getInstance().contains("Failure as flow file is empty"));
+    plan->runNextProcessor();
+    plan->runNextProcessor();
+
+    REQUIRE(LogTestController::getInstance().contains("attempting read"));
+  }
+  SECTION("with an empty file and fail on empty property set to true") {
+    plan->setProperty(md5processor, HashContent::FailOnEmpty.getName(), "true");
+
+    plan->runNextProcessor();
+    plan->runNextProcessor();
+
+    REQUIRE(LogTestController::getInstance().contains("Failure as flow file is empty"));
+  }
 }
-
 #endif  // OPENSSL_SUPPORT

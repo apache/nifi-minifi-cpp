@@ -272,3 +272,10 @@ class MiNiFi_integration_test():
     def check_query_results(self, cluster_name, query, number_of_rows, timeout_seconds):
         cluster = self.acquire_cluster(cluster_name)
         assert cluster.check_query_results(query, number_of_rows, timeout_seconds)
+
+    def check_minifi_log_contents(self, line):
+        line_found = False
+        for cluster in self.clusters.values():
+            if cluster.get_engine() == "minifi-cpp":
+                line_found = cluster.wait_for_app_logs(line, 60)
+        assert line_found

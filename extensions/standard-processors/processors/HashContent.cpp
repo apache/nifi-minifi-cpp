@@ -86,6 +86,7 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
   if (failOnEmpty_ && flowFile->getSize() == 0) {
     logger_->log_debug("Failure as flow file is empty");
     session->transfer(flowFile, Failure);
+    return;
   }
 
   logger_->log_trace("attempting read");

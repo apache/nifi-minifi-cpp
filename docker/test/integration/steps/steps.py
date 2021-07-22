@@ -259,6 +259,11 @@ def step_impl(context, content, path):
     context.test.add_test_data(path, content)
 
 
+@given("an empty file is present in \"{path}\"")
+def step_impl(context, path):
+    context.test.add_test_data(path, "")
+
+
 @given("a file with filename \"{file_name}\" and content \"{content}\" is present in \"{path}\"")
 def step_impl(context, file_name, content, path):
     context.test.add_test_data(path, content, file_name)
@@ -578,3 +583,8 @@ def step_impl(context, cluster_name, object_data):
 @then("the query \"{query}\" returns {number_of_rows:d} rows in less than {timeout_seconds:d} seconds on the \"{cluster_name}\" PostgreSQL server")
 def step_impl(context, cluster_name, query, number_of_rows, timeout_seconds):
     context.test.check_query_results(cluster_name, query, number_of_rows, timeout_seconds)
+
+
+@then("the minifi log contains \"{line}\"")
+def step_impl(context, line):
+    context.test.check_minifi_log_contents(line)
