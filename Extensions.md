@@ -16,108 +16,64 @@
 
 To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR select the option to "Enable all Extensions" in the bootstrap script. [ReadMe](https://github.com/apache/nifi-minifi-cpp/#bootstrapping)
 
-# Extensions by example
+# Extension internals
+Extensions are dynamic libraries loaded at runtime by the agent. An extension makes its 
+capabilities (classes) available to the system through registrars.
 
-Extensions consist of modules that are conditionally built into your client. Reasons why you may wish to do this with your modules/processors
+``` C++
+// register user-facing classes as
+REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
+    "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
+    "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
 
-  - Do not with to make dependencies required or the lack thereof is a known/expected runtime condition.
-  - You wish to allow users to exclude dependencies for a variety of reasons.
-
-# Extensions by example
-We've used HTTP-CURL as the first example. We've taken all libcURL runtime classes and placed them into an extensions folder 
-   - /extensions/http-curl
-   
-This folder contains a CMakeLists file so that we can conditionally build it. In the case with libcURL, if the user does not have curl installed OR they specify -DDISABLE_CURL=true in the cmake build, the extensions will not be built. In this case, when the extension is not built, C2 REST protocols, InvokeHTTP, and an HTTP Client implementation will not be included.
-
-Your CMAKE file should build a static library, that will be included into the run time. This must be added with your conditional to the libminifi CMAKE, along with a platform specific whole archive inclusion. Note that this will ensure that despite no direct linkage being found by the compiler, we will include the code so that we can dynamically find your code.
-
-# Including your extension in the build
-There is a new function that can be used in the root cmake to build and included your extension. An example is based on the LibArchive extension. The createExtension function has 8 possible arguments. The first five arguments are required.
-The first argument specifies the variable controlling the exclusion of this extension, followed by the variable that
-is used when including it into conditional statements. The third argument is the pretty name followed by the description of the extension and the extension directory. The first optional argument is the test directory, which must also contain a CMakeLists.txt file. The seventh argument can be a conditional variable that tells us whether or not to add a third party subdirectory specified by the final extension.
-
-In the lib archive example, we provide all arguments, but your extension may only need the first five and the the test folder. The seventh and eighth arguments must be included in tandem. 
-
-```cmake
-if ( NOT LibArchive_FOUND OR BUILD_LIBARCHIVE )
-	set(BUILD_TP "TRUE")
-endif()
-createExtension(DISABLE_LIBARCHIVE 
-				ARCHIVE-EXTENSIONS 
-				"ARCHIVE EXTENSIONS" 
-				"This Enables libarchive functionality including MergeContent, CompressContent, and (Un)FocusArchiveEntry" 
-				"extensions/libarchive"
-				"${TEST_DIR}/archive-tests"
-				BUILD_TP
-				"thirdparty/libarchive-3.3.2")
+// register internal resources as
+REGISTER_INTERNAL_RESOURCE(HTTPClient);
 ```
 
-It is advised that you also add your extension to bootstrap.sh as that is the suggested method of configuring MiNiFi C++
-  
-# C bindings
-To find your classes, you must adhere to a dlsym call back that adheres to the core::ObjectFactory class, like the one below. This object factory will return a list of classes, that we can instantiate through the class loader mechanism. Note that since we are including your code directly into our runtime, we will take care of dlopen and dlsym calls. A map from the class name to the object factory is kept in memory.
+If you decide to put them in a header file, you better make sure that there are no dependencies between extensions,
+as the inclusion of such header from extension "A", will force it to be defined in the including extension "B". This could result
+in shadowing each other's resources. Best to put them in source files.
+
+Some extensions (e.g. `http-curl`) require initialization before use. You need to subclass `Extension` and let the system know by using `REGISTER_EXTENSION`.
 
 ```C++
-class __attribute__((visibility("default"))) HttpCurlObjectFactory : public core::ObjectFactory {
+class HttpCurlExtension : core::extension::Extension {
  public:
-  HttpCurlObjectFactory() {
-
+  using Extension::Extension;
+  bool doInitialize(const core::extension::ExtensionConfig& /*config*/) override {
+    return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
   }
-
-  /**
-   * Gets the name of the object.
-   * @return class name of processor
-   */
-  virtual std::string getName() {
-    return "HttpCurlObjectFactory";
+  void doDeinitialize() override {
+    curl_global_cleanup();
   }
-
-  virtual std::string getClassName() {
-    return "HttpCurlObjectFactory";
-  }
-  /**
-   * Gets the class name for the object
-   * @return class name for the processor.
-   */
-  virtual std::vector<std::string> getClassNames() {
-    std::vector<std::string> class_names;
-    class_names.push_back("RESTProtocol");
-    class_names.push_back("RESTReceiver");
-    class_names.push_back("RESTSender");
-    class_names.push_back("InvokeHTTP");
-    class_names.push_back("HTTPClient");
-    return class_names;
-  }
-
-  virtual std::unique_ptr<ObjectFactory> assign(const std::string &class_name) {
-    if (class_name == "RESTReceiver") {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::c2::RESTReceiver>());
-    } else if (class_name == "RESTSender") {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<minifi::c2::RESTSender>());
-    } else if (class_name == "InvokeHTTP") {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<processors::InvokeHTTP>());
-    } else if (class_name == "HTTPClient") {
-      return std::unique_ptr<ObjectFactory>(new core::DefautObjectFactory<utils::HTTPClient>());
-    } else {
-      return nullptr;
-    }
-  }
-
 };
 
-extern "C" {
-void *createHttpCurlFactory(void);
-}
+REGISTER_EXTENSION(HttpCurlExtension);
 ```
 
-## Using your object factory function
-To use your C function, you must define the sequence "Class Loader Functions" in your YAML file under FlowController. This will indicate to the code that the factory function is to be called and we will create the mappings defined, above.
+If you don't use `REGISTER_EXTENSION`, the registered resources still become available, so make sure to register the extension if you need special initialization.
 
-Note that for the case of HTTP-CURL we have made it so that if libcURL exists and it is not disabled, the createHttpCurlFactory function is automatically loaded. To do this use the function FlowConfiguration::add_static_func -- this will add your function to the list of registered resources and will do so in a thread safe way. If you take this approach you cannot disable your library with an argument within the YAML file.
+# Loading extensions
 
+The agent will look for the `nifi.extension.path` property in the `minifi.properties` file to determine what extensions to load.
 
-## Common extension practices
+The property expects a comma separated list of paths.
+The paths support wildcards, specifically, a standalone `**` matches any number of nested directories, the `*` matches any number of characters in a single segment and `?` matches one single character in a segment.
+Relative paths are relative to the agent executable.
+```
+// This matches all files in the 'extensions' directory next to the directory the executable is in.
+nifi.extension.path=../extensions/*
+```
 
-Extensions should minimize dependencies that are dynamically linked. This means that you should statically link to dependencies when possible. You should verify that your resulting binary doesn't have system dependencies via ldd (in Linux) or dumpbbin /dependents on Microsoft Windows. 
+### Exlusion
+If you want to exclude some extensions from being loaded, without having to specify the rest, you can do so by prefixing the pattern with `!`.
+```
+// This loads all extensions but the gps extension. (the exact name differs by platform: dylib, dll, so)
+nifi.extension.path=../extensions/*,!../extensions/libminifi-gps.so
+```
 
-It is advised that you place your extension in bootstrap.sh to allow users a visual menu for enabling or disabling your extension. It should not be enabled by default unless discussed with the community at large. If there is reliance on specialized hardware you should perform as many compile time tests as possible to ensure your extension cannot be enabled. 
+You could even exclude some subdirectory and then re-include specific extensions/subdirectories in that.
+```
+// The last pattern that matches an extension will determine if that extension is loaded or not.
+nifi.extension.path=../extensions/**,!../extensions/private/*,../extension/private/my-cool-extension.dll
+```
