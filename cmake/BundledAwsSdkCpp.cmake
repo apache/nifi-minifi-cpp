@@ -33,35 +33,35 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
 
     if (WIN32 OR APPLE)
         set(BYPRODUCTS
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
     else()
         set(BYPRODUCTS
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}s2n.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}s2n.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
+                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
     endif()
 
     FOREACH(BYPRODUCT ${BYPRODUCTS})
@@ -81,7 +81,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             aws-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/aws/aws-sdk-cpp.git"
-            GIT_TAG "1.9.64"
+            GIT_TAG "1.9.65"
             UPDATE_COMMAND git submodule update --init --recursive
             SOURCE_DIR "${BINARY_DIR}/thirdparty/aws-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
