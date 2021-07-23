@@ -28,7 +28,7 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-class Funnel : public Processor {
+class Funnel final : public Processor {
  public:
   // Supported Relationships
   static const core::Relationship Success;

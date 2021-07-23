@@ -44,9 +44,10 @@ void YamlConnectionParser::addFunnelRelationshipToConnection(const std::shared_p
   }
   auto processor = parent_->findProcessorById(srcUUID);
   if (!processor) {
+    logger_->log_error("Could not find processor with id %s", srcUUID.to_string());
     return;
   }
-  if (std::dynamic_pointer_cast<minifi::core::Funnel>(processor)) {
+  if (typeid(minifi::core::Funnel) == typeid(*processor)) {
     addNewRelationshipToConnection(minifi::core::Funnel::Success.getName(), connection);
   }
 }

@@ -607,11 +607,10 @@ void YamlConfiguration::parseConnectionYaml(const YAML::Node& connectionsNode, c
     // If name is specified in configuration, use the value
     std::string name = connectionNode["name"].as<std::string>(id);
 
-    const auto uuid = utils::Identifier::parse(id);
-    if (!uuid) {
+    const utils::optional<utils::Identifier> uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect connection UUID format.");
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");
-    }
+    });
 
     connection = createConnection(name, uuid.value());
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
@@ -825,7 +824,6 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
   }
 
   for (const auto& element : node) {
-  // for (YAML::const_iterator iter = node.begin(); iter != node.end(); ++iter) {
     YAML::Node funnel_node = element.as<YAML::Node>();
 
     std::string id = getOrGenerateId(funnel_node);
