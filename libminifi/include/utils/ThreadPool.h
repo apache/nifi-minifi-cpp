@@ -80,16 +80,10 @@ class Worker {
 
   virtual ~Worker() = default;
 
-  /**
-   * Move constructor for worker tasks
-   */
-  Worker(Worker &&other) noexcept
-      : identifier_(std::move(other.identifier_)),
-        next_exec_time_(std::move(other.next_exec_time_)),
-        task(std::move(other.task)),
-        run_determinant_(std::move(other.run_determinant_)),
-        promise(other.promise) {
-  }
+  Worker(const Worker&) = delete;
+  Worker(Worker&&) noexcept = default;
+  Worker& operator=(const Worker&) = delete;
+  Worker& operator=(Worker&&) noexcept = default;
 
   /**
    * Runs the task and takes the output from the functor
@@ -120,10 +114,6 @@ class Worker {
     return run_determinant_->wait_time();
   }
 
-  Worker<T>(const Worker<T>&) = delete;
-  Worker<T>& operator= (const Worker<T>&) = delete;
-
-  Worker<T>& operator= (Worker<T> &&) noexcept;
 
   std::shared_ptr<std::promise<T>> getPromise() const;
 
@@ -146,16 +136,6 @@ class DelayedTaskComparator {
     return a.getNextExecutionTime() > b.getNextExecutionTime();
   }
 };
-
-template<typename T>
-Worker<T>& Worker<T>::operator =(Worker<T> && other) noexcept {
-  task = std::move(other.task);
-  promise = other.promise;
-  next_exec_time_ = std::move(other.next_exec_time_);
-  identifier_ = std::move(other.identifier_);
-  run_determinant_ = std::move(other.run_determinant_);
-  return *this;
-}
 
 template<typename T>
 std::shared_ptr<std::promise<T>> Worker<T>::getPromise() const {

@@ -20,7 +20,8 @@ function(use_bundled_libuvc SOURCE_DIR BINARY_DIR)
     pkg_check_modules(LIBUSB libusb-1.0)
 
     # Define patch step
-    set(PC git reset --hard HEAD && "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/libuvc/libuvc.patch")
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/libuvc/libuvc.patch")
+    set(LIBUVC_PATCH_COMMAND "${Patch_EXECUTABLE}" -p1 -R -s -f --dry-run -i "${PATCH_FILE}" || "${Patch_EXECUTABLE}" -p1 -N -i "${PATCH_FILE}")
 
     # Define patch step
     if (WIN32)
@@ -40,7 +41,7 @@ function(use_bundled_libuvc SOURCE_DIR BINARY_DIR)
             GIT_TAG "v0.0.6"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/libuvc-src"
             CMAKE_ARGS ${LIBUVC_CMAKE_ARGS}
-            PATCH_COMMAND ${PC}
+            PATCH_COMMAND ${LIBUVC_PATCH_COMMAND}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/libuvc-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
     )

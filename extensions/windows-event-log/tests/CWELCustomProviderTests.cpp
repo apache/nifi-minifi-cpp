@@ -25,9 +25,10 @@
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
-#include "rapidjson/document.h"
 #include "wel/UniqueEvtHandle.h"
 #include "IntegrationTestUtils.h"
+
+#include "rapidjson/document.h"
 
 #include "CWELTestUtils.h"
 #include "Utils.h"

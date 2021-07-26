@@ -20,6 +20,9 @@
 
 #include <type_traits>
 #include <utility>
+#if __cplusplus >= 201703L
+#include <optional>
+#endif  /* >= C++17 */
 
 #include <nonstd/optional.hpp>
 #include "utils/GeneralUtils.h"
@@ -35,15 +38,20 @@ using nonstd::nullopt;
 using nonstd::make_optional;
 
 template<typename T>
-optional<typename gsl_lite::remove_cvref<T>::type> optional_from_ptr(T&& obj) {
+optional<utils::remove_cvref_t<T>> optional_from_ptr(T&& obj) {
   return obj == nullptr ? nullopt : optional<utils::remove_cvref_t<T>>{ std::forward<T>(obj) };
 }
 
-template<typename>
+// two partial specializations because nonstd::optional<T> might or might not be the same as std::optional<T>,
+// and if they are the same, this would be a redefinition error
+template<typename, typename = void>
 struct is_optional : std::false_type {};
 
+template<typename T, typename Void>
+struct is_optional<nonstd::optional<T>, Void> : std::true_type {};
+
 template<typename T>
-struct is_optional<optional<T>> : std::true_type {};
+struct is_optional<std::optional<T>, void> : std::true_type {};
 
 namespace detail {
 template<typename T>

@@ -21,7 +21,8 @@ verify_enable_platform(){
     verify_gcc_enable "${feature}"
 }
 add_os_flags() {
-    CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND}"
+    #CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND}"
+    :
 }
 bootstrap_cmake(){
     sudo pacman -S --noconfirm cmake

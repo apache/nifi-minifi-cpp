@@ -21,6 +21,7 @@
 #include <string>
 
 #include "pugixml.hpp"
+
 #include "rapidjson/document.h"
 
 namespace org {

@@ -17,10 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <rapidjson/document.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/prettywriter.h>
+
 
 #include <vector>
 #include <queue>
@@ -32,6 +29,11 @@
 #include <functional>
 #include <iostream>
 #include <utility>
+
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/prettywriter.h"
 
 #include "core/Repository.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"

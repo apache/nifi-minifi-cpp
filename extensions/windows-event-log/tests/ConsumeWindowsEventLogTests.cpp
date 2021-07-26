@@ -23,6 +23,7 @@
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
+
 #include "rapidjson/document.h"
 
 #include "CWELTestUtils.h"

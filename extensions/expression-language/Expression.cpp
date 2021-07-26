@@ -628,7 +628,7 @@ Value expr_toDate(const std::vector<Value> &args) {
   auto arg_0 = args[0].asString();
   std::istringstream arg_s { arg_0 };
   date::sys_time<std::chrono::milliseconds> t;
-  arg_s >> date::parse(args[1].asString(), t);
+  date::from_stream(arg_s, args[1].asString().c_str(), t);
   auto zone = date::current_zone();
   if (args.size() > 2) {
     zone = date::locate_zone(args[2].asString());

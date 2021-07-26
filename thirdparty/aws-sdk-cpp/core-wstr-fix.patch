@@ -1,0 +1,20 @@
+diff -ruN orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp patched/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp
+--- orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-07-08 23:54:17.936278552 +0200
++++ patched/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-07-08 23:57:13.702620555 +0200
+@@ -11,6 +11,7 @@
+ #include <aws/core/utils/Outcome.h>
+ #include <aws/core/utils/crypto/Hash.h>
+ #include <aws/core/utils/HashingUtils.h>
++#include <aws/core/utils/StringUtils.h>
+ #include <atomic>
+ #include <bcrypt.h>
+ #include <winternl.h>
+@@ -126,7 +127,7 @@
+                 NTSTATUS status = BCryptOpenAlgorithmProvider(&m_algorithmHandle, algorithmName, MS_PRIMITIVE_PROVIDER, isHMAC ? BCRYPT_ALG_HANDLE_HMAC_FLAG : 0);
+                 if (!NT_SUCCESS(status))
+                 {
+-                    AWS_LOGSTREAM_ERROR(logTag, "Failed initializing BCryptOpenAlgorithmProvider for " << algorithmName);
++                    AWS_LOGSTREAM_ERROR(logTag, "Failed initializing BCryptOpenAlgorithmProvider for " << StringUtils::FromWString(algorithmName));
+                     return;
+                 }
+ 

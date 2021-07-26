@@ -16,42 +16,6 @@
 # specific language governing permissions and limitations
 # under the License.
 verify_gcc_enable(){
-  feature="$1"
-  if [ "$feature" = "BUSTACHE_ENABLED" ]; then
-    if (( COMPILER_MAJOR == 6 && COMPILER_MINOR >= 3 && COMPILER_REVISION >= 1  )); then
-      echo "true"
-    elif (( COMPILER_MAJOR > 6 )); then
-      echo "true"
-    else
-      echo "false"
-    fi
-  elif [ "$feature" = "EXECUTE_SCRIPT_ENABLED" ]; then
-    if (( COMPILER_MAJOR >= 6 )); then
-      echo "true"
-    else
-      echo "false"
-    fi
-  elif [ "$feature" = "KAFKA_ENABLED" ]; then
-    if (( COMPILER_MAJOR >= 4 )); then
-      if (( COMPILER_MAJOR > 4 || COMPILER_MINOR >= 8 )); then
-        echo "true"
-      else
-        echo "false"
-      fi
-    else
-      echo "false"
-    fi
-   elif [ "$feature" = "PCAP_ENABLED" ]; then
-    if (( COMPILER_MAJOR >= 4 )); then
-      if (( COMPILER_MAJOR > 4 || COMPILER_MINOR >= 8 )); then
-        echo "true"
-      else
-        echo "false"
-      fi
-    else
-      echo "false"
-    fi
-  else
-    echo "true"
-  fi
+  #feature="$1"
+  { [ "$COMPILER_MAJOR" -eq 8 ] && [ "$COMPILER_MINOR" -ge 2 ] || [ "$COMPILER_MAJOR" -gt 8 ]; } && echo true || echo false
 }

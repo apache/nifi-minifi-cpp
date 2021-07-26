@@ -16,6 +16,9 @@
 # under the License.
 
 function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/core-wstr-fix.patch")
+    set(AWS_SDK_CPP_PATCH_COMMAND "${Patch_EXECUTABLE}" -p1 -R -s -f --dry-run -i "${PATCH_FILE}" || "${Patch_EXECUTABLE}" -p1 -N -i "${PATCH_FILE}")
+
     if (WIN32)
         set(CMAKE_INSTALL_LIBDIR "lib")
     else()
@@ -115,6 +118,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             INSTALL_DIR "${BINARY_DIR}/thirdparty/libaws-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${AWS_SDK_CPP_CMAKE_ARGS}
+            PATCH_COMMAND ${AWS_SDK_CPP_PATCH_COMMAND}
             BUILD_BYPRODUCTS "${AWSSDK_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
     )

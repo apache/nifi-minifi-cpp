@@ -50,7 +50,7 @@ constexpr T intdiv_ceil(T numerator, T denominator) {
       : numerator / denominator + (numerator % denominator != 0));
 }
 
-#if __cplusplus > 201703L
+#if __cpp_lib_concepts >= 202002L
 using std::identity;
 #else
 // from https://stackoverflow.com/questions/15202474
@@ -60,7 +60,7 @@ struct identity {
         return std::forward<U>(v);
     }
 };
-#endif /* < C++20 */
+#endif /* if P0898 "Standard Library Concepts" is implemented, which introduced std::identity */
 
 #if __cpp_lib_type_identity >= 201806L
 using std::type_identity;

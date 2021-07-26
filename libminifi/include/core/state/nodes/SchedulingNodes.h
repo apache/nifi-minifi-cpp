@@ -85,7 +85,7 @@ class SchedulingDefaults : public DeviceInformation {
 
     SerializedResponseNode penalizationPeriod;
     penalizationPeriod.name = "penalizationPeriodMillis";
-    penalizationPeriod.value = std::chrono::milliseconds{core::DEFAULT_PENALIZATION_PERIOD}.count();
+    penalizationPeriod.value = int64_t{std::chrono::milliseconds{core::DEFAULT_PENALIZATION_PERIOD}.count()};
 
     schedulingDefaults.children.push_back(penalizationPeriod);
 

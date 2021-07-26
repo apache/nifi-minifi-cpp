@@ -46,7 +46,7 @@ class SocketCreator : public AbstractStreamFactory {
     return std::make_shared<V>(configure);
   }
 
-  SocketCreator<T, V>(const std::shared_ptr<Configure> &configuration)
+  explicit SocketCreator(const std::shared_ptr<Configure> &configuration)
       : configuration_(configuration) {
     context_ = create(configuration);
   }
@@ -56,12 +56,12 @@ class SocketCreator : public AbstractStreamFactory {
     return new T(context_, host, port);
   }
 
-  std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) {
+  std::unique_ptr<Socket> createSocket(const std::string &host, const uint16_t port) override {
     T *socket = create(host, port);
     return std::unique_ptr<Socket>(socket);
   }
 
-  std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) {
+  std::unique_ptr<Socket> createSecureSocket(const std::string &host, const uint16_t port, const std::shared_ptr<minifi::controllers::SSLContextService> &ssl_service) override {
 #ifdef OPENSSL_SUPPORT
     if (ssl_service != nullptr) {
       auto context = std::make_shared<TLSContext>(configuration_, ssl_service);

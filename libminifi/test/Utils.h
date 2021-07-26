@@ -18,6 +18,7 @@
 
 #include <string>
 #include <utility>
+
 #include "rapidjson/document.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
