@@ -71,8 +71,6 @@ class ListSFTPTestsFixture {
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
-    // Create temporary directories
-    src_dir = testController.createTempDirectory();
     REQUIRE_FALSE(src_dir.empty());
 
     // Start SFTP server
@@ -162,10 +160,10 @@ class ListSFTPTestsFixture {
   }
 
  protected:
-  std::string src_dir;
-  std::unique_ptr<SFTPTestServer> sftp_server;
   TestController testController;
+  std::string src_dir = testController.createTempDirectory();
   std::shared_ptr<TestPlan> plan;
+  std::unique_ptr<SFTPTestServer> sftp_server;
   std::shared_ptr<core::Processor> list_sftp;
   std::shared_ptr<core::Processor> log_attribute;
 };

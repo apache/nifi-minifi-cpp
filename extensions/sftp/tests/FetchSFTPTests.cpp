@@ -72,18 +72,15 @@ class FetchSFTPTestsFixture {
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
-    // Create temporary directories
-    src_dir = testController.createTempDirectory();
     REQUIRE_FALSE(src_dir.empty());
-    dst_dir = testController.createTempDirectory();
     REQUIRE_FALSE(dst_dir.empty());
+    REQUIRE(plan);
 
     // Start SFTP server
     sftp_server = std::unique_ptr<SFTPTestServer>(new SFTPTestServer(src_dir));
     REQUIRE(true == sftp_server->start());
 
     // Build MiNiFi processing graph
-    plan = testController.createPlan();
     generate_flow_file = plan->addProcessor(
         "GenerateFlowFile",
         "GenerateFlowFile");
@@ -188,11 +185,11 @@ class FetchSFTPTestsFixture {
   }
 
  protected:
-  std::string src_dir;
-  std::string dst_dir;
-  std::unique_ptr<SFTPTestServer> sftp_server;
   TestController testController;
-  std::shared_ptr<TestPlan> plan;
+  std::string src_dir = testController.createTempDirectory();
+  std::string dst_dir = testController.createTempDirectory();
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::unique_ptr<SFTPTestServer> sftp_server;
   std::shared_ptr<core::Processor> generate_flow_file;
   std::shared_ptr<core::Processor> update_attribute;
   std::shared_ptr<core::Processor> fetch_sftp;
