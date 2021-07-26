@@ -88,7 +88,7 @@ struct HasName {
 }
 
 std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter,
-                                                                                                     const utils::optional<uint32_t> max_interfaces) {
+                                                                                                     const std::optional<uint32_t> max_interfaces) {
   std::vector<NetworkInterfaceInfo> network_adapters;
 #ifdef WIN32
   ULONG buffer_length = sizeof(IP_ADAPTER_ADDRESSES);

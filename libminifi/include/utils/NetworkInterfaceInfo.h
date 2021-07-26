@@ -21,7 +21,7 @@
 #include <vector>
 #include <memory>
 #include <unordered_map>
-#include "utils/OptionalUtils.h"
+#include <optional>
 #include "core/logging/Logger.h"
 
 #ifdef WIN32
@@ -46,7 +46,7 @@ class NetworkInterfaceInfo {
 #else
   explicit NetworkInterfaceInfo(const struct ifaddrs* ifa);
 #endif
-  NetworkInterfaceInfo& operator=(NetworkInterfaceInfo&& other) = default;  // TODO(mzink): mark noexcept after gcc 4.9
+  NetworkInterfaceInfo& operator=(NetworkInterfaceInfo&& other) noexcept = default;
   const std::string& getName() const noexcept { return name_; }
   bool hasIpV4Address() const noexcept { return ip_v4_addresses_.size() > 0; }
   bool hasIpV6Address() const noexcept { return ip_v6_addresses_.size() > 0; }
@@ -58,7 +58,7 @@ class NetworkInterfaceInfo {
   void moveAddressesInto(NetworkInterfaceInfo& destination);
 
   static std::vector<NetworkInterfaceInfo> getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter = { [](const NetworkInterfaceInfo&) { return true; } },
-                                                                                        const utils::optional<uint32_t> max_interfaces = utils::nullopt);
+                                                                                        const std::optional<uint32_t> max_interfaces = std::nullopt);
 
  private:
   std::string name_;

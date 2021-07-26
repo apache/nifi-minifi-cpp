@@ -62,7 +62,7 @@ void AppendHostInfo::onSchedule(const std::shared_ptr<core::ProcessContext>& con
   if (context->getProperty(InterfaceNameFilter.getName(), interface_name_filter_str) && !interface_name_filter_str.empty())
     interface_name_filter_.emplace(interface_name_filter_str);
   else
-    interface_name_filter_ = utils::nullopt;
+    interface_name_filter_ = std::nullopt;
   std::string refresh_policy;
   context->getProperty(RefreshPolicy.getName(), refresh_policy);
   if (refresh_policy == REFRESH_POLICY_ON_TRIGGER)
@@ -98,7 +98,7 @@ void AppendHostInfo::refreshHostInfo() {
   auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter);
   std::ostringstream oss;
   if (network_interface_infos.size() == 0) {
-    ipaddresses_ = utils::nullopt;
+    ipaddresses_ = std::nullopt;
   } else {
     for (auto& network_interface_info : network_interface_infos) {
       auto& ip_v4_addresses = network_interface_info.getIpV4Addresses();
