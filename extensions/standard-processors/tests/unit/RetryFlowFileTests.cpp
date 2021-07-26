@@ -85,8 +85,6 @@ class RetryFlowFileTest {
       optional<bool> processor_uuid_matches_flowfile) {
     reInitialize();
 
-    const std::string output_dir = testController_->createTempDirectory();
-
     // Relationships
     const core::Relationship success         {"success", "description"};
     const core::Relationship retry           {RetryFlowFile::Retry};
