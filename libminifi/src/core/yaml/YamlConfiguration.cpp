@@ -764,8 +764,16 @@ void YamlConfiguration::parseSingleProperty(const std::string& propertyName, con
   core::Property myProp(propertyName, "", "");
   processor->getProperty(propertyName, myProp);
   const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, propertyValueNode);
+  bool property_set = false;
+  try {
+    property_set = processor->setProperty(myProp, coercedValue);
+  } catch(const utils::internal::InvalidValueException&) {
+    auto component = std::dynamic_pointer_cast<core::CoreComponent>(processor);
+    logger_->log_error("Invalid value was set for property '%s' creating component '%s'", propertyName, component->getName());
+    throw;
+  }
   const std::string rawValueString = propertyValueNode.as<std::string>();
-  if (!processor->setProperty(myProp, coercedValue)) {
+  if (!property_set) {
     std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
     if (proc) {
       logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
