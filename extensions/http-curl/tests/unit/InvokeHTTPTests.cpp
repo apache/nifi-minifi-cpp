@@ -47,8 +47,6 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
 
   std::shared_ptr<core::Processor> logAttribute = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
-  auto dir = testController.createTempDirectory();
-
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
   listenhttp->initialize();
 
@@ -166,8 +164,6 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::Processor> getfileprocessor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
   std::shared_ptr<core::Processor> logAttribute = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
-
-  auto dir = testController.createTempDirectory();
 
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
   listenhttp->initialize();
