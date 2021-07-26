@@ -77,6 +77,7 @@ __pycache__/
 .vs/slnx.sqlite
 /.ccls-cache
 /.vscode
+.ccache
 
 # generated files from WEL test
 extensions/windows-event-log/tests/custom-provider/unit-test-provider.cs

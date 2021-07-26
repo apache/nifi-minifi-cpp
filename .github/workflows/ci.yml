@@ -258,15 +258,24 @@ jobs:
   docker_integration_tests:
     name: "Docker integration tests"
     runs-on: ubuntu-20.04
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - id: checkout
         uses: actions/checkout@v2
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.ccache
+          key: docker-ccache-${{github.ref}}-${{github.sha}}
+          restore-keys: |
+            docker-ccache-${{github.ref}}-
+            docker-ccache-refs/heads/main
       - id: build
         run: |
-          ./bootstrap.sh -e -t
+          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
+          mkdir build
           cd build
-          cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DENABLE_JNI=OFF -DDISABLE_JEMALLOC=ON -DDISABLE_SCRIPTING=ON -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON ..
+          cmake -DUSE_SHARED_LIBS= -DSTRICT_GSL_CHECKS=AUDIT -DENABLE_JNI=OFF -DDISABLE_JEMALLOC=ON -DDISABLE_SCRIPTING=ON -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache ..
           make docker
       - id: install_deps
         run: |

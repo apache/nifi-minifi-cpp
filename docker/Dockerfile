@@ -87,7 +87,8 @@ RUN apk --no-cache add gcc \
   gpsd-dev \
   python3-dev \
   boost-dev \
-  doxygen
+  doxygen \
+  ccache
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
@@ -98,11 +99,15 @@ ENV MINIFI_VERSION ${MINIFI_VERSION}
 
 # Setup minificpp user
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
-    install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
+    install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && \
+    ln -s $(which ccache) /usr/local/bin/gcc && \
+    ln -s $(which ccache) /usr/local/bin/g++
 COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
+RUN if [ -d "${MINIFI_BASE_DIR}/.ccache" ]; then mv ${MINIFI_BASE_DIR}/.ccache /home/${USER}/.ccache; fi
 
 USER ${USER}
 
+ENV PATH /usr/lib/ccache/bin:${PATH}
 RUN mkdir ${MINIFI_BASE_DIR}/build
 WORKDIR ${MINIFI_BASE_DIR}/build
 RUN cmake -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_ALL="${ENABLE_ALL}" -DENABLE_PYTHON="${ENABLE_PYTHON}" -DENABLE_OPS="${ENABLE_OPS}" \
@@ -115,9 +120,9 @@ RUN cmake -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_ALL="${ENABLE_ALL}" -DENABL
     -DDISABLE_EXPRESSION_LANGUAGE="${DISABLE_EXPRESSION_LANGUAGE}" -DDISABLE_ROCKSDB="${DISABLE_ROCKSDB}" \
     -DDISABLE_LIBARCHIVE="${DISABLE_LIBARCHIVE}" -DDISABLE_LZMA="${DISABLE_LZMA}" -DDISABLE_BZIP2="${DISABLE_BZIP2}" \
     -DDISABLE_SCRIPTING="${DISABLE_SCRIPTING}" -DDISABLE_PYTHON_SCRIPTING="${DISABLE_PYTHON_SCRIPTING}" -DDISABLE_CONTROLLER="${DISABLE_CONTROLLER}" \
-    -DENABLE_ENCRYPT_CONFIG="${ENABLE_ENCRYPT_CONFIG}" -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. \
-  && make -j "$(nproc)" package \
-  && tar -xzvf "${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" -C "${MINIFI_BASE_DIR}"
+    -DENABLE_ENCRYPT_CONFIG="${ENABLE_ENCRYPT_CONFIG}" -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
+    make -j "$(nproc)" package && \
+    tar -xzvf "${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" -C "${MINIFI_BASE_DIR}"
 
 
 # Release image
