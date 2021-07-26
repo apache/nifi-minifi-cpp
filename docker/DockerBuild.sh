@@ -28,6 +28,7 @@ IMAGE_TAG=
 DUMP_LOCATION=
 DISTRO_NAME=
 BUILD_NUMBER=
+DOCKER_CCACHE_DUMP_LOCATION=
 
 function usage {
   echo "Usage: ./DockerBuild.sh -v <MINIFI_VERSION> [additional options]"
@@ -58,10 +59,10 @@ while [[ $# -gt 0 ]]; do
       shift
     ;;
     -v|--minifi-version)
-    MINIFI_VERSION="$2"
-    shift
-    shift
-    ;;
+      MINIFI_VERSION="$2"
+      shift
+      shift
+      ;;
     -t|--tag)
       IMAGE_TAG="$2"
       shift
@@ -84,6 +85,8 @@ while [[ $# -gt 0 ]]; do
           BUILD_NUMBER="${ARR[1]}"
         elif [ "${ARR[0]}" == "DOCKER_BASE_IMAGE" ]; then
           BUILD_ARGS="${BUILD_ARGS} --build-arg BASE_ALPINE_IMAGE=${ARR[1]}"
+        elif [ "${ARR[0]}" == "DOCKER_CCACHE_DUMP_LOCATION" ]; then
+          DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
         else
           BUILD_ARGS="${BUILD_ARGS} --build-arg ${ARR[0]}=${ARR[1]}"
         fi
@@ -133,14 +136,28 @@ if [ -n "${BUILD_NUMBER}" ]; then
   TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
 fi
 
-DOCKER_COMMAND="docker build "
+DOCKER_BUILD_START="docker build "
 BUILD_ARGS="--build-arg UID=${UID_ARG} \
             --build-arg GID=${GID_ARG} \
             --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
             --build-arg DUMP_LOCATION=${DUMP_LOCATION} \
             --build-arg DISTRO_NAME=${DISTRO_NAME} ${BUILD_ARGS}"
 
-DOCKER_COMMAND="${DOCKER_COMMAND} ${BUILD_ARGS} \
+if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
+  DOCKER_COMMAND="${DOCKER_BUILD_START} ${BUILD_ARGS} \
+                -f ${DOCKERFILE} \
+                --target build \
+                -t \
+                minifi_build .."
+  echo "Build image Docker Command: 'DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}'"
+  DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
+  container_id=$(docker run --rm -d  minifi_build sh -c "while true; do sleep 1; done")
+  mkdir -p "${DOCKER_CCACHE_DUMP_LOCATION}"
+  docker cp "${container_id}:/home/minificpp/.ccache/." "${DOCKER_CCACHE_DUMP_LOCATION}"
+  docker rm -f "${container_id}"
+fi
+
+DOCKER_COMMAND="${DOCKER_BUILD_START} ${BUILD_ARGS} \
                 -f ${DOCKERFILE} \
                 -t \
                 apacheminificpp:${TAG} .."
