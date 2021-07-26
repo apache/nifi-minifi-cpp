@@ -31,38 +31,23 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
         set(PREFIX "lib")
     endif()
 
-    if (WIN32 OR APPLE)
-        set(BYPRODUCTS
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
-    else()
-        set(BYPRODUCTS
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}s2n.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
-                "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
+    if (NOT WIN32 AND NOT APPLE)
+        list(APPEND BYPRODUCTS "${CMAKE_INSTALL_LIBDIR}/${PREFIX}s2n.${SUFFIX}")
     endif()
+    list(APPEND BYPRODUCTS
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
+            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
 
     FOREACH(BYPRODUCT ${BYPRODUCTS})
         LIST(APPEND AWSSDK_LIBRARIES_LIST "${BINARY_DIR}/thirdparty/libaws-install/${BYPRODUCT}")
