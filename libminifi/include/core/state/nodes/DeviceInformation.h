@@ -123,12 +123,8 @@ class Device {
   std::vector<std::string> getIpAddresses() {
     static std::vector<std::string> ips;
     if (ips.empty()) {
-      auto filter = [](const utils::NetworkInterfaceInfo& interface_info) -> bool {
-        if (interface_info.isLoopback())
-          return false;
-        if (!interface_info.isRunning())
-          return false;
-        return true;
+      const auto filter = [](const utils::NetworkInterfaceInfo& interface_info) {
+        return !interface_info.isLoopback() && interface_info.isRunning();
       };
       auto network_interface_infos = utils::NetworkInterfaceInfo::getNetworkInterfaceInfos(filter);
       for (const auto& network_interface_info : network_interface_infos)
