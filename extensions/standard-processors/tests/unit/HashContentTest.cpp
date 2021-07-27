@@ -147,10 +147,9 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
                                                                      core::Relationship("success", "description"), true);
   plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAttribute.getName(), MD5_ATTR);
   plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::HashAlgorithm.getName(), "MD5");
-  std::set<core::Relationship> relationships;
-  relationships.insert(core::Relationship("success", "description"));
-  relationships.insert(core::Relationship("failure", "description"));
-  md5processor->setAutoTerminatedRelationships(relationships);
+
+  using processors::HashContent;
+  md5processor->setAutoTerminatedRelationships({HashContent::Success, HashContent::Failure});
 
   std::stringstream stream_dir;
   stream_dir << tempdir << utils::file::FileUtils::get_separator() << TEST_FILE;
