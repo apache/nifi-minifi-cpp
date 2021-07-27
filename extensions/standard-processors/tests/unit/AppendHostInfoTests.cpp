@@ -51,8 +51,7 @@ TEST_CASE("AppendHostInfoTestWithUnmatchableRegex", "[appendhostinfotestunmatcha
 
   testController.runSession(plan);
 
-  using std::literals::operator""s;
-  using std::literals::operator""ms;
+  using namespace std::literals;  // NOLINT(build/namespaces_literals) using-directives are not allowed by the style guide, but are necessary to use standard literals
   REQUIRE(LogTestController::getInstance().contains("source.hostname", 0s, 0ms));
   REQUIRE_FALSE(LogTestController::getInstance().contains("source.ipv4", 0s, 0ms));
 }
@@ -70,8 +69,7 @@ TEST_CASE("AppendHostInfoTestCanFilterOutLoopbackInterfacesWithRegex", "[appendh
 
   testController.runSession(plan);
 
-  using std::literals::operator""s;
-  using std::literals::operator""ms;
+  using namespace std::literals;  // NOLINT(build/namespaces_literals) using-directives are not allowed by the style guide, but are necessary to use standard literals
   REQUIRE(LogTestController::getInstance().contains("source.hostname", 0s, 0ms));
   REQUIRE_FALSE(LogTestController::getInstance().contains("127.0.0.1", 0s, 0ms));
 }
