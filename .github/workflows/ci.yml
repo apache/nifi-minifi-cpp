@@ -22,7 +22,7 @@ jobs:
       - id: install_dependencies
         run: |
           brew update
-          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc automake autoconf
+          brew install ossp-uuid boost flex lua ccache sqliteodbc automake autoconf
       - id: setup_env
         name: setup enviroment
         run: |
@@ -31,8 +31,7 @@ jobs:
           sudo xcode-select -switch /Applications/Xcode_12.app
       - name: build
         run: |
-          export PATH="/usr/local/opt/lua@5.3/lib:/usr/local/opt/lua@5.3/include:/usr/local/opt/lua@5.3/bin:/usr/local/opt/flex/bin:$PATH"
-          export PKG_CONFIG_PATH="/usr/local/opt/lua@5.3/lib/pkgconfig"
+          export PATH="/usr/local/opt/flex/bin:$PATH"
           export LDFLAGS="-L/usr/local/opt/flex/lib"
           export CPPFLAGS="-I/usr/local/opt/flex/include"
           # CPPFLAGS are not recognized by cmake, so we have to force them to CFLAGS and CXXFLAGS to have flex 2.6 working
