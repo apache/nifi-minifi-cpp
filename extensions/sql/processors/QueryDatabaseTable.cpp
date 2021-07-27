@@ -220,9 +220,7 @@ void QueryDatabaseTable::initializeMaxValues(core::ProcessContext &context) {
     logger_->log_info("Found no stored state");
   } else {
     if (!loadMaxValuesFromStoredState(stored_state)) {
-      state_manager_->beginTransaction();
       state_manager_->clear();
-      state_manager_->commit();
     }
   }
 

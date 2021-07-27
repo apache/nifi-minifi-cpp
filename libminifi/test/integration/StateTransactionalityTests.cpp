@@ -164,10 +164,7 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   {
     "Set_in_onSchedule", {
     [](core::CoreComponentStateManager& stateManager) {
-      assert(!stateManager.set(exampleState));
-      assert(stateManager.beginTransaction());
       assert(stateManager.set(exampleState));
-      assert(stateManager.commit());
     },
     {
      [](core::CoreComponentStateManager& stateManager) {
@@ -183,12 +180,8 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
     "Clear_in_onSchedule", {
     [](core::CoreComponentStateManager& stateManager) {
       assert(!stateManager.clear());
-      assert(stateManager.beginTransaction());
       assert(stateManager.set(exampleState));
-      assert(stateManager.commit());
-      assert(stateManager.beginTransaction());
       assert(stateManager.clear());
-      assert(stateManager.commit());
     },
     {
      [](core::CoreComponentStateManager& stateManager) {

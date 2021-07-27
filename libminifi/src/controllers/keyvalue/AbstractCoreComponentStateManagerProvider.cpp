@@ -88,12 +88,18 @@ AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::~A
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::set(const core::CoreComponentState& kvs) {
+  bool autoCommit = false;
   if (!transactionInProgress_) {
-    return false;
+    autoCommit = true;
+    transactionInProgress_ = true;
   }
 
   changeType_ = ChangeType::SET;
   stateToSet_ = kvs;
+
+  if (autoCommit) {
+    return commit();
+  }
   return true;
 }
 
@@ -110,12 +116,22 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::clear() {
-  if (!state_valid_ || !transactionInProgress_) {
+  if (!state_valid_) {
     return false;
+  }
+
+  bool autoCommit = false;
+  if (!transactionInProgress_) {
+    autoCommit = true;
+    transactionInProgress_ = true;
   }
 
   changeType_ = ChangeType::CLEAR;
   stateToSet_.clear();
+
+  if (autoCommit) {
+    return commit();
+  }
   return true;
 }
 
