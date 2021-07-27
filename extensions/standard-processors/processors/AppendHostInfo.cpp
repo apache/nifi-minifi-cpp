@@ -56,6 +56,7 @@ void AppendHostInfo::initialize() {
 }
 
 void AppendHostInfo::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
+  std::unique_lock unique_lock(shared_mutex_);
   context->getProperty(HostAttribute.getName(), hostname_attribute_name_);
   context->getProperty(IPAttribute.getName(), ipaddress_attribute_name_);
   std::string interface_name_filter_str;
@@ -63,12 +64,12 @@ void AppendHostInfo::onSchedule(const std::shared_ptr<core::ProcessContext>& con
     interface_name_filter_.emplace(interface_name_filter_str);
   else
     interface_name_filter_ = std::nullopt;
+
   std::string refresh_policy;
   context->getProperty(RefreshPolicy.getName(), refresh_policy);
   if (refresh_policy == REFRESH_POLICY_ON_TRIGGER)
     refresh_on_trigger_ = true;
-
-  if (!refresh_on_trigger_)
+  else
     refreshHostInfo();
 }
 
@@ -77,12 +78,21 @@ void AppendHostInfo::onTrigger(core::ProcessContext*, core::ProcessSession* sess
   if (!flow)
     return;
 
-  if (refresh_on_trigger_)
-    refreshHostInfo();
+  {
+    std::shared_lock shared_lock(shared_mutex_);
+    if (refresh_on_trigger_) {
+      shared_lock.unlock();
+      std::unique_lock unique_lock(shared_mutex_);
+      refreshHostInfo();
+    }
+  }
 
-  flow->addAttribute(hostname_attribute_name_, hostname_);
-  if (ipaddresses_.has_value()) {
-    flow->addAttribute(ipaddress_attribute_name_, ipaddresses_.value());
+  {
+    std::shared_lock shared_lock(shared_mutex_);
+    flow->addAttribute(hostname_attribute_name_, hostname_);
+    if (ipaddresses_.has_value()) {
+      flow->addAttribute(ipaddress_attribute_name_, ipaddresses_.value());
+    }
   }
 
   session->transfer(flow, Success);

@@ -51,8 +51,10 @@ TEST_CASE("AppendHostInfoTestWithUnmatchableRegex", "[appendhostinfotestunmatcha
 
   testController.runSession(plan);
 
-  REQUIRE(LogTestController::getInstance().contains("source.hostname", std::chrono::seconds(0), std::chrono::milliseconds(0)));
-  REQUIRE_FALSE(LogTestController::getInstance().contains("source.ipv4", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+  using std::literals::operator""s;
+  using std::literals::operator""ms;
+  REQUIRE(LogTestController::getInstance().contains("source.hostname", 0s, 0ms));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("source.ipv4", 0s, 0ms));
 }
 
 TEST_CASE("AppendHostInfoTestCanFilterOutLoopbackInterfacesWithRegex", "[appendhostinfotestfilterloopback]") {
@@ -68,6 +70,8 @@ TEST_CASE("AppendHostInfoTestCanFilterOutLoopbackInterfacesWithRegex", "[appendh
 
   testController.runSession(plan);
 
-  REQUIRE(LogTestController::getInstance().contains("source.hostname", std::chrono::seconds(0), std::chrono::milliseconds(0)));
-  REQUIRE_FALSE(LogTestController::getInstance().contains("127.0.0.1", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+  using std::literals::operator""s;
+  using std::literals::operator""ms;
+  REQUIRE(LogTestController::getInstance().contains("source.hostname", 0s, 0ms));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("127.0.0.1", 0s, 0ms));
 }

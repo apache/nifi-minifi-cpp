@@ -24,6 +24,7 @@
 #include <string>
 #include <optional>
 #include <regex>
+#include <shared_mutex>
 
 #include "core/Property.h"
 #include "FlowFileRecord.h"
@@ -68,14 +69,15 @@ class AppendHostInfo : public core::Processor {
   virtual void refreshHostInfo();
 
  private:
+  std::shared_mutex shared_mutex_;
   std::shared_ptr<logging::Logger> logger_;
   std::string hostname_attribute_name_;
   std::string ipaddress_attribute_name_;
   std::optional<std::regex> interface_name_filter_;
+  bool refresh_on_trigger_;
 
   std::string hostname_;
   std::optional<std::string> ipaddresses_;
-  bool refresh_on_trigger_;
 };
 
 REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");

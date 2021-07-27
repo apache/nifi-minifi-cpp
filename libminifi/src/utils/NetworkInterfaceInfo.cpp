@@ -145,15 +145,17 @@ std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos
   return network_adapters;
 }
 
-void move_append(std::vector<std::string>& source, std::vector<std::string>& destination) {
+namespace {
+void move_append(std::vector<std::string> &&source, std::vector<std::string> &destination) {
   destination.reserve(destination.size() + source.size());
   std::move(std::begin(source), std::end(source), std::back_inserter(destination));
   source.clear();
 }
+}  // namespace
 
 void NetworkInterfaceInfo::moveAddressesInto(NetworkInterfaceInfo& destination) {
-  move_append(ip_v4_addresses_, destination.ip_v4_addresses_);
-  move_append(ip_v6_addresses_, destination.ip_v6_addresses_);
+  move_append(std::move(ip_v4_addresses_), destination.ip_v4_addresses_);
+  move_append(std::move(ip_v6_addresses_), destination.ip_v6_addresses_);
 }
 
 } /* namespace utils */

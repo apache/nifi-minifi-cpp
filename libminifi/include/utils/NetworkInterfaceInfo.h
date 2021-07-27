@@ -42,8 +42,10 @@ class NetworkInterfaceInfo {
  public:
   NetworkInterfaceInfo(NetworkInterfaceInfo&& src) noexcept = default;
 #ifdef WIN32
+  // Creates NetworkInterfaceInfo from IP_ADAPTER_ADDRESSES struct (it should contain all ip addresses from an adapter)
   explicit NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter);
 #else
+  // Creates NetworkInterfaceInfo from ifaddrs struct (it will only contain a single ip address from an adapter, it should be merged together based on name_)
   explicit NetworkInterfaceInfo(const struct ifaddrs* ifa);
 #endif
   NetworkInterfaceInfo& operator=(NetworkInterfaceInfo&& other) noexcept = default;
@@ -55,12 +57,13 @@ class NetworkInterfaceInfo {
   const std::vector<std::string>& getIpV4Addresses() const noexcept { return ip_v4_addresses_; }
   const std::vector<std::string>& getIpV6Addresses() const noexcept { return ip_v6_addresses_; }
 
-  void moveAddressesInto(NetworkInterfaceInfo& destination);
-
+  // Traverses the ip addresses and merges them together based on the interface name
   static std::vector<NetworkInterfaceInfo> getNetworkInterfaceInfos(std::function<bool(const NetworkInterfaceInfo&)> filter = { [](const NetworkInterfaceInfo&) { return true; } },
-                                                                                        const std::optional<uint32_t> max_interfaces = std::nullopt);
+      const std::optional<uint32_t> max_interfaces = std::nullopt);
 
  private:
+  void moveAddressesInto(NetworkInterfaceInfo& destination);
+
   std::string name_;
   std::vector<std::string> ip_v4_addresses_;
   std::vector<std::string> ip_v6_addresses_;
