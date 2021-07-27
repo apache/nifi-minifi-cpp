@@ -146,15 +146,9 @@ std::vector<NetworkInterfaceInfo> NetworkInterfaceInfo::getNetworkInterfaceInfos
 }
 
 void move_append(std::vector<std::string>& source, std::vector<std::string>& destination) {
-  if (source.size() == 0)
-    return;
-  if (destination.empty()) {
-    destination = std::move(source);
-  } else {
-    destination.reserve(destination.size() + source.size());
-    std::move(std::begin(source), std::end(source), std::back_inserter(destination));
-    source.clear();
-  }
+  destination.reserve(destination.size() + source.size());
+  std::move(std::begin(source), std::end(source), std::back_inserter(destination));
+  source.clear();
 }
 
 void NetworkInterfaceInfo::moveAddressesInto(NetworkInterfaceInfo& destination) {
