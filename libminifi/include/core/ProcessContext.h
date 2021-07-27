@@ -18,15 +18,17 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
 #define LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
 
+#include <algorithm>
+#include <atomic>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <queue>
 #include <string>
 #include <vector>
-#include <queue>
-#include <map>
 #include <unordered_map>
-#include <mutex>
-#include <atomic>
-#include <algorithm>
-#include <memory>
+
 #include "Property.h"
 #include "core/Core.h"
 #include "core/ContentRepository.h"
@@ -40,7 +42,6 @@
 #include "core/FlowFile.h"
 #include "core/CoreComponentState.h"
 #include "utils/file/FileUtils.h"
-#include "utils/OptionalUtils.h"
 #include "utils/PropertyErrors.h"
 #include "VariableRegistry.h"
 
@@ -100,13 +101,13 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
 
   template<typename T = std::string>
-  typename std::enable_if<std::is_default_constructible<T>::value, utils::optional<T>>::type
+  std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
   getProperty(const Property& property) {
     T value;
     try {
-      if (!getProperty(property.getName(), value)) return utils::nullopt;
+      if (!getProperty(property.getName(), value)) return std::nullopt;
     } catch (const utils::internal::ValueException&) {
-      return utils::nullopt;
+      return std::nullopt;
     }
     return value;
   }
@@ -255,7 +256,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     std::string always_persist, auto_persistence_interval;
     configuration->get(Configure::nifi_state_management_provider_local_always_persist, always_persist);
     configuration->get(Configure::nifi_state_management_provider_local_auto_persistence_interval, auto_persistence_interval);
-    utils::optional<std::string> path = configuration->get(Configure::nifi_state_management_provider_local_path);
+    const auto path = configuration->get(Configure::nifi_state_management_provider_local_path);
 
     /* Function to help creating a provider */
     auto create_provider = [&](

@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 
-#include <string>
 #include <fstream>
+#include <string>
 #include "utils/file/FileSystem.h"
-#include "utils/OptionalUtils.h"
 #include "utils/crypto/EncryptionProvider.h"
 
 namespace org {
@@ -28,7 +27,7 @@ namespace minifi {
 namespace utils {
 namespace file {
 
-FileSystem::FileSystem(bool should_encrypt_on_write, utils::optional<utils::crypto::EncryptionProvider> encryptor)
+FileSystem::FileSystem(bool should_encrypt_on_write, std::optional<utils::crypto::EncryptionProvider> encryptor)
     : should_encrypt_on_write_(should_encrypt_on_write),
       encryptor_(std::move(encryptor)) {
   if (should_encrypt_on_write_ && !encryptor) {
@@ -38,10 +37,10 @@ FileSystem::FileSystem(bool should_encrypt_on_write, utils::optional<utils::cryp
   }
 }
 
-utils::optional<std::string> FileSystem::read(const std::string& file_name) {
+std::optional<std::string> FileSystem::read(const std::string& file_name) {
   std::ifstream input{file_name, std::ios::binary};
   if (!input) {
-    return {};
+    return std::nullopt;
   }
   input.exceptions(std::ios::failbit | std::ios::badbit);
   std::string content{std::istreambuf_iterator<char>(input), {}};

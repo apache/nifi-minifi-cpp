@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-#include <string>
-#include <list>
-#include <vector>
-#include <cstdlib>
-#include <random>
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
+#include <list>
+#include <optional>
+#include <random>
+#include <string>
+#include <vector>
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/StringUtils.h"
@@ -219,7 +220,7 @@ TEST_CASE("TestStringUtils::endsWith", "[test endsWith]") {
 }
 
 TEST_CASE("TestStringUtils::toBool", "[test toBool]") {
-  std::vector<std::pair<std::string, utils::optional<bool>>> cases{
+  std::vector<std::pair<std::string, std::optional<bool>>> cases{
       {"", {}},
       {"true", true},
       {"false", false},

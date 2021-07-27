@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <memory>
 #include <string>
 
 #include <catch.hpp>
@@ -31,24 +32,15 @@ REGISTER_RESOURCE(DummyProcessor, "A processor that does nothing.");
 
 class Fixture {
  public:
-  Fixture();
   core::ProcessSession &processSession() { return *process_session_; }
 
  private:
   TestController test_controller_;
-  std::shared_ptr<TestPlan> test_plan_;
-  std::shared_ptr<core::Processor> dummy_processor_;
-  std::shared_ptr<core::ProcessContext> context_;
-  std::unique_ptr<core::ProcessSession> process_session_;
+  std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan();
+  std::shared_ptr<core::Processor> dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
+  std::shared_ptr<core::ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
+  std::unique_ptr<core::ProcessSession> process_session_ = std::make_unique<core::ProcessSession>(context_);
 };
-
-Fixture::Fixture() {
-  test_plan_ = test_controller_.createPlan();
-  dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
-  test_plan_->runNextProcessor();  // set the dummy processor as current
-  context_ = test_plan_->getCurrentContext();
-  process_session_ = utils::make_unique<core::ProcessSession>(context_);
-}
 
 const core::Relationship Success{"success", "everything is fine"};
 const core::Relationship Failure{"failure", "something has gone awry"};

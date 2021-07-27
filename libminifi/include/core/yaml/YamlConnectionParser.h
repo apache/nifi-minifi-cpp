@@ -45,12 +45,12 @@ class YamlConnectionParser {
       logger_(logger) {}
 
   void configureConnectionSourceRelationshipsFromYaml(const std::shared_ptr<minifi::Connection>& connection) const;
-  uint64_t getWorkQueueSizeFromYaml() const;
-  uint64_t getWorkQueueDataSizeFromYaml() const;
-  utils::Identifier getSourceUUIDFromYaml() const;
-  utils::Identifier getDestinationUUIDFromYaml() const;
-  uint64_t getFlowFileExpirationFromYaml() const;
-  bool getDropEmptyFromYaml() const;
+  [[nodiscard]] uint64_t getWorkQueueSizeFromYaml() const;
+  [[nodiscard]] uint64_t getWorkQueueDataSizeFromYaml() const;
+  [[nodiscard]] utils::Identifier getSourceUUIDFromYaml() const;
+  [[nodiscard]] utils::Identifier getDestinationUUIDFromYaml() const;
+  [[nodiscard]] uint64_t getFlowFileExpirationFromYaml() const;
+  [[nodiscard]] bool getDropEmptyFromYaml() const;
  private:
   const YAML::Node& connectionNode_;
   const std::string& name_;

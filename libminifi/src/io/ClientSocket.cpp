@@ -46,7 +46,6 @@
 #include "io/validation.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
-#include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
 
@@ -175,12 +174,12 @@ Socket::Socket(Socket &&other) noexcept
 
 Socket& Socket::operator=(Socket &&other) noexcept {
   if (&other == this) return *this;
-  requested_hostname_ = util::exchange(other.requested_hostname_, "");
-  canonical_hostname_ = util::exchange(other.canonical_hostname_, "");
-  port_ = util::exchange(other.port_, 0);
-  is_loopback_only_ = util::exchange(other.is_loopback_only_, false);
-  local_network_interface_ = util::exchange(other.local_network_interface_, {});
-  socket_file_descriptor_ = util::exchange(other.socket_file_descriptor_, INVALID_SOCKET);
+  requested_hostname_ = std::exchange(other.requested_hostname_, "");
+  canonical_hostname_ = std::exchange(other.canonical_hostname_, "");
+  port_ = std::exchange(other.port_, 0);
+  is_loopback_only_ = std::exchange(other.is_loopback_only_, false);
+  local_network_interface_ = std::exchange(other.local_network_interface_, {});
+  socket_file_descriptor_ = std::exchange(other.socket_file_descriptor_, INVALID_SOCKET);
   total_list_ = other.total_list_;
   FD_ZERO(&other.total_list_);
   read_fds_ = other.read_fds_;
@@ -191,8 +190,8 @@ Socket& Socket::operator=(Socket &&other) noexcept {
   other.total_written_.exchange(0);
   total_read_.exchange(other.total_read_);
   other.total_read_.exchange(0);
-  listeners_ = util::exchange(other.listeners_, 0);
-  nonBlocking_ = util::exchange(other.nonBlocking_, false);
+  listeners_ = std::exchange(other.listeners_, 0);
+  nonBlocking_ = std::exchange(other.nonBlocking_, false);
   logger_ = other.logger_;
   return *this;
 }

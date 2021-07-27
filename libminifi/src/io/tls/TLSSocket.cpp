@@ -32,7 +32,6 @@
 #include "properties/Configure.h"
 #include "utils/StringUtils.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "utils/tls/TLSUtils.h"
 
@@ -180,13 +179,13 @@ TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::stri
 
 TLSSocket::TLSSocket(TLSSocket &&other)
     : Socket(std::move(other)),
-      context_{ utils::exchange(other.context_, nullptr) } {
+      context_{ std::exchange(other.context_, nullptr) } {
   std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
 
   connected_.exchange(other.connected_.load());
   other.connected_.exchange(false);
-  ssl_ = utils::exchange(other.ssl_, nullptr);
-  ssl_map_ = utils::exchange(other.ssl_map_, {});
+  ssl_ = std::exchange(other.ssl_, nullptr);
+  ssl_map_ = std::exchange(other.ssl_map_, {});
 }
 
 TLSSocket& TLSSocket::operator=(TLSSocket&& other) {
@@ -195,9 +194,9 @@ TLSSocket& TLSSocket::operator=(TLSSocket&& other) {
   std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
   connected_.exchange(other.connected_.load());
   other.connected_.exchange(false);
-  context_ = utils::exchange(other.context_, nullptr);
-  ssl_ = utils::exchange(other.ssl_, nullptr);
-  ssl_map_ = utils::exchange(other.ssl_map_, {});
+  context_ = std::exchange(other.context_, nullptr);
+  ssl_ = std::exchange(other.ssl_, nullptr);
+  ssl_map_ = std::exchange(other.ssl_map_, {});
   return *this;
 }
 

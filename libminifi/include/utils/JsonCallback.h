@@ -16,9 +16,10 @@
  */
 #pragma once
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <utility>
-#include <memory>
 
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"
@@ -34,7 +35,7 @@ namespace utils {
 
 class JsonOutputCallback : public OutputStreamCallback {
  public:
-  explicit JsonOutputCallback(rapidjson::Document&& root, utils::optional<uint8_t> decimal_places)
+  explicit JsonOutputCallback(rapidjson::Document&& root, std::optional<uint8_t> decimal_places)
       : root_(std::move(root)), decimal_places_(decimal_places) {}
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
@@ -48,12 +49,12 @@ class JsonOutputCallback : public OutputStreamCallback {
 
  protected:
   rapidjson::Document root_;
-  utils::optional<uint8_t> decimal_places_;
+  std::optional<uint8_t> decimal_places_;
 };
 
 class PrettyJsonOutputCallback : public OutputStreamCallback {
  public:
-  explicit PrettyJsonOutputCallback(rapidjson::Document&& root, utils::optional<uint8_t> decimal_places)
+  explicit PrettyJsonOutputCallback(rapidjson::Document&& root, std::optional<uint8_t> decimal_places)
       : root_(std::move(root)), decimal_places_(decimal_places) {}
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
@@ -67,7 +68,7 @@ class PrettyJsonOutputCallback : public OutputStreamCallback {
 
  protected:
   rapidjson::Document root_;
-  utils::optional<uint8_t> decimal_places_;
+  std::optional<uint8_t> decimal_places_;
 };
 
 }  // namespace utils

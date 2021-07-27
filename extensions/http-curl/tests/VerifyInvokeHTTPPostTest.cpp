@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <optional>
+
 #include "VerifyInvokeHTTP.h"
 
 #include "HTTPHandlers.h"
@@ -42,7 +44,7 @@ class VerifyInvokeHTTPOK200Response : public VerifyInvokeHTTP {
 
 class VerifyInvokeHTTPRedirectResponse : public VerifyInvokeHTTP {
  public:
-  void setupFlow(const utils::optional<std::string>& flow_yml_path) override {
+  void setupFlow(const std::optional<std::string>& flow_yml_path) override {
     VerifyInvokeHTTP::setupFlow(flow_yml_path);
     setProperty(minifi::processors::InvokeHTTP::FollowRedirects.getName(), "false");
   }

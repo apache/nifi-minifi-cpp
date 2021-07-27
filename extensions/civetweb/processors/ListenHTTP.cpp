@@ -20,10 +20,11 @@
  */
 #include "ListenHTTP.h"
 
+#include <memory>
 #include <set>
-#include <vector>
-#include <utility>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "utils/gsl.h"
 
@@ -475,7 +476,7 @@ void ListenHTTP::Handler::writeBody(mg_connection *conn, const mg_request_info *
 }
 
 std::unique_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info) {
-  auto content_buffer = utils::make_unique<io::BufferStream>();
+  auto content_buffer = std::make_unique<io::BufferStream>();
   size_t nlen = 0;
   int64_t tlen = req_info->content_length;
   uint8_t buf[16384];

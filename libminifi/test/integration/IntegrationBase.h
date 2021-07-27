@@ -20,8 +20,9 @@
 #define DEFAULT_WAITTIME_MSECS 3000
 
 #include <memory>
-#include <utility>
+#include <optional>
 #include <string>
+#include <utility>
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
@@ -33,7 +34,6 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "HTTPUtils.h"
-#include "utils/OptionalUtils.h"
 
 class IntegrationBase {
  public:
@@ -41,7 +41,7 @@ class IntegrationBase {
 
   virtual ~IntegrationBase() = default;
 
-  virtual void run(const utils::optional<std::string>& test_file_location = {}, const utils::optional<std::string>& bootstrap_file = {});
+  virtual void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& bootstrap_file = {});
 
   void setKeyDir(const std::string key_dir) {
     this->key_dir = key_dir;
@@ -102,7 +102,7 @@ void IntegrationBase::configureSecurity() {
   }
 }
 
-void IntegrationBase::run(const utils::optional<std::string>& test_file_location, const utils::optional<std::string>& home_path) {
+void IntegrationBase::run(const std::optional<std::string>& test_file_location, const std::optional<std::string>& home_path) {
   testSetup();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();

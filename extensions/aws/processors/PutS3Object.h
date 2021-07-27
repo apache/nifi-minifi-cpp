@@ -20,18 +20,19 @@
 
 #pragma once
 
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
 #include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
-#include <memory>
-#include <string>
-#include <set>
-#include <map>
-#include <algorithm>
 
 #include "S3Processor.h"
-#include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
+#include "utils/Id.h"
 
 template<typename T>
 class S3TestsFixture;
@@ -115,7 +116,7 @@ class PutS3Object : public S3Processor {
     const minifi::aws::s3::PutObjectRequestParameters& options_;
     aws::s3::S3Wrapper& s3_wrapper_;
     uint64_t read_size_ = 0;
-    minifi::utils::optional<minifi::aws::s3::PutObjectResult> result_ = minifi::utils::nullopt;
+    std::optional<minifi::aws::s3::PutObjectResult> result_;
   };
 
  private:
@@ -138,7 +139,7 @@ class PutS3Object : public S3Processor {
     const std::shared_ptr<core::FlowFile> &flow_file,
     const aws::s3::PutObjectRequestParameters &put_s3_request_params,
     const minifi::aws::s3::PutObjectResult &put_object_result) const;
-  minifi::utils::optional<aws::s3::PutObjectRequestParameters> buildPutS3RequestParams(
+  std::optional<aws::s3::PutObjectRequestParameters> buildPutS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const;

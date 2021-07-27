@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <optional>
+
 #include "S3RequestSender.h"
 
 namespace org {
@@ -30,7 +32,7 @@ namespace s3 {
 
 class S3ClientRequestSender : public S3RequestSender {
  public:
-  minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
+  std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
@@ -38,23 +40,23 @@ class S3ClientRequestSender : public S3RequestSender {
     const Aws::S3::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
+  std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
     const Aws::S3::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
+  std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
     const Aws::S3::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
+  std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
     const Aws::S3::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
+  std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
     const Aws::S3::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;
-  minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
+  std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) override;

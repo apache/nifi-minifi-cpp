@@ -20,12 +20,12 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 
 #include "aws/core/auth/AWSCredentials.h"
 #include "utils/AWSInitializer.h"
-#include "utils/OptionalUtils.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -47,7 +47,7 @@ class AWSCredentialsProvider {
   void setSecretKey(const std::string &secret_key);
   void setCredentialsFile(const std::string &credentials_file);
   bool getUseDefaultCredentials() const;
-  minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
+  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 
  private:
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();

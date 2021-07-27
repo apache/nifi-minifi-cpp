@@ -17,34 +17,25 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
 
-#include <string>
-#include <utility>
-#include <iostream>
+#include <algorithm>
 #include <cstring>
 #include <functional>
+#include <iostream>
+#include <map>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 #ifdef WIN32
   #include <cwctype>
   #include <cctype>
 #endif
-#include <algorithm>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <type_traits>
 #include "utils/FailurePolicy.h"
-#include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
-#include "utils/OptionalUtils.h"
 
-#if defined(WIN32) || (__cplusplus >= 201103L && (!defined(__GLIBCXX__) || (__cplusplus >= 201402L) ||  (defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE > 4)))
-#define HAVE_REGEX_CPP 1
-#else
-#define HAVE_REGEX_CPP 0
-#endif
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 namespace utils {
 
 template<class Char>
@@ -79,7 +70,7 @@ class StringUtils {
    * @param input input string
    * @returns an optional of a boolean: true if the string is "true" (ignoring case), false if it is "false" (ignoring case), nullopt for any other value
    */
-  static utils::optional<bool> toBool(const std::string& input);
+  static std::optional<bool> toBool(const std::string& input);
 
   static std::string toLower(std::string str);
 
@@ -196,16 +187,6 @@ class StringUtils {
   static size_t size(const CharT* str) noexcept { return std::char_traits<CharT>::length(str); }
 
   struct detail {
-    // add all args
-    template<typename... SizeT>
-    static size_t sum(SizeT... ns) {
-      size_t result = 0;
-      (void)(std::initializer_list<size_t>{( result += ns )...});
-      return result;  // (ns + ...)
-    }
-
-#ifndef _MSC_VER
-
     // partial detection idiom impl, from cppreference.com
     struct nonesuch{};
 
@@ -216,25 +197,13 @@ class StringUtils {
     };
 
     template<typename Default, template<class...> class Op, typename... Args>
-    struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
+    struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
       using value_t = std::true_type;
       using type = Op<Args...>;
     };
 
     template<template<class...> class Op, typename... Args>
     using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
-
-    // and operation for boolean template argument packs
-    template<bool...>
-    struct and_;
-
-    template<bool Head, bool... Tail>
-    struct and_<Head, Tail...> : std::integral_constant<bool, Head && and_<Tail...>::value>
-    {};
-
-    template<bool B>
-    struct and_<B> : std::integral_constant<bool, B>
-    {};
 
     // implementation detail of join_pack
     template<typename CharT>
@@ -244,18 +213,13 @@ class StringUtils {
     };
 
     template<typename ResultT, typename CharT, typename... Strs>
-    using valid_string_pack_t = typename std::enable_if<and_<is_detected<str_detector<CharT>::template valid_string_t, Strs>::value...>::value, ResultT>::type;
-#else
-    // MSVC is broken without /permissive-
-  template<typename ResultT, typename...>
-  using valid_string_pack_t = ResultT;
-#endif
+    using valid_string_pack_t = std::enable_if_t<(is_detected<str_detector<CharT>::template valid_string_t, Strs>::value && ...), ResultT>;
 
     template<typename CharT, typename... Strs, valid_string_pack_t<void, CharT, Strs...>* = nullptr>
     static std::basic_string<CharT> join_pack(const Strs&... strs) {
       std::basic_string<CharT> result;
-      result.reserve(sum(size(strs)...));
-      (void)(std::initializer_list<int>{( result.append(strs) , 0)...});
+      result.reserve((size(strs) + ...));
+      (result.append(strs), ...);
       return result;
     }
   }; /* struct detail */
@@ -610,9 +574,6 @@ enum TimeUnit {
 };
 
 }  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_

@@ -95,11 +95,11 @@ void Arguments::set(const std::string& flag) {
   flags_.insert(flag);
 }
 
-utils::optional<std::string> Arguments::get(const std::string &key) const {
+std::optional<std::string> Arguments::get(const std::string &key) const {
   return getArg(key) | utils::flatMap([&] (const Argument& arg) {return get(arg);});
 }
 
-utils::optional<std::string> Arguments::get(const Argument& arg) const {
+std::optional<std::string> Arguments::get(const Argument& arg) const {
   for (const auto& name : arg.names) {
     auto it = args_.find(name);
     if (it != args_.end()) {
@@ -110,7 +110,7 @@ utils::optional<std::string> Arguments::get(const Argument& arg) const {
 }
 
 bool Arguments::isSet(const std::string &flag) const {
-  utils::optional<Flag> opt_flag = getFlag(flag);
+  std::optional<Flag> opt_flag = getFlag(flag);
   if (!opt_flag) {
     return false;
   }
@@ -147,7 +147,7 @@ Arguments Arguments::parse(int argc, char* argv[]) {
   return args;
 }
 
-utils::optional<Flag> Arguments::getFlag(const std::string &name) {
+std::optional<Flag> Arguments::getFlag(const std::string &name) {
   for (const auto& flag : registered_flags_) {
     if (flag.names.count(name) > 0) {
       return flag;
@@ -156,7 +156,7 @@ utils::optional<Flag> Arguments::getFlag(const std::string &name) {
   return {};
 }
 
-utils::optional<Argument> Arguments::getArg(const std::string &key) {
+std::optional<Argument> Arguments::getArg(const std::string &key) {
   for (const auto& arg : registered_args_) {
     if (arg.names.count(key) > 0) {
       return arg;

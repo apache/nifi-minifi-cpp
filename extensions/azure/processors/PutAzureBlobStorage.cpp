@@ -183,7 +183,7 @@ void PutAzureBlobStorage::createAzureStorageClient(const std::string &connection
   // When used in multithreaded environment make sure to use the azure_storage_mutex_ to lock the wrapper so the
   // client is not reset with different configuration while another thread is using it.
   if (blob_storage_wrapper_ == nullptr) {
-    blob_storage_wrapper_ = minifi::utils::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
+    blob_storage_wrapper_ = std::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
     return;
   }
 
@@ -229,7 +229,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
     return;
   }
 
-  utils::optional<azure::storage::UploadBlobResult> upload_result;
+  std::optional<azure::storage::UploadBlobResult> upload_result;
   {
     std::lock_guard<std::mutex> lock(azure_storage_mutex_);
     createAzureStorageClient(connection_string, container_name);

@@ -37,7 +37,7 @@ class LogBuffer {
   explicit LogBuffer(std::unique_ptr<io::BufferStream> buffer): buffer_{std::move(buffer)} {}
 
   static LogBuffer allocate(size_t max_size) {
-    LogBuffer instance{utils::make_unique<io::BufferStream>()};
+    LogBuffer instance{std::make_unique<io::BufferStream>()};
     instance.buffer_->extend(max_size);
     return instance;
   }

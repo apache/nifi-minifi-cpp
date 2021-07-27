@@ -28,7 +28,7 @@ namespace minifi {
 namespace aws {
 namespace s3 {
 
-minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::sendPutObjectRequest(
+std::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
@@ -40,7 +40,7 @@ minifi::utils::optional<Aws::S3::Model::PutObjectResult> S3ClientRequestSender::
       return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("PutS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 }
 
@@ -63,7 +63,7 @@ bool S3ClientRequestSender::sendDeleteObjectRequest(
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::sendGetObjectRequest(
+std::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::sendGetObjectRequest(
     const Aws::S3::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
@@ -75,11 +75,11 @@ minifi::utils::optional<Aws::S3::Model::GetObjectResult> S3ClientRequestSender::
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("FetchS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSender::sendListObjectsRequest(
+std::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSender::sendListObjectsRequest(
     const Aws::S3::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
@@ -91,11 +91,11 @@ minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> S3ClientRequestSend
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("ListObjectsV2 failed with the following: '%s'", outcome.GetError().GetMessage());
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientRequestSender::sendListVersionsRequest(
+std::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientRequestSender::sendListVersionsRequest(
     const Aws::S3::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
@@ -107,11 +107,11 @@ minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> S3ClientReques
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("ListObjectVersions failed with the following: '%s'", outcome.GetError().GetMessage());
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestSender::sendGetObjectTaggingRequest(
+std::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestSender::sendGetObjectTaggingRequest(
     const Aws::S3::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
@@ -123,11 +123,11 @@ minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> S3ClientRequestS
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("GetObjectTagging failed with the following: '%s'", outcome.GetError().GetMessage());
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 }
 
-minifi::utils::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadObjectRequest(
+std::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender::sendHeadObjectRequest(
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) {
@@ -139,7 +139,7 @@ minifi::utils::optional<Aws::S3::Model::HeadObjectResult> S3ClientRequestSender:
     return outcome.GetResultWithOwnership();
   } else {
     logger_->log_error("HeadS3Object failed with the following: '%s'", outcome.GetError().GetMessage());
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 }
 

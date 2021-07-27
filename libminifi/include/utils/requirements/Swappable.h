@@ -37,7 +37,7 @@ struct is_swappable_with_impl: std::false_type {};
 
 template<typename T, typename U>
 struct is_swappable_with_impl<T, U,
-    void_t<decltype(
+    std::void_t<decltype(
       swap(std::declval<T>(), std::declval<U>()),
       swap(std::declval<U>(), std::declval<T>()))
     >> : std::true_type {};

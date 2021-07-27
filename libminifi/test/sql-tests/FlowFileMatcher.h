@@ -19,10 +19,11 @@
 #pragma once
 
 #include <functional>
-#include <vector>
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "../TestBase.h"
 #include "core/FlowFile.h"
@@ -34,14 +35,14 @@ struct AttributeValue {
   explicit AttributeValue(const char* value)
       : value{value} {}
 
-  AttributeValue(std::string value, utils::optional<std::string>& capture)
+  AttributeValue(std::string value, std::optional<std::string>& capture)
       : value{std::move(value)}, capture{&capture} {}
 
   std::string value;
-  utils::optional<std::string>* capture{nullptr};
+  std::optional<std::string>* capture{nullptr};
 };
 
-AttributeValue capture(utils::optional<std::string>& value) {
+AttributeValue capture(std::optional<std::string>& value) {
   return {"", value};
 }
 

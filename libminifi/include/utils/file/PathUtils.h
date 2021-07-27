@@ -21,10 +21,10 @@
 #include <cctype>
 #include <cinttypes>
 #include <memory>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <utility>
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -64,7 +64,7 @@ inline bool isAbsolutePath(const char* const path) noexcept {
 #endif
 }
 
-inline utils::optional<std::string> canonicalize(const std::string &path) {
+inline std::optional<std::string> canonicalize(const std::string &path) {
   const char *resolved = nullptr;
 #ifndef WIN32
   char full_path[PATH_MAX];
@@ -74,7 +74,7 @@ inline utils::optional<std::string> canonicalize(const std::string &path) {
 #endif
 
   if (resolved == nullptr) {
-    return utils::nullopt;
+    return std::nullopt;
   }
   return std::string(path);
 }

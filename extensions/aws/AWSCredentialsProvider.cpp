@@ -60,7 +60,7 @@ void AWSCredentialsProvider::setCredentialsFile(const std::string &credentials_f
   credentials_file_ = credentials_file;
 }
 
-minifi::utils::optional<Aws::Auth::AWSCredentials> AWSCredentialsProvider::getAWSCredentials() {
+std::optional<Aws::Auth::AWSCredentials> AWSCredentialsProvider::getAWSCredentials() {
   if (use_default_credentials_) {
     logger_->log_debug("Trying to use default AWS credentials provider chain.");
     auto creds = Aws::Auth::DefaultAWSCredentialsProviderChain().GetAWSCredentials();
@@ -88,7 +88,7 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> AWSCredentialsProvider::getAW
   }
 
   logger_->log_debug("No AWS credentials were set.");
-  return minifi::utils::nullopt;
+  return std::nullopt;
 }
 
 }  // namespace aws

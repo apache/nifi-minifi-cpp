@@ -19,12 +19,12 @@
 
 #include <sodium.h>
 
+#include <optional>
 #include <stdexcept>
 
 #include "ConfigFile.h"
 #include "ConfigFileEncryptor.h"
 #include "utils/file/FileUtils.h"
-#include "utils/OptionalUtils.h"
 #include "Defaults.h"
 
 namespace {
@@ -58,7 +58,7 @@ EncryptConfig::EncryptionType EncryptConfig::encryptSensitiveProperties() const 
 
 void EncryptConfig::encryptFlowConfig() const {
   encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
-  utils::optional<std::string> config_path = properties_file.getValue(Configure::nifi_flow_configuration_file);
+  std::optional<std::string> config_path = properties_file.getValue(Configure::nifi_flow_configuration_file);
   if (!config_path) {
     config_path = utils::file::PathUtils::resolve(minifi_home_, "conf/config.yml");
     std::cout << "Couldn't find path of configuration file, using default: \"" << *config_path << "\"\n";
@@ -115,8 +115,8 @@ std::string EncryptConfig::propertiesFilePath() const {
 
 EncryptionKeys EncryptConfig::getEncryptionKeys() const {
   encrypt_config::ConfigFile bootstrap_file{std::ifstream{bootstrapFilePath()}};
-  utils::optional<std::string> decryption_key_hex = bootstrap_file.getValue(OLD_KEY_PROPERTY_NAME);
-  utils::optional<std::string> encryption_key_hex = bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME);
+  std::optional<std::string> decryption_key_hex = bootstrap_file.getValue(OLD_KEY_PROPERTY_NAME);
+  std::optional<std::string> encryption_key_hex = bootstrap_file.getValue(ENCRYPTION_KEY_PROPERTY_NAME);
 
   EncryptionKeys keys;
   if (decryption_key_hex && !decryption_key_hex->empty()) {

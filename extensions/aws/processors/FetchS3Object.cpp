@@ -65,7 +65,7 @@ void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
   logger_->log_debug("FetchS3Object: RequesterPays [%s]", requester_pays_ ? "true" : "false");
 }
 
-minifi::utils::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(
+std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const {
@@ -76,7 +76,7 @@ minifi::utils::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buil
   context->getProperty(ObjectKey, get_object_params.object_key, flow_file);
   if (get_object_params.object_key.empty() && (!flow_file->getAttribute("filename", get_object_params.object_key) || get_object_params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   logger_->log_debug("FetchS3Object: Object Key [%s]", get_object_params.object_key);
 

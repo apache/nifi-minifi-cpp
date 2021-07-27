@@ -104,7 +104,7 @@ void RetryFlowFile::onTrigger(core::ProcessContext* context, core::ProcessSessio
     return;
   }
 
-  utils::optional<uint64_t> maybe_retry_property_value = getRetryPropertyValue(flow_file);
+  const auto maybe_retry_property_value = getRetryPropertyValue(flow_file);
   if (!maybe_retry_property_value) {
     session->transfer(flow_file, Failure);
     return;
@@ -154,22 +154,22 @@ void RetryFlowFile::readDynamicPropertyKeys(core::ProcessContext* context) {
   }
 }
 
-utils::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const {
+std::optional<uint64_t> RetryFlowFile::getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const {
   std::string value_as_string;
   flow_file->getAttribute(retry_attribute_, value_as_string);
   uint64_t value;
   try {
     utils::internal::ValueParser(value_as_string).parse(value).parseEnd();
-    return utils::make_optional<uint64_t>(value);
+    return value;
   }
   catch(const utils::internal::ParseException&) {
     if (fail_on_non_numerical_overwrite_) {
       logger_->log_info("Non-numerical retry property in RetryFlowFile (value: %s). Sending flowfile to failure...", value_as_string);
-      return {};
+      return std::nullopt;
     }
   }
   logger_->log_info("Non-numerical retry property in RetryFlowFile: overwriting %s with 0.", value_as_string);
-  return utils::make_optional<uint64_t>(0);
+  return 0;
 }
 
 void RetryFlowFile::setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<core::FlowFile>& flow_file) const {

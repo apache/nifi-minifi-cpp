@@ -19,11 +19,10 @@
  */
 #pragma once
 
+#include <optional>
 #include <string>
-#include <vector>
 #include <utility>
-
-#include "utils/OptionalUtils.h"
+#include <vector>
 
 namespace org {
 namespace apache {
@@ -48,7 +47,7 @@ class BlobStorage {
 
   virtual void createContainer() = 0;
   virtual void resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) = 0;
-  virtual utils::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) = 0;
+  virtual std::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) = 0;
   virtual ~BlobStorage() = default;
 
  protected:

@@ -18,15 +18,16 @@
 
 #include "c2/C2Agent.h"
 
+#include <cinttypes>
 #include <cstdio>
 #include <csignal>
-#include <utility>
 #include <limits>
-#include <vector>
 #include <map>
-#include <string>
 #include <memory>
-#include <cinttypes>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "c2/ControllerSocketProtocol.h"
 #include "core/ProcessContext.h"
@@ -38,11 +39,9 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
 #include "utils/file/FileSystem.h"
-#include "utils/GeneralUtils.h"
 #include "utils/HTTPClient.h"
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
-#include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
 
 namespace org {
@@ -95,8 +94,7 @@ void C2Agent::start() {
   for (const auto& function : functions_) {
     utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
     task_ids_.push_back(uuid);
-    auto monitor = utils::make_unique<utils::ComplexMonitor>();
-    utils::Worker<utils::TaskRescheduleInfo> functor(function, uuid.to_string(), std::move(monitor));
+    utils::Worker<utils::TaskRescheduleInfo> functor(function, uuid.to_string(), std::make_unique<utils::ComplexMonitor>());
     std::future<utils::TaskRescheduleInfo> future;
     thread_pool_.execute(std::move(functor), future);
   }
@@ -659,10 +657,10 @@ utils::TaskRescheduleInfo C2Agent::consume() {
   return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
 }
 
-utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
+std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   if (!utils::StringUtils::startsWith(uri, "http") || protocol_.load() == nullptr) {
     // try to open the file
-    utils::optional<std::string> content = filesystem_->read(uri);
+    auto content = filesystem_->read(uri);
     if (content) {
       return content;
     }
@@ -688,7 +686,7 @@ utils::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
       utils::URL base_url{utils::StringUtils::trim(base)};
       if (!base_url.isValid()) {
         logger_->log_error("Could not parse C2 REST URL '%s'", base);
-        return {};
+        return std::nullopt;
       }
       resolved_url = base_url.hostPort() + "/c2/api/" + uri;
     }
@@ -709,7 +707,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
 
   if (url != resp.operation_arguments.end()) {
     file_uri = url->second.to_string();
-    utils::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
+    std::optional<std::string> optional_configuration_str = fetchFlow(file_uri);
     if (!optional_configuration_str) {
       logger_->log_error("Couldn't load new flow configuration from: \"%s\"", file_uri);
       C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);

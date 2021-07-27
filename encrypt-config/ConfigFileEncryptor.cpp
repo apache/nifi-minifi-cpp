@@ -18,6 +18,7 @@
 #include "ConfigFileEncryptor.h"
 
 #include <iostream>
+#include <optional>
 #include <string>
 
 #include "utils/StringUtils.h"
@@ -28,7 +29,7 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-bool isEncrypted(const utils::optional<std::string>& encryption_type) {
+bool isEncrypted(const std::optional<std::string>& encryption_type) {
   return encryption_type && !encryption_type->empty() && *encryption_type  != "plaintext";
 }
 
@@ -40,11 +41,11 @@ uint32_t encryptSensitivePropertiesInFile(ConfigFile& config_file, const Encrypt
   int num_properties_encrypted = 0;
 
   for (const auto& property_key : config_file.getSensitiveProperties()) {
-    utils::optional<std::string> property_value = config_file.getValue(property_key);
+    std::optional<std::string> property_value = config_file.getValue(property_key);
     if (!property_value) { continue; }
 
     std::string encryption_type_key = property_key + ".protected";
-    utils::optional<std::string> encryption_type = config_file.getValue(encryption_type_key);
+    std::optional<std::string> encryption_type = config_file.getValue(encryption_type_key);
 
     std::string raw_value = *property_value;
     if (isEncrypted(encryption_type)) {

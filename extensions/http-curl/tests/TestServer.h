@@ -61,13 +61,13 @@ class TestServer{
     const std::vector<std::string> cpp_options{ "document_root", ".", "listening_ports", port, "error_log_file",
                               "error.log", "ssl_certificate", ca_cert, "ssl_protocol_version", "4", "ssl_cipher_list",
                               "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no"};
-    server_ = utils::make_unique<CivetServer>(cpp_options, callbacks);
+    server_ = std::make_unique<CivetServer>(cpp_options, callbacks);
     addHandler(rooturi, handler);
   }
 
   TestServer(const std::string& port, const std::string& rooturi, CivetHandler* handler) {
     const std::vector<std::string> cpp_options{"document_root", ".", "listening_ports", port};
-    server_ = utils::make_unique<CivetServer>(cpp_options);
+    server_ = std::make_unique<CivetServer>(cpp_options);
     addHandler(rooturi, handler);
   }
 

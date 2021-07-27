@@ -24,8 +24,6 @@
 #include <string>
 #include <memory>
 
-#include "utils/GeneralUtils.h"
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -149,13 +147,13 @@ std::unique_ptr<MockRowset> MockRowset::select(const std::vector<std::string>& c
 
   std::unique_ptr<MockRowset> rowset;
   if (cols.empty()) {
-    rowset = utils::make_unique<MockRowset>(column_names_, column_types_);
+    rowset = std::make_unique<MockRowset>(column_names_, column_types_);
   } else {
     std::vector<DataType> col_types;
     for (const auto& col : cols) {
       col_types.push_back(column_types_.at(getColumnIndex(col)));
     }
-    rowset = utils::make_unique<MockRowset>(cols, col_types);
+    rowset = std::make_unique<MockRowset>(cols, col_types);
   }
 
   std::vector<std::string> used_cols = cols.empty() ? column_names_ : cols;
@@ -402,11 +400,11 @@ bool MockODBCConnection::connected(std::string& /*exception*/) const {
 }
 
 std::unique_ptr<sql::Statement> MockODBCConnection::prepareStatement(const std::string& query) const {
-  return utils::make_unique<sql::MockStatement>(query, file_path_);
+  return std::make_unique<sql::MockStatement>(query, file_path_);
 }
 
 std::unique_ptr<Session> MockODBCConnection::getSession() const {
-  return utils::make_unique<sql::MockSession>();
+  return std::make_unique<sql::MockSession>();
 }
 
 } /* namespace sql */

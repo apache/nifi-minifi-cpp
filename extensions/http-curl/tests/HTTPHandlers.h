@@ -19,11 +19,12 @@
 
 #include <algorithm>
 #include <cinttypes>
-#include <utility>
-#include <memory>
-#include <string>
-#include <vector>
 #include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "civetweb.h"
 #include "CivetServer.h"
@@ -509,7 +510,7 @@ class C2UpdateHandler : public C2FlowProvider {
     return true;
   }
 
-  void setC2RestResponse(const std::string& url, const std::string& name, const utils::optional<std::string>& persist = {}) {
+  void setC2RestResponse(const std::string& url, const std::string& name, const std::optional<std::string>& persist = {}) {
     std::string content = "{\"location\": \"" + url + "\"";
     if (persist) {
       content += ", \"persist\": \"" + *persist + "\"";

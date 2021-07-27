@@ -19,14 +19,15 @@
  */
 #include "ThreadedSchedulingAgent.h"
 
-#include <memory>
-#include <string>
-#include <vector>
-#include <utility>
-#include <map>
-#include <thread>
-#include <iostream>
 #include <cinttypes>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <thread>
+#include <utility>
+#include <vector>
 
 #include "core/ClassLoader.h"
 #include "core/Connectable.h"
@@ -35,9 +36,7 @@
 #include "core/ProcessContextBuilder.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
-#include "utils/GeneralUtils.h"
 #include "utils/ValueParser.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -51,7 +50,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
   std::string yieldValue;
 
   if (configure_->get(Configure::nifi_administrative_yield_duration, yieldValue)) {
-    utils::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
+    std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       admin_yield_duration_ = value->getMilliseconds();
       logger_->log_debug("nifi_administrative_yield_duration: [%" PRId64 "] ms", admin_yield_duration_);
@@ -60,7 +59,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
 
   bored_yield_duration_ = 0;
   if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
-    utils::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
+    std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       bored_yield_duration_ = value->getMilliseconds();
       logger_->log_debug("nifi_bored_yield_duration: [%" PRId64 "] ms", bored_yield_duration_);
@@ -102,8 +101,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     };
 
     // create a functor that will be submitted to the thread pool.
-    auto monitor = utils::make_unique<utils::ComplexMonitor>();
-    utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, processor->getUUIDStr(), std::move(monitor));
+    utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, processor->getUUIDStr(), std::make_unique<utils::ComplexMonitor>());
     // move the functor into the thread pool. While a future is returned
     // we aren't terribly concerned with the result.
     std::future<utils::TaskRescheduleInfo> future;

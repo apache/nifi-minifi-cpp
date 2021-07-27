@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 
 #include "core/logging/internal/CompressionManager.h"
 #include "core/logging/internal/LogCompressorSink.h"
@@ -36,7 +37,7 @@ namespace internal {
 
 std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
     const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const LoggerFactory& logger_factory) {
-  auto get_size = [&] (const char* const property_name) -> utils::optional<size_t> {
+  const auto get_size = [&] (const char* const property_name) -> std::optional<size_t> {
     auto size_str = properties->getString(property_name);
     if (!size_str) return {};
     size_t value;
@@ -46,7 +47,7 @@ std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
     if (error_logger) {
       error_logger->log_error("Invalid format for %s", property_name);
     }
-    return {};
+    return std::nullopt;
   };
   auto cached_log_max_size = get_size(compression_cached_log_max_size_).value_or(8_MiB);
   auto compressed_log_max_size = get_size(compression_compressed_log_max_size_).value_or(8_MiB);

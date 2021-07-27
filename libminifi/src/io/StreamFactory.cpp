@@ -19,10 +19,8 @@
 
 #include <atomic>
 #include <memory>
-#include <mutex>
 #include <string>
 
-#include "utils/GeneralUtils.h"
 #ifdef OPENSSL_SUPPORT
 #include "io/tls/TLSSocket.h"
 #endif
@@ -65,7 +63,7 @@ class SocketCreator : public AbstractStreamFactory {
 #ifdef OPENSSL_SUPPORT
     if (ssl_service != nullptr) {
       auto context = std::make_shared<TLSContext>(configuration_, ssl_service);
-      return utils::make_unique<TLSSocket>(context, host, port);
+      return std::make_unique<TLSSocket>(context, host, port);
     }
 #endif /* OPENSSL_SUPPORT */
     return nullptr;

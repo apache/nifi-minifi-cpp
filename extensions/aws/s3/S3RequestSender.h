@@ -19,8 +19,9 @@
  */
 #pragma once
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 
 #include "aws/core/auth/AWSCredentials.h"
 #include "aws/core/client/ClientConfiguration.h"
@@ -40,7 +41,6 @@
 #include "aws/s3/model/HeadObjectResult.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/OptionalUtils.h"
 #include "utils/AWSInitializer.h"
 
 namespace org {
@@ -59,7 +59,7 @@ struct ProxyOptions {
 
 class S3RequestSender {
  public:
-  virtual minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
+  virtual std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
@@ -67,23 +67,23 @@ class S3RequestSender {
     const Aws::S3::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
+  virtual std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
     const Aws::S3::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
+  virtual std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
     const Aws::S3::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
+  virtual std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
     const Aws::S3::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
+  virtual std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
     const Aws::S3::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;
-  virtual minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
+  virtual std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
     const Aws::Client::ClientConfiguration& client_config) = 0;

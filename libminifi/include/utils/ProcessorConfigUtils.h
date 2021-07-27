@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include <vector>
-#include <string>
+#include <optional>
 #include <set>
+#include <string>
+#include <vector>
 
 #include "core/ProcessContext.h"
 
@@ -34,7 +35,7 @@ std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessConte
 std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext* context, const std::string& property_name);
 bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::string& property_name);
 std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* context, const std::string& property_name);
-utils::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name);
+std::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name);
 std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values);
 
 }  // namespace utils

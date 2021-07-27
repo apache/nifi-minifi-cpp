@@ -19,9 +19,10 @@
  */
 #pragma once
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <vector>
-#include <memory>
 
 #include "BlobStorage.h"
 #include "azure/storage/blobs.hpp"
@@ -40,7 +41,7 @@ class AzureBlobStorage : public BlobStorage {
   AzureBlobStorage(std::string connection_string, std::string container_name);
   void createContainer() override;
   void resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) override;
-  utils::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) override;
+  std::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) override;
 
  private:
   std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> container_client_;

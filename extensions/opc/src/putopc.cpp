@@ -17,11 +17,12 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <string>
 #include <list>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <optional>
 #include <thread>
 
 #include "opc.h"
@@ -301,7 +302,7 @@ namespace processors {
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
-            utils::optional<bool> contentstr_parsed = utils::StringUtils::toBool(contentstr);
+            const auto contentstr_parsed = utils::StringUtils::toBool(contentstr);
             if (contentstr_parsed) {
               sc = connection_->update_node(targetnode, contentstr_parsed.value());
             } else {
@@ -378,7 +379,7 @@ namespace processors {
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
-            utils::optional<bool> contentstr_parsed = utils::StringUtils::toBool(contentstr);
+            const auto contentstr_parsed = utils::StringUtils::toBool(contentstr);
             if (contentstr_parsed) {
               sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr_parsed.value(), nodeDataType_, &resultnode);
             } else {

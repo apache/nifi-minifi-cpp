@@ -469,7 +469,7 @@ std::vector<std::pair<std::string, std::string>> ConsumeKafka::get_flowfile_attr
 void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileRecord>& flow_file, const rd_kafka_message_t& message) const {
   // We do not currently support batching messages into a single flowfile
   flow_file->setAttribute(KAFKA_COUNT_ATTR, "1");
-  const utils::optional<std::string> message_key = utils::get_encoded_message_key(message, key_attr_encoding_attr_to_enum());
+  const std::optional<std::string> message_key = utils::get_encoded_message_key(message, key_attr_encoding_attr_to_enum());
   if (message_key) {
     flow_file->setAttribute(KAFKA_MESSAGE_KEY_ATTR, message_key.value());
   }
@@ -478,7 +478,7 @@ void ConsumeKafka::add_kafka_attributes_to_flowfile(std::shared_ptr<FlowFileReco
   flow_file->setAttribute(KAFKA_TOPIC_ATTR, rd_kafka_topic_name(message.rkt));
 }
 
-utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transform_pending_messages_into_flowfiles(core::ProcessSession& session) const {
+std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transform_pending_messages_into_flowfiles(core::ProcessSession& session) const {
   std::vector<std::shared_ptr<FlowFileRecord>> flow_files_created;
   for (const auto& message : pending_messages_) {
     std::string message_content = extract_message(*message);
@@ -508,7 +508,7 @@ utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::tran
 
 
 void ConsumeKafka::process_pending_messages(core::ProcessSession& session) {
-  utils::optional<std::vector<std::shared_ptr<FlowFileRecord>>> flow_files_created = transform_pending_messages_into_flowfiles(session);
+  std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> flow_files_created = transform_pending_messages_into_flowfiles(session);
   if (!flow_files_created) {
     return;
   }

@@ -20,17 +20,17 @@
 
 #pragma once
 
+#include <memory>
+#include <optional>
+#include <string>
 #include <utility>
 #include <vector>
-#include <string>
-#include <memory>
 
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/BlobStorage.h"
-#include "utils/OptionalUtils.h"
 
 class PutAzureBlobStorageTestsFixture;
 
@@ -92,7 +92,7 @@ class PutAzureBlobStorage : public core::Processor {
       return result_->length;
     }
 
-    utils::optional<azure::storage::UploadBlobResult> getResult() const {
+    std::optional<azure::storage::UploadBlobResult> getResult() const {
       return result_;
     }
 
@@ -100,7 +100,7 @@ class PutAzureBlobStorage : public core::Processor {
     uint64_t flow_size_;
     azure::storage::BlobStorage &blob_storage_wrapper_;
     std::string blob_name_;
-    utils::optional<azure::storage::UploadBlobResult> result_ = utils::nullopt;
+    std::optional<azure::storage::UploadBlobResult> result_ = std::nullopt;
   };
 
  private:

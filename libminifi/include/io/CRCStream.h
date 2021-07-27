@@ -135,8 +135,8 @@ class CRCStream : public std::conditional<std::is_base_of<InputStream, StreamTyp
   }
 
   CRCStream(CRCStream &&stream) noexcept {
-    child_stream_ = utils::exchange(stream.child_stream_, nullptr);
-    crc_ = utils::exchange(stream.crc_, 0);
+    child_stream_ = std::exchange(stream.child_stream_, nullptr);
+    crc_ = std::exchange(stream.crc_, 0);
   }
 };
 

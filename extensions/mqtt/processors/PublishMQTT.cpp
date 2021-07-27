@@ -19,13 +19,14 @@
  */
 #include "PublishMQTT.h"
 
-#include <stdio.h>
 #include <algorithm>
-#include <memory>
-#include <string>
-#include <map>
-#include <set>
 #include <cinttypes>
+#include <cstdio>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
 
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
@@ -64,9 +65,9 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
 
-  const auto retain_parsed = [&] () -> utils::optional<bool> {
+  const auto retain_parsed = [&] () -> std::optional<bool> {
     std::string property_value;
-    if (!context->getProperty(CleanSession.getName(), property_value)) return utils::nullopt;
+    if (!context->getProperty(CleanSession.getName(), property_value)) return std::nullopt;
     return utils::StringUtils::toBool(property_value);
   }();
   if ( retain_parsed ) {

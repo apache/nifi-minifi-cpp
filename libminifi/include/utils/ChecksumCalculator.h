@@ -17,10 +17,9 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <utility>
-
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -41,9 +40,9 @@ class ChecksumCalculator {
  private:
   static std::string computeChecksum(const std::string& file_location);
 
-  utils::optional<std::string> file_location_;
-  utils::optional<std::string> file_name_;
-  utils::optional<std::string> checksum_;
+  std::optional<std::string> file_location_;
+  std::optional<std::string> file_name_;
+  std::optional<std::string> checksum_;
 };
 
 inline void ChecksumCalculator::invalidateChecksum() {

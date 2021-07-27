@@ -88,12 +88,12 @@ bool PropertiesFile::hasValue(const std::string& key) const {
   return findKey(key) != lines_.end();
 }
 
-utils::optional<std::string> PropertiesFile::getValue(const std::string& key) const {
+std::optional<std::string> PropertiesFile::getValue(const std::string& key) const {
   const auto it = findKey(key);
   if (it != lines_.end()) {
     return it->getValue();
   } else {
-    return utils::nullopt;
+    return std::nullopt;
   }
 }
 

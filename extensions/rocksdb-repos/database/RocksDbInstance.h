@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 #include <unordered_map>
-#include "utils/OptionalUtils.h"
 #include "RocksDbUtils.h"
 #include "rocksdb/db.h"
 #include "logging/Logger.h"
@@ -44,7 +44,7 @@ class RocksDbInstance {
  public:
   explicit RocksDbInstance(const std::string& path, RocksDbMode mode = RocksDbMode::ReadWrite);
 
-  utils::optional<OpenRocksDb> open(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch);
+  std::optional<OpenRocksDb> open(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch);
 
  protected:
   // caller must hold the mtx_ mutex

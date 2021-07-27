@@ -21,12 +21,11 @@
 #include "Core.h"
 
 #include <cstdint>
-#include <memory>
-#include <unordered_map>
 #include <map>
+#include <memory>
+#include <optional>
 #include <string>
-
-#include "utils/OptionalUtils.h"
+#include <unordered_map>
 
 namespace org {
 namespace apache {
@@ -44,12 +43,12 @@ class CoreComponentStateManager {
 
   virtual bool get(CoreComponentState& kvs) = 0;
 
-  utils::optional<std::unordered_map<std::string, std::string>> get() {
+  std::optional<std::unordered_map<std::string, std::string>> get() {
     std::unordered_map<std::string, std::string> out;
     if (get(out)) {
       return out;
     } else {
-      return utils::nullopt;
+      return std::nullopt;
     }
   }
 

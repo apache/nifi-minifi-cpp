@@ -20,7 +20,7 @@
 #include <set>
 #include <vector>
 #include <map>
-#include "utils/OptionalUtils.h"
+#include <optional>
 
 namespace org {
 namespace apache {
@@ -48,20 +48,20 @@ class Arguments {
 
   void set(const std::string& bool_key);
 
-  static utils::optional<Argument> getArg(const std::string& key);
-  static utils::optional<Flag> getFlag(const std::string& flag);
+  static std::optional<Argument> getArg(const std::string& key);
+  static std::optional<Flag> getFlag(const std::string& flag);
 
  public:
   static Arguments parse(int argc, char* argv[]);
 
   static std::string getHelp();
 
-  utils::optional<std::string> get(const std::string& key) const;
+  [[nodiscard]] std::optional<std::string> get(const std::string& key) const;
 
-  bool isSet(const std::string& flag) const;
+  [[nodiscard]] bool isSet(const std::string& flag) const;
 
  private:
-  utils::optional<std::string> get(const Argument& key) const;
+  [[nodiscard]] std::optional<std::string> get(const Argument& key) const;
 
   std::map<std::string, std::string> args_;
   std::set<std::string> flags_;

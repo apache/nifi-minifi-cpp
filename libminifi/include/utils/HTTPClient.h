@@ -29,6 +29,7 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -36,7 +37,6 @@
 #include "controllers/SSLContextService.h"
 #include "core/Deprecated.h"
 #include "utils/gsl.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -378,8 +378,8 @@ class URL {
  private:
   std::string protocol_;
   std::string host_;
-  utils::optional<int> port_;
-  utils::optional<std::string> path_;
+  std::optional<int> port_;
+  std::optional<std::string> path_;
   bool is_valid_ = false;
   std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<URL>::getLogger();
 };

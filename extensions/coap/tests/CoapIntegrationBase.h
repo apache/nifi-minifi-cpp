@@ -17,9 +17,10 @@
  */
 #pragma once
 
-#include <utility>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 
 #include "../tests/TestServer.h"
 #include "CivetServer.h"
@@ -47,7 +48,7 @@ class CoapIntegrationBase : public IntegrationBase {
     server.reset();
   }
 
-  void run(const utils::optional<std::string>& test_file_location = {}, const utils::optional<std::string>& = {}) override {
+  void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& = {}) override {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -61,12 +62,11 @@ class CoapIntegrationBase : public IntegrationBase {
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-    std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-        new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
+    auto yaml_ptr = std::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
     core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 
-    std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot().release() };
+    std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot() };
 
     queryRootProcessGroup(pg);
 
@@ -101,14 +101,14 @@ void CoapIntegrationBase::setUrl(std::string url, CivetHandler *handler) {
       return;
     }
     if (scheme == "https" && !key_dir.empty()) {
-      std::string cert = "";
+      std::string cert;
       cert = key_dir + "nifi-cert.pem";
       callback.init_ssl = ssl_enable;
       port += "s";
       callback.log_message = log_message;
-      server = utils::make_unique<TestServer>(port, path, handler, &callback, cert, cert);
+      server = std::make_unique<TestServer>(port, path, handler, &callback, cert, cert);
     } else {
-      server = utils::make_unique<TestServer>(port, path, handler);
+      server = std::make_unique<TestServer>(port, path, handler);
     }
   }
 }

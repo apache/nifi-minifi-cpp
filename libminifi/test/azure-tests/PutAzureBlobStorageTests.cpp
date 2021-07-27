@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+#include <memory>
+#include <optional>
+
 #include "../TestBase.h"
 #include "core/Processor.h"
 #include "processors/PutAzureBlobStorage.h"
@@ -53,7 +56,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
     container_name_ = container_name;
   }
 
-  utils::optional<minifi::azure::storage::UploadBlobResult> uploadBlob(const std::string& /*blob_name*/, const uint8_t* buffer, std::size_t buffer_size) override {
+  std::optional<minifi::azure::storage::UploadBlobResult> uploadBlob(const std::string& /*blob_name*/, const uint8_t* buffer, std::size_t buffer_size) override {
     input_data = std::string(buffer, buffer + buffer_size);
     minifi::azure::storage::UploadBlobResult result;
     result.etag = ETAG;
@@ -94,7 +97,7 @@ class PutAzureBlobStorageTestsFixture {
 
     // Build MiNiFi processing graph
     plan = test_controller.createPlan();
-    auto mock_blob_storage = utils::make_unique<MockBlobStorage>();
+    auto mock_blob_storage = std::make_unique<MockBlobStorage>();
     mock_blob_storage_ptr = mock_blob_storage.get();
     put_azure_blob_storage = std::shared_ptr<minifi::azure::processors::PutAzureBlobStorage>(
       new minifi::azure::processors::PutAzureBlobStorage("PutAzureBlobStorage", utils::Identifier(), std::move(mock_blob_storage)));

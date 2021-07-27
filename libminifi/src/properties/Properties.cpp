@@ -49,13 +49,13 @@ bool Properties::getString(const std::string &key, std::string &value) const {
   }
 }
 
-utils::optional<std::string> Properties::getString(const std::string& key) const {
+std::optional<std::string> Properties::getString(const std::string& key) const {
   std::string result;
   const bool found = getString(key, result);
   if (found) {
     return result;
   } else {
-    return utils::nullopt;
+    return std::nullopt;
   }
 }
 

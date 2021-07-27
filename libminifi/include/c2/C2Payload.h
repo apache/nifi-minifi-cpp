@@ -63,7 +63,7 @@ struct AnnotatedValue : state::response::ValueNode {
   using state::response::ValueNode::ValueNode;
   using state::response::ValueNode::operator=;
 
-  utils::optional<std::reference_wrapper<const AnnotatedValue>> getAnnotation(const std::string& name) const {
+  [[nodiscard]] std::optional<std::reference_wrapper<const AnnotatedValue>> getAnnotation(const std::string& name) const {
     auto it = annotations.find(name);
     if (it == annotations.end()) {
       return {};

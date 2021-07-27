@@ -23,7 +23,6 @@
 #include "TestBase.h"
 #include "ConsumeJournald.h"
 #include "libwrapper/LibWrapper.h"
-#include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "Utils.h"
@@ -132,7 +131,7 @@ struct TestLibWrapper final : libwrapper::LibWrapper {
   { }
 
   std::unique_ptr<libwrapper::Journal> openJournal(JournalType) override {
-    return utils::make_unique<TestJournal>(journal);
+    return std::make_unique<TestJournal>(journal);
   }
 
   std::vector<JournalEntry> journal;
@@ -150,7 +149,7 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
   TestController test_controller;
   LogTestController::getInstance().setTrace<ConsumeJournald>();
   const auto plan = test_controller.createPlan();
-  auto libwrapper = utils::make_unique<TestLibWrapper>(TestLibWrapper{{
+  auto libwrapper = std::make_unique<TestLibWrapper>(TestLibWrapper{{
       {"kernel", "Linux version 5.10.12-gentoo-x86_64 (root@test-pc.test.local) (x86_64-pc-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0, GNU ld (Gentoo 2.35.2 p1) 2.35.2) #1 SMP Sat Feb 20 03:13:45 CET 2021"},  // NOLINT
       {"kernel", "NX (Execute Disable) protection: active"},
       {"kernel", "ACPI: Local APIC address 0xfee00000"},

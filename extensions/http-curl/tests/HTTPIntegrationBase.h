@@ -93,9 +93,9 @@ void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *han
     callback.init_ssl = ssl_enable;
     port += "s";
     callback.log_message = log_message;
-    server = utils::make_unique<TestServer>(port, url_path, handler, &callback, cert, cert);
+    server = std::make_unique<TestServer>(port, url_path, handler, &callback, cert, cert);
   } else {
-    server = utils::make_unique<TestServer>(port, url_path, handler);
+    server = std::make_unique<TestServer>(port, url_path, handler);
   }
   bool secure{false};
   if (port == "0" || port == "0s") {

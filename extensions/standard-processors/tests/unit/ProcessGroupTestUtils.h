@@ -82,7 +82,7 @@ struct MaybeProc {
   MaybeProc(const UnresolvedProc& proc) : id(proc.id) {}  // NOLINT
 
   std::string id;
-  utils::optional<std::string> name;
+  std::optional<std::string> name;
 };
 
 struct Conn {

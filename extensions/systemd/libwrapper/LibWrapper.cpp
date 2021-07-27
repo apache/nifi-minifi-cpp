@@ -17,12 +17,11 @@
 
 #include "LibWrapper.h"
 #include "DlopenWrapper.h"
-#include "utils/GeneralUtils.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
 
 std::unique_ptr<LibWrapper> createLibWrapper() {
-  return utils::make_unique<DlopenWrapper>();
+  return std::make_unique<DlopenWrapper>();
 }
 
 }  // namespace libwrapper

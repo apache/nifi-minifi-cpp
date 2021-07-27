@@ -129,28 +129,28 @@ S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifie
                           EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials});
 }
 
-minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
+std::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string service_name;
   if (!context->getProperty(AWSCredentialsProviderService.getName(), service_name) || service_name.empty()) {
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
   if (!service) {
     logger_->log_error("AWS credentials service with name: '%s' could not be found", service_name);
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 
   auto aws_credentials_service = std::dynamic_pointer_cast<minifi::aws::controllers::AWSCredentialsService>(service);
   if (!aws_credentials_service) {
     logger_->log_error("Controller service with name: '%s' is not an AWS credentials service", service_name);
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 
   return aws_credentials_service->getAWSCredentials();
 }
 
-minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentials(
+std::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentials(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   auto service_cred = getAWSCredentialsFromControllerService(context);
@@ -178,13 +178,13 @@ minifi::utils::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredential
   return aws_credentials_provider.getAWSCredentials();
 }
 
-minifi::utils::optional<aws::s3::ProxyOptions> S3Processor::getProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
+std::optional<aws::s3::ProxyOptions> S3Processor::getProxy(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   aws::s3::ProxyOptions proxy;
   context->getProperty(ProxyHost, proxy.host, flow_file);
   std::string port_str;
   if (context->getProperty(ProxyPort, port_str, flow_file) && !port_str.empty() && !core::Property::StringToInt(port_str, proxy.port)) {
     logger_->log_error("Proxy port invalid");
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   context->getProperty(ProxyUsername, proxy.username, flow_file);
   context->getProperty(ProxyPassword, proxy.password, flow_file);
@@ -214,26 +214,26 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
   }
 }
 
-minifi::utils::optional<CommonProperties> S3Processor::getCommonELSupportedProperties(
+std::optional<CommonProperties> S3Processor::getCommonELSupportedProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   CommonProperties properties;
   if (!context->getProperty(Bucket, properties.bucket, flow_file) || properties.bucket.empty()) {
     logger_->log_error("Bucket '%s' is invalid or empty!", properties.bucket);
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   logger_->log_debug("S3Processor: Bucket [%s]", properties.bucket);
 
   auto credentials = getAWSCredentials(context, flow_file);
   if (!credentials) {
     logger_->log_error("AWS Credentials have not been set!");
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   properties.credentials = credentials.value();
 
   auto proxy = getProxy(context, flow_file);
   if (!proxy) {
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   properties.proxy = proxy.value();
 

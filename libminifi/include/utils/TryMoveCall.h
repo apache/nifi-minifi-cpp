@@ -16,9 +16,8 @@
  */
 #pragma once
 
+#include <type_traits>
 #include <utility>
-
-#include <utils/GeneralUtils.h> // NOLINT
 
 namespace org {
 namespace apache {
@@ -50,7 +49,7 @@ struct TryMoveCall {
 //     If 3. is ill-formed, then this specialization is ignored through SFINAE.
 //     If well-formed, then it's considered more specialized than the other and takes precedence.
 template<typename FunType, typename T>
-struct TryMoveCall<FunType, T, void_t<decltype(std::declval<FunType>()(std::declval<T>()))>> {
+struct TryMoveCall<FunType, T, std::void_t<decltype(std::declval<FunType>()(std::declval<T>()))>> {
     template<typename Fun>
     static auto call(Fun&& fun, T& elem) -> decltype(std::forward<Fun>(fun)(std::move(elem))) { return std::forward<Fun>(fun)(std::move(elem)); }
 };

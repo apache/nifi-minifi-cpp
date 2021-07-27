@@ -17,18 +17,18 @@
 
 #pragma once
 
-#include <utility>
-#include <memory>
-#include <string>
 #include <fstream>
 #include <iterator>
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 
 #include "ConsumeWindowsEventLog.h"
 #include "processors/PutFile.h"
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
-#include "utils/OptionalUtils.h"
 
 core::Relationship Success{"success", "Everything is fine"};
 
@@ -37,7 +37,7 @@ using PutFile = org::apache::nifi::minifi::processors::PutFile;
 
 class OutputFormatTestController : public TestController {
  public:
-  OutputFormatTestController(std::string channel, std::string query, std::string output_format, utils::optional<std::string> json_format = {})
+  OutputFormatTestController(std::string channel, std::string query, std::string output_format, std::optional<std::string> json_format = {})
     : channel_(std::move(channel)),
       query_(std::move(query)),
       output_format_(std::move(output_format)),
@@ -91,5 +91,5 @@ class OutputFormatTestController : public TestController {
   std::string channel_;
   std::string query_;
   std::string output_format_;
-  utils::optional<std::string> json_format_;
+  std::optional<std::string> json_format_;
 };

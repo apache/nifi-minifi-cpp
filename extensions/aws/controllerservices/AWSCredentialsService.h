@@ -18,13 +18,13 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 
 #include "aws/core/auth/AWSCredentials.h"
 
 #include "utils/AWSInitializer.h"
-#include "utils/OptionalUtils.h"
 #include "core/Resource.h"
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -69,13 +69,13 @@ class AWSCredentialsService : public core::controller::ControllerService {
 
   void onEnable() override;
 
-  minifi::utils::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
+  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 
  private:
   friend class ::AWSCredentialsServiceTestAccessor;
 
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
-  minifi::utils::optional<Aws::Auth::AWSCredentials> aws_credentials_;
+  std::optional<Aws::Auth::AWSCredentials> aws_credentials_;
   AWSCredentialsProvider aws_credentials_provider_;
 };
 

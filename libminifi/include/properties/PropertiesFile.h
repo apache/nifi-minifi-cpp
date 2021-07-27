@@ -17,11 +17,11 @@
 #pragma once
 
 #include <istream>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -37,9 +37,9 @@ class PropertiesFile {
 
     void updateValue(const std::string& value);
 
-    std::string getLine() const { return line_; }
-    std::string getKey() const { return key_; }
-    std::string getValue() const { return value_; }
+    [[nodiscard]] std::string getLine() const { return line_; }
+    [[nodiscard]] std::string getKey() const { return key_; }
+    [[nodiscard]] std::string getValue() const { return value_; }
 
     static bool isValidKey(const std::string& key);
 
@@ -56,8 +56,8 @@ class PropertiesFile {
   explicit PropertiesFile(std::istream& input_stream);
   explicit PropertiesFile(std::istream&& input_stream) : PropertiesFile{input_stream} {}
 
-  bool hasValue(const std::string& key) const;
-  utils::optional<std::string> getValue(const std::string& key) const;
+  [[nodiscard]] bool hasValue(const std::string& key) const;
+  [[nodiscard]] std::optional<std::string> getValue(const std::string& key) const;
   void update(const std::string& key, const std::string& value);
   void insertAfter(const std::string& after_key, const std::string& key, const std::string& value);
   void append(const std::string& key, const std::string& value);
@@ -65,17 +65,17 @@ class PropertiesFile {
 
   void writeTo(const std::string& file_path) const;
 
-  size_t size() const { return lines_.size(); }
+  [[nodiscard]] size_t size() const { return lines_.size(); }
 
  protected:
   using Lines = std::vector<Line>;
 
-  Lines::const_iterator findKey(const std::string& key) const;
+  [[nodiscard]] Lines::const_iterator findKey(const std::string& key) const;
   Lines::iterator findKey(const std::string& key);
 
  public:
-  Lines::const_iterator begin() const;
-  Lines::const_iterator end() const;
+  [[nodiscard]] Lines::const_iterator begin() const;
+  [[nodiscard]] Lines::const_iterator end() const;
 
  protected:
   Lines lines_;

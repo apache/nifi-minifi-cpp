@@ -20,6 +20,7 @@
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <queue>
 #include <string>
 #include <utility>
@@ -32,7 +33,6 @@
 #include "core/Core.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -88,7 +88,7 @@ class RetryFlowFile : public core::Processor {
 
  private:
   void readDynamicPropertyKeys(core::ProcessContext* context);
-  utils::optional<uint64_t> getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const;
+  std::optional<uint64_t> getRetryPropertyValue(const std::shared_ptr<core::FlowFile>& flow_file) const;
   void setRetriesExceededAttributesOnFlowFile(core::ProcessContext* context, const std::shared_ptr<core::FlowFile>& flow_file) const;
 
   core::annotation::Input getInputRequirement() const override {

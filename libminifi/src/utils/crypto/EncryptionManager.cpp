@@ -15,11 +15,11 @@
  * limitations under the License.
  */
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 #include "utils/crypto/EncryptionManager.h"
 #include "properties/Properties.h"
-#include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/crypto/ciphers/XSalsa20.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
@@ -40,22 +40,24 @@ constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
 
 std::shared_ptr<core::logging::Logger> EncryptionManager::logger_{core::logging::LoggerFactory<EncryptionManager>::getLogger()};
 
-utils::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std::string &key_name) const {
+std::optional<XSalsa20Cipher> EncryptionManager::createXSalsa20Cipher(const std::string &key_name) const {
   return readKey(key_name)
          | utils::map([] (const Bytes& key) {return XSalsa20Cipher{key};});
 }
 
-utils::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
-  utils::optional<Bytes> key = readKey(key_name);
+std::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const std::string &key_name) const {
+  auto key = readKey(key_name);
   if (!key) {
     logger_->log_info("No encryption key found for '%s'", key_name);
-    return {};
+    return std::nullopt;
   }
   if (key->empty()) {
     // generate new key
     logger_->log_info("Generating encryption key '%s'", key_name);
     key = Aes256EcbCipher::generateKey();
-    writeKey(key_name, key.value());
+    if (!writeKey(key_name, key.value())) {
+      logger_->log_warn("Failed to write key '%s'", key_name);
+    }
   } else {
     logger_->log_info("Using existing encryption key '%s'", key_name);
   }
@@ -63,7 +65,7 @@ utils::optional<Aes256EcbCipher> EncryptionManager::createAes256EcbCipher(const 
 }
 
 
-utils::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) const {
+std::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) const {
   minifi::Properties bootstrap_conf;
   bootstrap_conf.setHome(key_dir_);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);

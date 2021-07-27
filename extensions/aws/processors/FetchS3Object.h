@@ -20,10 +20,11 @@
 
 #pragma once
 
+#include <memory>
+#include <optional>
+#include <string>
 #include <sstream>
 #include <utility>
-#include <memory>
-#include <string>
 #include <vector>
 
 #include "S3Processor.h"
@@ -85,7 +86,7 @@ class FetchS3Object : public S3Processor {
     const minifi::aws::s3::GetObjectRequestParameters& get_object_params_;
     aws::s3::S3Wrapper& s3_wrapper_;
     uint64_t write_size_ = 0;
-    minifi::utils::optional<minifi::aws::s3::GetObjectResult> result_ = minifi::utils::nullopt;
+    std::optional<minifi::aws::s3::GetObjectResult> result_;
   };
 
  private:
@@ -99,7 +100,7 @@ class FetchS3Object : public S3Processor {
     : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 
-  minifi::utils::optional<aws::s3::GetObjectRequestParameters> buildFetchS3RequestParams(
+  std::optional<aws::s3::GetObjectRequestParameters> buildFetchS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const;

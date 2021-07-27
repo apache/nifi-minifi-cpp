@@ -29,6 +29,7 @@
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
+#include "utils/gsl.h"
 #include "utils/SmallString.h"
 
 namespace org {
@@ -79,14 +80,14 @@ inline std::string format_string(int max_size, char const* format_str, Args&&...
   }
   if (result <= LOG_BUFFER_SIZE) {
     // static buffer was large enough
-    return std::string(buf, result);
+    return std::string(buf, gsl::narrow<size_t>(result));
   }
   if (max_size >= 0 && max_size <= LOG_BUFFER_SIZE) {
     // static buffer was already larger than allowed, use the filled buffer
     return std::string(buf, LOG_BUFFER_SIZE);
   }
   // try to use dynamic buffer
-  size_t dynamic_buffer_size = max_size < 0 ? result : std::min(result, max_size);
+  size_t dynamic_buffer_size = max_size < 0 ? gsl::narrow<size_t>(result) : gsl::narrow<size_t>(std::min(result, max_size));
   std::vector<char> buffer(dynamic_buffer_size + 1);  // extra '\0' character
   result = std::snprintf(buffer.data(), buffer.size(), format_str, conditional_conversion(std::forward<Args>(args))...);
   if (result < 0) {

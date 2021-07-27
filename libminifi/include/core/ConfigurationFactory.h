@@ -20,10 +20,11 @@
 #define LIBMINIFI_INCLUDE_CORE_CONFIGURATIONFACTORY_H_
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <type_traits>
 
 #include "FlowConfiguration.h"
-#include  <type_traits>
 
 namespace org {
 namespace apache {
@@ -35,7 +36,7 @@ template<typename T>
 typename std::enable_if<!class_operations<T>::value, T*>::type instantiate(
     const std::shared_ptr<core::Repository>& /*repo*/, const std::shared_ptr<core::Repository>& /*flow_file_repo*/,
     const std::shared_ptr<core::ContentRepository>& /*content_repo*/, std::shared_ptr<Configure> /*configuration*/,
-    const utils::optional<std::string>& /*path*/, const std::shared_ptr<utils::file::FileSystem>& /*filesystem*/) {
+    const std::optional<std::string>& /*path*/, const std::shared_ptr<utils::file::FileSystem>& /*filesystem*/) {
   throw std::runtime_error("Cannot instantiate class");
 }
 
@@ -43,7 +44,7 @@ template<typename T>
 typename std::enable_if<class_operations<T>::value, T*>::type instantiate(
     const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_file_repo,
     const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<io::StreamFactory> &stream_factory,
-    std::shared_ptr<Configure> configuration, const utils::optional<std::string>& path,
+    std::shared_ptr<Configure> configuration, const std::optional<std::string>& path,
     const std::shared_ptr<utils::file::FileSystem>& filesystem) {
   return new T(repo, flow_file_repo, content_repo, stream_factory, configuration, path, filesystem);
 }
@@ -56,7 +57,7 @@ std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
     std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo,
     std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure,
     std::shared_ptr<io::StreamFactory> stream_factory, const std::string& configuration_class_name,
-    const utils::optional<std::string>& path = {}, std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(),
+    const std::optional<std::string>& path = {}, std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(),
     bool fail_safe = false);
 
 }  // namespace core

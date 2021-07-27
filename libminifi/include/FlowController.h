@@ -204,7 +204,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   void loadFlowRepo();
   void initializeExternalComponents();
 
-  utils::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
+  std::optional<std::chrono::milliseconds> loadShutdownTimeoutFromConfiguration();
 
  private:
   template <typename T, typename = typename std::enable_if<std::is_base_of<SchedulingAgent, T>::value>::type>

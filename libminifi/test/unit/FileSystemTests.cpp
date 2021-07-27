@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-#include <string>
 #include <fstream>
 #include <iterator>
+#include <optional>
+#include <string>
 #include "../TestBase.h"
 #include "utils/file/FileSystem.h"
 
@@ -74,12 +75,12 @@ TEST_CASE_METHOD(FileSystemTest, "Can read encrypted but writes non-encrypted", 
 }
 
 TEST_CASE_METHOD(FileSystemTest, "Can't read encrypted file without encryption provider", "[file_system]") {
-  FileSystem fs{false, utils::nullopt};
+  FileSystem fs{false, std::nullopt};
   REQUIRE(fs.read(encrypted_file) != "banana");
 }
 
 TEST_CASE_METHOD(FileSystemTest, "Can read and write unencrypted", "[file_system]") {
-  FileSystem fs{false, utils::nullopt};
+  FileSystem fs{false, std::nullopt};
   fs.write(new_file, "red lorry, yellow lorry");
 
   std::ifstream file{new_file, std::ios::binary};
@@ -88,5 +89,5 @@ TEST_CASE_METHOD(FileSystemTest, "Can read and write unencrypted", "[file_system
 }
 
 TEST_CASE_METHOD(FileSystemTest, "Required to encrypt but no key was provided", "[file_system]") {
-  REQUIRE_THROWS((FileSystem{true, utils::nullopt}));
+  REQUIRE_THROWS((FileSystem{true, std::nullopt}));
 }

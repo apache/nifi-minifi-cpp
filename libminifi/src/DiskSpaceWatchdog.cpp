@@ -30,20 +30,20 @@ namespace minifi {
 namespace {
 namespace chr = std::chrono;
 
-utils::optional<chr::milliseconds> time_string_to_milliseconds(const std::string& str) {
+std::optional<chr::milliseconds> time_string_to_milliseconds(const std::string& str) {
   uint64_t millisec_value{};
   const bool success = core::Property::getTimeMSFromString(str, millisec_value);
-  if (!success) return utils::nullopt;
-  return utils::make_optional(chr::milliseconds{millisec_value});
+  if (!success) return std::nullopt;
+  return chr::milliseconds{millisec_value};
 }
 
-template<typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
-utils::optional<T> data_size_string_to_int(const std::string& str) {
+template<typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
+std::optional<T> data_size_string_to_int(const std::string& str) {
   T result{};
   // actually aware of data units like B, kB, MB, etc.
   const bool success = core::Property::StringToInt(str, result);
-  if (!success) return utils::nullopt;
-  return utils::make_optional(result);
+  if (!success) return std::nullopt;
+  return std::make_optional(result);
 }
 
 
