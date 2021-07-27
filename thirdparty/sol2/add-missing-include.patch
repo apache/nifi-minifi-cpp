@@ -1,0 +1,11 @@
+diff -rupN orig/sol.c patched/sol.c
+--- orig/sol.hpp	2021-08-17 15:18:25.136058619 +0200
++++ patched/sol.hpp	2021-08-17 15:18:15.588063649 +0200
+@@ -9746,6 +9746,7 @@ namespace sol {
+ #include <algorithm>
+ #include <sstream>
+ #include <optional>
++#include <limits>
+ 
+ namespace sol {
+ 	namespace detail {
