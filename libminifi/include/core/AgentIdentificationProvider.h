@@ -18,8 +18,8 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -32,9 +32,9 @@ namespace core {
  */
 class AgentIdentificationProvider {
  public:
-  virtual utils::optional<std::string> getAgentClass() const = 0;
+  [[nodiscard]] virtual std::optional<std::string> getAgentClass() const = 0;
 
-  virtual std::string getAgentIdentifier() const = 0;
+  [[nodiscard]] virtual std::string getAgentIdentifier() const = 0;
 
   virtual ~AgentIdentificationProvider() = default;
 };

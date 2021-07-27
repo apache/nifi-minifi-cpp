@@ -18,10 +18,11 @@
 #pragma once
 
 #include <pdh.h>
-#include <string>
-#include <vector>
 #include <memory>
+#include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "core/Processor.h"
 
@@ -47,7 +48,7 @@ class PerformanceDataMonitor : public core::Processor {
 
   explicit PerformanceDataMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid), output_format_(OutputFormat::JSON), pretty_output_(false),
-        decimal_places_(utils::nullopt), logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
+        decimal_places_(std::nullopt), logger_(logging::LoggerFactory<PerformanceDataMonitor>::getLogger()),
         pdh_query_(nullptr), resource_consumption_counters_() {}
 
   ~PerformanceDataMonitor() override;
@@ -85,7 +86,7 @@ class PerformanceDataMonitor : public core::Processor {
   OutputFormat output_format_;
   bool pretty_output_;
 
-  utils::optional<uint8_t> decimal_places_;
+  std::optional<uint8_t> decimal_places_;
   std::shared_ptr<logging::Logger> logger_;
   PDH_HQUERY pdh_query_;
   std::vector<std::unique_ptr<PerformanceDataCounter>> resource_consumption_counters_;

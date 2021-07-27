@@ -22,12 +22,13 @@
 
 #include <sys/stat.h>
 #include <algorithm>
-#include <vector>
-#include <queue>
-#include <memory>
-#include <map>
-#include <string>
 #include <atomic>
+#include <map>
+#include <memory>
+#include <optional>
+#include <queue>
+#include <string>
+#include <vector>
 
 #include "core/Core.h"
 #include "utils/StringUtils.h"
@@ -64,7 +65,8 @@ namespace logging {
 
 const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
 
-utils::optional<spdlog::level::level_enum> parse_log_level(const std::string& level_name) {
+namespace {
+std::optional<spdlog::level::level_enum> parse_log_level(const std::string& level_name) {
   if (utils::StringUtils::equalsIgnoreCase(level_name, "trace")) {
     return spdlog::level::trace;
   } else if (utils::StringUtils::equalsIgnoreCase(level_name, "debug")) {
@@ -80,8 +82,9 @@ utils::optional<spdlog::level::level_enum> parse_log_level(const std::string& le
   } else if (utils::StringUtils::equalsIgnoreCase(level_name, "off")) {
     return spdlog::level::off;
   }
-  return utils::nullopt;
+  return std::nullopt;
 }
+}  // namespace
 
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;

@@ -26,8 +26,8 @@
 
 #ifdef __linux__
 #include <sys/sysinfo.h>
+#include <optional>
 #include <sstream>
-#include "utils/OptionalUtils.h"
 #endif
 
 #ifdef _WIN32
@@ -212,8 +212,8 @@ int64_t OsUtils::getSystemPhysicalMemoryUsage() {
   std::ifstream meminfo_file("/proc/meminfo");
   std::string line;
 
-  minifi::utils::optional<uint64_t> total_memory_kByte;
-  minifi::utils::optional<uint64_t> available_memory_kByte;
+  std::optional<uint64_t> total_memory_kByte;
+  std::optional<uint64_t> available_memory_kByte;
   while ((!total_memory_kByte.has_value() || !available_memory_kByte.has_value()) && std::getline(meminfo_file, line)) {
     if (line.rfind(total_memory_prefix, 0) == 0) {
       std::istringstream total_memory_line(line.substr(total_memory_prefix.length()));
@@ -226,7 +226,7 @@ int64_t OsUtils::getSystemPhysicalMemoryUsage() {
     }
   }
   if (total_memory_kByte.has_value() && available_memory_kByte.has_value())
-    return (total_memory_kByte.value() - available_memory_kByte.value()) * 1024;
+    return (gsl::narrow<int64_t>(total_memory_kByte.value()) - gsl::narrow<int64_t>(available_memory_kByte.value())) * 1024;
 
   return -1;
 #elif defined(__APPLE__)
@@ -256,11 +256,11 @@ int64_t OsUtils::getSystemPhysicalMemoryUsage() {
 
 int64_t OsUtils::getSystemTotalPhysicalMemory() {
 #if defined(__linux__)
-  struct sysinfo memory_info;
+  struct sysinfo memory_info{};
   sysinfo(&memory_info);
   uint64_t total_physical_memory = memory_info.totalram;
   total_physical_memory *= memory_info.mem_unit;
-  return total_physical_memory;
+  return gsl::narrow<int64_t>(total_physical_memory);
 #elif defined(__APPLE__)
   int mib[2];
   int64_t total_physical_memory = 0;

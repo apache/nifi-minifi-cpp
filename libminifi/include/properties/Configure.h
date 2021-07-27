@@ -16,12 +16,12 @@
  */
 #pragma once
 
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "properties/Configuration.h"
 #include "properties/Decryptor.h"
-#include "utils/OptionalUtils.h"
 #include "core/AgentIdentificationProvider.h"
 
 namespace org {
@@ -31,21 +31,21 @@ namespace minifi {
 
 class Configure : public Configuration, public core::AgentIdentificationProvider {
  public:
-  explicit Configure(utils::optional<Decryptor> decryptor = utils::nullopt)
+  explicit Configure(std::optional<Decryptor> decryptor = std::nullopt)
       : Configuration{}, decryptor_(std::move(decryptor)) {}
 
   bool get(const std::string& key, std::string& value) const;
   bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
-  utils::optional<std::string> get(const std::string& key) const;
+  std::optional<std::string> get(const std::string& key) const;
 
-  utils::optional<std::string> getAgentClass() const override;
+  std::optional<std::string> getAgentClass() const override;
   std::string getAgentIdentifier() const override;
   void setFallbackAgentIdentifier(const std::string& id);
 
  private:
   bool isEncrypted(const std::string& key) const;
 
-  utils::optional<Decryptor> decryptor_;
+  std::optional<Decryptor> decryptor_;
   mutable std::mutex fallback_identifier_mutex_;
   std::string fallback_identifier_;
 };

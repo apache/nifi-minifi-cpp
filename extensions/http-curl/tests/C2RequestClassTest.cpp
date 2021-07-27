@@ -17,15 +17,15 @@
  */
 
 #undef NDEBUG
-#include <vector>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
 #include "CivetStream.h"
 #include "StreamPipe.h"
-#include "OptionalUtils.h"
 
 class C2AcknowledgeHandler : public ServerAwareHandler {
  public:
@@ -60,7 +60,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
     std::string req = readPayload(conn);
     rapidjson::Document root;
     root.Parse(req.data(), req.size());
-    utils::optional<std::string> agent_class;
+    std::optional<std::string> agent_class;
     if (root.IsObject() && root["agentInfo"].HasMember("agentClass")) {
       agent_class = root["agentInfo"]["agentClass"].GetString();
     }
@@ -76,7 +76,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
     return true;
   }
 
-  bool gotClassesInOrder(const std::vector<utils::optional<std::string>>& class_names) {
+  bool gotClassesInOrder(const std::vector<std::optional<std::string>>& class_names) {
     std::lock_guard<std::mutex> lock(mtx_);
     auto it = classes_.begin();
     for (const auto& class_name : class_names) {
@@ -91,7 +91,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
 
  private:
   std::mutex mtx_;
-  std::vector<utils::optional<std::string>> classes_;
+  std::vector<std::optional<std::string>> classes_;
   std::string response_;
 };
 

@@ -159,7 +159,7 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 2);
 
-  utils::optional<std::string> fragment_id;
+  std::optional<std::string> fragment_id;
 
   matcher.verify(flow_files[0],
     { AttributeValue("test_table"), AttributeValue("3"), AttributeValue("2"), AttributeValue("0"), capture(fragment_id), AttributeValue("105") },

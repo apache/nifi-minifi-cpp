@@ -15,6 +15,10 @@
  * limitations under the License.
  */
 
+#include <optional>
+#include <string>
+#include <vector>
+
 #include "ConfigFile.h"
 
 #include "gsl/gsl-lite.hpp"
@@ -130,11 +134,11 @@ TEST_CASE("ConfigFile can find the value for a key", "[encrypt-config][getValue]
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
 
   SECTION("valid key") {
-    REQUIRE(test_file.getValue("nifi.bored.yield.duration") == utils::optional<std::string>{"10 millis"});
+    REQUIRE(test_file.getValue("nifi.bored.yield.duration") == "10 millis");
   }
 
   SECTION("nonexistent key") {
-    REQUIRE(test_file.getValue("nifi.bored.panda") == utils::nullopt);
+    REQUIRE(test_file.getValue("nifi.bored.panda") == std::nullopt);
   }
 }
 
@@ -143,7 +147,7 @@ TEST_CASE("ConfigFile can update the value for a key", "[encrypt-config][update]
 
   SECTION("valid key") {
     test_file.update("nifi.bored.yield.duration", "20 millis");
-    REQUIRE(test_file.getValue("nifi.bored.yield.duration") == utils::optional<std::string>{"20 millis"});
+    REQUIRE(test_file.getValue("nifi.bored.yield.duration") == "20 millis");
   }
 
   SECTION("nonexistent key") {
@@ -157,7 +161,7 @@ TEST_CASE("ConfigFile can add a new setting after an existing setting", "[encryp
   SECTION("valid key") {
     test_file.insertAfter("nifi.rest.api.password", "nifi.rest.api.password.protected", "my-cipher-name");
     REQUIRE(test_file.size() == 102);
-    REQUIRE(test_file.getValue("nifi.rest.api.password.protected") == utils::optional<std::string>{"my-cipher-name"});
+    REQUIRE(test_file.getValue("nifi.rest.api.password.protected") == "my-cipher-name");
   }
 
   SECTION("nonexistent key") {
@@ -172,7 +176,7 @@ TEST_CASE("ConfigFile can add a new setting at the end", "[encrypt-config][appen
   const std::string VALUE = "aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab";
   test_file.append(KEY, VALUE);
   REQUIRE(test_file.size() == 102);
-  REQUIRE(test_file.getValue(KEY) == utils::make_optional(VALUE));
+  REQUIRE(test_file.getValue(KEY) == std::make_optional(VALUE));
 }
 
 TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
@@ -188,7 +192,7 @@ TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
 
   ConfigFile test_file_copy{std::ifstream{file_path}};
   REQUIRE(test_file.size() == test_file_copy.size());
-  REQUIRE(test_file_copy.getValue("nifi.bored.yield.duration") == utils::optional<std::string>{"20 millis"});
+  REQUIRE(test_file_copy.getValue("nifi.bored.yield.duration") == "20 millis");
 }
 
 TEST_CASE("ConfigFile will throw if we try to write to an invalid file name", "[encrypt-config][writeTo]") {

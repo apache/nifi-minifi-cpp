@@ -15,6 +15,9 @@
  * limitations under the License.
  */
 
+#include <optional>
+#include <string>
+
 #include "ConfigFileEncryptor.h"
 
 #include "TestBase.h"
@@ -29,10 +32,10 @@ size_t base64_length(size_t unencoded_length) {
 }
 
 bool check_encryption(const ConfigFile& test_file, const std::string& property_name, size_t original_value_length) {
-    utils::optional<std::string> encrypted_value = test_file.getValue(property_name);
+    const auto encrypted_value = test_file.getValue(property_name);
     if (!encrypted_value) { return false; }
 
-    utils::optional<std::string> encryption_type = test_file.getValue(property_name + ".protected");
+    const auto encryption_type = test_file.getValue(property_name + ".protected");
     if (!encryption_type || *encryption_type != utils::crypto::EncryptionType::name()) { return false; }
 
     auto length = base64_length(utils::crypto::EncryptionType::nonceLength()) +

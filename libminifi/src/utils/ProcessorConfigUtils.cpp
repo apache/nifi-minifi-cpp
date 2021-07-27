@@ -48,7 +48,7 @@ std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::Proc
 
 bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::string& property_name) {
   const std::string value_str = getRequiredPropertyOrThrow(context, property_name);
-  utils::optional<bool> maybe_value = utils::StringUtils::toBool(value_str);
+  const auto maybe_value = utils::StringUtils::toBool(value_str);
   if (!maybe_value) {
     throw std::runtime_error(property_name + " property is invalid: value is " + value_str);
   }
@@ -65,12 +65,12 @@ std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* conte
   return std::chrono::milliseconds(time_value_ms);
 }
 
-utils::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name) {
+std::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name) {
   uint64_t value;
   if (context.getProperty(property_name, value)) {
     return { value };
   }
-  return utils::nullopt;
+  return std::nullopt;
 }
 
 std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values) {

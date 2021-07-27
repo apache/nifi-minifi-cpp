@@ -51,7 +51,7 @@ void DeleteS3Object::initialize() {
   setSupportedRelationships({Failure, Success});
 }
 
-minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
+std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const {
@@ -59,7 +59,7 @@ minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::
   context->getProperty(ObjectKey, params.object_key, flow_file);
   if (params.object_key.empty() && (!flow_file->getAttribute("filename", params.object_key) || params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   logger_->log_debug("DeleteS3Object: Object Key [%s]", params.object_key);
 

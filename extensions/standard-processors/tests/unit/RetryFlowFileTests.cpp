@@ -19,6 +19,7 @@
 #define CATCH_CONFIG_MAIN
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <set>
 
@@ -30,12 +31,12 @@
 #include "processors/PutFile.h"
 #include "processors/LogAttribute.h"
 #include "utils/file/FileUtils.h"
-#include "utils/OptionalUtils.h"
 #include "utils/RegexUtils.h"
 #include "utils/TestUtils.h"
 
 namespace {
-using org::apache::nifi::minifi::utils::optional;
+using org::apache::nifi::minifi::utils::createTempDir;
+using std::optional;
 namespace FileUtils = org::apache::nifi::minifi::utils::file;
 
 class RetryFlowFileTest {

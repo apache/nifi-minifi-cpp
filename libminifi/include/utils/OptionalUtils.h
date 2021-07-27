@@ -18,13 +18,11 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
 
+#include <functional>
+#include <optional>
 #include <type_traits>
 #include <utility>
-#if __cplusplus >= 201703L
-#include <optional>
-#endif  /* >= C++17 */
 
-#include <nonstd/optional.hpp>
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 
@@ -33,22 +31,14 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
-using nonstd::optional;
-using nonstd::nullopt;
-using nonstd::make_optional;
 
 template<typename T>
-optional<utils::remove_cvref_t<T>> optional_from_ptr(T&& obj) {
-  return obj == nullptr ? nullopt : optional<utils::remove_cvref_t<T>>{ std::forward<T>(obj) };
+std::optional<utils::remove_cvref_t<T>> optional_from_ptr(T&& obj) {
+  return obj == nullptr ? std::nullopt : std::optional<utils::remove_cvref_t<T>>{ std::forward<T>(obj) };
 }
 
-// two partial specializations because nonstd::optional<T> might or might not be the same as std::optional<T>,
-// and if they are the same, this would be a redefinition error
 template<typename, typename = void>
 struct is_optional : std::false_type {};
-
-template<typename T, typename Void>
-struct is_optional<nonstd::optional<T>, Void> : std::true_type {};
 
 template<typename T>
 struct is_optional<std::optional<T>, void> : std::true_type {};
@@ -61,22 +51,22 @@ struct map_wrapper {
 
 // map implementation
 template<typename SourceType, typename F>
-auto operator|(const optional<SourceType>& o, map_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function), *o)))
-    -> optional<typename std::decay<decltype(utils::invoke(std::forward<F>(f.function), *o))>::type> {
+auto operator|(const std::optional<SourceType>& o, map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *o)))
+    -> std::optional<typename std::decay<decltype(std::invoke(std::forward<F>(f.function), *o))>::type> {
   if (o.has_value()) {
-    return make_optional(utils::invoke(std::forward<F>(f.function), *o));
+    return std::make_optional(std::invoke(std::forward<F>(f.function), *o));
   } else {
-    return nullopt;
+    return std::nullopt;
   }
 }
 
 template<typename SourceType, typename F>
-auto operator|(optional<SourceType>&& o, map_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function), std::move(*o))))
-    -> optional<typename std::decay<decltype(utils::invoke(std::forward<F>(f.function), std::move(*o)))>::type> {
+auto operator|(std::optional<SourceType>&& o, map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), std::move(*o))))
+    -> std::optional<typename std::decay<decltype(std::invoke(std::forward<F>(f.function), std::move(*o)))>::type> {
   if (o.has_value()) {
-    return make_optional(utils::invoke(std::forward<F>(f.function), std::move(*o)));
+    return std::make_optional(std::invoke(std::forward<F>(f.function), std::move(*o)));
   } else {
-    return nullopt;
+    return std::nullopt;
   }
 }
 
@@ -87,23 +77,23 @@ struct flat_map_wrapper {
 
 // flatMap implementation
 template<typename SourceType, typename F>
-auto operator|(const optional<SourceType>& o, flat_map_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function), *o)))
-    -> optional<typename std::decay<decltype(*utils::invoke(std::forward<F>(f.function), *o))>::type> {
-  static_assert(is_optional<decltype(utils::invoke(std::forward<F>(f.function), *o))>::value, "flatMap expects a function returning optional");
+auto operator|(const std::optional<SourceType>& o, flat_map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *o)))
+    -> std::optional<typename std::decay<decltype(*std::invoke(std::forward<F>(f.function), *o))>::type> {
+  static_assert(is_optional<decltype(std::invoke(std::forward<F>(f.function), *o))>::value, "flatMap expects a function returning optional");
   if (o.has_value()) {
-    return utils::invoke(std::forward<F>(f.function), *o);
+    return std::invoke(std::forward<F>(f.function), *o);
   } else {
-    return nullopt;
+    return std::nullopt;
   }
 }
 template<typename SourceType, typename F>
-auto operator|(optional<SourceType>&& o, flat_map_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function), std::move(*o))))
-    -> optional<typename std::decay<decltype(*utils::invoke(std::forward<F>(f.function), std::move(*o)))>::type> {
-  static_assert(is_optional<decltype(utils::invoke(std::forward<F>(f.function), std::move(*o)))>::value, "flatMap expects a function returning optional");
+auto operator|(std::optional<SourceType>&& o, flat_map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), std::move(*o))))
+    -> std::optional<typename std::decay<decltype(*std::invoke(std::forward<F>(f.function), std::move(*o)))>::type> {
+  static_assert(is_optional<decltype(std::invoke(std::forward<F>(f.function), std::move(*o)))>::value, "flatMap expects a function returning optional");
   if (o.has_value()) {
-    return utils::invoke(std::forward<F>(f.function), std::move(*o));
+    return std::invoke(std::forward<F>(f.function), std::move(*o));
   } else {
-    return nullopt;
+    return std::nullopt;
   }
 }
 
@@ -114,23 +104,23 @@ struct or_else_wrapper {
 
 // orElse implementation
 template<typename SourceType, typename F>
-auto operator|(optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function))))
-    -> typename std::enable_if<std::is_same<decltype(utils::invoke(std::forward<F>(f.function))), void>::value, optional<SourceType>>::type {
+auto operator|(std::optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function))))
+    -> typename std::enable_if<std::is_same<decltype(std::invoke(std::forward<F>(f.function))), void>::value, std::optional<SourceType>>::type {
   if (o.has_value()) {
     return o;
   } else {
-    utils::invoke(std::forward<F>(f.function));
-    return nullopt;
+    std::invoke(std::forward<F>(f.function));
+    return std::nullopt;
   }
 }
 
 template<typename SourceType, typename F>
-auto operator|(optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexcept(utils::invoke(std::forward<F>(f.function))))
-    -> typename std::enable_if<std::is_same<typename std::decay<decltype(utils::invoke(std::forward<F>(f.function)))>::type, optional<SourceType>>::value, optional<SourceType>>::type {
+auto operator|(std::optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function))))
+    -> typename std::enable_if<std::is_same<typename std::decay<decltype(std::invoke(std::forward<F>(f.function)))>::type, std::optional<SourceType>>::value, std::optional<SourceType>>::type {
   if (o.has_value()) {
     return o;
   } else {
-    return utils::invoke(std::forward<F>(f.function));
+    return std::invoke(std::forward<F>(f.function));
   }
 }
 }  // namespace detail

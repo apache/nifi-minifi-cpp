@@ -20,6 +20,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
+
 #include "DatabaseService.h"
 #include "core/Resource.h"
 #include "data/SociConnectors.h"

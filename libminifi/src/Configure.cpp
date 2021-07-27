@@ -51,8 +51,8 @@ bool Configure::get(const std::string& key, const std::string& alternate_key, st
   }
 }
 
-utils::optional<std::string> Configure::get(const std::string& key) const {
-  utils::optional<std::string> value = getString(key);
+std::optional<std::string> Configure::get(const std::string& key) const {
+  auto value = getString(key);
   if (decryptor_ && value && isEncrypted(key)) {
     return decryptor_->decrypt(*value);
   } else {
@@ -62,11 +62,11 @@ utils::optional<std::string> Configure::get(const std::string& key) const {
 
 bool Configure::isEncrypted(const std::string& key) const {
   gsl_Expects(decryptor_);
-  utils::optional<std::string> encryption_marker = getString(key + ".protected");
+  const auto encryption_marker = getString(key + ".protected");
   return decryptor_->isValidEncryptionMarker(encryption_marker);
 }
 
-utils::optional<std::string> Configure::getAgentClass() const {
+std::optional<std::string> Configure::getAgentClass() const {
   std::string agent_class;
   if (get("nifi.c2.agent.class", "c2.agent.class", agent_class) && !agent_class.empty()) {
     return agent_class;

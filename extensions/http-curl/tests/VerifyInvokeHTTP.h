@@ -29,7 +29,6 @@
 #include "processors/LogAttribute.h"
 #include "core/state/ProcessorController.h"
 #include "HTTPIntegrationBase.h"
-#include "utils/GeneralUtils.h"
 
 class VerifyInvokeHTTP : public HTTPIntegrationBase {
  public:
@@ -73,7 +72,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     proc->setProperty(property, value);
   }
 
-  virtual void setupFlow(const utils::optional<std::string>& flow_yml_path) {
+  virtual void setupFlow(const std::optional<std::string>& flow_yml_path) {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -86,9 +85,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
-    std::unique_ptr<core::FlowConfiguration> yaml_ptr =
-      minifi::utils::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, flow_yml_path);
-
+    auto yaml_ptr = std::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, flow_yml_path);
     flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
     flowController_->load();
 
@@ -96,7 +93,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   }
 
-  void run(const utils::optional<std::string>& flow_yml_path = {}, const utils::optional<std::string>& = {}) override {
+  void run(const std::optional<std::string>& flow_yml_path = {}, const std::optional<std::string>& = {}) override {
     setupFlow(flow_yml_path);
     startFlowController();
 
@@ -127,5 +124,5 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
   }
 
  private:
-  utils::optional<std::string> path_;
+  std::optional<std::string> path_;
 };

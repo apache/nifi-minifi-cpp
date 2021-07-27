@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include <utility>
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
 #include "utils/crypto/ciphers/XSalsa20.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
 #include "core/logging/Logger.h"
@@ -38,11 +38,11 @@ class EncryptionManager {
  public:
   explicit EncryptionManager(std::string key_dir) : key_dir_(std::move(key_dir)) {}
 
-  utils::optional<XSalsa20Cipher> createXSalsa20Cipher(const std::string& key_name) const;
-  utils::optional<Aes256EcbCipher> createAes256EcbCipher(const std::string& key_name) const;
+  [[nodiscard]] std::optional<XSalsa20Cipher> createXSalsa20Cipher(const std::string& key_name) const;
+  [[nodiscard]] std::optional<Aes256EcbCipher> createAes256EcbCipher(const std::string& key_name) const;
  private:
-  utils::optional<Bytes> readKey(const std::string& key_name) const;
-  bool writeKey(const std::string& key_name, const Bytes& key) const;
+  [[nodiscard]] std::optional<Bytes> readKey(const std::string& key_name) const;
+  [[nodiscard]] bool writeKey(const std::string& key_name, const Bytes& key) const;
 
   std::string key_dir_;
 };

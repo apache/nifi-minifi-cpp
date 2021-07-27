@@ -16,11 +16,11 @@
  */
 #pragma once
 
+#include <optional>
 #include <string>
 #include <utility>
 
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
 #include "utils/crypto/EncryptionProvider.h"
 
 namespace org {
@@ -33,15 +33,15 @@ class Decryptor {
   explicit Decryptor(utils::crypto::EncryptionProvider provider)
       : provider_(std::move(provider)) {}
 
-  static bool isValidEncryptionMarker(const utils::optional<std::string>& encryption_marker) {
+  static bool isValidEncryptionMarker(const std::optional<std::string>& encryption_marker) {
     return encryption_marker && *encryption_marker == utils::crypto::EncryptionType::name();
   }
 
-  std::string decrypt(const std::string& encrypted_text) const {
+  [[nodiscard]] std::string decrypt(const std::string& encrypted_text) const {
     return provider_.decrypt(encrypted_text);
   }
 
-  static utils::optional<Decryptor> create(const std::string& minifi_home) {
+  static std::optional<Decryptor> create(const std::string& minifi_home) {
     return utils::crypto::EncryptionProvider::create(minifi_home)
         | utils::map([](const utils::crypto::EncryptionProvider& provider) {return Decryptor{provider};});
   }

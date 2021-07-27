@@ -18,6 +18,8 @@
 
 #undef NDEBUG
 
+#include <optional>
+
 #include "SQLTestController.h"
 #include "processors/ExecuteSQL.h"
 #include "Utils.h"
@@ -169,7 +171,7 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
       processors::ExecuteSQL::FRAGMENT_IDENTIFIER
   }};
 
-  utils::optional<std::string> fragment_id;
+  std::optional<std::string> fragment_id;
 
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 3);

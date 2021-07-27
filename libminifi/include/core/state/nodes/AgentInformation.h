@@ -60,7 +60,6 @@
 #include "core/state/nodes/StateMonitor.h"
 #include "io/ClientSocket.h"
 #include "SchedulingNodes.h"
-#include "utils/OptionalUtils.h"
 #include "utils/OsUtils.h"
 #include "utils/ProcessCpuUsageTracker.h"
 #include "core/AgentIdentificationProvider.h"
@@ -698,7 +697,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     ident.value = provider_->getAgentIdentifier();
     serialized.push_back(ident);
 
-    utils::optional<std::string> agent_class = provider_->getAgentClass();
+    const auto agent_class = provider_->getAgentClass();
     if (agent_class) {
       SerializedResponseNode agentClass;
       agentClass.name = "agentClass";

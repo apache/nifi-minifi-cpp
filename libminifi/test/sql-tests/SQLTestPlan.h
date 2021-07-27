@@ -18,12 +18,13 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <set>
-#include <utility>
 #include <map>
 #include <memory>
+#include <optional>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "../TestBase.h"
 
@@ -54,7 +55,7 @@ class SQLTestPlan {
     return plan_->getContent(flow_file);
   }
 
-  std::shared_ptr<core::FlowFile> addInput(std::initializer_list<std::pair<std::string, std::string>> attributes = {}, const utils::optional<std::string>& content = {}) {
+  std::shared_ptr<core::FlowFile> addInput(std::initializer_list<std::pair<std::string, std::string>> attributes = {}, const std::optional<std::string>& content = {}) {
     auto flow_file = std::make_shared<minifi::FlowFileRecord>();
     for (const auto& attr : attributes) {
       flow_file->setAttribute(attr.first, attr.second);

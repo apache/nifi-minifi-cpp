@@ -20,12 +20,12 @@
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "utils/OptionalUtils.h"
 #include "utils/TimeUtil.h"
 #include "ResourceClaim.h"
 #include "Connectable.h"
@@ -137,7 +137,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    */
   bool getAttribute(const std::string& key, std::string& value) const;
 
-  utils::optional<std::string> getAttribute(const std::string& key) const;
+  std::optional<std::string> getAttribute(const std::string& key) const;
 
   /**
    * Updates the value in the attribute map that corresponds

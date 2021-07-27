@@ -19,6 +19,7 @@
 #define LIBMINIFI_INCLUDE_CORE_YAML_YAMLCONFIGURATION_H_
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "core/FlowConfiguration.h"
@@ -31,7 +32,6 @@
 #include "utils/Id.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileSystem.h"
-#include "utils/OptionalUtils.h"
 #include "yaml-cpp/yaml.h"
 
 class YamlConfigurationTestAccessor;
@@ -60,7 +60,7 @@ class YamlConfiguration : public FlowConfiguration {
  public:
   explicit YamlConfiguration(const std::shared_ptr<core::Repository>& repo, const std::shared_ptr<core::Repository>& flow_file_repo,
                              const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<io::StreamFactory>& stream_factory,
-                             const std::shared_ptr<Configure>& configuration, const utils::optional<std::string>& path = {},
+                             const std::shared_ptr<Configure>& configuration, const std::optional<std::string>& path = {},
                              const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>());
 
   ~YamlConfiguration() override = default;
@@ -77,7 +77,7 @@ class YamlConfiguration : public FlowConfiguration {
       logger_->log_error("Cannot instantiate flow, no config file is set.");
       throw Exception(ExceptionType::FLOW_EXCEPTION, "No config file specified");
     }
-    utils::optional<std::string> configuration = filesystem_->read(config_path_.value());
+    const auto configuration = filesystem_->read(config_path_.value());
     if (!configuration) {
       return nullptr;
     }

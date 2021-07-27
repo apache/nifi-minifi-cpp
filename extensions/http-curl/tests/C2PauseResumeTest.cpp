@@ -17,6 +17,9 @@
  */
 
 #undef NDEBUG
+
+#include <memory>
+
 #include "TestBase.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
@@ -27,7 +30,6 @@
 #include "properties/Configure.h"
 #include "io/StreamFactory.h"
 #include "integration/IntegrationBase.h"
-#include "utils/GeneralUtils.h"
 
 class VerifyC2PauseResume : public VerifyC2Base {
  public:
@@ -122,7 +124,7 @@ int main(int argc, char **argv) {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
 
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = utils::make_unique<core::YamlConfiguration>(
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(
     test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(
@@ -140,7 +142,7 @@ int main(int argc, char **argv) {
   std::string port, scheme, path;
   std::unique_ptr<TestServer> server;
   parse_http_components(url, port, scheme, path);
-  server = utils::make_unique<TestServer>(port, path, &responder);
+  server = std::make_unique<TestServer>(port, path, &responder);
 
   harness.setUrl(args.url, &responder);
   harness.run(args.test_file);

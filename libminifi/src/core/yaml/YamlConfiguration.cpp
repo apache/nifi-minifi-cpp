@@ -41,7 +41,7 @@ std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::Id
 
 YamlConfiguration::YamlConfiguration(const std::shared_ptr<core::Repository>& repo, const std::shared_ptr<core::Repository>& flow_file_repo,
                                      const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<io::StreamFactory>& stream_factory,
-                                     const std::shared_ptr<Configure>& configuration, const utils::optional<std::string>& path,
+                                     const std::shared_ptr<Configure>& configuration, const std::optional<std::string>& path,
                                      const std::shared_ptr<utils::file::FileSystem>& filesystem)
     : FlowConfiguration(repo, flow_file_repo, content_repo, stream_factory, configuration,
                         path.value_or(DEFAULT_NIFI_CONFIG_YML), filesystem),
@@ -605,7 +605,7 @@ void YamlConfiguration::parseConnectionYaml(const YAML::Node& connectionsNode, c
     // If name is specified in configuration, use the value
     std::string name = connectionNode["name"].as<std::string>(id);
 
-    const utils::optional<utils::Identifier> uuid = utils::Identifier::parse(id);
+    const auto uuid = utils::Identifier::parse(id);
     if (!uuid) {
       logger_->log_debug("Incorrect connection UUID format.");
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");

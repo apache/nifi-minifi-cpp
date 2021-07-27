@@ -40,7 +40,7 @@ void RocksDbInstance::invalidate() {
   impl_.reset();
 }
 
-utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch) {
+std::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, const DBOptionsPatch& db_options_patch, const ColumnFamilyOptionsPatch& cf_options_patch) {
   std::lock_guard<std::mutex> db_guard{mtx_};
   if (!impl_) {
     gsl_Expects(columns_.empty());
@@ -74,7 +74,7 @@ utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, co
       rocksdb::Status compat_status = rocksdb::CheckOptionsCompatibility(conf_options, db_name_, db_options_, cf_descriptors);
       if (!compat_status.ok()) {
         logger_->log_error("Incompatible database options: %s", compat_status.ToString());
-        return utils::nullopt;
+        return std::nullopt;
       }
     } else if (option_status.IsNotFound()) {
       logger_->log_trace("Database at '%s' not found, creating", db_name_);
@@ -91,7 +91,7 @@ utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, co
       }
     } else if (!option_status.ok()) {
       logger_->log_error("Couldn't query database '%s' for options: '%s'", db_name_, option_status.ToString());
-      return utils::nullopt;
+      return std::nullopt;
     }
     std::vector<rocksdb::ColumnFamilyHandle*> column_handles;
     switch (mode_) {
@@ -110,7 +110,7 @@ utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, co
     }
     if (!result.ok()) {
       // we failed to open the database
-      return utils::nullopt;
+      return std::nullopt;
     }
     gsl_Expects(db_instance);
     // the patcher could have internal resources the we need to keep alive
@@ -129,14 +129,14 @@ utils::optional<OpenRocksDb> RocksDbInstance::open(const std::string& column, co
       db_options_patch(writer);
       if (writer.isModified()) {
         logger_->log_error("Database '%s' has already been opened using a different configuration", db_name_);
-        return utils::nullopt;
+        return std::nullopt;
       }
     }
   }
   std::shared_ptr<ColumnHandle> column_handle = getOrCreateColumnFamily(column, cf_options_patch, db_guard);
   if (!column_handle) {
     // error is already logged by the method
-    return utils::nullopt;
+    return std::nullopt;
   }
   return OpenRocksDb(
       *this,

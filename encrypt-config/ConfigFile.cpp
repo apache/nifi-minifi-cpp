@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <fstream>
 #include <utility>
+#include <optional>
 
 #include "utils/StringUtils.h"
 
@@ -37,7 +38,7 @@ namespace encrypt_config {
 
 std::vector<std::string> ConfigFile::getSensitiveProperties() const {
   std::vector<std::string> sensitive_properties(DEFAULT_SENSITIVE_PROPERTIES.begin(), DEFAULT_SENSITIVE_PROPERTIES.end());
-  const utils::optional<std::string> additional_sensitive_props_list = getValue(ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME);
+  const std::optional<std::string> additional_sensitive_props_list = getValue(ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME);
   if (additional_sensitive_props_list) {
     std::vector<std::string> additional_sensitive_properties = utils::StringUtils::split(*additional_sensitive_props_list, ",");
     sensitive_properties = mergeProperties(sensitive_properties, additional_sensitive_properties);

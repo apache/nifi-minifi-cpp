@@ -36,7 +36,7 @@ template<typename T, typename = void>
 struct is_dereferenceable : std::false_type {};
 
 template<typename T>
-struct is_dereferenceable<T, void_t<decltype(*std::declval<T&>())>> : std::true_type {};
+struct is_dereferenceable<T, std::void_t<decltype(*std::declval<T&>())>> : std::true_type {};
 
 template<typename T, typename = void>
 struct is_incrementable : std::false_type {};

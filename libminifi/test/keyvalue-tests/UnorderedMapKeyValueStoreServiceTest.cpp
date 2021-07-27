@@ -17,6 +17,7 @@
  */
 
 #define CATCH_CONFIG_RUNNER
+#include <memory>
 #include <string>
 #include "../TestBase.h"
 #include "core/controller/ControllerService.h"
@@ -90,7 +91,7 @@ class UnorderedMapKeyValueStoreServiceTestFixture {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
-  std::unique_ptr<core::YamlConfiguration> yaml_config = utils::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, config_yaml);
+  std::unique_ptr<core::YamlConfiguration> yaml_config = std::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, config_yaml);
   std::unique_ptr<core::ProcessGroup> process_group;
 
   std::shared_ptr<core::controller::ControllerServiceNode> key_value_store_service_node;

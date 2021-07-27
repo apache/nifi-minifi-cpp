@@ -132,7 +132,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   }
 }
 
-utils::optional<std::string> C2Client::fetchFlow(const std::string& uri) const {
+std::optional<std::string> C2Client::fetchFlow(const std::string& uri) const {
   if (!c2_agent_) {
     return {};
   }

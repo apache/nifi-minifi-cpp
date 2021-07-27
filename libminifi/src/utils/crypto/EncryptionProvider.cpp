@@ -30,7 +30,7 @@ namespace crypto {
 
 constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
-utils::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
+std::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
   return EncryptionManager{home_path}.createXSalsa20Cipher(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
     | utils::map([] (const XSalsa20Cipher& cipher) {return EncryptionProvider{cipher};});
 }

@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include <string>
 #include <cstring>
+#include <optional>
 #include <set>
+#include <string>
 
-#include "OptionalUtils.h"
 #include "StringUtils.h"
 
 namespace org {
@@ -142,7 +142,7 @@ namespace utils {
       int idx = static_cast<int>(value_); \
       return 0 <= idx && idx < length; \
     } \
-    static Clazz parse(const char* str, const ::org::apache::nifi::minifi::utils::optional<Clazz>& fallback = {}, bool caseSensitive = true) { \
+    static Clazz parse(const char* str, const ::std::optional<Clazz>& fallback = {}, bool caseSensitive = true) { \
       for (int idx = 0; idx < length; ++idx) { \
         if (::org::apache::nifi::minifi::utils::StringUtils::equals(str, detail::toStringImpl(static_cast<Type>(idx), #Clazz), caseSensitive)) \
           return static_cast<Type>(idx); \

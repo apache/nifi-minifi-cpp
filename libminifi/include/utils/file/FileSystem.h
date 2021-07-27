@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include <string>
 #include <memory>
-#include "utils/OptionalUtils.h"
+#include <optional>
+#include <string>
 #include "utils/crypto/EncryptionProvider.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -32,20 +32,20 @@ namespace file {
 
 class FileSystem {
  public:
-  explicit FileSystem(bool should_encrypt = false, utils::optional<utils::crypto::EncryptionProvider> encryptor = {});
+  explicit FileSystem(bool should_encrypt = false, std::optional<utils::crypto::EncryptionProvider> encryptor = {});
 
   FileSystem(const FileSystem&) = delete;
   FileSystem(FileSystem&&) = delete;
   FileSystem& operator=(const FileSystem&) = delete;
   FileSystem& operator=(FileSystem&&) = delete;
 
-  utils::optional<std::string> read(const std::string& file_name);
+  std::optional<std::string> read(const std::string& file_name);
 
   bool write(const std::string& file_name, const std::string& file_content);
 
  private:
   bool should_encrypt_on_write_;
-  utils::optional<utils::crypto::EncryptionProvider> encryptor_;
+  std::optional<utils::crypto::EncryptionProvider> encryptor_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<FileSystem>::getLogger()};
 };
 

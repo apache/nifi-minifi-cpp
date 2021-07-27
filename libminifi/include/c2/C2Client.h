@@ -18,11 +18,13 @@
 
 #pragma once
 
-#include <memory>
-#include <vector>
 #include <map>
-#include <string>
+#include <memory>
 #include <mutex>
+#include <optional>
+#include <string>
+#include <vector>
+
 #include "c2/C2Agent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "properties/Configure.h"
@@ -58,7 +60,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
  protected:
   bool isC2Enabled() const;
-  utils::optional<std::string> fetchFlow(const std::string& uri) const;
+  std::optional<std::string> fetchFlow(const std::string& uri) const;
 
  private:
   void initializeComponentMetrics();

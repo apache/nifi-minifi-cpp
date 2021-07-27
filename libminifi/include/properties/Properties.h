@@ -20,15 +20,15 @@
 #ifndef LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
 #define LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
 
-#include <memory>
-#include <vector>
-#include <string>
 #include <map>
+#include <memory>
+#include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 
 #include "core/logging/Logger.h"
 #include "utils/ChecksumCalculator.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -86,7 +86,7 @@ class Properties {
    * @param key key to look up
    * @returns the value if found, nullopt otherwise.
    */
-  utils::optional<std::string> getString(const std::string& key) const;
+  std::optional<std::string> getString(const std::string& key) const;
 
   /**
    * Load configure file

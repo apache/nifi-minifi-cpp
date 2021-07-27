@@ -20,13 +20,13 @@
 #include <algorithm>
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
 
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/OptionalUtils.h"
 #include "utils/gsl.h"
 #include "rdkafka.h"
 
@@ -96,7 +96,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::strin
 void print_topics_list(logging::Logger& logger, rd_kafka_topic_partition_list_t& kf_topic_partition_list);
 void print_kafka_message(const rd_kafka_message_t& rkmessage, logging::Logger& logger);
 std::string get_encoded_string(const std::string& input, KafkaEncoding encoding);
-optional<std::string> get_encoded_message_key(const rd_kafka_message_t& message, KafkaEncoding encoding);
+std::optional<std::string> get_encoded_message_key(const rd_kafka_message_t& message, KafkaEncoding encoding);
 
 }  // namespace utils
 }  // namespace minifi

@@ -17,13 +17,13 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_ID_H_
 #define LIBMINIFI_INCLUDE_UTILS_ID_H_
 
-#include <utility>
-#include <cstddef>
 #include <atomic>
+#include <cstddef>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
-#include "SmallString.h"
+#include <utility>
 
 #ifndef WIN32
 class uuid;
@@ -31,7 +31,6 @@ class uuid;
 
 #include "core/logging/Logger.h"
 #include "properties/Properties.h"
-#include "OptionalUtils.h"
 #include "SmallString.h"
 
 #define UUID_TIME_IMPL 0
@@ -85,7 +84,7 @@ class Identifier {
   // 70ns more.
   SmallString<36> to_string() const;
 
-  static utils::optional<Identifier> parse(const std::string& str);
+  static std::optional<Identifier> parse(const std::string& str);
 
  private:
   static bool parseByte(Data& data, const uint8_t* input, int& charIdx, int& byteIdx);

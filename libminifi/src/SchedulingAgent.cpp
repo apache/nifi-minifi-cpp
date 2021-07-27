@@ -23,7 +23,6 @@
 #include <utility>
 #include <memory>
 #include "core/Processor.h"
-#include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 
 namespace org {
@@ -48,7 +47,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(
     };
 
   // only need to run this once.
-  auto monitor = utils::make_unique<utils::ComplexMonitor>();
+  auto monitor = std::make_unique<utils::ComplexMonitor>();
   utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
   // move the functor into the thread pool. While a future is returned
   // we aren't terribly concerned with the result.
@@ -68,7 +67,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
   };
 
   // only need to run this once.
-  auto monitor = utils::make_unique<utils::ComplexMonitor>();
+  auto monitor = std::make_unique<utils::ComplexMonitor>();
   utils::Worker<utils::TaskRescheduleInfo> functor(f_ex, serviceNode->getUUIDStr(), std::move(monitor));
 
   // move the functor into the thread pool. While a future is returned

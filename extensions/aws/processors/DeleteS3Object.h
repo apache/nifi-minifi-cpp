@@ -20,10 +20,11 @@
 
 #pragma once
 
-#include <sstream>
-#include <utility>
 #include <memory>
+#include <optional>
+#include <sstream>
 #include <string>
+#include <utility>
 
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"
@@ -70,7 +71,7 @@ class DeleteS3Object : public S3Processor {
     : S3Processor(name, uuid, logging::LoggerFactory<DeleteS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 
-  minifi::utils::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(
+  std::optional<aws::s3::DeleteObjectRequestParameters> buildDeleteS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const;

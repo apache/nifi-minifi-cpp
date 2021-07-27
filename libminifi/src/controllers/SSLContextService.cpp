@@ -25,6 +25,7 @@
 #ifdef WIN32
 #pragma comment(lib, "crypt32.lib")
 #pragma comment(lib, "Ws2_32.lib")
+#include <optional>
 #endif  // WIN32
 #endif  // OPENSSL_SUPPORT
 
@@ -293,7 +294,7 @@ bool SSLContextService::useClientCertificate(SSL_CTX* ctx, PCCERT_CONTEXT certif
 
   if (!client_cert_cn_.empty()) {
     utils::tls::DistinguishedName dn = utils::tls::DistinguishedName::fromSlashSeparated(x509_cert->name);
-    utils::optional<std::string> cn = dn.getCN();
+    std::optional<std::string> cn = dn.getCN();
     if (!cn || *cn != client_cert_cn_) {
       logger_->log_debug("Skipping client certificate %s because it doesn't match CN=%s", x509_cert->name, client_cert_cn_);
       return false;

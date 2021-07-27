@@ -202,7 +202,7 @@ bool PutS3Object::setAccessControl(
   return setCannedAcl(context, flow_file, put_s3_request_params);
 }
 
-minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
+std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3RequestParams(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const {
@@ -216,7 +216,7 @@ minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildP
   context->getProperty(ObjectKey, params.object_key, flow_file);
   if (params.object_key.empty() && (!flow_file->getAttribute("filename", params.object_key) || params.object_key.empty())) {
     logger_->log_error("No Object Key is set and default object key 'filename' attribute could not be found!");
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   logger_->log_debug("PutS3Object: Object Key [%s]", params.object_key);
 
@@ -224,7 +224,7 @@ minifi::utils::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildP
   logger_->log_debug("PutS3Object: Content Type [%s]", params.content_type);
 
   if (!setAccessControl(context, flow_file, params)) {
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   return params;
 }
@@ -277,7 +277,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
 
   PutS3Object::ReadCallback callback(flow_file->getSize(), *put_s3_request_params, s3_wrapper_);
   session->read(flow_file, &callback);
-  if (callback.result_ == minifi::utils::nullopt) {
+  if (!callback.result_.has_value()) {
     logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params->bucket);
     session->transfer(flow_file, Failure);
   } else {

@@ -44,8 +44,9 @@
 #include <sodium.h>
 
 #include <cstdlib>
-#include <vector>
 #include <iostream>
+#include <memory>
+#include <vector>
 
 #include "ResourceClaim.h"
 #include "core/Core.h"
@@ -208,14 +209,14 @@ int main(int argc, char **argv) {
   // Make a record of minifi home in the configured log file.
   logger->log_info("MINIFI_HOME=%s", minifiHome);
 
-  utils::optional<minifi::Decryptor> decryptor = minifi::Decryptor::create(minifiHome);
+  auto decryptor = minifi::Decryptor::create(minifiHome);
   if (decryptor) {
     logger->log_info("Found encryption key, will decrypt sensitive properties in the configuration");
   } else {
     logger->log_info("No encryption key found, will not decrypt sensitive properties in the configuration");
   }
 
-  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(decryptor);
+  const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(std::move(decryptor));
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
@@ -337,7 +338,7 @@ int main(int argc, char **argv) {
         return -1;
       }
       auto interval_switch = minifi::disk_space_watchdog::disk_space_interval_switch(config);
-      disk_space_watchdog = utils::make_unique<utils::CallBackTimer>(config.interval, [interval_switch, min_space, repo_paths, logger, &controller]() mutable {
+      disk_space_watchdog = std::make_unique<utils::CallBackTimer>(config.interval, [interval_switch, min_space, repo_paths, logger, &controller]() mutable {
         const auto stop = [&]{ controller->stop(); controller->unload(); };
         const auto restart = [&]{ controller->load(); controller->start(); };
         const auto switch_state = interval_switch(min_space(minifi::disk_space_watchdog::check_available_space(repo_paths, logger.get())));

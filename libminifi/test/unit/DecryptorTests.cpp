@@ -25,12 +25,11 @@ TEST_CASE("Decryptor can decide whether a property is encrypted", "[isValidEncry
   utils::crypto::Bytes encryption_key;
   minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
 
-  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(utils::nullopt) == false);
-  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(utils::optional<std::string>{""}) == false);
-  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(utils::optional<std::string>{"plaintext"}) == false);
-  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(utils::optional<std::string>{"AES256-GCM"}) == false);
-  REQUIRE(
-      minifi::Decryptor::isValidEncryptionMarker(utils::optional<std::string>{utils::crypto::EncryptionType::name()}) == true);
+  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(std::nullopt) == false);
+  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(std::optional<std::string>{""}) == false);
+  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(std::optional<std::string>{"plaintext"}) == false);
+  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(std::optional<std::string>{"AES256-GCM"}) == false);
+  REQUIRE(minifi::Decryptor::isValidEncryptionMarker(utils::crypto::EncryptionType::name()) == true);
 }
 
 TEST_CASE("Decryptor can decrypt a property", "[decrypt]") {
@@ -94,11 +93,11 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
   configuration.loadConfigureFile("encrypted.minifi.properties");
   REQUIRE(configuration.getConfiguredKeys().size() > 0);
 
-  utils::optional<std::string> passphrase = configuration.get(minifi::Configure::nifi_security_client_pass_phrase);
+  const auto passphrase = configuration.get(minifi::Configure::nifi_security_client_pass_phrase);
   REQUIRE(passphrase);
   REQUIRE(*passphrase == "SpeakFriendAndEnter");
 
-  utils::optional<std::string> password = configuration.get(minifi::Configure::nifi_rest_api_password);
+  const auto password = configuration.get(minifi::Configure::nifi_rest_api_password);
   REQUIRE(password);
   REQUIRE(*password == "OpenSesame");
 
@@ -106,19 +105,19 @@ TEST_CASE("Decryptor can decrypt a configuration file", "[decryptSensitiveProper
   REQUIRE(configuration.get("nifi.c2.agent.identifier", "c2.agent.identifier", agent_identifier));
   REQUIRE(agent_identifier == "TailFileTester-001");
 
-  utils::optional<std::string> unencrypted_property = configuration.get(minifi::Configure::nifi_bored_yield_duration);
+  const auto unencrypted_property = configuration.get(minifi::Configure::nifi_bored_yield_duration);
   REQUIRE(unencrypted_property);
   REQUIRE(*unencrypted_property == "10 millis");
 
-  utils::optional<std::string> nonexistent_property = configuration.get("this.property.does.not.exist");
+  const auto nonexistent_property = configuration.get("this.property.does.not.exist");
   REQUIRE_FALSE(nonexistent_property);
 }
 
 TEST_CASE("Decryptor can be created from a bootstrap file", "[create]") {
-  utils::optional<minifi::Decryptor> valid_decryptor = minifi::Decryptor::create("resources");
+  const auto valid_decryptor = minifi::Decryptor::create("resources");
   REQUIRE(valid_decryptor);
   REQUIRE(valid_decryptor->decrypt("HvbPejGT3ur9/00gXQK/dJCYwaNqhopf||CiXKiNaljSN7VkLXP5zfJnb4+4UcKIG3ddwuVfSPpkRRfT4=") == "SpeakFriendAndEnter");
 
-  utils::optional<minifi::Decryptor> invalid_decryptor = minifi::Decryptor::create("there.is.no.such.directory");
+  const auto invalid_decryptor = minifi::Decryptor::create("there.is.no.such.directory");
   REQUIRE_FALSE(invalid_decryptor);
 }

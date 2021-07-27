@@ -17,11 +17,12 @@
 
 #pragma once
 
-#include <utility>
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
+#include <utility>
+
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
 #include "utils/crypto/ciphers/XSalsa20.h"
 #include "core/logging/Logger.h"
 
@@ -37,13 +38,13 @@ class EncryptionProvider {
   explicit EncryptionProvider(Bytes key) : cipher_impl_(std::move(key)) {}
   explicit EncryptionProvider(XSalsa20Cipher cipher_impl) : cipher_impl_(std::move(cipher_impl)) {}
 
-  static utils::optional<EncryptionProvider> create(const std::string& home_path);
+  static std::optional<EncryptionProvider> create(const std::string& home_path);
 
-  std::string encrypt(const std::string& data) const {
+  [[nodiscard]] std::string encrypt(const std::string& data) const {
     return cipher_impl_.encrypt(data);
   }
 
-  std::string decrypt(const std::string& data) const {
+  [[nodiscard]] std::string decrypt(const std::string& data) const {
     return cipher_impl_.decrypt(data);
   }
 

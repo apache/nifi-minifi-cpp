@@ -81,7 +81,7 @@ uint64_t YamlConnectionParser::getWorkQueueDataSizeFromYaml() const {
 utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
   const YAML::Node source_id_node = connectionNode_["source id"];
   if (source_id_node) {
-    const utils::optional<utils::Identifier> srcUUID = utils::Identifier::parse(source_id_node.as<std::string>());
+    const auto srcUUID = utils::Identifier::parse(source_id_node.as<std::string>());
     if (srcUUID) {
       logger_->log_debug("Using 'source id' to match source with same id for connection '%s': source id => [%s]", name_, srcUUID.value().to_string());
       return srcUUID.value();
@@ -91,8 +91,8 @@ utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
   }
   // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
   checkRequiredField(&connectionNode_, "source name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
-  const std::string connectionSrcProcName = connectionNode_["source name"].as<std::string>();
-  const utils::optional<utils::Identifier> srcUUID = utils::Identifier::parse(connectionSrcProcName);
+  const auto connectionSrcProcName = connectionNode_["source name"].as<std::string>();
+  const auto srcUUID = utils::Identifier::parse(connectionSrcProcName);
   if (srcUUID && parent_->findProcessorById(srcUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the source name is a remote port id, so use that as the source id
     logger_->log_debug("Using 'source name' containing a remote port id to match the source for connection '%s': source name => [%s]", name_, connectionSrcProcName);
@@ -113,7 +113,7 @@ utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
 utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   const YAML::Node destination_id_node = connectionNode_["destination id"];
   if (destination_id_node) {
-    const utils::optional<utils::Identifier> destUUID = utils::Identifier::parse(destination_id_node.as<std::string>());
+    const auto destUUID = utils::Identifier::parse(destination_id_node.as<std::string>());
     if (destUUID) {
       logger_->log_debug("Using 'destination id' to match destination with same id for connection '%s': destination id => [%s]", name_, destUUID.value().to_string());
       return destUUID.value();
@@ -125,7 +125,7 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   // for looking up the destination processor in absence of a processor id
   checkRequiredField(&connectionNode_, "destination name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
   std::string connectionDestProcName = connectionNode_["destination name"].as<std::string>();
-  const utils::optional<utils::Identifier> destUUID = utils::Identifier::parse(connectionDestProcName);
+  const auto destUUID = utils::Identifier::parse(connectionDestProcName);
   if (destUUID && parent_->findProcessorById(destUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the destination name is a remote port id, so use that as the dest id
     logger_->log_debug("Using 'destination name' containing a remote port id to match the destination for connection '%s': destination name => [%s]", name_, connectionDestProcName);

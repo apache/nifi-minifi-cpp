@@ -83,7 +83,7 @@ Identifier& Identifier::operator=(const Data& data) {
 }
 
 Identifier& Identifier::operator=(const std::string& idStr) {
-  utils::optional<Identifier> id = Identifier::parse(idStr);
+  const auto id = Identifier::parse(idStr);
   if (!id) {
     throw std::runtime_error("Couldn't parse UUID");
   }
@@ -141,7 +141,7 @@ SmallString<36> Identifier::to_string() const {
   return uuidStr;
 }
 
-utils::optional<Identifier> Identifier::parse(const std::string &str) {
+std::optional<Identifier> Identifier::parse(const std::string &str) {
   Identifier id;
   // xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx is 36 long: 16 bytes * 2 hex digits / byte + 4 hyphens
   if (str.length() != 36) return {};

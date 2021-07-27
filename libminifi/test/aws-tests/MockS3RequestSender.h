@@ -18,11 +18,12 @@
 
 #pragma once
 
+#include <map>
+#include <optional>
 #include <string>
 #include <sstream>
-#include <vector>
-#include <map>
 #include <utility>
+#include <vector>
 
 #include "s3/S3RequestSender.h"
 #include "aws/core/utils/DateTime.h"
@@ -90,7 +91,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     }
   }
 
-  minifi::utils::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
+  std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
       const Aws::S3::Model::PutObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
       const Aws::Client::ClientConfiguration& client_config) override {
@@ -118,7 +119,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return delete_object_result_;
   }
 
-  minifi::utils::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
+  std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
       const Aws::S3::Model::GetObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
       const Aws::Client::ClientConfiguration& client_config) override {
@@ -137,10 +138,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       get_s3_result.SetContentLength(S3_CONTENT.size());
       get_s3_result.SetMetadata(S3_OBJECT_USER_METADATA);
     }
-    return minifi::utils::make_optional(std::move(get_s3_result));
+    return std::make_optional(std::move(get_s3_result));
   }
 
-  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
+  std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
       const Aws::S3::Model::ListObjectsV2Request& request,
       const Aws::Auth::AWSCredentials& credentials,
       const Aws::Client::ClientConfiguration& client_config) override {
@@ -171,7 +172,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return list_object_result;
   }
 
-  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
+  std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
       const Aws::S3::Model::ListObjectVersionsRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
       const Aws::Client::ClientConfiguration& client_config) override {
@@ -203,7 +204,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return list_version_result;
   }
 
-  minifi::utils::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
+  std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
       const Aws::S3::Model::GetObjectTaggingRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
       const Aws::Client::ClientConfiguration& client_config) override {
@@ -220,7 +221,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return result;
   }
 
-  minifi::utils::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
+  std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
       const Aws::S3::Model::HeadObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
       const Aws::Client::ClientConfiguration& client_config) override {
@@ -238,7 +239,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
       head_s3_result.SetContentLength(S3_CONTENT.size());
       head_s3_result.SetMetadata(S3_OBJECT_USER_METADATA);
     }
-    return minifi::utils::make_optional(std::move(head_s3_result));
+    return std::make_optional(std::move(head_s3_result));
   }
 
   Aws::Auth::AWSCredentials getCredentials() const {

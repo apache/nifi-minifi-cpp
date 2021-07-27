@@ -167,7 +167,7 @@ class TLSClientSocketSupportedProtocolsTest {
     server.waitForConnection();
 
     const auto socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
-    client_socket_ = utils::make_unique<org::apache::nifi::minifi::io::TLSSocket>(socket_context, host_, std::stoi(port_), 0);
+    client_socket_ = std::make_unique<org::apache::nifi::minifi::io::TLSSocket>(socket_context, host_, std::stoi(port_), 0);
     const bool client_initialized_successfully = (client_socket_->initialize() == 0);
     assert(client_initialized_successfully == should_be_compatible);
     server.shutdownServer();

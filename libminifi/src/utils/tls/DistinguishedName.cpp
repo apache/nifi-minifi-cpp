@@ -42,13 +42,13 @@ DistinguishedName DistinguishedName::fromSlashSeparated(const std::string &slash
   return DistinguishedName{utils::StringUtils::splitRemovingEmpty(slash_separated_components, "/")};
 }
 
-utils::optional<std::string> DistinguishedName::getCN() const {
+std::optional<std::string> DistinguishedName::getCN() const {
   const auto it = std::find_if(components_.begin(), components_.end(),
       [](const std::string& component) { return component.compare(0, 3, "CN=") == 0; });
   if (it != components_.end()) {
     return it->substr(3);
   } else {
-    return utils::nullopt;
+    return std::nullopt;
   }
 }
 

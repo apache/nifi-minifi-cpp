@@ -25,12 +25,12 @@
 #include <string>
 #include <map>
 #include <set>
+#include <type_traits>
 #include <vector>
 
 #include "utils/gsl.h"
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
-#include "utils/GeneralUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
@@ -267,7 +267,7 @@ class PublishKafka::Messages {
   }
 
   template<typename Func>
-  auto iterateFlowFiles(Func fun) -> utils::void_t<decltype(fun(size_t{0}, flow_files_.front()))> {
+  auto iterateFlowFiles(Func fun) -> std::void_t<decltype(fun(size_t{0}, flow_files_.front()))> {
     std::lock_guard<std::mutex> lock(mutex_);
     for (size_t index = 0U; index < flow_files_.size(); index++) {
       fun(index, flow_files_[index]);
@@ -338,7 +338,7 @@ class ReadCallback : public InputStreamCallback {
       });
     };
     // release()d below, deallocated in PublishKafka::messageDeliveryCallback
-    auto callback_ptr = utils::make_unique<std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>>(std::move(produce_callback));
+    auto callback_ptr = std::make_unique<std::function<void(rd_kafka_t*, const rd_kafka_message_t*)>>(std::move(produce_callback));
 
     allocate_message_object(segment_num);
 
@@ -539,7 +539,7 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
   key_.brokers_ = brokers;
   key_.client_id_ = client_id;
 
-  conn_ = utils::make_unique<KafkaConnection>(key_);
+  conn_ = std::make_unique<KafkaConnection>(key_);
   configureNewConnection(context);
 
   std::string message_key_field;

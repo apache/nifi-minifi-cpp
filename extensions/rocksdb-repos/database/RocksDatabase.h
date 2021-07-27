@@ -19,9 +19,9 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 
-#include "utils/OptionalUtils.h"
 #include "rocksdb/db.h"
 #include "logging/Logger.h"
 #include "RocksDbUtils.h"
@@ -48,7 +48,7 @@ class RocksDatabase {
 
   RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, DBOptionsPatch db_options_patch, ColumnFamilyOptionsPatch cf_options_patch);
 
-  utils::optional<OpenRocksDb> open();
+  std::optional<OpenRocksDb> open();
 
  private:
   const std::string column_;

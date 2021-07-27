@@ -22,6 +22,7 @@
 #include <chrono>
 #include <future>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -35,7 +36,6 @@
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
-#include "utils/OptionalUtils.h"
 #include "WorkerThread.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
@@ -84,8 +84,8 @@ class ConsumeJournald final : public core::Processor {
     std::chrono::system_clock::time_point timestamp;
   };
 
-  static utils::optional<gsl::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
-  static utils::optional<journal_field> getNextField(libwrapper::Journal&);
+  static std::optional<gsl::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
+  static std::optional<journal_field> getNextField(libwrapper::Journal&);
   std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();
   std::string formatSyslogMessage(const journal_message&) const;
   std::string getCursor() const;

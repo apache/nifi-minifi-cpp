@@ -26,17 +26,17 @@ namespace {
 constexpr const char* HTTP = "http://";
 constexpr const char* HTTPS = "https://";
 
-utils::optional<std::string> parseProtocol(const std::string& url_input) {
+std::optional<std::string> parseProtocol(const std::string& url_input) {
   if (utils::StringUtils::startsWith(url_input, HTTP)) {
     return HTTP;
   } else if (utils::StringUtils::startsWith(url_input, HTTPS)) {
     return HTTPS;
   } else {
-    return {};
+    return std::nullopt;
   }
 }
 
-utils::optional<int> parsePortNumber(const std::string& port_string) {
+std::optional<int> parsePortNumber(const std::string& port_string) {
   try {
     size_t pos;
     int port = std::stoi(port_string, &pos);
@@ -47,7 +47,7 @@ utils::optional<int> parsePortNumber(const std::string& port_string) {
   } catch (const std::out_of_range&) {
   }
 
-  return {};
+  return std::nullopt;
 }
 
 }  // namespace

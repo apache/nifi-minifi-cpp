@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <numeric>
 #include "utils/TimeUtil.h"
-#include "utils/GeneralUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "serialization/PayloadSerializer.h"
@@ -301,20 +300,20 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
 
   const char* mimeType;
   std::unique_ptr<MergeBin> mergeBin;
-  std::unique_ptr<minifi::FlowFileSerializer> serializer = utils::make_unique<PayloadSerializer>(flowFileReader);
+  std::unique_ptr<minifi::FlowFileSerializer> serializer = std::make_unique<PayloadSerializer>(flowFileReader);
   if (mergeFormat_ == merge_content_options::MERGE_FORMAT_CONCAT_VALUE) {
-    mergeBin = utils::make_unique<BinaryConcatenationMerge>(headerContent_, footerContent_, demarcatorContent_);
+    mergeBin = std::make_unique<BinaryConcatenationMerge>(headerContent_, footerContent_, demarcatorContent_);
     mimeType = "application/octet-stream";
   } else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE) {
     // disregard header, demarcator, footer
-    mergeBin = utils::make_unique<BinaryConcatenationMerge>("", "", "");
-    serializer = utils::make_unique<FlowFileV3Serializer>(flowFileReader);
+    mergeBin = std::make_unique<BinaryConcatenationMerge>("", "", "");
+    serializer = std::make_unique<FlowFileV3Serializer>(flowFileReader);
     mimeType = "application/flowfile-v3";
   } else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_TAR_VALUE) {
-    mergeBin = utils::make_unique<TarMerge>();
+    mergeBin = std::make_unique<TarMerge>();
     mimeType = "application/tar";
   } else if (mergeFormat_ == merge_content_options::MERGE_FORMAT_ZIP_VALUE) {
-    mergeBin = utils::make_unique<ZipMerge>();
+    mergeBin = std::make_unique<ZipMerge>();
     mimeType = "application/zip";
   } else {
     logger_->log_error("Merge format not supported %s", mergeFormat_);

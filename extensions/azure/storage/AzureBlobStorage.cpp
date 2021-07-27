@@ -20,9 +20,8 @@
 
 #include "AzureBlobStorage.h"
 
+#include <memory>
 #include <utility>
-
-#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -33,7 +32,7 @@ namespace storage {
 
 AzureBlobStorage::AzureBlobStorage(std::string connection_string, std::string container_name)
   : BlobStorage(std::move(connection_string), std::move(container_name))
-  , container_client_(minifi::utils::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
+  , container_client_(std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
       Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string_, container_name_))) {
 }
 
@@ -45,7 +44,7 @@ void AzureBlobStorage::resetClientIfNeeded(const std::string &connection_string,
   connection_string_ = connection_string;
   container_name_ = container_name;
   logger_->log_debug("Client has been reset with new credentials");
-  container_client_ = minifi::utils::make_unique<Azure::Storage::Blobs::BlobContainerClient>(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string, container_name));
+  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string, container_name));
 }
 
 void AzureBlobStorage::createContainer() {
@@ -57,12 +56,12 @@ void AzureBlobStorage::createContainer() {
   }
 }
 
-utils::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) {
+std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) {
   try {
     auto blob_client = container_client_->GetBlockBlobClient(blob_name);
     auto response = blob_client.UploadFrom(buffer, buffer_size);
     if (!response.HasValue()) {
-      return utils::nullopt;
+      return std::nullopt;
     }
 
     UploadBlobResult result;
@@ -75,7 +74,7 @@ utils::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string
     return result;
   } catch (const std::runtime_error& err) {
     logger_->log_error("A runtime error occurred while uploading blob: %s", err.what());
-    return utils::nullopt;
+    return std::nullopt;
   }
 }
 

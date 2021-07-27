@@ -107,7 +107,7 @@ std::string get_encoded_string(const std::string& input, KafkaEncoding encoding)
   throw std::runtime_error("Invalid encoding selected: " + input);
 }
 
-optional<std::string> get_encoded_message_key(const rd_kafka_message_t& message, KafkaEncoding encoding) {
+std::optional<std::string> get_encoded_message_key(const rd_kafka_message_t& message, KafkaEncoding encoding) {
   if (nullptr == message.key) {
     return {};
   }

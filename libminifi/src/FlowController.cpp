@@ -49,7 +49,6 @@
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileSystem.h"
 #include "utils/HTTPClient.h"
-#include "utils/GeneralUtils.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/validation.h"
 
@@ -80,7 +79,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   running_ = false;
   initialized_ = false;
 
-  protocol_ = utils::make_unique<FlowControlProtocol>(this, configuration_);
+  protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
 
   if (!headless_mode) {
     initializeExternalComponents();
@@ -101,15 +100,15 @@ void FlowController::initializeExternalComponents() {
   }
 }
 
-utils::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
+std::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
   std::string shutdown_timeout_str;
   if (configuration_->get(minifi::Configure::nifi_flowcontroller_drain_timeout, shutdown_timeout_str)) {
-    const utils::optional<core::TimePeriodValue> time_from_config = core::TimePeriodValue::fromString(shutdown_timeout_str);
+    const auto time_from_config = core::TimePeriodValue::fromString(shutdown_timeout_str);
     if (time_from_config) {
       return { std::chrono::milliseconds{ time_from_config.value().getMilliseconds() }};
     }
   }
-  return utils::nullopt;
+  return std::nullopt;
 }
 
 FlowController::~FlowController() {

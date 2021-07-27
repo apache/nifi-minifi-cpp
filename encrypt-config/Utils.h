@@ -16,8 +16,9 @@
  */
 #pragma once
 
+#include <optional>
+
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -26,7 +27,7 @@ namespace minifi {
 namespace encrypt_config {
 
 struct EncryptionKeys {
-  utils::optional<utils::crypto::Bytes> old_key;
+  std::optional<utils::crypto::Bytes> old_key;
   utils::crypto::Bytes encryption_key;
 };
 

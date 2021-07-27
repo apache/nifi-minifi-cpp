@@ -20,11 +20,12 @@
 
 #pragma once
 
-#include <string>
 #include <map>
-#include <unordered_map>
 #include <memory>
+#include <optional>
 #include <sstream>
+#include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -194,12 +195,12 @@ class S3Wrapper {
   S3Wrapper();
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
-  minifi::utils::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
+  std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
   bool deleteObject(const DeleteObjectRequestParameters& options);
-  minifi::utils::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& fetched_body);
-  minifi::utils::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
-  minifi::utils::optional<std::map<std::string, std::string>> getObjectTags(const GetObjectTagsParameters& params);
-  minifi::utils::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
+  std::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& fetched_body);
+  std::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
+  std::optional<std::map<std::string, std::string>> getObjectTags(const GetObjectTagsParameters& params);
+  std::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);
 
   virtual ~S3Wrapper() = default;
 
@@ -210,8 +211,8 @@ class S3Wrapper {
   static int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
 
-  minifi::utils::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
-  minifi::utils::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
+  std::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);
+  std::optional<std::vector<ListedObjectAttributes>> listObjects(const ListRequestParameters& params);
   void addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
   void addListResults(const Aws::Vector<Aws::S3::Model::Object>& content, uint64_t min_object_age, std::vector<ListedObjectAttributes>& listed_objects);
 

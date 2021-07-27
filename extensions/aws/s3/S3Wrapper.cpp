@@ -25,7 +25,6 @@
 #include <vector>
 
 #include "S3ClientRequestSender.h"
-#include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/RegexUtils.h"
@@ -43,7 +42,7 @@ void HeadObjectResult::setFilePaths(const std::string& key) {
   std::tie(path, filename) = minifi::utils::file::FileUtils::split_path(key, true /*force_posix*/);
 }
 
-S3Wrapper::S3Wrapper() : request_sender_(minifi::utils::make_unique<S3ClientRequestSender>()) {
+S3Wrapper::S3Wrapper() : request_sender_(std::make_unique<S3ClientRequestSender>()) {
 }
 
 S3Wrapper::S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender) : request_sender_(std::move(request_sender)) {
@@ -81,7 +80,7 @@ std::string S3Wrapper::getEncryptionString(Aws::S3::Model::ServerSideEncryption 
   return "";
 }
 
-minifi::utils::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream) {
+std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(put_object_params.bucket);
   request.SetKey(put_object_params.object_key);
@@ -98,7 +97,7 @@ minifi::utils::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectReq
 
   auto aws_result = request_sender_->sendPutObjectRequest(request, put_object_params.credentials, put_object_params.client_config);
   if (!aws_result) {
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
 
   PutObjectResult result;
@@ -141,11 +140,11 @@ int64_t S3Wrapper::writeFetchedBody(Aws::IOStream& source, const int64_t data_si
   return gsl::narrow<int64_t>(write_size);
 }
 
-minifi::utils::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body) {
+std::optional<GetObjectResult> S3Wrapper::getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body) {
   auto request = createFetchObjectRequest<Aws::S3::Model::GetObjectRequest>(get_object_params);
   auto aws_result = request_sender_->sendGetObjectRequest(request, get_object_params.credentials, get_object_params.client_config);
   if (!aws_result) {
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   auto result = fillFetchObjectResult<Aws::S3::Model::GetObjectResult, GetObjectResult>(get_object_params, *aws_result);
   result.write_size = writeFetchedBody(aws_result->GetBody(), aws_result->GetContentLength(), out_body);
@@ -189,14 +188,14 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& conten
   }
 }
 
-minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const ListRequestParameters& params) {
+std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVersions(const ListRequestParameters& params) {
   auto request = createListRequest<Aws::S3::Model::ListObjectVersionsRequest>(params);
   std::vector<ListedObjectAttributes> attribute_list;
-  minifi::utils::optional<Aws::S3::Model::ListObjectVersionsResult> aws_result;
+  std::optional<Aws::S3::Model::ListObjectVersionsResult> aws_result;
   do {
     aws_result = request_sender_->sendListVersionsRequest(request, params.credentials, params.client_config);
     if (!aws_result) {
-      return minifi::utils::nullopt;
+      return std::nullopt;
     }
     const auto& versions = aws_result->GetVersions();
     logger_->log_debug("AWS S3 List operation returned %zu versions. This result is%s truncated.", versions.size(), aws_result->GetIsTruncated() ? "" : " not");
@@ -210,14 +209,14 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listVers
   return attribute_list;
 }
 
-minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const ListRequestParameters& params) {
+std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObjects(const ListRequestParameters& params) {
   auto request = createListRequest<Aws::S3::Model::ListObjectsV2Request>(params);
   std::vector<ListedObjectAttributes> attribute_list;
-  minifi::utils::optional<Aws::S3::Model::ListObjectsV2Result> aws_result;
+  std::optional<Aws::S3::Model::ListObjectsV2Result> aws_result;
   do {
     aws_result = request_sender_->sendListObjectsRequest(request, params.credentials, params.client_config);
     if (!aws_result) {
-      return minifi::utils::nullopt;
+      return std::nullopt;
     }
     const auto& objects = aws_result->GetContents();
     logger_->log_debug("AWS S3 List operation returned %zu objects. This result is%s truncated.", objects.size(), aws_result->GetIsTruncated() ? "" : "not");
@@ -230,15 +229,15 @@ minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listObje
   return attribute_list;
 }
 
-minifi::utils::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listBucket(const ListRequestParameters& params) {
-  last_bucket_list_timestamp_ = Aws::Utils::DateTime::CurrentTimeMillis();
+std::optional<std::vector<ListedObjectAttributes>> S3Wrapper::listBucket(const ListRequestParameters& params) {
+  last_bucket_list_timestamp_ = gsl::narrow<uint64_t>(Aws::Utils::DateTime::CurrentTimeMillis());
   if (params.use_versions) {
     return listVersions(params);
   }
   return listObjects(params);
 }
 
-minifi::utils::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const GetObjectTagsParameters& params) {
+std::optional<std::map<std::string, std::string>> S3Wrapper::getObjectTags(const GetObjectTagsParameters& params) {
   Aws::S3::Model::GetObjectTaggingRequest request;
   request.SetBucket(params.bucket);
   request.SetKey(params.object_key);
@@ -247,7 +246,7 @@ minifi::utils::optional<std::map<std::string, std::string>> S3Wrapper::getObject
   }
   auto aws_result = request_sender_->sendGetObjectTaggingRequest(request, params.credentials, params.client_config);
   if (!aws_result) {
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   std::map<std::string, std::string> tags;
   for (const auto& tag : aws_result->GetTagSet()) {
@@ -256,11 +255,11 @@ minifi::utils::optional<std::map<std::string, std::string>> S3Wrapper::getObject
   return tags;
 }
 
-minifi::utils::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestParameters& head_object_params) {
+std::optional<HeadObjectResult> S3Wrapper::headObject(const HeadObjectRequestParameters& head_object_params) {
   auto request = createFetchObjectRequest<Aws::S3::Model::HeadObjectRequest>(head_object_params);
   auto aws_result = request_sender_->sendHeadObjectRequest(request, head_object_params.credentials, head_object_params.client_config);
   if (!aws_result) {
-    return minifi::utils::nullopt;
+    return std::nullopt;
   }
   return fillFetchObjectResult<Aws::S3::Model::HeadObjectResult, HeadObjectResult>(head_object_params, aws_result.value());
 }

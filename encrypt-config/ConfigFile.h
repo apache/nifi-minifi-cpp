@@ -21,7 +21,6 @@
 #include <vector>
 
 #include "utils/crypto/EncryptionUtils.h"
-#include "utils/OptionalUtils.h"
 #include "properties/PropertiesFile.h"
 
 namespace org {
@@ -34,7 +33,7 @@ class ConfigFile : public PropertiesFile {
  public:
   using PropertiesFile::PropertiesFile;
 
-  std::vector<std::string> getSensitiveProperties() const;
+  [[nodiscard]] std::vector<std::string> getSensitiveProperties() const;
 
  private:
   friend class ConfigFileTestAccessor;

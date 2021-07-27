@@ -23,6 +23,7 @@
 #include "date/date.h"
 #include "spdlog/spdlog.h"  // TODO(szaszm): make fmt directly available
 #include "utils/GeneralUtils.h"
+#include "utils/OptionalUtils.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
@@ -77,7 +78,7 @@ void ConsumeJournald::initialize() {
   setSupportedProperties({BatchSize, PayloadFormat, IncludeTimestamp, JournalType, ProcessOldMessages, TimestampFormat});
   setSupportedRelationships({Success});
 
-  worker_ = utils::make_unique<Worker>();
+  worker_ = std::make_unique<Worker>();
 }
 
 void ConsumeJournald::notifyStop() {
@@ -93,16 +94,16 @@ void ConsumeJournald::onSchedule(core::ProcessContext* const context, core::Proc
   gsl_Expects(context && sessionFactory && !running_ && worker_);
   using JournalTypeEnum = systemd::JournalType;
 
-  const auto parse_payload_format = [](const std::string& property_value) -> utils::optional<systemd::PayloadFormat> {
+  const auto parse_payload_format = [](const std::string& property_value) -> std::optional<systemd::PayloadFormat> {
     if (property_value == PAYLOAD_FORMAT_RAW) return systemd::PayloadFormat::Raw;
     if (property_value == PAYLOAD_FORMAT_SYSLOG) return systemd::PayloadFormat::Syslog;
-    return utils::nullopt;
+    return std::nullopt;
   };
-  const auto parse_journal_type = [](const std::string& property_value) -> utils::optional<JournalTypeEnum> {
+  const auto parse_journal_type = [](const std::string& property_value) -> std::optional<JournalTypeEnum> {
     if (property_value == JOURNAL_TYPE_USER) return JournalTypeEnum::User;
     if (property_value == JOURNAL_TYPE_SYSTEM) return JournalTypeEnum::System;
     if (property_value == JOURNAL_TYPE_BOTH) return JournalTypeEnum::Both;
-    return utils::nullopt;
+    return std::nullopt;
   };
   batch_size_ = context->getProperty<size_t>(BatchSize).value();
   payload_format_ = (context->getProperty(PayloadFormat) | utils::flatMap(parse_payload_format)
@@ -172,11 +173,11 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
   state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
 }
 
-utils::optional<gsl::span<const char>> ConsumeJournald::enumerateJournalEntry(libwrapper::Journal& journal) {
+std::optional<gsl::span<const char>> ConsumeJournald::enumerateJournalEntry(libwrapper::Journal& journal) {
   const void* data_ptr{};
   size_t data_length{};
   const auto status_code = journal.enumerateData(&data_ptr, &data_length);
-  if (status_code == 0) return {};
+  if (status_code == 0) return std::nullopt;
   if (status_code < 0) throw SystemErrorException{ "sd_journal_enumerate_data", std::generic_category().default_error_condition(-status_code) };
   gsl_Ensures(data_ptr && "if sd_journal_enumerate_data was successful, then data_ptr must be set");
   gsl_Ensures(data_length > 0 && "if sd_journal_enumerate_data was successful, then data_length must be greater than zero");
@@ -184,7 +185,7 @@ utils::optional<gsl::span<const char>> ConsumeJournald::enumerateJournalEntry(li
   return gsl::make_span(data_str_ptr, data_length);
 }
 
-utils::optional<ConsumeJournald::journal_field> ConsumeJournald::getNextField(libwrapper::Journal& journal) {
+std::optional<ConsumeJournald::journal_field> ConsumeJournald::getNextField(libwrapper::Journal& journal) {
   return enumerateJournalEntry(journal) | utils::map([](gsl::span<const char> field) {
     const auto eq_pos = std::find(std::begin(field), std::end(field), '=');
     gsl_Ensures(eq_pos != std::end(field) && "field string must contain an equals sign");
@@ -203,7 +204,7 @@ std::future<std::pair<std::string, std::vector<ConsumeJournald::journal_message>
     messages.reserve(batch_size_);
     for (size_t i = 0; i < batch_size_ && journal_->next() > 0; ++i) {
       journal_message message;
-      utils::optional<journal_field> field;
+      std::optional<journal_field> field;
       while ((field = getNextField(*journal_)).has_value()) {
         message.fields.push_back(std::move(*field));
       }

@@ -17,12 +17,14 @@
  */
 
 #pragma once
+
+#include <memory>
+
 #include "core/ClassLoader.h"
 #include "processors/ExecuteSQL.h"
 #include "processors/PutSQL.h"
 #include "processors/QueryDatabaseTable.h"
 #include "services/ODBCConnector.h"
-#include "utils/GeneralUtils.h"
 
 class SQLFactory : public core::ObjectFactory {
  public:
@@ -49,7 +51,7 @@ class SQLFactory : public core::ObjectFactory {
 
   template <typename T>
   static std::unique_ptr<ObjectFactory> getObjectFactory() {
-    return utils::make_unique<core::DefautObjectFactory<T>>();
+    return std::make_unique<core::DefautObjectFactory<T>>();
   }
 
   std::unique_ptr<ObjectFactory> assign(const std::string &class_name) override {

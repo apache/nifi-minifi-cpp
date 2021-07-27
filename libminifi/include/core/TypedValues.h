@@ -19,16 +19,16 @@
 #define LIBMINIFI_INCLUDE_CORE_TYPEDVALUES_H_
 
 #include <algorithm>
-#include <string>
-#include <typeindex>
 #include <map>
 #include <memory>
+#include <optional>
+#include <string>
+#include <typeindex>
 
 #include "state/Value.h"
 #include "utils/StringUtils.h"
 #include "utils/ValueParser.h"
 #include "utils/PropertyErrors.h"
-#include "utils/OptionalUtils.h"
 #include "utils/Literals.h"
 
 namespace org {
@@ -72,11 +72,11 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
     return getValue();
   }
 
-  static utils::optional<TimePeriodValue> fromString(const std::string& str) {
+  static std::optional<TimePeriodValue> fromString(const std::string& str) {
     try {
       return TimePeriodValue(str);
     } catch (const utils::internal::ValueException&) {
-      return utils::nullopt;
+      return std::nullopt;
     }
   }
 

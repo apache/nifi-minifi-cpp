@@ -18,15 +18,16 @@
 
 #pragma once
 
-#include <map>
-#include <string>
-#include <vector>
-#include <utility>
 #include <functional>
 #include <future>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
+#include <string>
 #include <thread>
+#include <utility>
+#include <vector>
 
 #include "../core/state/nodes/MetricsBase.h"
 #include "../core/state/Value.h"
@@ -88,7 +89,7 @@ class C2Agent : public state::UpdateController {
     return heart_beat_period_;
   }
 
-  utils::optional<std::string> fetchFlow(const std::string& uri) const;
+  std::optional<std::string> fetchFlow(const std::string& uri) const;
 
  protected:
   void restart_agent();

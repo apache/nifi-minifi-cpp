@@ -315,7 +315,7 @@ void PerformanceDataMonitor::setupOutputFormatFromProperties(const std::shared_p
 void PerformanceDataMonitor::setupDecimalPlacesFromProperties(const std::shared_ptr<core::ProcessContext>& context) {
   std::string decimal_places_str;
   if (!context->getProperty(DecimalPlaces.getName(), decimal_places_str) || decimal_places_str == "") {
-    decimal_places_ = utils::nullopt;
+    decimal_places_ = std::nullopt;
     return;
   }
 

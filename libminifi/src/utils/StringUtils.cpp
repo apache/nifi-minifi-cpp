@@ -17,8 +17,8 @@
 
 #include <limits>
 
+#include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
-
 #include "utils/Environment.h"
 
 namespace org {
@@ -27,7 +27,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-utils::optional<bool> StringUtils::toBool(const std::string& str) {
+std::optional<bool> StringUtils::toBool(const std::string& str) {
   std::string trimmed = trim(str);
   if (equalsIgnoreCase(trimmed, "true")) {
     return true;
@@ -35,7 +35,7 @@ utils::optional<bool> StringUtils::toBool(const std::string& str) {
   if (equalsIgnoreCase(trimmed, "false")) {
     return false;
   }
-  return {};
+  return std::nullopt;
 }
 
 std::string StringUtils::toLower(std::string str) {

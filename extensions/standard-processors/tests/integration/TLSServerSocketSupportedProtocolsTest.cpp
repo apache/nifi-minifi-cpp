@@ -244,7 +244,7 @@ class TLSServerSocketSupportedProtocolsTest {
 
     void createServerSocket() {
       const auto socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
-      server_socket_ = utils::make_unique<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
+      server_socket_ = std::make_unique<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
       assert(0 == server_socket_->initialize());
 
       is_running_ = true;

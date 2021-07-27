@@ -40,7 +40,7 @@ namespace sitetosite {
 
 std::shared_ptr<utils::IdGenerator> HttpSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-utils::optional<utils::Identifier> HttpSiteToSiteClient::parseTransactionId(const std::string &uri) {
+std::optional<utils::Identifier> HttpSiteToSiteClient::parseTransactionId(const std::string &uri) {
   const size_t last_slash_pos = uri.find_last_of('/');
   size_t id_start_pos = 0;
   if (last_slash_pos != std::string::npos) {

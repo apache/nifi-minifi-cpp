@@ -60,7 +60,7 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
 
   if (mode == RocksDbMode::ReadOnly) {
     // no need to cache anything with read-only databases
-    return utils::make_unique<RocksDatabase>(std::make_shared<RocksDbInstance>(db_path, mode), db_column, db_options_patch, cf_options_patch);
+    return std::make_unique<RocksDatabase>(std::make_shared<RocksDbInstance>(db_path, mode), db_column, db_options_patch, cf_options_patch);
   }
 
   static std::mutex mtx;
@@ -78,13 +78,13 @@ std::unique_ptr<RocksDatabase> RocksDatabase::create(const DBOptionsPatch& db_op
       logger_->log_info("Using previously opened rocksdb instance '%s'", db_path);
     }
   }
-  return utils::make_unique<RocksDatabase>(instance, db_column, db_options_patch, cf_options_patch);
+  return std::make_unique<RocksDatabase>(instance, db_column, db_options_patch, cf_options_patch);
 }
 
 RocksDatabase::RocksDatabase(std::shared_ptr<RocksDbInstance> db, std::string column, DBOptionsPatch db_options_patch, ColumnFamilyOptionsPatch cf_options_patch)
   : column_(std::move(column)), db_options_patch_(std::move(db_options_patch)), cf_options_patch_(std::move(cf_options_patch)), db_(std::move(db)) {}
 
-utils::optional<OpenRocksDb> RocksDatabase::open() {
+std::optional<OpenRocksDb> RocksDatabase::open() {
   return db_->open(column_, db_options_patch_, cf_options_patch_);
 }
 

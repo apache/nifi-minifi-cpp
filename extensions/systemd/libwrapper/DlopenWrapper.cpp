@@ -98,7 +98,7 @@ class DlopenJournal : public Journal {
 };
 
 std::unique_ptr<Journal> DlopenWrapper::openJournal(const JournalType type) {
-  return utils::make_unique<DlopenJournal>(type);
+  return std::make_unique<DlopenJournal>(type);
 }
 
 }  // namespace libwrapper

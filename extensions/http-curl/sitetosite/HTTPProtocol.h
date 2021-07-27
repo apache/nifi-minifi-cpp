@@ -17,11 +17,12 @@
  */
 #pragma once
 
-#include <string>
 #include <map>
 #include <memory>
-#include <vector>
+#include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 #include "HTTPTransaction.h"
 #include "sitetosite/SiteToSite.h"
 #include "sitetosite/SiteToSiteClient.h"
@@ -144,7 +145,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   void tearDown() override;
 
-  utils::optional<utils::Identifier> parseTransactionId(const std::string &uri);
+  std::optional<utils::Identifier> parseTransactionId(const std::string &uri);
 
   std::unique_ptr<utils::HTTPClient> create_http_client(const std::string &uri, const std::string &method = "POST", bool setPropertyHeaders = false) {
     std::unique_ptr<utils::HTTPClient> http_client_ = std::unique_ptr<utils::HTTPClient>(new minifi::utils::HTTPClient(uri, ssl_context_service_));

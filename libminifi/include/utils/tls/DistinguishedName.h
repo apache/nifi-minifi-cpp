@@ -16,11 +16,10 @@
  */
 #pragma once
 
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -35,8 +34,8 @@ class DistinguishedName {
   static DistinguishedName fromCommaSeparated(const std::string& comma_separated_components);
   static DistinguishedName fromSlashSeparated(const std::string& slash_separated_components);
 
-  utils::optional<std::string> getCN() const;
-  std::string toString() const;
+  [[nodiscard]] std::optional<std::string> getCN() const;
+  [[nodiscard]] std::string toString() const;
 
   friend bool operator==(const DistinguishedName& left, const DistinguishedName& right) { return left.components_ == right.components_; }
   friend bool operator!=(const DistinguishedName& left, const DistinguishedName& right) { return !(left == right); }

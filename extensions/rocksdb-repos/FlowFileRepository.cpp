@@ -18,11 +18,12 @@
 #include "FlowFileRepository.h"
 
 #include <chrono>
+#include <list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
-#include <list>
 
 #include "rocksdb/options.h"
 #include "rocksdb/write_batch.h"
@@ -144,7 +145,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
     }
   };
   auto checkpointDB = minifi::internal::RocksDatabase::create(set_db_opts, {}, checkpoint_dir_, minifi::internal::RocksDbMode::ReadOnly);
-  utils::optional<minifi::internal::OpenRocksDb> opendb;
+  std::optional<minifi::internal::OpenRocksDb> opendb;
   if (nullptr != checkpoint_) {
     opendb = checkpointDB->open();
     if (opendb) {
