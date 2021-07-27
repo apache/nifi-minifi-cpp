@@ -18,6 +18,7 @@
 
 #include <map>
 #include <memory>
+#include <chrono>
 #include "core/repository/VolatileContentRepository.h"
 #include "core/ProcessGroup.h"
 #include "core/RepositoryFactory.h"
@@ -25,6 +26,8 @@
 #include "TailFile.h"
 #include "TestBase.h"
 #include "utils/TestUtils.h"
+
+using namespace std::chrono_literals;  // NOLINT using namespace directive is required for literals
 
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   TestController test_controller;
@@ -149,11 +152,9 @@ Provenance Reporting:
     REQUIRE(uuid);
     REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
     REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
-    REQUIRE(
-        core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
-    REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
+    REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
     REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
-    REQUIRE(std::chrono::seconds(30) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
+    REQUIRE(30s == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
     REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
     REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
@@ -478,7 +479,7 @@ NiFi Properties Overrides: {}
   REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
-  REQUIRE(std::chrono::seconds(30) == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
+  REQUIRE(30s == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
   REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
   REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
