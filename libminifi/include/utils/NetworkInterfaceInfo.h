@@ -48,8 +48,8 @@ class NetworkInterfaceInfo {
 #endif
   NetworkInterfaceInfo& operator=(NetworkInterfaceInfo&& other) noexcept = default;
   const std::string& getName() const noexcept { return name_; }
-  bool hasIpV4Address() const noexcept { return ip_v4_addresses_.size() > 0; }
-  bool hasIpV6Address() const noexcept { return ip_v6_addresses_.size() > 0; }
+  bool hasIpV4Address() const noexcept { return !ip_v4_addresses_.empty(); }
+  bool hasIpV6Address() const noexcept { return !ip_v6_addresses_.empty(); }
   bool isRunning() const noexcept { return running_; }
   bool isLoopback() const noexcept { return loopback_; }
   const std::vector<std::string>& getIpV4Addresses() const noexcept { return ip_v4_addresses_; }
