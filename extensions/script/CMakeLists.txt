@@ -38,6 +38,10 @@ if (NOT DISABLE_PYTHON_SCRIPTING)
     target_sources(minifi-script-extensions PRIVATE ${PY_SOURCES})
     target_link_libraries(minifi-script-extensions ${PYTHON_LIBRARIES})
     target_link_libraries(minifi-script-extensions pybind11)
+
+    target_include_directories(minifi-script-extensions PRIVATE python)
+    target_include_directories(minifi-script-extensions SYSTEM PRIVATE ${PYTHON_INCLUDE_DIR})
+    target_include_directories(minifi-script-extensions SYSTEM PRIVATE ../../thirdparty/pybind11/include)
 endif()
 
 if (ENABLE_LUA_SCRIPTING)
