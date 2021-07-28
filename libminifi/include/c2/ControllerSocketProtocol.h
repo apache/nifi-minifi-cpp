@@ -23,7 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "core/Resource.h"
 #include "HeartbeatReporter.h"
 #include "io/StreamFactory.h"
 #include "core/logging/LoggerConfiguration.h"

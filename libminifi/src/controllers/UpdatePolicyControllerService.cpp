@@ -34,6 +34,7 @@
 #endif
 #include "core/state/UpdatePolicy.h"
 #include "core/PropertyValidation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

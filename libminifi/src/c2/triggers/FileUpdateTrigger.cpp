@@ -17,6 +17,7 @@
  */
 
 #include "c2/triggers/FileUpdateTrigger.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

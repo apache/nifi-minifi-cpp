@@ -24,7 +24,6 @@
 #include <memory>
 
 #include "concurrentqueue.h"
-#include "core/Resource.h"
 #include "core/Processor.h"
 
 #include "ScriptEngine.h"

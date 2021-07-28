@@ -24,6 +24,7 @@
 #include <iterator>
 #include <set>
 #include "core/Property.h"
+#include "core/Resource.h"
 #include "io/validation.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"

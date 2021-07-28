@@ -19,6 +19,7 @@
  */
 
 #include "RouteOnAttribute.h"
+#include "core/Resource.h"
 
 #include <memory>
 #include <string>

@@ -32,6 +32,7 @@
 #endif  // LUA_SUPPORT
 
 #include "ExecuteScript.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

@@ -36,7 +36,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "utils/tls/ExtendedKeyUsage.h"
 #include "io/validation.h"

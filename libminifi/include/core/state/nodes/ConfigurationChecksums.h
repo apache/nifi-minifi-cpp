@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 
-#include "core/Resource.h"
 #include "core/state/nodes/MetricsBase.h"
 #include "utils/ChecksumCalculator.h"
 #include "utils/gsl.h"
@@ -45,8 +44,6 @@ class ConfigurationChecksums : public ResponseNode {
  private:
   std::vector<gsl::not_null<utils::ChecksumCalculator*>> checksum_calculators_;
 };
-
-REGISTER_RESOURCE(ConfigurationChecksums, "Node part of an AST that defines checksums of configuration files in the C2 protocol");
 
 }  // namespace response
 }  // namespace state

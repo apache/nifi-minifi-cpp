@@ -25,7 +25,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "controllers/SSLContextService.h"

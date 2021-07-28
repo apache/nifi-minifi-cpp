@@ -27,7 +27,6 @@ file(GLOB SOURCES "*.cpp" "protocols/*.cpp" "processors/*.cpp" "controllerservic
 
 add_library(nanofi-coap-c STATIC ${CSOURCES})
 add_library(minifi-coap SHARED ${SOURCES})
-set_property(TARGET minifi-coap PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(nanofi-coap-c COAP::libcoap Threads::Threads)
 target_link_libraries(minifi-coap ${LIBMINIFI})

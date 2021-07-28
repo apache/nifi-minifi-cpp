@@ -18,8 +18,6 @@
 #ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
 #define LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
 
-#include "core/Resource.h"
-
 #ifndef WIN32
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>

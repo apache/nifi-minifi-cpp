@@ -36,6 +36,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
+#include "core/Resource.h"
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/ByteArrayCallback.h"

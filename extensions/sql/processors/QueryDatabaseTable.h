@@ -25,7 +25,6 @@
 #include <unordered_map>
 #include <memory>
 
-#include "core/Resource.h"
 #include "core/ProcessSession.h"
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"

@@ -22,7 +22,6 @@
 
 #include <string>
 
-#include "core/Resource.h"
 #include "core/ProcessSession.h"
 #include "SQLProcessor.h"
 

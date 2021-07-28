@@ -33,7 +33,6 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 
 #include "core/Processor.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"

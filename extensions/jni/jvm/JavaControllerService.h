@@ -26,7 +26,6 @@
 
 #include "../jvm/JVMLoader.h"
 #include "NarClassLoader.h"
-#include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "JavaServicer.h"
 #include "io/validation.h"

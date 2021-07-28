@@ -31,6 +31,7 @@
 #include "ExtractText.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "core/FlowFile.h"
 #include "utils/gsl.h"
 

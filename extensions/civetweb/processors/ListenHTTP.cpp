@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "core/Resource.h"
 #include "utils/gsl.h"
 
 namespace org {

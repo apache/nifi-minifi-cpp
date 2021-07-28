@@ -26,6 +26,7 @@
 #include "core/Processor.h"
 #include "TestBase.h"
 #include "processors/GenerateFlowFile.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

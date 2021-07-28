@@ -22,6 +22,7 @@
 
 #include "KamikazeProcessor.h"
 #include "Exception.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

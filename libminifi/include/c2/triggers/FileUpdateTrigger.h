@@ -24,7 +24,6 @@
 #include "c2/C2Trigger.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "core/Resource.h"
 #include "c2/C2Payload.h"
 #include "properties/Configure.h"
 

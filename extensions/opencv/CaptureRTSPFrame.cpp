@@ -17,6 +17,7 @@
 #include <set>
 
 #include "CaptureRTSPFrame.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

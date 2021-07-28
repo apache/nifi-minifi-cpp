@@ -37,7 +37,6 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
 #include "io/BaseStream.h"
 #include "utils/StringUtils.h"
 #include "utils/Export.h"

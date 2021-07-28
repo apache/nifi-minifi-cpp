@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "core/state/nodes/AgentInformation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

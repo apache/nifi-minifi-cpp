@@ -17,6 +17,7 @@
  */
 
 #include "core/state/nodes/SystemMetrics.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

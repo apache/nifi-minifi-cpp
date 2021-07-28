@@ -30,7 +30,6 @@
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"

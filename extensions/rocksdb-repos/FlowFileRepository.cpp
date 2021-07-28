@@ -30,6 +30,7 @@
 #include "rocksdb/slice.h"
 #include "FlowFileRecord.h"
 #include "utils/gsl.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "core/state/nodes/DeviceInformation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

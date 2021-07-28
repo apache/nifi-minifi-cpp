@@ -31,7 +31,6 @@
 
 #include "core/CoreComponentState.h"
 #include "core/Processor.h"
-#include "core/Resource.h"
 #include "core/logging/Logger.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"

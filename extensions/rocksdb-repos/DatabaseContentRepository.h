@@ -27,7 +27,6 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "database/RocksDatabase.h"
 #include "core/ContentSession.h"
-#include "core/Resource.h"
 
 namespace org {
 namespace apache {

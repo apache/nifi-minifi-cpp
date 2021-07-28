@@ -23,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "core/Resource.h"
-
 #ifndef _WIN32
 #include <sys/utsname.h>
 

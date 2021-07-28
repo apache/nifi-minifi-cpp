@@ -22,6 +22,7 @@
 
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace {
   std::string escape(const std::string& str) {

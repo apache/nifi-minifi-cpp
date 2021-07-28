@@ -27,8 +27,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 
-#include "FocusArchiveEntry.h"
-#include "UnfocusArchiveEntry.h"
 #include "utils/Export.h"
 
 namespace org {

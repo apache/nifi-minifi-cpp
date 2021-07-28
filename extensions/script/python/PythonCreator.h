@@ -31,7 +31,6 @@
 #include "agent/build_description.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
-#include "core/Resource.h"
 
 namespace org {
 namespace apache {

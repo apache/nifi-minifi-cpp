@@ -34,6 +34,7 @@
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "utils/FileReaderCallback.h"
 

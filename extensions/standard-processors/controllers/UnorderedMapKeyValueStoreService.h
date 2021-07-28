@@ -28,7 +28,6 @@
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/Resource.h"
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 
 namespace org {

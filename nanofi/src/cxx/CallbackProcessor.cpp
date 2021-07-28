@@ -17,6 +17,8 @@
  */
 #include "cxx/CallbackProcessor.h"
 #include "core/cxxstructs.h"
+#include "core/Resource.h"
+
 namespace org {
 namespace apache {
 namespace nifi {

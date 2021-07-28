@@ -25,7 +25,6 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
-#include "core/Resource.h"
 
 #include "CoapResponse.h"
 #include "CoapMessaging.h"

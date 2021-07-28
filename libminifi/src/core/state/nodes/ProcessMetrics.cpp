@@ -17,6 +17,7 @@
  */
 
 #include "core/state/nodes/ProcessMetrics.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

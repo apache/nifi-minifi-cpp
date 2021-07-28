@@ -26,7 +26,6 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
-#include "core/Resource.h"
 #include "core/Processor.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"

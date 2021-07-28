@@ -23,6 +23,7 @@
 #include <string>
 
 #include "rapidjson/prettywriter.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

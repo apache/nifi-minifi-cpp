@@ -19,6 +19,7 @@
 #include "RetryFlowFile.h"
 
 #include "core/PropertyValidation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

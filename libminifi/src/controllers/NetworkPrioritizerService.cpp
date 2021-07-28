@@ -36,6 +36,7 @@
 #include <set>
 #include "utils/StringUtils.h"
 #include "core/TypedValues.h"
+#include "core/Resource.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>

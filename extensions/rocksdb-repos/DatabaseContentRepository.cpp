@@ -27,6 +27,7 @@
 #include "utils/gsl.h"
 #include "Exception.h"
 #include "database/StringAppender.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

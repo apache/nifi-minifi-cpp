@@ -17,6 +17,7 @@
  */
 
 #include "AWSCredentialsService.h"
+#include "core/Resource.h"
 
 #include <set>
 

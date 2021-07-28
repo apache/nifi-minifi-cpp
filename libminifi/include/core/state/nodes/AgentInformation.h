@@ -23,8 +23,6 @@
 #include <utility>
 #include <vector>
 
-#include "core/Resource.h"
-
 #ifndef WIN32
 #include <arpa/inet.h>
 #include <sys/ioctl.h>

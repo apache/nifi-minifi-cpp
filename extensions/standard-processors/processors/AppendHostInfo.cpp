@@ -31,6 +31,7 @@
 #include "core/Property.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
+#include "core/Resource.h"
 #include "io/ClientSocket.h"
 #include "utils/NetworkInterfaceInfo.h"
 

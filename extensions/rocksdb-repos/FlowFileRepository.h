@@ -35,7 +35,6 @@
 #include "database/RocksDatabase.h"
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "utils/crypto/EncryptionProvider.h"
-#include "core/Resource.h"
 
 namespace org {
 namespace apache {

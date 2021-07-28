@@ -27,7 +27,6 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Property.h"
-#include "core/Resource.h"
 #include "utils/Id.h"
 #include "RTIMULib.h"
 #include "SensorBase.h"

@@ -19,7 +19,6 @@
 
 #include <string>
 #include <memory>
-#include "core/Resource.h"
 #include "c2/protocols/RESTProtocol.h"
 #include "c2/C2Protocol.h"
 

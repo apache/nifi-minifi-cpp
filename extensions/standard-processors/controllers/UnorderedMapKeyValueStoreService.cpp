@@ -16,6 +16,7 @@
  */
 
 #include "UnorderedMapKeyValueStoreService.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

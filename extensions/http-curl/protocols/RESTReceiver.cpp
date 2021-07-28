@@ -17,6 +17,7 @@
  */
 
 #include "RESTReceiver.h"
+#include "core/Resource.h"
 #include <algorithm>
 #include <memory>
 #include <utility>

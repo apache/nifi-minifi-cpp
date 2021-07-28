@@ -29,6 +29,7 @@
 #include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "Exception.h"
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"

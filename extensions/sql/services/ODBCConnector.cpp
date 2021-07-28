@@ -22,6 +22,7 @@
 #include <memory>
 #include <set>
 #include "core/Property.h"
+#include "core/Resource.h"
 #include "ODBCConnector.h"
 #include "io/validation.h"
 #include "properties/Configure.h"

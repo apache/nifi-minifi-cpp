@@ -21,8 +21,6 @@
 #include <string>
 #include <vector>
 
-#include "core/Resource.h"
-
 #ifndef WIN32
 
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))

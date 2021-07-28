@@ -21,6 +21,7 @@
 
 #include "MotionDetector.h"
 #include "FrameIO.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
@@ -201,7 +202,7 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 void MotionDetector::notifyStop() {
 }
 
-REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images."); // NOLINT
+REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images.");
 
 } /* namespace processors */
 } /* namespace minifi */

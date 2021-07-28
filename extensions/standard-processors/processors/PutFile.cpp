@@ -31,6 +31,7 @@
 #endif
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

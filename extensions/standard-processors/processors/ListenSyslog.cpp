@@ -29,6 +29,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/TypedValues.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

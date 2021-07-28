@@ -26,6 +26,7 @@
 #include "ExecutePythonProcessor.h"
 
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

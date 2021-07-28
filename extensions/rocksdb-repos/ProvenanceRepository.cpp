@@ -17,7 +17,9 @@
  */
 
 #include "ProvenanceRepository.h"
+#include "core/Resource.h"
 #include <string>
+
 namespace org {
 namespace apache {
 namespace nifi {
