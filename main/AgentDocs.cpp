@@ -35,6 +35,7 @@
 #include "io/validation.h"
 #include "utils/file/FileUtils.h"
 #include "agent/build_description.h"
+#include "agent/agent_docs.h"
 #include "agent/agent_version.h"
 
 namespace org {
