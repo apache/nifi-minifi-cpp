@@ -43,15 +43,15 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Compress Codec         | none                                       |
       | PublishKafka   | Delivery Guarantee     | 1                                          |
       | PublishKafka   | Request Timeout        | 10 sec                                     |
-      | PublishKafka   | Message Timeout Phrase | 12 sec                                     |
-      | PublishKafka   | Security CA Key        | /tmp/resources/certs/ca-cert               |
+      | PublishKafka   | Message Timeout        | 12 sec                                     |
+      | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
       | PublishKafka   | Security Cert          | /tmp/resources/certs/client_LMN_client.pem |
       | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
       | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_LMN_client.key |
       | PublishKafka   | Security Protocol      | ssl                                        |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
-    And the "success" relationship of the GetFile processor is connected to the PutFile
+    And the "success" relationship of the PublishKafka processor is connected to the PutFile
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
