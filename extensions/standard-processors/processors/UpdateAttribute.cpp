@@ -19,11 +19,12 @@
  */
 
 #include "UpdateAttribute.h"
-#include "core/Resource.h"
 
 #include <memory>
 #include <string>
 #include <set>
+
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

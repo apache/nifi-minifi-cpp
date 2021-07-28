@@ -17,8 +17,10 @@
  */
 
 #include "ProvenanceRepository.h"
-#include "core/Resource.h"
+
 #include <string>
+
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

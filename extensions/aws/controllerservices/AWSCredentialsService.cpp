@@ -17,9 +17,10 @@
  */
 
 #include "AWSCredentialsService.h"
-#include "core/Resource.h"
 
 #include <set>
+
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

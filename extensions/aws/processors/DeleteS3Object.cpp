@@ -19,10 +19,11 @@
  */
 
 #include "DeleteS3Object.h"
-#include "core/Resource.h"
 
 #include <set>
 #include <memory>
+
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

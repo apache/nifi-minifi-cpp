@@ -17,13 +17,15 @@
  */
 
 #include "RESTReceiver.h"
-#include "core/Resource.h"
+
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
