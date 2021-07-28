@@ -25,6 +25,7 @@
 #include <memory>
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/Resource.h"
 #include "ExecutePythonProcessor.h"
 #include "PythonObjectFactory.h"
 #include "agent/agent_version.h"
