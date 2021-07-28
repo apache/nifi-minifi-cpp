@@ -16,13 +16,9 @@
 # under the License.
 
 function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
-    set(PATCH_FILE1 "${SOURCE_DIR}/thirdparty/azure-sdk-cpp-for-cpp/azure-sdk-for-cpp-old-compiler.patch")
-    set(PATCH_FILE2 "${SOURCE_DIR}/thirdparty/azure-sdk-cpp-for-cpp/fix-illegal-qualified-name-in-member.patch")
-    set(PC ${Bash_EXECUTABLE} -c "set -x &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE1}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE1}\") &&\
-            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE2}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE2}\") ")
-
-
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/azure-sdk-cpp-openssl-include-fix.patch")
+    set(PC ${Bash_EXECUTABLE} -c "set -x && \
+            (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
     # Define byproducts
     if (WIN32)
         set(SUFFIX "lib")
@@ -31,6 +27,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
         set(AZURE_STORAGE_COMMON_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-common/${CMAKE_BUILD_TYPE}/${PREFIX}azure-storage-common.${SUFFIX}")
         set(AZURE_STORAGE_BLOBS_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/${CMAKE_BUILD_TYPE}/${PREFIX}azure-storage-blobs.${SUFFIX}")
         set(AZURE_IDENTITY_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/${CMAKE_BUILD_TYPE}/${PREFIX}azure-identity.${SUFFIX}")
+        set(AZURE_STORAGE_FILES_DATALAKE_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-files-datalake/${CMAKE_BUILD_TYPE}/${PREFIX}azure-storage-files-datalake.${SUFFIX}")
     else()
         set(SUFFIX "a")
         set(PREFIX "lib")
@@ -38,13 +35,15 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
         set(AZURE_STORAGE_COMMON_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-common/${PREFIX}azure-storage-common.${SUFFIX}")
         set(AZURE_STORAGE_BLOBS_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/${PREFIX}azure-storage-blobs.${SUFFIX}")
         set(AZURE_IDENTITY_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/${PREFIX}azure-identity.${SUFFIX}")
+        set(AZURE_STORAGE_FILES_DATALAKE_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-files-datalake/${PREFIX}azure-storage-files-datalake.${SUFFIX}")
     endif()
 
     set(AZURESDK_LIBRARIES_LIST
             "${AZURE_CORE_LIB}"
             "${AZURE_STORAGE_COMMON_LIB}"
             "${AZURE_STORAGE_BLOBS_LIB}"
-            "${AZURE_IDENTITY_LIB}")
+            "${AZURE_IDENTITY_LIB}"
+            "${AZURE_STORAGE_FILES_DATALAKE_LIB}")
 
     set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
         -DWARNINGS_AS_ERRORS=OFF)
@@ -54,7 +53,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             azure-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/Azure/azure-sdk-for-cpp.git"
-            GIT_TAG "azure-storage-blobs_12.0.0-beta.7"
+            GIT_TAG "azure-storage-files-datalake_12.0.1"
             BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
@@ -66,7 +65,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     )
 
     # Set dependencies
-    add_dependencies(azure-sdk-cpp-external-build CURL::libcurl LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL nlohmann_json::nlohmann_json)
+    add_dependencies(azure-sdk-cpp-external-build LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL)
 
     # Set variables
     set(LIBAZURE_FOUND "YES" CACHE STRING "" FORCE)
@@ -87,10 +86,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set_target_properties(AZURE::azure-core PROPERTIES IMPORTED_LOCATION "${AZURE_CORE_LIB}")
     add_dependencies(AZURE::azure-core azure-sdk-cpp-external-build)
     target_include_directories(AZURE::azure-core INTERFACE ${LIBAZURE_INCLUDE_DIRS})
-    target_link_libraries(AZURE::azure-core INTERFACE LibXml2::LibXml2 CURL::libcurl OpenSSL::Crypto OpenSSL::SSL Threads::Threads nlohmann_json::nlohmann_json)
-    if (APPLE)
-        target_link_libraries(AZURE::azure-core INTERFACE "-framework CoreFoundation")
-    endif()
+    target_link_libraries(AZURE::azure-core INTERFACE OpenSSL::Crypto OpenSSL::SSL)
     if (WIN32)
         target_link_libraries(AZURE::azure-core INTERFACE winhttp.lib)
     endif()
@@ -99,36 +95,20 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set_target_properties(AZURE::azure-identity PROPERTIES IMPORTED_LOCATION "${AZURE_IDENTITY_LIB}")
     add_dependencies(AZURE::azure-identity azure-sdk-cpp-external-build)
     target_include_directories(AZURE::azure-identity INTERFACE ${LIBAZURE_INCLUDE_DIRS})
-    target_link_libraries(AZURE::azure-identity INTERFACE LibXml2::LibXml2 CURL::libcurl OpenSSL::Crypto OpenSSL::SSL Threads::Threads nlohmann_json::nlohmann_json)
-    if (APPLE)
-        target_link_libraries(AZURE::azure-identity INTERFACE "-framework CoreFoundation")
-    endif()
-    if (WIN32)
-        target_link_libraries(AZURE::azure-identity INTERFACE winhttp.lib)
-    endif()
 
     add_library(AZURE::azure-storage-common STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-common PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_COMMON_LIB}")
     add_dependencies(AZURE::azure-storage-common azure-sdk-cpp-external-build)
     target_include_directories(AZURE::azure-storage-common INTERFACE ${LIBAZURE_INCLUDE_DIRS})
-    target_link_libraries(AZURE::azure-storage-common INTERFACE LibXml2::LibXml2 CURL::libcurl OpenSSL::Crypto OpenSSL::SSL Threads::Threads nlohmann_json::nlohmann_json)
-    if (APPLE)
-        target_link_libraries(AZURE::azure-storage-common INTERFACE "-framework CoreFoundation")
-    endif()
-    if (WIN32)
-        target_link_libraries(AZURE::azure-storage-common INTERFACE winhttp.lib)
-    endif()
+    target_link_libraries(AZURE::azure-storage-common INTERFACE LibXml2::LibXml2)
 
     add_library(AZURE::azure-storage-blobs STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-blobs PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_BLOBS_LIB}")
     add_dependencies(AZURE::azure-storage-blobs azure-sdk-cpp-external-build)
     target_include_directories(AZURE::azure-storage-blobs INTERFACE ${LIBAZURE_INCLUDE_DIRS})
-    target_link_libraries(AZURE::azure-storage-blobs INTERFACE LibXml2::LibXml2 CURL::libcurl OpenSSL::Crypto OpenSSL::SSL Threads::Threads nlohmann_json::nlohmann_json)
-    if (APPLE)
-        target_link_libraries(AZURE::azure-storage-blobs INTERFACE "-framework CoreFoundation")
-    endif()
-    if (WIN32)
-        target_link_libraries(AZURE::azure-storage-blobs INTERFACE winhttp.lib)
-    endif()
-    add_definitions("-DBUILD_CURL_HTTP_TRANSPORT_ADAPTER")
+
+    add_library(AZURE::azure-storage-files-datalake STATIC IMPORTED)
+    set_target_properties(AZURE::azure-storage-files-datalake PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_FILES_DATALAKE_LIB}")
+    add_dependencies(AZURE::azure-storage-files-datalake azure-sdk-cpp-external-build)
+    target_include_directories(AZURE::azure-storage-files-datalake INTERFACE ${LIBAZURE_INCLUDE_DIRS})
 endfunction(use_bundled_libazure)

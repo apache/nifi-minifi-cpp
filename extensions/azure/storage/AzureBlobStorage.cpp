@@ -60,17 +60,14 @@ std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string &
   try {
     auto blob_client = container_client_->GetBlockBlobClient(blob_name);
     auto response = blob_client.UploadFrom(buffer, buffer_size);
-    if (!response.HasValue()) {
-      return std::nullopt;
-    }
 
     UploadBlobResult result;
     result.length = buffer_size;
     result.primary_uri = container_client_->GetUrl();
-    if (response->ETag.HasValue()) {
-      result.etag = response->ETag.ToString();
+    if (response.Value.ETag.HasValue()) {
+      result.etag = response.Value.ETag.ToString();
     }
-    result.timestamp = response->LastModified.GetString(Azure::Core::DateTime::DateFormat::Rfc1123);
+    result.timestamp = response.Value.LastModified.ToString(Azure::DateTime::DateFormat::Rfc1123);
     return result;
   } catch (const std::runtime_error& err) {
     logger_->log_error("A runtime error occurred while uploading blob: %s", err.what());

@@ -1,0 +1,14 @@
+# Issue presented in https://github.com/Azure/azure-sdk-for-cpp/issues/2560
+diff --git a/sdk/core/azure-core/CMakeLists.txt b/sdk/core/azure-core/CMakeLists.txt
+index 12f57af0..1d8f3398 100644
+--- a/sdk/core/azure-core/CMakeLists.txt
++++ b/sdk/core/azure-core/CMakeLists.txt
+@@ -142,7 +142,7 @@ if(WIN32)
+     target_link_libraries(azure-core PRIVATE bcrypt crypt32)
+ else()
+     find_package(OpenSSL REQUIRED)
+-    target_link_libraries(azure-core PRIVATE OpenSSL::SSL)
++    target_link_libraries(azure-core PUBLIC OpenSSL::SSL)
+ endif()
+
+ if(BUILD_TRANSPORT_CURL)

@@ -32,7 +32,7 @@ target_include_directories(minifi-azure BEFORE PRIVATE ${CMAKE_SOURCE_DIR}/exten
 
 target_link_libraries(minifi-azure ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-azure CURL::libcurl LibXml2::LibXml2)
-target_link_libraries(minifi-azure AZURE::azure-storage-blobs AZURE::azure-storage-common AZURE::azure-core)
+target_link_libraries(minifi-azure AZURE::azure-storage-files-datalake AZURE::azure-storage-blobs AZURE::azure-storage-common AZURE::azure-core)
 
 if (WIN32)
   target_link_libraries(minifi-azure crypt32.lib bcrypt.lib)
