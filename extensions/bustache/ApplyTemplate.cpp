@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 #include "ApplyTemplate.h"
-#include "core/Resource.h"
 
 #include <iostream>
 #include <fstream>
@@ -30,6 +29,7 @@
 
 #include <bustache/model.hpp>
 
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

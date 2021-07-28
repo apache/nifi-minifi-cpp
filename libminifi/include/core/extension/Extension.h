@@ -43,6 +43,15 @@ class Extension {
   explicit Extension(std::string name, ExtensionInit init);
   virtual ~Extension();
 
+  /**
+   * Ensures that the extension is initialized at most once, and schedules
+   * an automatic deinitialization on extension unloading. This init/deinit
+   * is backed by a local static object and sequenced relative to other static
+   * variable init/deinit (specifically the registration of classes into ClassLoader)
+   * according to the usual rules.
+   * @param config
+   * @return True if the initialization succeeded
+   */
   bool initialize(const ExtensionConfig& config) {
     return init_(this, config);
   }
@@ -52,10 +61,18 @@ class Extension {
   }
 
  protected:
+  /**
+   * Actual implementation of the initialization logic, overridden by subclasses.
+   * @param config
+   * @return True on success
+   */
   virtual bool doInitialize(const ExtensionConfig& /*config*/) {
     return true;
   }
 
+  /**
+   * Actual implementation of the deinitialization logic, overridden by subclasses.
+   */
   virtual void doDeinitialize() {}
 
  private:
