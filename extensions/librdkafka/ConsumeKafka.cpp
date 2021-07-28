@@ -21,6 +21,7 @@
 #include <limits>
 
 #include "core/PropertyValidation.h"
+#include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 

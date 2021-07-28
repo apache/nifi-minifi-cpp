@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "MQTTC2Protocol.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

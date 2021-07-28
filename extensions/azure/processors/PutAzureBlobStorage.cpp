@@ -25,6 +25,7 @@
 
 #include "storage/AzureBlobStorage.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

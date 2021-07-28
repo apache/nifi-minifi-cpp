@@ -27,6 +27,7 @@
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/Resource.h"
 #include "ConvertHeartBeat.h"
 #include "c2/PayloadSerializer.h"
 #include "utils/ByteArrayCallback.h"

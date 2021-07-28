@@ -21,6 +21,7 @@
 #include "RocksDbPersistableKeyValueStoreService.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
 #include "utils/StringUtils.h"
+#include "core/Resource.h"
 
 
 namespace org {

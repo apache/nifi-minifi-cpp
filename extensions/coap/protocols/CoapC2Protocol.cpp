@@ -21,6 +21,7 @@
 #include "coap_functions.h"
 #include "coap_message.h"
 #include "io/BaseStream.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

@@ -24,6 +24,7 @@
 #include <vector>
 #include <limits>
 #include "utils/file/FileUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

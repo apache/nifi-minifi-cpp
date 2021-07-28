@@ -17,6 +17,7 @@
  */
 
 #include "JVMCreator.h"
+#include "core/Resource.h"
 
 #ifndef WIN32
 

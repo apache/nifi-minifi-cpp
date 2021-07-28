@@ -21,6 +21,7 @@
 #include <string>
 
 #include "ProcessContextExpr.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

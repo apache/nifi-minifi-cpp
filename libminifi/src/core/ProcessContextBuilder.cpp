@@ -29,6 +29,7 @@
 #include <thread>
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

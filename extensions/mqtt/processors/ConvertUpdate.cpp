@@ -25,6 +25,7 @@
 #include "utils/HTTPClient.h"
 #include "io/BaseStream.h"
 #include "io/BufferStream.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

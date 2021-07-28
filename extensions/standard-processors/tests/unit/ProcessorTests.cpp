@@ -42,6 +42,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
+#include "core/Resource.h"
 #include "utils/gsl.h"
 #include "utils/PropertyErrors.h"
 #include "utils/IntegrationTestUtils.h"

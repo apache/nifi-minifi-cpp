@@ -31,6 +31,7 @@
 #include "io/CRCStream.h"
 #include "sitetosite/Peer.h"
 #include "io/validation.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {

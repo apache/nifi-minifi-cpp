@@ -16,6 +16,7 @@
  */
 
 #include "c2/HeartbeatLogger.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
