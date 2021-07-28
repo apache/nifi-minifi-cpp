@@ -31,6 +31,7 @@
 #include "JavaServicer.h"
 #include "JniBundle.h"
 #include "../JavaException.h"
+#include "agent/agent_docs.h"
 
 namespace org {
 namespace apache {
