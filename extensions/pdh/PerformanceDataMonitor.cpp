@@ -26,6 +26,7 @@
 #include "utils/StringUtils.h"
 #include "utils/JsonCallback.h"
 #include "utils/OpenTelemetryLogDataModelUtils.h"
+#include "core/Resource.h"
 
 namespace org {
 namespace apache {
