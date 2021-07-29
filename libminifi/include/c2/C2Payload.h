@@ -60,7 +60,8 @@ SMART_ENUM(DescribeOperand,
 
 SMART_ENUM(UpdateOperand,
   (CONFIGURATION, "configuration"),
-  (PROPERTIES, "properties")
+  (PROPERTIES, "properties"),
+  (ASSET, "asset")
 )
 
 SMART_ENUM(TransferOperand,
@@ -199,6 +200,8 @@ class C2Payload : public state::Update {
    */
   [[nodiscard]] std::vector<std::byte> getRawData() const noexcept { return raw_data_; }
   [[nodiscard]] std::string getRawDataAsString() const { return utils::span_to<std::string>(gsl::make_span(getRawData()).as_span<const char>()); }
+
+  std::vector<char> moveRawData() && {return std::move(raw_data_);}
 
   /**
    * Add a nested payload.

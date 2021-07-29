@@ -44,6 +44,7 @@
 #include "utils/StringUtils.h"
 #include "io/ArchiveStream.h"
 #include "io/StreamPipe.h"
+#include "utils/Path.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -601,6 +602,10 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       handlePropertyUpdate(resp);
       break;
     }
+    case UpdateOperand::ASSET: {
+      handleExtensionUpdate(resp);
+      break;
+    }
   }
 }
 
@@ -894,6 +899,77 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
     configuration_->commitChanges();
   }
 
+  return true;
+}
+
+static std::vector<std::string> splitPath(const std::string& path) {
+  std::vector<std::string> segments;
+#ifdef WIN32
+  std::string separators = "/\\";
+#else
+  std::string separators = "/";
+#endif
+  std::string::size_type begin = 0;
+  std::string::size_type end = 0;
+  do {
+    end = path.find_first_of(separators, begin);
+    if (end != std::string::npos) {
+      segments.push_back(path.substr(begin, end - begin));
+    } else {
+      segments.push_back(path.substr(begin));
+    }
+  } while (end != std::string::npos && (begin = end + 1, true));
+  return segments;
+}
+
+bool C2Agent::validateFilePath(const std::string& path) {
+  auto segments = splitPath(path);
+  if (segments.empty()) {
+    logger_->log_error("Empty output path");
+    return false;
+  }
+  if (segments.back().empty()) {
+    logger_->log_error("Last segment (filename) cannot be empty in output path '%s'", path);
+    return false;
+  }
+  for (const auto& segment : segments) {
+    if (segment.find('*') != std::string::npos) {
+      logger_->log_error("Invalid character '*' in file path '%s'", path);
+      return false;
+    }
+    if (segment.empty()) {
+      logger_->log_error("Empty segments are not supported in path '%s'", path);
+      return false;
+    }
+    if (segment == "..") {
+      logger_->log_error("Accessing parent directory is forbidden in file path '%s'", path);
+      return false;
+    }
+  }
+  return true;
+}
+
+bool C2Agent::handleExtensionUpdate(const C2ContentResponse& resp) {
+  for (const auto& file : resp.operation_arguments) {
+    if (!validateFilePath(file.first)) {
+      logger_->log_error("Error in output path '%s', ignoring", file.first);
+      continue;
+    }
+    C2Payload&& response = protocol_.load()->consumePayload(file.second.to_string(), C2Payload(Operation::TRANSFER, true), RECEIVE, false);
+
+    auto raw_data = std::move(response).moveRawData();
+    utils::Path root_dir(std::get<0>(utils::file::split_path(utils::file::get_executable_dir())));
+    if (root_dir.empty()) {
+      logger_->log_error("Couldn't determine parent directory of the executable's directory");
+      return false;
+    }
+    auto file_path = root_dir / "extensions" / file.first;
+    // ensure directory exists for file
+    utils::file::create_dir(std::get<0>(utils::file::split_path(file_path.str())));
+
+    std::ofstream{file_path.str()}
+      .write(raw_data.data(), raw_data.size());
+  }
   return true;
 }
 
