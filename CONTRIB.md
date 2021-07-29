@@ -15,24 +15,59 @@
 
 # Apache NiFi - MiNiFi - C++ Contribution Guide
 
+We welcome all contributions to Apache MiNiFi. All new files must include a copy of the Apache License Header.
+To make development easier, we've included the linter for the Google Style guide. Google provides an Eclipse formatter
+for their style guide. It is located
+[here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
+New contributions are expected to follow the Google Style Guide, except for the following points:
+- Use .cpp extension for implementation files
+- Use lowerCamelCase for functions, including accessors/mutators
+- Use UPPER_SNAKE_CASE for constants
+- Filenames are typically class names or a description of the contents in UpperCamelCase
+- If a class is imitating something from STL, boost or similar, then STL-style lower_snake_case is used for naming the
+  class. UpperSnakeCase is used for most classes, in line with the Google Style Guide.
+- Prefer `#pragma once` over include guards
+- Forward declarations are OK
+- Using-directives (`using namespace foo`) are discouraged, except for user-defined literal namespaces
+- Some patterns in the codebase rely on objects with static storage duration without being trivially destructible and
+  initialized with a constant expression. It's OK to use these.
+- Operator overloading and user-defined literal suffixes are OK
+- Public mutable data members are allowed
+- Inline function definition is OK
+- Rvalue references, exceptions and RTTI are allowed
+- Use gsl::narrow and gsl::narrow_cast in addition to standard casts. The codebase doesn't use abseil.
+- We are more liberal regarding the use of `auto`. The Google Style Guide only allows using it when it makes the code
+  clearer. In MiNiFi C++, it's up to the personal preferences of the contributor.
+- Template metaprogramming is OK as long as the usage is clear.
+- Static data members are capitalized according to lower_snake_case, in contrast to the Google Style Guide, which uses
+  lower_snake_case_with_trailing_underscore_. Non-static data members use lower_snake_case_with_trailing_underscore_
+  according to the Google Style Guide.
+- Enums are either UPPER_SNAKE_CASE or UpperCamelCase.
+- File-level comments describing the contents are not required and typically not used in the codebase. A license header
+  is required.
+- Function comments use /** Javadoc style */
+- Line length is not limited, but the linter warns on lines longer than 200 characters. Use a NOLINT line comment in the
+  rare case when a longer line is more readable than splitting it up.
+- Continuation indentation is ok with either 2 levels of indentation (4 spaces) or aligned.
 
-We welcome all contributions to Apache MiNiFi. To make development easier, we've included
-the linter for the Google Style guide. Google provides an Eclipse formatter for their style
-guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
-New contributions are expected to follow the Google style guide when it is reasonable.
-Additionally, all new files must include a copy of the Apache License Header.
-
+It's ok to diverge from any of the rules with a good enough reason. We recommend following the C++ Core Guidelines, when
+it doesn't contradict any of the Google Style Guide or the above exceptions.
 
 ## Issues and Pull Requests
 
-Issues within MiNiFi C++ are tracked in the official [Apache JIRA](https://issues.apache.org/jira/projects/MINIFICPP/issues)
-Unassigned tickets may be assigned to yourself or filed via this JIRA instance. Pull requests can be submitted via our [Github
-Mirror](https://github.com/apache/nifi-minifi-cpp) . When doing so try and have a ticket filed when submitting your pull request.
+Issues within MiNiFi C++ are tracked in the official [Apache JIRA](https://issues.apache.org/jira/projects/MINIFICPP/issues).
+New users can register freely and ask for contributor access on the
+[Developers Mailing List](https://nifi.apache.org/mailing_lists.html).
+Unassigned tickets may be assigned to yourself or filed via this JIRA instance. Pull requests can be submitted via our
+[Github Mirror](https://github.com/apache/nifi-minifi-cpp) . When doing so please create a JIRA issue for your pull
+request.
 
 Apache NiFi MiNiFi C++ is a review then commit community. As a result, we will review your commits and merge them following 
-review. We ask that you provide tests and documentation when possible. 
+review. We ask that you provide tests and documentation when possible. Typically PRs are merged after they get 2-3
+approvals, usually in a week or two.
 
 Once you have completed your changes, including source code and tests, you can verify that you follow the Google style guide by running the following command:
+
 ##### Linux or macOS
 ```
 $ make linter
