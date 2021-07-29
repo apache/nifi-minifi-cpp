@@ -58,6 +58,7 @@ This software includes third party software subject to the following copyrights:
 - IANA timezone database - public domain
 - date (HowardHinnant/date) - notices below
 - JSON for Modern C++ (nlohmann/json) - Copyright (c) 2013-2021 Niels Lohmann
+- range-v3 - Eric Niebler and other contributors
 
 The licenses for these third party components are included in LICENSE.txt
 
@@ -73,3 +74,33 @@ Copyright notices of the date project:
 // Copyright (c) 2017 Paul Thompson
 // Copyright (c) 2017, 2018, 2019 Tomasz Kamiński
 // Copyright (c) 2019 Asad. Gharighi
+
+range-v3:
+(C) Copyright Kevlin Henney and Dave Abrahams 1999.
+Copyright 2005 - 2007 Adobe Systems Incorporated
+Copyright 2019-present Christopher Di Bella
+Copyright Andrew Sutton 2014
+Copyright Andrey Diduh 2019
+Copyright Barry Revzin 2019-present
+Copyright (c) 1994 Hewlett-Packard Company
+Copyright (c) 1996 Silicon Graphics Computer Systems, Inc.
+Copyright (c) 2009 Alexander Stepanov and Paul McJones
+Copyright (c) 2013 GitHub, Inc.
+Copyright (c) 2015 Microsoft Corporation. All rights reserved.
+Copyright (c) 2018-present, Facebook, Inc.
+Copyright (c) 2020-present, Google LLC.
+Copyright Casey Carter 2015-present
+Copyright Eric Niebler 2004,2013-present
+Copyright Filip Matner 2015,2017
+Copyright Gonzalo Brito Gadeschi 2014-2017
+Copyright Google LLC 2020-present
+Copyright Jeff Garland 2017
+Copyright Johel Guerrero 2019
+Copyright Louis Dionne 2013-2017
+Copyright Luis Martinez de Bartolome Izquierdo 2016
+Copyright Michel Morin 2014
+Copyright MikeGitb 2018-present
+Copyright Mitsutaka Takeda 2018-present
+Copyright Rostislav Khlebnikov 2017
+Copyright Tobias Mayer 2016
+Copyright Tomislav Ivek 2015-2016

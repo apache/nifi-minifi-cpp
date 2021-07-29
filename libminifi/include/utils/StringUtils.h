@@ -25,6 +25,7 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -72,7 +73,7 @@ class StringUtils {
    */
   static std::optional<bool> toBool(const std::string& input);
 
-  static std::string toLower(std::string str);
+  static std::string toLower(std::string_view str);
 
   // Trim String utils
 
