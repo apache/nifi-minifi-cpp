@@ -74,6 +74,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/inc/"
             "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-common/inc/"
             "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/inc/"
+            "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-files-datalake/inc/"
             CACHE STRING "" FORCE)
     set(LIBAZURE_LIBRARIES ${AZURESDK_LIBRARIES_LIST} CACHE STRING "" FORCE)
 

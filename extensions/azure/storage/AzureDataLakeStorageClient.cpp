@@ -1,0 +1,72 @@
+/**
+ * @file AzureDataLakeStorageClient.cpp
+ * AzureDataLakeStorageClient class implementation
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "AzureDataLakeStorageClient.h"
+
+namespace org {
+namespace apache {
+namespace nifi {
+namespace minifi {
+namespace azure {
+namespace storage {
+
+void AzureDataLakeStorageClient::resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name) {
+  if (client_ == nullptr || connection_string != connection_string || file_system_name_ != file_system_name) {
+    client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
+      Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(connection_string, file_system_name));
+    file_system_name_ = file_system_name;
+    connection_string_ = connection_string;
+  }
+}
+
+std::optional<bool> AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParameters& params) {
+  try {
+    resetClientIfNeeded(params.connection_string, params.file_system_name);
+    auto directory_client = client_->GetDirectoryClient(params.directory_name);
+    directory_client.CreateIfNotExists();
+    auto file_client = directory_client.GetFileClient(params.filename);
+    auto response = file_client.CreateIfNotExists();
+    return response.Value.Created;
+  } catch (const std::runtime_error& err) {
+    logger_->log_error("A runtime error occurred while creating file in Data Lake storage: %s", err.what());
+    return std::nullopt;
+  }
+}
+
+std::optional<std::string> AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
+  try {
+    resetClientIfNeeded(params.connection_string, params.file_system_name);
+    auto directory_client = client_->GetDirectoryClient(params.directory_name);
+    directory_client.CreateIfNotExists();
+    auto file_client = directory_client.GetFileClient(params.filename);
+    file_client.UploadFrom(buffer, buffer_size);
+    return file_client.GetUrl();
+  } catch (const std::runtime_error& err) {
+    logger_->log_error("A runtime error occurred while uploading blob: %s", err.what());
+    return std::nullopt;
+  }
+}
+
+}  // namespace storage
+}  // namespace azure
+}  // namespace minifi
+}  // namespace nifi
+}  // namespace apache
+}  // namespace org
