@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,21 +14,14 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
+include(FetchContent)
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+FetchContent_Declare(range-v3_src
+    URL      https://github.com/ericniebler/range-v3/archive/refs/tags/0.11.0.tar.gz
+    URL_HASH SHA256=376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c
+)
+FetchContent_MakeAvailable(range-v3_src)
 
-file(GLOB SOURCES  "processors/*.cpp" "controllers/*.cpp" )
-
-add_library(minifi-standard-processors STATIC ${SOURCES})
-set_property(TARGET minifi-standard-processors PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-include(RangeV3)
-target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3)
-
-SET (STANDARD-PROCESSORS minifi-standard-processors PARENT_SCOPE)
-register_extension(minifi-standard-processors)
-
-
-register_extension_linter(minifi-standard-processors-linter)
+# for better error messages
+target_compile_options(range-v3 INTERFACE $<$<COMPILE_LANG_AND_ID:CXX,GNU>:-fconcepts>)

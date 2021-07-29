@@ -17,15 +17,20 @@
 
 #include <limits>
 
+#include "range/v3/view/transform.hpp"
+#include "range/v3/range/conversion.hpp"
+
+#include "utils/Environment.h"
 #include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
-#include "utils/Environment.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
+
+namespace views = ranges::views;
 
 std::optional<bool> StringUtils::toBool(const std::string& str) {
   std::string trimmed = trim(str);
@@ -38,9 +43,9 @@ std::optional<bool> StringUtils::toBool(const std::string& str) {
   return std::nullopt;
 }
 
-std::string StringUtils::toLower(std::string str) {
-  std::transform(str.begin(), str.end(), str.begin(), [] (unsigned char c) {return std::tolower(c);});
-  return str;
+std::string StringUtils::toLower(std::string_view str) {
+  const auto tolower = [](auto c) { return std::tolower(static_cast<unsigned char>(c)); };
+  return str | views::transform(tolower) | ranges::to<std::string>();
 }
 
 std::string StringUtils::trim(const std::string& s) {

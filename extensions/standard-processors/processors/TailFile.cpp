@@ -31,6 +31,9 @@
 #include <utility>
 #include <vector>
 
+#include "range/v3/action/sort.hpp"
+#include "range/v3/algorithm/transform.hpp"
+
 #include "io/CRCStream.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
@@ -639,10 +642,11 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
 }
 
 std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const {
-  std::sort(matched_files_with_mtime.begin(), matched_files_with_mtime.end(), [](const TailStateWithMtime &left, const TailStateWithMtime &right) {
+  const auto first_by_mtime_then_by_name = [](const auto& left, const auto& right) {
     return std::tie(left.mtime_, left.tail_state_.file_name_) <
            std::tie(right.mtime_, right.tail_state_.file_name_);
-  });
+  };
+  matched_files_with_mtime |= ranges::actions::sort(first_by_mtime_then_by_name);
 
   if (!matched_files_with_mtime.empty() && state.position_ > 0) {
     TailState &first_rotated_file = matched_files_with_mtime[0].tail_state_;
