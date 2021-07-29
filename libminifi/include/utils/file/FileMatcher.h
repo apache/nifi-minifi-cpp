@@ -44,7 +44,7 @@ class FileMatcher {
         excluding_(excluding) {}
 
    public:
-    static optional<FilePattern> fromPattern(std::string pattern, bool log_errors = true);
+    static optional<FilePattern> fromPattern(std::string pattern);
 
     bool isExcluding() const {
       return excluding_;

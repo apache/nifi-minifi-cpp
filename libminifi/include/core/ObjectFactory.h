@@ -33,8 +33,8 @@ namespace core {
  */
 class ObjectFactory {
  public:
-  ObjectFactory(const std::string &group) // NOLINT
-      : group_(group) {
+  explicit ObjectFactory(std::string group)
+      : group_(std::move(group)) {
   }
 
   ObjectFactory() = default;
@@ -92,19 +92,15 @@ class DefautObjectFactory : public ObjectFactory {
     className = core::getClassName<T>();
   }
 
-  DefautObjectFactory(const std::string &group_name) // NOLINT
-      : ObjectFactory(group_name) {
+  explicit DefautObjectFactory(std::string group_name)
+      : ObjectFactory(std::move(group_name)) {
     className = core::getClassName<T>();
   }
-  /**
-   * Virtual destructor.
-   */
-  virtual ~DefautObjectFactory() = default;
 
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string &name) {
+  std::shared_ptr<CoreComponent> create(const std::string &name) override {
     std::shared_ptr<T> ptr = std::make_shared<T>(name);
     return std::static_pointer_cast<CoreComponent>(ptr);
   }
@@ -112,7 +108,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) {
+  std::shared_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
     std::shared_ptr<T> ptr = std::make_shared<T>(name, uuid);
     return std::static_pointer_cast<CoreComponent>(ptr);
   }
@@ -120,7 +116,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual CoreComponent* createRaw(const std::string &name) {
+  CoreComponent* createRaw(const std::string &name) override {
     T *ptr = new T(name);
     return dynamic_cast<CoreComponent*>(ptr);
   }
@@ -128,7 +124,7 @@ class DefautObjectFactory : public ObjectFactory {
   /**
    * Create a shared pointer to a new processor.
    */
-  virtual CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) {
+  CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
     T *ptr = new T(name, uuid);
     return dynamic_cast<CoreComponent*>(ptr);
   }
@@ -137,7 +133,7 @@ class DefautObjectFactory : public ObjectFactory {
    * Gets the class name for the object
    * @return class name for the processor.
    */
-  virtual std::string getClassName() {
+  std::string getClassName() override {
     return className;
   }
 

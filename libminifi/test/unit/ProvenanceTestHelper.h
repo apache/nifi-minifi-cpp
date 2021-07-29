@@ -239,7 +239,7 @@ class TestFlowRepository : public core::Repository {
 class TestFlowController : public minifi::FlowController {
  public:
   TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> /*content_repo*/)
-      : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "", true) {
+      : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "") {
   }
 
   ~TestFlowController() override = default;

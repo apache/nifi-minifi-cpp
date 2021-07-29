@@ -326,7 +326,7 @@ void printManifest(const std::shared_ptr<minifi::Configure> &configuration) {
       prov_repo, flow_repo, content_repo, configuration, stream_factory, nifi_configuration_class_name);
 
   std::shared_ptr<minifi::FlowController> controller = std::unique_ptr<minifi::FlowController>(
-      new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest", false));
+      new minifi::FlowController(prov_repo, flow_repo, configuration, std::move(flow_configuration), content_repo, "manifest"));
   controller->load();
   controller->start();
   std::this_thread::sleep_for(std::chrono::milliseconds(10000));

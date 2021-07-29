@@ -52,19 +52,20 @@ static std::vector<std::string> split(const std::string& str, const std::vector<
   return result;
 }
 
-optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::string pattern, bool log_errors) {
+optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::string pattern) {
+  pattern = utils::StringUtils::trim(pattern);
   bool excluding = false;
   if (!pattern.empty() && pattern[0] == '!') {
     excluding = true;
-    pattern = pattern.substr(1);
+    pattern = utils::StringUtils::trim(pattern.substr(1));
   }
   if (pattern.empty()) {
-    if (log_errors) logger_->log_error("Empty pattern");
+    logger_->log_error("Empty pattern");
     return nullopt;
   }
   std::string exe_dir = get_executable_dir();
   if (exe_dir.empty() && !isAbsolutePath(pattern.c_str())) {
-    if (log_errors) logger_->log_error("Couldn't determine executable dir, relative pattern '%s' not supported", pattern);
+    logger_->log_error("Couldn't determine executable dir, relative pattern '%s' not supported", pattern);
     return nullopt;
   }
   pattern = resolve(exe_dir, pattern);
@@ -77,7 +78,7 @@ optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::st
     segments.pop_back();
   }
   if (file_pattern == "." || file_pattern == "..") {
-    if (log_errors) logger_->log_error("Invalid file pattern '%s'", file_pattern);
+    logger_->log_error("Invalid file pattern '%s'", file_pattern);
     return nullopt;
   }
   return FilePattern(segments, file_pattern, excluding);

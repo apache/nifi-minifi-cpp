@@ -148,7 +148,7 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
 
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
+  flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME);
   flowController_->load();
   updateProperties(flowController_);
   flowController_->start();

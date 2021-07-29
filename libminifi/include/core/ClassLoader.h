@@ -48,12 +48,6 @@ namespace core {
 #endif
 
 /**
- * Function that is used to create the
- * processor factory from the shared object.
- */
-typedef ObjectFactory* createFactory();
-
-/**
  * Processor class loader that accepts
  * a variety of mechanisms to load in shared
  * objects.

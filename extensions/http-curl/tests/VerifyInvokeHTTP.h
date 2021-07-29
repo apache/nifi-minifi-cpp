@@ -86,7 +86,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     content_repo->initialize(configuration);
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
     auto yaml_ptr = std::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, flow_yml_path);
-    flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME, true);
+    flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME);
     flowController_->load();
 
     std::string url = scheme + "://localhost:" + getWebPort() + *path_;
