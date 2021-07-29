@@ -112,6 +112,12 @@ class MockDB {
   std::unique_ptr<Rowset> select(const std::string& query, const std::vector<std::string>& args);
   void readDb();
   void storeDb();
+
+  /**
+   * This function parses an and-separated list of conditions in the format of <column_name> [<>=] <value>
+   * @param condition_str SQL WHERE condition string with only AND logical operators
+   * @return Function object evaluating MockRow according to the condition parameter
+   */
   std::function<bool(const MockRow&)> parseWhereCondition(const std::string& condition_str);
 
   static DataType stringToDataType(const std::string& type_str);
