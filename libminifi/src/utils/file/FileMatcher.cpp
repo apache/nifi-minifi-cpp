@@ -52,6 +52,12 @@ static std::vector<std::string> split(const std::string& str, const std::vector<
   return result;
 }
 
+#ifdef WIN32
+static const std::vector<std::string> path_separators{"/", "\\"};
+#else
+static const std::vector<std::string> path_separators{"/"};
+#endif
+
 optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::string pattern) {
   pattern = utils::StringUtils::trim(pattern);
   bool excluding = false;
@@ -69,7 +75,7 @@ optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::st
     return nullopt;
   }
   pattern = resolve(exe_dir, pattern);
-  auto segments = split(pattern, {"/", "\\"});
+  auto segments = split(pattern, path_separators);
   gsl_Expects(!segments.empty());
   auto file_pattern = segments.back();
   if (file_pattern == "**") {
@@ -80,6 +86,16 @@ optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::st
   if (file_pattern == "." || file_pattern == "..") {
     logger_->log_error("Invalid file pattern '%s'", file_pattern);
     return nullopt;
+  }
+  bool after_wildcard = false;
+  for (const auto& segment : segments) {
+    if (after_wildcard && segment == "..") {
+      logger_->log_error("Parent accessor is not supported after wildcards");
+      return nullopt;
+    }
+    if (isGlobPattern(segment)) {
+      after_wildcard = true;
+    }
   }
   return FilePattern(segments, file_pattern, excluding);
 }
@@ -193,24 +209,27 @@ FileMatcher::FilePattern::DirMatchResult FileMatcher::FilePattern::matchDirector
   }
 }
 
-bool FileMatcher::FilePattern::match(const std::string& directory, const optional<std::string>& filename) const {
-  auto value = split(directory, {"/", "\\"});
+FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std::string& directory, const optional<std::string>& filename) const {
+  auto value = split(directory, path_separators);
   auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
   if (!filename) {
     if (excluding_) {
       if (result == DirMatchResult::TREE && file_pattern_ == "*") {
         // all files are excluded in this directory
-        return true;
+        return MatchResult::EXCLUDE;
       }
-      return false;
+      return MatchResult::DONT_CARE;
     }
-    return result != DirMatchResult::NONE;
+    return result != DirMatchResult::NONE ? MatchResult::INCLUDE : MatchResult::DONT_CARE;
   }
   if (result != DirMatchResult::EXACT && result != DirMatchResult::TREE) {
-    // we only accept a file if the directory fully matches
-    return false;
+    // we only match a file if the directory fully matches
+    return MatchResult::DONT_CARE;
   }
-  return matchGlob(file_pattern_.begin(), file_pattern_.end(), filename->begin(), filename->end());
+  if (matchGlob(file_pattern_.begin(), file_pattern_.end(), filename->begin(), filename->end())) {
+    return excluding_ ? MatchResult::EXCLUDE : MatchResult::INCLUDE;
+  }
+  return MatchResult::DONT_CARE;
 }
 
 void FileMatcher::forEachFile(const std::function<bool(const std::string&, const std::string&)>& fn) const {
@@ -220,7 +239,8 @@ void FileMatcher::forEachFile(const std::function<bool(const std::string&, const
     if (it->isExcluding()) continue;
     std::function<bool(const std::string&, const utils::optional<std::string>&)> matcher = [&] (const std::string& dir, const utils::optional<std::string>& file) -> bool {
       if (terminate) return false;
-      if (!it->match(dir, file)) {
+      if (it->match(dir, file) != FilePattern::MatchResult::INCLUDE) {
+        // our main pattern does not explicitly command us to process this file/dir
         if (file) {
           // keep iterating
           return true;
@@ -230,16 +250,16 @@ void FileMatcher::forEachFile(const std::function<bool(const std::string&, const
       }
       // check all subsequent patterns in reverse (later ones have higher precedence)
       for (auto rit = patterns_.rbegin(); rit.base() != it + 1; ++rit) {
-        if (rit->match(dir, file)) {
-          if (rit->isExcluding()) {
-            if (file) {
-              // keep on iterating if this is a file
-              return true;
-            }
-            // do not descend into this directory
-            return false;
-          }
+        const auto result = rit->match(dir, file);
+        if (result == FilePattern::MatchResult::INCLUDE) {
           break;
+        } else if (result == FilePattern::MatchResult::EXCLUDE) {
+          if (file) {
+            // keep on processing the rest of the files in the current directory
+            return true;
+          }
+          // do not descend into this directory
+          return false;
         }
       }
       if (file) {

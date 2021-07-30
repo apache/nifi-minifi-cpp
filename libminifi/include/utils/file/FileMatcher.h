@@ -44,13 +44,18 @@ class FileMatcher {
         excluding_(excluding) {}
 
    public:
+    enum class MatchResult {
+      INCLUDE,  // dir/file should be processed according to the pattern
+      EXCLUDE,  // dir/file is explicitly rejected by the pattern
+      DONT_CARE  // dir/file does not match pattern, do what you may
+    };
     static optional<FilePattern> fromPattern(std::string pattern);
 
     bool isExcluding() const {
       return excluding_;
     }
 
-    bool match(const std::string& directory, const optional<std::string>& filename = {}) const;
+    MatchResult match(const std::string& directory, const optional<std::string>& filename = {}) const;
 
     /**
      * @return The lowermost parent directory without wildcards.

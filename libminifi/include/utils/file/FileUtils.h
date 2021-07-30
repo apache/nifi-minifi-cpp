@@ -513,10 +513,14 @@ inline std::string concat_path(const std::string& root, const std::string& child
   return new_path.str();
 }
 
-/*
+/**
  * Provides a platform-independent function to list a directory
- * Callback is called for every file found: first argument is the path of the directory, second is the filename
+ * @param dir The directory to start the enumeration from.
+ * @param callback Callback is called for every file found: first argument is the path of the directory, second is the filename.
  * Return value of the callback is used to continue (true) or stop (false) listing
+ * @param logger
+ * @param dir_callback Called for every child directory, its return value decides if we should descend and recursively
+ * process that directory or not.
  */
 inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
                      const std::shared_ptr<logging::Logger> &logger, std::function<bool(const std::string&)> dir_callback) {
