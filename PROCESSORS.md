@@ -686,6 +686,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - | - | - |
 |Hash Algorithm|SHA256||Name of the algorithm used to generate checksum|
 |Hash Attribute|Checksum||Attribute to store checksum to|
+|Fail on empty|false||Route to failure relationship in case of empty content|
 ### Properties
 
 | Name | Description |
