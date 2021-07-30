@@ -163,6 +163,8 @@ void InvokeHTTP::initialize() {
   properties.insert(DisablePeerVerification);
   properties.insert(AlwaysOutputResponse);
   properties.insert(FollowRedirects);
+  properties.insert(PropPutOutputAttributes);
+  properties.insert(PenalizeOnNoRetry);
 
   setSupportedProperties(properties);
   // Set the supported relationships
