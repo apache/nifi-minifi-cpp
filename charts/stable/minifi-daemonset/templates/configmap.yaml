@@ -1,0 +1,28 @@
+{{- if or .Values.configFile.config .Values.configFile.properties .Values.configuration.config .Values.configuration.properties }}
+apiVersion: v1
+data:
+{{- if or .Values.configuration.properties .Values.configFile.properties }}
+  minifi-log.properties: |
+{{- if .Values.configuration.properties }}
+{{ .Values.configuration.properties | indent 4 }}
+{{- else }}
+{{ .Files.Get .Values.configFile.properties | indent 4 }}
+{{- end }}
+{{- end }}
+
+{{- if or .Values.configuration.config .Values.configFile.config }}
+  config.yml: |
+{{- if .Values.configuration.config }}
+{{ .Values.configuration.config | indent 4}}
+{{- else }}
+{{ .Files.Get .Values.configFile.config | indent 4 }}
+{{- end }}
+{{- end }}
+kind: ConfigMap
+metadata:
+  labels:
+    k8s-app: {{ .Release.Name }}
+  name: {{ .Release.Name }}-config
+  namespace: {{ .Release.Namespace }}
+
+{{- end }}

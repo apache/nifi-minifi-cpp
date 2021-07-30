@@ -1,0 +1,25 @@
+image:
+  repository: apache/nifi-minifi-cpp
+  tag: latest
+  pullPolicy: Always
+
+imagePullSecrets: []
+
+resources:
+  limits:
+    memory: 1Gi
+    cpu: 1
+  requests:
+    memory: 512Mi
+    cpu: 500m
+
+serviceAccount: ""
+serviceAccountName: ""
+
+configFile:
+  config: ""
+  properties: ""
+
+configuration:
+  config:
+  properties:
