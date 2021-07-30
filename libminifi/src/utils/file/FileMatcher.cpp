@@ -209,24 +209,27 @@ FileMatcher::FilePattern::DirMatchResult FileMatcher::FilePattern::matchDirector
   }
 }
 
-FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std::string& directory, const optional<std::string>& filename) const {
+FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std::string& directory) const {
   auto value = split(directory, path_separators);
   auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
-  if (!filename) {
-    if (excluding_) {
-      if (result == DirMatchResult::TREE && file_pattern_ == "*") {
-        // all files are excluded in this directory
-        return MatchResult::EXCLUDE;
-      }
-      return MatchResult::DONT_CARE;
+  if (excluding_) {
+    if (result == DirMatchResult::TREE && file_pattern_ == "*") {
+      // all files are excluded in this directory
+      return MatchResult::EXCLUDE;
     }
-    return result != DirMatchResult::NONE ? MatchResult::INCLUDE : MatchResult::DONT_CARE;
+    return MatchResult::DONT_CARE;
   }
+  return result != DirMatchResult::NONE ? MatchResult::INCLUDE : MatchResult::DONT_CARE;
+}
+
+FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std::string& directory, const std::string& filename) const {
+  auto value = split(directory, path_separators);
+  auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
   if (result != DirMatchResult::EXACT && result != DirMatchResult::TREE) {
     // we only match a file if the directory fully matches
     return MatchResult::DONT_CARE;
   }
-  if (matchGlob(file_pattern_.begin(), file_pattern_.end(), filename->begin(), filename->end())) {
+  if (matchGlob(file_pattern_.begin(), file_pattern_.end(), filename.begin(), filename.end())) {
     return excluding_ ? MatchResult::EXCLUDE : MatchResult::INCLUDE;
   }
   return MatchResult::DONT_CARE;
@@ -237,16 +240,12 @@ void FileMatcher::forEachFile(const std::function<bool(const std::string&, const
   std::set<std::string> files;
   for (auto it = patterns_.begin(); it != patterns_.end(); ++it) {
     if (it->isExcluding()) continue;
-    std::function<bool(const std::string&, const utils::optional<std::string>&)> matcher = [&] (const std::string& dir, const utils::optional<std::string>& file) -> bool {
+    const auto match_file = [&] (const std::string& dir, const std::string& file) -> bool {
       if (terminate) return false;
       if (it->match(dir, file) != FilePattern::MatchResult::INCLUDE) {
-        // our main pattern does not explicitly command us to process this file/dir
-        if (file) {
-          // keep iterating
-          return true;
-        }
-        // do not descend into this directory
-        return false;
+        // our main pattern does not explicitly command us to process this file
+        // keep iterating
+        return true;
       }
       // check all subsequent patterns in reverse (later ones have higher precedence)
       for (auto rit = patterns_.rbegin(); rit.base() != it + 1; ++rit) {
@@ -254,26 +253,38 @@ void FileMatcher::forEachFile(const std::function<bool(const std::string&, const
         if (result == FilePattern::MatchResult::INCLUDE) {
           break;
         } else if (result == FilePattern::MatchResult::EXCLUDE) {
-          if (file) {
-            // keep on processing the rest of the files in the current directory
-            return true;
-          }
-          // do not descend into this directory
-          return false;
+          // keep on processing the rest of the files in the current directory
+          return true;
         }
       }
-      if (file) {
-        if (files.insert(concat_path(dir, file.value())).second) {
-          // this is a new file, we haven't checked before
-          if (!fn(dir, file.value())) {
-            terminate = true;
-            return false;
-          }
+      if (files.insert(concat_path(dir, file)).second) {
+        // this is a new file, we haven't checked before
+        if (!fn(dir, file)) {
+          terminate = true;
+          return false;
         }
       }
       return true;
     };
-    list_dir(it->getBaseDirectory(), matcher, logger_);
+    const auto descend_into_directory = [&] (const std::string& dir) -> bool {
+      if (it->match(dir) != FilePattern::MatchResult::INCLUDE) {
+        // our main pattern does not explicitly command us to process this directory
+        // do not descend into this directory
+        return false;
+      }
+      // check all subsequent patterns in reverse (later ones have higher precedence)
+      for (auto rit = patterns_.rbegin(); rit.base() != it + 1; ++rit) {
+        const auto result = rit->match(dir);
+        if (result == FilePattern::MatchResult::INCLUDE) {
+          break;
+        } else if (result == FilePattern::MatchResult::EXCLUDE) {
+          // do not descend into this directory
+          return false;
+        }
+      }
+      return true;
+    };
+    list_dir(it->getBaseDirectory(), match_file, logger_, descend_into_directory);
   }
 }
 

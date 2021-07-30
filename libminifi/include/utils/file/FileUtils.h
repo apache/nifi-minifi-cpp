@@ -599,15 +599,6 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
   });
 }
 
-inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const utils::optional<std::string>&)> callback,
-                     const std::shared_ptr<logging::Logger> &logger) {
-  list_dir(dir, [&] (const std::string& dir, const std::string& file) {
-    return callback(dir, file);
-  }, logger, [&] (const std::string&) {
-    return callback(dir, nullopt);
-  });
-}
-
 inline std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<logging::Logger> &logger,
     bool recursive = true)  {
   std::vector<std::pair<std::string, std::string>> fileList;

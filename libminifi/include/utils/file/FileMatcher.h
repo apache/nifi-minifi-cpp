@@ -55,7 +55,9 @@ class FileMatcher {
       return excluding_;
     }
 
-    MatchResult match(const std::string& directory, const optional<std::string>& filename = {}) const;
+    MatchResult match(const std::string& directory) const;
+
+    MatchResult match(const std::string& directory, const std::string& filename) const;
 
     /**
      * @return The lowermost parent directory without wildcards.
