@@ -904,26 +904,6 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
   return true;
 }
 
-static std::vector<std::string> splitPath(const std::string& path) {
-  std::vector<std::string> segments;
-#ifdef WIN32
-  std::string separators = "/\\";
-#else
-  std::string separators = "/";
-#endif
-  std::string::size_type begin = 0;
-  std::string::size_type end = 0;
-  do {
-    end = path.find_first_of(separators, begin);
-    if (end != std::string::npos) {
-      segments.push_back(path.substr(begin, end - begin));
-    } else {
-      segments.push_back(path.substr(begin));
-    }
-  } while (end != std::string::npos && (begin = end + 1, true));
-  return segments;
-}
-
 static bool validateFilePath(const std::filesystem::path& path, const std::shared_ptr<logging::Logger>& logger) {
   if (path.empty()) {
     logger->log_error("Empty output path");
