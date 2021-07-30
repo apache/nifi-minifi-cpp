@@ -28,6 +28,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cinttypes>
+#include <filesystem>
 
 #include "c2/ControllerSocketProtocol.h"
 #include "core/ProcessContext.h"
@@ -922,27 +924,31 @@ static std::vector<std::string> splitPath(const std::string& path) {
   return segments;
 }
 
-bool C2Agent::validateFilePath(const std::string& path) {
-  auto segments = splitPath(path);
-  if (segments.empty()) {
-    logger_->log_error("Empty output path");
+static bool validateFilePath(const std::filesystem::path& path, const std::shared_ptr<logging::Logger>& logger) {
+  if (path.empty()) {
+    logger->log_error("Empty output path");
     return false;
   }
-  if (segments.back().empty()) {
-    logger_->log_error("Last segment (filename) cannot be empty in output path '%s'", path);
+  if (path.has_root_path()) {
+    logger->log_error("Absolute paths are not supported");
     return false;
   }
-  for (const auto& segment : segments) {
-    if (segment.find('*') != std::string::npos) {
-      logger_->log_error("Invalid character '*' in file path '%s'", path);
-      return false;
-    }
-    if (segment.empty()) {
-      logger_->log_error("Empty segments are not supported in path '%s'", path);
+  if (path.filename().empty()) {
+    logger->log_error("Filename cannot be empty in output path '%s'", path);
+    return false;
+  }
+  if (path.filename() == "." || path.filename() == "..") {
+    logger->log_error("Invalid filename '%s'", path.filename());
+    return false;
+  }
+  for (const auto& segment : path) {
+    auto wildcard_idx = segment.string().find_first_of("*?");
+    if (wildcard_idx != std::string::npos) {
+      logger->log_error("Invalid character '%c' in file path '%s'", segment.string()[wildcard_idx], path);
       return false;
     }
     if (segment == "..") {
-      logger_->log_error("Accessing parent directory is forbidden in file path '%s'", path);
+      logger->log_error("Accessing parent directory is forbidden in file path '%s'", path);
       return false;
     }
   }
@@ -951,23 +957,23 @@ bool C2Agent::validateFilePath(const std::string& path) {
 
 bool C2Agent::handleExtensionUpdate(const C2ContentResponse& resp) {
   for (const auto& file : resp.operation_arguments) {
-    if (!validateFilePath(file.first)) {
+    if (!validateFilePath(file.first, logger_)) {
       logger_->log_error("Error in output path '%s', ignoring", file.first);
       continue;
     }
     C2Payload&& response = protocol_.load()->consumePayload(file.second.to_string(), C2Payload(Operation::TRANSFER, true), RECEIVE, false);
 
     auto raw_data = std::move(response).moveRawData();
-    utils::Path root_dir(std::get<0>(utils::file::split_path(utils::file::get_executable_dir())));
+    auto root_dir = std::filesystem::path(utils::file::get_executable_dir()).parent_path();
     if (root_dir.empty()) {
       logger_->log_error("Couldn't determine parent directory of the executable's directory");
       return false;
     }
     auto file_path = root_dir / "extensions" / file.first;
     // ensure directory exists for file
-    utils::file::create_dir(std::get<0>(utils::file::split_path(file_path.str())));
+    utils::file::create_dir(file_path.parent_path());
 
-    std::ofstream{file_path.str()}
+    std::ofstream{file_path}
       .write(raw_data.data(), raw_data.size());
   }
   return true;
