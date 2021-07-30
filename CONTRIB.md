@@ -20,7 +20,7 @@ To make development easier, we've included the linter for the Google Style guide
 for their style guide. It is located
 [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
 New contributions are expected to follow the 
-[Google C++ Style Guide][https://google.github.io/styleguide/cppguide.html], except for the following points:
+[Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html), except for the following points:
 - Use .cpp extension for implementation files
 - Use lowerCamelCase for functions, including accessors/mutators
 - Use UPPER_SNAKE_CASE for constants
