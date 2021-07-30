@@ -25,7 +25,7 @@ New contributions are expected to follow the Google Style Guide, except for the 
 - Use UPPER_SNAKE_CASE for constants
 - Filenames are typically class names or a description of the contents in UpperCamelCase
 - If a class is imitating something from STL, boost or similar, then STL-style lower_snake_case is used for naming the
-  class. UpperSnakeCase is used for most classes, in line with the Google Style Guide.
+  class. UpperCamelCase is used for most classes, in line with the Google Style Guide.
 - Prefer `#pragma once` over include guards
 - Forward declarations are OK
 - Using-directives (`using namespace foo`) are discouraged, except for user-defined literal namespaces
@@ -38,10 +38,8 @@ New contributions are expected to follow the Google Style Guide, except for the 
 - Use gsl::narrow and gsl::narrow_cast in addition to standard casts. The codebase doesn't use abseil.
 - We are more liberal regarding the use of `auto`. The Google Style Guide only allows using it when it makes the code
   clearer. In MiNiFi C++, it's up to the personal preferences of the contributor.
-- Template metaprogramming is OK as long as the usage is clear.
-- Static data members are capitalized according to lower_snake_case, in contrast to the Google Style Guide, which uses
-  lower_snake_case_with_trailing_underscore_. Non-static data members use lower_snake_case_with_trailing_underscore_
-  according to the Google Style Guide.
+- Template metaprogramming is OK when necessary, as long as the usage is clear. Prefer the more readable alternatives
+  when applicable.
 - Enums are either UPPER_SNAKE_CASE or UpperCamelCase.
 - File-level comments describing the contents are not required and typically not used in the codebase. A license header
   is required.
@@ -52,6 +50,9 @@ New contributions are expected to follow the Google Style Guide, except for the 
 
 It's ok to diverge from any of the rules with a good enough reason. We recommend following the C++ Core Guidelines, when
 it doesn't contradict any of the Google Style Guide or the above exceptions.
+
+C++ is a powerful language and "with great power comes great responsibility". Please aim for simple, readable and
+maintainable solutions and avoid footguns. Be open for respectful debate in pull request reviews.
 
 ## Issues and Pull Requests
 
