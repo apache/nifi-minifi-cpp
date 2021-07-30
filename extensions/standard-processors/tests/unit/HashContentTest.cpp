@@ -157,12 +157,12 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
   std::ofstream test_file(test_file_path, std::ios::binary);
 
   SECTION("with an empty file and fail on empty property set to false") {
-  plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::FailOnEmpty.getName(), "false");
+    plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::FailOnEmpty.getName(), "false");
 
-  plan->runNextProcessor();
-  plan->runNextProcessor();
+    plan->runNextProcessor();
+    plan->runNextProcessor();
 
-  REQUIRE(LogTestController::getInstance().contains("attempting read"));
+    REQUIRE(LogTestController::getInstance().contains("attempting read"));
   }
   SECTION("with an empty file and fail on empty property set to true") {
     plan->setProperty(md5processor, org::apache::nifi::minifi::processors::HashContent::FailOnEmpty.getName(), "true");
