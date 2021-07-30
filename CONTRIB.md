@@ -31,7 +31,7 @@ New contributions are expected to follow the Google Style Guide, except for the 
 - Using-directives (`using namespace foo`) are discouraged, except for user-defined literal namespaces
 - Some patterns in the codebase rely on objects with static storage duration without being trivially destructible and
   initialized with a constant expression. It's OK to use these.
-- Operator overloading and user-defined literal suffixes are OK
+- User-defined literal suffixes are OK
 - Public mutable data members are allowed
 - Inline function definition is OK
 - Rvalue references, exceptions and RTTI are allowed
