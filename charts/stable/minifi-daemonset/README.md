@@ -15,6 +15,7 @@ MiNiFi configuration can be provided using multiline values.
 There are two values to use:
 
 **configuration.flow**
+
 This field takes the Flow configuration to be run. It expects a multiline string:
 ```
 configuration:
@@ -26,6 +27,7 @@ configuration:
 ```
 
 **configuration.properties**
+
 This field takes the MiNiFi properties configuration. It expects a multiline string:
 ```
 configuration:
@@ -43,6 +45,7 @@ MiNiFi configuration can be provided using files within the chart. These files m
 Files must be referenced in the values file:
 
 **configFile.flow**
+
 Specifies the file which contains the Flow definition.
 ```
 configFile:
@@ -50,6 +53,7 @@ configFile:
 ```
 
 **configFile.properties**
+
 Specifies the file which contains the MiNiFi properties definitions.
 ```
 configFile:
