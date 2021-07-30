@@ -28,9 +28,9 @@ namespace nifi {
 namespace minifi {
 namespace sql {
 
-SQLRowsetProcessor::SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers)
-  : rowset_(rowset), row_subscribers_(std::move(row_subscribers)) {
-  iter_ = rowset_.begin();
+SQLRowsetProcessor::SQLRowsetProcessor(std::unique_ptr<Rowset> rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers)
+  : rowset_(std::move(rowset)), row_subscribers_(std::move(row_subscribers)) {
+  rowset_->reset();
 }
 
 size_t SQLRowsetProcessor::process(size_t max) {
@@ -40,9 +40,9 @@ size_t SQLRowsetProcessor::process(size_t max) {
     subscriber.get().beginProcessBatch();
   }
 
-  for (; iter_ != rowset_.end(); ) {
-    addRow(*iter_, count);
-    iter_++;
+  while (!rowset_->is_done()) {
+    addRow(rowset_->getCurrent(), count);
+    rowset_->next();
     count++;
     if (max > 0 && count >= max) {
       break;
@@ -59,7 +59,7 @@ size_t SQLRowsetProcessor::process(size_t max) {
   return count;
 }
 
-void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
+void SQLRowsetProcessor::addRow(const Row& row, size_t rowCount) {
   for (const auto& subscriber : row_subscribers_) {
     subscriber.get().beginProcessRow();
   }
@@ -68,7 +68,7 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
     std::vector<std::string> column_names;
     column_names.reserve(row.size());
     for (std::size_t i = 0; i != row.size(); ++i) {
-      column_names.push_back(utils::StringUtils::toLower(row.get_properties(i).get_name()));
+      column_names.push_back(utils::StringUtils::toLower(row.getColumnName(i)));
     }
     for (const auto& subscriber : row_subscribers_) {
       subscriber.get().processColumnNames(column_names);
@@ -76,36 +76,34 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
   }
 
   for (std::size_t i = 0; i != row.size(); ++i) {
-    const soci::column_properties& props = row.get_properties(i);
+    const auto& name = utils::StringUtils::toLower(row.getColumnName(i));
 
-    const auto& name = utils::StringUtils::toLower(props.get_name());
-
-    if (row.get_indicator(i) == soci::i_null) {
+    if (row.isNull(i)) {
       processColumn(name, "NULL");
     } else {
-      switch (const auto dataType = props.get_data_type()) {
-        case soci::data_type::dt_string: {
-          processColumn(name, row.get<std::string>(i));
+      switch (row.getDataType(i)) {
+        case DataType::STRING: {
+          processColumn(name, row.getString(i));
         }
         break;
-        case soci::data_type::dt_double: {
-          processColumn(name, row.get<double>(i));
+        case DataType::DOUBLE: {
+          processColumn(name, row.getDouble(i));
         }
         break;
-        case soci::data_type::dt_integer: {
-          processColumn(name, row.get<int>(i));
+        case DataType::INTEGER: {
+          processColumn(name, row.getInteger(i));
         }
         break;
-        case soci::data_type::dt_long_long: {
-          processColumn(name, row.get<long long>(i));
+        case DataType::LONG_LONG: {
+          processColumn(name, row.getLongLong(i));
         }
         break;
-        case soci::data_type::dt_unsigned_long_long: {
-          processColumn(name, row.get<unsigned long long>(i));
+        case DataType::UNSIGNED_LONG_LONG: {
+          processColumn(name, row.getUnsignedLongLong(i));
         }
         break;
-        case soci::data_type::dt_date: {
-          const std::tm when = row.get<std::tm>(i);
+        case DataType::DATE: {
+          const std::tm when = row.getDate(i);
 
           char value[128];
           if (!std::strftime(value, sizeof(value), "%Y-%m-%d %H:%M:%S", &when))
@@ -115,7 +113,7 @@ void SQLRowsetProcessor::addRow(const soci::row& row, size_t rowCount) {
         }
         break;
         default: {
-          throw minifi::Exception(PROCESSOR_EXCEPTION, "SQLRowsetProcessor: Unsupported data type " + std::to_string(dataType));
+          throw minifi::Exception(PROCESSOR_EXCEPTION, "SQLRowsetProcessor: Unsupported data type in column");
         }
       }
     }

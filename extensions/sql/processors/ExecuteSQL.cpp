@@ -100,7 +100,7 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
 
   sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty};
   FlowFileGenerator flow_file_creator{session, json_writer};
-  sql::SQLRowsetProcessor sql_rowset_processor(row_set, {json_writer, flow_file_creator});
+  sql::SQLRowsetProcessor sql_rowset_processor(std::move(row_set), {json_writer, flow_file_creator});
 
   // Process rowset.
   while (size_t row_count = sql_rowset_processor.process(max_rows_)) {

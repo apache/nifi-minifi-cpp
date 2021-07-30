@@ -20,9 +20,8 @@
 
 #include <vector>
 
-#include <soci/soci.h>
-
 #include "SQLRowSubscriber.h"
+#include "DatabaseConnectors.h"
 
 namespace org {
 namespace apache {
@@ -32,12 +31,12 @@ namespace sql {
 
 class SQLRowsetProcessor {
  public:
-  SQLRowsetProcessor(const soci::rowset<soci::row>& rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> rowSubscribers);
+  SQLRowsetProcessor(std::unique_ptr<Rowset> rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> rowSubscribers);
 
   size_t process(size_t max);
 
  private:
-   void addRow(const soci::row& row, size_t rowCount);
+   void addRow(const Row& row, size_t rowCount);
 
    template <typename T>
    void processColumn(const std::string& name, const T& value) const {
@@ -47,8 +46,7 @@ class SQLRowsetProcessor {
    }
 
  private:
-  soci::rowset<soci::row>::const_iterator iter_;
-  soci::rowset<soci::row> rowset_;
+  std::unique_ptr<Rowset> rowset_;
   std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers_;
 };
 

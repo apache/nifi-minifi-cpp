@@ -42,12 +42,11 @@ TEST_CASE("Test Put", "[PutSQLPut]") {
 
   auto input_file = plan->addInput({
     {"sql.args.1.value", "42"},
-    {"sql.args.2.value", "asdf"}
   });
 
   sql_proc->setProperty(
       "SQL Statement",
-      "INSERT INTO test_table (int_col, text_col) VALUES (?, ?)");
+      "INSERT INTO test_table (int_col, text_col) VALUES (?, 'asdf')");
 
   plan->run();
 

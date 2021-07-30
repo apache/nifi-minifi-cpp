@@ -18,11 +18,14 @@
 
 #pragma once
 
-#include "core/logging/LoggerConfiguration.h"
-#include "core/controller/ControllerService.h"
-#include "DatabaseService.h"
+#include <memory>
+#include <string>
+
+#include "MockConnectors.h"
+#include "services/DatabaseService.h"
 #include "core/Resource.h"
-#include "data/SociConnectors.h"
+#include "data/DatabaseConnectors.h"
+#include "utils/GeneralUtils.h"
 
 namespace org {
 namespace apache {
@@ -31,33 +34,30 @@ namespace minifi {
 namespace sql {
 namespace controllers {
 
-/**
- * Purpose and Justification: Controller services function as a layerable way to provide
- * services to internal services. While a controller service is generally configured from the flow,
- * we want to follow the open closed principle and provide Database services
- */
-class ODBCService : public DatabaseService {
+class MockODBCService : public DatabaseService {
  public:
-  explicit ODBCService(const std::string &name, const utils::Identifier &uuid = {})
+  explicit MockODBCService(const std::string &name, utils::Identifier uuid = utils::Identifier())
     : DatabaseService(name, uuid),
-      logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+      logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
     initialize();
   }
 
-  explicit ODBCService(const std::string &name, const std::shared_ptr<Configure> &configuration)
+  explicit MockODBCService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : DatabaseService(name),
-        logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+        logger_(logging::LoggerFactory<MockODBCService>::getLogger()) {
     setConfiguration(configuration);
     initialize();
   }
 
-  std::unique_ptr<sql::Connection> getConnection() const override;
+  std::unique_ptr<sql::Connection> getConnection() const {
+    return minifi::utils::make_unique<sql::MockODBCConnection>(connection_string_);
+  }
 
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database connection");
+REGISTER_RESOURCE(MockODBCService, "Controller service that provides Mock ODBC database connection");
 
 } /* namespace controllers */
 } /* namespace sql */

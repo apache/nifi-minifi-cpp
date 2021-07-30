@@ -27,6 +27,13 @@
 
 #include "../TestBase.h"
 
+#ifdef USE_REAL_ODBC_TEST_DRIVER
+static const std::string ODBC_SERVICE = "ODBCService";
+#else
+#include "mocks/MockODBCService.h"
+static const std::string ODBC_SERVICE = "MockODBCService";
+#endif
+
 class SQLTestPlan {
  public:
   SQLTestPlan(TestController& controller, const std::string& connection_str, const std::string& sql_processor, std::initializer_list<core::Relationship> output_rels) {
@@ -39,7 +46,7 @@ class SQLTestPlan {
     }
 
     // initialize database service
-    auto service = plan_->addController("ODBCService", "ODBCService");
+    auto service = plan_->addController(ODBC_SERVICE, "ODBCService");
     plan_->setProperty(service, minifi::sql::controllers::DatabaseService::ConnectionString.getName(), connection_str);
   }
 

@@ -60,6 +60,10 @@ option(DISABLE_CURL "Disables libCurl Properties." OFF)
 option(USE_GOLD_LINKER "Use Gold Linker" OFF)
 option(INSTALLER_MERGE_MODULES "Creates installer with merge modules" OFF)
 option(FAIL_ON_WARNINGS "Treat warnings as errors" OFF)
+option(USE_REAL_ODBC_TEST_DRIVER "Use SQLite ODBC driver in SQL extenstion unit tests instead of a mock database" OFF)
+if (USE_REAL_ODBC_TEST_DRIVER)
+	add_definitions("-DUSE_REAL_ODBC_TEST_DRIVER")
+endif()
 # This is needed for ninja:
 # By default, neither Clang or GCC will add ANSI-formatted colors to your output if they detect
 # the output medium is not a terminal. This means no coloring when using a generator
