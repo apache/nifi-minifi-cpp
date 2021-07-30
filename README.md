@@ -560,23 +560,7 @@ See https://nifi.apache.org/minifi for the latest documentation.
 See our [examples page](examples/README.md) for flow examples.
 
 ## Contributing
-
-We welcome all contributions to Apache MiNiFi. To make development easier, we've included
-the linter for the Google Style guide. Google provides an Eclipse formatter for their style
-guide. It is located [here](https://github.com/google/styleguide/blob/gh-pages/eclipse-cpp-google-style.xml).
-New contributions are expected to follow the Google style guide when it is reasonable.
-
-Shell script files shall follow the guidelines and best practices defined by the [shellcheck](https://github.com/koalaman/shellcheck) analysis tool.
-New contributions are expected to pass the shellcheck analysis as part of the verification process.
-If a shellcheck requested change is unfeasable it shall be disabled on per-line basis and will be subjected to review.
-For more information on an issue please check the [shellcheck wiki page](https://github.com/koalaman/shellcheck/wiki).
-
-Python script files shall follow the PEP8 guidelines and best practices. The project includes [flake8](https://flake8.pycqa.org/en/latest/) checks
-as part of the verification process, that is applied to all new contributions.
-
-Additionally, all new files must include a copy of the Apache License Header.
-
-For more details on how to contribute please see our [Contribution Guide](CONTRIB.md)
+See our [Contribution Guide](CONTRIB.md).
 
 ## License
 Except as otherwise noted this software is licensed under the
