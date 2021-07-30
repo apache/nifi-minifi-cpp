@@ -35,15 +35,7 @@
 #include "utils/FailurePolicy.h"
 #include "utils/gsl.h"
 
-#if defined(WIN32) || (__cplusplus >= 201103L && (!defined(__GLIBCXX__) || (__cplusplus >= 201402L) ||  (defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE > 4)))
-#define HAVE_REGEX_CPP 1
-#else
-#define HAVE_REGEX_CPP 0
-#endif
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 namespace utils {
 
 template<class Char>
@@ -582,9 +574,6 @@ enum TimeUnit {
 };
 
 }  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
