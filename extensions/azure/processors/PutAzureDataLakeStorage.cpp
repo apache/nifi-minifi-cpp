@@ -105,15 +105,6 @@ std::string PutAzureDataLakeStorage::getConnectionStringFromControllerService(co
 }
 
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  std::string value;
-  if (!context->getProperty(FilesystemName.getName(), value) || value.empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Filesystem Name property missing or invalid");
-  }
-
-  if (!context->getProperty(DirectoryName.getName(), value) || value.empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Directory Name property missing or invalid");
-  }
-
   connection_string_ = getConnectionStringFromControllerService(context);
   if (connection_string_.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");

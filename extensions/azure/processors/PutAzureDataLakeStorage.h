@@ -71,6 +71,8 @@ class PutAzureDataLakeStorage final : public core::Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
+  friend class ::PutAzureDataLakeStorageTestsFixture;
+
   class ReadCallback : public InputStreamCallback {
    public:
     ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params)
@@ -104,8 +106,6 @@ class PutAzureDataLakeStorage final : public core::Processor {
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;
   }
-
-  friend class PutAzureDataLakeStorageTestsFixture;
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
     : core::Processor(name, uuid),
