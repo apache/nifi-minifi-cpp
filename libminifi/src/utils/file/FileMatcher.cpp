@@ -140,26 +140,27 @@ static void skip_if(It& it, const It& end, const Fn& fn) {
   }
 }
 
-static bool matchGlob(std::string::const_iterator pattern_it, std::string::const_iterator pattern_end, std::string::const_iterator value_it, std::string::const_iterator value_end) {
+static bool matchGlob(std::string_view pattern, std::string_view value) {
   // match * and ?
-  for (; pattern_it != pattern_end; ++pattern_it) {
-    if (*pattern_it == '*') {
+  size_t value_idx = 0;
+  for (size_t pattern_idx = 0; pattern_idx != pattern.length(); ++pattern_idx) {
+    if (pattern[pattern_idx] == '*') {
       do {
-        if (matchGlob(std::next(pattern_it), pattern_end, value_it, value_end)) {
+        if (matchGlob(pattern.substr(pattern_idx + 1), value.substr(value_idx))) {
           return true;
         }
-      } while (advance_if_not_equal(value_it, value_end));
+      } while (advance_if_not_equal(value_idx, value.length()));
       return false;
     }
-    if (value_it == value_end) {
+    if (value_idx == value.length()) {
       return false;
     }
-    if (*pattern_it != '?' && *pattern_it != *value_it) {
+    if (pattern[pattern_idx] != '?' && pattern[pattern_idx] != value[value_idx]) {
       return false;
     }
-    ++value_it;
+    ++value_idx;
   }
-  return value_it == value_end;
+  return value_idx == value.length();
 }
 
 FileMatcher::FilePattern::DirMatchResult FileMatcher::FilePattern::matchDirectory(DirIt pattern_it, DirIt pattern_end, DirIt value_it, DirIt value_end) {
@@ -194,7 +195,7 @@ FileMatcher::FilePattern::DirMatchResult FileMatcher::FilePattern::matchDirector
       // we used up all the value segments but there are still pattern segments
       return DirMatchResult::PARENT;
     }
-    if (!matchGlob(pattern_it->begin(), pattern_it->end(), value_it->begin(), value_it->end())) {
+    if (!matchGlob(*pattern_it, *value_it)) {
       return DirMatchResult::NONE;
     }
     ++value_it;
@@ -229,7 +230,7 @@ FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std:
     // we only match a file if the directory fully matches
     return MatchResult::DONT_CARE;
   }
-  if (matchGlob(file_pattern_.begin(), file_pattern_.end(), filename.begin(), filename.end())) {
+  if (matchGlob(file_pattern_, filename)) {
     return excluding_ ? MatchResult::EXCLUDE : MatchResult::INCLUDE;
   }
   return MatchResult::DONT_CARE;
