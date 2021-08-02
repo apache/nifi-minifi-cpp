@@ -936,11 +936,11 @@ void C2Agent::handleExtensionUpdate(const C2ContentResponse& resp) {
   // Relative paths are resolved relative to "<exe_dir>/../extensions".
   // We can use the ${MINIFI_HOME} prefix to place files relative to the
   // minifi home if need be.
-  std::filesystem::path root_dir = utils::file::get_parent_path(utils::file::get_executable_dir());
+  std::filesystem::path root_dir = utils::file::get_extension_dir();
   if (root_dir.empty()) {
-    logger_->log_error("Couldn't determine parent directory of the executable's directory");
+    logger_->log_error("Couldn't determine extension directory");
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
-    response.setRawData("Couldn't determine parent directory of the executable's directory");
+    response.setRawData("Couldn't determine extension directory");
     enqueue_c2_response(std::move(response));
     return;
   }
@@ -959,7 +959,7 @@ void C2Agent::handleExtensionUpdate(const C2ContentResponse& resp) {
     auto raw_data = std::move(response).moveRawData();
     std::filesystem::path file_path(output_path);
     if (!file_path.has_root_path()) {
-      file_path = root_dir / "extensions" / file_path;
+      file_path = root_dir / file_path;
     }
     // ensure directory exists for file
     if (utils::file::create_dir(file_path.parent_path()) != 0) {

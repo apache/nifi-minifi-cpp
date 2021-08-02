@@ -88,9 +88,8 @@ int main() {
 
   // setup executable directory
   const std::filesystem::path root_dir = controller.createTempDirectory("/var/tmp/test.XXXXXX").str();
-  utils::file::create_dir(root_dir / "bin");
-  utils::file::create_dir(root_dir / "extensions");
   utils::file::test_set_mock_executable_path(root_dir / "bin" / "minifi.exe");
+  auto extension_dir = utils::file::get_extension_dir();
 
   // setup minifi home
   const std::filesystem::path home_dir = controller.createTempDirectory("/var/tmp/test.XXXXXX").str();
@@ -106,16 +105,16 @@ int main() {
     if (!ack_handler.isAcknowledged(file_update_id)) {
       return false;
     }
-    std::string file1_content = readFile(home_dir / "extensions" / "example.txt");
+    std::string file1_content = readFile(home_dir / "example.txt");
     assert(file1_content == expected_content);
 
-    std::string file2_content = readFile(home_dir / "extensions" / "new_dir" / "renamed.txt");
+    std::string file2_content = readFile(home_dir / "new_dir" / "renamed.txt");
     assert(file2_content == expected_content);
 
-    std::string file3_content = readFile(root_dir / "extensions" / "rel_to_binary.txt");
+    std::string file3_content = readFile(extension_dir / "rel_to_binary.txt");
     assert(file3_content == expected_content);
 
-    std::string file4_content = readFile(root_dir / "extensions" / "also_new_dir" / "rel_to_binary.txt.sig");
+    std::string file4_content = readFile(extension_dir / "also_new_dir" / "rel_to_binary.txt.sig");
     assert(file4_content == expected_content);
 
     return true;
@@ -129,8 +128,8 @@ int main() {
       "name": "extension",
       "operationId": ")" + file_update_id + R"(",
       "args": {
-        "${MINIFI_HOME}/extensions/example.txt": ")" + file_url + R"(",
-        "${MINIFI_HOME}/extensions/new_dir/renamed.txt": ")" + file_url + R"(",
+        "${MINIFI_HOME}/example.txt": ")" + file_url + R"(",
+        "${MINIFI_HOME}/new_dir/renamed.txt": ")" + file_url + R"(",
         "rel_to_binary.txt": ")" + file_url + R"(",
         "also_new_dir/rel_to_binary.txt.sig": ")" + file_url + R"("
       }

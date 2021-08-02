@@ -590,6 +590,14 @@ inline std::string get_executable_dir() {
   return get_parent_path(executable_path);
 }
 
+inline std::filesystem::path get_extension_dir() {
+  auto executable_dir = get_executable_dir();
+  if (executable_dir.empty()) {
+    return "";
+  }
+  return concat_path(get_parent_path(executable_dir), "extensions");
+}
+
 inline int close(int file_descriptor) {
 #ifdef WIN32
   return _close(file_descriptor);
