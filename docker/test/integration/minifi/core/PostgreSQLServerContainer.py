@@ -6,7 +6,7 @@ class PostgreSQLServerContainer(Container):
     def __init__(self, name, vols, network):
         super().__init__(name, 'postgresql-server', vols, network)
 
-    def get_startup_finish_text(self):
+    def get_startup_finished_log_entry(self):
         return "database system is ready to accept connections"
 
     def deploy(self):

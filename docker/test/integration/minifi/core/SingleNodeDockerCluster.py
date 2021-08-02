@@ -10,7 +10,7 @@ from .KafkaBrokerContainer import KafkaBrokerContainer
 from .S3ServerContainer import S3ServerContainer
 from .AzureStorageServerContainer import AzureStorageServerContainer
 from .HttpProxyContainer import HttpProxyContainer
-from .HttpProxyContainer import PostgreSQLServerContainer
+from .PostgreSQLServerContainer import PostgreSQLServerContainer
 
 
 class SingleNodeDockerCluster(Cluster):

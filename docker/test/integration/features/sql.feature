@@ -13,7 +13,7 @@ Feature: Execuring SQL operations from MiNiFi-C++
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PutSQL
     And an ODBCService is setup up for PutSQL with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
-    And a PostgreSQL server "postgresql" is set up
+    And a PostgreSQL server is set up
     When all instances start up
     Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 120 seconds on the PostgreSQL server
 
@@ -28,7 +28,7 @@ Feature: Execuring SQL operations from MiNiFi-C++
     And the "success" relationship of the UpdateAttribute processor is connected to the ExecuteSQL
     And the "success" relationship of the ExecuteSQL processor is connected to the PutFile
     And an ODBCService is setup up for ExecuteSQL with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
-    And a PostgreSQL server "postgresql" is set up
+    And a PostgreSQL server is set up
     When all instances start up
     Then at least one flowfile with the content '[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
 
@@ -40,6 +40,6 @@ Feature: Execuring SQL operations from MiNiFi-C++
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the QueryDatabaseTable processor is connected to the PutFile
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
-    And a PostgreSQL server "postgresql" is set up
+    And a PostgreSQL server is set up
     When all instances start up
     Then at least one flowfile with the content '[{"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
