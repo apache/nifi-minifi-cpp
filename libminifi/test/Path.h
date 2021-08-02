@@ -58,10 +58,6 @@ class Path {
     return value_;
   }
 
-  bool empty() const noexcept {
-    return value_.empty();
-  }
-
  private:
   std::string value_;
 };
