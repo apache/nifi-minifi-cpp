@@ -561,6 +561,17 @@ inline std::string get_executable_path() {
 #endif
 }
 
+std::string get_executable_path();
+
+/**
+ * Test utility to mock the executable's path, when we don't want to
+ * actually apply some modifications relative to the actual executable.
+ * e.g. creating test files in the build directory.
+ * WARNING: not to be used outside tests, also: not thread safe
+ * @param path to be set as the executable path
+ */
+void test_set_mock_executable_path(const std::string& path);
+
 inline std::string resolve(const std::string& base, const std::string& path) {
   if (utils::file::isAbsolutePath(path.c_str())) {
     return path;

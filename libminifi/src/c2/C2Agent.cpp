@@ -47,6 +47,7 @@
 #include "io/ArchiveStream.h"
 #include "io/StreamPipe.h"
 #include "utils/Path.h"
+#include "io/FileStream.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -909,12 +910,8 @@ static bool validateFilePath(const std::filesystem::path& path, const std::share
     logger->log_error("Empty output path");
     return false;
   }
-  if (path.has_root_path()) {
-    logger->log_error("Absolute paths are not supported");
-    return false;
-  }
-  if (path.filename().empty()) {
-    logger->log_error("Filename cannot be empty in output path '%s'", path);
+  if (!path.has_filename()) {
+    logger->log_error("Filename missing in output path '%s'", path);
     return false;
   }
   if (path.filename() == "." || path.filename() == "..") {
@@ -935,28 +932,52 @@ static bool validateFilePath(const std::filesystem::path& path, const std::share
   return true;
 }
 
-bool C2Agent::handleExtensionUpdate(const C2ContentResponse& resp) {
+void C2Agent::handleExtensionUpdate(const C2ContentResponse& resp) {
+  // Relative paths are resolved relative to "<exe_dir>/../extensions".
+  // We can use the ${MINIFI_HOME} prefix to place files relative to the
+  // minifi home if need be.
+  std::filesystem::path root_dir = utils::file::get_parent_path(utils::file::get_executable_dir());
+  if (root_dir.empty()) {
+    logger_->log_error("Couldn't determine parent directory of the executable's directory");
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+    response.setRawData("Couldn't determine parent directory of the executable's directory");
+    enqueue_c2_response(std::move(response));
+    return;
+  }
+  state::UpdateState result = state::UpdateState::FULLY_APPLIED;
   for (const auto& file : resp.operation_arguments) {
-    if (!validateFilePath(file.first, logger_)) {
-      logger_->log_error("Error in output path '%s', ignoring", file.first);
+    std::string output_path = file.first;
+    // TODO(adebreceni): should we allow resolution of all other env vars?
+    utils::StringUtils::replaceAll(output_path, "${" MINIFI_HOME_ENV_KEY "}", utils::Environment::getEnvironmentVariable(MINIFI_HOME_ENV_KEY).second);
+    if (!validateFilePath(output_path, logger_)) {
+      logger_->log_error("Error in output path '%s', ignoring", output_path);
+      result = state::UpdateState::PARTIALLY_APPLIED;
       continue;
     }
     C2Payload&& response = protocol_.load()->consumePayload(file.second.to_string(), C2Payload(Operation::TRANSFER, true), RECEIVE, false);
 
     auto raw_data = std::move(response).moveRawData();
-    auto root_dir = std::filesystem::path(utils::file::get_executable_dir()).parent_path();
-    if (root_dir.empty()) {
-      logger_->log_error("Couldn't determine parent directory of the executable's directory");
-      return false;
+    std::filesystem::path file_path(output_path);
+    if (!file_path.has_root_path()) {
+      file_path = root_dir / "extensions" / file_path;
     }
-    auto file_path = root_dir / "extensions" / file.first;
     // ensure directory exists for file
-    utils::file::create_dir(file_path.parent_path());
+    if (utils::file::create_dir(file_path.parent_path()) != 0) {
+      logger_->log_error("Failed to create directory '%s'", file_path.parent_path());
+      result = state::UpdateState::PARTIALLY_APPLIED;
+      continue;
+    }
 
-    std::ofstream{file_path}
-      .write(raw_data.data(), raw_data.size());
+    io::FileStream output{file_path};
+    if (io::isError(output.write(reinterpret_cast<const uint8_t*>(raw_data.data()), raw_data.size()))) {
+      logger_->log_error("Error while writing file '%s'", file_path);
+      result = state::UpdateState::PARTIALLY_APPLIED;
+      continue;
+    }
+    output.close();
   }
-  return true;
+  C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
+  enqueue_c2_response(std::move(response));
 }
 
 void C2Agent::enqueue_c2_server_response(C2Payload &&resp) {

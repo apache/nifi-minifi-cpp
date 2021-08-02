@@ -42,9 +42,6 @@ extern "C" {
 #define STOP_WAIT_TIME_MS 30*1000
 //! Default YAML location
 
-//! Define home environment variable
-#define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
-
 #ifdef _MSC_VER
 #ifndef PATH_MAX
 #define PATH_MAX 260

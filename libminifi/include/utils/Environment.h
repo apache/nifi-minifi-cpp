@@ -21,6 +21,9 @@
 #include <functional>
 #include <string>
 
+//! Define home environment variable
+#define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
+
 namespace org {
 namespace apache {
 namespace nifi {

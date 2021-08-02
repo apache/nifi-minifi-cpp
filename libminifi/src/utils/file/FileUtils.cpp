@@ -113,6 +113,64 @@ void put_content(const std::filesystem::path& filename, std::string_view new_con
   ofs.write(new_contents.data(), gsl::narrow<std::streamsize>(new_contents.size()));
 }
 
+static std::optional<std::string> mock_executable_path;
+
+void test_set_mock_executable_path(const std::string& path) {
+  mock_executable_path = path;
+}
+
+std::string get_executable_path() {
+  if (mock_executable_path) {
+    return mock_executable_path.value();
+  }
+#if defined(__linux__)
+  std::vector<char> buf(1024U);
+  while (true) {
+    ssize_t ret = readlink("/proc/self/exe", buf.data(), buf.size());
+    if (ret < 0) {
+      return "";
+    }
+    if (static_cast<size_t>(ret) == buf.size()) {
+      /* It may have been truncated */
+      buf.resize(buf.size() * 2);
+      continue;
+    }
+    return std::string(buf.data(), ret);
+  }
+#elif defined(__APPLE__)
+  std::vector<char> buf(PATH_MAX);
+  uint32_t buf_size = buf.size();
+  while (_NSGetExecutablePath(buf.data(), &buf_size) != 0) {
+    buf.resize(buf_size);
+  }
+  std::vector<char> resolved_name(PATH_MAX);
+  if (realpath(buf.data(), resolved_name.data()) == nullptr) {
+    return "";
+  }
+  return std::string(resolved_name.data());
+#elif defined(WIN32)
+  HMODULE hModule = GetModuleHandleA(nullptr);
+    if (hModule == nullptr) {
+      return "";
+    }
+    std::vector<char> buf(1024U);
+    while (true) {
+      size_t ret = GetModuleFileNameA(hModule, buf.data(), gsl::narrow<DWORD>(buf.size()));
+      if (ret == 0U) {
+        return "";
+      }
+      if (ret == buf.size() && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+        /* It has been truncated */
+        buf.resize(buf.size() * 2);
+        continue;
+      }
+      return std::string(buf.data());
+    }
+#else
+    return "";
+#endif
+}
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi

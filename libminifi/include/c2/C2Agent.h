@@ -178,7 +178,7 @@ class C2Agent : public state::UpdateController {
 
   std::optional<std::string> resolveUrl(const std::string& url) const;
 
-  bool handleExtensionUpdate(const C2ContentResponse& resp);
+  void handleExtensionUpdate(const C2ContentResponse& resp);
 
  protected:
   std::timed_mutex metrics_mutex_;
