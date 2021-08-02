@@ -25,6 +25,7 @@
 #include "MemoryConsumptionCounter.h"
 #include "utils/StringUtils.h"
 #include "utils/JsonCallback.h"
+#include "utils/OpenTelemetryLogDataModelUtils.h"
 
 namespace org {
 namespace apache {
@@ -136,13 +137,9 @@ void PerformanceDataMonitor::initialize() {
 rapidjson::Value& PerformanceDataMonitor::prepareJSONBody(rapidjson::Document& root) {
   switch (output_format_) {
     case OutputFormat::OPENTELEMETRY: {
-      root.AddMember("Name", "PerformanceData", root.GetAllocator());
-      root.AddMember("Timestamp", std::time(0), root.GetAllocator());
-      std::string hostname = io::Socket::getMyHostName();
-      rapidjson::Value hostname_value;
-      hostname_value.SetString(hostname.c_str(), hostname.length(), root.GetAllocator());
-      root.AddMember("Hostname", hostname_value, root.GetAllocator());
-      root.AddMember("Body", rapidjson::Value{ rapidjson::kObjectType }, root.GetAllocator());
+      utils::OpenTelemetryLogDataModel::appendEventInformation(root, "PerformanceData");
+      utils::OpenTelemetryLogDataModel::appendHostInformation(root);
+      utils::OpenTelemetryLogDataModel::appendBody(root);
       return root["Body"];
     }
     case OutputFormat::JSON:

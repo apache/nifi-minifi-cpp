@@ -22,6 +22,7 @@
 #include <map>
 
 #include "utils/gsl.h"
+#include "Exception.h"
 
 #ifdef __linux__
 #include <sys/sysinfo.h>
@@ -36,16 +37,19 @@
 #include <Windows.h>
 #include <sddl.h>
 #include <psapi.h>
+#include <winsock2.h>
 #include <vector>
 #include <algorithm>
+#include <WS2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
 #else
 #include <sys/utsname.h>
 #include <pwd.h>
 #include <sys/types.h>
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <fstream>
-
+#include <cstring>
 #endif
 
 #ifdef __APPLE__
@@ -312,8 +316,44 @@ std::string OsUtils::getMachineArchitecture() {
   else
     return buf.machine;
 #endif
+
   return "unknown";
 }
+
+namespace {
+std::string get_last_socket_error_message() {
+#ifdef WIN32
+  const auto error_code = WSAGetLastError();
+#else
+  const auto error_code = errno;
+#endif /* WIN32 */
+  return std::system_category().message(error_code);
+}
+}
+
+std::string OsUtils::sockaddr_ntop(const sockaddr* const sa) {
+  std::string result;
+  if (sa->sa_family == AF_INET) {
+    sockaddr_in sa_in{};
+    std::memcpy(reinterpret_cast<void*>(&sa_in), sa, sizeof(sockaddr_in));
+    result.resize(INET_ADDRSTRLEN);
+    if (inet_ntop(AF_INET, &sa_in.sin_addr, &result[0], INET_ADDRSTRLEN) == nullptr) {
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error_message() };
+    }
+  } else if (sa->sa_family == AF_INET6) {
+    sockaddr_in6 sa_in6{};
+    std::memcpy(reinterpret_cast<void*>(&sa_in6), sa, sizeof(sockaddr_in6));
+    result.resize(INET6_ADDRSTRLEN);
+    if (inet_ntop(AF_INET6, &sa_in6.sin6_addr, &result[0], INET6_ADDRSTRLEN) == nullptr) {
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error_message() };
+    }
+  } else {
+    throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, "sockaddr_ntop: unknown address family" };
+  }
+  result.resize(strlen(result.c_str()));  // discard remaining null bytes at the end
+  return result;
+}
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

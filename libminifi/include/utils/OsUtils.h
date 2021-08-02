@@ -19,12 +19,15 @@
 
 #include <string>
 
+struct sockaddr;
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace utils {
 namespace OsUtils {
+
 
 /// Resolves a user ID to a username
 extern std::string userIdToUsername(const std::string &uid);
@@ -50,6 +53,9 @@ std::string getMachineArchitecture();
 /// Resolves common identifiers
 extern std::string resolve_common_identifiers(const std::string &id);
 #endif
+
+std::string sockaddr_ntop(const sockaddr* const sa);
+
 } /* namespace OsUtils */
 } /* namespace utils */
 } /* namespace minifi */
