@@ -120,7 +120,7 @@ std::unique_ptr<Rowset> SociStatement::execute(const std::vector<std::string>& a
     // binds arguments to the prepared statement
     stmt.operator,(soci::use(arg));
   }
-  return utils::make_unique<SociRowset>(stmt);
+  return std::make_unique<SociRowset>(stmt);
 }
 
 void SociSession::begin() {
@@ -141,7 +141,7 @@ void SociSession::execute(const std::string &statement) {
 
 ODBCConnection::ODBCConnection(std::string connectionString)
   : connection_string_(std::move(connectionString)) {
-    session_ = utils::make_unique<soci::session>(getSessionParameters());
+    session_ = std::make_unique<soci::session>(getSessionParameters());
 }
 
 bool ODBCConnection::connected(std::string& exception) const {
@@ -158,11 +158,11 @@ bool ODBCConnection::connected(std::string& exception) const {
 }
 
 std::unique_ptr<sql::Statement> ODBCConnection::prepareStatement(const std::string& query) const {
-  return utils::make_unique<sql::SociStatement>(*session_, query);
+  return std::make_unique<sql::SociStatement>(*session_, query);
 }
 
 std::unique_ptr<Session> ODBCConnection::getSession() const {
-  return utils::make_unique<sql::SociSession>(*session_);
+  return std::make_unique<sql::SociSession>(*session_);
 }
 
 soci::connection_parameters ODBCConnection::getSessionParameters() const {

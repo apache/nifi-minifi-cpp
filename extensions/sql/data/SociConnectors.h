@@ -23,7 +23,6 @@
 #include <ctime>
 
 #include "Exception.h"
-#include "utils/GeneralUtils.h"
 #include "data/DatabaseConnectors.h"
 #include <soci/soci.h>
 #include <soci/odbc/soci-odbc.h>
