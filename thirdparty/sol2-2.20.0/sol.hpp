@@ -1719,7 +1719,8 @@ namespace sol {
 #else
 			is_specialization_of<meta::unqualified_t<T>, basic_string_view>,
 #endif
-			meta::all<std::is_array<unqualified_t<T>>, meta::any_same<meta::unqualified_t<std::remove_all_extents_t<meta::unqualified_t<T>>>, char, char16_t, char32_t, wchar_t>>
+			// Added char8_t to the list. Patched by szaszm in minifi-cpp to avoid compilation error on C++20, where char8_t is incompatible with char.
+			meta::all<std::is_array<unqualified_t<T>>, meta::any_same<meta::unqualified_t<std::remove_all_extents_t<meta::unqualified_t<T>>>, char, char8_t, char16_t, char32_t, wchar_t>>
 		>;
 
 		template <typename T>
@@ -5350,7 +5351,8 @@ namespace sol {
 		template <typename T>
 		struct is_container<T, std::enable_if_t<meta::all<
 			std::is_array<meta::unqualified_t<T>>
-			, meta::neg<meta::any_same<std::remove_all_extents_t<meta::unqualified_t<T>>, char, wchar_t, char16_t, char32_t>>
+			// Added char8_t to the list. Patched by szaszm in minifi-cpp to avoid compilation error on C++20, where char8_t is incompatible with char.
+			, meta::neg<meta::any_same<std::remove_all_extents_t<meta::unqualified_t<T>>, char, wchar_t, char8_t, char16_t, char32_t>>
 			>::value
 		>> : std::true_type {};
 
@@ -7862,14 +7864,15 @@ namespace sol {
 			return key;
 		}
 
-		inline decltype(auto) base_class_index_propogation_key() {
+		// Casting types to const char* (from const char8_t*). Patched by szaszm in minifi-cpp to avoid compilation error on C++20, where char8_t is incompatible with char.
+		inline const char* const& base_class_index_propogation_key() {
 			static const auto& key = u8"\xF0\x9F\x8C\xB2.index";
-			return key;
+			return reinterpret_cast<const char* const&>(key);
 		}
 
-		inline decltype(auto) base_class_new_index_propogation_key() {
+		inline const char* const& base_class_new_index_propogation_key() {
 			static const auto& key = u8"\xF0\x9F\x8C\xB2.new_index";
-			return key;
+			return reinterpret_cast<const char* const&>(key);
 		}
 
 		template <typename T, typename... Bases>
@@ -18105,7 +18108,7 @@ namespace sol {
 				return;
 			const char* metakey = &usertype_traits<Base>::metatable()[0];
 			const char* gcmetakey = &usertype_traits<Base>::gc_table()[0];
-			const char* basewalkkey = is_index ? static_cast<const char*>(detail::base_class_index_propogation_key()) : static_cast<const char*>(detail::base_class_new_index_propogation_key());
+			const char* basewalkkey = is_index ? detail::base_class_index_propogation_key() : detail::base_class_new_index_propogation_key();
 
 			luaL_getmetatable(L, metakey);
 			if (type_of(L, -1) == type::lua_nil) {
