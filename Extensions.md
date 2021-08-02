@@ -18,7 +18,9 @@ To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR sel
 
 # Extension internals
 Extensions are dynamic libraries loaded at runtime by the agent. An extension makes its 
-capabilities (classes) available to the system through registrars.
+capabilities (classes) available to the system through registrars. Registration should happen in source files,
+as otherwise, including another extension's headers would introduce the same resources in the including extension
+as well, possibly shadowing its own resources.
 
 ``` C++
 // register user-facing classes as
@@ -29,10 +31,6 @@ REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with 
 // register internal resources as
 REGISTER_INTERNAL_RESOURCE(HTTPClient);
 ```
-
-If you decide to put them in a header file, you better make sure that there are no dependencies between extensions,
-as the inclusion of such header from extension "A", will force it to be defined in the including extension "B". This could result
-in shadowing each other's resources. Best to put them in source files.
 
 Some extensions (e.g. `http-curl`) require initialization before use. You need to subclass `Extension` and let the system know by using `REGISTER_EXTENSION`.
 

@@ -46,6 +46,10 @@ class StringStreamSink : public spdlog::sinks::sink {
   }
 
  private:
+  // we need to keep the stream alive as long as the sink is in use,
+  // as the sinks are stored in the loggers, some of which are
+  // static storage duration, thus they might outlive the provider of
+  // the stream
   std::shared_ptr<std::ostringstream> stream_;
   spdlog::sinks::ostream_sink_mt sink_;
 };
