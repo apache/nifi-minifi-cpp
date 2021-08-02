@@ -34,8 +34,6 @@
 #include "utils/TestUtils.h"
 #include "AWSCredentialsProvider.h"
 
-using org::apache::nifi::minifi::utils::createTempDir;
-
 template<typename T>
 class S3TestsFixture {
  public:
@@ -73,7 +71,7 @@ class S3TestsFixture {
 
   template<typename Component>
   void setCredentialFile(const Component &component) {
-    auto temp_path = createTempDir(&test_controller);
+    auto temp_path = test_controller.createTempDirectory();
     REQUIRE(!temp_path.empty());
     std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
     std::ofstream aws_credentials_file_stream(aws_credentials_file);
@@ -138,7 +136,7 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     LogTestController::getInstance().setTrace<processors::GetFile>();
     LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
 
-    auto input_dir = createTempDir(&this->test_controller);
+    auto input_dir = this->test_controller.createTempDirectory();
     std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + INPUT_FILENAME);
     input_file_stream << INPUT_DATA;
     input_file_stream.close();

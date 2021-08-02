@@ -37,8 +37,7 @@ struct RocksDBTest : TestController {
     LogTestController::getInstance().setTrace<minifi::internal::RocksDatabase>();
     LogTestController::getInstance().setTrace<minifi::internal::RocksDbInstance>();
     LogTestController::getInstance().setTrace<minifi::internal::ColumnHandle>();
-    char format[] = "/var/tmp/db.XXXXXX";
-    db_dir = createTempDirectory(format);
+    db_dir = createTempDirectory();
   }
 
   OpenDatabase openDB(const std::vector<std::string>& cf_names) const {
@@ -220,7 +219,7 @@ void withDefaultEnv(minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
 }
 
 TEST_CASE_METHOD(RocksDBTest, "Error is logged if different encryption keys are used", "[rocksDBTest10]") {
-  utils::Path home_dir = createTempDirectory("/var/tmp/test.XXXXXX");
+  utils::Path home_dir{createTempDirectory()};
   utils::file::FileUtils::create_dir((home_dir / "conf").str());
   std::ofstream{(home_dir / "conf" / "bootstrap.conf").str()}
     << "encryption.key.one=" << "805D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n"

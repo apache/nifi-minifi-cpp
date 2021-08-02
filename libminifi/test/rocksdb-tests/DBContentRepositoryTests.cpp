@@ -29,8 +29,7 @@
 
 TEST_CASE("Write Claim", "[TestDBCR1]") {
   TestController testController;
-  char format[] = "/var/tmp/testRepo.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -70,8 +69,7 @@ TEST_CASE("Write Claim", "[TestDBCR1]") {
 
 TEST_CASE("Delete Claim", "[TestDBCR2]") {
   TestController testController;
-  char format[] = "/var/tmp/testRepo.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -109,8 +107,7 @@ TEST_CASE("Delete Claim", "[TestDBCR2]") {
 
 TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
   TestController testController;
-  char format[] = "/var/tmp/testRepo.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -145,8 +142,7 @@ TEST_CASE("Test Empty Claim", "[TestDBCR3]") {
 
 TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
   TestController testController;
-  char format[] = "/var/tmp/testRepo.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
@@ -186,8 +182,7 @@ TEST_CASE("Delete NonExistent Claim", "[TestDBCR4]") {
 
 TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   TestController testController;
-  char format[] = "/var/tmp/testRepo.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   auto content_repo = std::make_shared<core::repository::DatabaseContentRepository>();
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();

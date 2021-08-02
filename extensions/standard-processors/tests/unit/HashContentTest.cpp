@@ -68,9 +68,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-  char dir[] = "/tmp/gt.XXXXXX";
-
-  auto tempdir = testController.createTempDirectory(dir);
+  auto tempdir = testController.createTempDirectory();
   REQUIRE(!tempdir.empty());
 
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
@@ -140,7 +138,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::HashContent>();
   std::shared_ptr<TestPlan> plan = testController.createPlan();
 
-  auto tempdir = minifi::utils::createTempDir(&testController);
+  auto tempdir = testController.createTempDirectory();
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");

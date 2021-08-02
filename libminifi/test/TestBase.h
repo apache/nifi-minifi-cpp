@@ -436,20 +436,11 @@ class TestController {
     }
   }
 
-  /**
-   * format will be changed by mkdtemp, so don't rely on a shared variable.
-   */
-  std::string createTempDirectory(char *format) {
+  std::string createTempDirectory() {
+    char format[] = "/var/tmp/nifi-minifi-cpp.test.XXXXXX";
     const auto dir = utils::file::FileUtils::create_temp_directory(format);
     directories.push_back(dir);
     return dir;
-  }
-
-  template<size_t N>
-  utils::Path createTempDirectory(const char (&format)[N]) {
-    char buffer[N];
-    std::memcpy(buffer, format, N);
-    return utils::Path{createTempDirectory(static_cast<char*>(buffer))};
   }
 
  protected:

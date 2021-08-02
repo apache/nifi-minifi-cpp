@@ -57,8 +57,7 @@ class ListenHTTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
 
     // Create temporary directories
-    char tmp_dir_format[] = "/tmp/gt.XXXXXX";
-    tmp_dir = testController.createTempDirectory(tmp_dir_format);
+    tmp_dir = testController.createTempDirectory();
     REQUIRE(!tmp_dir.empty());
 
     // Define test input file

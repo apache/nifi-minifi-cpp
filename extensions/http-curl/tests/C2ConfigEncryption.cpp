@@ -28,8 +28,7 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");
   TestController controller;
   // copy config file to temporary location as it will get overridden
-  char tmp_format[] = "/var/tmp/c2.XXXXXX";
-  std::string home_path = controller.createTempDirectory(tmp_format);
+  std::string home_path = controller.createTempDirectory();
   std::string live_config_file = utils::file::FileUtils::concat_path(home_path, "config.yml");
   utils::file::FileUtils::copy_file(args.test_file, live_config_file);
   // the C2 server will update the flow with the contents of args.test_file

@@ -67,12 +67,10 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") { // NOLINT
         session.transfer(flow_file, REL_SUCCESS)
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
-  char putFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto putFileDir = testController.createTempDirectory(putFileDirFmt);
+  auto putFileDir = testController.createTempDirectory();
   plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
@@ -151,12 +149,10 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") { // NOLINT
         session.transfer(flow_file, REL_SUCCESS)
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
-  char putFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto putFileDir = testController.createTempDirectory(putFileDirFmt);
+  auto putFileDir = testController.createTempDirectory();
   plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
@@ -260,8 +256,7 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
         session.transfer(flow_file, REL_SUCCESS)
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
@@ -306,8 +301,7 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
       log.info('got Script Engine property: %s' % script_engine)
   )");
 
-  char getFileDirFmt[] = "/tmp/ft.XXXXXX";
-  auto getFileDir = testController.createTempDirectory(getFileDirFmt);
+  auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;

@@ -61,9 +61,7 @@ constexpr const char* PUBLIC_KEY_AUTH_ERROR_MESSAGE = "Failed to authenticate wi
 
 class PutSFTPTestsFixture {
  public:
-  PutSFTPTestsFixture()
-  : src_dir(strdup("/var/tmp/sftps.XXXXXX"))
-  , dst_dir(strdup("/var/tmp/sftpd.XXXXXX")) {
+  PutSFTPTestsFixture() {
     LogTestController::getInstance().setTrace<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
@@ -77,18 +75,15 @@ class PutSFTPTestsFixture {
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
-    // Create temporary directories
-    testController.createTempDirectory(src_dir);
-    REQUIRE(src_dir != nullptr);
-    testController.createTempDirectory(dst_dir);
-    REQUIRE(dst_dir != nullptr);
+    REQUIRE_FALSE(src_dir.empty());
+    REQUIRE_FALSE(dst_dir.empty());
+    REQUIRE(plan);
 
     // Start SFTP server
     sftp_server = std::unique_ptr<SFTPTestServer>(new SFTPTestServer(dst_dir));
     REQUIRE(true == sftp_server->start());
 
     // Build MiNiFi processing graph
-    plan = testController.createPlan();
     get_file = plan->addProcessor(
         "GetFile",
         "GetFile");
@@ -125,8 +120,6 @@ class PutSFTPTestsFixture {
   }
 
   virtual ~PutSFTPTestsFixture() {
-    free(src_dir);
-    free(dst_dir);
     LogTestController::getInstance().reset();
   }
 
@@ -206,11 +199,11 @@ class PutSFTPTestsFixture {
   }
 
  protected:
-  char *src_dir;
-  char *dst_dir;
-  std::unique_ptr<SFTPTestServer> sftp_server;
   TestController testController;
-  std::shared_ptr<TestPlan> plan;
+  std::string src_dir = testController.createTempDirectory();
+  std::string dst_dir = testController.createTempDirectory();
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::unique_ptr<SFTPTestServer> sftp_server;
   std::shared_ptr<core::Processor> get_file;
   std::shared_ptr<core::Processor> put;
 };
@@ -735,14 +728,11 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching reaches limit"
 
   sftp_server.reset();
 
-  std::vector<std::vector<char>> dst_dirs;
   std::vector<std::unique_ptr<SFTPTestServer>> sftp_servers;
 
-  std::string tmp_dir_format("/var/tmp/sftpd.XXXXXX");
   for (size_t i = 0; i < 10; i++) {
-    dst_dirs.emplace_back(tmp_dir_format.data(), tmp_dir_format.data() + tmp_dir_format.size() + 1);
-    testController.createTempDirectory(dst_dirs.back().data());
-    sftp_servers.emplace_back(new SFTPTestServer(dst_dirs.back().data()));
+    std::string destination_dir = testController.createTempDirectory();
+    sftp_servers.emplace_back(new SFTPTestServer(destination_dir));
     REQUIRE(true == sftp_servers.back()->start());
     createFile(src_dir, "tstFile" + std::to_string(i) + ".ext", std::to_string(sftp_servers.back()->getPort()));
 

@@ -52,8 +52,7 @@ void init_file_paths() {
   struct Initializer {
     Initializer() {
       static TestController global_controller;
-      char format[] = "/tmp/test.XXXXXX";
-      std::string tempDir = global_controller.createTempDirectory(format);
+      std::string tempDir = global_controller.createTempDirectory();
       FLOW_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent");
       EXPECT_MERGE_CONTENT_FIRST = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent1.txt");
       EXPECT_MERGE_CONTENT_SECOND = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent2.txt");

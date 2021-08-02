@@ -64,8 +64,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   utils::Identifier processoruuid = processor->getUUID();
   REQUIRE(processoruuid);
@@ -149,8 +148,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  const auto dir = testController.createTempDirectory(format);
+  const auto dir = testController.createTempDirectory();
 
   utils::Identifier processoruuid = processor->getUUID();
   REQUIRE(processoruuid);
@@ -295,8 +293,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   testController.runSession(plan, false);
@@ -339,8 +336,7 @@ TEST_CASE("LogAttributeTestInvalid", "[TestLogAttribute]") {
 
   auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
@@ -358,8 +354,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
 
   auto loggattr = plan->addProcessor("LogAttribute", "logattribute", core::Relationship("success", "description"), true);
 
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   auto flowsToLogStr = std::to_string(flowsToLog);
   if (verifyStringFlowsLogged.empty())
@@ -426,9 +421,8 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   std::shared_ptr<core::Processor> processorReport = std::make_shared<org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(
       minifi::io::StreamFactory::getInstance(std::make_shared<org::apache::nifi::minifi::Configure>()), std::make_shared<org::apache::nifi::minifi::Configure>());
   plan->addProcessor(processorReport, "reporter", core::Relationship("success", "description"), false);
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
 
+  auto dir = testController.createTempDirectory();
   plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();

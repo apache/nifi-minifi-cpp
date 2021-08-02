@@ -35,7 +35,6 @@
 #include "utils/TestUtils.h"
 
 namespace {
-using org::apache::nifi::minifi::utils::createTempDir;
 using org::apache::nifi::minifi::utils::optional;
 namespace FileUtils = org::apache::nifi::minifi::utils::file;
 
@@ -85,8 +84,6 @@ class RetryFlowFileTest {
       optional<std::string> reuse_mode,
       optional<bool> processor_uuid_matches_flowfile) {
     reInitialize();
-
-    const std::string output_dir = createTempDir(testController_.get());
 
     // Relationships
     const core::Relationship success         {"success", "description"};
@@ -140,9 +137,9 @@ class RetryFlowFileTest {
     plan_->setProperty(retryflowfile, "retries_exceeded_property_key_1", "retries_exceeded_property_value_1", true);
     plan_->setProperty(retryflowfile, "retries_exceeded_property_key_2", "retries_exceeded_property_value_2", true);
 
-    const std::string retry_dir            = createTempDir(testController_.get());
-    const std::string retries_exceeded_dir = createTempDir(testController_.get());
-    const std::string failure_dir          = createTempDir(testController_.get());
+    const std::string retry_dir            = testController_->createTempDirectory();
+    const std::string retries_exceeded_dir = testController_->createTempDirectory();
+    const std::string failure_dir          = testController_->createTempDirectory();
 
     plan_->setProperty(putfile_on_retry, PutFile::Directory.getName(), retry_dir);
     plan_->setProperty(putfile_on_retries_exceeded, PutFile::Directory.getName(), retries_exceeded_dir);

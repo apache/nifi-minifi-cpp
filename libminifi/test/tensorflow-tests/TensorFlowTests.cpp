@@ -45,8 +45,7 @@ TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT
   auto repo = std::make_shared<TestRepository>();
 
   // Define directory for input protocol buffers
-  char in_dir_format[] = "/tmp/gt.XXXXXX";
-  std::string in_dir = testController.createTempDirectory(in_dir_format);
+  std::string in_dir = testController.createTempDirectory();
 
   // Define input graph protocol buffer file
   std::string in_graph_file(in_dir);
@@ -57,8 +56,7 @@ TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT
   in_tensor_file.append("/tensor.pb");
 
   // Define directory for output protocol buffers
-  char out_dir_format[] = "/tmp/gt.XXXXXX";
-  std::string out_dir = testController.createTempDirectory(out_dir_format);
+  std::string out_dir = testController.createTempDirectory();
 
   // Define output tensor protocol buffer file
   std::string out_tensor_file(out_dir);
@@ -184,16 +182,14 @@ TEST_CASE("TensorFlow: ConvertImageToTensor", "[tfConvertImageToTensor]") { // N
   auto repo = std::make_shared<TestRepository>();
 
   // Define directory for input protocol buffers
-  char in_dir_format[] = "/tmp/gt.XXXXXX";
-  std::string in_dir = testController.createTempDirectory(in_dir_format);
+  std::string in_dir = testController.createTempDirectory();
 
   // Define input tensor protocol buffer file
   std::string in_img_file(in_dir);
   in_img_file.append("/img");
 
   // Define directory for output protocol buffers
-  char out_dir_format[] = "/tmp/gt.XXXXXX";
-  std::string out_dir = testController.createTempDirectory(out_dir_format);
+  std::string out_dir = testController.createTempDirectory();
 
   // Define output tensor protocol buffer file
   std::string out_tensor_file(out_dir);
@@ -312,8 +308,7 @@ TEST_CASE("TensorFlow: Extract Top Labels", "[tfExtractTopLabels]") { // NOLINT
   auto repo = std::make_shared<TestRepository>();
 
   // Define directory for input protocol buffers
-  char in_dir_format[] = "/tmp/gt.XXXXXX";
-  std::string in_dir = testController.createTempDirectory(in_dir_format);
+  std::string in_dir = testController.createTempDirectory();
 
   // Define input labels file
   std::string in_labels_file(in_dir);

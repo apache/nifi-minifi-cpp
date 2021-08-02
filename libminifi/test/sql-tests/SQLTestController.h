@@ -63,8 +63,7 @@ class SQLTestController : public TestController {
     LogTestController::getInstance().setTrace<processors::ExecuteSQL>();
     LogTestController::getInstance().setTrace<processors::QueryDatabaseTable>();
 
-    char format[] = "/var/tmp/gt.XXXXXX";
-    test_dir_ = createTempDirectory(format);
+    test_dir_ = createTempDirectory();
     database_ = test_dir_ / "test.db";
     connection_str_ = "Driver=" + DRIVER + ";Database=" + database_.str();
 

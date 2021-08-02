@@ -35,8 +35,7 @@ class TestControllerWithFlow: public TestController{
     LogTestController::getInstance().setTrace<minifi::TimerDrivenSchedulingAgent>();
     LogTestController::getInstance().setTrace<minifi::EventDrivenSchedulingAgent>();
 
-    char format[] = "/tmp/flowTest.XXXXXX";
-    std::string dir = createTempDirectory(format);
+    std::string dir = createTempDirectory();
 
     std::string yamlPath = utils::file::FileUtils::concat_path(dir, "config.yml");
     std::ofstream{yamlPath} << yamlConfigContent;

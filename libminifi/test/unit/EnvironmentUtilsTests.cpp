@@ -145,8 +145,7 @@ TEST_CASE("getcwd", "[getcwd]") {
 TEST_CASE("setcwd", "[setcwd]") {
   TestController testController;
   const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
-  char format[] = "/tmp/envtest.XXXXXX";
-  const std::string tempDir = utils::file::getFullPath(testController.createTempDirectory(format));
+  const std::string tempDir = utils::file::getFullPath(testController.createTempDirectory());
   REQUIRE(true == utils::Environment::setCurrentWorkingDirectory(tempDir.c_str()));
   REQUIRE(tempDir == utils::Environment::getCurrentWorkingDirectory());
   REQUIRE(true == utils::Environment::setCurrentWorkingDirectory(cwd.c_str()));

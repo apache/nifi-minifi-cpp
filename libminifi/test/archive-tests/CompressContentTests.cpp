@@ -206,8 +206,7 @@ class CompressTestController : public CompressDecompressionTestController {
 
  public:
   CompressTestController() {
-    char CompressionFormat[] = "/tmp/test.XXXXXX";
-    tempDir_ = get_global_controller().createTempDirectory(CompressionFormat);
+    tempDir_ = get_global_controller().createTempDirectory();
     REQUIRE(!tempDir_.empty());
     raw_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-expect-compresscontent.txt");
     compressed_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-compresscontent");
@@ -559,12 +558,10 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   LogTestController::getInstance().setTrace<processors::PutFile>();
 
   // Create temporary directories
-  char format_src[] = "/tmp/archives.XXXXXX";
-  std::string src_dir = createTempDirectory(format_src);
+  std::string src_dir = createTempDirectory();
   REQUIRE(!src_dir.empty());
 
-  char format_dst[] = "/tmp/archived.XXXXXX";
-  std::string dst_dir = createTempDirectory(format_dst);
+  std::string dst_dir = createTempDirectory();
   REQUIRE(!dst_dir.empty());
 
   // Define files

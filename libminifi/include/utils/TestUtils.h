@@ -33,19 +33,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-std::string createTempDir(TestController* testController, char* format = nullptr) {
-  std::string temp_dir;
-  if (format == nullptr) {
-    char dirtemplate[] = "/tmp/gt.XXXXXX";
-    temp_dir = testController->createTempDirectory(dirtemplate);
-  } else {
-    temp_dir = testController->createTempDirectory(format);
-  }
-  REQUIRE(!temp_dir.empty());
-  REQUIRE(file::FileUtils::is_directory(temp_dir.c_str()));
-  return temp_dir;
-}
-
 std::string putFileToDir(const std::string& dir_path, const std::string& file_name, const std::string& content) {
   std::string file_path(file::FileUtils::concat_path(dir_path, file_name));
   std::ofstream out_file(file_path, std::ios::binary | std::ios::out);
@@ -53,12 +40,6 @@ std::string putFileToDir(const std::string& dir_path, const std::string& file_na
     out_file << content;
   }
   return file_path;
-}
-
-std::string createTempDirWithFile(TestController* testController, const std::string& file_name, const std::string& content) {
-  std::string temp_dir = createTempDir(testController);
-  putFileToDir(temp_dir, file_name, content);
-  return temp_dir;
 }
 
 std::string getFileContent(const std::string& file_name) {

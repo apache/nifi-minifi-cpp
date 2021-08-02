@@ -128,8 +128,7 @@ class TestControllerWithTemporaryWorkingDirectory {
 public:
   TestControllerWithTemporaryWorkingDirectory()
     : old_cwd_(get_current_working_directory()) {
-    char format[] = "/tmp/ctest_temp_dir.XXXXXX";
-    std::string temp_dir = test_controller_.createTempDirectory(format);
+    std::string temp_dir = test_controller_.createTempDirectory();
     int result = change_current_working_directory(temp_dir.c_str());
     if (result != 0) {
       throw std::runtime_error("Could not change to temporary directory " + temp_dir);

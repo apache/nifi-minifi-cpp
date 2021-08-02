@@ -32,8 +32,7 @@
 
 TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::fstream file;
   std::stringstream ss;
@@ -70,8 +69,7 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 
 TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::fstream file;
   std::stringstream ss;
@@ -108,8 +106,7 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 
 TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::fstream file;
   std::stringstream ss;
@@ -146,8 +143,7 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
 
 TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::fstream file;
   std::stringstream ss;
@@ -184,8 +180,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
 TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::fstream file;
   std::stringstream ss;
@@ -218,8 +213,7 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
 
 TEST_CASE("TestFileExceedSize", "[TestLoader]") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   std::fstream file;
   std::stringstream ss;
@@ -253,24 +247,21 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
 
 TEST_CASE("Write zero bytes") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
   REQUIRE(stream.write(nullptr, 0) == 0);
 }
 
 TEST_CASE("Read zero bytes") {
   TestController testController;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
   minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
   REQUIRE(stream.read(nullptr, 0) == 0);
 }
 
 TEST_CASE("Non-existing file read/write test") {
   TestController test_controller;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = test_controller.createTempDirectory(format);
+  auto dir = test_controller.createTempDirectory();
   minifi::io::FileStream stream(utils::file::concat_path(dir, "non_existing_file.txt"), 0, true);
   REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
   REQUIRE(test_controller.getLog().getInstance().contains("No such file or directory", std::chrono::seconds(0)));
@@ -284,8 +275,7 @@ TEST_CASE("Non-existing file read/write test") {
 
 TEST_CASE("Existing file read/write test") {
   TestController test_controller;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = test_controller.createTempDirectory(format);
+  auto dir = test_controller.createTempDirectory();
   std::string path_to_existing_file(utils::file::concat_path(dir, "existing_file.txt"));
   {
     std::ofstream outfile(path_to_existing_file);
@@ -309,8 +299,7 @@ TEST_CASE("Existing file read/write test") {
 // This could be simplified with C++17 std::filesystem
 TEST_CASE("Opening file without permission creates error logs") {
   TestController test_controller;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = test_controller.createTempDirectory(format);
+  auto dir = test_controller.createTempDirectory();
   std::string path_to_permissionless_file(utils::file::concat_path(dir, "permissionless_file.txt"));
   {
     std::ofstream outfile(path_to_permissionless_file);
@@ -330,8 +319,7 @@ TEST_CASE("Opening file without permission creates error logs") {
 
 TEST_CASE("Readonly filestream write test") {
   TestController test_controller;
-  char format[] = "/tmp/gt.XXXXXX";
-  auto dir = test_controller.createTempDirectory(format);
+  auto dir = test_controller.createTempDirectory();
   std::string path_to_file(utils::file::concat_path(dir, "file_to_seek_in.txt"));
   {
     std::ofstream outfile(path_to_file);

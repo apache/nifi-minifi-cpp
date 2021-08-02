@@ -28,7 +28,7 @@ namespace {
 
 TEST_CASE("ChecksumCalculator can calculate the checksum, which is equal to sha256sum", "[ChecksumCalculator]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   REQUIRE(std::string{utils::ChecksumCalculator::CHECKSUM_TYPE} == std::string{"SHA256"});
@@ -42,7 +42,7 @@ TEST_CASE("ChecksumCalculator can calculate the checksum, which is equal to sha2
 
 TEST_CASE("On Windows text files, the checksum calculated is also the same as sha256sum", "[ChecksumCalculator]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\r\n");
 
   utils::ChecksumCalculator checksum_calculator;
@@ -52,7 +52,7 @@ TEST_CASE("On Windows text files, the checksum calculated is also the same as sh
 
 TEST_CASE("The checksum can be reset and recomputed", "[ChecksumCalculator]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   utils::ChecksumCalculator checksum_calculator;
@@ -71,7 +71,7 @@ TEST_CASE("The checksum can be reset and recomputed", "[ChecksumCalculator]") {
 
 TEST_CASE("If the file location is updated, the checksum will be recomputed", "[ChecksumCalculator]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   utils::ChecksumCalculator checksum_calculator;
@@ -85,7 +85,7 @@ TEST_CASE("If the file location is updated, the checksum will be recomputed", "[
 
 TEST_CASE("Checksums can be computed for binary (eg. encrypted) files, too", "[ChecksumCalculator]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string binary_data(size_t{256}, '\0');
   std::iota(binary_data.begin(), binary_data.end(), 'x');
   std::string file_location = utils::putFileToDir(test_dir, "simple.txt", binary_data);
@@ -97,7 +97,7 @@ TEST_CASE("Checksums can be computed for binary (eg. encrypted) files, too", "[C
 
 TEST_CASE("The agent identifier is excluded from the checksum", "[ChecksumCalculator]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string file_location_1 = utils::putFileToDir(test_dir, "agent_one.txt",
       "nifi.c2.agent.class=Test\n"
       "nifi.c2.agent.identifier=Test-111\n"

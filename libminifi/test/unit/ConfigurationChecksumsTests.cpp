@@ -34,7 +34,7 @@ TEST_CASE("If no checksum calculators are added, we get an empty node", "[Config
 
 TEST_CASE("If one checksum calculator is added, we get a node with one child", "[ConfigurationChecksums]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   utils::ChecksumCalculator checksum_calculator;
@@ -56,7 +56,7 @@ TEST_CASE("If one checksum calculator is added, we get a node with one child", "
 
 TEST_CASE("If two checksum calculators are added, we get a node with two children", "[ConfigurationChecksums]") {
   TestController test_controller;
-  std::string test_dir = utils::createTempDir(&test_controller);
+  std::string test_dir = test_controller.createTempDirectory();
   std::string file_location_1 = utils::putFileToDir(test_dir, "first.txt", "this is the first file\n");
   std::string file_location_2 = utils::putFileToDir(test_dir, "second.txt", "this is the second file\n");
 
