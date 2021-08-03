@@ -22,8 +22,6 @@ include_directories(./controllerservice ./processors ./protocol ../../libminifi/
 
 file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
 
-set(PAHO_BUILD_STATIC "ON" CACHE STRING "" FORCE)
-
 add_library(minifi-mqtt-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
 
