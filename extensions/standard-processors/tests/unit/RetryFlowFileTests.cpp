@@ -35,7 +35,6 @@
 #include "utils/TestUtils.h"
 
 namespace {
-using org::apache::nifi::minifi::utils::createTempDir;
 using std::optional;
 namespace FileUtils = org::apache::nifi::minifi::utils::file;
 
