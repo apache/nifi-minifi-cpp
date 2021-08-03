@@ -150,8 +150,7 @@ TEST_CASE("Matching files with trailing double asterisk") {
 
 TEST_CASE("Matching directory with exclusion") {
   TestController controller;
-  char format[] = "/var/tmp/temp.XXXXXX";
-  utils::Path root{controller.createTempDirectory(format)};
+  utils::Path root{controller.createTempDirectory()};
   // root
   //   |- file1.txt
   //   |- one
