@@ -87,12 +87,12 @@ int main() {
   TestController controller;
 
   // setup executable directory
-  const std::filesystem::path root_dir = controller.createTempDirectory("/var/tmp/test.XXXXXX").str();
+  const std::filesystem::path root_dir = controller.createTempDirectory();
   utils::file::test_set_mock_executable_path(root_dir / "bin" / "minifi.exe");
   auto extension_dir = utils::file::get_extension_dir();
 
   // setup minifi home
-  const std::filesystem::path home_dir = controller.createTempDirectory("/var/tmp/test.XXXXXX").str();
+  const std::filesystem::path home_dir = controller.createTempDirectory();
   utils::Environment::setCurrentWorkingDirectory(home_dir.c_str());
   utils::Environment::setEnvironmentVariable(MINIFI_HOME_ENV_KEY, home_dir.c_str());
 
