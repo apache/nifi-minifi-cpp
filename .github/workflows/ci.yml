@@ -48,6 +48,8 @@ jobs:
     env:
       CLCACHE_DIR: ${{ GITHUB.WORKSPACE }}\clcache
     steps:
+      - name: Support longpaths
+        run: git config --system core.longpaths true
       - id: checkout
         uses: actions/checkout@v2
       - id: cache
