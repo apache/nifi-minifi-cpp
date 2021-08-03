@@ -119,7 +119,8 @@ class Minifi_flow_yaml_serializer:
                 res['Connections'].append({
                     'name': str(uuid.uuid4()),
                     'source id': str(connectable.uuid),
-                    'destination id': str(conn_procs.uuid)
+                    'destination id': str(conn_procs.uuid),
+                    'drop empty': ("true" if proc.drop_empty_flowfiles else "false")
                 })
                 if (any(str(connectable.uuid) == x['id'] for x in res['Funnels'])):
                     res['Connections'][-1]['source relationship name'] = conn_name

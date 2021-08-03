@@ -832,8 +832,8 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
     std::string name = funnel_node["name"].as<std::string>(id);
 
     const utils::optional<utils::Identifier> uuid = utils::Identifier::parse(id) | utils::orElse([this] {
-      logger_->log_debug("Incorrect connection UUID format.");
-      throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");
+      logger_->log_debug("Incorrect funnel UUID format.");
+      throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
 
     std::shared_ptr<core::Processor> funnel = std::make_shared<core::Funnel>(name, uuid.value());
