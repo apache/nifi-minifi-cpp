@@ -216,7 +216,7 @@ Provenance Reporting:
 
     std::istringstream configYamlStream(CONFIG_YAML_EMPTY_RETRY_ATTRIBUTE);
     REQUIRE_THROWS_AS(yamlConfig.getYamlRoot(configYamlStream), utils::internal::InvalidValueException);
-    REQUIRE(LogTestController::getInstance().contains("Invalid value was set for property 'Retry Attribute'"));
+    REQUIRE(LogTestController::getInstance().contains("Invalid value was set for property 'Retry Attribute' creating component 'RetryFlowFile'"));
   }
 }
 

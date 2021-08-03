@@ -768,7 +768,8 @@ void YamlConfiguration::parseSingleProperty(const std::string& propertyName, con
   try {
     property_set = processor->setProperty(myProp, coercedValue);
   } catch(const utils::internal::InvalidValueException&) {
-    logger_->log_error("Invalid value was set for property '%s'", propertyName);
+    auto component = std::dynamic_pointer_cast<core::CoreComponent>(processor);
+    logger_->log_error("Invalid value was set for property '%s' creating component '%s'", propertyName, component->getName());
     throw;
   }
   const std::string rawValueString = propertyValueNode.as<std::string>();
