@@ -962,13 +962,13 @@ void C2Agent::handleExtensionUpdate(const C2ContentResponse& resp) {
       file_path = root_dir / file_path;
     }
     // ensure directory exists for file
-    if (utils::file::create_dir(file_path.parent_path()) != 0) {
+    if (utils::file::create_dir(file_path.parent_path().string()) != 0) {
       logger_->log_error("Failed to create directory '%s'", file_path.parent_path());
       result = state::UpdateState::PARTIALLY_APPLIED;
       continue;
     }
 
-    io::FileStream output{file_path};
+    io::FileStream output{file_path.string()};
     if (io::isError(output.write(reinterpret_cast<const uint8_t*>(raw_data.data()), raw_data.size()))) {
       logger_->log_error("Error while writing file '%s'", file_path);
       result = state::UpdateState::PARTIALLY_APPLIED;
