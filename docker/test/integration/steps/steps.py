@@ -266,8 +266,7 @@ def step_impl(context, file_name, content, path):
 
 @given("a Funnel with the name \"{funnel_name}\" is set up")
 def step_impl(context, funnel_name):
-    funnel = Funnel()
-    funnel.set_name(funnel_name)
+    funnel = Funnel(funnel_name)
     context.test.add_node(funnel)
 
 
