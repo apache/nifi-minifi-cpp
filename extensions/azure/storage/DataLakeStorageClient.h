@@ -19,7 +19,6 @@
  */
 #pragma once
 
-#include <optional>
 #include <string>
 
 namespace org {
@@ -39,8 +38,8 @@ struct PutAzureDataLakeStorageParameters {
 
 class DataLakeStorageClient {
  public:
-  virtual std::optional<bool> createFile(const PutAzureDataLakeStorageParameters& params) = 0;
-  virtual std::optional<std::string> uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) = 0;
+  virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
+  virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) = 0;
 };
 
 }  // namespace storage

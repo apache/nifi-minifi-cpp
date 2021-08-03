@@ -36,32 +36,22 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const std::string& connecti
   }
 }
 
-std::optional<bool> AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParameters& params) {
-  try {
-    resetClientIfNeeded(params.connection_string, params.file_system_name);
-    auto directory_client = client_->GetDirectoryClient(params.directory_name);
-    directory_client.CreateIfNotExists();
-    auto file_client = directory_client.GetFileClient(params.filename);
-    auto response = file_client.CreateIfNotExists();
-    return response.Value.Created;
-  } catch (const std::runtime_error& err) {
-    logger_->log_error("A runtime error occurred while creating file in Data Lake storage: %s", err.what());
-    return std::nullopt;
-  }
+bool AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParameters& params) {
+  resetClientIfNeeded(params.connection_string, params.file_system_name);
+  auto directory_client = client_->GetDirectoryClient(params.directory_name);
+  directory_client.CreateIfNotExists();
+  auto file_client = directory_client.GetFileClient(params.filename);
+  auto response = file_client.CreateIfNotExists();
+  return response.Value.Created;
 }
 
-std::optional<std::string> AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
-  try {
-    resetClientIfNeeded(params.connection_string, params.file_system_name);
-    auto directory_client = client_->GetDirectoryClient(params.directory_name);
-    directory_client.CreateIfNotExists();
-    auto file_client = directory_client.GetFileClient(params.filename);
-    file_client.UploadFrom(buffer, buffer_size);
-    return file_client.GetUrl();
-  } catch (const std::runtime_error& err) {
-    logger_->log_error("A runtime error occurred while uploading blob: %s", err.what());
-    return std::nullopt;
-  }
+std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
+  resetClientIfNeeded(params.connection_string, params.file_system_name);
+  auto directory_client = client_->GetDirectoryClient(params.directory_name);
+  directory_client.CreateIfNotExists();
+  auto file_client = directory_client.GetFileClient(params.filename);
+  file_client.UploadFrom(buffer, buffer_size);
+  return file_client.GetUrl();
 }
 
 }  // namespace storage

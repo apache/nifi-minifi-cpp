@@ -37,8 +37,8 @@ namespace storage {
 
 class AzureDataLakeStorageClient : public DataLakeStorageClient {
  public:
-  std::optional<bool> createFile(const PutAzureDataLakeStorageParameters& params) override;
-  std::optional<std::string> uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) override;
+  bool createFile(const PutAzureDataLakeStorageParameters& params) override;
+  std::string uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) override;
 
  private:
   void resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name);

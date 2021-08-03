@@ -21,6 +21,7 @@
 #include "PutAzureDataLakeStorage.h"
 
 #include "utils/ProcessorConfigUtils.h"
+#include "utils/gsl.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org {
@@ -144,8 +145,19 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     return;
   }
 
-  PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, params);
+  PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, params, logger_);
   session->read(flow_file, &callback);
+  if (callback.caughtFileAlreadyExistsError()) {
+    gsl_Expects(conflict_resolution_strategy_ != "replace");
+    if (conflict_resolution_strategy_ == "fail") {
+      session->transfer(flow_file, Failure);
+      return;
+    } else if (conflict_resolution_strategy_ == "ignore") {
+      session->transfer(flow_file, Success);
+      return;
+    }
+  }
+
   auto result = callback.getResult();
   if (result == std::nullopt) {
     logger_->log_error("Failed to upload file '%s' to Azura Data Lake storage", params.filename);

@@ -48,11 +48,10 @@ class AzureDataLakeStorage {
     explicit FileAlreadyExistsException(const std::string& msg) : std::runtime_error(msg) {}
   };
 
-  AzureDataLakeStorage() : data_lake_storage_client_(std::make_unique<AzureDataLakeStorageClient>()) {}
-  explicit AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client) : data_lake_storage_client_(std::move(data_lake_storage_client)) {
-  }
+  AzureDataLakeStorage();
+  explicit AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client);
 
-  std::optional<azure::storage::UploadDataLakeStorageResult> uploadFile(const storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size);
+  azure::storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size);
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};

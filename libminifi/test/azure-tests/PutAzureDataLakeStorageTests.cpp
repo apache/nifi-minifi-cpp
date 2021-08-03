@@ -41,15 +41,22 @@ class MockDataLakeStorageClient : public minifi::azure::storage::DataLakeStorage
  public:
   const std::string PRIMARY_URI = "test-uri";
 
-  std::optional<bool> createFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& /*params*/) override {
-    return file_creation_error_ ? std::nullopt : std::make_optional<bool>(create_file_);
+  bool createFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& /*params*/) override {
+    if (file_creation_error_) {
+      throw std::runtime_error("error");
+    }
+    return create_file_;
   }
 
-  std::optional<std::string> uploadFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) override {
+  std::string uploadFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) override {
     input_data_ = std::string(buffer, buffer + buffer_size);
     params_ = params;
 
-    return upload_fails_ ? std::nullopt : std::make_optional<std::string>(PRIMARY_URI);
+    if (upload_fails_) {
+      throw std::runtime_error("error");
+    }
+
+    return PRIMARY_URI;
   }
 
   void setFileCreation(bool create_file) {
@@ -223,10 +230,39 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "File upload fails", "[azu
   REQUIRE(failed_flowfiles[0] == TEST_DATA);
 }
 
-TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to failure in case of 'fail' resolution strategy", "[azureDataLakeStorageUpload]") {
+TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to failure on 'fail' resolution strategy if file exists", "[azureDataLakeStorageUpload]") {
   mock_data_lake_storage_client_ptr_->setFileCreation(false);
   test_controller_.runSession(plan_, true);
   auto failed_flowfiles = getFailedFlowFileContents();
   REQUIRE(failed_flowfiles.size() == 1);
   REQUIRE(failed_flowfiles[0] == TEST_DATA);
+}
+
+TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to success on 'ignore' resolution strategy if file exists", "[azureDataLakeStorageUpload]") {
+  plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(), "ignore");
+  mock_data_lake_storage_client_ptr_->setFileCreation(false);
+  test_controller_.runSession(plan_, true);
+  REQUIRE(getFailedFlowFileContents().size() == 0);
+  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:filename value:" + GETFILE_FILE_NAME));
+  REQUIRE(!verifyLogLinePresenceInPollTime(0s, "key:azure"));
+}
+
+TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Replace old file on 'replace' resolution strategy if file exists", "[azureDataLakeStorageUpload]") {
+  plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(), "replace");
+  mock_data_lake_storage_client_ptr_->setFileCreation(false);
+  test_controller_.runSession(plan_, true);
+  REQUIRE(getFailedFlowFileContents().size() == 0);
+  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:" + DIRECTORY_NAME));
+  REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:azure.filename value:" + GETFILE_FILE_NAME));
+  REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:azure.filesystem value:" + FILESYSTEM_NAME));
+  REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:azure.length value:" + std::to_string(TEST_DATA.size())));
+  REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:azure.primaryUri value:" + mock_data_lake_storage_client_ptr_->PRIMARY_URI));
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  REQUIRE(passed_params.connection_string == CONNECTION_STRING);
+  REQUIRE(passed_params.file_system_name == FILESYSTEM_NAME);
+  REQUIRE(passed_params.directory_name == DIRECTORY_NAME);
+  REQUIRE(passed_params.filename == GETFILE_FILE_NAME);
+  REQUIRE(passed_params.replace_file);
 }

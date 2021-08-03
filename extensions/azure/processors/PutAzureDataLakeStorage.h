@@ -75,20 +75,29 @@ class PutAzureDataLakeStorage final : public core::Processor {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params)
+    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger)
       : flow_size_(flow_size)
       , azure_data_lake_storage_(azure_data_lake_storage)
-      , params_(params) {
+      , params_(params)
+      , logger_(std::move(logger)) {
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       std::vector<uint8_t> buffer;
       int read_ret = stream->read(buffer, flow_size_);
-      if (read_ret < 0) {
+      if (io::isError(read_ret)) {
         return -1;
       }
 
-      result_ = azure_data_lake_storage_.uploadFile(params_, buffer.data(), flow_size_);
+      try {
+        result_ = azure_data_lake_storage_.uploadFile(params_, buffer.data(), flow_size_);
+      } catch(const storage::AzureDataLakeStorage::FileAlreadyExistsException&) {
+        caught_file_already_exists_error_ = true;
+      } catch(const std::runtime_error& err) {
+        logger_->log_error("A runtime error occurred while uploading file to Azure Data Lake storage: %s", err.what());
+        return read_ret;
+      }
+
       return read_ret;
     }
 
@@ -96,11 +105,17 @@ class PutAzureDataLakeStorage final : public core::Processor {
       return result_;
     }
 
+    bool caughtFileAlreadyExistsError() const {
+      return caught_file_already_exists_error_;
+    }
+
    private:
     uint64_t flow_size_;
     storage::AzureDataLakeStorage& azure_data_lake_storage_;
     const storage::PutAzureDataLakeStorageParameters& params_;
+    bool caught_file_already_exists_error_ = false;
     std::optional<azure::storage::UploadDataLakeStorageResult> result_ = std::nullopt;
+    std::shared_ptr<logging::Logger> logger_;
   };
 
   core::annotation::Input getInputRequirement() const override {

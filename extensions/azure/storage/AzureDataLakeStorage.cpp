@@ -27,25 +27,26 @@ namespace minifi {
 namespace azure {
 namespace storage {
 
-std::optional<UploadDataLakeStorageResult> AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
+AzureDataLakeStorage::AzureDataLakeStorage()
+  : data_lake_storage_client_(std::make_unique<AzureDataLakeStorageClient>()) {
+}
+
+AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client)
+  : data_lake_storage_client_(std::move(data_lake_storage_client)) {
+}
+
+UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
   auto file_created = data_lake_storage_client_->createFile(params);
-  if (!file_created) {
-    return std::nullopt;
-  }
-  if (!file_created.value() && !params.replace_file) {
+  if (!file_created && !params.replace_file) {
     std::string message = "File " + params.filename + " already exists on Azure Data Lake Storage";
     logger_->log_error(message.c_str());
     throw FileAlreadyExistsException("File " + params.filename + " already exists on Azure Data Lake Storage");
   }
 
   auto upload_url = data_lake_storage_client_->uploadFile(params, buffer, buffer_size);
-  if (!upload_url) {
-    return std::nullopt;
-  }
-
   UploadDataLakeStorageResult result;
   result.length = buffer_size;
-  result.primary_uri = upload_url.value();
+  result.primary_uri = upload_url;
   return result;
 }
 
