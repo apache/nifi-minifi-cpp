@@ -111,7 +111,7 @@ class Minifi_flow_yaml_serializer:
                         'destination id': str(proc.uuid),
                         'drop empty': ("true" if proc.drop_empty_flowfiles else "false")
                     })
-                    if (any(str(connectable.uuid) == x['id'] for x in res['Funnels'])):
+                    if (all(str(connectable.uuid) != x['id'] for x in res['Funnels'])):
                         res['Connections'][-1]['source relationship name'] = conn_name
                     if proc not in visited:
                         self.serialize_node(proc, res, visited)
@@ -122,7 +122,7 @@ class Minifi_flow_yaml_serializer:
                     'destination id': str(conn_procs.uuid),
                     'drop empty': ("true" if proc.drop_empty_flowfiles else "false")
                 })
-                if (any(str(connectable.uuid) == x['id'] for x in res['Funnels'])):
+                if (all(str(connectable.uuid) != x['id'] for x in res['Funnels'])):
                     res['Connections'][-1]['source relationship name'] = conn_name
                 if conn_procs not in visited:
                     self.serialize_node(conn_procs, res, visited)
