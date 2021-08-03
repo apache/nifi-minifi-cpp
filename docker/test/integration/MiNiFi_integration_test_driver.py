@@ -163,10 +163,10 @@ class MiNiFi_integration_test():
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1)
 
-    def check_for_file_with_matching_hash_content_generated(self, timeout_seconds, subdir=''):
+    def check_for_file_with_matching_hash_content_generated(self, timeout_seconds):
         output_validator = SingleFileContentHashValidator(self.saved_md5_hash)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1, subdir)
+        self.check_output(timeout_seconds, output_validator, 1)
 
     def check_output_force_wait(self, timeout_seconds, output_validator):
         time.sleep(timeout_seconds)
