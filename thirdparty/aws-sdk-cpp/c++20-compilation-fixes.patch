@@ -1,6 +1,6 @@
 diff -ruN orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp patched/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp
---- orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-07-08 23:54:17.936278552 +0200
-+++ patched/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-07-08 23:57:13.702620555 +0200
+--- orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-08-03 20:29:03.231072140 +0200
++++ patched/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp	2021-08-03 20:30:21.510721218 +0200
 @@ -11,6 +11,7 @@
  #include <aws/core/utils/Outcome.h>
  #include <aws/core/utils/crypto/Hash.h>
@@ -18,3 +18,14 @@ diff -ruN orig/aws-cpp-sdk-core/source/utils/crypto/bcrypt/CryptoImpl.cpp patche
                      return;
                  }
  
+diff -ruN orig/crt/aws-crt-cpp/include/aws/crt/StringView.h patched/crt/aws-crt-cpp/include/aws/crt/StringView.h
+--- orig/crt/aws-crt-cpp/include/aws/crt/StringView.h	2021-08-03 20:29:04.615065881 +0200
++++ patched/crt/aws-crt-cpp/include/aws/crt/StringView.h	2021-08-03 20:30:38.030647928 +0200
+@@ -13,6 +13,7 @@
+ #include <iterator>
+ #include <limits>
+ #include <stddef.h>
++#include <string>
+ #include <type_traits>
+ 
+ #if __cplusplus >= 201703L || (defined(_MSC_LANG) && _MSC_LANG >= 201703L)
