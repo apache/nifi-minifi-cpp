@@ -244,6 +244,7 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  flow->setAttribute(core::SpecialFlowAttribute::FILENAME, "inputfile");
   sessionGenFlowFile.import(rawContentPath(), flow, true, 0);
   sessionGenFlowFile.flushContent();
   input->put(flow);
@@ -261,9 +262,11 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
-    REQUIRE(mime == "application/gzip");
+    std::string attribute_value;
+    flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attribute_value);
+    REQUIRE(attribute_value == "application/gzip");
+    flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
+    REQUIRE(attribute_value == "inputfile.tar.gz");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
@@ -282,6 +285,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
+  flow->setAttribute(core::SpecialFlowAttribute::FILENAME, "inputfile.tar.gz");
   sessionGenFlowFile.import(compressedPath(), flow, true, 0);
   sessionGenFlowFile.flushContent();
   input->put(flow);
@@ -299,8 +303,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
   REQUIRE(flow1->getSize() > 0);
   {
     REQUIRE(flow1->getSize() != flow->getSize());
-    std::string mime;
-    REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
+    std::string attribute_value;
+    REQUIRE_FALSE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attribute_value));
+    flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
+    REQUIRE(attribute_value == "inputfile");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     std::string content(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);

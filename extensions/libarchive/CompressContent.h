@@ -75,6 +75,8 @@ class CompressContent : public core::Processor {
   static core::Relationship Failure;
   static core::Relationship Success;
 
+  static const std::string TAR_EXT;
+
   SMART_ENUM(CompressionMode,
     (Compress, "compress"),
     (Decompress, "decompress")
