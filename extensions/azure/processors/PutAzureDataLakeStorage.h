@@ -33,6 +33,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureDataLakeStorage.h"
 #include "storage/AzureDataLakeStorageClient.h"
+#include "utils/Enum.h"
 
 class PutAzureDataLakeStorageTestsFixture;
 
@@ -59,6 +60,12 @@ class PutAzureDataLakeStorage final : public core::Processor {
   // Supported Relationships
   static const core::Relationship Failure;
   static const core::Relationship Success;
+
+  SMART_ENUM(FileExistsResolutionStrategy,
+    (FAIL, "fail"),
+    (REPLACE, "replace"),
+    (IGNORE, "ignore")
+  )
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : core::Processor(name, uuid) {
@@ -101,7 +108,7 @@ class PutAzureDataLakeStorage final : public core::Processor {
       return read_ret;
     }
 
-    utils::optional<azure::storage::UploadDataLakeStorageResult> getResult() const {
+    std::optional<azure::storage::UploadDataLakeStorageResult> getResult() const {
       return result_;
     }
 
@@ -131,7 +138,7 @@ class PutAzureDataLakeStorage final : public core::Processor {
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()};
   std::string connection_string_;
-  std::string conflict_resolution_strategy_;
+  FileExistsResolutionStrategy conflict_resolution_strategy_;
   storage::AzureDataLakeStorage azure_data_lake_storage_;
 };
 

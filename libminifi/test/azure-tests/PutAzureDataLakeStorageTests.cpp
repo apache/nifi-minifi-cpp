@@ -101,7 +101,7 @@ class PutAzureDataLakeStorageTestsFixture {
     mock_data_lake_storage_client_ptr_ = mock_data_lake_storage_client.get();
     put_azure_data_lake_storage_ = std::shared_ptr<minifi::azure::processors::PutAzureDataLakeStorage>(
       new minifi::azure::processors::PutAzureDataLakeStorage("PutAzureDataLakeStorage", utils::Identifier(), std::move(mock_data_lake_storage_client)));
-    auto input_dir = test_controller_.createTempDirectory("/tmp/gt.XXXXXX").str();
+    auto input_dir = test_controller_.createTempDirectory();
     std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + GETFILE_FILE_NAME);
     input_file_stream << TEST_DATA;
     input_file_stream.close();
@@ -119,7 +119,7 @@ class PutAzureDataLakeStorageTestsFixture {
     plan_->addConnection(put_azure_data_lake_storage_, {"failure", "d"}, putfile_);
     putfile_->setAutoTerminatedRelationships({{"success", "d"}});
     putfile_->setAutoTerminatedRelationships({{"failure", "d"}});
-    output_dir_ = test_controller_.createTempDirectory("/tmp/gt.XXXXXX").str();
+    output_dir_ = test_controller_.createTempDirectory();
     plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), output_dir_);
 
     azure_storage_cred_service_ = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
@@ -239,7 +239,8 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to failure on 'f
 }
 
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to success on 'ignore' resolution strategy if file exists", "[azureDataLakeStorageUpload]") {
-  plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(), "ignore");
+  plan_->setProperty(put_azure_data_lake_storage_,
+    minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(), toString(minifi::azure::processors::PutAzureDataLakeStorage::FileExistsResolutionStrategy::IGNORE));
   mock_data_lake_storage_client_ptr_->setFileCreation(false);
   test_controller_.runSession(plan_, true);
   REQUIRE(getFailedFlowFileContents().size() == 0);
@@ -249,7 +250,8 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to success on 'i
 }
 
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Replace old file on 'replace' resolution strategy if file exists", "[azureDataLakeStorageUpload]") {
-  plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(), "replace");
+  plan_->setProperty(put_azure_data_lake_storage_,
+    minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(), toString(minifi::azure::processors::PutAzureDataLakeStorage::FileExistsResolutionStrategy::REPLACE));
   mock_data_lake_storage_client_ptr_->setFileCreation(false);
   test_controller_.runSession(plan_, true);
   REQUIRE(getFailedFlowFileContents().size() == 0);

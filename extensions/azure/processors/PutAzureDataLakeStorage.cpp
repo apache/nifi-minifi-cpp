@@ -60,8 +60,8 @@ const core::Property PutAzureDataLakeStorage::ConflictResolutionStrategy(
     core::PropertyBuilder::createProperty("Conflict Resolution Strategy")
       ->withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
       ->isRequired(true)
-      ->withDefaultValue<std::string>("fail")
-      ->withAllowableValues<std::string>(CONFLICT_RESOLUTION_STRATEGIES)
+      ->withDefaultValue<std::string>(toString(FileExistsResolutionStrategy::FAIL))
+      ->withAllowableValues<std::string>(FileExistsResolutionStrategy::values())
       ->build());
 
 const core::Relationship PutAzureDataLakeStorage::Success("success", "Files that have been successfully written to Azure storage are transferred to this relationship");
@@ -110,7 +110,8 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
   }
 
-  conflict_resolution_strategy_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), CONFLICT_RESOLUTION_STRATEGIES);
+  conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(
+    utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), FileExistsResolutionStrategy::values()).c_str());
 }
 
 void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -123,7 +124,7 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
 
   storage::PutAzureDataLakeStorageParameters params;
   params.connection_string = connection_string_;
-  params.replace_file = conflict_resolution_strategy_ == "replace";
+  params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE;
 
   if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
     logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
@@ -147,11 +148,11 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
   PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, params, logger_);
   session->read(flow_file, &callback);
   if (callback.caughtFileAlreadyExistsError()) {
-    gsl_Expects(conflict_resolution_strategy_ != "replace");
-    if (conflict_resolution_strategy_ == "fail") {
+    gsl_Expects(conflict_resolution_strategy_ != FileExistsResolutionStrategy::REPLACE);
+    if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::FAIL) {
       session->transfer(flow_file, Failure);
       return;
-    } else if (conflict_resolution_strategy_ == "ignore") {
+    } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::IGNORE) {
       session->transfer(flow_file, Success);
       return;
     }
