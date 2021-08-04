@@ -32,6 +32,7 @@ function(use_bundled_pahomqttc SOURCE_DIR BINARY_DIR)
     set(PAHOMQTTC_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/paho.mqtt.c-install"
             -DPAHO_BUILD_STATIC=TRUE
+            -DPAHO_BUILD_SHARED=FALSE
             -DPAHO_ENABLE_TESTING=FALSE)
     if (OPENSSL_OFF)
         list(APPEND PAHOMQTTC_CMAKE_ARGS -DPAHO_WITH_SSL=FALSE)
