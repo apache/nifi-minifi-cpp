@@ -58,8 +58,7 @@ const core::Property PutAzureDataLakeStorage::FileName(
       ->build());
 const core::Property PutAzureDataLakeStorage::ConflictResolutionStrategy(
     core::PropertyBuilder::createProperty("Conflict Resolution Strategy")
-      ->withDescription("Indicates what should happen when a file with the same name already exists in the output directory")
-      ->supportsExpressionLanguage(true)
+      ->withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
       ->isRequired(true)
       ->withDefaultValue<std::string>("fail")
       ->withAllowableValues<std::string>(CONFLICT_RESOLUTION_STRATEGIES)

@@ -42,6 +42,7 @@
 - [PublishKafka](#publishkafka)
 - [PublishMQTT](#publishmqtt)
 - [PutAzureBlobStorage](#putazureblobstorage)
+- [PutAzureDataLakeStorage](#putazuredatalakestorage)
 - [PutFile](#putfile)
 - [PutOPCProcessor](#putopcprocessor)
 - [PutS3Object](#puts3object)
@@ -1236,6 +1237,31 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |failure|Unsuccessful operations will be transferred to the failure relationship|
 |success|All successfully processed FlowFiles are routed to this relationship|
+
+
+## PutAzureDataLakeStorage
+
+### Description
+
+Puts content into an Azure Data Lake Storage Gen 2
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Azure Storage Credentials Service**|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
+|**Filesystem Name**|||Name of the Azure Storage File System. It is assumed to be already existing.<br/>**Supports Expression Language: true**|
+|**Directory Name**|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. The root directory can be designated by the empty string value. In case of the PutAzureDataLakeStorage processor, the directory will be created if not already existing.<br/>**Supports Expression Language: true**|
+|File Name|||The filename to be uploaded. If left empty the filename attribute will be used by default.|
+|**Conflict Resolution Strategy**|fail|fail<br/>replace<br/>ignore|Indicates what should happen when a file with the same name already exists in the output directory.|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|Files that could not be written to Azure storage for some reason are transferred to this relationship|
+|success|Files that have been successfully written to Azure storage are transferred to this relationship|
 
 
 ## PutFile
