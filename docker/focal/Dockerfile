@@ -29,7 +29,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt update
-RUN DEBIAN_FRONTEND="noninteractive" apt install -y openjdk-8-jdk openjdk-8-source python3.9-dev sudo git maven autogen autoconf automake cmake
+RUN DEBIAN_FRONTEND="noninteractive" apt install -y openjdk-8-jdk openjdk-8-source python3.9-dev sudo git maven autogen autoconf automake cmake software-properties-common
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
@@ -37,11 +37,14 @@ COPY . ${MINIFI_BASE_DIR}
 
 FROM build_deps AS release
 ARG ENABLE_JNI
-# Perform the build
-RUN cd $MINIFI_BASE_DIR \
-	&& ./bootstrap.sh -e -t \
-	&& rm -rf build \
-	&& mkdir build \
-	&& cd build \
-	&& cmake -DUSE_SHARED_LIBS=  -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
-	&& make -j$(nproc) package
+
+# Run bootstrap
+RUN cd $MINIFI_BASE_DIR && ./bootstrap.sh -t
+
+ENV CC gcc-11
+ENV CXX g++-11
+
+# Build
+RUN cd $MINIFI_BASE_DIR/build \
+       && cmake -DUSE_SHARED_LIBS= -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
+       && make -j$(nproc) package
