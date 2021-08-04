@@ -16,7 +16,7 @@
 # under the License.
 
 function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/aws-sdk-cpp.patch")
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/aws-sdk-cpp/c++20-compilation-fixes.patch")
     set(AWS_SDK_CPP_PATCH_COMMAND "${Patch_EXECUTABLE}" -p1 -R -s -f --dry-run -i "${PATCH_FILE}" || "${Patch_EXECUTABLE}" -p1 -N -i "${PATCH_FILE}")
 
     if (WIN32)
