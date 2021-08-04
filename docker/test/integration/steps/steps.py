@@ -392,7 +392,6 @@ def step_impl(context, cluster_name):
     cluster = context.test.acquire_cluster(cluster_name)
     cluster.set_name(cluster_name)
     cluster.set_engine("postgresql-server")
-    cluster.set_flow(None)
 
 
 @when("the MiNiFi instance starts up")
