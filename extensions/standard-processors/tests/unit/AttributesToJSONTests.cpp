@@ -43,7 +43,7 @@ class AttributesToJSONTestFixture {
     LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
-    dir_ = minifi::utils::createTempDir(&test_controller_);
+    dir_ = test_controller_.createTempDirectory();
 
     plan_ = test_controller_.createPlan();
     getfile_ = plan_->addProcessor("GetFile", "GetFile");

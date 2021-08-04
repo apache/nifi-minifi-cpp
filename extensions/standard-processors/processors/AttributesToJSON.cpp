@@ -83,10 +83,10 @@ void AttributesToJSON::initialize() {
 void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string attributes;
   context->getProperty(AttributesList.getName(), attributes);
-  attribute_list_ = utils::StringUtils::split(attributes, ",");
+  attribute_list_ = utils::StringUtils::splitRemovingEmpty(attributes, ",");
   context->getProperty(AttributesRegularExpression.getName(), attributes_regular_expression_str_);
   if (!attributes_regular_expression_str_.empty()) {
-    attributes_regular_expression_ = utils::Regex(attributes_regular_expression_str_);
+    attributes_regular_expression_ = std::regex(attributes_regular_expression_str_);
   }
   write_to_attribute_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, Destination.getName(), DESTINATIONS) == "flowfile-attribute";
   context->getProperty(IncludeCoreAttributes.getName(), include_core_attributes_);
@@ -98,7 +98,7 @@ bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute)
 }
 
 bool AttributesToJSON::matchesAttributeRegex(const std::string& attribute) {
-  return attributes_regular_expression_str_.empty() || attributes_regular_expression_.match(attribute);
+  return attributes_regular_expression_str_.empty() || std::regex_search(attribute, attributes_regular_expression_);
 }
 
 void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) {
