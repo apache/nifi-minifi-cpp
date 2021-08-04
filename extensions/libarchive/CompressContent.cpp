@@ -25,6 +25,7 @@
 #include <set>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -61,6 +62,8 @@ core::Property CompressContent::BatchSize(
 
 core::Relationship CompressContent::Success("success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed");
 core::Relationship CompressContent::Failure("failure", "FlowFiles will be transferred to the failure relationship if they fail to compress/decompress");
+
+const std::string CompressContent::TAR_EXT = ".tar";
 
 const std::map<std::string, CompressContent::CompressionFormat> CompressContent::compressionFormatMimeTypeMap_{
   {"application/gzip", CompressionFormat::GZIP},
@@ -191,14 +194,20 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     if (compressMode_ == CompressionMode::Compress) {
       session->putAttribute(result, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
       if (updateFileName_) {
+        if (encapsulateInTar_) {
+          fileName = fileName + TAR_EXT;
+        }
         fileName = fileName + fileExtension;
         session->putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
       }
     } else {
       session->removeAttribute(result, core::SpecialFlowAttribute::MIME_TYPE);
       if (updateFileName_) {
-        if (fileName.size() >= fileExtension.size() && fileName.compare(fileName.size() - fileExtension.size(), fileExtension.size(), fileExtension) == 0) {
+        if (utils::StringUtils::endsWith(fileName, fileExtension)) {
           fileName = fileName.substr(0, fileName.size() - fileExtension.size());
+          if (encapsulateInTar_ && utils::StringUtils::endsWith(fileName, TAR_EXT)) {
+            fileName = fileName.substr(0, fileName.size() - TAR_EXT.size());
+          }
           session->putAttribute(result, core::SpecialFlowAttribute::FILENAME, fileName);
         }
       }
