@@ -19,7 +19,7 @@ include(FetchContent)
 
 FetchContent_Declare(range-v3_src
     GIT_REPOSITORY https://github.com/ericniebler/range-v3.git
-    GIT_TAG c6d7c7480ebdb7f3fcc124c8fdd1b48f7a5adf39
+    GIT_TAG 0487cca29e352e8f16bbd91fda38e76e39a0ed28
 )
 FetchContent_MakeAvailable(range-v3_src)
 
