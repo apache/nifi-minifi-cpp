@@ -102,14 +102,14 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   /**
    * Magic: TTL-based DB cleanup only triggers when writeBuffers are serialized to storage
    * To achieve this 250 entries are put to DB with a total size that ensures at least one buffer is serialized
-   * Wait more than a sec to make sure the serialized records expire
+   * Wait 2 seconds to make sure the serialized records expire
    * Put another set of entries to trigger cleanup logic to drop the already serialized records
    * This tests relies on the default settings of Provenance repo: a size of a writeBuffer is 16 MB
    * One provisioning call here writes 25 MB to make sure serialization is triggered
    * When the 2nd 50 MB is written the records of the 1st serialization are dropped -> around 160 of them
    * That's why the final check verifies keyCount to be below 400
    */
-  std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 
   provisionRepo(provdb, keyCount /2, 102400);
 
