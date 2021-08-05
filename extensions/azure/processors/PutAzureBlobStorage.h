@@ -87,7 +87,7 @@ class PutAzureBlobStorage : public core::Processor {
 
       result_ = blob_storage_wrapper_.uploadBlob(blob_name_, buffer.data(), flow_size_);
       if (!result_) {
-        return -1;
+        return read_ret;
       }
       return result_->length;
     }
