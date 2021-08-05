@@ -45,7 +45,7 @@ struct LibraryDescriptor {
 };
 }  // namespace
 
-static utils::optional<LibraryDescriptor> asDynamicLibrary(const std::string& dir, const std::string& filename) {
+static std::optional<LibraryDescriptor> asDynamicLibrary(const std::string& dir, const std::string& filename) {
 #if defined(WIN32)
   const std::string extension = ".dll";
 #elif defined(__APPLE__)
@@ -86,11 +86,11 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
     logger_->log_trace("Initializing extensions");
     // initialize executable
     active_module_->initialize(config);
-    utils::optional<std::string> pattern = config ? config->get(nifi_extension_path) : utils::nullopt;
+    std::optional<std::string> pattern = config ? config->get(nifi_extension_path) : utils::nullopt;
     if (!pattern) return;
     std::vector<LibraryDescriptor> libraries;
     utils::file::FileMatcher(pattern.value()).forEachFile([&] (const std::string& dir, const std::string& filename) {
-      utils::optional<LibraryDescriptor> library = asDynamicLibrary(dir, filename);
+      std::optional<LibraryDescriptor> library = asDynamicLibrary(dir, filename);
       if (library && library->verify(logger_)) {
         libraries.push_back(std::move(library.value()));
       }

@@ -52,7 +52,7 @@ static inline ClassLoader& getClassLoader() {
 template<class T>
 class StaticClassType {
  public:
-  StaticClassType(const std::string& name, const utils::optional<std::string>& description, const std::vector<std::string>& construction_names)
+  StaticClassType(const std::string& name, const std::optional<std::string>& description, const std::vector<std::string>& construction_names)
       : name_(name), construction_names_(construction_names) { // NOLINT
     // Notify when the static member is created
     if (description) {
@@ -74,7 +74,7 @@ class StaticClassType {
     }
   }
 
-  static StaticClassType& get(const std::string& name, const utils::optional<std::string> &description, const std::vector<std::string>& construction_names) {
+  static StaticClassType& get(const std::string& name, const std::optional<std::string> &description, const std::vector<std::string>& construction_names) {
     static StaticClassType instance(name, description, construction_names);
     return instance;
   }

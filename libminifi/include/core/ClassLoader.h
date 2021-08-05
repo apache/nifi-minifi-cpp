@@ -107,10 +107,10 @@ class ClassLoader {
     return classes;
   }
 
-  utils::optional<std::string> getGroupForClass(const std::string &class_name) const {
+  std::optional<std::string> getGroupForClass(const std::string &class_name) const {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     for (const auto& child_loader : class_loaders_) {
-      utils::optional<std::string> group = child_loader.second.getGroupForClass(class_name);
+      std::optional<std::string> group = child_loader.second.getGroupForClass(class_name);
       if (group) {
         return group;
       }
