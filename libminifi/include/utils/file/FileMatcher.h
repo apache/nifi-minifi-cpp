@@ -49,7 +49,7 @@ class FileMatcher {
       EXCLUDE,  // dir/file is explicitly rejected by the pattern
       DONT_CARE  // dir/file does not match pattern, do what you may
     };
-    static optional<FilePattern> fromPattern(std::string pattern);
+    static std::optional<FilePattern> fromPattern(std::string pattern);
 
     bool isExcluding() const {
       return excluding_;

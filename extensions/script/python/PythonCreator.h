@@ -59,7 +59,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     python::PythonScriptEngine::initialize();
 
     auto engine = std::make_shared<python::PythonScriptEngine>();
-    std::optional<std::string> pathListings = configuration ? configuration->get("nifi.python.processor.dir") : utils::nullopt;
+    std::optional<std::string> pathListings = configuration ? configuration->get("nifi.python.processor.dir") : std::nullopt;
     if (!pathListings) {
       return;
     }
@@ -74,7 +74,7 @@ class PythonCreator : public minifi::core::CoreComponent {
         fullname = utils::StringUtils::join_pack("org.apache.nifi.minifi.processors.", package, ".", scriptname);
         classname = fullname;
       }
-      core::getClassLoader().registerClass(classname, utils::make_unique<PythonObjectFactory>(path, classname));
+      core::getClassLoader().registerClass(classname, std::make_unique<PythonObjectFactory>(path, classname));
       registered_classes_.push_back(classname);
       try {
         registerScriptDescription(classname, fullname, path, scriptname);

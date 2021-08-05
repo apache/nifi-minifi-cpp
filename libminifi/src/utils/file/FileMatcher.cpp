@@ -58,7 +58,7 @@ static const std::vector<std::string> path_separators{"/", "\\"};
 static const std::vector<std::string> path_separators{"/"};
 #endif
 
-optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::string pattern) {
+std::optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::string pattern) {
   pattern = utils::StringUtils::trim(pattern);
   bool excluding = false;
   if (!pattern.empty() && pattern[0] == '!') {
@@ -67,12 +67,12 @@ optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::st
   }
   if (pattern.empty()) {
     logger_->log_error("Empty pattern");
-    return nullopt;
+    return std::nullopt;
   }
   std::string exe_dir = get_executable_dir();
   if (exe_dir.empty() && !isAbsolutePath(pattern.c_str())) {
     logger_->log_error("Couldn't determine executable dir, relative pattern '%s' not supported", pattern);
-    return nullopt;
+    return std::nullopt;
   }
   pattern = resolve(exe_dir, pattern);
   auto segments = split(pattern, path_separators);
@@ -85,13 +85,13 @@ optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::st
   }
   if (file_pattern == "." || file_pattern == "..") {
     logger_->log_error("Invalid file pattern '%s'", file_pattern);
-    return nullopt;
+    return std::nullopt;
   }
   bool after_wildcard = false;
   for (const auto& segment : segments) {
     if (after_wildcard && segment == "..") {
       logger_->log_error("Parent accessor is not supported after wildcards");
-      return nullopt;
+      return std::nullopt;
     }
     if (isGlobPattern(segment)) {
       after_wildcard = true;

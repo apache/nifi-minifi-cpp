@@ -72,7 +72,7 @@ static std::optional<LibraryDescriptor> asDynamicLibrary(const std::string& dir,
 std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
 
 ExtensionManager::ExtensionManager() {
-  modules_.push_back(utils::make_unique<Executable>());
+  modules_.push_back(std::make_unique<Executable>());
   active_module_ = modules_[0].get();
 }
 
@@ -86,7 +86,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
     logger_->log_trace("Initializing extensions");
     // initialize executable
     active_module_->initialize(config);
-    std::optional<std::string> pattern = config ? config->get(nifi_extension_path) : utils::nullopt;
+    std::optional<std::string> pattern = config ? config->get(nifi_extension_path) : std::nullopt;
     if (!pattern) return;
     std::vector<LibraryDescriptor> libraries;
     utils::file::FileMatcher(pattern.value()).forEachFile([&] (const std::string& dir, const std::string& filename) {
@@ -97,7 +97,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
       return true;
     });
     for (const auto& library : libraries) {
-      auto module = utils::make_unique<DynamicLibrary>(library.name, library.getFullPath());
+      auto module = std::make_unique<DynamicLibrary>(library.name, library.getFullPath());
       active_module_ = module.get();
       if (!module->load()) {
         // error already logged by method
