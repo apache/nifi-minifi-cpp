@@ -18,8 +18,8 @@
 include(FetchContent)
 
 FetchContent_Declare(range-v3_src
-    URL      https://github.com/ericniebler/range-v3/archive/refs/tags/0.11.0.tar.gz
-    URL_HASH SHA256=376376615dbba43d3bef75aa590931431ecb49eb36d07bb726a19f680c75e20c
+    GIT_REPOSITORY https://github.com/ericniebler/range-v3.git
+    GIT_TAG c6d7c7480ebdb7f3fcc124c8fdd1b48f7a5adf39
 )
 FetchContent_MakeAvailable(range-v3_src)
 
