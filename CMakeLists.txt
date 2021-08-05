@@ -88,7 +88,7 @@ if (WIN32)
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	option(ENABLE_SYSTEMD "Disables the systemd extension." ON)
+	option(ENABLE_SYSTEMD "Enables the systemd extension." ON)
 endif()
 
 option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
@@ -106,7 +106,7 @@ option(ENABLE_LIBRDKAFKA "Enables the librdkafka extension." OFF)
 option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
 option(ENABLE_SENSORS "Enables the Sensors package." OFF)
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
-option(ENABLE_TENSORFLOW "Disables the TensorFlow extensions." OFF)  ## Disabled by default because TF can be complex/environment-specific to build
+option(ENABLE_TENSORFLOW "Enables the TensorFlow extensions." OFF)  ## Disabled by default because TF can be complex/environment-specific to build
 option(ENABLE_AWS "Enables AWS support." OFF)
 option(ENABLE_OPENCV "Enables the OpenCV extensions." OFF)
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
@@ -464,7 +464,7 @@ if (WIN32 AND (ENABLE_ALL OR ENABLE_WEL))
 	include(BundledPugiXml)
 	use_bundled_pugixml(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(WEL-EXTENSION "WEL EXTENSIONS" "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log" "extensions/windows-event-log/tests")
-endif(WIN32 AND (ENABLE_ALL OR ENABLE_WEL))
+endif()
 
 if (ENABLE_ALL OR ENABLE_SQL)
 	createExtension(SQL-EXTENSIONS "SQL EXTENSIONS" "Enables the SQL Suite of Tools" "extensions/sql" "${TEST_DIR}/sql-tests")
