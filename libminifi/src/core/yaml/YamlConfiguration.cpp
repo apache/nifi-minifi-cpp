@@ -607,7 +607,7 @@ void YamlConfiguration::parseConnectionYaml(const YAML::Node& connectionsNode, c
     // If name is specified in configuration, use the value
     std::string name = connectionNode["name"].as<std::string>(id);
 
-    const utils::optional<utils::Identifier> uuid = utils::Identifier::parse(id) | utils::orElse([this] {
+    const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect connection UUID format.");
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");
     });
@@ -831,7 +831,7 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
     // Default name to be same as ID
     std::string name = funnel_node["name"].as<std::string>(id);
 
-    const utils::optional<utils::Identifier> uuid = utils::Identifier::parse(id) | utils::orElse([this] {
+    const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect funnel UUID format.");
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
