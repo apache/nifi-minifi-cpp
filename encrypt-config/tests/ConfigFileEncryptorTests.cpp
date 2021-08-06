@@ -17,11 +17,11 @@
 
 #include <optional>
 #include <string>
+#include <regex>
 
 #include "ConfigFileEncryptor.h"
 
 #include "TestBase.h"
-#include "utils/RegexUtils.h"
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
 using org::apache::nifi::minifi::encrypt_config::encryptSensitivePropertiesInFile;
@@ -41,7 +41,8 @@ bool check_encryption(const ConfigFile& test_file, const std::string& property_n
     auto length = base64_length(utils::crypto::EncryptionType::nonceLength()) +
         utils::crypto::EncryptionType::separator().size() +
         base64_length(original_value_length + utils::crypto::EncryptionType::macLength());
-    return utils::Regex::matchesFullInput("[0-9A-Za-z/+=|]{" + std::to_string(length) + "}", *encrypted_value);
+    std::regex pattern("[0-9A-Za-z/+=|]{" + std::to_string(length) + "}");
+    return std::regex_match(*encrypted_value, pattern);
 }
 }  // namespace
 

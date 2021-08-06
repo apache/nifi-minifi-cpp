@@ -23,11 +23,11 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <regex>
 
 #include "Exception.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
-#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -369,9 +369,9 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
   if (sregex == ".*")
     return true;
   try {
-    utils::Regex rgx(sregex);
-    return rgx.match(value);
-  } catch (const Exception &) {
+    std::regex rgx(sregex);
+    return std::regex_search(value, rgx);
+  } catch (const std::regex_error &) {
     return false;
   }
 }

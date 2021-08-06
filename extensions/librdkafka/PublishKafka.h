@@ -30,6 +30,7 @@
 #include <condition_variable>
 #include <utility>
 #include <vector>
+#include <regex>
 
 #include "utils/GeneralUtils.h"
 #include "FlowFileRecord.h"
@@ -40,7 +41,6 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
-#include "utils/RegexUtils.h"
 #include "rdkafka.h"
 #include "KafkaConnection.h"
 
@@ -127,7 +127,7 @@ class PublishKafka : public core::Processor {
   uint32_t batch_size_{};
   uint64_t target_batch_payload_size_{};
   uint64_t max_flow_seg_size_{};
-  utils::Regex attributeNameRegex_;
+  std::regex attributeNameRegex_;
 
   std::atomic<bool> interrupted_{false};
   std::mutex messages_mutex_;  // If both connection_mutex_ and messages_mutex_ are needed, always take connection_mutex_ first to avoid deadlock

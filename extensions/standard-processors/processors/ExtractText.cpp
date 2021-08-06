@@ -32,7 +32,6 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
-#include "utils/RegexUtils.h"
 #include "utils/gsl.h"
 
 namespace org {
@@ -148,11 +147,10 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
   }
 
   if (regex_mode) {
-    std::vector<utils::Regex::Mode> rgx_mode;
-
     bool insensitive;
+    std::regex_constants::syntax_option_type regex_flags = std::regex::ECMAScript;  // ECMAScript is the default behaviour
     if (ctx_->getProperty(InsensitiveMatch.getName(), insensitive) && insensitive) {
-      rgx_mode.push_back(utils::Regex::Mode::ICASE);
+      regex_flags |= std::regex_constants::icase;
     }
 
     bool ignoregroupzero;
@@ -180,9 +178,9 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
       int matchcount = 0;
 
       try {
-        utils::Regex rgx(value, rgx_mode);
-        while (rgx.match(workStr)) {
-          const std::vector<std::string> &matches = rgx.getResult();
+        std::regex rgx(value, regex_flags);
+        std::smatch matches;
+        while (std::regex_search(workStr, matches, rgx)) {
           size_t i = ignoregroupzero ? 1 : 0;
 
           for (; i < matches.size(); ++i, ++matchcount) {
@@ -198,9 +196,9 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
           if (!repeatingcapture) {
             break;
           }
-          workStr = rgx.getSuffix();
+          workStr = matches.suffix();
         }
-      } catch (const Exception &e) {
+      } catch (const std::regex_error &e) {
         logger_->log_error("%s error encountered when trying to construct regular expression from property (key: %s) value: %s",
                            e.what(), k, value);
         continue;
