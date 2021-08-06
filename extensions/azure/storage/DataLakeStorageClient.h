@@ -40,6 +40,7 @@ class DataLakeStorageClient {
  public:
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) = 0;
+  virtual ~DataLakeStorageClient() {}
 };
 
 }  // namespace storage
