@@ -31,8 +31,6 @@ namespace minifi {
 namespace azure {
 namespace processors {
 
-const std::set<std::string> PutAzureDataLakeStorage::CONFLICT_RESOLUTION_STRATEGIES({"fail", "replace", "ignore"});
-
 const core::Property PutAzureDataLakeStorage::AzureStorageCredentialsService(
     core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
       ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
@@ -47,9 +45,8 @@ const core::Property PutAzureDataLakeStorage::FilesystemName(
 const core::Property PutAzureDataLakeStorage::DirectoryName(
     core::PropertyBuilder::createProperty("Directory Name")
       ->withDescription("Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. "
-                        "The root directory can be designated by the empty string value. In case of the PutAzureDataLakeStorage processor, the directory will be created if not already existing.")
+                        "If left empty it designates the root directory. The directory will be created if not already existing.")
       ->supportsExpressionLanguage(true)
-      ->isRequired(true)
       ->build());
 const core::Property PutAzureDataLakeStorage::FileName(
     core::PropertyBuilder::createProperty("File Name")
@@ -114,6 +111,28 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), FileExistsResolutionStrategy::values()).c_str());
 }
 
+std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
+    const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+  storage::PutAzureDataLakeStorageParameters params;
+  params.connection_string = connection_string_;
+  params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE;
+
+  if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
+    logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
+    return std::nullopt;
+  }
+
+  context->getProperty(DirectoryName, params.directory_name, flow_file);
+
+  context->getProperty(FileName, params.filename, flow_file);
+  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
+    logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
+    return std::nullopt;
+  }
+
+  return params;
+}
+
 void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   logger_->log_debug("PutAzureDataLakeStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
@@ -122,37 +141,22 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     return;
   }
 
-  storage::PutAzureDataLakeStorageParameters params;
-  params.connection_string = connection_string_;
-  params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE;
-
-  if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
-    logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
+  const auto params = buildUploadParameters(context, flow_file);
+  if (!params) {
     session->transfer(flow_file, Failure);
     return;
   }
 
-  if (!context->getProperty(DirectoryName, params.directory_name, flow_file) || params.directory_name.empty()) {
-    logger_->log_error("Directory Name '%s' is invalid or empty!", params.directory_name);
-    session->transfer(flow_file, Failure);
-    return;
-  }
-
-  context->getProperty(FileName, params.filename, flow_file);
-  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
-    logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
-    session->transfer(flow_file, Failure);
-    return;
-  }
-
-  PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, params, logger_);
+  PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, *params, logger_);
   session->read(flow_file, &callback);
   if (callback.caughtFileAlreadyExistsError()) {
     gsl_Expects(conflict_resolution_strategy_ != FileExistsResolutionStrategy::REPLACE);
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::FAIL) {
+      logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage because file already exists", params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Failure);
       return;
     } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::IGNORE) {
+      logger_->log_debug("Upload of file '%s/%s' was ignored because it already exits in filesystem '%s' on Azure Data Lake Storage", params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Success);
       return;
     }
@@ -160,17 +164,45 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
 
   auto result = callback.getResult();
   if (result == std::nullopt) {
-    logger_->log_error("Failed to upload file '%s' to Azura Data Lake storage", params.filename);
+    logger_->log_error("Failed to upload file '%s' to Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
   } else {
-    session->putAttribute(flow_file, "azure.filesystem", params.file_system_name);
-    session->putAttribute(flow_file, "azure.directory", params.directory_name);
-    session->putAttribute(flow_file, "azure.filename", params.filename);
+    session->putAttribute(flow_file, "azure.filesystem", params->file_system_name);
+    session->putAttribute(flow_file, "azure.directory", params->directory_name);
+    session->putAttribute(flow_file, "azure.filename", params->filename);
     session->putAttribute(flow_file, "azure.primaryUri", result->primary_uri);
     session->putAttribute(flow_file, "azure.length", std::to_string(result->length));
-    logger_->log_debug("Successfully uploaded file '%s' to Azura Data Lake storage", params.filename);
+    logger_->log_debug("Successfully uploaded file '%s' to filesystem '%s' on Azure Data Lake storage", params->filename, params->file_system_name);
     session->transfer(flow_file, Success);
   }
+}
+
+PutAzureDataLakeStorage::ReadCallback::ReadCallback(
+    uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger)
+  : flow_size_(flow_size)
+  , azure_data_lake_storage_(azure_data_lake_storage)
+  , params_(params)
+  , logger_(std::move(logger)) {
+}
+
+int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+  std::vector<uint8_t> buffer;
+  int read_ret = stream->read(buffer, flow_size_);
+  if (io::isError(read_ret)) {
+    return -1;
+  }
+
+  try {
+    result_ = azure_data_lake_storage_.uploadFile(params_, buffer.data(), flow_size_);
+  } catch(const storage::AzureDataLakeStorage::FileAlreadyExistsException& ex) {
+    logger_->log_warn(ex.what());
+    caught_file_already_exists_error_ = true;
+  } catch(const std::runtime_error& err) {
+    logger_->log_error("A runtime error occurred while uploading file to Azure Data Lake storage: %s", err.what());
+    return read_ret;
+  }
+
+  return read_ret;
 }
 
 }  // namespace processors

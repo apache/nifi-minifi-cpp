@@ -45,7 +45,8 @@ class AzureDataLakeStorage {
  public:
   class FileAlreadyExistsException : public std::runtime_error {
    public:
-    explicit FileAlreadyExistsException(const std::string& msg) : std::runtime_error(msg) {}
+    explicit FileAlreadyExistsException(const PutAzureDataLakeStorageParameters& params)
+      : std::runtime_error("File '" + params.directory_name + "/" + params.filename + "' already exists on Azure Data Lake Storage filesystem '" + params.file_system_name + "'") {}
   };
 
   AzureDataLakeStorage();

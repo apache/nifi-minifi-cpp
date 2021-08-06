@@ -38,9 +38,7 @@ AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient
 UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
   auto file_created = data_lake_storage_client_->createFile(params);
   if (!file_created && !params.replace_file) {
-    std::string message = "File " + params.filename + " already exists on Azure Data Lake Storage";
-    logger_->log_error(message.c_str());
-    throw FileAlreadyExistsException("File " + params.filename + " already exists on Azure Data Lake Storage");
+    throw FileAlreadyExistsException(params);
   }
 
   auto upload_url = data_lake_storage_client_->uploadFile(params, buffer, buffer_size);

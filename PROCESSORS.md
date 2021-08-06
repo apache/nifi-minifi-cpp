@@ -1252,8 +1252,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - | - | - |
 |**Azure Storage Credentials Service**|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
 |**Filesystem Name**|||Name of the Azure Storage File System. It is assumed to be already existing.<br/>**Supports Expression Language: true**|
-|**Directory Name**|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. The root directory can be designated by the empty string value. In case of the PutAzureDataLakeStorage processor, the directory will be created if not already existing.<br/>**Supports Expression Language: true**|
-|File Name|||The filename to be uploaded. If left empty the filename attribute will be used by default.|
+|Directory Name|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. If left empty it designates the root directory. The directory will be created if not already existing.<br/>**Supports Expression Language: true**|
+|File Name|||The filename to be uploaded. If left empty the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
 |**Conflict Resolution Strategy**|fail|fail<br/>replace<br/>ignore|Indicates what should happen when a file with the same name already exists in the output directory.|
 
 ### Relationships

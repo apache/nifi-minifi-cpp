@@ -46,8 +46,6 @@ namespace processors {
 
 class PutAzureDataLakeStorage final : public core::Processor {
  public:
-  static const std::set<std::string> CONFLICT_RESOLUTION_STRATEGIES;
-
   static constexpr char const* ProcessorName = "PutAzureDataLakeStorage";
 
   // Supported Properties
@@ -82,31 +80,8 @@ class PutAzureDataLakeStorage final : public core::Processor {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger)
-      : flow_size_(flow_size)
-      , azure_data_lake_storage_(azure_data_lake_storage)
-      , params_(params)
-      , logger_(std::move(logger)) {
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      std::vector<uint8_t> buffer;
-      int read_ret = stream->read(buffer, flow_size_);
-      if (io::isError(read_ret)) {
-        return -1;
-      }
-
-      try {
-        result_ = azure_data_lake_storage_.uploadFile(params_, buffer.data(), flow_size_);
-      } catch(const storage::AzureDataLakeStorage::FileAlreadyExistsException&) {
-        caught_file_already_exists_error_ = true;
-      } catch(const std::runtime_error& err) {
-        logger_->log_error("A runtime error occurred while uploading file to Azure Data Lake storage: %s", err.what());
-        return read_ret;
-      }
-
-      return read_ret;
-    }
+    ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger);
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
     std::optional<azure::storage::UploadDataLakeStorageResult> getResult() const {
       return result_;
@@ -135,6 +110,7 @@ class PutAzureDataLakeStorage final : public core::Processor {
   }
 
   std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
+  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
 
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()};
   std::string connection_string_;

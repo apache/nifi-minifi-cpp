@@ -181,16 +181,6 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Filesystem name is not se
   REQUIRE(failed_flowfiles[0] == TEST_DATA);
 }
 
-TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Directory name is not set", "[azureDataLakeStorageParameters]") {
-  plan_->setProperty(update_attribute_, "test.directoryname", "", true);
-  test_controller_.runSession(plan_, true);
-  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-  REQUIRE(verifyLogLinePresenceInPollTime(1s, "Directory Name '' is invalid or empty!"));
-  auto failed_flowfiles = getFailedFlowFileContents();
-  REQUIRE(failed_flowfiles.size() == 1);
-  REQUIRE(failed_flowfiles[0] == TEST_DATA);
-}
-
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Connection String is empty", "[azureDataLakeStorageParameters]") {
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString.getName(), "");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
@@ -267,4 +257,14 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Replace old file on 'repl
   REQUIRE(passed_params.directory_name == DIRECTORY_NAME);
   REQUIRE(passed_params.filename == GETFILE_FILE_NAME);
   REQUIRE(passed_params.replace_file);
+}
+
+TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake Storage with empty directory is accepted", "[azureDataLakeStorageUpload]") {
+  plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::DirectoryName.getName(), "");
+  test_controller_.runSession(plan_, true);
+  REQUIRE(getFailedFlowFileContents().size() == 0);
+  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:\n"));
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  REQUIRE(passed_params.directory_name == "");
 }

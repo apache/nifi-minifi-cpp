@@ -36,20 +36,23 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const std::string& connecti
   }
 }
 
-bool AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParameters& params) {
+Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const PutAzureDataLakeStorageParameters& params) {
   resetClientIfNeeded(params.connection_string, params.file_system_name);
   auto directory_client = client_->GetDirectoryClient(params.directory_name);
-  directory_client.CreateIfNotExists();
-  auto file_client = directory_client.GetFileClient(params.filename);
+  if (!params.directory_name.empty()) {
+    directory_client.CreateIfNotExists();
+  }
+  return directory_client.GetFileClient(params.filename);
+}
+
+bool AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParameters& params) {
+  auto file_client = getFileClient(params);
   auto response = file_client.CreateIfNotExists();
   return response.Value.Created;
 }
 
 std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
-  resetClientIfNeeded(params.connection_string, params.file_system_name);
-  auto directory_client = client_->GetDirectoryClient(params.directory_name);
-  directory_client.CreateIfNotExists();
-  auto file_client = directory_client.GetFileClient(params.filename);
+  auto file_client = getFileClient(params);
   file_client.UploadFrom(buffer, buffer_size);
   return file_client.GetUrl();
 }
