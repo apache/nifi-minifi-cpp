@@ -152,11 +152,13 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
   if (callback.caughtFileAlreadyExistsError()) {
     gsl_Expects(conflict_resolution_strategy_ != FileExistsResolutionStrategy::REPLACE);
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::FAIL) {
-      logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage because file already exists", params->directory_name, params->filename, params->file_system_name);
+      logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage because file already exists",
+        params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Failure);
       return;
     } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::IGNORE) {
-      logger_->log_debug("Upload of file '%s/%s' was ignored because it already exits in filesystem '%s' on Azure Data Lake Storage", params->directory_name, params->filename, params->file_system_name);
+      logger_->log_debug("Upload of file '%s/%s' was ignored because it already exits in filesystem '%s' on Azure Data Lake Storage",
+        params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Success);
       return;
     }
