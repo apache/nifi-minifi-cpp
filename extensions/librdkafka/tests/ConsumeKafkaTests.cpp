@@ -30,7 +30,6 @@
 #include "../rdkafka_utils.h"
 #include "../../standard-processors/processors/ExtractText.h"
 #include "utils/file/FileUtils.h"
-#include "utils/RegexUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/TestUtils.h"
 

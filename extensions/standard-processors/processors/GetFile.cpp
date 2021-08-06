@@ -27,11 +27,11 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <regex>
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/TimeUtil.h"
-#include "utils/RegexUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/TypedValues.h"
@@ -258,8 +258,8 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   if (request.ignoreHiddenFile && utils::file::FileUtils::is_hidden(fullName))
     return false;
 
-  utils::Regex rgx(request.fileFilter);
-  if (!rgx.match(name)) {
+  std::regex rgx(request.fileFilter);
+  if (!std::regex_search(name, rgx)) {
     return false;
   }
 
