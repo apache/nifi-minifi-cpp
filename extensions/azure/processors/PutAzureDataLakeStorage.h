@@ -60,9 +60,9 @@ class PutAzureDataLakeStorage final : public core::Processor {
   static const core::Relationship Success;
 
   SMART_ENUM(FileExistsResolutionStrategy,
-    (FAIL, "fail"),
-    (REPLACE, "replace"),
-    (IGNORE, "ignore")
+    (FAIL_FLOW, "fail"),
+    (REPLACE_FILE, "replace"),
+    (IGNORE_REQUEST, "ignore")
   )
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())

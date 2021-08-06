@@ -57,7 +57,7 @@ const core::Property PutAzureDataLakeStorage::ConflictResolutionStrategy(
     core::PropertyBuilder::createProperty("Conflict Resolution Strategy")
       ->withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
       ->isRequired(true)
-      ->withDefaultValue<std::string>(toString(FileExistsResolutionStrategy::FAIL))
+      ->withDefaultValue<std::string>(toString(FileExistsResolutionStrategy::FAIL_FLOW))
       ->withAllowableValues<std::string>(FileExistsResolutionStrategy::values())
       ->build());
 
@@ -115,7 +115,7 @@ std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorag
     const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::PutAzureDataLakeStorageParameters params;
   params.connection_string = connection_string_;
-  params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE;
+  params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE_FILE;
 
   if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
     logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
@@ -150,13 +150,13 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
   PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, *params, logger_);
   session->read(flow_file, &callback);
   if (callback.caughtFileAlreadyExistsError()) {
-    gsl_Expects(conflict_resolution_strategy_ != FileExistsResolutionStrategy::REPLACE);
-    if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::FAIL) {
+    gsl_Expects(conflict_resolution_strategy_ != FileExistsResolutionStrategy::REPLACE_FILE);
+    if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::FAIL_FLOW) {
       logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage because file already exists",
         params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Failure);
       return;
-    } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::IGNORE) {
+    } else if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::IGNORE_REQUEST) {
       logger_->log_debug("Upload of file '%s/%s' was ignored because it already exits in filesystem '%s' on Azure Data Lake Storage",
         params->directory_name, params->filename, params->file_system_name);
       session->transfer(flow_file, Success);
