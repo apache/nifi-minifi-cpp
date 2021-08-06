@@ -54,7 +54,11 @@ bool AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParamet
 std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
   auto file_client = getFileClient(params);
   file_client.UploadFrom(buffer, buffer_size);
-  return file_client.GetUrl();
+  auto full_url = file_client.GetUrl();
+  if (auto query_string_pos = full_url.find('?'); query_string_pos != std::string::npos) {
+    return full_url.substr(0, query_string_pos);
+  }
+  return full_url;
 }
 
 }  // namespace storage

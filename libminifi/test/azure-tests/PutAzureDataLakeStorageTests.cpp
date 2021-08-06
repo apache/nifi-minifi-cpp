@@ -39,7 +39,7 @@ const std::string GETFILE_FILE_NAME = "input_data.log";
 
 class MockDataLakeStorageClient : public minifi::azure::storage::DataLakeStorageClient {
  public:
-  const std::string PRIMARY_URI = "test-uri";
+  const std::string PRIMARY_URI = "http://test-uri/file";
 
   bool createFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& /*params*/) override {
     if (file_creation_error_) {
@@ -56,7 +56,7 @@ class MockDataLakeStorageClient : public minifi::azure::storage::DataLakeStorage
       throw std::runtime_error("error");
     }
 
-    return PRIMARY_URI;
+    return RETURNED_PRIMARY_URI;
   }
 
   void setFileCreation(bool create_file) {
@@ -76,6 +76,7 @@ class MockDataLakeStorageClient : public minifi::azure::storage::DataLakeStorage
   }
 
  private:
+  const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
   bool create_file_ = true;
   bool file_creation_error_ = false;
   bool upload_fails_ = false;

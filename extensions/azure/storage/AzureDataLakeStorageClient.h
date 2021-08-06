@@ -37,7 +37,20 @@ namespace storage {
 
 class AzureDataLakeStorageClient : public DataLakeStorageClient {
  public:
+  /**
+   * Creates a file on Azure Data Lake Storage
+   * @param params Parameters required for connecting and file creation on Azure
+   * @return True if a new file was created, false otherwise
+   */
   bool createFile(const PutAzureDataLakeStorageParameters& params) override;
+
+  /**
+   * Creates a file on the Azure Data Lake Storage
+   * @param params Parameters required for connecting and file access on Azure
+   * @param buffer Buffer containing the data to be uploaded
+   * @param buffer_size Size of the data to be uploaded
+   * @return URI of the file uploaded
+   */
   std::string uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) override;
 
  private:
