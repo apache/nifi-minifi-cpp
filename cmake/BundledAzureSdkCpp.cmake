@@ -65,7 +65,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     )
 
     # Set dependencies
-    add_dependencies(azure-sdk-cpp-external-build LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL)
+    add_dependencies(azure-sdk-cpp-external-build CURL::libcurl LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL)
 
     # Set variables
     set(LIBAZURE_FOUND "YES" CACHE STRING "" FORCE)
@@ -87,7 +87,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set_target_properties(AZURE::azure-core PROPERTIES IMPORTED_LOCATION "${AZURE_CORE_LIB}")
     add_dependencies(AZURE::azure-core azure-sdk-cpp-external-build)
     target_include_directories(AZURE::azure-core INTERFACE ${LIBAZURE_INCLUDE_DIRS})
-    target_link_libraries(AZURE::azure-core INTERFACE OpenSSL::Crypto OpenSSL::SSL)
+    target_link_libraries(AZURE::azure-core INTERFACE CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
     if (WIN32)
         target_link_libraries(AZURE::azure-core INTERFACE winhttp.lib)
     endif()
