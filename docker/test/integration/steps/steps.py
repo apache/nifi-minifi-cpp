@@ -550,11 +550,11 @@ def step_impl(context, cluster_name, object_data):
     context.test.check_azure_storage_server_data(cluster_name, object_data)
 
 
-
 # SQL
 @then("the query \"{query}\" returns {number_of_rows:d} rows in less than {timeout_seconds:d} seconds on the \"{cluster_name}\" PostgreSQL server")
 def step_impl(context, cluster_name, query, number_of_rows, timeout_seconds):
     context.test.check_query_results(cluster_name, query, number_of_rows, timeout_seconds)
+
 
 @then("the minifi log contains \"{line}\"")
 def step_impl(context, line):

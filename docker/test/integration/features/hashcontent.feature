@@ -19,11 +19,8 @@ Feature: Hash value is added to Flowfiles by HashContent processor
 
     Examples:
       | content  | hash_algorithm | hash_value                                                       |
-      | "test"   | MD5            | 098F6BCD4621D373CADE4E832627B4F6                                 |
+      | "apple"  | MD5            | 1F3870BE274F6C49B3E31A0C6728957F                                 |
       | "test"   | SHA1           | A94A8FE5CCB19BA61C4C0873D391E987982FBBD3                         |
-      | "test"   | SHA256         | 9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08 |
-      | "coffee" | MD5            | 24EB05D18318AC2DB8B2B959315D10F2                                 |
-      | "coffee" | SHA1           | 44213F9F4D59B557314FADCD233232EEBCAC8012                         |
       | "coffee" | SHA256         | 37290D74AC4D186E3A8E5785D259D2EC04FAC91AE28092E7620EC8BC99E830AA |
 
 
