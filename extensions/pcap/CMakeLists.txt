@@ -19,11 +19,21 @@
 
 find_package(PCAP REQUIRED)
 
+include(FetchContent)
+
+FetchContent_Declare(pcapplusplus
+		URL      https://github.com/seladb/PcapPlusPlus/archive/refs/tags/v21.05.tar.gz
+		URL_HASH SHA256=f7bc2caea72544f42e3547c8acf65fca07ddd4cd45f7be2f5132dd1826ea27bb
+		)
+if (NOT pcapplusplus_POPULATED)
+	FetchContent_Populate(pcapplusplus)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 include_directories(/usr/include/netinet)
 
-set(PCAPPLUSPLUS_TP_BASE_DIR "${CMAKE_SOURCE_DIR}/thirdparty/pcap++/")
+set(PCAPPLUSPLUS_TP_BASE_DIR "${pcapplusplus_SOURCE_DIR}/")
 set(PCAPPLUSPLUS_BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pcap++" )
 set(PCAPPLUSPLUS_BASE_DIR PCAPPLUSPLUS_BASE_DIR PARENT_SCOPE)
 set(PCAPPLUSPLUS_HEADER_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist/header" )
