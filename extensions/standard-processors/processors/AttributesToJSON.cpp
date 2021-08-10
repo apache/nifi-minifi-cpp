@@ -29,8 +29,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::set<std::string> AttributesToJSON::DESTINATIONS({"flowfile-attribute", "flowfile-content"});
-
 const core::Property AttributesToJSON::AttributesList(
   core::PropertyBuilder::createProperty("Attributes List")
     ->withDescription("Comma separated list of attributes to be included in the resulting JSON. "
@@ -49,8 +47,8 @@ const core::Property AttributesToJSON::Destination(
     ->withDescription("Control if JSON value is written as a new flowfile attribute 'JSONAttributes' or written in the flowfile content. "
                       "Writing to flowfile content will overwrite any existing flowfile content.")
     ->isRequired(true)
-    ->withDefaultValue<std::string>("flowfile-attribute")
-    ->withAllowableValues<std::string>(DESTINATIONS)
+    ->withDefaultValue<std::string>(toString(WriteDestination::FLOWFILE_ATTRIBUTE))
+    ->withAllowableValues<std::string>(WriteDestination::values())
     ->build());
 
 const core::Property AttributesToJSON::IncludeCoreAttributes(
@@ -81,14 +79,14 @@ void AttributesToJSON::initialize() {
 }
 
 void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  std::string attributes;
-  context->getProperty(AttributesList.getName(), attributes);
-  attribute_list_ = utils::StringUtils::splitRemovingEmpty(attributes, ",");
-  context->getProperty(AttributesRegularExpression.getName(), attributes_regular_expression_str_);
-  if (!attributes_regular_expression_str_.empty()) {
-    attributes_regular_expression_ = std::regex(attributes_regular_expression_str_);
+  std::string value;
+  if (context->getProperty(AttributesList.getName(), value) && !value.empty()) {
+    attribute_list_ = utils::StringUtils::splitRemovingEmpty(value, ",");
   }
-  write_to_attribute_ = utils::parsePropertyWithAllowableValuesOrThrow(*context, Destination.getName(), DESTINATIONS) == "flowfile-attribute";
+  if (context->getProperty(AttributesRegularExpression.getName(), value) && !value.empty()) {
+    attributes_regular_expression_ = std::regex(value);
+  }
+  write_destination_ = WriteDestination::parse(utils::parsePropertyWithAllowableValuesOrThrow(*context, Destination.getName(), WriteDestination::values()).c_str());
   context->getProperty(IncludeCoreAttributes.getName(), include_core_attributes_);
   context->getProperty(NullValue.getName(), null_value_);
 }
@@ -98,7 +96,7 @@ bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute)
 }
 
 bool AttributesToJSON::matchesAttributeRegex(const std::string& attribute) {
-  return attributes_regular_expression_str_.empty() || std::regex_search(attribute, attributes_regular_expression_);
+  return !attributes_regular_expression_ || std::regex_search(attribute, attributes_regular_expression_.value());
 }
 
 void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) {
@@ -125,8 +123,8 @@ std::string AttributesToJSON::buildAttributeJsonData(std::map<std::string, std::
       addAttributeToJson(root, attribute, attributes[attribute]);
     }
   } else {
-    for (const auto& kvp : attributes) {
-      addAttributeToJson(root, kvp.first, kvp.second);
+     for (const auto& [key, value] : attributes) {
+      addAttributeToJson(root, key, value);
     }
   }
 
@@ -143,7 +141,7 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
   }
 
   auto json_data = buildAttributeJsonData(flow_file->getAttributes());
-  if (write_to_attribute_) {
+  if (write_destination_ == WriteDestination::FLOWFILE_ATTRIBUTE) {
     logger_->log_debug("Writing the following attribute data to JSONAttributes attribute: %s", json_data);
     session->putAttribute(flow_file, "JSONAttributes", json_data);
     session->transfer(flow_file, Success);

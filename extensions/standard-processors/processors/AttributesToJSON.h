@@ -31,6 +31,7 @@
 #include "core/Processor.h"
 #include "core/Property.h"
 #include "core/logging/Logger.h"
+#include "utils/Enum.h"
 
 namespace org {
 namespace apache {
@@ -40,14 +41,6 @@ namespace processors {
 
 class AttributesToJSON : public core::Processor {
  public:
-  static const std::set<std::string> DESTINATIONS;
-
-  explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()),
-        core_attributes_(core::SpecialFlowAttribute::getSpecialFlowAttributes()) {
-  }
-  static constexpr char const* ProcessorName = "AttributesToJSON";
   // Supported Properties
   static const core::Property AttributesList;
   static const core::Property AttributesRegularExpression;
@@ -57,6 +50,17 @@ class AttributesToJSON : public core::Processor {
 
   // Supported Relationships
   static core::Relationship Success;
+
+  SMART_ENUM(WriteDestination,
+    (FLOWFILE_ATTRIBUTE, "flowfile-attribute"),
+    (FLOWFILE_CONTENT, "flowfile-content")
+  )
+
+  explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid),
+        logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()),
+        core_attributes_(core::SpecialFlowAttribute::getSpecialFlowAttributes()) {
+  }
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* sessionFactory) override;
@@ -86,9 +90,8 @@ class AttributesToJSON : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   const std::unordered_set<std::string> core_attributes_;
   std::vector<std::string> attribute_list_;
-  std::string attributes_regular_expression_str_;
-  std::regex attributes_regular_expression_;
-  bool write_to_attribute_ = true;
+  std::optional<std::regex> attributes_regular_expression_;
+  WriteDestination write_destination_;
   bool include_core_attributes_ = true;
   bool null_value_ = false;
 };

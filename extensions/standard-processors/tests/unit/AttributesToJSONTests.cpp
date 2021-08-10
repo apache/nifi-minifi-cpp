@@ -59,12 +59,7 @@ class AttributesToJSONTestFixture {
     update_attribute_->setDynamicProperty("other_attribute", "other_value");
     update_attribute_->setDynamicProperty("empty_attribute", "");
 
-    std::fstream file;
-    std::stringstream ss;
-    ss << dir_ << utils::file::FileUtils::get_separator() << TEST_FILE_NAME;
-    file.open(ss.str(), std::ios::out);
-    file << TEST_FILE_CONTENT;
-    file.close();
+    utils::putFileToDir(dir_, TEST_FILE_NAME, TEST_FILE_CONTENT);
   }
 
   std::string escapeJson(const std::string& json) const {
@@ -79,7 +74,7 @@ class AttributesToJSONTestFixture {
 
     auto callback = [&file_contents](const std::string& path, const std::string& filename) -> bool {
       std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
-      std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+      std::string file_content(std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{});
       file_contents.push_back(file_content);
       return true;
     };
@@ -105,7 +100,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move all attributes to a flowfile
   auto file_contents = getOutputFileContents();
 
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == TEST_FILE_CONTENT.size());
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
   std::string expected_json = "{\"absolute.path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME) + ",\"empty_attribute\":\"\",\"filename\":" + escapeJson(TEST_FILE_NAME) + ",\"flow.id\":\"test\",\"my_attribute\":\"my_value\",\"other_attribute\":\"other_value\",\"path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator()) + "}";  // NOLINT
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:" + expected_json));
 }
@@ -116,7 +111,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes to a flo
   auto file_contents = getOutputFileContents();
 
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == TEST_FILE_CONTENT.size());
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"my_attribute\":\"my_value\",\"non_existent_attribute\":\"\"}"));
 }
 
@@ -126,7 +121,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes with spe
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == TEST_FILE_CONTENT.size());
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
   std::string expected_json = "{\"special_attribute\":" + escapeJson("\\\"") + "}";
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:" + expected_json));
 }
@@ -138,17 +133,17 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent or empty selected at
   auto file_contents = getOutputFileContents();
 
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == TEST_FILE_CONTENT.size());
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"my_attribute\":\"my_value\",\"non_existent_attribute\":null,\"empty_attribute\":null}"));
 }
 
-TEST_CASE_METHOD(AttributesToJSONTestFixture, "All non-existent or empty attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "All empty attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::NullValue.getName(), "true");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
 
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == TEST_FILE_CONTENT.size());
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
   std::string expected_json = "{\"absolute.path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME) + ",\"empty_attribute\":null,\"filename\":" + escapeJson(TEST_FILE_NAME) + ",\"flow.id\":\"test\",\"my_attribute\":\"my_value\",\"other_attribute\":\"other_value\",\"path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator()) + "}";  // NOLINT
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:" + expected_json));
 }
@@ -161,7 +156,6 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in fl
   auto file_contents = getOutputFileContents();
 
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == expected_content.size());
   REQUIRE(file_contents[0] == expected_content);
   REQUIRE(!LogTestController::getInstance().contains("key:JSONAttributes", std::chrono::seconds(0), std::chrono::milliseconds(0)));
 }
@@ -172,7 +166,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Do not include core attributes in
   auto file_contents = getOutputFileContents();
 
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == TEST_FILE_CONTENT.size());
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"empty_attribute\":\"\",\"my_attribute\":\"my_value\",\"other_attribute\":\"other_value\"}"));
 }
 
@@ -182,7 +176,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Regex selected attributes are wri
   auto file_contents = getOutputFileContents();
 
   REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].size() == TEST_FILE_CONTENT.size());
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
   REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"empty_attribute\":\"\",\"my_attribute\":\"my_value\"}"));
 }
 
