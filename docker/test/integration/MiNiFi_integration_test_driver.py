@@ -19,6 +19,7 @@ from minifi.validators.MultiFileOutputValidator import MultiFileOutputValidator
 from minifi.validators.SingleOrMultiFileOutputValidator import SingleOrMultiFileOutputValidator
 from minifi.validators.NoContentCheckFileNumberValidator import NoContentCheckFileNumberValidator
 from minifi.validators.NumFileRangeValidator import NumFileRangeValidator
+from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutputValidator
 
 
 class MiNiFi_integration_test():
@@ -204,6 +205,11 @@ class MiNiFi_integration_test():
 
     def check_for_single_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleFileOutputValidator(content)
+        output_validator.set_output_dir(self.file_system_observer.get_output_dir())
+        self.check_output(timeout_seconds, output_validator, 1)
+
+    def check_for_single_json_file_with_content_generated(self, content, timeout_seconds):
+        output_validator = SingleJSONFileOutputValidator(content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1)
 

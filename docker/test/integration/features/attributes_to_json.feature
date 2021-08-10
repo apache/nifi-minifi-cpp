@@ -12,4 +12,4 @@ Feature: Writing attribute data using AttributesToJSON processor
     And the "success" relationship of the GetFile processor is connected to the AttributesToJSON
     And the "success" relationship of the AttributesToJSON processor is connected to the PutFile
     When the MiNiFi instance starts up
-    Then a flowfile with the content "{"filename":"test_file.log","invalid":null}" is placed in the monitored directory in less than 10 seconds
+    Then a flowfile with the JSON content "{"filename":"test_file.log","invalid":null}" is placed in the monitored directory in less than 10 seconds
