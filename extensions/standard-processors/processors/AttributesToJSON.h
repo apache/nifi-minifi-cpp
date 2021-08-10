@@ -83,9 +83,9 @@ class AttributesToJSON : public core::Processor {
   };
 
   bool isCoreAttributeToBeFiltered(const std::string& attribute) const;
-  bool matchesAttributeRegex(const std::string& attribute);
+  std::unordered_set<std::string> getAttributesToBeWritten(const std::map<std::string, std::string>& flowfile_attributes) const;
   void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value);
-  std::string buildAttributeJsonData(std::map<std::string, std::string>&& attributes);
+  std::string buildAttributeJsonData(std::map<std::string, std::string>&& flowfile_attributes);
 
   std::shared_ptr<logging::Logger> logger_;
   const std::unordered_set<std::string> core_attributes_;

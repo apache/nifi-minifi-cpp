@@ -62,11 +62,29 @@ class AttributesToJSONTestFixture {
     utils::putFileToDir(dir_, TEST_FILE_NAME, TEST_FILE_CONTENT);
   }
 
-  std::string escapeJson(const std::string& json) const {
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    writer.String(json.c_str(), json.size());
-    return buffer.GetString();
+  void assertJSONAttributesFromLog(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
+    auto match = LogTestController::getInstance().matchesRegex("key:JSONAttributes value:(.*)").value();
+    assertAttributes(expected_attributes, match[1].str());
+  }
+
+  void assertJSONAttributesFromFile(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
+    auto file_contents = getOutputFileContents();
+    REQUIRE(file_contents.size() == 1);
+    assertAttributes(expected_attributes, file_contents[0]);
+  }
+
+  void assertAttributes(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes, const std::string& output_json) {
+    rapidjson::Document root;
+    rapidjson::ParseResult ok = root.Parse(output_json.c_str());
+    REQUIRE(ok);
+    REQUIRE(root.MemberCount() == expected_attributes.size());
+    for (const auto& [key, value] : expected_attributes) {
+      if (value == std::nullopt) {
+        REQUIRE(root[key.c_str()].IsNull());
+      } else {
+        REQUIRE(std::string(root[key.c_str()].GetString()) == value.value());
+      }
+    }
   }
 
   std::vector<std::string> getOutputFileContents() {
@@ -98,21 +116,33 @@ class AttributesToJSONTestFixture {
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move all attributes to a flowfile attribute", "[AttributesToJSONTests]") {
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
-
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-  std::string expected_json = "{\"absolute.path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME) + ",\"empty_attribute\":\"\",\"filename\":" + escapeJson(TEST_FILE_NAME) + ",\"flow.id\":\"test\",\"my_attribute\":\"my_value\",\"other_attribute\":\"other_value\",\"path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator()) + "}";  // NOLINT
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:" + expected_json));
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"absolute.path", dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME},
+    {"empty_attribute", ""},
+    {"filename", TEST_FILE_NAME},
+    {"flow.id", "test"},
+    {"my_attribute", "my_value"},
+    {"other_attribute", "other_value"},
+    {"path", dir_ + utils::file::FileUtils::get_separator()}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes to a flowfile attribute", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "my_attribute,non_existent_attribute");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
-
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"my_attribute\":\"my_value\",\"non_existent_attribute\":\"\"}"));
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"my_attribute", "my_value"},
+    {"non_existent_attribute", ""}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes with special characters to a flowfile attribute", "[AttributesToJSONTests]") {
@@ -122,8 +152,11 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes with spe
   auto file_contents = getOutputFileContents();
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-  std::string expected_json = "{\"special_attribute\":" + escapeJson("\\\"") + "}";
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:" + expected_json));
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"special_attribute", "\\\""}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent or empty selected attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
@@ -131,58 +164,130 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent or empty selected at
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::NullValue.getName(), "true");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
-
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"my_attribute\":\"my_value\",\"non_existent_attribute\":null,\"empty_attribute\":null}"));
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"my_attribute", "my_value"},
+    {"non_existent_attribute", std::nullopt},
+    {"empty_attribute", std::nullopt}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "All empty attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::NullValue.getName(), "true");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
-
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-  std::string expected_json = "{\"absolute.path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME) + ",\"empty_attribute\":null,\"filename\":" + escapeJson(TEST_FILE_NAME) + ",\"flow.id\":\"test\",\"my_attribute\":\"my_value\",\"other_attribute\":\"other_value\",\"path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator()) + "}";  // NOLINT
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:" + expected_json));
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"absolute.path", dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME},
+    {"empty_attribute", std::nullopt},
+    {"filename", TEST_FILE_NAME},
+    {"flow.id", "test"},
+    {"my_attribute", "my_value"},
+    {"other_attribute", "other_value"},
+    {"path", dir_ + utils::file::FileUtils::get_separator()}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in flowfile", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination.getName(), "flowfile-content");
   test_controller_.runSession(plan_);
-  std::string expected_content = "{\"absolute.path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME) + ",\"empty_attribute\":\"\",\"filename\":" + escapeJson(TEST_FILE_NAME) + ",\"flow.id\":\"test\",\"my_attribute\":\"my_value\",\"other_attribute\":\"other_value\",\"path\":" + escapeJson(dir_ + utils::file::FileUtils::get_separator()) + "}";  // NOLINT
 
-  auto file_contents = getOutputFileContents();
-
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == expected_content);
-  REQUIRE(!LogTestController::getInstance().contains("key:JSONAttributes", std::chrono::seconds(0), std::chrono::milliseconds(0)));
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"absolute.path", dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME},
+    {"empty_attribute", ""},
+    {"filename", TEST_FILE_NAME},
+    {"flow.id", "test"},
+    {"my_attribute", "my_value"},
+    {"other_attribute", "other_value"},
+    {"path", dir_ + utils::file::FileUtils::get_separator()}
+  };
+  assertJSONAttributesFromFile(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Do not include core attributes in JSON", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
-
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"empty_attribute\":\"\",\"my_attribute\":\"my_value\",\"other_attribute\":\"other_value\"}"));
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"empty_attribute", ""},
+    {"my_attribute", "my_value"},
+    {"other_attribute", "other_value"}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Regex selected attributes are written in JSONAttributes attribute", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "[a-z]+y_attribute");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();
-
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"empty_attribute\":\"\",\"my_attribute\":\"my_value\"}"));
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"empty_attribute", ""},
+    {"my_attribute", "my_value"}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "Invalid destination is set", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::Destination.getName(), "invalid-destination");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_), minifi::Exception);
+}
+
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "Attributes from attributes list and regex selected attributes combined are written in JSONAttributes attribute", "[AttributesToJSONTests]") {
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "[a-z]+y_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "filename, path,my_attribute");
+  test_controller_.runSession(plan_);
+  auto file_contents = getOutputFileContents();
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"empty_attribute", ""},
+    {"filename", TEST_FILE_NAME},
+    {"my_attribute", "my_value"},
+    {"path", dir_ + utils::file::FileUtils::get_separator()}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
+}
+
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are filtered even if they match regex or attributes list", "[AttributesToJSONTests]") {
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "file.*");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "filename, path,my_attribute");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
+  test_controller_.runSession(plan_);
+  auto file_contents = getOutputFileContents();
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
+
+  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"my_attribute\":\"my_value\"}"));
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"my_attribute", "my_value"},
+  };
+  assertJSONAttributesFromLog(expected_attributes);
+}
+
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "No matching attribute in list nor by regex", "[AttributesToJSONTests]") {
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "file.*");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "filename, path");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
+  test_controller_.runSession(plan_);
+  auto file_contents = getOutputFileContents();
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes;
+  assertJSONAttributesFromLog(expected_attributes);
 }
 
 }  // namespace

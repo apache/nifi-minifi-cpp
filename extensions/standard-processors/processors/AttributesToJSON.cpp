@@ -19,6 +19,8 @@
  */
 #include "AttributesToJSON.h"
 
+#include <unordered_set>
+
 #include "rapidjson/writer.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -39,7 +41,7 @@ const core::Property AttributesToJSON::AttributesList(
 const core::Property AttributesToJSON::AttributesRegularExpression(
   core::PropertyBuilder::createProperty("Attributes Regular Expression")
     ->withDescription("Regular expression that will be evaluated against the flow file attributes to select the matching attributes. "
-                      "This property can be used in combination with the attributes list property.")
+                      "Both the matching attributes and the selected attributes from the Attributes List property will be written in the resulting JSON.")
     ->build());
 
 const core::Property AttributesToJSON::Destination(
@@ -81,7 +83,7 @@ void AttributesToJSON::initialize() {
 void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
   std::string value;
   if (context->getProperty(AttributesList.getName(), value) && !value.empty()) {
-    attribute_list_ = utils::StringUtils::splitRemovingEmpty(value, ",");
+    attribute_list_ = utils::StringUtils::splitAndTrimRemovingEmpty(value, ",");
   }
   if (context->getProperty(AttributesRegularExpression.getName(), value) && !value.empty()) {
     attributes_regular_expression_ = std::regex(value);
@@ -95,19 +97,27 @@ bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute)
   return !include_core_attributes_ && core_attributes_.find(attribute) != core_attributes_.end();
 }
 
-bool AttributesToJSON::matchesAttributeRegex(const std::string& attribute) {
-  return !attributes_regular_expression_ || std::regex_search(attribute, attributes_regular_expression_.value());
+std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(const std::map<std::string, std::string>& flowfile_attributes) const {
+  std::unordered_set<std::string> attributes;
+
+  for (const auto& attribute : attribute_list_) {
+    if (!isCoreAttributeToBeFiltered(attribute)) {
+      attributes.insert(attribute);
+    }
+  }
+
+  if (attributes_regular_expression_) {
+    for (const auto& [key, value] : flowfile_attributes) {
+      if (!isCoreAttributeToBeFiltered(key) && std::regex_search(key, attributes_regular_expression_.value())) {
+        attributes.insert(key);
+      }
+    }
+  }
+
+  return attributes;
 }
 
 void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) {
-  if (isCoreAttributeToBeFiltered(key)) {
-    logger_->log_debug("Core attribute '%s' will not be included in the attributes JSON.", key);
-    return;
-  }
-  if (!matchesAttributeRegex(key)) {
-    logger_->log_debug("Attribute '%s' does not match the set regex, therefore it will not be included in the attributes JSON.", key);
-    return;
-  }
   rapidjson::Value json_key(key.c_str(), document.GetAllocator());
   rapidjson::Value json_val;
   if (!value.empty() || !null_value_) {
@@ -116,15 +126,19 @@ void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const s
   document.AddMember(json_key, json_val, document.GetAllocator());
 }
 
-std::string AttributesToJSON::buildAttributeJsonData(std::map<std::string, std::string>&& attributes) {
+std::string AttributesToJSON::buildAttributeJsonData(std::map<std::string, std::string>&& flowfile_attributes) {
   auto root = rapidjson::Document(rapidjson::kObjectType);
-  if (!attribute_list_.empty()) {
-    for (const auto& attribute : attribute_list_) {
-      addAttributeToJson(root, attribute, attributes[attribute]);
+
+  if (!attribute_list_.empty() || attributes_regular_expression_) {
+    auto attributes_to_write = getAttributesToBeWritten(flowfile_attributes);
+    for (const auto& key : attributes_to_write) {
+      addAttributeToJson(root, key, flowfile_attributes[key]);
     }
   } else {
-     for (const auto& [key, value] : attributes) {
-      addAttributeToJson(root, key, value);
+    for (const auto& [key, value] : flowfile_attributes) {
+      if (!isCoreAttributeToBeFiltered(key)) {
+        addAttributeToJson(root, key, value);
+      }
     }
   }
 
