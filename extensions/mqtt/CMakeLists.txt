@@ -26,8 +26,9 @@ add_library(minifi-mqtt-extensions STATIC ${SOURCES})
 set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
-target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 
+include(PahoMqttC)
+target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 
 SET (MQTT-EXTENSIONS minifi-mqtt-extensions PARENT_SCOPE)
 
