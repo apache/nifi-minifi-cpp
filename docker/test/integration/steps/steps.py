@@ -274,6 +274,14 @@ def step_impl(context, producer_name, consumer_name):
     consumer.set_property("SSL Verify Peer", "no")
 
 
+@given("an ssl context service set up for {producer_name}")
+def step_impl(context, producer_name):
+    ssl_context_service = SSLContextService(cert="/tmp/resources/certs/client_LMN_client.pem", ca_cert="/tmp/resources/certs/ca-cert", key="/tmp/resources/certs/client_LMN_client.key", passphrase="abcdefgh")
+    producer = context.test.get_node_by_name(producer_name)
+    producer.controller_services.append(ssl_context_service)
+    producer.set_property("SSL Context Service", ssl_context_service.name)
+
+
 # Kafka setup
 @given("a kafka broker is set up in correspondence with the PublishKafka")
 @given("a kafka broker is set up in correspondence with the third-party kafka publisher")

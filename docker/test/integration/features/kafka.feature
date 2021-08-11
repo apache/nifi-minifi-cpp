@@ -45,11 +45,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Request Timeout        | 10 sec                                     |
       | PublishKafka   | Message Timeout        | 12 sec                                     |
       | PublishKafka   | Security Protocol      | ssl                                        |
-      | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
-      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_LMN_client.pem |
-      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_LMN_client.key |
-      | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And an ssl context service set up for PublishKafka
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
 
@@ -259,11 +256,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | processor name | property name        | property value                             |
       | ConsumeKafka   | Kafka Brokers        | kafka-broker:9093                          |
       | ConsumeKafka   | Security Protocol    | ssl                                        |
-      | ConsumeKafka   | Security CA          | /tmp/resources/certs/ca-cert               |
-      | ConsumeKafka   | Security Cert        | /tmp/resources/certs/client_LMN_client.pem |
-      | ConsumeKafka   | Security Private Key | /tmp/resources/certs/client_LMN_client.key |
-      | ConsumeKafka   | Security Pass Phrase | abcdefgh                                   |
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And an ssl context service set up for ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
     And a kafka broker "broker" is set up in correspondence with the publisher flow

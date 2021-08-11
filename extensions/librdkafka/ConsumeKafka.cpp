@@ -167,25 +167,11 @@ core::Property ConsumeKafka::SessionTimeout(core::PropertyBuilder::createPropert
   ->withDefaultValue<core::TimePeriodValue>("60 seconds")
   ->build());
 
-core::Property ConsumeKafka::SecurityCA(core::PropertyBuilder::createProperty("Security CA")
-  ->withDescription("File or directory path to CA certificate(s) for verifying the broker's key")
-  ->withDefaultValue("")
-  ->build());
-
-core::Property ConsumeKafka::SecurityCert(core::PropertyBuilder::createProperty("Security Cert")
-  ->withDescription("Path to client's public key (PEM) used for authentication")
-  ->withDefaultValue("")
-  ->build());
-
-core::Property ConsumeKafka::SecurityPrivateKey(core::PropertyBuilder::createProperty("Security Private Key")
-  ->withDescription("Path to client's private key (PEM) used for authentication")
-  ->withDefaultValue("")
-  ->build());
-
-core::Property ConsumeKafka::SecurityPrivateKeyPassword(core::PropertyBuilder::createProperty("Security Pass Phrase")
-  ->withDescription("Private key passphrase")
-  ->withDefaultValue("")
-  ->build());
+core::Property ConsumeKafka::SSLContextService(
+    core::PropertyBuilder::createProperty("SSL Context Service")
+        ->withDescription("SSL Context Service Name")
+        ->asType<minifi::controllers::SSLContextService>()
+        ->build());
 
 const core::Relationship ConsumeKafka::Success("success", "Incoming Kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
 
@@ -206,10 +192,7 @@ void ConsumeKafka::initialize() {
     MaxPollRecords,
     MaxPollTime,
     SessionTimeout,
-    SecurityCA,
-    SecurityCert,
-    SecurityPrivateKey,
-    SecurityPrivateKeyPassword
+    SSLContextService
   });
   setSupportedRelationships({
     Success,
@@ -235,10 +218,18 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   context->getProperty(MessageHeaderEncoding.getName(), message_header_encoding_);
   context->getProperty(DuplicateHeaderHandling.getName(), duplicate_header_handling_);
 
-  context->getProperty(SecurityCA.getName(), ssl_data_.ca_loc);
-  context->getProperty(SecurityCert.getName(), ssl_data_.cert_loc);
-  context->getProperty(SecurityPrivateKey.getName(), ssl_data_.key_loc);
-  context->getProperty(SecurityPrivateKeyPassword.getName(), ssl_data_.key_pw);
+  std::string ssl_service_name;
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service;
+  if (context->getProperty(SSLContextService.getName(), ssl_service_name) && !ssl_service_name.empty()) {
+    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(ssl_service_name);
+    if (service) {
+      ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+      ssl_data_.ca_loc = ssl_service->getCACertificate();
+      ssl_data_.cert_loc = ssl_service->getCertificateFile();
+      ssl_data_.key_loc = ssl_service->getPrivateKeyFile();
+      ssl_data_.key_pw = ssl_service->getPassphrase();
+    }
+  }
 
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(*context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));

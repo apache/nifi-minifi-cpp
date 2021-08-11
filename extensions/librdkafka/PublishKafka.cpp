@@ -128,10 +128,17 @@ const core::Property PublishKafka::SecurityProtocol(
         ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL})
         ->isRequired(true)
         ->build());
-const core::Property PublishKafka::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
-const core::Property PublishKafka::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
-const core::Property PublishKafka::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
-const core::Property PublishKafka::SecurityPrivateKeyPassWord("Security Pass Phrase", "Private key passphrase", "");
+
+const core::Property PublishKafka::SSLContextService(
+    core::PropertyBuilder::createProperty("SSL Context Service")
+        ->withDescription("SSL Context Service Name")
+        ->asType<minifi::controllers::SSLContextService>()
+        ->build());
+
+const core::Property PublishKafka::SecurityCA("Security CA", "DEPRECATED in favor of SSL Context Service. File or directory path to CA certificate(s) for verifying the broker's key", "");
+const core::Property PublishKafka::SecurityCert("Security Cert", "DEPRECATED in favor of SSL Context Service.Path to client's public key (PEM) used for authentication", "");
+const core::Property PublishKafka::SecurityPrivateKey("Security Private Key", "DEPRECATED in favor of SSL Context Service.Path to client's private key (PEM) used for authentication", "");
+const core::Property PublishKafka::SecurityPrivateKeyPassWord("Security Pass Phrase", "DEPRECATED in favor of SSL Context Service.Private key passphrase", "");
 const core::Property PublishKafka::KerberosServiceName("Kerberos Service Name", "Kerberos Service Name", "");
 const core::Property PublishKafka::KerberosPrincipal("Kerberos Principal", "Keberos Principal", "");
 const core::Property PublishKafka::KerberosKeytabPath("Kerberos Keytab Path",
@@ -484,6 +491,7 @@ void PublishKafka::initialize() {
   properties.insert(CompressCodec);
   properties.insert(MaxFlowSegSize);
   properties.insert(SecurityProtocol);
+  properties.insert(SSLContextService);
   properties.insert(SecurityCA);
   properties.insert(SecurityCert);
   properties.insert(SecurityPrivateKey);
@@ -709,37 +717,70 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
         auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
-      value = "";
-      if (context->getProperty(SecurityCA.getName(), value) && !value.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.ca.location", value.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.ca.location [%s]", value);
+
+      std::shared_ptr<minifi::controllers::SSLContextService> ssl_service;
+      if (context->getProperty(SSLContextService.getName(), value) && !value.empty()) {
+        std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(value);
+        if (service) {
+          ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+        }
+      }
+
+      std::string security_ca;
+      if (ssl_service) {
+        security_ca = ssl_service->getCACertificate();
+      } else {
+        context->getProperty(SecurityCA.getName(), security_ca);
+      }
+
+      std::string security_cert;
+      if (ssl_service) {
+        security_cert = ssl_service->getCertificateFile();
+      } else {
+        context->getProperty(SecurityCert.getName(), security_cert);
+      }
+
+      std::string security_private_key;
+      if (ssl_service) {
+        security_private_key = ssl_service->getPrivateKeyFile();
+      } else {
+        context->getProperty(SecurityPrivateKey.getName(), security_private_key);
+      }
+
+      std::string security_private_key_password;
+      if (ssl_service) {
+        security_private_key_password = ssl_service->getPassphrase();
+      } else {
+        context->getProperty(SecurityPrivateKeyPassWord.getName(), security_private_key_password);
+      }
+
+      if (!security_ca.empty()) {
+        result = rd_kafka_conf_set(conf_.get(), "ssl.ca.location", security_ca.c_str(), errstr.data(), errstr.size());
+        logger_->log_debug("PublishKafka: ssl.ca.location [%s]", security_ca);
         if (result != RD_KAFKA_CONF_OK) {
           auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
           throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
-      value = "";
-      if (context->getProperty(SecurityCert.getName(), value) && !value.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.certificate.location", value.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.certificate.location [%s]", value);
+      if (!security_cert.empty()) {
+        result = rd_kafka_conf_set(conf_.get(), "ssl.certificate.location", security_cert.c_str(), errstr.data(), errstr.size());
+        logger_->log_debug("PublishKafka: ssl.certificate.location [%s]", security_cert);
         if (result != RD_KAFKA_CONF_OK) {
           auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
           throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
-      value = "";
-      if (context->getProperty(SecurityPrivateKey.getName(), value) && !value.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.key.location", value.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.key.location [%s]", value);
+      if (!security_private_key.empty()) {
+        result = rd_kafka_conf_set(conf_.get(), "ssl.key.location", security_private_key.c_str(), errstr.data(), errstr.size());
+        logger_->log_debug("PublishKafka: ssl.key.location [%s]", security_private_key);
         if (result != RD_KAFKA_CONF_OK) {
           auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
           throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
       }
-      value = "";
-      if (context->getProperty(SecurityPrivateKeyPassWord.getName(), value) && !value.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.key.password", value.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.key.password [%s]", value);
+      if (!security_private_key_password.empty()) {
+        result = rd_kafka_conf_set(conf_.get(), "ssl.key.password", security_private_key_password.c_str(), errstr.data(), errstr.size());
+        logger_->log_debug("PublishKafka: ssl.key.password [%s]", security_private_key_password);
         if (result != RD_KAFKA_CONF_OK) {
           auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
           throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);

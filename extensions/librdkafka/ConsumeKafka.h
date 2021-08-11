@@ -55,11 +55,7 @@ class ConsumeKafka : public core::Processor {
   static core::Property MaxPollRecords;
   static core::Property MaxPollTime;
   static core::Property SessionTimeout;
-
-  static core::Property SecurityCA;
-  static core::Property SecurityCert;
-  static core::Property SecurityPrivateKey;
-  static core::Property SecurityPrivateKeyPassword;
+  static core::Property SSLContextService;
 
   // Supported Relationships
   static const core::Relationship Success;

@@ -41,6 +41,7 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
+#include "controllers/SSLContextService.h"
 #include "rdkafka.h"
 #include "KafkaConnection.h"
 
@@ -71,6 +72,7 @@ class PublishKafka : public core::Processor {
   static const core::Property QueueBufferMaxMessage;
   static const core::Property CompressCodec;
   static const core::Property MaxFlowSegSize;
+  static const core::Property SSLContextService;
   static const core::Property SecurityProtocol;
   static const core::Property SecurityCA;
   static const core::Property SecurityCert;

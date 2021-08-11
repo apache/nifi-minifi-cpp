@@ -255,10 +255,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Message Demarcator|||Since KafkaConsumer receives messages in batches, you have an option to output FlowFiles which contains all Kafka messages in a single batch for a given topic and partition and this property allows you to provide a string (interpreted as UTF-8) to use for demarcating apart multiple Kafka messages. This is an optional property and if not provided each Kafka message received will result in a single FlowFile which time it is triggered. <br/>**Supports Expression Language: true**|
 |Message Header Encoding|UTF-8|Hex<br>UTF-8<br>|Any message header that is found on a Kafka message will be added to the outbound FlowFile as an attribute. This property indicates the Character Encoding to use for deserializing the headers.|
 |**Offset Reset**|latest|earliest<br>latest<br>none<br>|Allows you to manage the condition when there is no initial offset in Kafka or if the current offset does not exist any more on the server (e.g. because that data has been deleted). Corresponds to Kafka's 'auto.offset.reset' property.|
-|Security CA|||File or directory path to CA certificate(s) for verifying the broker's key|
-|Security Cert|||Path to client's public key (PEM) used for authentication|
-|Security Pass Phrase|||Private key passphrase|
-|Security Private Key|||Path to client's private key (PEM) used for authentication|
+|SSL Context Service|||SSL Context Service Name|
 |**Security Protocol**|plaintext|plaintext<br>ssl|Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.|
 |Session Timeout|60 seconds||Client group session and failure detection timeout. The consumer sends periodic heartbeats to indicate its liveness to the broker. If no hearts are received by the broker for a group member within the session timeout, the broker will remove the consumer from the group and trigger a rebalance. The allowed range is configured with the broker configuration properties group.min.session.timeout.ms and group.max.session.timeout.ms.|
 |**Topic Name Format**|Names|Names<br>Patterns<br>|Specifies whether the Topic(s) provided are a comma separated list of names or a single regular expression. Using regular expressions does not automatically discover Kafka topics created after the processor started.|
@@ -1167,10 +1164,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Queue Max Buffer Size|||Maximum total message size sum allowed on the producer queue|
 |Queue Max Message|||Maximum number of messages allowed on the producer queue|
 |Request Timeout|10 sec||The ack timeout of the producer request|
-|Security CA|||File or directory path to CA certificate(s) for verifying the broker's key|
-|Security Cert|||Path to client's public key (PEM) used for authentication|
-|Security Pass Phrase|||Private key passphrase|
-|Security Private Key|||Path to client's private key (PEM) used for authentication|
+|SSL Context Service|||SSL Context Service Name|
+|Security CA|||DEPRECATED in favor of SSL Context Service. File or directory path to CA certificate(s) for verifying the broker's key|
+|Security Cert|||DEPRECATED in favor of SSL Context Service. Path to client's public key (PEM) used for authentication|
+|Security Pass Phrase|||DEPRECATED in favor of SSL Context Service. Private key passphrase|
+|Security Private Key|||DEPRECATED in favor of SSL Context Service. Path to client's private key (PEM) used for authentication|
 |Security Protocol|||Protocol used to communicate with brokers|
 |Target Batch Payload Size|512 KB||The target total payload size for a batch. 0 B means unlimited (Batch Size is still applied).|
 |**Topic Name**|||The Kafka Topic of interest<br/>**Supports Expression Language: true**|
