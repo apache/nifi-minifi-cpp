@@ -190,7 +190,7 @@ class MiNiFi_integration_test():
     def check_minifi_log_contents(self, line):
         for container in self.cluster.containers.values():
             if container.get_engine() == "minifi-cpp":
-                line_found = self.cluster.wait_for_app_logs(line, 60)
+                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, 60)
                 if line_found:
                     return
         assert False

@@ -71,8 +71,8 @@ def step_impl(context, processor_type, minifi_container_name):
     processor.set_name(processor_type)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
-    if container.get_flow() is None:
-        container.set_flow(processor)
+    if not container.get_start_nodes():
+        container.add_start_node(processor)
 
 
 @given("a {processor_type} processor")
@@ -234,9 +234,9 @@ def step_impl(context, source_name, destination_name):
 
 @given("\"{processor_name}\" processor is a start node")
 def step_impl(context, processor_name):
-    cluster = context.test.acquire_cluster("primary_cluster")
+    container = context.test.acquire_container("minifi-cpp-flow")
     processor = context.test.get_or_create_node_by_name(processor_name)
-    cluster.add_start_node(processor)
+    container.add_start_node(processor)
 
 
 # NiFi setups
@@ -247,7 +247,7 @@ def step_impl(context, source_name):
     context.test.add_node(source)
     container = context.test.acquire_container('nifi', 'nifi')
     # Assume that the first node declared is primary unless specified otherwise
-    if container.get_start_nodes() is None:
+    if not container.get_start_nodes():
         container.add_start_node(source)
 
 
