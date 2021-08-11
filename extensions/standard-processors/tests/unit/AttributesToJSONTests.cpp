@@ -56,6 +56,7 @@ class AttributesToJSONTestFixture {
     plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_);
 
     update_attribute_->setDynamicProperty("my_attribute", "my_value");
+    update_attribute_->setDynamicProperty("my_attribute_1", "my_value_1");
     update_attribute_->setDynamicProperty("other_attribute", "other_value");
     update_attribute_->setDynamicProperty("empty_attribute", "");
 
@@ -63,8 +64,9 @@ class AttributesToJSONTestFixture {
   }
 
   void assertJSONAttributesFromLog(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
-    auto match = LogTestController::getInstance().matchesRegex("key:JSONAttributes value:(.*)").value();
-    assertAttributes(expected_attributes, match[1].str());
+    auto match = LogTestController::getInstance().matchesRegex("key:JSONAttributes value:(.*)");
+    REQUIRE(match);
+    assertAttributes(expected_attributes, (*match)[1].str());
   }
 
   void assertJSONAttributesFromFile(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
@@ -125,6 +127,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move all attributes to a flowfile
     {"filename", TEST_FILE_NAME},
     {"flow.id", "test"},
     {"my_attribute", "my_value"},
+    {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"},
     {"path", dir_ + utils::file::FileUtils::get_separator()}
   };
@@ -188,6 +191,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "All empty attributes shall be wri
     {"filename", TEST_FILE_NAME},
     {"flow.id", "test"},
     {"my_attribute", "my_value"},
+    {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"},
     {"path", dir_ + utils::file::FileUtils::get_separator()}
   };
@@ -204,6 +208,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in fl
     {"filename", TEST_FILE_NAME},
     {"flow.id", "test"},
     {"my_attribute", "my_value"},
+    {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"},
     {"path", dir_ + utils::file::FileUtils::get_separator()}
   };
@@ -220,6 +225,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Do not include core attributes in
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
     {"empty_attribute", ""},
     {"my_attribute", "my_value"},
+    {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"}
   };
   assertJSONAttributesFromLog(expected_attributes);
@@ -270,7 +276,6 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are filtered even
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
 
-  REQUIRE(LogTestController::getInstance().contains("key:JSONAttributes value:{\"my_attribute\":\"my_value\"}"));
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
     {"my_attribute", "my_value"},
   };

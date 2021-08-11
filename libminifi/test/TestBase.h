@@ -155,7 +155,7 @@ class LogTestController {
       std::string str = stream.str();
       found = (str.find(ending) != std::string::npos);
       auto now = std::chrono::system_clock::now();
-      timed_out = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) > std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+      timed_out = (now - start > timeout);
       if (!found && !timed_out) {
         std::this_thread::sleep_for(sleep_interval);
       }
@@ -180,7 +180,7 @@ class LogTestController {
       std::string str = log_output.str();
       found = std::regex_search(str, match, matcher_regex);
       auto now = std::chrono::system_clock::now();
-      timed_out = std::chrono::duration_cast<std::chrono::milliseconds>(now - start) > std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
+      timed_out = (now - start > timeout);
       if (!found && !timed_out) {
         std::this_thread::sleep_for(sleep_interval);
       }
