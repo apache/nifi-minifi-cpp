@@ -235,7 +235,7 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     try {
       compiled_file_filter_regex_ = std::regex(file_filter_regex_);
       file_filter_regex_set_ = true;
-    } catch (const Exception &e) {
+    } catch (const std::regex_error &e) {
       logger_->log_error("Failed to compile File Filter Regex \"%s\"", file_filter_regex_.c_str());
       file_filter_regex_set_ = false;
     }
@@ -246,7 +246,7 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
     try {
       compiled_path_filter_regex_ = std::regex(path_filter_regex_);
       path_filter_regex_set_ = true;
-    } catch (const Exception &e) {
+    } catch (const std::regex_error &e) {
       logger_->log_error("Failed to compile Path Filter Regex \"%s\"", path_filter_regex_.c_str());
       path_filter_regex_set_ = false;
     }

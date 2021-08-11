@@ -371,7 +371,7 @@ bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
   try {
     std::regex rgx(sregex);
     return std::regex_search(value, rgx);
-  } catch (const Exception &) {
+  } catch (const std::regex_error &) {
     return false;
   }
 }
