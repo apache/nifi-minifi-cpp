@@ -52,7 +52,7 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentia
   credentials_ = credentials;
 }
 
-Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const PutAzureDataLakeStorageParameters& params) {
+Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const AzureDataLakeStorageParameters& params) {
   resetClientIfNeeded(params.credentials, params.file_system_name);
 
   auto directory_client = client_->GetDirectoryClient(params.directory_name);
@@ -72,6 +72,17 @@ std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorage
   auto file_client = getFileClient(params);
   file_client.UploadFrom(buffer.data(), buffer.size());
   return file_client.GetUrl();
+}
+
+bool AzureDataLakeStorageClient::deleteFile(const DeleteAzureDataLakeStorageParameters& params) {
+  try {
+    auto file_client = getFileClient(params);
+    auto result = file_client.Delete();
+    return result.Value.Deleted;
+  } catch (const std::runtime_error& err) {
+    logger_->log_error("Runtime error while deleting '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, err.what());
+    return false;
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

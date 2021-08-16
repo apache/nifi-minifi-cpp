@@ -52,4 +52,8 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
   }
 }
 
+bool AzureDataLakeStorage::deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params) {
+  return data_lake_storage_client_->deleteFile(params);
+}
+
 }  // namespace org::apache::nifi::minifi::azure::storage

@@ -25,7 +25,8 @@
 #include "utils/Enum.h"
 #include "utils/Export.h"
 
-class PutAzureDataLakeStorageTestsFixture;
+template<typename AzureDataLakeStorageProcessor>
+class AzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -54,7 +55,7 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  friend class ::PutAzureDataLakeStorageTestsFixture;
+  friend class ::AzureDataLakeStorageTestsFixture<PutAzureDataLakeStorage>;
 
   class ReadCallback : public InputStreamCallback {
    public:

@@ -28,18 +28,24 @@
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-struct PutAzureDataLakeStorageParameters {
+struct AzureDataLakeStorageParameters {
   AzureStorageCredentials credentials;
   std::string file_system_name;
   std::string directory_name;
   std::string filename;
+};
+
+struct PutAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
   bool replace_file = false;
 };
+
+using DeleteAzureDataLakeStorageParameters = AzureDataLakeStorageParameters;
 
 class DataLakeStorageClient {
  public:
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
+  virtual bool deleteFile(const DeleteAzureDataLakeStorageParameters& params) = 0;
   virtual ~DataLakeStorageClient() = default;
 };
 
