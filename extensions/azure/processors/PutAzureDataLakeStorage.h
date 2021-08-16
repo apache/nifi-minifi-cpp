@@ -20,29 +20,18 @@
 
 #pragma once
 
-#include <utility>
-#include <string>
-#include <memory>
-#include <optional>
-#include <vector>
+#include "AzureDataLakeStorageProcessor.h"
 
-#include "core/Property.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "storage/AzureDataLakeStorage.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
-#include "AzureStorageProcessorBase.h"
 
 class PutAzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
+class PutAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
  public:
   // Supported Properties
-  EXTENSIONAPI static const core::Property FilesystemName;
-  EXTENSIONAPI static const core::Property DirectoryName;
   EXTENSIONAPI static const core::Property FileName;
   EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
 
@@ -93,15 +82,12 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
   }
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureStorageProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()),
-      azure_data_lake_storage_(std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageProcessor(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
 
-  storage::AzureStorageCredentials credentials_;
   FileExistsResolutionStrategy conflict_resolution_strategy_;
-  storage::AzureDataLakeStorage azure_data_lake_storage_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

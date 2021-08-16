@@ -22,23 +22,10 @@
 
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
-#include "controllerservices/AzureStorageCredentialsService.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property PutAzureDataLakeStorage::FilesystemName(
-    core::PropertyBuilder::createProperty("Filesystem Name")
-      ->withDescription("Name of the Azure Storage File System. It is assumed to be already existing.")
-      ->supportsExpressionLanguage(true)
-      ->isRequired(true)
-      ->build());
-const core::Property PutAzureDataLakeStorage::DirectoryName(
-    core::PropertyBuilder::createProperty("Directory Name")
-      ->withDescription("Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. "
-                        "If left empty it designates the root directory. The directory will be created if not already existing.")
-      ->supportsExpressionLanguage(true)
-      ->build());
 const core::Property PutAzureDataLakeStorage::FileName(
     core::PropertyBuilder::createProperty("File Name")
       ->withDescription("The filename to be uploaded. If left empty the filename attribute will be used by default.")
@@ -56,11 +43,9 @@ const core::Relationship PutAzureDataLakeStorage::Success("success", "Files that
 const core::Relationship PutAzureDataLakeStorage::Failure("failure", "Files that could not be written to Azure storage for some reason are transferred to this relationship");
 
 void PutAzureDataLakeStorage::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    FilesystemName,
-    DirectoryName,
+  AzureDataLakeStorageProcessor::initialize();
+  // Add new supported properties
+  updateSupportedProperties({
     FileName,
     ConflictResolutionStrategy
   });
@@ -71,18 +56,8 @@ void PutAzureDataLakeStorage::initialize() {
   });
 }
 
-void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  std::optional<storage::AzureStorageCredentials> credentials;
-  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(context);
-  if (!credentials) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
-  }
-
-  if (!credentials->isValid()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
-  }
-
-  credentials_ = *credentials;
+void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+  AzureDataLakeStorageProcessor::onSchedule(context, sessionFactory);
 
   conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), FileExistsResolutionStrategy::values()).c_str());
