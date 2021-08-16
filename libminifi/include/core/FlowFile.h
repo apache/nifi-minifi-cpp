@@ -312,8 +312,11 @@ struct SpecialFlowAttribute {
   // Flow identifier
   static const std::string FLOW_ID;
 
-  static std::unordered_set<std::string> getSpecialFlowAttributes() {
-    return {PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID};
+  static const auto& getSpecialFlowAttributes() {
+    static const std::array<std::string_view, 9> SPECIAL_FLOW_ATTRIBUTES {
+      PATH, ABSOLUTE_PATH, FILENAME, UUID, priority, MIME_TYPE, DISCARD_REASON, ALTERNATE_IDENTIFIER, FLOW_ID
+    };
+    return SPECIAL_FLOW_ATTRIBUTES;
   }
 };
 

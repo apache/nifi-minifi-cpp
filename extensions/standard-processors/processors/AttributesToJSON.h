@@ -49,7 +49,7 @@ class AttributesToJSON : public core::Processor {
   static const core::Property NullValue;
 
   // Supported Relationships
-  static core::Relationship Success;
+  static const core::Relationship Success;
 
   SMART_ENUM(WriteDestination,
     (FLOWFILE_ATTRIBUTE, "flowfile-attribute"),
@@ -58,8 +58,7 @@ class AttributesToJSON : public core::Processor {
 
   explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()),
-        core_attributes_(core::SpecialFlowAttribute::getSpecialFlowAttributes()) {
+        logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()) {
   }
 
   void initialize() override;
@@ -83,12 +82,11 @@ class AttributesToJSON : public core::Processor {
   };
 
   bool isCoreAttributeToBeFiltered(const std::string& attribute) const;
-  std::unordered_set<std::string> getAttributesToBeWritten(const std::map<std::string, std::string>& flowfile_attributes) const;
+  std::unordered_set<std::string> getAttributesToBeWritten(core::FlowFile::AttributeMap* flowfile_attributes) const;
   void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value);
-  std::string buildAttributeJsonData(std::map<std::string, std::string>&& flowfile_attributes);
+  std::string buildAttributeJsonData(core::FlowFile::AttributeMap* flowfile_attributes);
 
   std::shared_ptr<logging::Logger> logger_;
-  const std::unordered_set<std::string> core_attributes_;
   std::vector<std::string> attribute_list_;
   std::optional<std::regex> attributes_regular_expression_;
   WriteDestination write_destination_;

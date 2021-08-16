@@ -24,6 +24,7 @@
 #include "rapidjson/writer.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "range/v3/algorithm/find.hpp"
 
 namespace org {
 namespace apache {
@@ -67,7 +68,7 @@ const core::Property AttributesToJSON::NullValue(
     ->withDefaultValue<bool>(false)
     ->build());
 
-core::Relationship AttributesToJSON::Success("success", "All FlowFiles received are routed to success");
+const core::Relationship AttributesToJSON::Success("success", "All FlowFiles received are routed to success");
 
 void AttributesToJSON::initialize() {
   setSupportedProperties({
@@ -94,10 +95,11 @@ void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSe
 }
 
 bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute) const {
-  return !include_core_attributes_ && core_attributes_.find(attribute) != core_attributes_.end();
+  const auto& special_attributes = core::SpecialFlowAttribute::getSpecialFlowAttributes();
+  return !include_core_attributes_ && ranges::find(special_attributes, attribute) != ranges::end(special_attributes);
 }
 
-std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(const std::map<std::string, std::string>& flowfile_attributes) const {
+std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(core::FlowFile::AttributeMap* flowfile_attributes) const {
   std::unordered_set<std::string> attributes;
 
   for (const auto& attribute : attribute_list_) {
@@ -107,7 +109,7 @@ std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(const
   }
 
   if (attributes_regular_expression_) {
-    for (const auto& [key, value] : flowfile_attributes) {
+    for (const auto& [key, value] : *flowfile_attributes) {
       if (!isCoreAttributeToBeFiltered(key) && std::regex_match(key, attributes_regular_expression_.value())) {
         attributes.insert(key);
       }
@@ -126,16 +128,17 @@ void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const s
   document.AddMember(json_key, json_val, document.GetAllocator());
 }
 
-std::string AttributesToJSON::buildAttributeJsonData(std::map<std::string, std::string>&& flowfile_attributes) {
+std::string AttributesToJSON::buildAttributeJsonData(core::FlowFile::AttributeMap* flowfile_attributes) {
   auto root = rapidjson::Document(rapidjson::kObjectType);
 
   if (!attribute_list_.empty() || attributes_regular_expression_) {
     auto attributes_to_write = getAttributesToBeWritten(flowfile_attributes);
     for (const auto& key : attributes_to_write) {
-      addAttributeToJson(root, key, flowfile_attributes[key]);
+      auto it = flowfile_attributes->find(key);
+      addAttributeToJson(root, key, it == flowfile_attributes->end() ? "" : it->second);
     }
   } else {
-    for (const auto& [key, value] : flowfile_attributes) {
+    for (const auto& [key, value] : *flowfile_attributes) {
       if (!isCoreAttributeToBeFiltered(key)) {
         addAttributeToJson(root, key, value);
       }
@@ -154,7 +157,7 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
     return;
   }
 
-  auto json_data = buildAttributeJsonData(flow_file->getAttributes());
+  auto json_data = buildAttributeJsonData(flow_file->getAttributesPtr());
   if (write_destination_ == WriteDestination::FLOWFILE_ATTRIBUTE) {
     logger_->log_debug("Writing the following attribute data to JSONAttributes attribute: %s", json_data);
     session->putAttribute(flow_file, "JSONAttributes", json_data);
