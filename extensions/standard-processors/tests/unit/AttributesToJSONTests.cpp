@@ -162,7 +162,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move selected attributes with spe
   assertJSONAttributesFromLog(expected_attributes);
 }
 
-TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent or empty selected attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent selected attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "my_attribute,non_existent_attribute,empty_attribute");
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::NullValue.getName(), "true");
   test_controller_.runSession(plan_);
@@ -173,27 +173,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Non-existent or empty selected at
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
     {"my_attribute", "my_value"},
     {"non_existent_attribute", std::nullopt},
-    {"empty_attribute", std::nullopt}
-  };
-  assertJSONAttributesFromLog(expected_attributes);
-}
-
-TEST_CASE_METHOD(AttributesToJSONTestFixture, "All empty attributes shall be written as null in JSON", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::NullValue.getName(), "true");
-  test_controller_.runSession(plan_);
-  auto file_contents = getOutputFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
-
-  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
-    {"absolute.path", dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME},
-    {"empty_attribute", std::nullopt},
-    {"filename", TEST_FILE_NAME},
-    {"flow.id", "test"},
-    {"my_attribute", "my_value"},
-    {"my_attribute_1", "my_value_1"},
-    {"other_attribute", "other_value"},
-    {"path", dir_ + utils::file::FileUtils::get_separator()}
+    {"empty_attribute", ""}
   };
   assertJSONAttributesFromLog(expected_attributes);
 }

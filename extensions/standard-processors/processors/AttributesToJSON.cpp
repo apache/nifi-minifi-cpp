@@ -63,7 +63,7 @@ const core::Property AttributesToJSON::IncludeCoreAttributes(
 
 const core::Property AttributesToJSON::NullValue(
   core::PropertyBuilder::createProperty("Null Value")
-    ->withDescription("If true a non existing or empty attribute will be NULL in the resulting JSON. If false an empty string will be placed in the JSON.")
+    ->withDescription("If true a non existing selected attribute will be NULL in the resulting JSON. If false an empty string will be placed in the JSON.")
     ->isRequired(true)
     ->withDefaultValue<bool>(false)
     ->build());
@@ -99,7 +99,11 @@ bool AttributesToJSON::isCoreAttributeToBeFiltered(const std::string& attribute)
   return !include_core_attributes_ && ranges::find(special_attributes, attribute) != ranges::end(special_attributes);
 }
 
-std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(core::FlowFile::AttributeMap* flowfile_attributes) const {
+std::optional<std::unordered_set<std::string>> AttributesToJSON::getAttributesToBeWritten(const core::FlowFile::AttributeMap& flowfile_attributes) const {
+  if (attribute_list_.empty() && !attributes_regular_expression_) {
+    return std::nullopt;
+  }
+
   std::unordered_set<std::string> attributes;
 
   for (const auto& attribute : attribute_list_) {
@@ -107,7 +111,7 @@ std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(core:
   }
 
   if (attributes_regular_expression_) {
-    for (const auto& [key, value] : *flowfile_attributes) {
+    for (const auto& [key, value] : flowfile_attributes) {
       if (std::regex_match(key, attributes_regular_expression_.value())) {
         attributes.insert(key);
       }
@@ -117,26 +121,25 @@ std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(core:
   return attributes;
 }
 
-void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::string& value) {
+void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value) {
   rapidjson::Value json_key(key.c_str(), document.GetAllocator());
   rapidjson::Value json_val;
-  if (!value.empty() || !null_value_) {
-    json_val.SetString(value.c_str(), document.GetAllocator());
+  if (value || !null_value_) {
+    json_val.SetString(value ? value->c_str() : "", document.GetAllocator());
   }
   document.AddMember(json_key, json_val, document.GetAllocator());
 }
 
-std::string AttributesToJSON::buildAttributeJsonData(core::FlowFile::AttributeMap* flowfile_attributes) {
+std::string AttributesToJSON::buildAttributeJsonData(const core::FlowFile::AttributeMap& flowfile_attributes) {
   auto root = rapidjson::Document(rapidjson::kObjectType);
 
-  if (!attribute_list_.empty() || attributes_regular_expression_) {
-    auto attributes_to_write = getAttributesToBeWritten(flowfile_attributes);
-    for (const auto& key : attributes_to_write) {
-      auto it = flowfile_attributes->find(key);
-      addAttributeToJson(root, key, it == flowfile_attributes->end() ? "" : it->second);
+  if (auto attributes_to_write = getAttributesToBeWritten(flowfile_attributes); attributes_to_write) {
+    for (const auto& key : *attributes_to_write) {
+      auto it = flowfile_attributes.find(key);
+      addAttributeToJson(root, key, it == flowfile_attributes.end() ? std::nullopt : std::make_optional(it->second));
     }
   } else {
-    for (const auto& [key, value] : *flowfile_attributes) {
+    for (const auto& [key, value] : flowfile_attributes) {
       if (!isCoreAttributeToBeFiltered(key)) {
         addAttributeToJson(root, key, value);
       }
@@ -155,7 +158,7 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
     return;
   }
 
-  auto json_data = buildAttributeJsonData(flow_file->getAttributesPtr());
+  auto json_data = buildAttributeJsonData(*flow_file->getAttributesPtr());
   if (write_destination_ == WriteDestination::FLOWFILE_ATTRIBUTE) {
     logger_->log_debug("Writing the following attribute data to JSONAttributes attribute: %s", json_data);
     session->putAttribute(flow_file, "JSONAttributes", json_data);
