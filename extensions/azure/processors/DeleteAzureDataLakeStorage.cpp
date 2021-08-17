@@ -36,8 +36,8 @@ const core::Property DeleteAzureDataLakeStorage::FileName(
       ->supportsExpressionLanguage(true)
       ->build());
 
-const core::Relationship DeleteAzureDataLakeStorage::Success("success", "Files that have been successfully written to Azure storage are transferred to this relationship");
-const core::Relationship DeleteAzureDataLakeStorage::Failure("failure", "Files that could not be written to Azure storage for some reason are transferred to this relationship");
+const core::Relationship DeleteAzureDataLakeStorage::Success("success", "If file deletion from Azure storage succeeds the flowfile is transferred to this relationship");
+const core::Relationship DeleteAzureDataLakeStorage::Failure("failure", "If file deletion from Azure storage fails the flowfile is transferred to this relationship");
 
 void DeleteAzureDataLakeStorage::initialize() {
   AzureDataLakeStorageProcessor::initialize();

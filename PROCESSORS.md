@@ -14,6 +14,7 @@
 - [ConsumeKafka](#consumekafka)
 - [ConsumeMQTT](#consumemqtt)
 - [DefragmentText](#defragmenttext)
+- [DeleteAzureDataLakeStorage](#deleteazuredatalakestorage)
 - [DeleteS3Object](#deletes3object)
 - [ExecuteProcess](#executeprocess)
 - [ExecutePythonProcessor](#executepythonprocessor)
@@ -320,6 +321,30 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |success|Flowfiles that have been successfully defragmented|
 |failure|Flowfiles that failed the defragmentation process|
+
+
+## DeleteAzureDataLakeStorage
+
+### Description
+
+Deletes the provided file from Azure Data Lake Storage Gen 2
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Azure Storage Credentials Service**|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
+|**Filesystem Name**|||Name of the Azure Storage File System. It is assumed to be already existing.<br/>**Supports Expression Language: true**|
+|Directory Name|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. If left empty it designates the root directory. The directory will be created if not already existing.<br/>**Supports Expression Language: true**|
+|File Name|||The filename to be uploaded. If left empty the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|If file deletion from Azure Data Lake storage fails the flowfile is transferred to this relationship|
+|success|If file deletion from Azure Data Lake storage succeeds the flowfile is transferred to this relationship|
 
 
 ## DeleteS3Object
