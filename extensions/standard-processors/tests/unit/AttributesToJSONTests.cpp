@@ -267,8 +267,21 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Attributes from attributes list a
   assertJSONAttributesFromLog(expected_attributes);
 }
 
-TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are filtered even if they match regex or attributes list", "[AttributesToJSONTests]") {
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if they match regex", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "file.*");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
+  test_controller_.runSession(plan_);
+  auto file_contents = getOutputFileContents();
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
+
+  const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
+    {"filename", TEST_FILE_NAME}
+  };
+  assertJSONAttributesFromLog(expected_attributes);
+}
+
+TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if they match attributes list", "[AttributesToJSONTests]") {
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "filename, path,my_attribute");
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
   test_controller_.runSession(plan_);
@@ -277,14 +290,15 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are filtered even
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
-    {"my_attribute", "my_value"},
+    {"filename", TEST_FILE_NAME},
+    {"path", dir_ + utils::file::FileUtils::get_separator()},
+    {"my_attribute", "my_value"}
   };
   assertJSONAttributesFromLog(expected_attributes);
 }
 
 TEST_CASE_METHOD(AttributesToJSONTestFixture, "No matching attribute in list nor by regex", "[AttributesToJSONTests]") {
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "file.*");
-  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesList.getName(), "filename, path");
+  plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::AttributesRegularExpression.getName(), "non-exist.*");
   plan_->setProperty(attribute_to_json_, org::apache::nifi::minifi::processors::AttributesToJSON::IncludeCoreAttributes.getName(), "false");
   test_controller_.runSession(plan_);
   auto file_contents = getOutputFileContents();

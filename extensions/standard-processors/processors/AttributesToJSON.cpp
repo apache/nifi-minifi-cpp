@@ -103,14 +103,12 @@ std::unordered_set<std::string> AttributesToJSON::getAttributesToBeWritten(core:
   std::unordered_set<std::string> attributes;
 
   for (const auto& attribute : attribute_list_) {
-    if (!isCoreAttributeToBeFiltered(attribute)) {
-      attributes.insert(attribute);
-    }
+    attributes.insert(attribute);
   }
 
   if (attributes_regular_expression_) {
     for (const auto& [key, value] : *flowfile_attributes) {
-      if (!isCoreAttributeToBeFiltered(key) && std::regex_match(key, attributes_regular_expression_.value())) {
+      if (std::regex_match(key, attributes_regular_expression_.value())) {
         attributes.insert(key);
       }
     }
