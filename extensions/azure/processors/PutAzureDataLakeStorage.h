@@ -23,7 +23,6 @@
 #include <utility>
 #include <string>
 #include <memory>
-#include <set>
 #include <optional>
 #include <vector>
 
@@ -32,7 +31,6 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureDataLakeStorage.h"
-#include "storage/AzureDataLakeStorageClient.h"
 #include "utils/Enum.h"
 
 class PutAzureDataLakeStorageTestsFixture;
@@ -46,8 +44,6 @@ namespace processors {
 
 class PutAzureDataLakeStorage final : public core::Processor {
  public:
-  static constexpr char const* ProcessorName = "PutAzureDataLakeStorage";
-
   // Supported Properties
   static const core::Property AzureStorageCredentialsService;
   static const core::Property FilesystemName;

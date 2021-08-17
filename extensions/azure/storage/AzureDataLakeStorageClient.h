@@ -57,7 +57,6 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   void resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name);
   Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const PutAzureDataLakeStorageParameters& params);
 
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureDataLakeStorageClient>::getLogger()};
   std::string connection_string_;
   std::string file_system_name_;
   std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
