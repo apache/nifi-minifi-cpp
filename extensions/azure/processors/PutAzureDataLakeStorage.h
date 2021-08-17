@@ -20,6 +20,10 @@
 
 #pragma once
 
+#include <string>
+#include <utility>
+#include <memory>
+
 #include "AzureDataLakeStorageProcessor.h"
 
 #include "utils/Enum.h"

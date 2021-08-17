@@ -167,4 +167,4 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:\n"));
 }
 
-}
+}  // namespace

@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <string>
 #include <stdexcept>
 
 #include "storage/DataLakeStorageClient.h"

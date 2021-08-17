@@ -20,6 +20,8 @@
 
 #include "PutAzureDataLakeStorage.h"
 
+#include <vector>
+
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 #include "core/Resource.h"

@@ -65,4 +65,4 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete file fails", "[
   REQUIRE(!verifyLogLinePresenceInPollTime(0s, "key:filename value:"));
 }
 
-}
+}  // namespace

@@ -16,6 +16,13 @@
  * limitations under the License.
  */
 
+#pragma once
+
+#include <utility>
+#include <vector>
+#include <memory>
+#include <string>
+
 #include "MockDataLakeStorageClient.h"
 #include "../TestBase.h"
 #include "utils/TestUtils.h"
