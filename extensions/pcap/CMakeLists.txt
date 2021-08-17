@@ -25,9 +25,7 @@ FetchContent_Declare(pcapplusplus
 		URL      https://github.com/seladb/PcapPlusPlus/archive/refs/tags/v21.05.tar.gz
 		URL_HASH SHA256=f7bc2caea72544f42e3547c8acf65fca07ddd4cd45f7be2f5132dd1826ea27bb
 		)
-if (NOT pcapplusplus_POPULATED)
-	FetchContent_Populate(pcapplusplus)
-endif()
+FetchContent_MakeAvailable(pcapplusplus)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
