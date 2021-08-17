@@ -105,9 +105,9 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def check_http_proxy_access(self, url):
         output = subprocess.check_output(["docker", "exec", "http-proxy", "cat", "/var/log/squid/access.log"]).decode(self.get_stdout_encoding())
         return url in output \
-            and ((output.count("TCP_DENIED/407") != 0
-                  and output.count("TCP_MISS") == output.count("TCP_DENIED/407"))
-                 or output.count("TCP_DENIED/407") == 0 and "TCP_MISS" in output)
+            and ((output.count("TCP_DENIED") != 0
+                  and output.count("TCP_MISS") == output.count("TCP_DENIED"))
+                 or output.count("TCP_DENIED") == 0 and "TCP_MISS" in output)
 
     @retry_check()
     def check_s3_server_object_data(self, test_data):
