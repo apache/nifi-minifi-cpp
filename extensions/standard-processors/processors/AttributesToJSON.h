@@ -94,9 +94,6 @@ class AttributesToJSON : public core::Processor {
   bool null_value_ = false;
 };
 
-REGISTER_RESOURCE(AttributesToJSON, "Generates a JSON representation of the input FlowFile Attributes. "
-  "The resulting JSON can be written to either a new Attribute 'JSONAttributes' or written to the FlowFile as content.");
-
 }  // namespace processors
 }  // namespace minifi
 }  // namespace nifi
