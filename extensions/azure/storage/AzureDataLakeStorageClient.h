@@ -52,7 +52,7 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   /**
    * Deletes a file on the Azure Data Lake Storage
    * @param params Parameters required for connecting and file access on Azure
-   * @return True
+   * @return True if file was deleted, false otherwise
    */
   bool deleteFile(const DeleteAzureDataLakeStorageParameters& params) override;
 
