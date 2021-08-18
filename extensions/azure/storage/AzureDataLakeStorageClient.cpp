@@ -20,12 +20,7 @@
 
 #include "AzureDataLakeStorageClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace storage {
+namespace org::apache::nifi::minifi::azure::storage {
 
 void AzureDataLakeStorageClient::resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name) {
   if (client_ == nullptr || connection_string != connection_string || file_system_name_ != file_system_name) {
@@ -61,9 +56,4 @@ std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorage
   return full_url;
 }
 
-}  // namespace storage
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::storage

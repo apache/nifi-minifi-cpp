@@ -20,12 +20,7 @@
 
 #include "AzureDataLakeStorage.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace storage {
+namespace org::apache::nifi::minifi::azure::storage {
 
 AzureDataLakeStorage::AzureDataLakeStorage()
   : data_lake_storage_client_(std::make_unique<AzureDataLakeStorageClient>()) {
@@ -48,9 +43,4 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
   return result;
 }
 
-}  // namespace storage
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::storage

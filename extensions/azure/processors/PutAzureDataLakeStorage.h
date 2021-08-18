@@ -35,12 +35,7 @@
 
 class PutAzureDataLakeStorageTestsFixture;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 class PutAzureDataLakeStorage final : public core::Processor {
  public:
@@ -116,9 +111,4 @@ class PutAzureDataLakeStorage final : public core::Processor {
 
 REGISTER_RESOURCE(PutAzureDataLakeStorage, "Puts content into an Azure Data Lake Storage Gen 2");
 
-}  // namespace processors
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::processors

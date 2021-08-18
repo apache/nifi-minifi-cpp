@@ -29,12 +29,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "AzureDataLakeStorageClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace storage {
+namespace org::apache::nifi::minifi::azure::storage {
 
 struct UploadDataLakeStorageResult {
   std::string primary_uri;
@@ -59,9 +54,4 @@ class AzureDataLakeStorage {
   std::unique_ptr<DataLakeStorageClient> data_lake_storage_client_;
 };
 
-}  // namespace storage
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::storage

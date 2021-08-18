@@ -21,12 +21,7 @@
 
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace storage {
+namespace org::apache::nifi::minifi::azure::storage {
 
 struct PutAzureDataLakeStorageParameters {
   std::string connection_string;
@@ -43,9 +38,4 @@ class DataLakeStorageClient {
   virtual ~DataLakeStorageClient() {}
 };
 
-}  // namespace storage
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::storage

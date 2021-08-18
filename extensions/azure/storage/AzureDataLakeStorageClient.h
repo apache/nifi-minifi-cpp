@@ -28,12 +28,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace storage {
+namespace org::apache::nifi::minifi::azure::storage {
 
 class AzureDataLakeStorageClient : public DataLakeStorageClient {
  public:
@@ -62,9 +57,4 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
 };
 
-}  // namespace storage
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::storage

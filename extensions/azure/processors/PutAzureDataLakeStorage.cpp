@@ -24,12 +24,7 @@
 #include "utils/gsl.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 const core::Property PutAzureDataLakeStorage::AzureStorageCredentialsService(
     core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
@@ -207,9 +202,4 @@ int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io:
   return read_ret;
 }
 
-}  // namespace processors
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::processors
