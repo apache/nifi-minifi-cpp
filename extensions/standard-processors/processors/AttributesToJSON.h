@@ -32,6 +32,7 @@
 #include "core/Property.h"
 #include "core/logging/Logger.h"
 #include "utils/Enum.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -42,14 +43,14 @@ namespace processors {
 class AttributesToJSON : public core::Processor {
  public:
   // Supported Properties
-  static const core::Property AttributesList;
-  static const core::Property AttributesRegularExpression;
-  static const core::Property Destination;
-  static const core::Property IncludeCoreAttributes;
-  static const core::Property NullValue;
+  EXTENSIONAPI static const core::Property AttributesList;
+  EXTENSIONAPI static const core::Property AttributesRegularExpression;
+  EXTENSIONAPI static const core::Property Destination;
+  EXTENSIONAPI static const core::Property IncludeCoreAttributes;
+  EXTENSIONAPI static const core::Property NullValue;
 
   // Supported Relationships
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
 
   SMART_ENUM(WriteDestination,
     (FLOWFILE_ATTRIBUTE, "flowfile-attribute"),
