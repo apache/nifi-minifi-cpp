@@ -18,9 +18,7 @@ To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR sel
 
 # Extension internals
 Extensions are dynamic libraries loaded at runtime by the agent. An extension makes its 
-capabilities (classes) available to the system through registrars. Registration should happen in source files,
-as otherwise, including another extension's headers would introduce the same resources in the including extension
-as well, possibly shadowing its own resources.
+capabilities (classes) available to the system through registrars. Registration must happen in source files, not headers.
 
 ``` C++
 // register user-facing classes as
