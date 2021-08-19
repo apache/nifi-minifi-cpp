@@ -65,14 +65,12 @@ class FetchS3Object : public S3Processor {
 
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(uint64_t flow_size, const minifi::aws::s3::GetObjectRequestParameters& get_object_params, aws::s3::S3Wrapper& s3_wrapper)
-      : flow_size_(flow_size)
-      , get_object_params_(get_object_params)
-      , s3_wrapper_(s3_wrapper) {
+    WriteCallback(const minifi::aws::s3::GetObjectRequestParameters& get_object_params, aws::s3::S3Wrapper& s3_wrapper)
+      : get_object_params_(get_object_params),
+        s3_wrapper_(s3_wrapper) {
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      std::vector<uint8_t> buffer;
       result_ = s3_wrapper_.getObject(get_object_params_, *stream);
       if (!result_) {
         return 0;
@@ -81,11 +79,8 @@ class FetchS3Object : public S3Processor {
       return result_->write_size;
     }
 
-    uint64_t flow_size_;
-
     const minifi::aws::s3::GetObjectRequestParameters& get_object_params_;
     aws::s3::S3Wrapper& s3_wrapper_;
-    uint64_t write_size_ = 0;
     std::optional<minifi::aws::s3::GetObjectResult> result_;
   };
 

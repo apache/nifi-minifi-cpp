@@ -56,6 +56,13 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
    */
   bool deleteFile(const DeleteAzureDataLakeStorageParameters& params) override;
 
+  /**
+   * Fetches a file from the Azure Data Lake Storage
+   * @param params Parameters required for connecting and file access on Azure
+   * @return Download result of Azure Data Lake storage client
+   */
+  Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const FetchAzureDataLakeStorageParameters& params) override;
+
  private:
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name);
   Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageParameters& params);

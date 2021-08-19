@@ -80,4 +80,10 @@ bool AzureDataLakeStorageClient::deleteFile(const DeleteAzureDataLakeStoragePara
   return result.Value.Deleted;
 }
 
+Azure::Storage::Files::DataLake::Models::DownloadFileResult AzureDataLakeStorageClient::fetchFile(const FetchAzureDataLakeStorageParameters& params) {
+  auto file_client = getFileClient(params);
+  auto result = file_client.Download();
+  return std::move(result.Value);
+}
+
 }  // namespace org::apache::nifi::minifi::azure::storage

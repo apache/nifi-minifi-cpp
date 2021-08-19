@@ -109,7 +109,7 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     return;
   }
 
-  WriteCallback callback(flow_file->getSize(), *get_object_params, s3_wrapper_);
+  WriteCallback callback(*get_object_params, s3_wrapper_);
   session->write(flow_file, &callback);
 
   if (callback.result_) {

@@ -52,12 +52,37 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
   }
 }
 
-bool AzureDataLakeStorage::deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params) {
+bool AzureDataLakeStorage::deleteFile(const DeleteAzureDataLakeStorageParameters& params) {
   try {
     return data_lake_storage_client_->deleteFile(params);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while deleting '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
     return false;
+  }
+}
+
+std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream) {
+  try {
+    auto fetch_res = data_lake_storage_client_->fetchFile(params);
+
+    std::vector<uint8_t> buffer(4096);
+    size_t write_size = 0;
+    if (fetch_res.FileSize < 0) return 0;
+    while (write_size < gsl::narrow<uint64_t>(fetch_res.FileSize)) {
+      const auto next_write_size = (std::min)(gsl::narrow<size_t>(fetch_res.FileSize) - write_size, size_t{4096});
+      if (!fetch_res.Body->Read(buffer.data(), gsl::narrow<std::streamsize>(next_write_size))) {
+        return -1;
+      }
+      const auto ret = stream.write(buffer.data(), next_write_size);
+      if (io::isError(ret)) {
+        return -1;
+      }
+      write_size += next_write_size;
+    }
+    return gsl::narrow<int64_t>(write_size);
+  } catch (const std::runtime_error& err) {
+    logger_->log_error("Runtime error while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, err.what());
+    return std::nullopt;
   }
 }
 

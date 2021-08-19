@@ -55,6 +55,11 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return delete_result_;
   }
 
+  Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const  org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters& /*params*/) override {
+    Azure::Storage::Files::DataLake::Models::DownloadFileResult result;
+    return result;
+  }
+
   void setFileCreation(bool create_file) {
     create_file_ = create_file;
   }
