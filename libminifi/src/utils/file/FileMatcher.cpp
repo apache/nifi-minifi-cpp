@@ -218,9 +218,9 @@ FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std:
       // all files are excluded in this directory
       return MatchResult::EXCLUDE;
     }
-    return MatchResult::DONT_CARE;
+    return MatchResult::NOT_MATCHING;
   }
-  return result != DirMatchResult::NONE ? MatchResult::INCLUDE : MatchResult::DONT_CARE;
+  return result != DirMatchResult::NONE ? MatchResult::INCLUDE : MatchResult::NOT_MATCHING;
 }
 
 FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std::string& directory, const std::string& filename) const {
@@ -228,12 +228,12 @@ FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std:
   auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
   if (result != DirMatchResult::EXACT && result != DirMatchResult::TREE) {
     // we only match a file if the directory fully matches
-    return MatchResult::DONT_CARE;
+    return MatchResult::NOT_MATCHING;
   }
   if (matchGlob(file_pattern_, filename)) {
     return excluding_ ? MatchResult::EXCLUDE : MatchResult::INCLUDE;
   }
-  return MatchResult::DONT_CARE;
+  return MatchResult::NOT_MATCHING;
 }
 
 void FileMatcher::forEachFile(const std::function<bool(const std::string&, const std::string&)>& fn) const {

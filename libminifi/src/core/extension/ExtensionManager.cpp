@@ -20,6 +20,7 @@
 #include "utils/file/FileUtils.h"
 #include "core/extension/Executable.h"
 #include "utils/file/FileMatcher.h"
+#include "core/extension/DynamicLibrary.h"
 
 namespace org {
 namespace apache {

@@ -16,12 +16,7 @@
  * limitations under the License.
  */
 #include "TestBase.h"
-#include "io/ClientSocket.h"
-#include "core/Processor.h"
 #include "core/ClassLoader.h"
-#include "core/yaml/YamlConfiguration.h"
-#include "core/extension/ExtensionManager.h"
-#include "utils/file/FileUtils.h"
 
 TEST_CASE("TestLoader", "[TestLoader]") {
   TestController controller;

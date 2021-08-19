@@ -53,7 +53,7 @@ template<class T>
 class StaticClassType {
  public:
   StaticClassType(const std::string& name, const std::optional<std::string>& description, const std::vector<std::string>& construction_names)
-      : name_(name), construction_names_(construction_names) { // NOLINT
+      : name_(name), construction_names_(construction_names) {
     // Notify when the static member is created
     if (description) {
       minifi::AgentDocs::putDescription(name, description.value());

@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "core/logging/Logger.h"
-#include "DynamicLibrary.h"
+#include "Module.h"
 #include "properties/Configure.h"
 
 namespace org {

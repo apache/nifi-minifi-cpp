@@ -47,7 +47,7 @@ class FileMatcher {
     enum class MatchResult {
       INCLUDE,  // dir/file should be processed according to the pattern
       EXCLUDE,  // dir/file is explicitly rejected by the pattern
-      DONT_CARE  // dir/file does not match pattern, do what you may
+      NOT_MATCHING  // dir/file does not match pattern, do what you may
     };
     static std::optional<FilePattern> fromPattern(std::string pattern);
 
