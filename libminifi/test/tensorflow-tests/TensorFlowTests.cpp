@@ -28,8 +28,6 @@
 #include <TFConvertImageToTensor.h>
 #include <TFExtractTopLabels.h>
 
-#define CATCH_CONFIG_MAIN
-
 #include "../TestBase.h"
 
 TEST_CASE("TensorFlow: Apply Graph", "[tfApplyGraph]") { // NOLINT

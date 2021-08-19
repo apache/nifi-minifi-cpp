@@ -456,9 +456,6 @@ if (ENABLE_ALL OR ENABLE_COAP STREQUAL "ON")
 	include(BundledLibCoAP)
 	use_bundled_libcoap(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(COAP-EXTENSION "COAP EXTENSIONS" "Enables LibCOAP Functionality." "extensions/coap" "extensions/coap/tests/")
-	if( NOT DISABLE_CURL)
-		add_dependencies(minifi-coap minifi-http-curl)
-	endif()
 endif()
 
 if (WIN32 AND (ENABLE_ALL OR ENABLE_WEL))
@@ -596,7 +593,6 @@ add_subdirectory(main)
 
 if (ENABLE_NANOFI)
 	add_subdirectory(nanofi)
-	add_dependencies(nanofi minifiexe)
 endif()
 
 if (ENABLE_ENCRYPT_CONFIG)
@@ -605,7 +601,6 @@ endif()
 
 if (NOT DISABLE_CURL AND NOT DISABLE_CONTROLLER)
 	add_subdirectory(controller)
-	add_dependencies(minificontroller minifiexe)
 endif()
 
 

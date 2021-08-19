@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#define CATCH_CONFIG_MAIN
-
 #include <memory>
 #include <optional>
 #include <string>

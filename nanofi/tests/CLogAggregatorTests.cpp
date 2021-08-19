@@ -17,7 +17,7 @@
  */
 
 #ifndef _WIN32
-#include "catch.hpp"
+#include "Catch.h"
 
 #include <vector>
 #include <string>

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 #ifndef _WIN32
-#include "catch.hpp"
+#include "Catch.h"
 
 #include <dirent.h>
 #include <stdio.h>
