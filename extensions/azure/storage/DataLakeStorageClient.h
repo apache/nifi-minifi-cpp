@@ -21,10 +21,12 @@
 
 #include <string>
 #include <optional>
+#include <memory>
 
 #include "AzureStorageCredentials.h"
 
 #include "utils/gsl.h"
+#include "io/InputStream.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -33,6 +35,7 @@ struct AzureDataLakeStorageParameters {
   std::string file_system_name;
   std::string directory_name;
   std::string filename;
+  std::optional<uint64_t> number_of_retries;
 };
 
 struct PutAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
@@ -41,11 +44,17 @@ struct PutAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters
 
 using DeleteAzureDataLakeStorageParameters = AzureDataLakeStorageParameters;
 
+struct FetchAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
+  std::optional<uint64_t> range_start;
+  std::optional<uint64_t> range_length;
+};
+
 class DataLakeStorageClient {
  public:
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual bool deleteFile(const DeleteAzureDataLakeStorageParameters& params) = 0;
+  virtual std::unique_ptr<io::InputStream> fetchFile(const FetchAzureDataLakeStorageParameters& params) = 0;
   virtual ~DataLakeStorageClient() = default;
 };
 

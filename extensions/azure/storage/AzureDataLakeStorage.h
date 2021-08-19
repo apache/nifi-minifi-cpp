@@ -28,6 +28,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "DataLakeStorageClient.h"
+#include "azure/core/io/body_stream.hpp"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -48,6 +49,7 @@ class AzureDataLakeStorage {
 
   storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer);
   bool deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params);
+  std::optional<uint64_t> fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream);
 
  private:
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};

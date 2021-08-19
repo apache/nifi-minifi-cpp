@@ -20,12 +20,17 @@
 
 #include <string>
 #include <stdexcept>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "storage/DataLakeStorageClient.h"
+#include "io/BufferStream.h"
 
 class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::storage::DataLakeStorageClient {
  public:
   const std::string PRIMARY_URI = "http://test-uri/file";
+  const std::string FETCHED_DATA = "test azure data for stream";
 
   bool createFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& /*params*/) override {
     if (file_creation_error_) {
@@ -55,6 +60,27 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return delete_result_;
   }
 
+  std::unique_ptr<org::apache::nifi::minifi::io::InputStream> fetchFile(const org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters& params) override {
+    if (fetch_fails_) {
+      throw std::runtime_error("error");
+    }
+
+    fetch_params_ = params;
+    buffer_.clear();
+    uint64_t range_start = 0;
+    uint64_t size = FETCHED_DATA.size();
+    if (params.range_start) {
+      range_start = *params.range_start;
+    }
+
+    if (params.range_length) {
+      size = *params.range_length;
+    }
+
+    buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + size);
+    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_.data(), buffer_.size());
+  }
+
   void setFileCreation(bool create_file) {
     create_file_ = create_file;
   }
@@ -75,12 +101,20 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     delete_result_ = delete_result;
   }
 
+  void setFetchFailure(bool fetch_fails) {
+    fetch_fails_ = fetch_fails;
+  }
+
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters getPassedPutParams() const {
     return put_params_;
   }
 
   org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters getPassedDeleteParams() const {
     return delete_params_;
+  }
+
+  org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters getPassedFetchParams() const {
+    return fetch_params_;
   }
 
  private:
@@ -90,7 +124,10 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   bool upload_fails_ = false;
   bool delete_fails_ = false;
   bool delete_result_ = true;
+  bool fetch_fails_ = false;
   std::string input_data_;
+  std::vector<uint8_t> buffer_;
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters put_params_;
   org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters delete_params_;
+  org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters fetch_params_;
 };

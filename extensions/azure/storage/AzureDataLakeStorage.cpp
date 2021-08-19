@@ -21,6 +21,7 @@
 #include "AzureDataLakeStorage.h"
 
 #include "AzureDataLakeStorageClient.h"
+#include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -52,12 +53,22 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
   }
 }
 
-bool AzureDataLakeStorage::deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params) {
+bool AzureDataLakeStorage::deleteFile(const DeleteAzureDataLakeStorageParameters& params) {
   try {
     return data_lake_storage_client_->deleteFile(params);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while deleting '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
     return false;
+  }
+}
+
+std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream) {
+  try {
+    auto result = data_lake_storage_client_->fetchFile(params);
+    return internal::pipe(result.get(), &stream);
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
+    return std::nullopt;
   }
 }
 

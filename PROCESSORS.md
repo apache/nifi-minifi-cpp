@@ -21,6 +21,7 @@
 - [ExecuteSQL](#executesql)
 - [ExecuteScript](#executescript)
 - [ExtractText](#extracttext)
+- [FetchAzureDataLakeStorage](#fetchazuredatalakestorage)
 - [FetchOPCProcessor](#fetchopcprocessor)
 - [FetchS3Object](#fetchs3object)
 - [FetchSFTP](#fetchsftp)
@@ -502,6 +503,33 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|success operational on the flow record|
+
+
+## FetchAzureDataLakeStorage
+
+### Description
+
+Fetch the provided file from Azure Data Lake Storage Gen 2
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Azure Storage Credentials Service**|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
+|File Name|||The filename in Azure Storage. If left empty the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
+|**Filesystem Name**|||Name of the Azure Storage File System. It is assumed to be already existing.<br/>**Supports Expression Language: true**|
+|Directory Name|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. If left empty it designates the root directory. The directory will be created if not already existing.<br/>**Supports Expression Language: true**|
+|Range Start|||The byte position at which to start reading from the object. An empty value or a value of zero will start reading at the beginning of the object.<br/>**Supports Expression Language: true**|
+|Range Length|||The number of bytes to download from the object, starting from the Range Start. An empty value or a value that extends beyond the end of the object will read to the end of the object.<br/>**Supports Expression Language: true**|
+|Number of Retries|0||The number of automatic retries to perform if the download fails.<br/>**Supports Expression Language: true**|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|In case of fetch failure flowfiles are transferred to this relationship|
+|success|Files that have been successfully fetched from Azure storage are transferred to this relationship|
 
 
 ## FetchOPCProcessor

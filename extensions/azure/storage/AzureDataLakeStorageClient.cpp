@@ -18,7 +18,11 @@
  * limitations under the License.
  */
 
+#include <utility>
+
 #include "AzureDataLakeStorageClient.h"
+#include "azure/core/http/http.hpp"
+#include "azure/storage/files/datalake/datalake_options.hpp"
 
 #include "azure/identity.hpp"
 
@@ -30,30 +34,35 @@ AzureDataLakeStorageClient::AzureDataLakeStorageClient() {
   utils::AzureSdkLogger::initialize();
 }
 
-void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name) {
-  if (client_ && credentials_ == credentials && file_system_name_ == file_system_name) {
+void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries) {
+  if (client_ && credentials_ == credentials && file_system_name_ == file_system_name && number_of_retries_ == number_of_retries) {
     logger_->log_debug("Azure Data Lake Storge client credentials have not changed, no need to reset client");
     return;
   }
 
+  Azure::Storage::Files::DataLake::DataLakeClientOptions options;
+  if (number_of_retries) {
+    options.Retry.MaxRetries = *number_of_retries;
+  }
+
   if (credentials.getUseManagedIdentityCredentials()) {
     auto datalake_service_client = Azure::Storage::Files::DataLake::DataLakeServiceClient(
-      "https://" + credentials.getStorageAccountName() + ".dfs." + credentials.getEndpointSuffix(), std::make_shared<Azure::Identity::ManagedIdentityCredential>());
-
+        "https://" + credentials.getStorageAccountName() + ".dfs." + credentials.getEndpointSuffix(), std::make_shared<Azure::Identity::ManagedIdentityCredential>(), options);
     client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(datalake_service_client.GetFileSystemClient(file_system_name));
     logger_->log_debug("Azure Data Lake Storge client has been reset with new managed identity credentials.");
   } else {
     client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
-    Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(credentials.buildConnectionString(), file_system_name));
+        Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(credentials.buildConnectionString(), file_system_name, options));
     logger_->log_debug("Azure Data Lake Storge client has been reset with new connection string credentials.");
   }
 
   file_system_name_ = file_system_name;
   credentials_ = credentials;
+  number_of_retries_ = number_of_retries;
 }
 
 Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const AzureDataLakeStorageParameters& params) {
-  resetClientIfNeeded(params.credentials, params.file_system_name);
+  resetClientIfNeeded(params.credentials, params.file_system_name, params.number_of_retries);
 
   auto directory_client = client_->GetDirectoryClient(params.directory_name);
   if (!params.directory_name.empty()) {
@@ -78,6 +87,24 @@ bool AzureDataLakeStorageClient::deleteFile(const DeleteAzureDataLakeStoragePara
   auto file_client = getFileClient(params);
   auto result = file_client.Delete();
   return result.Value.Deleted;
+}
+
+std::unique_ptr<io::InputStream> AzureDataLakeStorageClient::fetchFile(const FetchAzureDataLakeStorageParameters& params) {
+  auto file_client = getFileClient(params);
+  Azure::Storage::Files::DataLake::DownloadFileOptions options;
+  if (params.range_start || params.range_length) {
+    Azure::Core::Http::HttpRange range;
+    if (params.range_start) {
+      range.Offset = *params.range_start;
+    }
+
+    if (params.range_length) {
+      range.Length = *params.range_length;
+    }
+    options.Range = range;
+  }
+  auto result = file_client.Download(options);
+  return std::make_unique<AzureDataLakeStorageInputStream>(std::move(result.Value));
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage
