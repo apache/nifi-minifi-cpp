@@ -165,7 +165,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     add_library(OPENCV::libopencv-imgcodecs STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-imgcodecs PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_imgcodecs${SUFFIX}")
-    add_dependencies(OPENCV::libopencv-imgcodecs opencv-external OPENCV::libopencv-core OPENCV::libjpeg-turbo OPENCV::libpng)
+    add_dependencies(OPENCV::libopencv-imgcodecs opencv-external)
     target_include_directories(OPENCV::libopencv-imgcodecs INTERFACE ${OPENCV_INCLUDE_DIR})
     target_link_libraries(OPENCV::libopencv-imgcodecs INTERFACE OPENCV::libopencv-core OPENCV::libjpeg-turbo OPENCV::libpng)
 
@@ -176,7 +176,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     add_library(OPENCV::libopencv-imgproc STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-imgproc PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_imgproc${SUFFIX}")
-    add_dependencies(OPENCV::libopencv-imgproc opencv-external OPENCV::libopencv-core)
+    add_dependencies(OPENCV::libopencv-imgproc opencv-external)
     target_include_directories(OPENCV::libopencv-imgproc INTERFACE ${OPENCV_INCLUDE_DIR})
     target_link_libraries(OPENCV::libopencv-imgproc INTERFACE OPENCV::libopencv-core)
 
@@ -187,7 +187,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     add_library(OPENCV::libopencv-videoio STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-videoio PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_videoio${SUFFIX}")
-    add_dependencies(OPENCV::libopencv-videoio opencv-external OPENCV::libopencv-core)
+    add_dependencies(OPENCV::libopencv-videoio opencv-external)
     target_include_directories(OPENCV::libopencv-videoio INTERFACE ${OPENCV_INCLUDE_DIR})
     target_link_libraries(OPENCV::libopencv-videoio INTERFACE OPENCV::libopencv-core)
 
@@ -207,7 +207,6 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     target_include_directories(OPENCV::libopencv-features2d INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv INTERFACE IMPORTED)
-    add_dependencies(OPENCV::libopencv OPENCV::libopencv-flann OPENCV::libopencv-dnn OPENCV::libopencv-objdetect OPENCV::libopencv-core OPENCV::libopencv-gapi OPENCV::libopencv-imgcodecs OPENCV::libopencv-calib3d OPENCV::libopencv-imgproc OPENCV::libopencv-photo OPENCV::libopencv-videoio OPENCV::libopencv-video OPENCV::libopencv-stitching OPENCV::libopencv-features2d)
     target_link_libraries(OPENCV::libopencv INTERFACE OPENCV::libopencv-flann OPENCV::libopencv-dnn OPENCV::libopencv-objdetect OPENCV::libopencv-core OPENCV::libopencv-gapi OPENCV::libopencv-imgcodecs OPENCV::libopencv-calib3d OPENCV::libopencv-imgproc OPENCV::libopencv-photo OPENCV::libopencv-videoio OPENCV::libopencv-video OPENCV::libopencv-stitching OPENCV::libopencv-features2d)
 
 endfunction(use_bundled_opencv)
