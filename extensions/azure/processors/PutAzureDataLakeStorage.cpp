@@ -28,11 +28,6 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property PutAzureDataLakeStorage::FileName(
-    core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename to be uploaded. If left empty the filename attribute will be used by default.")
-      ->supportsExpressionLanguage(true)
-      ->build());
 const core::Property PutAzureDataLakeStorage::ConflictResolutionStrategy(
     core::PropertyBuilder::createProperty("Conflict Resolution Strategy")
       ->withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
@@ -48,7 +43,6 @@ void PutAzureDataLakeStorage::initialize() {
   AzureDataLakeStorageProcessor::initialize();
   // Add new supported properties
   updateSupportedProperties({
-    FileName,
     ConflictResolutionStrategy
   });
   // Set the supported relationships
@@ -68,21 +62,10 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
 std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
     const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::PutAzureDataLakeStorageParameters params;
-  params.credentials = credentials_;
+  if (!setCommonParameters(params, context, flow_file)) {
+    return std::nullopt;
+  }
   params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE_FILE;
-
-  if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
-    logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
-    return std::nullopt;
-  }
-
-  context->getProperty(DirectoryName, params.directory_name, flow_file);
-
-  context->getProperty(FileName, params.filename, flow_file);
-  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
-    logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
-    return std::nullopt;
-  }
 
   return params;
 }

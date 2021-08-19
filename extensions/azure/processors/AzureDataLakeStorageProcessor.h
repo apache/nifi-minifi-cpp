@@ -44,6 +44,7 @@ class AzureDataLakeStorageProcessor : public AzureStorageProcessorBase {
   static const core::Property AzureStorageCredentialsService;
   static const core::Property FilesystemName;
   static const core::Property DirectoryName;
+  static const core::Property FileName;
 
   explicit AzureDataLakeStorageProcessor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
     : AzureStorageProcessorBase(name, uuid, logger) {
@@ -60,6 +61,8 @@ class AzureDataLakeStorageProcessor : public AzureStorageProcessorBase {
     : AzureStorageProcessorBase(name, uuid, logger),
       azure_data_lake_storage_(std::move(data_lake_storage_client)) {
   }
+
+  bool setCommonParameters(storage::AzureDataLakeStorageParameters& params, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
 
   storage::AzureStorageCredentials credentials_;
   storage::AzureDataLakeStorage azure_data_lake_storage_;

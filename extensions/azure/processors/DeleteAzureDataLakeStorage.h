@@ -38,9 +38,6 @@ namespace processors {
 
 class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
  public:
-  // Supported Properties
-  static const core::Property FileName;
-
   // Supported Relationships
   static const core::Relationship Failure;
   static const core::Relationship Success;

@@ -37,7 +37,6 @@ namespace org::apache::nifi::minifi::azure::processors {
 class PutAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
  public:
   // Supported Properties
-  EXTENSIONAPI static const core::Property FileName;
   EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
 
   // Supported Relationships

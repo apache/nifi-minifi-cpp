@@ -47,13 +47,19 @@ const core::Property AzureDataLakeStorageProcessor::DirectoryName(
                         "If left empty it designates the root directory. The directory will be created if not already existing.")
       ->supportsExpressionLanguage(true)
       ->build());
+const core::Property AzureDataLakeStorageProcessor::FileName(
+    core::PropertyBuilder::createProperty("File Name")
+      ->withDescription("The filename to be uploaded. If left empty the filename attribute will be used by default.")
+      ->supportsExpressionLanguage(true)
+      ->build());
 
 void AzureDataLakeStorageProcessor::initialize() {
   // Set the supported properties
   setSupportedProperties({
     AzureStorageCredentialsService,
     FilesystemName,
-    DirectoryName
+    DirectoryName,
+    FileName
   });
 }
 
@@ -69,6 +75,26 @@ void AzureDataLakeStorageProcessor::onSchedule(const std::shared_ptr<core::Proce
   }
 
   credentials_ = *credentials;
+}
+
+bool AzureDataLakeStorageProcessor::setCommonParameters(
+    storage::AzureDataLakeStorageParameters& params, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+  params.credentials = credentials_;
+
+  if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
+    logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
+    return false;
+  }
+
+  context->getProperty(DirectoryName, params.directory_name, flow_file);
+
+  context->getProperty(FileName, params.filename, flow_file);
+  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
+    logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
+    return false;
+  }
+
+  return true;
 }
 
 }  // namespace processors

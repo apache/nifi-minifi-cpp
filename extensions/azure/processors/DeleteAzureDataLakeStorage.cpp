@@ -30,21 +30,11 @@ namespace minifi {
 namespace azure {
 namespace processors {
 
-const core::Property DeleteAzureDataLakeStorage::FileName(
-    core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename")
-      ->supportsExpressionLanguage(true)
-      ->build());
-
 const core::Relationship DeleteAzureDataLakeStorage::Success("success", "If file deletion from Azure storage succeeds the flowfile is transferred to this relationship");
 const core::Relationship DeleteAzureDataLakeStorage::Failure("failure", "If file deletion from Azure storage fails the flowfile is transferred to this relationship");
 
 void DeleteAzureDataLakeStorage::initialize() {
   AzureDataLakeStorageProcessor::initialize();
-  // Add new supported properties
-  updateSupportedProperties({
-    FileName
-  });
   // Set the supported relationships
   setSupportedRelationships({
     Success,
@@ -55,18 +45,7 @@ void DeleteAzureDataLakeStorage::initialize() {
 std::optional<storage::DeleteAzureDataLakeStorageParameters> DeleteAzureDataLakeStorage::buildDeleteParameters(
     const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::DeleteAzureDataLakeStorageParameters params;
-  params.connection_string = connection_string_;
-
-  if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
-    logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
-    return std::nullopt;
-  }
-
-  context->getProperty(DirectoryName, params.directory_name, flow_file);
-
-  context->getProperty(FileName, params.filename, flow_file);
-  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
-    logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
+  if (!setCommonParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 
