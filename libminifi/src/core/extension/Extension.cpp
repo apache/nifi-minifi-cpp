@@ -44,7 +44,7 @@ ExtensionInitializer::ExtensionInitializer(Extension& extension, const Extension
   }
 }
 ExtensionInitializer::~ExtensionInitializer() {
-  init_logger->log_trace("Deinitializing extension: %s", extension_->getName());
+  init_logger->log_trace("Deinitializing extension: %s", extension_.getName());
   extension_.deinit_impl_();
 }
 
