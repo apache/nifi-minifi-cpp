@@ -17,29 +17,24 @@
 
 include(FetchContent)
 
+# Set build options
+set(PAHO_BUILD_STATIC ON CACHE BOOL "" FORCE)
+set(PAHO_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(PAHO_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+
+if (OPENSSL_OFF)
+    set(PAHO_WITH_SSL OFF CACHE BOOL "" FORCE)
+else()
+    set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
+endif()
+
 FetchContent_Declare(
     paho.mqtt.c-external
     GIT_REPOSITORY "https://github.com/eclipse/paho.mqtt.c.git"
     GIT_TAG "3b7ae6348bc917d42c04efa962e4868c09bbde9f" # Once tagged as v1.3.9 release, but tags may move
 )
 
-FetchContent_GetProperties(paho.mqtt.c-external)
-if(NOT paho.mqtt.c-external_POPULATED)
-    FetchContent_Populate(paho.mqtt.c-external)
-
-    # Set build options
-    option(PAHO_BUILD_STATIC "" TRUE)
-    option(PAHO_BUILD_SHARED "" FALSE)
-    option(PAHO_ENABLE_TESTING "" FALSE)
-
-    if (OPENSSL_OFF)
-        option(PAHO_WITH_SSL "" FALSE)
-    else()
-        option(PAHO_WITH_SSL "" TRUE)
-    endif()
-
-    add_subdirectory(${paho.mqtt.c-external_SOURCE_DIR} ${paho.mqtt.c-external_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(paho.mqtt.c-external)
 
 # Set dependencies and target to link to
 if (NOT OPENSSL_OFF)
