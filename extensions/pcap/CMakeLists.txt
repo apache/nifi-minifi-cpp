@@ -29,15 +29,11 @@ FetchContent_MakeAvailable(pcapplusplus)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-include_directories(/usr/include/netinet)
-
 set(PCAPPLUSPLUS_TP_BASE_DIR "${pcapplusplus_SOURCE_DIR}/")
 set(PCAPPLUSPLUS_BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pcap++" )
 set(PCAPPLUSPLUS_BASE_DIR PCAPPLUSPLUS_BASE_DIR PARENT_SCOPE)
 set(PCAPPLUSPLUS_HEADER_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist/header" )
 set(PCAPPLUSPLUS_HEADER_DIR PCAPPLUSPLUS_HEADER_DIR PARENT_SCOPE)
-
-include_directories(${PCAPPLUSPLUS_HEADER_DIR})
 
 file(COPY ${PCAPPLUSPLUS_TP_BASE_DIR} DESTINATION ${PCAPPLUSPLUS_BASE_DIR})
 
@@ -60,6 +56,7 @@ set(PCAPPLUSPLUS_LIB_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist")
 file(GLOB SOURCES  "*.cpp")
 
 add_library(minifi-pcap SHARED ${SOURCES})
+target_include_directories(minifi-pcap PRIVATE ${PCAPPLUSPLUS_HEADER_DIR})
 
 add_dependencies(minifi-pcap pcappp)
 
