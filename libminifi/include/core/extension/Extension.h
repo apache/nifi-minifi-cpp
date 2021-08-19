@@ -86,7 +86,8 @@ class ExtensionInitializer {
 };
 
 #define REGISTER_EXTENSION(name, init, deinit) \
-  static org::apache::nifi::minifi::core::extension::Extension extension_registrar(name, init, deinit, [] (org::apache::nifi::minifi::core::extension::Extension& extension, const org::apache::nifi::minifi::core::extension::ExtensionConfig& config) -> bool { \
+  static org::apache::nifi::minifi::core::extension::Extension extension_registrar(name, init, deinit, \
+  [] (org::apache::nifi::minifi::core::extension::Extension& extension, const org::apache::nifi::minifi::core::extension::ExtensionConfig& config) -> bool { \
     try {                             \
       static org::apache::nifi::minifi::core::extension::ExtensionInitializer initializer(extension, config);                                                  \
       return true; \
