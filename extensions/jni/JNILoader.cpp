@@ -26,17 +26,13 @@ static minifi::jni::JVMCreator& getJVMCreator() {
   return instance;
 }
 
-class JNIExtension : core::extension::Extension {
- public:
-  using Extension::Extension;
-  bool doInitialize(const std::shared_ptr<org::apache::nifi::minifi::Configure>& config) override {
-    getJVMCreator().configure(config);
-    return true;
-  }
+static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& config) {
+  getJVMCreator().configure(config);
+  return true;
+}
 
-  void doDeinitialize() override {
-    // TODO(adebreceni)
-  }
-};
+static void deinit() {
+  // TODO(adebreceni)
+}
 
-REGISTER_EXTENSION(JNIExtension);
+REGISTER_EXTENSION("JNIExtension", init, deinit);

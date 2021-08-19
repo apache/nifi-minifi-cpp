@@ -44,22 +44,22 @@ std::string Module::getName() const {
   return name_;
 }
 
-void Module::registerExtension(Extension *extension) {
-  logger_->log_trace("Registering extension '%s' in module '%s'", extension->getName(), name_);
+void Module::registerExtension(Extension& extension) {
+  logger_->log_trace("Registering extension '%s' in module '%s'", extension.getName(), name_);
   std::lock_guard<std::mutex> guard(mtx_);
-  extensions_.push_back(extension);
+  extensions_.push_back(&extension);
 }
 
-bool Module::unregisterExtension(Extension *extension) {
-  logger_->log_trace("Trying to unregister extension '%s' in module '%s'", extension->getName(), name_);
+bool Module::unregisterExtension(Extension& extension) {
+  logger_->log_trace("Trying to unregister extension '%s' in module '%s'", extension.getName(), name_);
   std::lock_guard<std::mutex> guard(mtx_);
-  auto it = std::find(extensions_.begin(), extensions_.end(), extension);
+  auto it = std::find(extensions_.begin(), extensions_.end(), &extension);
   if (it == extensions_.end()) {
-    logger_->log_error("Couldn't find extension '%s' in module '%s'", extension->getName(), name_);
+    logger_->log_error("Couldn't find extension '%s' in module '%s'", extension.getName(), name_);
     return false;
   }
   extensions_.erase(it);
-  logger_->log_trace("Successfully unregistered extension '%s' in module '%s'", extension->getName(), name_);
+  logger_->log_trace("Successfully unregistered extension '%s' in module '%s'", extension.getName(), name_);
   return true;
 }
 

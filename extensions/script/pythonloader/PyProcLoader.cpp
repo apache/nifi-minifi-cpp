@@ -19,22 +19,19 @@
 #include "PythonCreator.h"
 #include "PythonBindings.h"
 
-class PythonExtension : core::extension::Extension {
-  static minifi::python::PythonCreator& getPythonCreator() {
-    static minifi::python::PythonCreator instance("PythonCreator");
-    return instance;
-  }
- public:
-  using Extension::Extension;
-  bool doInitialize(const std::shared_ptr<minifi::Configure>& config) override {
-    getPythonCreator().configure(config);
-    return true;
-  }
+static minifi::python::PythonCreator& getPythonCreator() {
+  static minifi::python::PythonCreator instance("PythonCreator");
+  return instance;
+}
 
-  void doDeinitialize() override {
-    // TODO(adebreceni)
-  }
-};
+static bool init(const std::shared_ptr<minifi::Configure>& config) {
+  getPythonCreator().configure(config);
+  return true;
+}
 
-REGISTER_EXTENSION(PythonExtension);
+static void deinit() {
+  // TODO(adebreceni)
+}
+
+REGISTER_EXTENSION("PythonExtension", init, deinit);
 

@@ -28,23 +28,24 @@ namespace extension {
 
 static std::shared_ptr<logging::Logger> init_logger = logging::LoggerFactory<ExtensionInitializer>::getLogger();
 
-Extension::Extension(std::string name, ExtensionInit init): name_(std::move(name)), init_(init) {
-  ExtensionManager::get().registerExtension(this);
+Extension::Extension(std::string name, ExtensionInitImpl init_impl, ExtensionDeinitImpl deinit_impl, ExtensionInit init)
+    : name_(std::move(name)), init_impl_(init_impl), deinit_impl_(deinit_impl), init_(init) {
+  ExtensionManager::get().registerExtension(*this);
 }
 
 Extension::~Extension() {
-  ExtensionManager::get().unregisterExtension(this);
+  ExtensionManager::get().unregisterExtension(*this);
 }
 
-ExtensionInitializer::ExtensionInitializer(Extension* extension, const ExtensionConfig& config): extension_(extension) {
-  init_logger->log_trace("Initializing extension: %s", extension_->getName());
-  if (!extension_->doInitialize(config)) {
+ExtensionInitializer::ExtensionInitializer(Extension& extension, const ExtensionConfig& config): extension_(extension) {
+  init_logger->log_trace("Initializing extension: %s", extension_.getName());
+  if (!extension_.init_impl_(config)) {
     throw std::runtime_error("Failed to initialize extension");
   }
 }
 ExtensionInitializer::~ExtensionInitializer() {
   init_logger->log_trace("Deinitializing extension: %s", extension_->getName());
-  extension_->doDeinitialize();
+  extension_.deinit_impl_();
 }
 
 }  // namespace extension

@@ -47,8 +47,8 @@ class Module {
 
   std::string getName() const;
 
-  void registerExtension(Extension* extension);
-  bool unregisterExtension(Extension* extension);
+  void registerExtension(Extension& extension);
+  bool unregisterExtension(Extension& extension);
 
  private:
   bool initialize(const std::shared_ptr<Configure>& config);

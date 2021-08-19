@@ -28,15 +28,12 @@
 
 #include "client/HTTPClient.h"
 
-class HttpCurlExtension : core::extension::Extension {
- public:
-  using Extension::Extension;
-  bool doInitialize(const core::extension::ExtensionConfig& /*config*/) override {
-    return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
-  }
-  void doDeinitialize() override {
-    curl_global_cleanup();
-  }
-};
+static bool init(const core::extension::ExtensionConfig& /*config*/) {
+  return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
+}
 
-REGISTER_EXTENSION(HttpCurlExtension);
+static void deinit() {
+  curl_global_cleanup();
+}
+
+REGISTER_EXTENSION("HttpCurlExtension", init, deinit);

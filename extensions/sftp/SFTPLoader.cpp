@@ -19,24 +19,20 @@
 #include "core/extension/Extension.h"
 #include "client/SFTPClient.h"
 
-class SFTPExtension : core::extension::Extension {
- public:
-  using Extension::Extension;
-  bool doInitialize(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) override {
-    if (libssh2_init(0) != 0) {
-      return false;
-    }
-    if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
-      libssh2_exit();
-      return false;
-    }
-    return true;
+static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& /*config*/) {
+  if (libssh2_init(0) != 0) {
+    return false;
   }
-
-  void doDeinitialize() override {
-    curl_global_cleanup();
+  if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
     libssh2_exit();
+    return false;
   }
-};
+  return true;
+}
 
-REGISTER_EXTENSION(SFTPExtension);
+static void deinit() {
+  curl_global_cleanup();
+  libssh2_exit();
+}
+
+REGISTER_EXTENSION("SFTPExtension", init, deinit);

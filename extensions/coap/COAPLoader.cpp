@@ -23,30 +23,25 @@
 #include <winsock2.h>
 #endif
 
-class CoapExtension : public core::extension::Extension {
- public:
-  using Extension::Extension;
-
-  bool doInitialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> & /*config*/) override {
+static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure> & /*config*/) {
 #ifdef WIN32
-    static WSADATA s_wsaData;
-    int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
-    if (iWinSockInitResult != 0) {
-      logging::LoggerFactory<COAPObjectFactoryInitializer>::getLogger()->log_error("WSAStartup failed with error %d", iWinSockInitResult);
-      return false;
-    } else {
-      return true;
-    }
-#else
+  static WSADATA s_wsaData;
+  int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
+  if (iWinSockInitResult != 0) {
+    logging::LoggerFactory<COAPObjectFactoryInitializer>::getLogger()->log_error("WSAStartup failed with error %d", iWinSockInitResult);
+    return false;
+  } else {
     return true;
-#endif
   }
+#else
+  return true;
+#endif
+}
 
-  void doDeinitialize() override {
+static void deinit() {
 #ifdef WIN32
-    WSACleanup();
+  WSACleanup();
 #endif
-  }
-};
+}
 
-REGISTER_EXTENSION(CoapExtension);
+REGISTER_EXTENSION("CoapExtension", init, deinit);

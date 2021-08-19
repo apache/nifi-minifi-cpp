@@ -46,8 +46,8 @@ class ExtensionManager {
 
   bool initialize(const std::shared_ptr<Configure>& config);
 
-  void registerExtension(Extension* extension);
-  void unregisterExtension(Extension* extension);
+  void registerExtension(Extension& extension);
+  void unregisterExtension(Extension& extension);
 
  private:
   std::vector<std::unique_ptr<Module>> modules_;

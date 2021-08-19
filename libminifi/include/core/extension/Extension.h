@@ -33,14 +33,16 @@ namespace extension {
 class Extension;
 
 using ExtensionConfig = std::shared_ptr<org::apache::nifi::minifi::Configure>;
-using ExtensionInit = bool(*)(Extension*, const ExtensionConfig&);
+using ExtensionInit = bool(*)(Extension&, const ExtensionConfig&);
+using ExtensionInitImpl = bool(*)(const ExtensionConfig&);
+using ExtensionDeinitImpl = void(*)();
 
 class ExtensionInitializer;
 
 class Extension {
   friend class ExtensionInitializer;
  public:
-  explicit Extension(std::string name, ExtensionInit init);
+  explicit Extension(std::string name, ExtensionInitImpl init_impl, ExtensionDeinitImpl deinit_impl, ExtensionInit init);
   virtual ~Extension();
 
   /**
@@ -53,44 +55,38 @@ class Extension {
    * @return True if the initialization succeeded
    */
   bool initialize(const ExtensionConfig& config) {
-    return init_(this, config);
+    return init_(*this, config);
   }
 
   const std::string& getName() const {
     return name_;
   }
 
- protected:
-  /**
-   * Actual implementation of the initialization logic, overridden by subclasses.
-   * @param config
-   * @return True on success
-   */
-  virtual bool doInitialize(const ExtensionConfig& /*config*/) {
-    return true;
-  }
-
-  /**
-   * Actual implementation of the deinitialization logic, overridden by subclasses.
-   */
-  virtual void doDeinitialize() {}
-
  private:
   std::string name_;
+  /**
+   * Actual implementation of the initialization logic.
+   */
+  ExtensionInitImpl init_impl_;
+  /**
+   * Actual implementation of the deinitialization logic.
+   */
+  ExtensionDeinitImpl deinit_impl_;
+
   ExtensionInit init_;
 };
 
 class ExtensionInitializer {
  public:
-  explicit ExtensionInitializer(Extension* extension, const ExtensionConfig& config);
+  explicit ExtensionInitializer(Extension& extension, const ExtensionConfig& config);
   ~ExtensionInitializer();
 
  private:
-  Extension* extension_;
+  Extension& extension_;
 };
 
-#define REGISTER_EXTENSION(clazz) \
-  static clazz extension_registrar(#clazz, [](org::apache::nifi::minifi::core::extension::Extension* extension, const org::apache::nifi::minifi::core::extension::ExtensionConfig& config) -> bool { \
+#define REGISTER_EXTENSION(name, init, deinit) \
+  static org::apache::nifi::minifi::core::extension::Extension extension_registrar(name, init, deinit, [] (org::apache::nifi::minifi::core::extension::Extension& extension, const org::apache::nifi::minifi::core::extension::ExtensionConfig& config) -> bool { \
     try {                             \
       static org::apache::nifi::minifi::core::extension::ExtensionInitializer initializer(extension, config);                                                  \
       return true; \

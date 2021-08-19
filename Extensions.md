@@ -30,21 +30,19 @@ REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with 
 REGISTER_INTERNAL_RESOURCE(HTTPClient);
 ```
 
-Some extensions (e.g. `http-curl`) require initialization before use. You need to subclass `Extension` and let the system know by using `REGISTER_EXTENSION`.
+Some extensions (e.g. `http-curl`) require initialization before use. 
+You need to create `init` and `deinit` functions and register them using `REGISTER_EXTENSION`.
 
 ```C++
-class HttpCurlExtension : core::extension::Extension {
- public:
-  using Extension::Extension;
-  bool doInitialize(const core::extension::ExtensionConfig& /*config*/) override {
-    return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
-  }
-  void doDeinitialize() override {
-    curl_global_cleanup();
-  }
-};
+static bool init(const core::extension::ExtensionConfig& /*config*/) override {
+  return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
+}
 
-REGISTER_EXTENSION(HttpCurlExtension);
+static void deinit() override {
+  curl_global_cleanup();
+}
+
+REGISTER_EXTENSION("HttpCurlExtension", init, deinit);
 ```
 
 If you don't use `REGISTER_EXTENSION`, the registered resources still become available, so make sure to register the extension if you need special initialization.

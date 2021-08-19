@@ -114,11 +114,11 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
   return initialized;
 }
 
-void ExtensionManager::registerExtension(Extension *extension) {
+void ExtensionManager::registerExtension(Extension& extension) {
   active_module_->registerExtension(extension);
 }
 
-void ExtensionManager::unregisterExtension(Extension *extension) {
+void ExtensionManager::unregisterExtension(Extension& extension) {
   for (const auto& module : modules_) {
     if (module->unregisterExtension(extension)) {
       return;
