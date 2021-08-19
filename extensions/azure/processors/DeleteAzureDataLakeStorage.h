@@ -29,12 +29,7 @@
 template<typename AzureDataLakeStorageProcessor>
 class AzureDataLakeStorageTestsFixture;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
  public:
@@ -67,9 +62,4 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
 
 REGISTER_RESOURCE(DeleteAzureDataLakeStorage, "Deletes the provided file from Azure Data Lake Storage");
 
-}  // namespace processors
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::processors

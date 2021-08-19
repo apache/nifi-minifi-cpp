@@ -31,12 +31,7 @@
 #include "storage/AzureDataLakeStorage.h"
 #include "AzureStorageProcessorBase.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureDataLakeStorageProcessor : public AzureStorageProcessorBase {
  public:
@@ -68,9 +63,4 @@ class AzureDataLakeStorageProcessor : public AzureStorageProcessorBase {
   storage::AzureDataLakeStorage azure_data_lake_storage_;
 };
 
-}  // namespace processors
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::processors

@@ -23,12 +23,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 const core::Property AzureDataLakeStorageProcessor::AzureStorageCredentialsService(
     core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
@@ -97,9 +92,4 @@ bool AzureDataLakeStorageProcessor::setCommonParameters(
   return true;
 }
 
-}  // namespace processors
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::processors
