@@ -37,6 +37,9 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
   }
 
   auto upload_url = data_lake_storage_client_->uploadFile(params, buffer, buffer_size);
+  if (auto query_string_pos = upload_url.find('?'); query_string_pos != std::string::npos) {
+    upload_url = upload_url.substr(0, query_string_pos);
+  }
   UploadDataLakeStorageResult result;
   result.length = buffer_size;
   result.primary_uri = upload_url;
