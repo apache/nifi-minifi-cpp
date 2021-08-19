@@ -74,12 +74,8 @@ class PutAzureDataLakeStorage final : public core::Processor {
     ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger);
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
-    std::optional<azure::storage::UploadDataLakeStorageResult> getResult() const {
+    azure::storage::UploadDataLakeStorageResult getResult() const {
       return result_;
-    }
-
-    bool caughtFileAlreadyExistsError() const {
-      return caught_file_already_exists_error_;
     }
 
    private:
@@ -87,7 +83,7 @@ class PutAzureDataLakeStorage final : public core::Processor {
     storage::AzureDataLakeStorage& azure_data_lake_storage_;
     const storage::PutAzureDataLakeStorageParameters& params_;
     bool caught_file_already_exists_error_ = false;
-    std::optional<azure::storage::UploadDataLakeStorageResult> result_ = std::nullopt;
+    azure::storage::UploadDataLakeStorageResult result_;
     std::shared_ptr<logging::Logger> logger_;
   };
 

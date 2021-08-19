@@ -31,19 +31,28 @@ AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient
 }
 
 UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
-  auto file_created = data_lake_storage_client_->createFile(params);
-  if (!file_created && !params.replace_file) {
-    throw FileAlreadyExistsException(params);
+  UploadDataLakeStorageResult result;
+  try {
+    auto file_created = data_lake_storage_client_->createFile(params);
+    if (!file_created && !params.replace_file) {
+      logger_->log_warn("File '%s/%s' already exists on Azure Data Lake Storage filesystem '%s'", params.directory_name, params.filename, params.file_system_name);
+      result.result_code = UploadResultCode::FILE_ALREADY_EXISTS;
+      return result;
+    }
+
+    auto upload_url = data_lake_storage_client_->uploadFile(params, buffer, buffer_size);
+    if (auto query_string_pos = upload_url.find('?'); query_string_pos != std::string::npos) {
+      upload_url = upload_url.substr(0, query_string_pos);
+    }
+    result.length = buffer_size;
+    result.primary_uri = upload_url;
+    return result;
+  } catch(const std::runtime_error& err) {
+    logger_->log_error("A runtime error occurred while uploading file to Azure Data Lake storage: %s", err.what());
+    result.result_code = UploadResultCode::FAILURE;
+    return result;
   }
 
-  auto upload_url = data_lake_storage_client_->uploadFile(params, buffer, buffer_size);
-  if (auto query_string_pos = upload_url.find('?'); query_string_pos != std::string::npos) {
-    upload_url = upload_url.substr(0, query_string_pos);
-  }
-  UploadDataLakeStorageResult result;
-  result.length = buffer_size;
-  result.primary_uri = upload_url;
-  return result;
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

@@ -31,19 +31,20 @@
 
 namespace org::apache::nifi::minifi::azure::storage {
 
+enum class UploadResultCode {
+  SUCCESS,
+  FILE_ALREADY_EXISTS,
+  FAILURE
+};
+
 struct UploadDataLakeStorageResult {
+  UploadResultCode result_code = UploadResultCode::SUCCESS;
   std::string primary_uri;
   std::size_t length;
 };
 
 class AzureDataLakeStorage {
  public:
-  class FileAlreadyExistsException : public std::runtime_error {
-   public:
-    explicit FileAlreadyExistsException(const PutAzureDataLakeStorageParameters& params)
-      : std::runtime_error("File '" + params.directory_name + "/" + params.filename + "' already exists on Azure Data Lake Storage filesystem '" + params.file_system_name + "'") {}
-  };
-
   AzureDataLakeStorage();
   explicit AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client);
 

@@ -144,7 +144,8 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
 
   PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, *params, logger_);
   session->read(flow_file, &callback);
-  if (callback.caughtFileAlreadyExistsError()) {
+  auto result = callback.getResult();
+  if (result.result_code == storage::UploadResultCode::FILE_ALREADY_EXISTS) {
     gsl_Expects(conflict_resolution_strategy_ != FileExistsResolutionStrategy::REPLACE_FILE);
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::FAIL_FLOW) {
       logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage because file already exists",
@@ -157,18 +158,15 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
       session->transfer(flow_file, Success);
       return;
     }
-  }
-
-  auto result = callback.getResult();
-  if (!result) {
+  } else if (result.result_code == storage::UploadResultCode::FAILURE) {
     logger_->log_error("Failed to upload file '%s/%s' to filesystem '%s' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
     session->transfer(flow_file, Failure);
   } else {
     session->putAttribute(flow_file, "azure.filesystem", params->file_system_name);
     session->putAttribute(flow_file, "azure.directory", params->directory_name);
     session->putAttribute(flow_file, "azure.filename", params->filename);
-    session->putAttribute(flow_file, "azure.primaryUri", result->primary_uri);
-    session->putAttribute(flow_file, "azure.length", std::to_string(result->length));
+    session->putAttribute(flow_file, "azure.primaryUri", result.primary_uri);
+    session->putAttribute(flow_file, "azure.length", std::to_string(result.length));
     logger_->log_debug("Successfully uploaded file '%s/%s' to filesystem '%s' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
     session->transfer(flow_file, Success);
   }
@@ -189,16 +187,7 @@ int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io:
     return -1;
   }
 
-  try {
-    result_ = azure_data_lake_storage_.uploadFile(params_, buffer.data(), flow_size_);
-  } catch(const storage::AzureDataLakeStorage::FileAlreadyExistsException& ex) {
-    logger_->log_warn(ex.what());
-    caught_file_already_exists_error_ = true;
-  } catch(const std::runtime_error& err) {
-    logger_->log_error("A runtime error occurred while uploading file to Azure Data Lake storage: %s", err.what());
-    return read_ret;
-  }
-
+  result_ = azure_data_lake_storage_.uploadFile(params_, buffer.data(), flow_size_);
   return read_ret;
 }
 
