@@ -30,29 +30,15 @@ endif()
 
 FetchContent_Declare(
     paho.mqtt.c-external
-    GIT_REPOSITORY "https://github.com/eclipse/paho.mqtt.c.git"
-    GIT_TAG "3b7ae6348bc917d42c04efa962e4868c09bbde9f" # Once tagged as v1.3.9 release, but tags may move
+    URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.9.tar.gz"
+    URL_HASH "SHA256=386c9b5fa1cf6d0d516db12d57fd8f6a410dd0fdc5e9a2da870aae437a2535ed"
 )
 
 FetchContent_MakeAvailable(paho.mqtt.c-external)
 
 # Set dependencies and target to link to
 if (NOT OPENSSL_OFF)
-    # workaround
-    if(TARGET paho-mqtt3cs)
-        # this is selected for the first configure run
-        add_library(paho.mqtt.c ALIAS paho-mqtt3cs)
-    else()
-        # this is selected for further configure runs
-        add_library(paho.mqtt.c ALIAS paho-mqtt3cs-static)
-    endif()
+    add_library(paho.mqtt.c ALIAS paho-mqtt3cs-static)
 else()
-    # workaround
-    if(TARGET paho-mqtt3c)
-        # this is selected for the first configure run
-        add_library(paho.mqtt.c ALIAS paho-mqtt3c)
-    else()
-        # this is selected for further configure runs
-        add_library(paho.mqtt.c ALIAS paho-mqtt3c-static)
-    endif()
+    add_library(paho.mqtt.c ALIAS paho-mqtt3c-static)
 endif()
