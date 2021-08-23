@@ -99,9 +99,7 @@ ENV MINIFI_VERSION ${MINIFI_VERSION}
 
 # Setup minificpp user
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
-    install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && \
-    ln -s $(which ccache) /usr/local/bin/gcc && \
-    ln -s $(which ccache) /usr/local/bin/g++
+    install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR}
 COPY --chown=${USER}:${USER} . ${MINIFI_BASE_DIR}
 RUN if [ -d "${MINIFI_BASE_DIR}/.ccache" ]; then mv ${MINIFI_BASE_DIR}/.ccache /home/${USER}/.ccache; fi
 
