@@ -153,7 +153,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     When all instances start up
     And the publisher performs a <transaction type> transaction publishing to the "ConsumeKafkaTest" topic these messages: <messages sent>
 
-    Then <number of flowfiles expected> flowfiles are placed in the monitored directory in less than 30 seconds
+    Then <number of flowfiles expected> flowfiles are placed in the monitored directory in less than 15 seconds
 
   Examples: Transaction descriptions
     | messages sent                     | transaction type             | honor transactions | number of flowfiles expected |
@@ -246,7 +246,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
 
-    Then no files are placed in the monitored directory in 30 seconds of running time
+    Then no files are placed in the monitored directory in 20 seconds of running time
 
     Examples: Unsupported property values
       | message 1        | message 2      | property name           | property value |

@@ -42,4 +42,4 @@ Feature: Sending data from MiNiFi-C++ to NiFi using S2S protocol
     And the "success" relationship of the from-minifi is connected to the PutFile
 
     When both instances start up
-    Then no files are placed in the monitored directory in 90 seconds of running time
+    Then no files are placed in the monitored directory in 50 seconds of running time
