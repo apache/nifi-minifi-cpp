@@ -82,7 +82,6 @@ class PutAzureDataLakeStorage final : public core::Processor {
     uint64_t flow_size_;
     storage::AzureDataLakeStorage& azure_data_lake_storage_;
     const storage::PutAzureDataLakeStorageParameters& params_;
-    bool caught_file_already_exists_error_ = false;
     azure::storage::UploadDataLakeStorageResult result_;
     std::shared_ptr<logging::Logger> logger_;
   };

@@ -52,7 +52,6 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
     result.result_code = UploadResultCode::FAILURE;
     return result;
   }
-
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage
