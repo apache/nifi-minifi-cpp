@@ -10,8 +10,8 @@ from .utils import retry_check
 
 
 class DockerTestCluster(SingleNodeDockerCluster):
-    def __init__(self):
-        super(DockerTestCluster, self).__init__()
+    def __init__(self, image_store):
+        super(DockerTestCluster, self).__init__(image_store)
         self.segfault = False
 
     @staticmethod

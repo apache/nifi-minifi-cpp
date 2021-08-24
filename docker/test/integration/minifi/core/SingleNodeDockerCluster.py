@@ -19,10 +19,12 @@ class SingleNodeDockerCluster(Cluster):
     testing or use-cases which do not span multiple compute nodes.
     """
 
-    def __init__(self):
+    def __init__(self, image_store):
         self.vols = {}
         self.network = self.create_docker_network()
         self.containers = {}
+        self.image_store = image_store
+        self.data_directories = {}
 
         # Get docker client
         self.client = docker.from_env()
@@ -39,8 +41,9 @@ class SingleNodeDockerCluster(Cluster):
             self.network.remove()
             self.network = None
 
-    def set_directory_bindings(self, bindings):
-        self.vols = bindings
+    def set_directory_bindings(self, volumes, data_directories):
+        self.vols = volumes
+        self.data_directories = data_directories
         for container in self.containers.values():
             container.vols = self.vols
 
@@ -59,20 +62,20 @@ class SingleNodeDockerCluster(Cluster):
             logging.info('Container name was not provided; using generated name \'%s\'', self.name)
 
         if engine == 'nifi':
-            return self.containers.setdefault(name, NifiContainer(name, self.vols, self.network))
+            return self.containers.setdefault(name, NifiContainer(self.data_directories["nifi_config_dir"], name, self.vols, self.network, self.image_store))
         elif engine == 'minifi-cpp':
-            return self.containers.setdefault(name, MinifiContainer(name, self.vols, self.network))
+            return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store))
         elif engine == 'kafka-broker':
-            self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network))
-            return self.containers.setdefault(name, KafkaBrokerContainer(name, self.vols, self.network))
+            self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, KafkaBrokerContainer(name, self.vols, self.network, self.image_store))
         elif engine == 'http-proxy':
-            return self.containers.setdefault(name, HttpProxyContainer(name, self.vols, self.network))
+            return self.containers.setdefault(name, HttpProxyContainer(name, self.vols, self.network, self.image_store))
         elif engine == 's3-server':
-            return self.containers.setdefault(name, S3ServerContainer(name, self.vols, self.network))
+            return self.containers.setdefault(name, S3ServerContainer(name, self.vols, self.network, self.image_store))
         elif engine == 'azure-storage-server':
-            return self.containers.setdefault(name, AzureStorageServerContainer(name, self.vols, self.network))
+            return self.containers.setdefault(name, AzureStorageServerContainer(name, self.vols, self.network, self.image_store))
         elif engine == 'postgresql-server':
-            return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network))
+            return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network, self.image_store))
         else:
             raise Exception('invalid flow engine: \'%s\'' % self.engine)
 

@@ -1,11 +1,10 @@
 import logging
-import os
 from .Container import Container
 
 
 class KafkaBrokerContainer(Container):
-    def __init__(self, name, vols, network):
-        super().__init__(name, 'kafka-broker', vols, network)
+    def __init__(self, name, vols, network, image_store):
+        super().__init__(name, 'kafka-broker', vols, network, image_store)
 
     def get_startup_finished_log_entry(self):
         return "Kafka startTimeMs"
@@ -15,10 +14,8 @@ class KafkaBrokerContainer(Container):
             return
 
         logging.info('Creating and running kafka broker docker container...')
-        test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
-        broker_image = self.build_image_by_path(test_dir + "/resources/kafka_broker", 'minifi-kafka')
         self.client.containers.run(
-            broker_image[0],
+            self.image_store.get_image(self.get_engine()),
             detach=True,
             name='kafka-broker',
             network=self.network.name,

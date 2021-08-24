@@ -20,9 +20,9 @@ from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutput
 
 
 class MiNiFi_integration_test():
-    def __init__(self):
+    def __init__(self, image_store):
         self.test_id = str(uuid.uuid4())
-        self.cluster = DockerTestCluster()
+        self.cluster = DockerTestCluster(image_store)
 
         self.connectable_nodes = []
         # Remote process groups are not connectables
@@ -31,6 +31,7 @@ class MiNiFi_integration_test():
 
         self.docker_directory_bindings = DockerTestDirectoryBindings()
         self.docker_directory_bindings.create_new_data_directories(self.test_id)
+        self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id), self.docker_directory_bindings.get_data_directories(self.test_id))
 
     def __del__(self):
         self.cleanup()
@@ -60,7 +61,6 @@ class MiNiFi_integration_test():
 
     def start(self):
         logging.info("MiNiFi_integration_test start")
-        self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id))
         self.cluster.deploy_flow()
         for container_name in self.cluster.containers:
             assert self.wait_for_container_startup_to_finish(container_name)

@@ -3,8 +3,8 @@ from .Container import Container
 
 
 class S3ServerContainer(Container):
-    def __init__(self, name, vols, network):
-        super().__init__(name, 's3-server', vols, network)
+    def __init__(self, name, vols, network, image_store):
+        super().__init__(name, 's3-server', vols, network, image_store)
 
     def get_startup_finished_log_entry(self):
         return "Started S3MockApplication"
