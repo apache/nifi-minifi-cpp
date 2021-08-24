@@ -65,4 +65,14 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete file fails", "[
   REQUIRE(!verifyLogLinePresenceInPollTime(0s, "key:filename value:"));
 }
 
+TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete result is false", "[azureDataLakeStorageDelete]") {
+  mock_data_lake_storage_client_ptr_->setDeleteResult(false);
+  test_controller_.runSession(plan_, true);
+  auto failed_flowfiles = getFailedFlowFileContents();
+  REQUIRE(failed_flowfiles.size() == 1);
+  REQUIRE(failed_flowfiles[0] == TEST_DATA);
+  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  REQUIRE(!verifyLogLinePresenceInPollTime(0s, "key:filename value:"));
+}
+
 }  // namespace

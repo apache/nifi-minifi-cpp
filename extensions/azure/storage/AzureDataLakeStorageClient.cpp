@@ -75,14 +75,9 @@ std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorage
 }
 
 bool AzureDataLakeStorageClient::deleteFile(const DeleteAzureDataLakeStorageParameters& params) {
-  try {
-    auto file_client = getFileClient(params);
-    auto result = file_client.Delete();
-    return result.Value.Deleted;
-  } catch (const std::runtime_error& err) {
-    logger_->log_error("Runtime error while deleting '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, err.what());
-    return false;
-  }
+  auto file_client = getFileClient(params);
+  auto result = file_client.Delete();
+  return result.Value.Deleted;
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

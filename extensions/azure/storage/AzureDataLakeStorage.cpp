@@ -53,7 +53,12 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
 }
 
 bool AzureDataLakeStorage::deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params) {
-  return data_lake_storage_client_->deleteFile(params);
+  try {
+    return data_lake_storage_client_->deleteFile(params);
+  } catch (const std::runtime_error& err) {
+    logger_->log_error("Runtime error while deleting '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, err.what());
+    return false;
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

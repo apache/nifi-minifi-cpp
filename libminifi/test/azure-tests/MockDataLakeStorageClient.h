@@ -46,7 +46,11 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   }
 
   bool deleteFile(const org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters& /*params*/) override {
-    return !delete_fails_;
+    if (delete_fails_) {
+      throw std::runtime_error("error");
+    }
+
+    return delete_result_;
   }
 
   void setFileCreation(bool create_file) {
@@ -65,6 +69,10 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     delete_fails_ = delete_fails;
   }
 
+  void setDeleteResult(bool delete_result) {
+    delete_result_ = delete_result;
+  }
+
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters getPassedParams() const {
     return params_;
   }
@@ -75,6 +83,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   bool file_creation_error_ = false;
   bool upload_fails_ = false;
   bool delete_fails_ = false;
+  bool delete_result_ = true;
   std::string input_data_;
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters params_;
 };
