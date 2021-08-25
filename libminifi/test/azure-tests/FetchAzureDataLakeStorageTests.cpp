@@ -48,12 +48,22 @@ TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Connection String is em
   REQUIRE(getFailedFlowFileContents().size() == 0);
 }
 
-TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch file succeeds", "[azureDataLakeStorageFetch]") {
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch full file succeeds", "[azureDataLakeStorageFetch]") {
   test_controller_.runSession(plan_, true);
   REQUIRE(getFailedFlowFileContents().size() == 0);
   auto success_contents = getSuccessfulFlowFileContents();
   REQUIRE(success_contents.size() == 1);
   REQUIRE(success_contents[0] == mock_data_lake_storage_client_ptr_->FETCHED_DATA);
+}
+
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch a range of the file succeeds", "[azureDataLakeStorageFetch]") {
+  plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::FetchAzureDataLakeStorage::RangeStart.getName(), "5");
+  plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::FetchAzureDataLakeStorage::RangeLength.getName(), "10");
+  test_controller_.runSession(plan_, true);
+  REQUIRE(getFailedFlowFileContents().size() == 0);
+  auto success_contents = getSuccessfulFlowFileContents();
+  REQUIRE(success_contents.size() == 1);
+  REQUIRE(success_contents[0] == mock_data_lake_storage_client_ptr_->FETCHED_DATA.substr(5, 10));
 }
 
 }  // namespace

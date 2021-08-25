@@ -32,7 +32,8 @@ const core::Property FetchAzureDataLakeStorage::RangeStart(
 
 const core::Property FetchAzureDataLakeStorage::RangeLength(
     core::PropertyBuilder::createProperty("Range Length")
-      ->withDescription("The number of bytes to download from the object, starting from the Range Start. An empty value or a value that extends beyond the end of the object will read to the end of the object.")
+      ->withDescription("The number of bytes to download from the object, starting from the Range Start. "
+                        "An empty value or a value that extends beyond the end of the object will read to the end of the object.")
       ->supportsExpressionLanguage(true)
       ->build());
 
@@ -66,6 +67,17 @@ std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeSt
   storage::FetchAzureDataLakeStorageParameters params;
   if (!setCommonParameters(params, context, flow_file)) {
     return std::nullopt;
+  }
+
+  std::string value;
+  if (context->getProperty(RangeStart, value, flow_file)) {
+    params.range_start = std::stoull(value);
+    logger_->log_debug("Range Start property set to %llu", value);
+  }
+
+  if (context->getProperty(RangeLength, value, flow_file)) {
+    params.range_length = std::stoull(value);
+    logger_->log_debug("Range Length property set to %llu", value);
   }
 
   return params;

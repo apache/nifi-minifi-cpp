@@ -41,7 +41,11 @@ struct PutAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters
 };
 
 using DeleteAzureDataLakeStorageParameters = AzureDataLakeStorageParameters;
-using FetchAzureDataLakeStorageParameters = AzureDataLakeStorageParameters;
+
+struct FetchAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
+  std::optional<uint64_t> range_start;
+  std::optional<uint64_t> range_length;
+};
 
 class DataLakeStorageClient {
  public:

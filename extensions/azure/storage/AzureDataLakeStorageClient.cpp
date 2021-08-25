@@ -18,7 +18,10 @@
  * limitations under the License.
  */
 
+#include <utility>
+
 #include "AzureDataLakeStorageClient.h"
+#include "azure/core/http/http.hpp"
 
 #include "azure/identity.hpp"
 
@@ -82,7 +85,19 @@ bool AzureDataLakeStorageClient::deleteFile(const DeleteAzureDataLakeStoragePara
 
 Azure::Storage::Files::DataLake::Models::DownloadFileResult AzureDataLakeStorageClient::fetchFile(const FetchAzureDataLakeStorageParameters& params) {
   auto file_client = getFileClient(params);
-  auto result = file_client.Download();
+  Azure::Storage::Files::DataLake::DownloadFileOptions options;
+  if (params.range_start || params.range_length) {
+    Azure::Core::Http::HttpRange range;
+    if (params.range_start) {
+      range.Offset = *params.range_start;
+    }
+
+    if (params.range_length) {
+      range.Length = *params.range_length;
+    }
+    options.Range = range;
+  }
+  auto result = file_client.Download(options);
   return std::move(result.Value);
 }
 
