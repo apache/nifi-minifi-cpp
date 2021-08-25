@@ -22,10 +22,16 @@
 #include <stdexcept>
 
 #include "storage/DataLakeStorageClient.h"
+#include "azure/core/io/body_stream.hpp"
 
 class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::storage::DataLakeStorageClient {
  public:
   const std::string PRIMARY_URI = "http://test-uri/file";
+  const std::string FETCHED_DATA = "test azure data for stream";
+
+  MockDataLakeStorageClient()
+    : buffer_(FETCHED_DATA.begin(), FETCHED_DATA.end()) {
+  }
 
   bool createFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& /*params*/) override {
     if (file_creation_error_) {
@@ -57,6 +63,8 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
 
   Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const  org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters& /*params*/) override {
     Azure::Storage::Files::DataLake::Models::DownloadFileResult result;
+    result.FileSize = FETCHED_DATA.size();
+    result.Body = std::move(std::make_unique<Azure::Core::IO::MemoryBodyStream>(buffer_));
     return result;
   }
 
@@ -96,6 +104,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   bool delete_fails_ = false;
   bool delete_result_ = true;
   std::string input_data_;
+  std::vector<uint8_t> buffer_;
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters put_params_;
   org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters delete_params_;
 };

@@ -71,19 +71,32 @@ class AzureDataLakeStorageTestsFixture {
     update_attribute_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
     plan_->addProcessor(azure_data_lake_storage_, "AzureDataLakeStorageProcessor", { {"success", "d"}, {"failure", "d"} }, true);
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
-    logattribute->setAutoTerminatedRelationships({{"success", "d"}});
 
-    putfile_ = plan_->addProcessor("PutFile", "PutFile", { {"success", "d"} }, false);
-    plan_->addConnection(azure_data_lake_storage_, {"failure", "d"}, putfile_);
-    putfile_->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
-    output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), output_dir_);
+    success_putfile_ = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
+    plan_->addConnection(logattribute, {"success", "d"}, success_putfile_);
+    success_putfile_->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    success_output_dir_ = test_controller_.createTempDirectory();
+    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_);
+
+    failure_putfile_ = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
+    plan_->addConnection(azure_data_lake_storage_, {"failure", "d"}, failure_putfile_);
+    failure_putfile_->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    failure_output_dir_ = test_controller_.createTempDirectory();
+    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_);
 
     azure_storage_cred_service_ = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
     setDefaultProperties();
   }
 
   std::vector<std::string> getFailedFlowFileContents() {
+    return getFileContents(failure_output_dir_);
+  }
+
+  std::vector<std::string> getSuccessfulFlowFileContents() {
+    return getFileContents(success_output_dir_);
+  }
+
+  std::vector<std::string> getFileContents(const std::string& dir) {
     std::vector<std::string> file_contents;
 
     auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
@@ -92,7 +105,7 @@ class AzureDataLakeStorageTestsFixture {
       return true;
     };
 
-    utils::file::FileUtils::list_dir(output_dir_, lambda, plan_->getLogger(), false);
+    utils::file::FileUtils::list_dir(dir, lambda, plan_->getLogger(), false);
     return file_contents;
   }
 
@@ -116,7 +129,9 @@ class AzureDataLakeStorageTestsFixture {
   std::shared_ptr<core::Processor> azure_data_lake_storage_;
   std::shared_ptr<core::Processor> get_file_;
   std::shared_ptr<core::Processor> update_attribute_;
-  std::shared_ptr<core::Processor> putfile_;
+  std::shared_ptr<core::Processor> success_putfile_;
+  std::shared_ptr<core::Processor> failure_putfile_;
   std::shared_ptr<core::controller::ControllerServiceNode> azure_storage_cred_service_;
-  std::string output_dir_;
+  std::string failure_output_dir_;
+  std::string success_output_dir_;
 };

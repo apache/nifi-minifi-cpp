@@ -63,15 +63,15 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      auto result_size_ = azure_data_lake_storage_.fetchFile(params_, *stream);
+      result_size_ = azure_data_lake_storage_.fetchFile(params_, *stream);
       if (!result_size_) {
         return 0;
       }
 
-      return *result_size_;
+      return gsl::narrow<int64_t>(*result_size_);
     }
 
-    std::optional<uint64_t> getResult() const {
+    auto getResult() const {
       return result_size_;
     }
 

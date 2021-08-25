@@ -90,10 +90,10 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
 
   auto result_size = callback.getResult();
   if (result_size == std::nullopt) {
-    logger_->log_error("Failed to upload file '%s' to Azure Data Lake storage", params->filename);
+    logger_->log_error("Failed to fetch file '%s' from Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
   } else {
-    logger_->log_debug("Successfully uploaded file '%s' to filesystem '%s' on Azure Data Lake storage", params->filename, params->file_system_name);
+    logger_->log_debug("Successfully fetch file '%s' from filesystem '%s' on Azure Data Lake storage", params->filename, params->file_system_name);
     session->transfer(flow_file, Success);
   }
 }
