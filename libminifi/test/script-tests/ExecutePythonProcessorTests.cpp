@@ -78,8 +78,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
  public:
   enum class Expectation {
     OUTPUT_FILE_MATCHES_INPUT,
-    RUNTIME_RELATIONSHIP_EXCEPTION,
-    PROCESSOR_INITIALIZATION_EXCEPTION
+    RUNTIME_RELATIONSHIP_EXCEPTION
   };
   SimplePythonFlowFileTransferTest() : ExecutePythonProcessorTestBase{} {}
 
@@ -90,11 +89,6 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     const std::string input_dir = testController_->createTempDirectory();
     putFileToDir(input_dir, TEST_FILE_NAME, TEST_FILE_CONTENT);
     addGetFileProcessorToPlan(input_dir);
-
-    if (Expectation::PROCESSOR_INITIALIZATION_EXCEPTION == expectation) {
-      REQUIRE_THROWS(addExecutePythonProcessorToPlan(used_as_script_file, used_as_script_body));
-      return;
-    }
     REQUIRE_NOTHROW(addExecutePythonProcessorToPlan(used_as_script_file, used_as_script_body));
 
     const std::string output_dir = testController_->createTempDirectory();
@@ -121,7 +115,6 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor");
     plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile.getName(), getScriptFullPath("stateful_processor.py"));
-    executePythonProcessor->initialize();
 
     addPutFileProcessorToPlan(core::Relationship("success", "description"), output_dir);
     plan_->runNextProcessor();  // ExecutePythonProcessor
@@ -154,7 +147,6 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     if ("" != used_as_script_body) {
         plan_->setProperty(executePythonProcessor, org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptBody.getName(), getFileContent(getScriptFullPath(used_as_script_body)));
     }
-    executePythonProcessor->initialize();
     return executePythonProcessor;
   }
 
@@ -179,7 +171,6 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
   // Expectations
   const auto OUTPUT_FILE_MATCHES_INPUT          = SimplePythonFlowFileTransferTest::Expectation::OUTPUT_FILE_MATCHES_INPUT;
   const auto RUNTIME_RELATIONSHIP_EXCEPTION    = SimplePythonFlowFileTransferTest::Expectation::RUNTIME_RELATIONSHIP_EXCEPTION;
-  const auto PROCESSOR_INITIALIZATION_EXCEPTION = SimplePythonFlowFileTransferTest::Expectation::PROCESSOR_INITIALIZATION_EXCEPTION;
   // ExecutePython outbound relationships
   const core::Relationship SUCCESS {"success", "description"};
   const core::Relationship FAILURE{"failure", "description"};
@@ -187,11 +178,11 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
   // For the tests "" is treated as none-provided since no optional implementation was ported to the project yet
 
   // 0. Neither valid script file nor script body provided
-  //                                          TEST EXPECTATION  OUT_REL        USE_AS_SCRIPT_FILE  USE_AS_SCRIPT_BODY
-  testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, SUCCESS,                       "", "");  // NOLINT
-  testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, FAILURE,                       "", "");  // NOLINT
-  testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, SUCCESS, "non_existent_script.py", "");  // NOLINT
-  testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, FAILURE, "non_existent_script.py", "");  // NOLINT
+  //                                      TEST EXPECTATION  OUT_REL        USE_AS_SCRIPT_FILE  USE_AS_SCRIPT_BODY
+  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, SUCCESS,                       "", "");  // NOLINT
+  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE,                       "", "");  // NOLINT
+  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, SUCCESS, "non_existent_script.py", "");  // NOLINT
+  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE, "non_existent_script.py", "");  // NOLINT
 
   // 1. Using script file as attribute
   //                                      TEST EXPECTATION  OUT_REL                                 USE_AS_SCRIPT_FILE  USE_AS_SCRIPT_BODY
@@ -203,15 +194,15 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
 
   // 2. Using script body as attribute
   //                                      TEST EXPECTATION  OUT_REL  SCRIPT_FILE                        USE_AS_SCRIPT_BODY
-  testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, SUCCESS, "", "passthrough_processor_transfering_to_success.py");  // NOLINT 
-  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE, "", "passthrough_processor_transfering_to_success.py");  // NOLINT 
-  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, SUCCESS, "", "passthrough_processor_transfering_to_failure.py");  // NOLINT 
-  testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, FAILURE, "", "passthrough_processor_transfering_to_failure.py");  // NOLINT 
+  testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, SUCCESS, "", "passthrough_processor_transfering_to_success.py");  // NOLINT
+  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE, "", "passthrough_processor_transfering_to_success.py");  // NOLINT
+  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, SUCCESS, "", "passthrough_processor_transfering_to_failure.py");  // NOLINT
+  testSimpleFilePassthrough(     OUTPUT_FILE_MATCHES_INPUT, FAILURE, "", "passthrough_processor_transfering_to_failure.py");  // NOLINT
   testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, FAILURE, "",                   "non_transferring_processor.py");  // NOLINT
 
   // 3. Setting both attributes
-  //                                          TEST EXPECTATION  OUT_REL                                        SCRIPT_FILE                                 USE_AS_SCRIPT_BODY
-  testSimpleFilePassthrough(PROCESSOR_INITIALIZATION_EXCEPTION, SUCCESS, "passthrough_processor_transfering_to_success.py", "passthrough_processor_transfering_to_success.py");  // NOLINT
+  //                                      TEST EXPECTATION  OUT_REL                                        SCRIPT_FILE                                 USE_AS_SCRIPT_BODY
+  testSimpleFilePassthrough(RUNTIME_RELATIONSHIP_EXCEPTION, SUCCESS, "passthrough_processor_transfering_to_success.py", "passthrough_processor_transfering_to_success.py");  // NOLINT
 }
 
 TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Stateful execution", "[executePythonProcessorStateful]") {

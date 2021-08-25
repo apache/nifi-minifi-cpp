@@ -594,3 +594,8 @@ def step_impl(context, cluster_name, query, number_of_rows, timeout_seconds):
 @then("the minifi log contains \"{line}\"")
 def step_impl(context, line):
     context.test.check_minifi_log_contents(line)
+
+
+@then("the Minifi logs in the \"{cluster_name}\" contain the following message: \"{log_message}\" in less than {duration}")
+def step_impl(context, cluster_name, log_message, duration):
+    context.test.check_minifi_logs_for_message(cluster_name, log_message, timeparse(duration))
