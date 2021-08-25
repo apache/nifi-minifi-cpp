@@ -38,6 +38,19 @@ std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* conte
 std::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name);
 std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values);
 
+template<typename T>
+T parseEnumProperty(const core::ProcessContext& context, const core::Property& prop) {
+  std::string value;
+  if (!context.getProperty(prop.getName(), value)) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + prop.getName() + "' is missing");
+  }
+  T result = T::parse(value.c_str(), T{});
+  if (!result) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + prop.getName() + "' has invalid value: '" + value + "'");
+  }
+  return result;
+}
+
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi

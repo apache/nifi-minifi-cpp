@@ -106,6 +106,8 @@ class StringUtils {
     return s;
   }
 
+  static std::string_view trim(const std::string_view& sv);
+
   /**
    * Compares strings by lower casing them.
    */
@@ -126,6 +128,16 @@ class StringUtils {
       return false;
     }
     return std::equal(right, right + right_len, left, [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
+  }
+
+  static inline bool equals(const std::string_view& left, const std::string_view& right, bool case_sensitive = true) {
+    if (case_sensitive) {
+      return left == right;
+    }
+    if (left.length() != right.length()) {
+      return false;
+    }
+    return std::equal(left.begin(), left.end(), right.begin(), [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
@@ -159,10 +171,49 @@ class StringUtils {
     return std::equal(start_string.begin(), start_string.end(), value.begin());
   }
 
+  inline static bool startsWith(const std::string_view& value, const std::string_view& start, bool case_sensitive = true) {
+    if (case_sensitive) {
+      return value.starts_with(start);
+    }
+    if (start.length() > value.length()) return false;
+    return std::equal(start.begin(), start.end(), value.begin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
+  }
+
   inline static bool endsWith(const std::string& value, const std::string& end_string) {
     if (end_string.size() > value.size())
       return false;
     return std::equal(end_string.rbegin(), end_string.rend(), value.rbegin());
+  }
+
+  inline static bool endsWith(const std::string_view& value, const std::string_view& end, bool case_sensitive = true) {
+    if (case_sensitive) {
+      return value.ends_with(end);
+    }
+    if (end.length() > value.length()) return false;
+    return std::equal(end.rbegin(), end.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
+  }
+
+  inline static std::string_view::size_type find(const std::string_view& value, const std::string_view& target, bool case_sensitive = true) {
+    if (target.length() > value.length()) return false;
+    if (target.empty()) return 0;
+    // brute force
+    for (std::string_view::size_type off = 0; off < value.length() - target.length(); ++off) {
+      bool mismatch = false;
+      for (std::string_view::size_type idx = 0; idx < target.length(); ++idx) {
+        if (case_sensitive && value[off + idx] != target[idx]) {
+          mismatch = true;
+          break;
+        }
+        if (!case_sensitive && tolower((unsigned char)value[off + idx]) != tolower((unsigned char)target[idx])) {
+          mismatch = true;
+          break;
+        }
+      }
+      if (!mismatch) {
+        return off;
+      }
+    }
+    return std::string_view::npos;
   }
 
   inline static std::string hex_ascii(const std::string& in) {

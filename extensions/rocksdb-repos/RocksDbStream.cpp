@@ -92,6 +92,15 @@ size_t RocksDbStream::read(uint8_t *buf, size_t buflen) {
   return amtToRead;
 }
 
+std::optional<const uint8_t*> RocksDbStream::tryGetBuffer() const {
+  if (!exists_) return std::nullopt;
+  // although we do not currently modify "value_" on write,
+  // we should not depend on that
+  if (write_enable_) return std::nullopt;
+
+  return reinterpret_cast<const uint8_t*>(value_.data());
+}
+
 } /* namespace io */
 } /* namespace minifi */
 } /* namespace nifi */

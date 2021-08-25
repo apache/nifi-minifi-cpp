@@ -102,7 +102,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   template<typename T = std::string>
   std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
-  getProperty(const Property& property) {
+  getProperty(const Property& property) const {
     T value;
     try {
       if (!getProperty(property.getName(), value)) return std::nullopt;
@@ -125,6 +125,23 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
   virtual bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
     return getDynamicProperty(property.getName(), value);
+  }
+  bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& flow_file, const std::map<std::string, std::string>& variables) {
+    std::map<std::string, std::optional<std::string>> original_attributes;
+    for (const auto& var : variables) {
+      original_attributes[var.first] = flow_file->getAttribute(var.first);
+      flow_file->setAttribute(var.first, var.second);
+    }
+    auto onExit = gsl::finally([&]{
+      for (const auto& attr : original_attributes) {
+        if (attr.second) {
+          flow_file->setAttribute(attr.first, attr.second.value());
+        } else {
+          flow_file->removeAttribute(attr.first);
+        }
+      }
+    });
+    return getDynamicProperty(property, value, flow_file);
   }
   std::vector<std::string> getDynamicPropertyKeys() const {
     return processor_node_->getDynamicPropertyKeys();
