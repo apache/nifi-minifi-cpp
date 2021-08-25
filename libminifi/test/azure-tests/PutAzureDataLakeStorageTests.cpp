@@ -118,8 +118,7 @@ class PutAzureDataLakeStorageTestsFixture {
 
     putfile_ = plan_->addProcessor("PutFile", "PutFile", { {"success", "d"} }, false);
     plan_->addConnection(put_azure_data_lake_storage_, {"failure", "d"}, putfile_);
-    putfile_->setAutoTerminatedRelationships({{"success", "d"}});
-    putfile_->setAutoTerminatedRelationships({{"failure", "d"}});
+    putfile_->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
     output_dir_ = test_controller_.createTempDirectory();
     plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), output_dir_);
 
