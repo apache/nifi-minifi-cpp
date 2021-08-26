@@ -37,8 +37,8 @@ namespace utils {
 namespace file {
 
 class FilePatternError : public std::invalid_argument {
-public:
- explicit FilePatternError(const std::string& msg) : invalid_argument(msg) {}
+ public:
+  explicit FilePatternError(const std::string& msg) : invalid_argument(msg) {}
 };
 
 class FilePattern {

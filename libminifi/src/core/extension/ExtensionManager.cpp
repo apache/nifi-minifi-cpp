@@ -90,7 +90,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
     active_module_->initialize(config);
     std::optional<std::string> pattern = config ? config->get(nifi_extension_path) : std::nullopt;
     if (!pattern) return;
-    auto candidates = utils::file::match(utils::file::FilePattern(pattern.value(),[&] (std::string_view subpattern, std::string_view error_msg) {
+    auto candidates = utils::file::match(utils::file::FilePattern(pattern.value(), [&] (std::string_view subpattern, std::string_view error_msg) {
       logger_->log_error("Error in subpattern '%s': %s", std::string{subpattern}, std::string{error_msg});
     }));
     for (const auto& candidate : candidates) {
