@@ -53,9 +53,8 @@ class MiNiFi_integration_test():
         return startup_success
 
     def start_kafka_broker(self):
-        self.cluster.acquire_container('zookeeper', 'zookeeper')
-        self.cluster.deploy('zookeeper')
         self.cluster.acquire_container('kafka-broker', 'kafka-broker')
+        self.cluster.deploy('zookeeper')
         self.cluster.deploy('kafka-broker')
         assert self.wait_for_container_startup_to_finish('kafka-broker')
 
@@ -187,16 +186,13 @@ class MiNiFi_integration_test():
     def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
         assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name)
 
-    def check_minifi_log_contents(self, line):
+    def check_minifi_log_contents(self, line, timeout_seconds=60):
         for container in self.cluster.containers.values():
             if container.get_engine() == "minifi-cpp":
-                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, 60)
+                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, timeout_seconds)
                 if line_found:
                     return
         assert False
-
-    def check_minifi_logs_for_message(self, log_message, timeout_seconds):
-        assert self.cluster.wait_for_app_logs(log_message, timeout_seconds)
 
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         assert self.cluster.check_query_results(postgresql_container_name, query, number_of_rows, timeout_seconds)

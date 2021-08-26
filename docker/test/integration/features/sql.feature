@@ -1,4 +1,4 @@
-Feature: Execuring SQL operations from MiNiFi-C++
+Feature: Executing SQL operations from MiNiFi-C++
   As a user of MiNiFi
   I need to have ExecuteSQL, QueryDatabaseTable and PutSQL processors
 

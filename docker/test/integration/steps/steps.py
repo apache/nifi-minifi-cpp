@@ -519,11 +519,6 @@ def step_impl(context, query, number_of_rows, timeout_seconds):
     context.test.check_query_results("postgresql-server", query, number_of_rows, timeout_seconds)
 
 
-@then("the minifi log contains \"{line}\"")
-def step_impl(context, line):
-    context.test.check_minifi_log_contents(line)
-
-
 @then("the Minifi logs contain the following message: \"{log_message}\" in less than {duration}")
 def step_impl(context, log_message, duration):
-    context.test.check_minifi_logs_for_message(log_message, timeparse(duration))
+    context.test.check_minifi_log_contents(log_message, timeparse(duration))

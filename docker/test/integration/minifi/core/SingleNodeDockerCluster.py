@@ -66,7 +66,8 @@ class SingleNodeDockerCluster(Cluster):
         elif engine == 'minifi-cpp':
             return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store))
         elif engine == 'kafka-broker':
-            self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store))
+            if 'zookeeper' not in self.containers:
+                self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store))
             return self.containers.setdefault(name, KafkaBrokerContainer(name, self.vols, self.network, self.image_store))
         elif engine == 'http-proxy':
             return self.containers.setdefault(name, HttpProxyContainer(name, self.vols, self.network, self.image_store))
