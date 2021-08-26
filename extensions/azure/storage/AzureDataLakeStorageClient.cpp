@@ -23,7 +23,7 @@
 namespace org::apache::nifi::minifi::azure::storage {
 
 void AzureDataLakeStorageClient::resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name) {
-  if (client_ == nullptr || connection_string != connection_string || file_system_name_ != file_system_name) {
+  if (client_ == nullptr || connection_string_ != connection_string || file_system_name_ != file_system_name) {
     client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
       Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(connection_string, file_system_name));
     file_system_name_ = file_system_name;
