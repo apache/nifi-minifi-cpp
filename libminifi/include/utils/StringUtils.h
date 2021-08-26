@@ -194,10 +194,11 @@ class StringUtils {
   }
 
   inline static std::string_view::size_type find(const std::string_view& value, const std::string_view& target, bool case_sensitive = true) {
-    if (target.length() > value.length()) return false;
-    if (target.empty()) return 0;
+    if (target.length() > value.length()) {
+      return std::string_view::npos;
+    }
     // brute force
-    for (std::string_view::size_type off = 0; off < value.length() - target.length(); ++off) {
+    for (std::string_view::size_type off = 0; off <= value.length() - target.length(); ++off) {
       bool mismatch = false;
       for (std::string_view::size_type idx = 0; idx < target.length(); ++idx) {
         if (case_sensitive && value[off + idx] != target[idx]) {

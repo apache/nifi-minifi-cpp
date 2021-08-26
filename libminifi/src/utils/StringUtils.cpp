@@ -93,7 +93,7 @@ std::vector<std::string> StringUtils::splitRemovingEmpty(const std::string& str,
 }
 
 std::vector<std::string> StringUtils::splitAndTrim(const std::string& str, const std::string& delimiter) {
-  return split_transformed(str, delimiter, trim);
+  return split_transformed(str, delimiter, static_cast<std::string(*)(const std::string&)>(trim));
 }
 
 std::vector<std::string> StringUtils::splitAndTrimRemovingEmpty(const std::string& str, const std::string& delimiter) {

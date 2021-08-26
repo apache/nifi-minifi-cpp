@@ -25,6 +25,11 @@
 #include "logging/LoggerConfiguration.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/OptionalUtils.h"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/tail.hpp"
+#include "range/v3/view/join.hpp"
+#include "range/v3/view/cache1.hpp"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -277,7 +282,10 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
 
   for (const auto& flow_file_content : flow_file_contents) {
     auto new_flow_file = session->create(flow_file);
-    new_flow_file->setAttribute(GROUP_ATTRIBUTE_NAME, flow_file_content.first.second)
+    if (flow_file_content.first.second) {
+      new_flow_file->setAttribute(GROUP_ATTRIBUTE_NAME, flow_file_content.first.second.value());
+    }
+    session->writeBuffer(new_flow_file, flow_file_content.second);
     session->transfer(new_flow_file, flow_file_content.first.first);
   }
 
@@ -291,6 +299,7 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
       variables["segment"] = segment.value_;
       variables["segmentNo"] = std::to_string(segment.idx_);
       if (segmentation_ == Segmentation::PER_LINE) {
+        // for nifi compatibility
         variables["line"] = segment.value_;
         variables["lineNo"] = std::to_string(segment.idx_);
       }
@@ -333,18 +342,13 @@ std::optional<std::string> RouteText::getGroup(const std::string_view& segment) 
   if (!std::regex_match(segment.begin(), segment.end(), match_result, group_regex_.value())) {
     return std::nullopt;
   }
-  bool first = true;
-  std::string group_name;
-
-  for (size_t idx = 1; idx < match_result.size(); ++idx) {
-    if (!first) {
-      group_name += ", ";
-    }
-    first = false;
-    group_name += match_result[idx];
-  }
   // TODO(adebreceni): warn if some capturing groups are not used
-  return group_name;
+  auto to_string = [] (const std::cmatch::value_type& submatch) -> std::string {return submatch;};
+  return ranges::views::tail(match_result)  // only join the capture groups
+    | ranges::views::transform(to_string)
+    | ranges::views::cache1
+    | ranges::views::join(", ")
+    | ranges::to<std::string>();
 }
 
 void RouteText::onDynamicPropertyModified(const core::Property& /*orig_property*/, const core::Property& new_property) {
