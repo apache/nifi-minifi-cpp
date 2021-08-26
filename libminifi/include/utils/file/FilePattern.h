@@ -38,7 +38,7 @@ namespace file {
 
 class FilePatternError : public std::invalid_argument {
 public:
- FilePatternError(const std::string& msg) : invalid_argument(msg) {}
+ explicit FilePatternError(const std::string& msg) : invalid_argument(msg) {}
 };
 
 class FilePattern {
@@ -48,15 +48,10 @@ class FilePattern {
 
   class FilePatternSegmentError : public std::invalid_argument {
    public:
-    FilePatternSegmentError(const std::string& msg) : invalid_argument(msg) {}
+    explicit FilePatternSegmentError(const std::string& msg) : invalid_argument(msg) {}
   };
 
   class FilePatternSegment {
-    FilePatternSegment(std::vector<std::string> directory_segments, std::string file_pattern, bool excluding)
-      : directory_segments_(std::move(directory_segments)),
-        file_pattern_(std::move(file_pattern)),
-        excluding_(excluding) {}
-
     static void defaultSegmentErrorHandler(std::string_view error_message) {
       throw FilePatternError(std::string{error_message});
     }
@@ -82,7 +77,7 @@ class FilePattern {
     /**
      * @return The lowermost parent directory without wildcards.
      */
-    std::string getBaseDirectory() const;
+    std::filesystem::path getBaseDirectory() const;
 
    private:
     enum class DirMatchResult {
@@ -92,10 +87,10 @@ class FilePattern {
       TREE  // pattern matches the whole subtree of the directory (e.g. p = "/home/**", v = "/home/banana")
     };
 
-    using DirIt = std::vector<std::string>::const_iterator;
+    using DirIt = std::filesystem::path::const_iterator;
     static DirMatchResult matchDirectory(DirIt pattern_begin, DirIt pattern_end, DirIt value_begin, DirIt value_end);
 
-    std::vector<std::string> directory_segments_;
+    std::filesystem::path directory_pattern_;
     std::string file_pattern_;
     bool excluding_;
   };
@@ -112,9 +107,6 @@ class FilePattern {
 
  public:
   explicit FilePattern(const std::string& pattern, ErrorHandler error_handler = defaultErrorHandler);
-
-  std::set<std::string> listFiles() const;
-  void forEachFile(const std::function<bool(const std::string&, const std::string&)>& fn) const;
 
  private:
   std::vector<FilePatternSegment> patterns_;

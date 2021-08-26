@@ -30,31 +30,6 @@ static bool isGlobPattern(const std::string& pattern) {
   return pattern.find_first_of("?*") != std::string::npos;
 }
 
-static std::vector<std::string> split(const std::string& str, const std::vector<std::string>& delimiters) {
-  std::vector<std::string> result;
-
-  size_t prev_delim_end = 0;
-  size_t next_delim_begin = std::string::npos;
-  do {
-    for (const auto& delim : delimiters) {
-      next_delim_begin = str.find(delim, prev_delim_end);
-      if (next_delim_begin != std::string::npos) {
-        result.push_back(str.substr(prev_delim_end, next_delim_begin - prev_delim_end));
-        prev_delim_end = next_delim_begin + delim.length();
-        break;
-      }
-    }
-  } while (next_delim_begin != std::string::npos);
-  result.push_back(str.substr(prev_delim_end));
-  return result;
-}
-
-#ifdef WIN32
-static const std::vector<std::string> path_separators{"/", "\\"};
-#else
-static const std::vector<std::string> path_separators{"/"};
-#endif
-
 FilePattern::FilePatternSegment::FilePatternSegment(std::string pattern) {
   pattern = utils::StringUtils::trim(pattern);
   excluding_ = false;
@@ -65,48 +40,51 @@ FilePattern::FilePatternSegment::FilePatternSegment(std::string pattern) {
   if (pattern.empty()) {
     throw FilePatternSegmentError("Empty pattern");
   }
-  std::string exe_dir = get_executable_dir();
-  if (exe_dir.empty() && !isAbsolutePath(pattern.c_str())) {
+  std::filesystem::path exe_dir = get_executable_dir();
+  std::filesystem::path path = pattern;
+  if (!exe_dir.is_absolute() && path.is_relative()) {
     throw FilePatternSegmentError("Couldn't determine executable dir, relative pattern not supported");
   }
-  pattern = resolve(exe_dir, pattern);
-  auto segments = split(pattern, path_separators);
-  gsl_Expects(!segments.empty());
-  file_pattern_ = segments.back();
+  path = exe_dir / path;
+  file_pattern_ = path.filename();
+  if (file_pattern_.empty()) {
+    throw FilePatternSegmentError("Empty file pattern");
+  }
   if (file_pattern_ == "**") {
     file_pattern_ = "*";
+    // include the "**" in the directory pattern
+    directory_pattern_ = path;
   } else {
-    segments.pop_back();
+    directory_pattern_ = path.parent_path();
   }
   if (file_pattern_ == "." || file_pattern_ == "..") {
     throw FilePatternSegmentError("Invalid file pattern '" + file_pattern_ + "'");
   }
   bool after_wildcard = false;
-  for (const auto& segment : segments) {
+  for (const auto& segment : directory_pattern_) {
     if (after_wildcard && segment == "..") {
       throw FilePatternSegmentError("Parent accessor is not supported after wildcards");
     }
-    if (isGlobPattern(segment)) {
+    if (isGlobPattern(segment.string())) {
       after_wildcard = true;
     }
   }
-  directory_segments_ = segments;
 }
 
-std::string FilePattern::FilePatternSegment::getBaseDirectory() const {
-  std::string base_dir;
-  for (const auto& segment : directory_segments_) {
+std::filesystem::path FilePattern::FilePatternSegment::getBaseDirectory() const {
+  std::filesystem::path base_dir;
+  for (const auto& segment : directory_pattern_) {
     // ignore segments at or after wildcards
-    if (isGlobPattern(segment)) {
+    if (isGlobPattern(segment.string())) {
       break;
     }
-    base_dir += segment + get_separator();
+    base_dir /= segment;
   }
   return base_dir;
 }
 
 FilePattern::FilePattern(const std::string &pattern, ErrorHandler error_handler) {
-  for (auto&& segment : split(pattern, {","})) {
+  for (auto&& segment : StringUtils::split(pattern, ",")) {
     try {
       patterns_.push_back(FilePatternSegment(segment));
     } catch (const FilePatternSegmentError& segment_error) {
@@ -124,7 +102,7 @@ static bool advance_if_not_equal(It& it, const It& end) {
   return true;
 }
 
-static bool is_this_dir(const std::string& dir) {
+static bool is_this_dir(const std::filesystem::path& dir) {
   return dir.empty() || dir == ".";
 }
 
@@ -190,7 +168,7 @@ FilePattern::FilePatternSegment::DirMatchResult FilePattern::FilePatternSegment:
       // we used up all the value segments but there are still pattern segments
       return DirMatchResult::PARENT;
     }
-    if (!matchGlob(*pattern_it, *value_it)) {
+    if (!matchGlob(pattern_it->string(), value_it->string())) {
       return DirMatchResult::NONE;
     }
     ++value_it;
@@ -206,8 +184,8 @@ FilePattern::FilePatternSegment::DirMatchResult FilePattern::FilePatternSegment:
 }
 
 FilePattern::FilePatternSegment::MatchResult FilePattern::FilePatternSegment::match(const std::string& directory) const {
-  auto value = split(directory, path_separators);
-  auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
+  std::filesystem::path value = directory;
+  auto result = matchDirectory(directory_pattern_.begin(), directory_pattern_.end(), value.begin(), value.end());
   if (excluding_) {
     if (result == DirMatchResult::TREE && file_pattern_ == "*") {
       // all files are excluded in this directory
@@ -219,8 +197,8 @@ FilePattern::FilePatternSegment::MatchResult FilePattern::FilePatternSegment::ma
 }
 
 auto FilePattern::FilePatternSegment::match(const std::string& directory, const std::string& filename) const -> MatchResult {
-  auto value = split(directory, path_separators);
-  auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
+  std::filesystem::path value = directory;
+  auto result = matchDirectory(directory_pattern_.begin(), directory_pattern_.end(), value.begin(), value.end());
   if (result != DirMatchResult::EXACT && result != DirMatchResult::TREE) {
     // we only match a file if the directory fully matches
     return MatchResult::NOT_MATCHING;
