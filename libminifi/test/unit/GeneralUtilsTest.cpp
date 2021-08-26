@@ -63,10 +63,3 @@ TEST_CASE("GeneralUtils::dereference", "[dereference]") {
   REQUIRE(42 == utils::dereference(pa));
   REQUIRE(&a == &utils::dereference(pa));
 }
-
-TEST_CASE("GeneralUtils::dereference on optional", "[dereference optional]") {
-  const std::optional opt_int{42};
-  REQUIRE(42 == *opt_int);
-  REQUIRE(42 == utils::dereference(opt_int));
-  REQUIRE(&*opt_int == &utils::dereference(opt_int));
-}

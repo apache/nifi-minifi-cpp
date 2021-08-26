@@ -21,9 +21,6 @@
 #include "core/extension/Executable.h"
 #include "utils/file/FilePattern.h"
 #include "core/extension/DynamicLibrary.h"
-#include "range/v3/view/transform.hpp"
-#include "range/v3/range/conversion.hpp"
-#include "range/v3/view/filter.hpp"
 
 namespace org {
 namespace apache {
@@ -96,21 +93,19 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
     auto candidates = utils::file::match(utils::file::FilePattern(pattern.value(),[&] (std::string_view subpattern, std::string_view error_msg) {
       logger_->log_error("Error in subpattern '%s': %s", std::string{subpattern}, std::string{error_msg});
     }));
-    std::vector<LibraryDescriptor> libraries =
-        candidates
-          | ranges::views::transform(asDynamicLibrary)
-          | ranges::views::filter([&] (const auto& candidate) {return candidate && candidate->verify(logger_);})
-          | ranges::views::transform(utils::dereference)
-          | ranges::to<std::vector>();
-    for (const auto& library : libraries) {
-      auto module = std::make_unique<DynamicLibrary>(library.name, library.getFullPath());
+    for (const auto& candidate : candidates) {
+      auto library = asDynamicLibrary(candidate);
+      if (!library || !library->verify(logger_)) {
+        continue;
+      }
+      auto module = std::make_unique<DynamicLibrary>(library->name, library->getFullPath());
       active_module_ = module.get();
       if (!module->load()) {
         // error already logged by method
         continue;
       }
       if (!module->initialize(config)) {
-        logger_->log_error("Failed to initialize module '%s' at '%s'", library.name, library.getFullPath());
+        logger_->log_error("Failed to initialize module '%s' at '%s'", library->name, library->getFullPath());
       } else {
         modules_.push_back(std::move(module));
       }
