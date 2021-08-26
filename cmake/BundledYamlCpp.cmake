@@ -29,12 +29,19 @@ function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
 
     # Set build options
     set(YAMLCPP_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-            "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/yaml-cpp-install")
+            "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/yaml-cpp-install"
+            "-DCMAKE_DEBUG_POSTFIX="
+            "-DYAML_CPP_BUILD_TESTS=OFF"
+            "-DYAML_CPP_BUILD_TOOLS=OFF")
 
     # Build project
     ExternalProject_Add(
             yaml-cpp-external
-            SOURCE_DIR "${SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-20171024"
+            GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
+            GIT_TAG "yaml-cpp-0.7.0"
+            SOURCE_DIR "${BINARY_DIR}/thirdparty/yaml-cpp-src"
+            INSTALL_DIR "${BINARY_DIR}/thirdparty/yaml-cpp-install"
+            LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${YAMLCPP_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BINARY_DIR}/thirdparty/yaml-cpp-install/${BYPRODUCT}"
             EXCLUDE_FROM_ALL TRUE
@@ -42,13 +49,15 @@ function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
 
     # Set variables
     set(YAMLCPP_FOUND "YES" CACHE STRING "" FORCE)
-    set(YAMLCPP_INCLUDE_DIR "${SOURCE_DIR}/thirdparty/yaml-cpp-yaml-cpp-20171024/include" CACHE STRING "" FORCE)
+    set(YAMLCPP_INCLUDE_DIR "${BINARY_DIR}/thirdparty/yaml-cpp-install/include" CACHE STRING "" FORCE)
     set(YAMLCPP_LIBRARY "${BINARY_DIR}/thirdparty/yaml-cpp-install/${BYPRODUCT}" CACHE STRING "" FORCE)
     set(YAMLCPP_LIBRARIES ${YAMLCPP_LIBRARY} CACHE STRING "" FORCE)
 
     # Create imported targets
+    file(MAKE_DIRECTORY ${YAMLCPP_INCLUDE_DIR})
+
     add_library(yaml-cpp STATIC IMPORTED)
     set_target_properties(yaml-cpp PROPERTIES IMPORTED_LOCATION "${YAMLCPP_LIBRARY}")
     add_dependencies(yaml-cpp yaml-cpp-external)
-    set_property(TARGET yaml-cpp APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${YAMLCPP_INCLUDE_DIR})
+    target_include_directories(yaml-cpp INTERFACE ${YAMLCPP_INCLUDE_DIR})
 endfunction(use_bundled_yamlcpp)
