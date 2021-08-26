@@ -93,7 +93,7 @@ struct EnableSharedFromThis : virtual internal::EnableSharedFromThisBase {
 namespace detail {
 struct dereference_t {
   template<typename T, typename = std::void_t<decltype(*std::declval<T>())>>
-  auto& operator()(T&& ptr) const noexcept { return *ptr; }
+  auto operator()(T&& ptr) const noexcept -> decltype(*std::forward<T>(ptr)) { return *std::forward<T>(ptr); }
 };
 }  // namespace detail
 
