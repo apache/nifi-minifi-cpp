@@ -72,12 +72,17 @@ std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeSt
   std::string value;
   if (context->getProperty(RangeStart, value, flow_file)) {
     params.range_start = std::stoull(value);
-    logger_->log_debug("Range Start property set to %llu", value);
+    logger_->log_debug("Range Start property set to %llu", *params.range_start);
   }
 
   if (context->getProperty(RangeLength, value, flow_file)) {
     params.range_length = std::stoull(value);
-    logger_->log_debug("Range Length property set to %llu", value);
+    logger_->log_debug("Range Length property set to %llu", *params.range_length);
+  }
+
+  if (context->getProperty(NumberOfRetries, value, flow_file)) {
+    params.number_of_retries = std::stoull(value);
+    logger_->log_debug("Number Of Retries property set to %llu", *params.number_of_retries);
   }
 
   return params;

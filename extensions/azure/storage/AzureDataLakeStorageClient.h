@@ -64,11 +64,12 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const FetchAzureDataLakeStorageParameters& params) override;
 
  private:
-  void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name);
+  void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries);
   Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageParameters& params);
 
   AzureStorageCredentials credentials_;
   std::string file_system_name_;
+  std::optional<uint64_t> number_of_retries_;
   std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureDataLakeStorageClient>::getLogger()};
 };

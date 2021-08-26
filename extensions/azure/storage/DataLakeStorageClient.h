@@ -34,6 +34,7 @@ struct AzureDataLakeStorageParameters {
   std::string file_system_name;
   std::string directory_name;
   std::string filename;
+  std::optional<uint64_t> number_of_retries;
 };
 
 struct PutAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {

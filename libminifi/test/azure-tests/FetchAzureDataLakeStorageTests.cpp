@@ -66,4 +66,10 @@ TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch a range of the fi
   REQUIRE(success_contents[0] == mock_data_lake_storage_client_ptr_->FETCHED_DATA.substr(5, 10));
 }
 
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Number of Retries is set", "[azureDataLakeStorageFetch]") {
+  plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::FetchAzureDataLakeStorage::NumberOfRetries.getName(), "1");
+  test_controller_.runSession(plan_, true);
+  REQUIRE(mock_data_lake_storage_client_ptr_->getPassedFetchParams().number_of_retries == 1);
+}
+
 }  // namespace

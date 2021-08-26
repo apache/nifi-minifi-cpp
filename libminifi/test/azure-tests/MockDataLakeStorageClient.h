@@ -61,6 +61,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   }
 
   Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters& params) override {
+    fetch_params_ = params;
     Azure::Storage::Files::DataLake::Models::DownloadFileResult result;
     buffer_.clear();
     uint64_t range_start = 0;
@@ -106,6 +107,10 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return delete_params_;
   }
 
+  org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters getPassedFetchParams() const {
+    return fetch_params_;
+  }
+
  private:
   const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
   bool create_file_ = true;
@@ -117,4 +122,5 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   std::vector<uint8_t> buffer_;
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters put_params_;
   org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters delete_params_;
+  org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters fetch_params_;
 };
