@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "utils/file/FileMatcher.h"
+#include "utils/file/FilePattern.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 
@@ -25,9 +25,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 namespace file {
-
-std::shared_ptr<core::logging::Logger> FileMatcher::FilePattern::logger_ = logging::LoggerFactory<FileMatcher::FilePattern>::getLogger();
-std::shared_ptr<core::logging::Logger> FileMatcher::logger_ = logging::LoggerFactory<FileMatcher>::getLogger();
 
 static bool isGlobPattern(const std::string& pattern) {
   return pattern.find_first_of("?*") != std::string::npos;
@@ -58,49 +55,45 @@ static const std::vector<std::string> path_separators{"/", "\\"};
 static const std::vector<std::string> path_separators{"/"};
 #endif
 
-std::optional<FileMatcher::FilePattern> FileMatcher::FilePattern::fromPattern(std::string pattern) {
+FilePattern::FilePatternSegment::FilePatternSegment(std::string pattern) {
   pattern = utils::StringUtils::trim(pattern);
-  bool excluding = false;
+  excluding_ = false;
   if (!pattern.empty() && pattern[0] == '!') {
-    excluding = true;
+    excluding_ = true;
     pattern = utils::StringUtils::trim(pattern.substr(1));
   }
   if (pattern.empty()) {
-    logger_->log_error("Empty pattern");
-    return std::nullopt;
+    throw FilePatternSegmentError("Empty pattern");
   }
   std::string exe_dir = get_executable_dir();
   if (exe_dir.empty() && !isAbsolutePath(pattern.c_str())) {
-    logger_->log_error("Couldn't determine executable dir, relative pattern '%s' not supported", pattern);
-    return std::nullopt;
+    throw FilePatternSegmentError("Couldn't determine executable dir, relative pattern not supported");
   }
   pattern = resolve(exe_dir, pattern);
   auto segments = split(pattern, path_separators);
   gsl_Expects(!segments.empty());
-  auto file_pattern = segments.back();
-  if (file_pattern == "**") {
-    file_pattern = "*";
+  file_pattern_ = segments.back();
+  if (file_pattern_ == "**") {
+    file_pattern_ = "*";
   } else {
     segments.pop_back();
   }
-  if (file_pattern == "." || file_pattern == "..") {
-    logger_->log_error("Invalid file pattern '%s'", file_pattern);
-    return std::nullopt;
+  if (file_pattern_ == "." || file_pattern_ == "..") {
+    throw FilePatternSegmentError("Invalid file pattern '" + file_pattern_ + "'");
   }
   bool after_wildcard = false;
   for (const auto& segment : segments) {
     if (after_wildcard && segment == "..") {
-      logger_->log_error("Parent accessor is not supported after wildcards");
-      return std::nullopt;
+      throw FilePatternSegmentError("Parent accessor is not supported after wildcards");
     }
     if (isGlobPattern(segment)) {
       after_wildcard = true;
     }
   }
-  return FilePattern(segments, file_pattern, excluding);
+  directory_segments_ = segments;
 }
 
-std::string FileMatcher::FilePattern::getBaseDirectory() const {
+std::string FilePattern::FilePatternSegment::getBaseDirectory() const {
   std::string base_dir;
   for (const auto& segment : directory_segments_) {
     // ignore segments at or after wildcards
@@ -112,10 +105,12 @@ std::string FileMatcher::FilePattern::getBaseDirectory() const {
   return base_dir;
 }
 
-FileMatcher::FileMatcher(const std::string &patterns) {
-  for (auto&& pattern : split(patterns, {","})) {
-    if (auto&& p = FilePattern::fromPattern(pattern)) {
-      patterns_.push_back(std::move(p.value()));
+FilePattern::FilePattern(const std::string &pattern, ErrorHandler error_handler) {
+  for (auto&& segment : split(pattern, {","})) {
+    try {
+      patterns_.push_back(FilePatternSegment(segment));
+    } catch (const FilePatternSegmentError& segment_error) {
+      error_handler(segment, segment_error.what());
     }
   }
 }
@@ -163,7 +158,7 @@ static bool matchGlob(std::string_view pattern, std::string_view value) {
   return value_idx == value.length();
 }
 
-FileMatcher::FilePattern::DirMatchResult FileMatcher::FilePattern::matchDirectory(DirIt pattern_it, DirIt pattern_end, DirIt value_it, DirIt value_end) {
+FilePattern::FilePatternSegment::DirMatchResult FilePattern::FilePatternSegment::matchDirectory(DirIt pattern_it, DirIt pattern_end, DirIt value_it, DirIt value_end) {
   for (; pattern_it != pattern_end; ++pattern_it) {
     if (is_this_dir(*pattern_it)) {
       continue;
@@ -210,7 +205,7 @@ FileMatcher::FilePattern::DirMatchResult FileMatcher::FilePattern::matchDirector
   }
 }
 
-FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std::string& directory) const {
+FilePattern::FilePatternSegment::MatchResult FilePattern::FilePatternSegment::match(const std::string& directory) const {
   auto value = split(directory, path_separators);
   auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
   if (excluding_) {
@@ -223,7 +218,7 @@ FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std:
   return result != DirMatchResult::NONE ? MatchResult::INCLUDE : MatchResult::NOT_MATCHING;
 }
 
-FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std::string& directory, const std::string& filename) const {
+auto FilePattern::FilePatternSegment::match(const std::string& directory, const std::string& filename) const -> MatchResult {
   auto value = split(directory, path_separators);
   auto result = matchDirectory(directory_segments_.begin(), directory_segments_.end(), value.begin(), value.end());
   if (result != DirMatchResult::EXACT && result != DirMatchResult::TREE) {
@@ -236,65 +231,59 @@ FileMatcher::FilePattern::MatchResult FileMatcher::FilePattern::match(const std:
   return MatchResult::NOT_MATCHING;
 }
 
-void FileMatcher::forEachFile(const std::function<bool(const std::string&, const std::string&)>& fn) const {
-  bool terminate = false;
-  std::set<std::string> files;
-  for (auto it = patterns_.begin(); it != patterns_.end(); ++it) {
+auto FilePattern::FilePatternSegment::match(const std::filesystem::path& path) const -> MatchResult {
+  if (path.has_filename()) {
+    return match(path.parent_path().string(), path.filename());
+  }
+  return match(path.parent_path().string());
+}
+
+static std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<FilePattern>::getLogger();
+
+std::set<std::filesystem::path> match(const FilePattern& pattern) {
+  using FilePatternSegment = FilePattern::FilePatternSegment;
+  std::set<std::filesystem::path> files;
+  for (auto it = pattern.patterns_.begin(); it != pattern.patterns_.end(); ++it) {
     if (it->isExcluding()) continue;
     const auto match_file = [&] (const std::string& dir, const std::string& file) -> bool {
-      if (terminate) return false;
-      if (it->match(dir, file) != FilePattern::MatchResult::INCLUDE) {
+      if (it->match(dir, file) != FilePatternSegment::MatchResult::INCLUDE) {
         // our main pattern does not explicitly command us to process this file
         // keep iterating
         return true;
       }
       // check all subsequent patterns in reverse (later ones have higher precedence)
-      for (auto rit = patterns_.rbegin(); rit.base() != it + 1; ++rit) {
+      for (auto rit = pattern.patterns_.rbegin(); rit.base() != it + 1; ++rit) {
         const auto result = rit->match(dir, file);
-        if (result == FilePattern::MatchResult::INCLUDE) {
+        if (result == FilePatternSegment::MatchResult::INCLUDE) {
           break;
-        } else if (result == FilePattern::MatchResult::EXCLUDE) {
+        } else if (result == FilePatternSegment::MatchResult::EXCLUDE) {
           // keep on processing the rest of the files in the current directory
           return true;
         }
       }
-      if (files.insert(concat_path(dir, file)).second) {
-        // this is a new file, we haven't checked before
-        if (!fn(dir, file)) {
-          terminate = true;
-          return false;
-        }
-      }
+      files.insert(concat_path(dir, file));
       return true;
     };
     const auto descend_into_directory = [&] (const std::string& dir) -> bool {
-      if (it->match(dir) != FilePattern::MatchResult::INCLUDE) {
+      if (it->match(dir) != FilePatternSegment::MatchResult::INCLUDE) {
         // our main pattern does not explicitly command us to process this directory
         // do not descend into this directory
         return false;
       }
       // check all subsequent patterns in reverse (later ones have higher precedence)
-      for (auto rit = patterns_.rbegin(); rit.base() != it + 1; ++rit) {
+      for (auto rit = pattern.patterns_.rbegin(); rit.base() != it + 1; ++rit) {
         const auto result = rit->match(dir);
-        if (result == FilePattern::MatchResult::INCLUDE) {
+        if (result == FilePatternSegment::MatchResult::INCLUDE) {
           break;
-        } else if (result == FilePattern::MatchResult::EXCLUDE) {
+        } else if (result == FilePatternSegment::MatchResult::EXCLUDE) {
           // do not descend into this directory
           return false;
         }
       }
       return true;
     };
-    list_dir(it->getBaseDirectory(), match_file, logger_, descend_into_directory);
+    list_dir(it->getBaseDirectory(), match_file, logger, descend_into_directory);
   }
-}
-
-std::set<std::string> FileMatcher::listFiles() const {
-  std::set<std::string> files;
-  forEachFile([&] (const std::string& dir, const std::string& filename) {
-    files.insert(concat_path(dir, filename));
-    return true;
-  });
   return files;
 }
 

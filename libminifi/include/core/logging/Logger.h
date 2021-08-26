@@ -26,6 +26,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <filesystem>
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -57,6 +58,10 @@ inline char const* conditional_conversion(std::string const& str) {
   return str.c_str();
 }
 
+inline char const* conditional_conversion(const std::filesystem::path& path) {
+  return path.c_str();
+}
+
 template<size_t N>
 inline char const* conditional_conversion(const utils::SmallString<N>& arr) {
   return arr.c_str();
@@ -69,6 +74,8 @@ template<typename T, typename = typename std::enable_if<
 inline T conditional_conversion(T t) {
   return t;
 }
+
+
 
 template<typename ... Args>
 inline std::string format_string(int max_size, char const* format_str, Args&&... args) {

@@ -46,7 +46,7 @@ namespace extension {
 
 std::shared_ptr<logging::Logger> DynamicLibrary::logger_ = logging::LoggerFactory<DynamicLibrary>::getLogger();
 
-DynamicLibrary::DynamicLibrary(std::string name, std::string library_path)
+DynamicLibrary::DynamicLibrary(std::string name, std::filesystem::path library_path)
   : Module(std::move(name)),
     library_path_(std::move(library_path)) {
 }

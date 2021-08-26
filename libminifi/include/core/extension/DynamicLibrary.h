@@ -20,6 +20,7 @@
 #include <memory>
 #include <map>
 #include <string>
+#include <filesystem>
 
 #include "Module.h"
 
@@ -34,7 +35,7 @@ class DynamicLibrary : public Module {
   friend class ExtensionManager;
 
  public:
-  DynamicLibrary(std::string name, std::string library_path);
+  DynamicLibrary(std::string name, std::filesystem::path library_path);
   ~DynamicLibrary() override;
 
  private:
@@ -54,7 +55,7 @@ class DynamicLibrary : public Module {
   bool load();
   bool unload();
 
-  std::string library_path_;
+  std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
 
   static std::shared_ptr<logging::Logger> logger_;

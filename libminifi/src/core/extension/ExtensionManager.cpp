@@ -19,8 +19,11 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
 #include "core/extension/Executable.h"
-#include "utils/file/FileMatcher.h"
+#include "utils/file/FilePattern.h"
 #include "core/extension/DynamicLibrary.h"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/filter.hpp"
 
 namespace org {
 namespace apache {
@@ -32,7 +35,7 @@ namespace extension {
 namespace {
 struct LibraryDescriptor {
   std::string name;
-  std::string dir;
+  std::filesystem::path dir;
   std::string filename;
 
   bool verify(const std::shared_ptr<logging::Logger>& /*logger*/) const {
@@ -40,13 +43,13 @@ struct LibraryDescriptor {
     return true;
   }
 
-  std::string getFullPath() const {
-    return utils::file::PathUtils::concat_path(dir, filename);
+  std::filesystem::path getFullPath() const {
+    return dir / filename;
   }
 };
 }  // namespace
 
-static std::optional<LibraryDescriptor> asDynamicLibrary(const std::string& dir, const std::string& filename) {
+static std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
 #if defined(WIN32)
   const std::string extension = ".dll";
 #elif defined(__APPLE__)
@@ -60,12 +63,13 @@ static std::optional<LibraryDescriptor> asDynamicLibrary(const std::string& dir,
 #else
   const std::string prefix = "lib";
 #endif
+  std::string filename = path.filename().string();
   if (!utils::StringUtils::startsWith(filename, prefix) || !utils::StringUtils::endsWith(filename, extension)) {
     return {};
   }
   return LibraryDescriptor{
     filename.substr(prefix.length(), filename.length() - extension.length() - prefix.length()),
-    dir,
+    path.parent_path(),
     filename
   };
 }
@@ -89,14 +93,13 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
     active_module_->initialize(config);
     std::optional<std::string> pattern = config ? config->get(nifi_extension_path) : std::nullopt;
     if (!pattern) return;
-    std::vector<LibraryDescriptor> libraries;
-    utils::file::FileMatcher(pattern.value()).forEachFile([&] (const std::string& dir, const std::string& filename) {
-      std::optional<LibraryDescriptor> library = asDynamicLibrary(dir, filename);
-      if (library && library->verify(logger_)) {
-        libraries.push_back(std::move(library.value()));
-      }
-      return true;
-    });
+    auto candidates = utils::file::match(utils::file::FilePattern(pattern.value()));
+    std::vector<LibraryDescriptor> libraries =
+        candidates
+          | ranges::views::transform(asDynamicLibrary)
+          | ranges::views::filter([&] (const auto& candidate) {return candidate && candidate->verify(logger_);})
+          | ranges::views::transform(utils::dereference)
+          | ranges::to<std::vector>();
     for (const auto& library : libraries) {
       auto module = std::make_unique<DynamicLibrary>(library.name, library.getFullPath());
       active_module_ = module.get();

@@ -22,11 +22,12 @@
 #include <set>
 #include <utility>
 #include <memory>
+#include <filesystem>
 
 #include "utils/OptionalUtils.h"
 #include "core/logging/Logger.h"
 
-struct FileMatcherTestAccessor;
+struct FilePatternTestAccessor;
 
 namespace org {
 namespace apache {
@@ -35,21 +36,39 @@ namespace minifi {
 namespace utils {
 namespace file {
 
-class FileMatcher {
-  friend struct ::FileMatcherTestAccessor;
-  class FilePattern {
-    FilePattern(std::vector<std::string> directory_segments, std::string file_pattern, bool excluding)
+class FilePatternError : public std::invalid_argument {
+public:
+ FilePatternError(const std::string& msg) : invalid_argument(msg) {}
+};
+
+class FilePattern {
+  friend struct ::FilePatternTestAccessor;
+
+  friend std::set<std::filesystem::path> match(const FilePattern& pattern);
+
+  class FilePatternSegmentError : public std::invalid_argument {
+   public:
+    FilePatternSegmentError(const std::string& msg) : invalid_argument(msg) {}
+  };
+
+  class FilePatternSegment {
+    FilePatternSegment(std::vector<std::string> directory_segments, std::string file_pattern, bool excluding)
       : directory_segments_(std::move(directory_segments)),
         file_pattern_(std::move(file_pattern)),
         excluding_(excluding) {}
 
+    static void defaultSegmentErrorHandler(std::string_view error_message) {
+      throw FilePatternError(std::string{error_message});
+    }
+
    public:
+    explicit FilePatternSegment(std::string pattern);
+
     enum class MatchResult {
       INCLUDE,  // dir/file should be processed according to the pattern
       EXCLUDE,  // dir/file is explicitly rejected by the pattern
       NOT_MATCHING  // dir/file does not match pattern, do what you may
     };
-    static std::optional<FilePattern> fromPattern(std::string pattern);
 
     bool isExcluding() const {
       return excluding_;
@@ -59,6 +78,7 @@ class FileMatcher {
 
     MatchResult match(const std::string& directory, const std::string& filename) const;
 
+    MatchResult match(const std::filesystem::path& path) const;
     /**
      * @return The lowermost parent directory without wildcards.
      */
@@ -78,21 +98,29 @@ class FileMatcher {
     std::vector<std::string> directory_segments_;
     std::string file_pattern_;
     bool excluding_;
-
-    static std::shared_ptr<core::logging::Logger> logger_;
   };
 
+  using ErrorHandler = std::function<void(std::string_view /*subpattern*/, std::string_view /*error_message*/)>;
+
+  static void defaultErrorHandler(std::string_view subpattern, std::string_view error_message) {
+    std::string message = "Error in subpattern '";
+    message += subpattern;
+    message += "': ";
+    message += error_message;
+    throw FilePatternError(message);
+  }
+
  public:
-  explicit FileMatcher(const std::string& patterns);
+  explicit FilePattern(const std::string& pattern, ErrorHandler error_handler = defaultErrorHandler);
 
   std::set<std::string> listFiles() const;
   void forEachFile(const std::function<bool(const std::string&, const std::string&)>& fn) const;
 
  private:
-  std::vector<FilePattern> patterns_;
-
-  static std::shared_ptr<core::logging::Logger> logger_;
+  std::vector<FilePatternSegment> patterns_;
 };
+
+std::set<std::filesystem::path> match(const FilePattern& pattern);
 
 }  // namespace file
 }  // namespace utils
