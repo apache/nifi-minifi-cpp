@@ -16,15 +16,21 @@
 # under the License.
 
 function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
+    if (WIN32)
+        set(CMAKE_INSTALL_LIBDIR "lib")
+    else()
+        include(GNUInstallDirs)
+    endif()
+
     # Define byproducts
     if (WIN32)
         if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-            set(BYPRODUCT "lib/libyaml-cppmdd.lib")
+            set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libyaml-cppmdd.lib")
         else()
-            set(BYPRODUCT "lib/libyaml-cppmd.lib")
+            set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libyaml-cppmd.lib")
         endif()
     else()
-        set(BYPRODUCT "lib/libyaml-cpp.a")
+        set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libyaml-cpp.a")
     endif()
 
     # Set build options
