@@ -24,11 +24,7 @@ function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
 
     # Define byproducts
     if (WIN32)
-        if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-            set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libyaml-cppmdd.lib")
-        else()
-            set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libyaml-cppmd.lib")
-        endif()
+        set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/yaml-cpp.lib")
     else()
         set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libyaml-cpp.a")
     endif()
@@ -37,6 +33,7 @@ function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
     set(YAMLCPP_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
             "-DCMAKE_INSTALL_PREFIX=${BINARY_DIR}/thirdparty/yaml-cpp-install"
             "-DCMAKE_DEBUG_POSTFIX="
+            "-DBUILD_SHARED_LIBS=OFF"
             "-DYAML_CPP_BUILD_TESTS=OFF"
             "-DYAML_CPP_BUILD_TOOLS=OFF")
 
