@@ -48,20 +48,20 @@ struct LibraryDescriptor {
 
 std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
 #if defined(WIN32)
-  const std::string_view extension = ".dll";
+  const std::string extension = ".dll";
 #elif defined(__APPLE__)
-  const std::string_view extension = ".dylib";
+  const std::string extension = ".dylib";
 #else
-  const std::string_view extension = ".so";
+  const std::string extension = ".so";
 #endif
 
 #ifdef WIN32
-  const std::string_view prefix = "";
+  const std::string prefix = "";
 #else
-  const std::string_view prefix = "lib";
+  const std::string prefix = "lib";
 #endif
   std::string filename = path.filename().string();
-  if (!filename.starts_with(prefix) || !filename.ends_with(extension)) {
+  if (!utils::StringUtils::startsWith(filename, prefix) || !utils::StringUtils::endsWith(filename, extension)) {
     return {};
   }
   return LibraryDescriptor{
