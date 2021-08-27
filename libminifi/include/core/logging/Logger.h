@@ -26,6 +26,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <string_view>
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -69,8 +70,6 @@ template<typename T, typename = typename std::enable_if<
 inline T conditional_conversion(T t) {
   return t;
 }
-
-
 
 template<typename ... Args>
 inline std::string format_string(int max_size, char const* format_str, Args&&... args) {

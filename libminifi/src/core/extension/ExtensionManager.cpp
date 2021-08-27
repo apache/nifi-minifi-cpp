@@ -30,6 +30,7 @@ namespace core {
 namespace extension {
 
 namespace {
+
 struct LibraryDescriptor {
   std::string name;
   std::filesystem::path dir;
@@ -44,24 +45,23 @@ struct LibraryDescriptor {
     return dir / filename;
   }
 };
-}  // namespace
 
-static std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
+std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
 #if defined(WIN32)
-  const std::string extension = ".dll";
+  const std::string_view extension = ".dll";
 #elif defined(__APPLE__)
-  const std::string extension = ".dylib";
+  const std::string_view extension = ".dylib";
 #else
-  const std::string extension = ".so";
+  const std::string_view extension = ".so";
 #endif
 
 #ifdef WIN32
-  const std::string prefix = "";
+  const std::string_view prefix = "";
 #else
-  const std::string prefix = "lib";
+  const std::string_view prefix = "lib";
 #endif
   std::string filename = path.filename().string();
-  if (!utils::StringUtils::startsWith(filename, prefix) || !utils::StringUtils::endsWith(filename, extension)) {
+  if (!filename.starts_with(prefix) || !filename.ends_with(extension)) {
     return {};
   }
   return LibraryDescriptor{
@@ -71,7 +71,9 @@ static std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::
   };
 }
 
-std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
+}  // namespace
+
+const std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
 
 ExtensionManager::ExtensionManager() {
   modules_.push_back(std::make_unique<Executable>());

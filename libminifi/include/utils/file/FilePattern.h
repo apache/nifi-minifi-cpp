@@ -52,10 +52,6 @@ class FilePattern {
   };
 
   class FilePatternSegment {
-    static void defaultSegmentErrorHandler(std::string_view error_message) {
-      throw FilePatternError(std::string{error_message});
-    }
-
    public:
     explicit FilePatternSegment(std::string pattern);
 

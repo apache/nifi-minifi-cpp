@@ -54,7 +54,7 @@ class ExtensionManager {
 
   Module* active_module_;
 
-  static std::shared_ptr<logging::Logger> logger_;
+  static const std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace extension
