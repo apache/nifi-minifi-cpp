@@ -53,28 +53,28 @@ DynamicLibrary::DynamicLibrary(std::string name, std::filesystem::path library_p
 
 bool DynamicLibrary::load() {
   dlerror();
-  handle_ = dlopen(library_path_.c_str(), RTLD_NOW | RTLD_LOCAL);
+  handle_ = dlopen(library_path_.string().c_str(), RTLD_NOW | RTLD_LOCAL);
   if (!handle_) {
-    logger_->log_error("Failed to load extension '%s' at '%s': %s", name_, library_path_, dlerror());
+    logger_->log_error("Failed to load extension '%s' at '%s': %s", name_, library_path_.string(), dlerror());
     return false;
   } else {
-    logger_->log_trace("Loaded extension '%s' at '%s'", name_, library_path_);
+    logger_->log_trace("Loaded extension '%s' at '%s'", name_, library_path_.string());
     return true;
   }
 }
 
 bool DynamicLibrary::unload() {
-  logger_->log_trace("Unloading library '%s' at '%s'", name_, library_path_);
+  logger_->log_trace("Unloading library '%s' at '%s'", name_, library_path_.string());
   if (!handle_) {
-    logger_->log_error("Extension does not have a handle_ '%s' at '%s'", name_, library_path_);
+    logger_->log_error("Extension does not have a handle_ '%s' at '%s'", name_, library_path_.string());
     return true;
   }
   dlerror();
   if (dlclose(handle_)) {
-    logger_->log_error("Failed to unload extension '%s' at '%': %s", name_, library_path_, dlerror());
+    logger_->log_error("Failed to unload extension '%s' at '%': %s", name_, library_path_.string(), dlerror());
     return false;
   }
-  logger_->log_trace("Unloaded extension '%s' at '%s'", name_, library_path_);
+  logger_->log_trace("Unloaded extension '%s' at '%s'", name_, library_path_.string());
   handle_ = nullptr;
   return true;
 }

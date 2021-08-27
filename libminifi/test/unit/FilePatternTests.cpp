@@ -27,6 +27,7 @@
 #include "range/v3/view/cache1.hpp"
 #include "range/v3/view/c_str.hpp"
 #include "range/v3/range/conversion.hpp"
+#include "range/v3/range.hpp"
 
 struct FilePatternTestAccessor {
   using FilePatternSegment = fileutils::FilePattern::FilePatternSegment;
