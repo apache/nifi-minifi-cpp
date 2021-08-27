@@ -46,7 +46,7 @@ FilePattern::FilePatternSegment::FilePatternSegment(std::string pattern) {
     throw FilePatternSegmentError("Couldn't determine executable dir, relative pattern not supported");
   }
   path = exe_dir / path;
-  file_pattern_ = path.filename();
+  file_pattern_ = path.filename().string();
   if (file_pattern_.empty()) {
     throw FilePatternSegmentError("Empty file pattern");
   }
@@ -211,7 +211,7 @@ auto FilePattern::FilePatternSegment::match(const std::string& directory, const 
 
 auto FilePattern::FilePatternSegment::match(const std::filesystem::path& path) const -> MatchResult {
   if (path.has_filename()) {
-    return match(path.parent_path().string(), path.filename());
+    return match(path.parent_path().string(), path.filename().string());
   }
   return match(path.parent_path().string());
 }
@@ -260,7 +260,7 @@ std::set<std::filesystem::path> match(const FilePattern& pattern) {
       }
       return true;
     };
-    list_dir(it->getBaseDirectory(), match_file, logger, descend_into_directory);
+    list_dir(it->getBaseDirectory().string(), match_file, logger, descend_into_directory);
   }
   return files;
 }
