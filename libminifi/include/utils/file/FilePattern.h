@@ -109,7 +109,7 @@ class FilePattern {
   explicit FilePattern(const std::string& pattern, ErrorHandler error_handler = defaultErrorHandler);
 
  private:
-  std::vector<FilePatternSegment> patterns_;
+  std::vector<FilePatternSegment> segments_;
 };
 
 std::set<std::filesystem::path> match(const FilePattern& pattern);

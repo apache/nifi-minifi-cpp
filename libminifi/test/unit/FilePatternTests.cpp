@@ -21,6 +21,12 @@
 
 #include "../TestBase.h"
 #include "utils/file/FilePattern.h"
+#include "range/v3/view/transform.hpp"
+#include "range/v3/view/map.hpp"
+#include "range/v3/view/join.hpp"
+#include "range/v3/view/cache1.hpp"
+#include "range/v3/view/c_str.hpp"
+#include "range/v3/range/conversion.hpp"
 
 struct FilePatternTestAccessor {
   using FilePatternSegment = fileutils::FilePattern::FilePatternSegment;
@@ -49,6 +55,23 @@ TEST_CASE("Invalid paths") {
   // parent accessor after wildcard
   FilePatternSegment("./../file.txt");  // sanity check
   REQUIRE_THROWS(FilePatternSegment("./*/../file.txt"));
+}
+
+TEST_CASE("FilePattern reports error in correct subpattern") {
+  std::vector<std::pair<std::string, std::string>> invalid_subpattern{
+      {"", "Empty pattern"},
+      {".", "Invalid file pattern '.'"},
+      {"..", "Invalid file pattern '..'"},
+      {"!./*/../file.txt", "Parent accessor is not supported after wildcards"},
+      {"./", "Empty file pattern"}
+  };
+  auto pattern = invalid_subpattern | ranges::views::keys | ranges::views::join(',') | ranges::to<std::string>;
+  size_t idx = 0;
+  FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error) {
+    REQUIRE(invalid_subpattern[idx].first == subpattern);
+    REQUIRE(invalid_subpattern[idx++].second == error);
+  });
+  REQUIRE(idx == invalid_subpattern.size());
 }
 
 TEST_CASE("Matching directories without globs") {
