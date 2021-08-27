@@ -136,7 +136,7 @@ void* DynamicLibrary::dlopen(const char* file, int mode) {
   uint32_t uMode = SetErrorMode(SEM_FAILCRITICALERRORS);
   if (nullptr == file) {
     HMODULE allModules[1024];
-    HANDLE current_process_id = GetCurrentProcess();
+    HANDLE current_process_handle = GetCurrentProcess();
     DWORD cbNeeded;
     object = GetModuleHandle(NULL);
 
@@ -144,7 +144,7 @@ void* DynamicLibrary::dlopen(const char* file, int mode) {
       store_error();
     }
 
-    if (EnumProcessModules(current_process_id, allModules, sizeof(allModules), &cbNeeded) != 0) {
+    if (EnumProcessModules(current_process_handle, allModules, sizeof(allModules), &cbNeeded) != 0) {
       for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++) {
         // Get the full path to the module's file.
         resource_mapping_.insert(std::make_pair(reinterpret_cast<void*>(allModules[i]), "minifi-system"));
