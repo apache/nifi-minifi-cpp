@@ -105,7 +105,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
         continue;
       }
       if (!module->initialize(config)) {
-        logger_->log_error("Failed to initialize module '%s' at '%s'", library->name, library->getFullPath());
+        logger_->log_error("Failed to initialize module '%s' at '%s'", library->name, library->getFullPath().string());
       } else {
         modules_.push_back(std::move(module));
       }

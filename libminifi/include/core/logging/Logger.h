@@ -26,7 +26,6 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <filesystem>
 
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
@@ -56,10 +55,6 @@ class LoggerControl {
 
 inline char const* conditional_conversion(std::string const& str) {
   return str.c_str();
-}
-
-inline char const* conditional_conversion(const std::filesystem::path& path) {
-  return path.c_str();
 }
 
 template<size_t N>
