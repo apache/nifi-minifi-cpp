@@ -108,8 +108,8 @@ class CompressDecompressionTestController : public TestController{
   }
 
   void setupFlow() {
-    LogTestController::getInstance().setTrace<processors::CompressContent>();
-    LogTestController::getInstance().setTrace<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::CompressContent>();
+    LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
     LogTestController::getInstance().setTrace<core::ProcessContext>();
     LogTestController::getInstance().setTrace<core::repository::VolatileContentRepository>();
@@ -119,7 +119,7 @@ class CompressDecompressionTestController : public TestController{
 
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    processor = std::make_shared<processors::CompressContent>("compresscontent");
+    processor = std::make_shared<minifi::processors::CompressContent>("compresscontent");
     processor->initialize();
     utils::Identifier processoruuid = processor->getUUID();
     REQUIRE(processoruuid);
@@ -233,14 +233,14 @@ class DecompressTestController : public CompressDecompressionTestController{
   }
 };
 
-using CompressionFormat = processors::CompressContent::ExtendedCompressionFormat;
-using CompressionMode = processors::CompressContent::CompressionMode;
+using CompressionFormat = minifi::processors::CompressContent::ExtendedCompressionFormat;
+using CompressionMode = minifi::processors::CompressContent::CompressionMode;
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -278,10 +278,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
 }
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfiletest2]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -315,10 +315,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -354,10 +354,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -388,10 +388,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::LZMA));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::LZMA));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -433,10 +433,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -474,10 +474,10 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::XZ_LZMA2));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::XZ_LZMA2));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -519,10 +519,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
   core::ProcessSession sessionGenFlowFile(context);
   std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast < core::FlowFile > (sessionGenFlowFile.create());
@@ -560,8 +560,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
 }
 
 TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfiletest8]") {
-  LogTestController::getInstance().setTrace<processors::CompressContent>();
-  LogTestController::getInstance().setTrace<processors::PutFile>();
+  LogTestController::getInstance().setTrace<minifi::processors::CompressContent>();
+  LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
 
   // Create temporary directories
   std::string src_dir = createTempDirectory();
@@ -667,11 +667,11 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   };
   const std::size_t batchSize = 3;
 
-  context->setProperty(processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
-  context->setProperty(processors::CompressContent::CompressLevel, "9");
-  context->setProperty(processors::CompressContent::UpdateFileName, "true");
-  context->setProperty(processors::CompressContent::BatchSize, std::to_string(batchSize));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
+  context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
+  context->setProperty(minifi::processors::CompressContent::BatchSize, std::to_string(batchSize));
 
 
   core::ProcessSession sessionGenFlowFile(context);

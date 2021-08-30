@@ -216,7 +216,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  auto filemodtime = fileutils::FileUtils::last_write_time(movedFile.str());
+  auto filemodtime = utils::file::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -237,7 +237,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
-  REQUIRE(filemodtime == fileutils::FileUtils::last_write_time(movedFile.str()));
+  REQUIRE(filemodtime == utils::file::last_write_time(movedFile.str()));
   LogTestController::getInstance().reset();
 }
 
@@ -282,7 +282,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  auto filemodtime = fileutils::FileUtils::last_write_time(movedFile.str());
+  auto filemodtime = utils::file::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -304,7 +304,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
 #ifndef WIN32
-  REQUIRE(filemodtime != fileutils::FileUtils::last_write_time(movedFile.str()));
+  REQUIRE(filemodtime != utils::file::last_write_time(movedFile.str()));
 #endif
   LogTestController::getInstance().reset();
 }

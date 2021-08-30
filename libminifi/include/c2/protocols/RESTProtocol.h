@@ -66,7 +66,7 @@ class RESTProtocol : public HeartbeatJsonSerializer {
   bool minimize_updates_{false};
   std::map<std::string, C2Payload> nested_payloads_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTProtocol>::getLogger();
 };
 
 }  // namespace c2

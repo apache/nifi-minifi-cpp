@@ -67,7 +67,7 @@ void ExecutePythonProcessor::initialize() {
 }
 
 void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  python_logger_ = logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
+  python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
 
   getProperty(ModuleDirectory.getName(), module_directory_);
 

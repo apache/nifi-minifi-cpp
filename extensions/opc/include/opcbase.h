@@ -60,7 +60,7 @@ class BaseOPCProcessor : public core::Processor {
 
   virtual bool reconnect();
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 
   opc::ClientPtr connection_;
 

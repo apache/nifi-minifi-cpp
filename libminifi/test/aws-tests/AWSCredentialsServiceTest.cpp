@@ -22,6 +22,7 @@
 #include "../TestBase.h"
 #include "controllerservices/AWSCredentialsService.h"
 #include "../Utils.h"
+#include "core/controller/ControllerServiceNode.h"
 
 class AWSCredentialsServiceTestAccessor {
  public:

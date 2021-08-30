@@ -56,8 +56,7 @@ namespace io {
 
 TLSServerSocket::TLSServerSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners = -1)
     : TLSSocket(context, hostname, port, listeners),
-      running_(true),
-      logger_(logging::LoggerFactory<TLSServerSocket>::getLogger()) {
+      running_(true) {
 }
 
 TLSServerSocket::~TLSServerSocket() {

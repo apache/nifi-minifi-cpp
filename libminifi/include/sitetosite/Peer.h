@@ -141,8 +141,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   SiteToSitePeer()
       : stream_(nullptr),
         host_(""),
-        port_(-1),
-        logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
+        port_(-1) {
   }
   /*
    * Create a new site2site peer
@@ -158,7 +157,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
         port_(port),
         timeout_(30000),
         yield_expiration_(0),
-        logger_(logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
+        logger_(core::logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
     yield_expiration_ = 0;
     timeout_ = 30000;  // 30 seconds
@@ -353,7 +352,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // Yield Expiration per destination PortID
   std::map<std::string, uint64_t> yield_expiration_PortIdMap;
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SiteToSitePeer>::getLogger();
 };
 
 }  // namespace sitetosite

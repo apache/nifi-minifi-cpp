@@ -17,9 +17,11 @@
  */
 
 #include "../TestBase.h"
-#include "utils/TestUtils.h"
 #include "FlowFileRepository.h"
 #include "utils/IntegrationTestUtils.h"
+#include "../Path.h"
+#include "repository/VolatileContentRepository.h"
+#include "FlowFileRecord.h"
 
 using utils::Path;
 using core::repository::FlowFileRepository;

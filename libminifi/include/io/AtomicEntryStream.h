@@ -43,8 +43,7 @@ class AtomicEntryStream : public BaseStream {
       : length_(0),
         offset_(0),
         key_(key),
-        entry_(entry),
-        logger_(logging::LoggerFactory<AtomicEntryStream()>::getLogger()) {
+        entry_(entry) {
     core::repository::RepoValue<T> *value;
     if (entry_->getValue(key, &value)) {
       length_ = value->getBufferSize();
@@ -99,7 +98,7 @@ class AtomicEntryStream : public BaseStream {
   std::recursive_mutex entry_lock_;
 
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AtomicEntryStream>::getLogger();
 };
 
 template<typename T>

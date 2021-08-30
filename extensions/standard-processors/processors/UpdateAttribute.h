@@ -39,8 +39,7 @@ namespace processors {
 class UpdateAttribute : public core::Processor {
  public:
   UpdateAttribute(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<UpdateAttribute>::getLogger()) {
+      : core::Processor(name, uuid) {
   }
 
   /**
@@ -69,7 +68,7 @@ class UpdateAttribute : public core::Processor {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdateAttribute>::getLogger();
   std::vector<core::Property> attributes_;
 };
 

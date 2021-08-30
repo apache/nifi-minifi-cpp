@@ -46,7 +46,7 @@ class FileSystem {
  private:
   bool should_encrypt_on_write_;
   std::optional<utils::crypto::EncryptionProvider> encryptor_;
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<FileSystem>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<FileSystem>::getLogger()};
 };
 
 }  // namespace file

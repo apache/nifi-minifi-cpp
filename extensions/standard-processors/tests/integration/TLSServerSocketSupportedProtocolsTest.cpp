@@ -38,6 +38,8 @@
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSServerSocket.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 #ifdef WIN32
 using SocketDescriptor = SOCKET;
 #else
@@ -105,7 +107,7 @@ std::string str_addr(const sockaddr* const sa) {
   }
 }
 
-void log_addrinfo(addrinfo* const ai, logging::Logger& logger) {
+void log_addrinfo(addrinfo* const ai, minifi::core::logging::Logger& logger) {
   logger.log_debug(".ai_family: %d %s\n", ai->ai_family, str_family(ai->ai_family));
   logger.log_debug(".ai_socktype: %d %s\n", ai->ai_socktype, str_socktype(ai->ai_socktype));
   logger.log_debug(".ai_protocol: %d %s\n", ai->ai_protocol, str_proto(ai->ai_protocol));
@@ -149,9 +151,9 @@ class SimpleSSLTestClient  {
   SocketDescriptor sfd_;
   std::string host_;
   std::string port_;
-  gsl::not_null<std::shared_ptr<logging::Logger>> logger_{gsl::make_not_null(logging::LoggerFactory<SimpleSSLTestClient>::getLogger())};
+  gsl::not_null<std::shared_ptr<minifi::core::logging::Logger>> logger_{gsl::make_not_null(minifi::core::logging::LoggerFactory<SimpleSSLTestClient>::getLogger())};
 
-  static SocketDescriptor openConnection(const char *host_name, const char *port, logging::Logger& logger) {
+  static SocketDescriptor openConnection(const char *host_name, const char *port, minifi::core::logging::Logger& logger) {
     struct addrinfo hints;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
@@ -231,7 +233,7 @@ class TLSServerSocketSupportedProtocolsTest {
 
  protected:
     void configureSecurity() {
-      host_ = org::apache::nifi::minifi::io::Socket::getMyHostName();
+      host_ = minifi::io::Socket::getMyHostName();
       port_ = "38778";
       if (!key_dir_.empty()) {
         configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
@@ -244,8 +246,8 @@ class TLSServerSocketSupportedProtocolsTest {
     }
 
     void createServerSocket() {
-      const auto socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
-      server_socket_ = std::make_unique<org::apache::nifi::minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
+      const auto socket_context = std::make_shared<minifi::io::TLSContext>(configuration_);
+      server_socket_ = std::make_unique<minifi::io::TLSServerSocket>(socket_context, host_, std::stoi(port_), 3);
       assert(0 == server_socket_->initialize());
 
       is_running_ = true;
@@ -275,7 +277,7 @@ class TLSServerSocketSupportedProtocolsTest {
     }
 
     std::atomic<bool> is_running_;
-    std::unique_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
+    std::unique_ptr<minifi::io::TLSServerSocket> server_socket_;
     std::string host_;
     std::string port_;
     std::string key_dir_;

@@ -28,7 +28,7 @@
 
 #include "client/HTTPClient.h"
 
-static bool init(const core::extension::ExtensionConfig& /*config*/) {
+static bool init(const org::apache::nifi::minifi::core::extension::ExtensionConfig& /*config*/) {
   return curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
 }
 

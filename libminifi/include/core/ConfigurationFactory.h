@@ -33,15 +33,7 @@ namespace minifi {
 namespace core {
 
 template<typename T>
-typename std::enable_if<!class_operations<T>::value, T*>::type instantiate(
-    const std::shared_ptr<core::Repository>& /*repo*/, const std::shared_ptr<core::Repository>& /*flow_file_repo*/,
-    const std::shared_ptr<core::ContentRepository>& /*content_repo*/, std::shared_ptr<Configure> /*configuration*/,
-    const std::optional<std::string>& /*path*/, const std::shared_ptr<utils::file::FileSystem>& /*filesystem*/) {
-  throw std::runtime_error("Cannot instantiate class");
-}
-
-template<typename T>
-typename std::enable_if<class_operations<T>::value, T*>::type instantiate(
+T* instantiate(
     const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_file_repo,
     const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<io::StreamFactory> &stream_factory,
     std::shared_ptr<Configure> configuration, const std::optional<std::string>& path,

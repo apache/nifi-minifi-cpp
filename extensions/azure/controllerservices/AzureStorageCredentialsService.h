@@ -38,13 +38,11 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
 
   explicit AzureStorageCredentialsService(const std::string& name, const minifi::utils::Identifier& uuid = {})
-      : ControllerService(name, uuid),
-        logger_(logging::LoggerFactory<AzureStorageCredentialsService>::getLogger()) {
+      : ControllerService(name, uuid) {
   }
 
   explicit AzureStorageCredentialsService(const std::string& name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name),
-        logger_(logging::LoggerFactory<AzureStorageCredentialsService>::getLogger()) {
+      : ControllerService(name) {
   }
 
   void initialize() override;
@@ -68,7 +66,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
 
  private:
   storage::AzureStorageCredentials credentials_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AzureStorageCredentialsService>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::azure::controllers

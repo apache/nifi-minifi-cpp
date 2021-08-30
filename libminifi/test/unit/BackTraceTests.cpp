@@ -21,6 +21,8 @@
 #include <memory>
 #include "../TestBase.h"
 #include "utils/BackTrace.h"
+#include "utils/Monitors.h"
+#include "utils/ThreadPool.h"
 
 bool function() {
   return true;

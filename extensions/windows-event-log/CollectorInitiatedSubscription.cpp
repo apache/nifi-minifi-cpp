@@ -59,7 +59,7 @@ static core::Relationship s_success("success", "Relationship for successfully co
 
 
 CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid)
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<CollectorInitiatedSubscription>::getLogger()) {
+  : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<CollectorInitiatedSubscription>::getLogger()) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
   if (GetComputerName(buff, &size)) {

@@ -129,7 +129,7 @@ FetchSFTP::FetchSFTP(const std::string& name, const utils::Identifier& uuid /*= 
     : SFTPProcessorBase(name, uuid),
       create_directory_(false),
       disable_directory_listing_(false) {
-  logger_ = logging::LoggerFactory<FetchSFTP>::getLogger();
+  logger_ = core::logging::LoggerFactory<FetchSFTP>::getLogger();
 }
 
 FetchSFTP::~FetchSFTP() = default;
@@ -160,8 +160,7 @@ void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
 
 FetchSFTP::WriteCallback::WriteCallback(const std::string& remote_file,
                                     utils::SFTPClient& client)
-    : logger_(logging::LoggerFactory<FetchSFTP::WriteCallback>::getLogger())
-    , remote_file_(remote_file)
+    : remote_file_(remote_file)
     , client_(client) {
 }
 

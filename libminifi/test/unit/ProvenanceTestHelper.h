@@ -45,14 +45,14 @@
 /**
  * Test repository
  */
-class TestRepository : public core::Repository {
+class TestRepository : public org::apache::nifi::minifi::core::Repository {
  public:
   TestRepository()
-      : core::SerializableComponent("repo_name"),
+      : org::apache::nifi::minifi::core::SerializableComponent("repo_name"),
         Repository("repo_name", "./dir", 1000, 100, 0) {
   }
 
-  bool initialize(const std::shared_ptr<minifi::Configure> &) override {
+  bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
     return true;
   }
 
@@ -80,7 +80,7 @@ class TestRepository : public core::Repository {
     return true;
   }
 
-  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override {
+  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>>>& data) override {
     for (const auto& item : data) {
       if (!Put(item.first, item.second->getBuffer(), item.second->size())) {
         return false;
@@ -110,29 +110,29 @@ class TestRepository : public core::Repository {
     }
   }
 
-  bool Serialize(std::vector<std::shared_ptr<core::SerializableComponent>>& /*store*/, size_t /*max_size*/) override {
+  bool Serialize(std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>>& /*store*/, size_t /*max_size*/) override {
     return false;
   }
 
-  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override {
+  bool DeSerialize(std::vector<std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>> &store, size_t &max_size) override {
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
     max_size = 0;
     for (const auto &entry : repository_results_) {
       if (max_size >= store.size()) {
         break;
       }
-      std::shared_ptr<core::SerializableComponent> eventRead = store.at(max_size);
+      const auto eventRead = store.at(max_size);
       eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length());
       ++max_size;
     }
     return true;
   }
 
-  bool Serialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) override {
+  bool Serialize(const std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent>& /*store*/) override {
     return false;
   }
 
-  bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) override {
+  bool DeSerialize(const std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent> &store) override {
     std::string value;
     Get(store->getUUIDStr(), value);
     store->DeSerialize(reinterpret_cast<const uint8_t*>(value.c_str()), value.size());
@@ -148,12 +148,12 @@ class TestRepository : public core::Repository {
     return repository_results_;
   }
 
-  void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
+  void getProvenanceRecord(std::vector<std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>> &records, int maxSize) {
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
     for (const auto &entry : repository_results_) {
       if (records.size() >= static_cast<uint64_t>(maxSize))
         break;
-      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
+      const auto eventRead = std::make_shared<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>();
 
       if (eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length())) {
         records.push_back(eventRead);
@@ -170,11 +170,11 @@ class TestRepository : public core::Repository {
   std::map<std::string, std::string> repository_results_;
 };
 
-class TestFlowRepository : public core::Repository {
+class TestFlowRepository : public org::apache::nifi::minifi::core::Repository {
  public:
   TestFlowRepository()
-      : core::SerializableComponent("ff"),
-        core::Repository("ff", "./dir", 1000, 100, 0) {
+      : org::apache::nifi::minifi::core::SerializableComponent("ff"),
+        org::apache::nifi::minifi::core::Repository("ff", "./dir", 1000, 100, 0) {
   }
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
@@ -211,12 +211,12 @@ class TestFlowRepository : public core::Repository {
     return repository_results_;
   }
 
-  void getProvenanceRecord(std::vector<std::shared_ptr<provenance::ProvenanceEventRecord>> &records, int maxSize) {
+  void getProvenanceRecord(std::vector<std::shared_ptr<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>> &records, int maxSize) {
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
     for (const auto &entry : repository_results_) {
       if (records.size() >= static_cast<uint64_t>(maxSize))
         break;
-      std::shared_ptr<provenance::ProvenanceEventRecord> eventRead = std::make_shared<provenance::ProvenanceEventRecord>();
+      const auto eventRead = std::make_shared<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>();
 
       if (eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length())) {
         records.push_back(eventRead);
@@ -224,7 +224,7 @@ class TestFlowRepository : public core::Repository {
     }
   }
 
-  void loadComponent(const std::shared_ptr<core::ContentRepository>& /*content_repo*/) override {
+  void loadComponent(const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/) override {
   }
 
   void run() override {
@@ -236,15 +236,17 @@ class TestFlowRepository : public core::Repository {
   std::map<std::string, std::string> repository_results_;
 };
 
-class TestFlowController : public minifi::FlowController {
+class TestFlowController : public org::apache::nifi::minifi::FlowController {
  public:
-  TestFlowController(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> /*content_repo*/)
-      : minifi::FlowController(repo, flow_file_repo, std::make_shared<minifi::Configure>(), nullptr, std::make_shared<core::repository::VolatileContentRepository>(), "") {
+  TestFlowController(std::shared_ptr<org::apache::nifi::minifi::core::Repository> repo, std::shared_ptr<org::apache::nifi::minifi::core::Repository> flow_file_repo,
+      const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/)
+      :org::apache::nifi::minifi::FlowController(repo, flow_file_repo, std::make_shared<org::apache::nifi::minifi::Configure>(), nullptr,
+          std::make_shared<org::apache::nifi::minifi::core::repository::VolatileContentRepository>(), "") {
   }
 
   ~TestFlowController() override = default;
 
-  void load(const std::shared_ptr<core::ProcessGroup>& /*root*/ = nullptr, bool /*reload*/ = false) override {
+  void load(const std::shared_ptr<org::apache::nifi::minifi::core::ProcessGroup>& /*root*/ = nullptr, bool /*reload*/ = false) override {
   }
 
   int16_t start() override {
@@ -276,19 +278,19 @@ class TestFlowController : public minifi::FlowController {
     return true;
   }
 
-  std::shared_ptr<core::Processor> createProcessor(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
+  std::shared_ptr<org::apache::nifi::minifi::core::Processor> createProcessor(const std::string& /*name*/, const org::apache::nifi::minifi::utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  core::ProcessGroup *createRootProcessGroup(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
+  org::apache::nifi::minifi::core::ProcessGroup *createRootProcessGroup(const std::string& /*name*/, const org::apache::nifi::minifi::utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  core::ProcessGroup *createRemoteProcessGroup(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
+  org::apache::nifi::minifi::core::ProcessGroup *createRemoteProcessGroup(const std::string& /*name*/, const org::apache::nifi::minifi::utils::Identifier& /*uuid*/) {
     return 0;
   }
 
-  std::shared_ptr<minifi::Connection> createConnection(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
+  std::shared_ptr<org::apache::nifi::minifi::Connection> createConnection(const std::string& /*name*/, const org::apache::nifi::minifi::utils::Identifier& /*uuid*/) {
     return 0;
   }
 };

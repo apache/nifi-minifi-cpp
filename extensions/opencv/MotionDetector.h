@@ -34,8 +34,7 @@ namespace processors {
 class MotionDetector : public core::Processor {
  public:
   explicit MotionDetector(const std::string &name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid),
-        logger_(logging::LoggerFactory<MotionDetector>::getLogger()) {
+      : Processor(name, uuid) {
   }
 
   static core::Property ImageEncoding;
@@ -47,7 +46,7 @@ class MotionDetector : public core::Processor {
   static core::Relationship Success;
   static core::Relationship Failure;
 
-  void initialize(void) override;
+  void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
@@ -56,14 +55,14 @@ class MotionDetector : public core::Processor {
  private:
   bool detectAndDraw(cv::Mat &frame);
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MotionDetector>::getLogger();
   std::mutex mutex_;
   cv::Mat background_;
   cv::Mat bg_img_;
   std::string image_encoding_;
-  int min_area_;
-  int threshold_;
-  int dil_iter_;
+  int min_area_{};
+  int threshold_{};
+  int dil_iter_{};
 
   // hardcoded width to 500
   const double IMG_WIDTH = 500.0;

@@ -37,7 +37,7 @@ class AzureStorageProcessorBase : public core::Processor {
   // Supported Properties
   EXTENSIONAPI static const core::Property AzureStorageCredentialsService;
 
-  AzureStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger>& logger)
+  AzureStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
     : core::Processor(name, uuid),
       logger_(logger) {
   }
@@ -51,7 +51,7 @@ class AzureStorageProcessorBase : public core::Processor {
 
   std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

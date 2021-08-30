@@ -52,8 +52,8 @@ class CallbackProcessor : public core::Processor {
   /*!
    * Create a new processor
    */
-  CallbackProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(std::move(name), uuid) {
+  explicit CallbackProcessor(const std::string& name, const utils::Identifier& uuid = {})
+      : Processor(name, uuid) {
   }
   // Destructor
   ~CallbackProcessor() override = default;
@@ -84,7 +84,7 @@ class CallbackProcessor : public core::Processor {
   std::function<void(core::ProcessContext *context)> onschedule_callback_;
  private:
   // Logger
-  std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<CallbackProcessor>::getLogger() };
+  std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<CallbackProcessor>::getLogger() };
 };
 
 } /* namespace processors */

@@ -38,9 +38,7 @@ namespace processors {
 class ExecuteScript : public core::Processor {
  public:
   explicit ExecuteScript(const std::string &name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid),
-        logger_(logging::LoggerFactory<ExecuteScript>::getLogger()),
-        script_engine_q_() {
+      : Processor(name, uuid) {
   }
 
   static core::Property ScriptEngine;
@@ -60,7 +58,7 @@ class ExecuteScript : public core::Processor {
                  const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger();
 
   std::string script_engine_;
   std::string script_file_;

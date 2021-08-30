@@ -38,9 +38,8 @@ namespace processors {
 
 class RouteOnAttribute : public core::Processor {
  public:
-  RouteOnAttribute(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<RouteOnAttribute>::getLogger()) {
+  explicit RouteOnAttribute(const std::string& name, const utils::Identifier& uuid = {})
+      : core::Processor(name, uuid) {
   }
 
   /**
@@ -71,7 +70,7 @@ class RouteOnAttribute : public core::Processor {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RouteOnAttribute>::getLogger();
   std::map<std::string, core::Property> route_properties_;
   std::map<std::string, core::Relationship> route_rels_;
 };

@@ -45,8 +45,7 @@ namespace python {
 class PythonCreator : public minifi::core::CoreComponent {
  public:
   explicit PythonCreator(const std::string &name, const utils::Identifier &uuid = {})
-      : minifi::core::CoreComponent(name, uuid),
-        logger_(logging::LoggerFactory<PythonCreator>::getLogger()) {
+      : minifi::core::CoreComponent(name, uuid) {
   }
 
   ~PythonCreator() override {
@@ -162,7 +161,7 @@ class PythonCreator : public minifi::core::CoreComponent {
   std::vector<std::string> registered_classes_;
   std::vector<std::string> classpaths_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PythonCreator>::getLogger();
 };
 
 } /* namespace python */

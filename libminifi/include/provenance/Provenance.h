@@ -435,7 +435,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Only support pass by reference or pointer
   ProvenanceEventRecord(const ProvenanceEventRecord &parent);
   ProvenanceEventRecord &operator=(const ProvenanceEventRecord &parent);
-  static std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<core::logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
@@ -447,7 +447,7 @@ class ProvenanceReporter {
    * Create a new provenance reporter associated with the process session
    */
   ProvenanceReporter(std::shared_ptr<core::Repository> repo, std::string componentId, std::string componentType)
-      : logger_(logging::LoggerFactory<ProvenanceReporter>::getLogger()) {
+      : logger_(core::logging::LoggerFactory<ProvenanceReporter>::getLogger()) {
     _componentId = componentId;
     _componentType = componentType;
     repo_ = repo;
@@ -523,7 +523,7 @@ class ProvenanceReporter {
   std::string _componentType;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   // Incoming connection Iterator
   std::set<std::shared_ptr<ProvenanceEventRecord>> _events;
   // provenance repository.

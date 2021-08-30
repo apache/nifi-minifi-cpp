@@ -27,6 +27,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "wel/UniqueEvtHandle.h"
+#include "logging/Logger.h"
 
 namespace org {
 namespace apache {
@@ -44,7 +45,7 @@ class Bookmark {
       const utils::Identifier& uuid,
       bool processOldEvents,
       std::shared_ptr<core::CoreComponentStateManager> state_manager,
-      std::shared_ptr<logging::Logger> logger);
+      std::shared_ptr<core::logging::Logger> logger);
   ~Bookmark();
   explicit operator bool() const noexcept;
 
@@ -58,7 +59,7 @@ class Bookmark {
 
   using unique_evt_handle = wel::unique_evt_handle;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string filePath_;
   bool ok_{};

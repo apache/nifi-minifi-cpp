@@ -206,7 +206,7 @@ class PublishKafka::Messages {
   std::condition_variable cv_;
   std::vector<FlowFileResult> flow_files_;
   bool interrupted_ = false;
-  const std::shared_ptr<logging::Logger> logger_;
+  const std::shared_ptr<core::logging::Logger> logger_;
 
   std::string logStatus(const std::unique_lock<std::mutex>& lock) const {
     gsl_Expects(lock.owns_lock());
@@ -240,12 +240,12 @@ class PublishKafka::Messages {
   }
 
  public:
-  explicit Messages(std::shared_ptr<logging::Logger> logger) :logger_{std::move(logger)} {}
+  explicit Messages(std::shared_ptr<core::logging::Logger> logger) :logger_{std::move(logger)} {}
 
   void waitForCompletion() {
     std::unique_lock<std::mutex> lock(mutex_);
     cv_.wait(lock, [this, &lock] {
-      if (logger_->should_log(logging::LOG_LEVEL::trace)) {
+      if (logger_->should_log(core::logging::LOG_LEVEL::trace)) {
         logger_->log_trace("%s", logStatus(lock));
       }
       return interrupted_ || std::all_of(std::begin(this->flow_files_), std::end(this->flow_files_), [](const FlowFileResult& flow_file) {
@@ -375,7 +375,7 @@ class ReadCallback : public InputStreamCallback {
       std::shared_ptr<PublishKafka::Messages> messages,
       const size_t flow_file_index,
       const bool fail_empty_flow_files,
-      std::shared_ptr<logging::Logger> logger)
+      std::shared_ptr<core::logging::Logger> logger)
       : flow_size_(flowFile.getSize()),
       max_seg_size_(max_seg_size == 0 || flow_size_ < max_seg_size ? flow_size_ : max_seg_size),
       key_(std::move(key)),
@@ -454,7 +454,7 @@ class ReadCallback : public InputStreamCallback {
   uint32_t read_size_ = 0;
   bool called_ = false;
   const bool fail_empty_flow_files_ = true;
-  const std::shared_ptr<logging::Logger> logger_;
+  const std::shared_ptr<core::logging::Logger> logger_;
 };
 
 /**

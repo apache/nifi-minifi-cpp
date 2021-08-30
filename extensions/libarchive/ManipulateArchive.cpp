@@ -124,7 +124,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     }
 
     ArchiveMetadata archiveMetadata;
-    fileutils::FileManager file_man;
+    utils::file::FileManager file_man;
 
     FocusArchiveEntry::ReadCallback readCallback(this, &file_man, &archiveMetadata);
     session->read(flowFile, &readCallback);

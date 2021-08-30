@@ -19,6 +19,8 @@
 #include "PythonCreator.h"
 #include "PythonBindings.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 static minifi::python::PythonCreator& getPythonCreator() {
   static minifi::python::PythonCreator instance("PythonCreator");
   return instance;

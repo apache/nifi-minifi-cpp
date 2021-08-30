@@ -36,7 +36,7 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
   namespace py = pybind11;
   namespace python = org::apache::nifi::minifi::python;
   namespace script = org::apache::nifi::minifi::script;
-  typedef core::logging::Logger Logger;
+  typedef org::apache::nifi::minifi::core::logging::Logger Logger;
 
   py::class_<Logger, std::shared_ptr<Logger>>(m, "Logger")
       .def("error", &Logger::log_error<>)
@@ -70,9 +70,9 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
       .def("removeAttribute", &script::ScriptFlowFile::removeAttribute)
       .def("setAttribute", &script::ScriptFlowFile::setAttribute);
 
-  py::class_<core::Relationship>(m, "Relationship")
-      .def("getName", &core::Relationship::getName)
-      .def("getDescription", &core::Relationship::getDescription);
+  py::class_<org::apache::nifi::minifi::core::Relationship>(m, "Relationship")
+      .def("getName", &org::apache::nifi::minifi::core::Relationship::getName)
+      .def("getDescription", &org::apache::nifi::minifi::core::Relationship::getDescription);
 
   py::class_<python::PyBaseStream, std::shared_ptr<python::PyBaseStream>>(m, "BaseStream")
       .def("read", static_cast<py::bytes (python::PyBaseStream::*)()>(&python::PyBaseStream::read))

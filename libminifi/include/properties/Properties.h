@@ -131,7 +131,7 @@ class Properties {
   // Mutex for protection
   mutable std::mutex mutex_;
   // Logger
-  std::shared_ptr<minifi::core::logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   // Home location for this executable
   std::string minifi_home_;
 

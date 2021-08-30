@@ -37,7 +37,7 @@ namespace aws {
 
 class AWSCredentialsProvider {
  public:
-  AWSCredentialsProvider(
+  explicit AWSCredentialsProvider(
     bool use_default_credentials = false,
     const std::string &access_key = "",
     const std::string &secret_key = "",
@@ -46,8 +46,8 @@ class AWSCredentialsProvider {
   void setAccessKey(const std::string &access_key);
   void setSecretKey(const std::string &secret_key);
   void setCredentialsFile(const std::string &credentials_file);
-  bool getUseDefaultCredentials() const;
-  std::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
+  [[nodiscard]] bool getUseDefaultCredentials() const;
+  [[nodiscard]] std::optional<Aws::Auth::AWSCredentials> getAWSCredentials();
 
  private:
   const utils::AWSInitializer& AWS_INITIALIZER = utils::AWSInitializer::get();
@@ -55,7 +55,7 @@ class AWSCredentialsProvider {
   std::string access_key_;
   std::string secret_key_;
   std::string credentials_file_;
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AWSCredentialsProvider>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AWSCredentialsProvider>::getLogger()};
 };
 
 }  // namespace aws

@@ -65,10 +65,10 @@ class ListSFTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setDebug<processors::GenerateFlowFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::GenerateFlowFile>();
     LogTestController::getInstance().setTrace<minifi::utils::SFTPClient>();
-    LogTestController::getInstance().setTrace<processors::ListSFTP>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::ListSFTP>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
     REQUIRE_FALSE(src_dir.empty());
@@ -110,7 +110,7 @@ class ListSFTPTestsFixture {
                                        true);
 
     // Configure ListSFTP processor
-    plan->setProperty(list_sftp, "Listing Strategy", processors::ListSFTP::LISTING_STRATEGY_TRACKING_TIMESTAMPS);
+    plan->setProperty(list_sftp, "Listing Strategy", minifi::processors::ListSFTP::LISTING_STRATEGY_TRACKING_TIMESTAMPS);
     plan->setProperty(list_sftp, "Hostname", "localhost");
     plan->setProperty(list_sftp, "Port", std::to_string(sftp_server->getPort()));
     plan->setProperty(list_sftp, "Username", "nifiuser");
@@ -122,7 +122,7 @@ class ListSFTPTestsFixture {
     plan->setProperty(list_sftp, "Connection Timeout", "30 sec");
     plan->setProperty(list_sftp, "Data Timeout", "30 sec");
     plan->setProperty(list_sftp, "Send Keep Alive On Timeout", "true");
-    plan->setProperty(list_sftp, "Target System Timestamp Precision", processors::ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_AUTO_DETECT);
+    plan->setProperty(list_sftp, "Target System Timestamp Precision", minifi::processors::ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_AUTO_DETECT);
     plan->setProperty(list_sftp, "Minimum File Age", "0 sec");
     plan->setProperty(list_sftp, "Minimum File Size", "0 B");
     plan->setProperty(list_sftp, "Target System Timestamp Precision", "Seconds");
@@ -969,7 +969,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities changed confi
 
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities Initial Listing Target Tracking Time Window entity outside window", "[ListSFTP][tracking-entities]") {
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
-  plan->setProperty(list_sftp, "Entity Tracking Initial Listing Target", processors::ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW);
+  plan->setProperty(list_sftp, "Entity Tracking Initial Listing Target", minifi::processors::ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW);
   plan->setProperty(list_sftp, "Entity Tracking Time Window", "10 minutes");
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1", -20*60 /* 20 minutes ago */);
@@ -982,7 +982,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities Initial Listi
 
 TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP Tracking Entities Initial Listing Target Tracking Time Window entity inside window", "[ListSFTP][tracking-entities]") {
   plan->setProperty(list_sftp, "Listing Strategy", "Tracking Entities");
-  plan->setProperty(list_sftp, "Entity Tracking Initial Listing Target", processors::ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW);
+  plan->setProperty(list_sftp, "Entity Tracking Initial Listing Target", minifi::processors::ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW);
   plan->setProperty(list_sftp, "Entity Tracking Time Window", "10 minutes");
 
   createFileWithModificationTimeDiff("nifi_test/file1.ext", "Test content 1");

@@ -68,8 +68,8 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     const utils::Identifier expected_source_id = utils::generateUUID();
     const utils::Identifier expected_destination_id = utils::generateUUID();
     std::string serialized_yaml;
-    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<processors::TailFile>("TailFile_1", expected_source_id)));
-    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<processors::TailFile>("TailFile_2", expected_destination_id)));
+    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<minifi::processors::TailFile>("TailFile_1", expected_source_id)));
+    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<minifi::processors::TailFile>("TailFile_2", expected_destination_id)));
     SECTION("Directly from configuration") {
       serialized_yaml = std::string {
           "source id: " + expected_source_id.to_string() + "\n"

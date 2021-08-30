@@ -30,6 +30,8 @@
 #include "ManipulateArchive.h"
 #include "FocusArchiveEntry.h"
 #include "UnfocusArchiveEntry.h"
+#include "../unit/ProvenanceTestHelper.h"
+#include "repository/VolatileContentRepository.h"
 
 const char TEST_ARCHIVE_NAME[] = "manipulate_test_archive.tar";
 const int NUM_FILES = 3;

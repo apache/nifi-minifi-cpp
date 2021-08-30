@@ -68,11 +68,11 @@ class PutSFTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setDebug<processors::GetFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::GetFile>();
     LogTestController::getInstance().setTrace<minifi::utils::SFTPClient>();
-    LogTestController::getInstance().setTrace<processors::PutSFTP>();
-    LogTestController::getInstance().setTrace<processors::ExtractText>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::PutSFTP>();
+    LogTestController::getInstance().setTrace<minifi::processors::ExtractText>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
     REQUIRE_FALSE(src_dir.empty());
@@ -112,7 +112,7 @@ class PutSFTPTestsFixture {
     plan->setProperty(put, "Batch Size", "2");
     plan->setProperty(put, "Connection Timeout", "30 sec");
     plan->setProperty(put, "Data Timeout", "30 sec");
-    plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
+    plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
     plan->setProperty(put, "Strict Host Key Checking", "false");
     plan->setProperty(put, "Send Keep Alive On Timeout", "true");
     plan->setProperty(put, "Use Compression", "false");
@@ -357,7 +357,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking mismatch strict
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution rename", "[PutSFTP][conflict-resolution]") {
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
@@ -371,7 +371,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution rename", "[Pu
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution reject", "[PutSFTP][conflict-resolution]") {
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_REJECT);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REJECT);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
@@ -384,7 +384,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution reject", "[Pu
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution fail", "[PutSFTP][conflict-resolution]") {
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
@@ -397,7 +397,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution fail", "[PutS
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution ignore", "[PutSFTP][conflict-resolution]") {
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_IGNORE);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_IGNORE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
@@ -411,7 +411,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution ignore", "[Pu
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution replace", "[PutSFTP][conflict-resolution]") {
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_REPLACE);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REPLACE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
@@ -424,7 +424,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution replace", "[P
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution none", "[PutSFTP][conflict-resolution]") {
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
@@ -439,22 +439,22 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution none", "[PutS
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution with directory existing at target", "[PutSFTP][conflict-resolution]") {
   bool should_predetect_failure = true;
   SECTION("with conflict resolution rename") {
-    plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
+    plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
   }
   SECTION("with conflict resolution reject") {
-    plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_REJECT);
+    plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REJECT);
   }
   SECTION("with conflict resolution fail") {
-    plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
+    plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
   }
   SECTION("with conflict resolution ignore") {
-    plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_IGNORE);
+    plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_IGNORE);
   }
   SECTION("with conflict resolution replace") {
-    plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_REPLACE);
+    plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REPLACE);
   }
   SECTION("with conflict resolution none") {
-    plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
+    plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
     should_predetect_failure = false;
   }
 
@@ -614,7 +614,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test temporary filename", "[PutSF
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test temporary file cleanup", "[PutSFTP]") {
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
@@ -720,7 +720,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP connection caching reaches limit"
   plan->setProperty(put, "Batch Size", "2");
   plan->setProperty(put, "Connection Timeout", "30 sec");
   plan->setProperty(put, "Data Timeout", "30 sec");
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
   plan->setProperty(put, "Strict Host Key Checking", "false");
   plan->setProperty(put, "Send Keep Alive On Timeout", "true");
   plan->setProperty(put, "Use Compression", "false");
@@ -782,7 +782,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching two files in two batches
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching does not fail even if one is routed to Failure", "[PutSFTP][batching]") {
   plan->setProperty(put, "Batch Size", "3");
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   createFile(src_dir, "tstFile2.ext", "content 2");
@@ -869,7 +869,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP expression language test", "[PutS
   plan->setProperty(put, "Batch Size", "2");
   plan->setProperty(put, "Connection Timeout", "30 sec");
   plan->setProperty(put, "Data Timeout", "30 sec");
-  plan->setProperty(put, "Conflict Resolution", processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
+  plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
   plan->setProperty(put, "Strict Host Key Checking", "false");
   plan->setProperty(put, "Send Keep Alive On Timeout", "true");
   plan->setProperty(put, "Use Compression", "false");

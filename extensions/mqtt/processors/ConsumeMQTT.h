@@ -52,8 +52,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
    * Create a new processor
    */
   explicit ConsumeMQTT(const std::string& name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(name, uuid),
-        logger_(logging::LoggerFactory<ConsumeMQTT>::getLogger()) {
+      : processors::AbstractMQTTProcessor(name, uuid) {
     isSubscriber_ = true;
     maxQueueSize_ = 100;
     maxSegSize_ = ULLONG_MAX;
@@ -122,7 +121,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
   std::mutex mutex_;
   uint64_t maxQueueSize_;
   uint64_t maxSegSize_;

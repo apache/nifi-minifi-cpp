@@ -63,12 +63,12 @@ class ListThenFetchSFTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setDebug<processors::GenerateFlowFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::GenerateFlowFile>();
     LogTestController::getInstance().setTrace<minifi::utils::SFTPClient>();
-    LogTestController::getInstance().setTrace<processors::ListSFTP>();
-    LogTestController::getInstance().setTrace<processors::FetchSFTP>();
-    LogTestController::getInstance().setTrace<processors::PutFile>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::ListSFTP>();
+    LogTestController::getInstance().setTrace<minifi::processors::FetchSFTP>();
+    LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
     REQUIRE_FALSE(src_dir.empty());
@@ -101,7 +101,7 @@ class ListThenFetchSFTPTestsFixture {
          true);
 
     // Configure ListSFTP processor
-    plan->setProperty(list_sftp, "Listing Strategy", processors::ListSFTP::LISTING_STRATEGY_TRACKING_TIMESTAMPS);
+    plan->setProperty(list_sftp, "Listing Strategy", minifi::processors::ListSFTP::LISTING_STRATEGY_TRACKING_TIMESTAMPS);
     plan->setProperty(list_sftp, "Hostname", "localhost");
     plan->setProperty(list_sftp, "Port", std::to_string(sftp_server->getPort()));
     plan->setProperty(list_sftp, "Username", "nifiuser");
@@ -113,7 +113,7 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(list_sftp, "Connection Timeout", "30 sec");
     plan->setProperty(list_sftp, "Data Timeout", "30 sec");
     plan->setProperty(list_sftp, "Send Keep Alive On Timeout", "true");
-    plan->setProperty(list_sftp, "Target System Timestamp Precision", processors::ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_AUTO_DETECT);
+    plan->setProperty(list_sftp, "Target System Timestamp Precision", minifi::processors::ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_AUTO_DETECT);
     plan->setProperty(list_sftp, "Minimum File Age", "0 sec");
     plan->setProperty(list_sftp, "Minimum File Size", "0 B");
     plan->setProperty(list_sftp, "Target System Timestamp Precision", "Seconds");
@@ -125,7 +125,7 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(fetch_sftp, "Port", std::to_string(sftp_server->getPort()));
     plan->setProperty(fetch_sftp, "Username", "nifiuser");
     plan->setProperty(fetch_sftp, "Password", "nifipassword");
-    plan->setProperty(fetch_sftp, "Completion Strategy", processors::FetchSFTP::COMPLETION_STRATEGY_NONE);
+    plan->setProperty(fetch_sftp, "Completion Strategy", minifi::processors::FetchSFTP::COMPLETION_STRATEGY_NONE);
     plan->setProperty(fetch_sftp, "Connection Timeout", "30 sec");
     plan->setProperty(fetch_sftp, "Data Timeout", "30 sec");
     plan->setProperty(fetch_sftp, "Strict Host Key Checking", "false");
@@ -138,7 +138,7 @@ class ListThenFetchSFTPTestsFixture {
 
     // Configure PutFile processor
     plan->setProperty(put_file, "Directory", dst_dir + "/${path}");
-    plan->setProperty(put_file, "Conflict Resolution Strategy", processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
+    plan->setProperty(put_file, "Conflict Resolution Strategy", minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
 
@@ -154,7 +154,7 @@ class ListThenFetchSFTPTestsFixture {
     auto full_path = ss.str();
     std::deque<std::string> parent_dirs;
     std::string parent_dir = full_path;
-    while ((parent_dir = utils::file::FileUtils::get_parent_path(parent_dir)) != "") {
+    while (!(parent_dir = utils::file::FileUtils::get_parent_path(parent_dir)).empty()) {
       parent_dirs.push_front(parent_dir);
     }
     for (const auto& dir : parent_dirs) {

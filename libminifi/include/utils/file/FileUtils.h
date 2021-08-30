@@ -420,7 +420,7 @@ inline int copy_file(const std::string &path_from, const std::string& dest_path)
   return 0;
 }
 
-inline void addFilesMatchingExtension(const std::shared_ptr<logging::Logger> &logger, const std::string &originalPath, const std::string &extension, std::vector<std::string> &accruedFiles) {
+inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logger> &logger, const std::string &originalPath, const std::string &extension, std::vector<std::string> &accruedFiles) {
 #ifndef WIN32
 
   struct stat s;
@@ -523,7 +523,7 @@ inline std::string concat_path(const std::string& root, const std::string& child
  * process that directory or not.
  */
 inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
-                     const std::shared_ptr<logging::Logger> &logger, std::function<bool(const std::string&)> dir_callback) {
+                     const std::shared_ptr<core::logging::Logger> &logger, std::function<bool(const std::string&)> dir_callback) {
   logger->log_debug("Performing file listing against %s", dir);
 #ifndef WIN32
   DIR *d = opendir(dir.c_str());
@@ -593,13 +593,13 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
 }
 
 inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
-                     const std::shared_ptr<logging::Logger> &logger, bool recursive = true) {
+                     const std::shared_ptr<core::logging::Logger> &logger, bool recursive = true) {
   list_dir(dir, callback, logger, [&] (const std::string&) {
     return recursive;
   });
 }
 
-inline std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<logging::Logger> &logger,
+inline std::vector<std::pair<std::string, std::string>> list_dir_all(const std::string& dir, const std::shared_ptr<core::logging::Logger> &logger,
     bool recursive = true)  {
   std::vector<std::pair<std::string, std::string>> fileList;
   auto lambda = [&fileList] (const std::string &path, const std::string &filename) {

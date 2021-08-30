@@ -156,7 +156,7 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
 }
 
 PutAzureDataLakeStorage::ReadCallback::ReadCallback(
-      uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger)
+      uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<core::logging::Logger> logger)
   : flow_size_(flow_size),
     azure_data_lake_storage_(azure_data_lake_storage),
     params_(params),

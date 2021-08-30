@@ -65,11 +65,11 @@ class FetchSFTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setDebug<processors::GenerateFlowFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::GenerateFlowFile>();
     LogTestController::getInstance().setTrace<minifi::utils::SFTPClient>();
-    LogTestController::getInstance().setTrace<processors::FetchSFTP>();
-    LogTestController::getInstance().setTrace<processors::PutFile>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::FetchSFTP>();
+    LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<SFTPTestServer>();
 
     REQUIRE_FALSE(src_dir.empty());
@@ -113,7 +113,7 @@ class FetchSFTPTestsFixture {
     plan->setProperty(fetch_sftp, "Port", std::to_string(sftp_server->getPort()));
     plan->setProperty(fetch_sftp, "Username", "nifiuser");
     plan->setProperty(fetch_sftp, "Password", "nifipassword");
-    plan->setProperty(fetch_sftp, "Completion Strategy", processors::FetchSFTP::COMPLETION_STRATEGY_NONE);
+    plan->setProperty(fetch_sftp, "Completion Strategy", minifi::processors::FetchSFTP::COMPLETION_STRATEGY_NONE);
     plan->setProperty(fetch_sftp, "Connection Timeout", "30 sec");
     plan->setProperty(fetch_sftp, "Data Timeout", "30 sec");
     plan->setProperty(fetch_sftp, "Strict Host Key Checking", "false");
@@ -122,7 +122,7 @@ class FetchSFTPTestsFixture {
 
     // Configure PutFile processor
     plan->setProperty(put_file, "Directory", dst_dir + "/${path}");
-    plan->setProperty(put_file, "Conflict Resolution Strategy", processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
+    plan->setProperty(put_file, "Conflict Resolution Strategy", minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
 
@@ -283,7 +283,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch connection error", "[Fe
 
 TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete File success", "[FetchSFTP][completion-strategy]") {
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(fetch_sftp, "Completion Strategy", processors::FetchSFTP::COMPLETION_STRATEGY_DELETE_FILE);
+  plan->setProperty(fetch_sftp, "Completion Strategy", minifi::processors::FetchSFTP::COMPLETION_STRATEGY_DELETE_FILE);
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
 
@@ -306,7 +306,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
     return;
   }
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(fetch_sftp, "Completion Strategy", processors::FetchSFTP::COMPLETION_STRATEGY_DELETE_FILE);
+  plan->setProperty(fetch_sftp, "Completion Strategy", minifi::processors::FetchSFTP::COMPLETION_STRATEGY_DELETE_FILE);
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
   /* By making the parent directory non-writable we make it impossible do delete the source file */
@@ -331,7 +331,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
 
 TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Move File success", "[FetchSFTP][completion-strategy]") {
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(fetch_sftp, "Completion Strategy", processors::FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE);
+  plan->setProperty(fetch_sftp, "Completion Strategy", minifi::processors::FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE);
   plan->setProperty(fetch_sftp, "Move Destination Directory", "nifi_done/");
   plan->setProperty(fetch_sftp, "Create Directory", "true");
 
@@ -352,7 +352,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Move File
 
 TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Move File fail", "[FetchSFTP][completion-strategy]") {
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(fetch_sftp, "Completion Strategy", processors::FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE);
+  plan->setProperty(fetch_sftp, "Completion Strategy", minifi::processors::FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE);
   plan->setProperty(fetch_sftp, "Move Destination Directory", "nifi_done/");
 
   /* The completion strategy should fail because the target directory does not exist and we don't create it */
@@ -397,7 +397,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP expression language test", "[
   plan->setProperty(fetch_sftp, "Remote File", "${'attr_Remote File'}");
   plan->setProperty(fetch_sftp, "Move Destination Directory", "${'attr_Move Destination Directory'}");
 
-  plan->setProperty(fetch_sftp, "Completion Strategy", processors::FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE);
+  plan->setProperty(fetch_sftp, "Completion Strategy", minifi::processors::FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE);
   plan->setProperty(fetch_sftp, "Create Directory", "true");
 
   createFile("nifi_test/tstFile.ext", "Test content 1");

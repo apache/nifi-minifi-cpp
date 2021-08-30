@@ -38,7 +38,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-using logging::Logger;
+using core::logging::Logger;
 
 //! UnfocusArchiveEntry Class
 class UnfocusArchiveEntry : public core::Processor {
@@ -48,30 +48,29 @@ class UnfocusArchiveEntry : public core::Processor {
    * Create a new processor
    */
   explicit UnfocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
-  : core::Processor(name, uuid),
-    logger_(logging::LoggerFactory<UnfocusArchiveEntry>::getLogger()) {
+      : core::Processor(name, uuid) {
   }
   //! Destructor
-  virtual ~UnfocusArchiveEntry() = default;
+  ~UnfocusArchiveEntry() override = default;
   //! Processor Name
   static constexpr char const* ProcessorName = "UnfocusArchiveEntry";
   //! Supported Relationships
   static core::Relationship Success;
 
   //! OnTrigger method, implemented by NiFi UnfocusArchiveEntry
-  virtual void onTrigger(core::ProcessContext *context,
-      core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context,
+      core::ProcessSession *session) override;
   //! Initialize, over write by NiFi UnfocusArchiveEntry
-  virtual void initialize(void);
+  void initialize() override;
 
   //! Write callback for reconstituting lensed archive into flow file content
   class WriteCallback : public OutputStreamCallback {
    public:
     explicit WriteCallback(ArchiveMetadata *archiveMetadata);
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
    private:
     //! Logger
-    std::shared_ptr<Logger> logger_;
+    std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger();
     ArchiveMetadata *_archiveMetadata;
     static int ok_cb(struct archive *, void* /*d*/) { return ARCHIVE_OK; }
     static la_ssize_t write_cb(struct archive *, void *d, const void *buffer, size_t length);
@@ -79,7 +78,7 @@ class UnfocusArchiveEntry : public core::Processor {
 
  private:
   //! Logger
-  std::shared_ptr<Logger> logger_;
+  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger();
 };
 
 } /* namespace processors */

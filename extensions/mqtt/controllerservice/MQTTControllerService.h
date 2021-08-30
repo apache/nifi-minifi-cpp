@@ -77,8 +77,7 @@ class MQTTControllerService : public core::controller::ControllerService {
         keepAliveInterval_(0),
         connectionTimeOut_(0),
         qos_(2),
-        ssl_context_service_(nullptr),
-        logger_(logging::LoggerFactory<MQTTControllerService>::getLogger()) {
+        ssl_context_service_(nullptr) {
   }
 
   explicit MQTTControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
@@ -88,8 +87,7 @@ class MQTTControllerService : public core::controller::ControllerService {
         keepAliveInterval_(0),
         connectionTimeOut_(0),
         qos_(2),
-        ssl_context_service_(nullptr),
-        logger_(logging::LoggerFactory<MQTTControllerService>::getLogger()) {
+        ssl_context_service_(nullptr) {
     setConfiguration(configuration);
     initialize();
   }
@@ -313,7 +311,7 @@ class MQTTControllerService : public core::controller::ControllerService {
 
   std::shared_ptr<controllers::SSLContextService> ssl_context_service_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MQTTControllerService>::getLogger();
 };
 
 } /* namespace controllers */

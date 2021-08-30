@@ -48,8 +48,7 @@ class LinuxPowerManagerService : public ThreadManagementService {
         wait_period_(0),
         last_time_(0),
         trigger_(0),
-        low_battery_trigger_(0),
-        logger_(logging::LoggerFactory<LinuxPowerManagerService>::getLogger()) {
+        low_battery_trigger_(0) {
   }
 
   explicit LinuxPowerManagerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
@@ -123,7 +122,7 @@ class LinuxPowerManagerService : public ThreadManagementService {
   std::string status_keyword_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LinuxPowerManagerService>::getLogger();
 };
 
 }  // namespace controllers

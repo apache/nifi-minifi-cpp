@@ -43,8 +43,7 @@ int ssl_protocol_en(void* /*ssl_context*/, void* /*user_data*/) {
 }
 
 RESTReceiver::RESTReceiver(const std::string& name, const utils::Identifier& uuid)
-    : HeartbeatReporter(name, uuid),
-      logger_(logging::LoggerFactory<RESTReceiver>::getLogger()) {
+    : HeartbeatReporter(name, uuid) {
 }
 
 void RESTReceiver::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) {

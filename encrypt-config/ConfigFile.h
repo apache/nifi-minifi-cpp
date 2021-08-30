@@ -16,7 +16,6 @@
  */
 #pragma once
 
-#include <istream>
 #include <string>
 #include <vector>
 

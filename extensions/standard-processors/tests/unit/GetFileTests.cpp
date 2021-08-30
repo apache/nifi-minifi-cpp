@@ -26,6 +26,7 @@
 #include "GetFile.h"
 #include "utils/file/FileUtils.h"
 #include "utils/TestUtils.h"
+#include "unit/ProvenanceTestHelper.h"
 
 #ifdef WIN32
 #include <fileapi.h>
@@ -47,8 +48,8 @@ class GetFileTestController {
 
 GetFileTestController::GetFileTestController() {
   LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setTrace<processors::GetFile>();
-  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
+  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
 
   test_plan_ = test_controller_.createPlan();
   auto repo = std::make_shared<TestRepository>();
@@ -63,9 +64,9 @@ GetFileTestController::GetFileTestController() {
 
   // Build MiNiFi processing graph
   get_file_processor_ = test_plan_->addProcessor("GetFile", "Get");
-  test_plan_->setProperty(get_file_processor_, processors::GetFile::Directory.getName(), temp_dir);
+  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir);
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
-  test_plan_->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
   // Write test input.
   std::ofstream in_file_stream(input_file_name_);
@@ -98,8 +99,8 @@ void GetFileTestController::runSession() {
 TEST_CASE("GetFile ignores hidden files and files larger than MaxSize", "[GetFile]") {
   GetFileTestController test_controller;
   SECTION("IgnoreHiddenFile not set, so defaults to true") {}
-  SECTION("IgnoreHiddenFile set to true explicitly") { test_controller.setProperty(processors::GetFile::IgnoreHiddenFile, "true"); }
-  test_controller.setProperty(processors::GetFile::MaxSize, "50 B");
+  SECTION("IgnoreHiddenFile set to true explicitly") { test_controller.setProperty(minifi::processors::GetFile::IgnoreHiddenFile, "true"); }
+  test_controller.setProperty(minifi::processors::GetFile::MaxSize, "50 B");
 
   test_controller.runSession();
 
@@ -117,7 +118,7 @@ TEST_CASE("GetFile ignores hidden files and files larger than MaxSize", "[GetFil
 TEST_CASE("GetFile onSchedule() throws if the required Directory property is not set", "[GetFile]") {
   TestController test_controller;
   LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setTrace<processors::GetFile>();
+  LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
   auto plan = test_controller.createPlan();
   auto get_file = plan->addProcessor("GetFile", "Get");
   REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception);
@@ -126,7 +127,7 @@ TEST_CASE("GetFile onSchedule() throws if the required Directory property is not
 TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
   GetFileTestController test_controller;
   SECTION("KeepSourceFile is not set, so defaults to false") {}
-  SECTION("KeepSourceFile is set to false explicitly") { test_controller.setProperty(processors::GetFile::KeepSourceFile, "false"); }
+  SECTION("KeepSourceFile is set to false explicitly") { test_controller.setProperty(minifi::processors::GetFile::KeepSourceFile, "false"); }
 
   test_controller.runSession();
 
@@ -135,7 +136,7 @@ TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
 
 TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
   GetFileTestController test_controller;
-  test_controller.setProperty(processors::GetFile::KeepSourceFile, "true");
+  test_controller.setProperty(minifi::processors::GetFile::KeepSourceFile, "true");
 
   test_controller.runSession();
 
@@ -145,8 +146,8 @@ TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
 TEST_CASE("GetFileHiddenPropertyCheck", "[getFileProperty]") {
   TestController testController;
   LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setTrace<processors::GetFile>();
-  LogTestController::getInstance().setTrace<processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
+  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
   auto plan = testController.createPlan();
 
   auto temp_path = testController.createTempDirectory();
@@ -154,11 +155,11 @@ TEST_CASE("GetFileHiddenPropertyCheck", "[getFileProperty]") {
   std::string hidden_in_file(temp_path + utils::file::FileUtils::get_separator() + ".testfifo");
 
   auto get_file = plan->addProcessor("GetFile", "Get");
-  plan->setProperty(get_file, processors::GetFile::IgnoreHiddenFile.getName(), "false");
+  plan->setProperty(get_file, minifi::processors::GetFile::IgnoreHiddenFile.getName(), "false");
 
-  plan->setProperty(get_file, processors::GetFile::Directory.getName(), temp_path);
+  plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), temp_path);
   auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
-  plan->setProperty(log_attr, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+  plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
   std::ofstream in_file_stream(in_file);
   in_file_stream << "This file is not hidden" << std::endl;

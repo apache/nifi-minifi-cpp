@@ -177,7 +177,7 @@ PutSFTP::PutSFTP(const std::string& name, const utils::Identifier& uuid /*= util
     batch_size_(0),
     reject_zero_byte_(false),
     dot_rename_(false) {
-  logger_ = logging::LoggerFactory<PutSFTP>::getLogger();
+  logger_ = core::logging::LoggerFactory<PutSFTP>::getLogger();
 }
 
 PutSFTP::~PutSFTP() = default;
@@ -215,8 +215,7 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
 PutSFTP::ReadCallback::ReadCallback(const std::string& target_path,
                                     utils::SFTPClient& client,
                                     const std::string& conflict_resolution)
-    : logger_(logging::LoggerFactory<PutSFTP::ReadCallback>::getLogger())
-    , target_path_(target_path)
+    : target_path_(target_path)
     , client_(client)
     , conflict_resolution_(conflict_resolution) {
 }

@@ -48,8 +48,7 @@ class ConvertJSONAck : public ConvertBase {
    * Create a new processor
    */
   explicit ConvertJSONAck(const std::string& name, const utils::Identifier& uuid = {})
-      : ConvertBase(name, uuid),
-        logger_(logging::LoggerFactory<ConvertJSONAck>::getLogger()) {
+      : ConvertBase(name, uuid) {
   }
   // Destructor
   ~ConvertJSONAck() override = default;
@@ -89,7 +88,7 @@ class ConvertJSONAck : public ConvertBase {
   std::string parseTopicName(const std::string &json);
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConvertJSONAck>::getLogger();
 };
 
 } /* namespace processors */

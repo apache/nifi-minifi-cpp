@@ -70,7 +70,8 @@ class C2Agent : public state::UpdateController {
           const std::shared_ptr<state::StateMonitor> &updateSink,
           const std::shared_ptr<Configure> &configure,
           const std::shared_ptr<utils::file::FileSystem> &filesystem = std::make_shared<utils::file::FileSystem>());
-  virtual ~C2Agent() noexcept {
+
+  ~C2Agent() noexcept override {
     delete protocol_.load();
   }
 
@@ -224,7 +225,7 @@ class C2Agent : public state::UpdateController {
 
   std::atomic<C2Protocol*> protocol_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2Agent>::getLogger();
 
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
 

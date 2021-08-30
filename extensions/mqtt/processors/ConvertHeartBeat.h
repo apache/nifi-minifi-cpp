@@ -41,10 +41,10 @@ class ConvertHeartBeat: public ConvertBase{
    * Create a new processor
    */
   explicit ConvertHeartBeat(const std::string& name, const utils::Identifier& uuid = {})
-    : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertHeartBeat>::getLogger()) {
+    : ConvertBase(name, uuid) {
   }
   // Destructor
-  virtual ~ConvertHeartBeat() = default;
+  ~ConvertHeartBeat() override = default;
   // Processor Name
   static constexpr char const* ProcessorName = "ConvertHeartBeat";
 
@@ -59,7 +59,7 @@ class ConvertHeartBeat: public ConvertBase{
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConvertHeartBeat>::getLogger();
 };
 
 } /* namespace processors */

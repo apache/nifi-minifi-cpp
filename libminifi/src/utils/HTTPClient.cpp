@@ -21,15 +21,18 @@
 #include "utils/HTTPClient.h"
 #include "utils/StringUtils.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 namespace {
 
 constexpr const char* HTTP = "http://";
 constexpr const char* HTTPS = "https://";
 
+
 std::optional<std::string> parseProtocol(const std::string& url_input) {
-  if (utils::StringUtils::startsWith(url_input, HTTP)) {
+  if (minifi::utils::StringUtils::startsWith(url_input, HTTP)) {
     return HTTP;
-  } else if (utils::StringUtils::startsWith(url_input, HTTPS)) {
+  } else if (minifi::utils::StringUtils::startsWith(url_input, HTTPS)) {
     return HTTPS;
   } else {
     return std::nullopt;

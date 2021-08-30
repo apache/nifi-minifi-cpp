@@ -253,7 +253,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
 namespace {
 void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_partition_list_t* partitions, void* /*opaque*/) {
   // Cooperative, incremental assignment is not supported in the current librdkafka version
-  std::shared_ptr<logging::Logger> logger{logging::LoggerFactory<ConsumeKafka>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger{core::logging::LoggerFactory<ConsumeKafka>::getLogger()};
   logger->log_debug("Rebalance triggered.");
   rd_kafka_resp_err_t assign_error = RD_KAFKA_RESP_ERR_NO_ERROR;
   switch (trigger) {

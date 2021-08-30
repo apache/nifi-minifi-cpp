@@ -41,8 +41,7 @@ namespace minifi {
 Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name)
     : core::Connectable(name),
       flow_repository_(flow_repository),
-      content_repo_(content_repo),
-      logger_(logging::LoggerFactory<Connection>::getLogger()) {
+      content_repo_(content_repo) {
   source_connectable_ = nullptr;
   dest_connectable_ = nullptr;
   max_queue_size_ = 0;
@@ -57,8 +56,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
 Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
-      content_repo_(content_repo),
-      logger_(logging::LoggerFactory<Connection>::getLogger()) {
+      content_repo_(content_repo) {
   source_connectable_ = nullptr;
   dest_connectable_ = nullptr;
   max_queue_size_ = 0;
@@ -74,9 +72,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
                        const utils::Identifier& srcUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
-      content_repo_(content_repo),
-      logger_(logging::LoggerFactory<Connection>::getLogger()) {
-
+      content_repo_(content_repo) {
   src_uuid_ = srcUUID;
 
   source_connectable_ = nullptr;
@@ -94,8 +90,7 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
                        const utils::Identifier& srcUUID, const utils::Identifier& destUUID)
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
-      content_repo_(content_repo),
-      logger_(logging::LoggerFactory<Connection>::getLogger()) {
+      content_repo_(content_repo) {
 
   src_uuid_ = srcUUID;
   dest_uuid_ = destUUID;

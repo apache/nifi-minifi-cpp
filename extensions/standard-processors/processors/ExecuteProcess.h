@@ -58,8 +58,7 @@ class ExecuteProcess : public core::Processor {
    * Create a new processor
    */
   ExecuteProcess(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : Processor(name, uuid),
-        logger_(logging::LoggerFactory<ExecuteProcess>::getLogger()) {
+      : Processor(name, uuid) {
     _redirectErrorStream = false;
     _batchDuration = 0;
     _workingDir = ".";
@@ -67,7 +66,7 @@ class ExecuteProcess : public core::Processor {
     _pid = 0;
   }
   // Destructor
-  virtual ~ExecuteProcess() {
+  ~ExecuteProcess() override {
     if (_processRunning && _pid > 0)
       kill(_pid, SIGTERM);
   }
@@ -101,13 +100,13 @@ class ExecuteProcess : public core::Processor {
 
  public:
   // OnTrigger method, implemented by NiFi ExecuteProcess
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   // Initialize, over write by NiFi ExecuteProcess
-  virtual void initialize(void);
+  void initialize() override;
 
  private:
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger();
   // Property
   std::string _command;
   std::string _commandArgument;

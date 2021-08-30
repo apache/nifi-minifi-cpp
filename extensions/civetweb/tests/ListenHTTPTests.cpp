@@ -32,6 +32,9 @@
 #include "client/HTTPClient.h"
 #include "controllers/SSLContextService.h"
 #include "properties/Configure.h"
+#include "FlowController.h"
+#include "SchedulingAgent.h"
+#include "core/ProcessGroup.h"
 
 class ListenHTTPTestsFixture {
  public:
@@ -50,9 +53,9 @@ class ListenHTTPTestsFixture {
     LogTestController::getInstance().setDebug<minifi::core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setTrace<processors::ListenHTTP>();
-    LogTestController::getInstance().setTrace<processors::ListenHTTP::Handler>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::ListenHTTP>();
+    LogTestController::getInstance().setTrace<minifi::processors::ListenHTTP::Handler>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
 

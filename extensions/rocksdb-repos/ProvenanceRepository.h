@@ -50,22 +50,20 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   /*!
    * Create a new provenance repository
    */
-  ProvenanceRepository(const std::string repo_name = "", std::string directory = PROVENANCE_DIRECTORY, int64_t maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
-  MAX_PROVENANCE_STORAGE_SIZE,
-                       uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
+  explicit ProvenanceRepository(const std::string& repo_name = "", std::string directory = PROVENANCE_DIRECTORY, int64_t maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
+      int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE, uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
-        Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
-        logger_(logging::LoggerFactory<ProvenanceRepository>::getLogger()) {
-    db_ = NULL;
+        Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod) {
+    db_ = nullptr;
   }
 
   void printStats();
 
-  virtual bool isNoop() {
+  bool isNoop() override {
     return false;
   }
 
-  void start() {
+  void start() override {
     if (running_)
       return;
     running_ = true;
@@ -74,7 +72,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   }
 
   // initialize
-  virtual bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) {
+  bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) override {
     std::string value;
     if (config->get(Configure::nifi_provenance_repository_directory_default, value)) {
       directory_ = value;
@@ -125,13 +123,13 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     return true;
   }
   // Put
-  virtual bool Put(std::string key, const uint8_t *buf, size_t bufLen) {
+  bool Put(std::string key, const uint8_t *buf, size_t bufLen) override {
     // persist to the DB
     rocksdb::Slice value((const char *) buf, bufLen);
     return db_->Put(rocksdb::WriteOptions(), key, value).ok();
   }
 
-  virtual bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) {
+  bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override {
     rocksdb::WriteBatch batch;
     for (const auto &item : data) {
       rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->size());
@@ -143,16 +141,16 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   }
 
   // Delete
-  virtual bool Delete(std::string /*key*/) {
+  bool Delete(std::string /*key*/) override {
     // The repo is cleaned up by itself, there is no need to delete items.
     return true;
   }
   // Get
-  virtual bool Get(const std::string &key, std::string &value) {
+  bool Get(const std::string &key, std::string &value) override {
     return db_->Get(rocksdb::ReadOptions(), key, &value).ok();
   }
 
-  virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
+  bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) override {
     return Put(key, buffer, bufferSize);
   }
 
@@ -170,7 +168,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     return true;
   }
 
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) {
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) override {
     std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
     size_t requested_batch = max_size;
     max_size = 0;
@@ -201,7 +199,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     }
   }
 
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) {
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override {
     std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
     max_size = 0;
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -222,7 +220,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     db_.reset();
   }
   // Run function for the thread
-  void run();
+  void run() override;
 
   uint64_t getKeyCount() const {
     std::string key_count;
@@ -238,7 +236,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
 
  private:
   std::unique_ptr<rocksdb::DB> db_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProvenanceRepository>::getLogger();
 };
 
 } /* namespace provenance */

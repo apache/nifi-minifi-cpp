@@ -63,6 +63,10 @@
 #include "AgentDocs.h"
 #include "MainHelper.h"
 
+namespace minifi = org::apache::nifi::minifi;
+namespace core = minifi::core;
+namespace utils = minifi::utils;
+
  // Variables that allow us to avoid a timed wait.
 sem_t *running;
 //! Flow Controller
@@ -127,7 +131,7 @@ int main(int argc, char **argv) {
   if (utils::Environment::isRunningAsService()) {
     setSyslogLogger();
   }
-  std::shared_ptr<logging::Logger> logger = logging::LoggerConfiguration::getConfiguration().getLogger("main");
+  const auto logger = core::logging::LoggerConfiguration::getConfiguration().getLogger("main");
 
 #ifdef WIN32
   if (isStartedByService) {
@@ -194,10 +198,10 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  std::shared_ptr<logging::LoggerProperties> log_properties = std::make_shared<logging::LoggerProperties>();
+  const auto log_properties = std::make_shared<core::logging::LoggerProperties>();
   log_properties->setHome(minifiHome);
   log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
-  logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
+  core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
 
   std::shared_ptr<minifi::Properties> uid_properties = std::make_shared<minifi::Properties>("UID properties");
   uid_properties->setHome(minifiHome);
@@ -288,7 +292,7 @@ int main(int argc, char **argv) {
 
   std::string content_repo_path;
   if (configure->get(minifi::Configure::nifi_dbcontent_repository_directory_default, content_repo_path)) {
-    logging::LOG_INFO(logger) << "setting default dir to " << content_repo_path;
+    core::logging::LOG_INFO(logger) << "setting default dir to " << content_repo_path;
     minifi::setDefaultDirectory(content_repo_path);
   }
 

@@ -236,7 +236,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
  private:
   std::chrono::milliseconds shutdown_check_interval_{1000};
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
   std::string serial_number_;
 };
 

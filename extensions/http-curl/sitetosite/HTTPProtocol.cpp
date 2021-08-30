@@ -288,7 +288,7 @@ void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transaction
   if (client->getResponseCode() == 400) {
     std::string error(client->getResponseBody().data(), client->getResponseBody().size());
 
-    logging::LOG_WARN(logger_) << "400 received: " << error;
+    core::logging::LOG_WARN(logger_) << "400 received: " << error;
     std::stringstream message;
     message << "Received " << client->getResponseCode() << " from " << uri.str();
     throw Exception(SITE2SITE_EXCEPTION, message.str());

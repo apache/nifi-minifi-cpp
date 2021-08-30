@@ -58,8 +58,7 @@ class AttributesToJSON : public core::Processor {
   )
 
   explicit AttributesToJSON(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AttributesToJSON>::getLogger()) {
+      : core::Processor(name, uuid) {
   }
 
   void initialize() override;
@@ -87,7 +86,7 @@ class AttributesToJSON : public core::Processor {
   void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value);
   std::string buildAttributeJsonData(const core::FlowFile::AttributeMap& flowfile_attributes);
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AttributesToJSON>::getLogger();
   std::vector<std::string> attribute_list_;
   std::optional<std::regex> attributes_regular_expression_;
   WriteDestination write_destination_;

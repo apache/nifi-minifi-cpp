@@ -55,7 +55,7 @@ class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
   rapidjson::Value serializeJsonPayload(const C2Payload &payload, rapidjson::Document::AllocatorType &alloc) override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AgentPrinter>::getLogger();
 };
 
 } /* namespace c2 */

@@ -62,15 +62,13 @@ core::Property UnorderedMapPersistableKeyValueStoreService::File(
 UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
     , AbstractAutoPersistingKeyValueStoreService(name, uuid)
-    , UnorderedMapKeyValueStoreService(name, uuid)
-    , logger_(logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger()) {
+    , UnorderedMapKeyValueStoreService(name, uuid) {
 }
 
 UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure> &configuration)
     : PersistableKeyValueStoreService(name)
     , AbstractAutoPersistingKeyValueStoreService(name)
-    , UnorderedMapKeyValueStoreService(name)
-    , logger_(logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger())  {
+    , UnorderedMapKeyValueStoreService(name) {
   setConfiguration(configuration);
   initializeNonVirtual();
 }

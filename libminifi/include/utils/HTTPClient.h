@@ -381,7 +381,7 @@ class URL {
   std::optional<int> port_;
   std::optional<std::string> path_;
   bool is_valid_ = false;
-  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<URL>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<URL>::getLogger();
 };
 
 }  // namespace utils

@@ -28,9 +28,9 @@ TEST_CASE("QueryDatabaseTable queries the table and returns specified columns", 
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
-  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
 
   controller.insertValues({
     {101, "one"},
@@ -44,7 +44,7 @@ TEST_CASE("QueryDatabaseTable queries the table and returns specified columns", 
   REQUIRE(flow_files.size() == 1);
 
   std::string row_count;
-  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
   auto content = plan->getContent(flow_files[0]);
   verifyJSON(content, R"(
@@ -57,9 +57,9 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
-  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
 
   controller.insertValues({
     {101, "one"},
@@ -84,7 +84,7 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
   REQUIRE(second_flow_files.size() == 1);
 
   std::string row_count;
-  second_flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  second_flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "2");
   auto content = plan->getContent(second_flow_files[0]);
   verifyJSON(content, R"(
@@ -97,9 +97,9 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
-  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
   sql_proc->setDynamicProperty("initial.maxvalue.int_col", "102");
 
   controller.insertValues({
@@ -115,7 +115,7 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
   REQUIRE(flow_files.size() == 1);
 
   std::string row_count;
-  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "2");
   auto content = plan->getContent(flow_files[0]);
   verifyJSON(content, R"(
@@ -128,10 +128,10 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
-  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxRowsPerFlowFile.getName(), "3");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxRowsPerFlowFile.getName(), "3");
 
   controller.insertValues({
     {101, "one"},
@@ -148,11 +148,11 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
   };
 
   FlowFileMatcher matcher(content_verifier, {
-      processors::QueryDatabaseTable::RESULT_TABLE_NAME,
-      processors::QueryDatabaseTable::RESULT_ROW_COUNT,
-      processors::QueryDatabaseTable::FRAGMENT_COUNT,
-      processors::QueryDatabaseTable::FRAGMENT_INDEX,
-      processors::QueryDatabaseTable::FRAGMENT_IDENTIFIER,
+      minifi::processors::QueryDatabaseTable::RESULT_TABLE_NAME,
+      minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT,
+      minifi::processors::QueryDatabaseTable::FRAGMENT_COUNT,
+      minifi::processors::QueryDatabaseTable::FRAGMENT_INDEX,
+      minifi::processors::QueryDatabaseTable::FRAGMENT_IDENTIFIER,
       "maxvalue.int_col"
   });
 
@@ -175,9 +175,9 @@ TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabase
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
-  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
 
   controller.insertValues({
       {101, "one"},
@@ -190,22 +190,22 @@ TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabase
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
   std::string row_count;
-  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
 
 
   // query "empty_test_table"
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "empty_test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "empty_test_table");
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 0);
 
   // again query "test_table", by now the stored state is reset, so all rows are returned
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
-  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
 }
 
@@ -214,9 +214,9 @@ TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[Qu
 
   auto plan = controller.createSQLPlan("QueryDatabaseTable", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(processors::QueryDatabaseTable::TableName.getName(), "test_table");
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
-  sql_proc->setProperty(processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::ColumnNames.getName(), "text_col");
 
   controller.insertValues({
       {101, "one"},
@@ -229,23 +229,23 @@ TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[Qu
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
   std::string row_count;
-  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
 
 
   // query using ["int_col", "text_col"] as max value columns
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col, text_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col, text_col");
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
-  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
 
   // query using ["int_col"] as max value columns again
-  sql_proc->setProperty(processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
+  sql_proc->setProperty(minifi::processors::QueryDatabaseTable::MaxValueColumnNames.getName(), "int_col");
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
-  flow_files[0]->getAttribute(processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
 }

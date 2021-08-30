@@ -47,16 +47,12 @@ namespace controllers {
 class JavaControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<JavaControllerService>, public JavaServicer {
  public:
   explicit JavaControllerService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
-        loader(nullptr),
-        logger_(logging::LoggerFactory<JavaControllerService>::getLogger()) {
+      : ControllerService(name, uuid) {
     initialized_ = false;
   }
 
   explicit JavaControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : ControllerService(name),
-        loader(nullptr),
-        logger_(logging::LoggerFactory<JavaControllerService>::getLogger()) {
+      : ControllerService(name) {
     initialized_ = false;
     setConfiguration(configuration);
     initialize();
@@ -154,9 +150,9 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   std::unique_ptr<NarClassLoader> nar_loader_;
 
-  JVMLoader *loader;
+  JVMLoader *loader = nullptr;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JavaControllerService>::getLogger();
 };
 
 } /* namespace controllers */

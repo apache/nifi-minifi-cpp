@@ -25,12 +25,13 @@
 #include "range/v3/view/join.hpp"
 #include "range/v3/range/conversion.hpp"
 
+using FilePattern = minifi::utils::file::FilePattern;
+
 struct FilePatternTestAccessor {
-  using FilePatternSegment = fileutils::FilePattern::FilePatternSegment;
+  using FilePatternSegment = minifi::utils::file::FilePattern::FilePatternSegment;
 };
 
 using FilePatternSegment = FilePatternTestAccessor::FilePatternSegment;
-using FilePattern = fileutils::FilePattern;
 
 #define REQUIRE_INCLUDE(val) REQUIRE((val == FilePatternSegment::MatchResult::INCLUDE))
 #define REQUIRE_EXCLUDE(val) REQUIRE((val == FilePatternSegment::MatchResult::EXCLUDE))
@@ -150,9 +151,9 @@ TEST_CASE("Matching directory with exclusion") {
   //   |        |- file5.txt
   //   |- two
   //       |- file6.txt
-  fileutils::create_dir((root / "one" / "apple").string(), true);
-  fileutils::create_dir((root / "one" / "banana").string(), true);
-  fileutils::create_dir((root / "two").string(), true);
+  minifi::utils::file::create_dir((root / "one" / "apple").string(), true);
+  minifi::utils::file::create_dir((root / "one" / "banana").string(), true);
+  minifi::utils::file::create_dir((root / "two").string(), true);
 
   auto file1 = root / "file1.txt";
   auto file2 = root / "one" / "file2.txt";
@@ -166,23 +167,23 @@ TEST_CASE("Matching directory with exclusion") {
   for (const auto& file : files) {std::ofstream{file};}
 
   // match all
-  auto matched_files = fileutils::match(FilePattern((root / "**").string()));
+  auto matched_files = minifi::utils::file::match(FilePattern((root / "**").string()));
   REQUIRE(matched_files == files);
 
   // match txt files
-  matched_files = fileutils::match(FilePattern((root / "**" / "*.txt").string()));
+  matched_files = minifi::utils::file::match(FilePattern((root / "**" / "*.txt").string()));
   REQUIRE((matched_files == std::set<std::filesystem::path>{file1, file2, file4, file5, file6}));
 
   // match everything in /one, but not in /one/apple
-  matched_files = fileutils::match(FilePattern((root / "one" / "**").string() + ",!" + (root / "one" / "apple" / "**").string()));
+  matched_files = minifi::utils::file::match(FilePattern((root / "one" / "**").string() + ",!" + (root / "one" / "apple" / "**").string()));
   REQUIRE((matched_files == std::set<std::filesystem::path>{file2, file5}));
 
   // match everything in /one/banana, and in /two
-  matched_files = fileutils::match(FilePattern((root / "one" / "banana" / "**").string() + "," + (root / "two" / "**").string()));
+  matched_files = minifi::utils::file::match(FilePattern((root / "one" / "banana" / "**").string() + "," + (root / "two" / "**").string()));
   REQUIRE((matched_files == std::set<std::filesystem::path>{file5, file6}));
 
   // match everything in / not in /one, /two but in /one/apple
-  matched_files = fileutils::match(FilePattern(
+  matched_files = minifi::utils::file::match(FilePattern(
       root.string() +
       ",!" + (root / "one" / "**").string() +
       "," + (root / "one" / "apple" / "**").string() +
@@ -190,15 +191,15 @@ TEST_CASE("Matching directory with exclusion") {
   REQUIRE((matched_files == std::set<std::filesystem::path>{file3, file4}));
 
   // exclude a single file
-  matched_files = fileutils::match(FilePattern((root / "one" / "apple" / "**").string() + ",!" + (root / "one" / "apple" / "file3.jpg").string()));
+  matched_files = minifi::utils::file::match(FilePattern((root / "one" / "apple" / "**").string() + ",!" + (root / "one" / "apple" / "file3.jpg").string()));
   REQUIRE((matched_files == std::set<std::filesystem::path>{file4}));
 
   // exclude by file extension
-  matched_files = fileutils::match(FilePattern((root / "**").string() + ",!" + (root / "**" / "*.txt").string()));
+  matched_files = minifi::utils::file::match(FilePattern((root / "**").string() + ",!" + (root / "**" / "*.txt").string()));
   REQUIRE((matched_files == std::set<std::filesystem::path>{file3}));
 
   // exclude files with name "*tx*" (everything except the jpg)
-  matched_files = fileutils::match(FilePattern((root / "**").string() + ",!" + (root / "**" / "*tx*").string()));
+  matched_files = minifi::utils::file::match(FilePattern((root / "**").string() + ",!" + (root / "**" / "*tx*").string()));
   REQUIRE((matched_files == std::set<std::filesystem::path>{file3}));
 }
 

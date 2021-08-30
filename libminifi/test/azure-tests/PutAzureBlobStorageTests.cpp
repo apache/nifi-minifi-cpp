@@ -100,10 +100,10 @@ class PutAzureBlobStorageTestsFixture {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setTrace<processors::GetFile>();
-    LogTestController::getInstance().setTrace<processors::PutFile>();
-    LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
+    LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::azure::processors::PutAzureBlobStorage>();
 
     // Build MiNiFi processing graph
@@ -117,8 +117,8 @@ class PutAzureBlobStorageTestsFixture {
     input_file_stream << TEST_DATA;
     input_file_stream.close();
     get_file = plan->addProcessor("GetFile", "GetFile");
-    plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
-    plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
+    plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), input_dir);
+    plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
     update_attribute = plan->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
     plan->addProcessor(put_azure_blob_storage, "PutAzureBlobStorage", { {"success", "d"} }, true);
     auto logattribute = plan->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);

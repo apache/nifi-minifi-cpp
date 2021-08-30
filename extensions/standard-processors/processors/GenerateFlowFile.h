@@ -45,7 +45,7 @@ class GenerateFlowFile : public core::Processor {
    * Create a new processor
    */
   GenerateFlowFile(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : Processor(name, uuid), logger_(logging::LoggerFactory<GenerateFlowFile>::getLogger()) {
+      : Processor(name, uuid) {
     batchSize_ = 1;
     uniqueFlowFile_ = true;
     fileSize_ = 1024;
@@ -99,7 +99,7 @@ class GenerateFlowFile : public core::Processor {
   }
 
   // logger instance
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger();
 };
 
 }  // namespace processors

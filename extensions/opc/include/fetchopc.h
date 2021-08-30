@@ -55,8 +55,8 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   static core::Relationship Failure;
 
   explicit FetchOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
-  : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
-    logger_ = logging::LoggerFactory<FetchOPCProcessor>::getLogger();
+      : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
+    logger_ = core::logging::LoggerFactory<FetchOPCProcessor>::getLogger();
   }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;

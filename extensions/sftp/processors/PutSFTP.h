@@ -59,7 +59,7 @@ class PutSFTP : public SFTPProcessorBase {
    * Create a new processor
    */
   explicit PutSFTP(const std::string& name, const utils::Identifier& uuid = {});
-  virtual ~PutSFTP();
+  ~PutSFTP() override;
 
   // Supported Properties
   static core::Property RemotePath;
@@ -94,11 +94,11 @@ class PutSFTP : public SFTPProcessorBase {
     ReadCallback(const std::string& target_path,
         utils::SFTPClient& client,
         const std::string& conflict_resolution);
-    ~ReadCallback();
+    ~ReadCallback() override;
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutSFTP::ReadCallback>::getLogger();
     const std::string target_path_;
     utils::SFTPClient& client_;
     const std::string conflict_resolution_;

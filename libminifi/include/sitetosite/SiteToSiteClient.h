@@ -45,7 +45,7 @@ namespace sitetosite {
  */
 class DataPacket {
  public:
-  DataPacket(std::shared_ptr<logging::Logger> logger, std::shared_ptr<Transaction> transaction, std::map<std::string, std::string> attributes, const std::string &payload)
+  DataPacket(std::shared_ptr<core::logging::Logger> logger, std::shared_ptr<Transaction> transaction, std::map<std::string, std::string> attributes, const std::string &payload)
       : _attributes{std::move(attributes)},
         transaction_{std::move(transaction)},
         payload_{payload},
@@ -55,7 +55,7 @@ class DataPacket {
   uint64_t _size{0};
   std::shared_ptr<Transaction> transaction_;
   const std::string & payload_;
-  std::shared_ptr<logging::Logger> logger_reference_;
+  std::shared_ptr<core::logging::Logger> logger_reference_;
 };
 
 class SiteToSiteClient : public core::Connectable {
@@ -172,7 +172,7 @@ class SiteToSiteClient : public core::Connectable {
    */
   virtual bool establish() = 0;
 
-  const std::shared_ptr<logging::Logger> &getLogger() {
+  const std::shared_ptr<core::logging::Logger> &getLogger() {
     return logger_;
   }
 
@@ -262,7 +262,7 @@ class SiteToSiteClient : public core::Connectable {
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<SiteToSiteClient>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<SiteToSiteClient>::getLogger()};
 };
 
 // Nest Callback Class for write stream
@@ -281,14 +281,14 @@ class WriteCallback : public OutputStreamCallback {
       const auto size = std::min(len, uint64_t{16384});
       const auto ret = _packet->transaction_->getStream().read(buffer, size);
       if (ret != size) {
-        logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
+        core::logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
         return -1;
       }
       stream->write(buffer, size);
       len -= size;
       total += size;
     }
-    logging::LOG_INFO(_packet->logger_reference_) << "Received " << total << " from stream";
+    core::logging::LOG_INFO(_packet->logger_reference_) << "Received " << total << " from stream";
     return gsl::narrow<int64_t>(len);
   }
 };
@@ -309,7 +309,7 @@ class ReadCallback : public InputStreamCallback {
       if (io::isError(readSize)) return -1;
       const auto ret = _packet->transaction_->getStream().write(buffer, readSize);
       if (io::isError(ret) || gsl::narrow<size_t>(ret) != readSize) {
-        logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
+        core::logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
         return -1;
       }
       size += readSize;

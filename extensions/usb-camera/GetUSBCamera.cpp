@@ -403,8 +403,7 @@ GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> wri
     : png_write_mtx_(std::move(write_mtx)),
       frame_(frame),
       width_(width),
-      height_(height),
-      logger_(logging::LoggerFactory<PNGWriteCallback>::getLogger()) {
+      height_(height) {
 }
 
 int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
@@ -468,8 +467,7 @@ int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseSt
 }
 
 GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
-    : frame_(frame),
-      logger_(logging::LoggerFactory<RawWriteCallback>::getLogger()) {
+    : frame_(frame) {
 }
 
 int64_t GetUSBCamera::RawWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {

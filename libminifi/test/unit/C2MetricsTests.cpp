@@ -26,6 +26,8 @@
 #include "core/Processor.h"
 #include "core/ClassLoader.h"
 #include "core/yaml/YamlConfiguration.h"
+#include "repository/VolatileContentRepository.h"
+#include "ProvenanceTestHelper.h"
 
 TEST_CASE("TestProcessMetrics", "[c2m1]") {
   minifi::state::response::ProcessMetrics metrics;

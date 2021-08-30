@@ -23,7 +23,6 @@
 #include "DatabaseContentRepository.h"
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "RocksDbStream.h"
-#include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 #include "Exception.h"
 #include "database/StringAppender.h"

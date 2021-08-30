@@ -41,8 +41,7 @@ class ApplyTemplate : public core::Processor {
    * Create a new processor
    */
   explicit ApplyTemplate(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
-        logger_(logging::LoggerFactory<ApplyTemplate>::getLogger()) {}
+      : Processor(name, uuid) {}
   ~ApplyTemplate() = default;
   static constexpr char const *ProcessorName = "ApplyTemplate";
 
@@ -63,13 +62,13 @@ class ApplyTemplate : public core::Processor {
     int64_t process(const std::shared_ptr<io::BaseStream>& stream);
 
    private:
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ApplyTemplate::WriteCallback>::getLogger();
     std::string template_file_;
     std::shared_ptr<core::FlowFile> flow_file_;
   };
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ApplyTemplate>::getLogger();
 };
 
 } /* namespace processors */

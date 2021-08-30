@@ -131,7 +131,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   };
 
   // shortened with list_dir
-  utils::file::FileUtils::list_dir(docsdir, fileFind, logging::LoggerFactory<AgentDocs>::getLogger());
+  utils::file::FileUtils::list_dir(docsdir, fileFind, core::logging::LoggerFactory<AgentDocs>::getLogger());
   genStream << "<!--"
   "Licensed to the Apache Software Foundation (ASF) under one or more"
   "contributor license agreements.  See the NOTICE file distributed with"

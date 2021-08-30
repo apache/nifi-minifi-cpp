@@ -46,8 +46,7 @@ class GetMovementSensors : public SensorBase {
    * Create a new processor
    */
   explicit GetMovementSensors(const std::string& name, const utils::Identifier& uuid = {})
-      : SensorBase(name, uuid),
-        logger_(logging::LoggerFactory<GetMovementSensors>::getLogger()) {
+      : SensorBase(name, uuid) {
   }
   // Destructor
   virtual ~GetMovementSensors();
@@ -60,7 +59,7 @@ class GetMovementSensors : public SensorBase {
   void initialize() override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetMovementSensors>::getLogger();
 };
 
 } /* namespace processors */

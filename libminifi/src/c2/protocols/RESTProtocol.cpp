@@ -144,7 +144,7 @@ const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const 
   return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
 }
 
-RESTProtocol::RESTProtocol() : logger_(logging::LoggerFactory<RESTProtocol>::getLogger()) {}
+RESTProtocol::RESTProtocol() = default;
 
 void RESTProtocol::initialize(core::controller::ControllerServiceProvider* /*controller*/, const std::shared_ptr<Configure> &configure) {
   if (configure) {

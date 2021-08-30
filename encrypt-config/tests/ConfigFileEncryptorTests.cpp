@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include <optional>
-#include <string>
 #include <regex>
+#include <string>
 
 #include "ConfigFileEncryptor.h"
 
@@ -25,6 +26,7 @@
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
 using org::apache::nifi::minifi::encrypt_config::encryptSensitivePropertiesInFile;
+namespace utils = org::apache::nifi::minifi::utils;
 
 namespace {
 size_t base64_length(size_t unencoded_length) {
@@ -32,17 +34,17 @@ size_t base64_length(size_t unencoded_length) {
 }
 
 bool check_encryption(const ConfigFile& test_file, const std::string& property_name, size_t original_value_length) {
-    const auto encrypted_value = test_file.getValue(property_name);
-    if (!encrypted_value) { return false; }
+  const auto encrypted_value = test_file.getValue(property_name);
+  if (!encrypted_value) { return false; }
 
-    const auto encryption_type = test_file.getValue(property_name + ".protected");
-    if (!encryption_type || *encryption_type != utils::crypto::EncryptionType::name()) { return false; }
+  const auto encryption_type = test_file.getValue(property_name + ".protected");
+  if (!encryption_type || *encryption_type != utils::crypto::EncryptionType::name()) { return false; }
 
-    auto length = base64_length(utils::crypto::EncryptionType::nonceLength()) +
-        utils::crypto::EncryptionType::separator().size() +
-        base64_length(original_value_length + utils::crypto::EncryptionType::macLength());
-    std::regex pattern("[0-9A-Za-z/+=|]{" + std::to_string(length) + "}");
-    return std::regex_match(*encrypted_value, pattern);
+  auto length = base64_length(utils::crypto::EncryptionType::nonceLength()) +
+      utils::crypto::EncryptionType::separator().size() +
+      base64_length(original_value_length + utils::crypto::EncryptionType::macLength());
+  std::regex pattern("[0-9A-Za-z/+=|]{" + std::to_string(length) + "}");
+  return std::regex_match(*encrypted_value, pattern);
 }
 }  // namespace
 

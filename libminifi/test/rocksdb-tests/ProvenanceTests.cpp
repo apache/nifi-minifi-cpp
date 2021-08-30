@@ -30,6 +30,8 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
 
+namespace provenance = minifi::provenance;
+
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah", "blahblah");
   REQUIRE(record1.getAttributes().size() == 0);

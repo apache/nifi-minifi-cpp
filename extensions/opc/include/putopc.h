@@ -58,8 +58,8 @@ class PutOPCProcessor : public BaseOPCProcessor {
   static core::Relationship Failure;
 
   explicit PutOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
-  : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), parentExists_(false) {
-    logger_ = logging::LoggerFactory<PutOPCProcessor>::getLogger();
+      : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), parentExists_(false) {
+    logger_ = core::logging::LoggerFactory<PutOPCProcessor>::getLogger();
   }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
@@ -71,13 +71,13 @@ class PutOPCProcessor : public BaseOPCProcessor {
  private:
   class ReadCallback : public InputStreamCallback {
    public:
-    explicit ReadCallback(std::shared_ptr<logging::Logger> logger) : logger_(logger) {}
+    explicit ReadCallback(std::shared_ptr<core::logging::Logger> logger) : logger_(logger) {}
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
     const std::vector<uint8_t>& getContent() const { return buf_; }
 
    private:
     std::vector<uint8_t> buf_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_;
   };
 
   std::string nodeID_;

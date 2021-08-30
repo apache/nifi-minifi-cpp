@@ -34,7 +34,7 @@ class TestHarness : public IntegrationBase {
     LogTestController::getInstance().setTrace<minifi::FlowController>();
     LogTestController::getInstance().setTrace<core::ProcessSession>();
     LogTestController::getInstance().setTrace<core::ProcessContextExpr>();
-    LogTestController::getInstance().setInfo<processors::LogAttribute>();
+    LogTestController::getInstance().setInfo<minifi::processors::LogAttribute>();
   }
 
   void runAssertions() override {

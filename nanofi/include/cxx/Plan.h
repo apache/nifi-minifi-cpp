@@ -47,6 +47,11 @@
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
 #include "api/nanofi.h"
 
+namespace minifi = org::apache::nifi::minifi;
+namespace core = minifi::core;
+namespace utils = minifi::utils;
+namespace provenance = minifi::provenance;
+
 static const std::string CallbackProcessorName = "CallbackProcessor";
 
 using failure_callback_type = std::function<void(flow_file_record*)>;
@@ -236,7 +241,7 @@ class ExecutionPlan {
  private:
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   std::shared_ptr<FailureHandler> failure_handler_;
   static std::map<utils::Identifier, std::shared_ptr<ExecutionPlan>> proc_plan_map_;
   static std::map<std::string, custom_processor_args> custom_processors;

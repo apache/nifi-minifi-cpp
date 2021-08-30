@@ -49,7 +49,7 @@ bool PersistableKeyValueStoreService::getImpl(std::map<utils::Identifier, std::s
     if (optional_uuid) {
       kvs[optional_uuid.value()] = state.second;
     } else {
-      logging::LoggerFactory<PersistableKeyValueStoreService>::getLogger()
+      core::logging::LoggerFactory<PersistableKeyValueStoreService>::getLogger()
           ->log_error("Found non-UUID key \"%s\" in storage implementation", state.first);
     }
   }

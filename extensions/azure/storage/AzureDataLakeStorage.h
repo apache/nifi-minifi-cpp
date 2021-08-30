@@ -49,7 +49,7 @@ class AzureDataLakeStorage {
   storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer);
 
  private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};
   std::unique_ptr<DataLakeStorageClient> data_lake_storage_client_;
 };
 

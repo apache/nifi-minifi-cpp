@@ -74,8 +74,7 @@ class ListenSyslog : public core::Processor {
    * Create a new processor
    */
   ListenSyslog(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
-      : Processor(name, uuid),
-        logger_(logging::LoggerFactory<ListenSyslog>::getLogger()) {
+      : Processor(name, uuid) {
     _eventQueueByteSize = 0;
     _serverSocket = 0;
     _recvBufSize = 65507;
@@ -152,7 +151,7 @@ class ListenSyslog : public core::Processor {
   }
 
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenSyslog>::getLogger();
   // Run function for the thread
   static void run(ListenSyslog *process);
   // Run Thread

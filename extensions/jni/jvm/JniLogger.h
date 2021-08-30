@@ -40,7 +40,7 @@ class JniLogger {
     return clazz_;
   }
   jclass clazz_;
-  std::shared_ptr<logging::Logger> logger_reference_;
+  std::shared_ptr<core::logging::Logger> logger_reference_;
 };
 
 } /* namespace jni */

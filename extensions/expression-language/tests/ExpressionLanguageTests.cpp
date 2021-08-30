@@ -38,6 +38,7 @@
 #include <LogAttribute.h>
 #include "utils/gsl.h"
 #include "TestBase.h"
+#include "unit/ProvenanceTestHelper.h"
 
 namespace expression = org::apache::nifi::minifi::expression;
 
@@ -179,12 +180,12 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   TestController testController;
 
   LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setTrace<processors::PutFile>();
-  LogTestController::getInstance().setTrace<processors::ExtractText>();
-  LogTestController::getInstance().setTrace<processors::GetFile>();
-  LogTestController::getInstance().setTrace<processors::PutFile>();
-  LogTestController::getInstance().setTrace<processors::LogAttribute>();
-  LogTestController::getInstance().setTrace<processors::UpdateAttribute>();
+  LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
+  LogTestController::getInstance().setTrace<minifi::processors::ExtractText>();
+  LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
+  LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
+  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
+  LogTestController::getInstance().setTrace<minifi::processors::UpdateAttribute>();
 
   auto conf = std::make_shared<minifi::Configure>();
 
@@ -206,18 +207,18 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
 
   // Build MiNiFi processing graph
   auto get_file = plan->addProcessor("GetFile", "GetFile");
-  plan->setProperty(get_file, processors::GetFile::Directory.getName(), in_dir);
-  plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
+  plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), in_dir);
+  plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
   auto update = plan->addProcessor("UpdateAttribute", "UpdateAttribute", core::Relationship("success", "description"), true);
   update->setDynamicProperty("prop_attr", "${'nifi.my.own.property'}_added");
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto extract_text = plan->addProcessor("ExtractText", "ExtractText", core::Relationship("success", "description"), true);
-  plan->setProperty(extract_text, processors::ExtractText::Attribute.getName(), "extracted_attr_name");
+  plan->setProperty(extract_text, minifi::processors::ExtractText::Attribute.getName(), "extracted_attr_name");
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto put_file = plan->addProcessor("PutFile", "PutFile", core::Relationship("success", "description"), true);
-  plan->setProperty(put_file, processors::PutFile::Directory.getName(), out_dir + "/${extracted_attr_name}");
-  plan->setProperty(put_file, processors::PutFile::ConflictResolution.getName(), processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
-  plan->setProperty(put_file, processors::PutFile::CreateDirs.getName(), "true");
+  plan->setProperty(put_file, minifi::processors::PutFile::Directory.getName(), out_dir + "/${extracted_attr_name}");
+  plan->setProperty(put_file, minifi::processors::PutFile::ConflictResolution.getName(), minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
+  plan->setProperty(put_file, minifi::processors::PutFile::CreateDirs.getName(), "true");
 
   // Write test input
   {

@@ -44,6 +44,7 @@
 #include "core/Resource.h"
 #include "Bookmark.h"
 #include "utils/Deleters.h"
+#include "logging/LoggerConfiguration.h"
 
 #include "utils/gsl.h"
 
@@ -177,7 +178,7 @@ core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for 
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid),
-    logger_(logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()) {
+    logger_(core::logging::LoggerFactory<ConsumeWindowsEventLog>::getLogger()) {
   char buff[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(buff);
   if (GetComputerName(buff, &size)) {
@@ -467,8 +468,8 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
   }
 
   struct TreeWalker: public pugi::xml_tree_walker {
-    TreeWalker(HMODULE hMsobjsDll, std::unordered_map<std::string, std::string>& xmlPercentageItemsResolutions, std::shared_ptr<logging::Logger> logger)
-      : hMsobjsDll_(hMsobjsDll), xmlPercentageItemsResolutions_(xmlPercentageItemsResolutions), logger_(logger) {
+    TreeWalker(HMODULE hMsobjsDll, std::unordered_map<std::string, std::string>& xmlPercentageItemsResolutions, std::shared_ptr<core::logging::Logger> logger)
+      : hMsobjsDll_(hMsobjsDll), xmlPercentageItemsResolutions_(xmlPercentageItemsResolutions), logger_(std::move(logger)) {
     }
 
     bool for_each(pugi::xml_node& node) override {
@@ -534,7 +535,7 @@ void ConsumeWindowsEventLog::substituteXMLPercentageItems(pugi::xml_document& do
    private:
     HMODULE hMsobjsDll_;
     std::unordered_map<std::string, std::string>& xmlPercentageItemsResolutions_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_;
   } treeWalker(hMsobjsDll_, xmlPercentageItemsResolutions_, logger_);
 
   doc.traverse(treeWalker);

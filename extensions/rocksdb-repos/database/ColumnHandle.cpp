@@ -26,7 +26,7 @@ namespace minifi {
 namespace internal {
 
 ColumnHandle::~ColumnHandle() {
-  static auto logger = logging::LoggerFactory<ColumnHandle>::getLogger();
+  static auto logger = core::logging::LoggerFactory<ColumnHandle>::getLogger();
   logger->log_trace("Closing column handle '%s'", handle->GetName());
 }
 

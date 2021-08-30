@@ -40,9 +40,9 @@ bool ZlibBaseStream::isFinished() const {
 }
 
 ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level)
-  : ZlibCompressStream(output, format, level, logging::LoggerFactory<ZlibCompressStream>::getLogger()) {}
+  : ZlibCompressStream(output, format, level, core::logging::LoggerFactory<ZlibCompressStream>::getLogger()) {}
 
-ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level, std::shared_ptr<logging::Logger> logger)
+ZlibCompressStream::ZlibCompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format, int level, std::shared_ptr<core::logging::Logger> logger)
   : ZlibBaseStream(output),
     logger_{std::move(logger)} {
   int ret = deflateInit2(
@@ -130,7 +130,7 @@ void ZlibCompressStream::close() {
 
 ZlibDecompressStream::ZlibDecompressStream(gsl::not_null<OutputStream*> output, ZlibCompressionFormat format)
     : ZlibBaseStream(output),
-      logger_{logging::LoggerFactory<ZlibDecompressStream>::getLogger()} {
+      logger_{core::logging::LoggerFactory<ZlibDecompressStream>::getLogger()} {
   int ret = inflateInit2(&strm_, 15 + (format == ZlibCompressionFormat::GZIP ? 16 : 0) /* windowBits */);
   if (ret != Z_OK) {
     logger_->log_error("Failed to initialize z_stream with inflateInit2, error code: %d", ret);

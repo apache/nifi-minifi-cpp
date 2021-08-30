@@ -17,17 +17,9 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
 
+#include <filesystem>
 #include <string>
 #include <vector>
-
-#ifdef USE_BOOST
-#include <boost/filesystem.hpp>
-
-#else
-#include <cstdlib>
-
-#endif
-#include <fcntl.h>
 
 #include <cstdio>
 
@@ -62,7 +54,7 @@ class FileManager {
   FileManager() = default;
 
   ~FileManager() {
-    for (auto file : unique_files_) {
+    for (const auto& file : unique_files_) {
       std::remove(file.c_str());
     }
   }
@@ -70,7 +62,7 @@ class FileManager {
     const std::string& dir = !IsNullOrEmpty(location) ? location : utils::file::FileUtils::get_temp_directory();
 
     std::string file_name = utils::file::FileUtils::concat_path(dir, non_repeating_string_generator_.generate());
-    while (!verify_not_exist(file_name)) {
+    while (utils::file::exists(file_name)) {
       file_name = utils::file::FileUtils::concat_path(dir, non_repeating_string_generator_.generate());
     }
     if (!keep)
@@ -79,26 +71,11 @@ class FileManager {
   }
 
   std::string unique_file(bool keep = false) {
-#ifdef USE_BOOST
-    (void)keep;  // against unused variable warnings
-    return boost::filesystem::unique_path().native();
-#else  // USE_BOOST
     return unique_file(std::string{}, keep);
-#endif  // USE_BOOST
   }
 
 
  protected:
-  inline bool verify_not_exist(const std::string& name) {
-#ifdef WIN32
-    struct _stat buffer;
-    return _stat(name.c_str(), &buffer) != 0;
-#else
-    struct stat buffer;
-    return stat(name.c_str(), &buffer) != 0;
-#endif
-  }
-
   utils::NonRepeatingStringGenerator non_repeating_string_generator_;
 
   std::vector<std::string> unique_files_;

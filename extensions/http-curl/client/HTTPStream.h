@@ -154,7 +154,7 @@ class HttpStream : public io::BaseStream {
   std::atomic<bool> started_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpStream>::getLogger();
 };
 } /* namespace io */
 } /* namespace minifi */

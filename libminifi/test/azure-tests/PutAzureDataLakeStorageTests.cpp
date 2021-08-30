@@ -91,10 +91,10 @@ class PutAzureDataLakeStorageTestsFixture {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setTrace<processors::GetFile>();
-    LogTestController::getInstance().setTrace<processors::PutFile>();
-    LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
+    LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::azure::processors::PutAzureDataLakeStorage>();
 
     // Build MiNiFi processing graph
@@ -107,8 +107,8 @@ class PutAzureDataLakeStorageTestsFixture {
     utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
 
     get_file_ = plan_->addProcessor("GetFile", "GetFile");
-    plan_->setProperty(get_file_, processors::GetFile::Directory.getName(), input_dir);
-    plan_->setProperty(get_file_, processors::GetFile::KeepSourceFile.getName(), "false");
+    plan_->setProperty(get_file_, minifi::processors::GetFile::Directory.getName(), input_dir);
+    plan_->setProperty(get_file_, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
 
     update_attribute_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
     plan_->addProcessor(put_azure_data_lake_storage_, "PutAzureDataLakeStorage", { {"success", "d"}, {"failure", "d"} }, true);

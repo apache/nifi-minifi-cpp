@@ -79,12 +79,12 @@ int API_INITIALIZER::initialized = initialize_api();
 static nifi_instance* standalone_instance = nullptr;
 
 int initialize_api() {
-  logging::LoggerConfiguration::getConfiguration().disableLogging();
+  core::logging::LoggerConfiguration::getConfiguration().disableLogging();
   return 1;
 }
 
 void enable_logging() {
-  logging::LoggerConfiguration::getConfiguration().enableLogging();
+  core::logging::LoggerConfiguration::getConfiguration().enableLogging();
 }
 
 void set_terminate_callback(void (*terminate_callback)()) {

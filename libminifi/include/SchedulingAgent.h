@@ -67,7 +67,7 @@ class SchedulingAgent {
         content_repo_(content_repo),
         thread_pool_(thread_pool),
         controller_service_provider_(controller_service_provider),
-        logger_(logging::LoggerFactory<SchedulingAgent>::getLogger()),
+        logger_(core::logging::LoggerFactory<SchedulingAgent>::getLogger()),
         alert_time_(configuration->getInt(Configure::nifi_flow_engine_alert_period, SCHEDULING_WATCHDOG_DEFAULT_ALERT_PERIOD_MS)) {
     running_ = false;
     repo_ = repo;
@@ -155,7 +155,7 @@ class SchedulingAgent {
   };
 
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   mutable std::mutex watchdog_mtx_;  // used to protect the set below
   std::set<SchedulingInfo> scheduled_processors_;  // set was chosen to avoid iterator invalidation
   std::unique_ptr<utils::CallBackTimer> watchDogTimer_;

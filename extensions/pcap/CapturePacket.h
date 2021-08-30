@@ -98,10 +98,7 @@ class CapturePacket : public core::Processor {
    * Create a new processor
    */
   explicit CapturePacket(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
-        capture_bluetooth_(false),
-        pcap_batch_size_(50),
-        logger_(logging::LoggerFactory<CapturePacket>::getLogger()) {
+      : Processor(name, uuid) {
     mover = std::unique_ptr<PacketMovers>(new PacketMovers());
   }
   // Destructor
@@ -151,15 +148,15 @@ class CapturePacket : public core::Processor {
   inline std::string getPath() {
     return base_dir_ + "/" + base_path_;
   }
-  bool capture_bluetooth_;
+  bool capture_bluetooth_ = false;
   std::string base_dir_;
   std::vector<std::string> attached_controllers_;
   std::string base_path_;
-  int64_t pcap_batch_size_;
+  int64_t pcap_batch_size_ = 50;
   std::unique_ptr<PacketMovers> mover;
   static std::atomic<int> num_;
   std::vector<pcpp::PcapLiveDevice*> device_list_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CapturePacket>::getLogger();
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 

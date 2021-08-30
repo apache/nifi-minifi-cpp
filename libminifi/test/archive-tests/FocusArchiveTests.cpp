@@ -33,6 +33,8 @@
 #include "processors/PutFile.h"
 #include "UnfocusArchiveEntry.h"
 #include "../TestBase.h"
+#include "repository/VolatileContentRepository.h"
+#include "../unit/ProvenanceTestHelper.h"
 
 const char TEST_ARCHIVE_NAME[] = "focus_test_archive.tar";
 const int NUM_FILES = 2;

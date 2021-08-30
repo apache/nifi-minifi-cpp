@@ -24,6 +24,8 @@
 #include "core/Core.h"
 #include "utils/gsl.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 /**
  * Test repository
  */

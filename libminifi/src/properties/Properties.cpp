@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "properties/Properties.h"
+#include <fstream>
 #include <string>
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
@@ -32,7 +33,7 @@ namespace minifi {
 #define TRACE_BUFFER_SIZE 512
 
 Properties::Properties(const std::string& name)
-    : logger_(logging::LoggerFactory<Properties>::getLogger()),
+    : logger_(core::logging::LoggerFactory<Properties>::getLogger()),
     name_(name) {
 }
 

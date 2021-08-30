@@ -50,8 +50,7 @@ class PutFile : public core::Processor {
    * Create a new processor
    */
   PutFile(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(std::move(name), uuid),
-        logger_(logging::LoggerFactory<PutFile>::getLogger()) {
+      : core::Processor(std::move(name), uuid) {
   }
 
   ~PutFile() override = default;
@@ -88,7 +87,7 @@ class PutFile : public core::Processor {
     bool commit();
 
    private:
-    std::shared_ptr<logging::Logger> logger_{ logging::LoggerFactory<PutFile::ReadCallback>::getLogger() };
+    std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<PutFile::ReadCallback>::getLogger() };
     bool write_succeeded_ = false;
     std::string tmp_file_;
     std::string dest_file_;
@@ -116,7 +115,7 @@ class PutFile : public core::Processor {
                const std::string &tmpFile,
                const std::string &destFile,
                const std::string &destDir);
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutFile>::getLogger();
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 
 #ifndef WIN32

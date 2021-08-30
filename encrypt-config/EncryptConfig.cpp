@@ -19,6 +19,7 @@
 
 #include <sodium.h>
 
+#include <fstream>
 #include <optional>
 #include <stdexcept>
 

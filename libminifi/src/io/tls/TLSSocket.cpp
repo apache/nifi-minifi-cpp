@@ -43,7 +43,6 @@ namespace io {
 
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service)
     : SocketContext(configure),
-      logger_(logging::LoggerFactory<TLSContext>::getLogger()),
       configure_(configure),
       ssl_service_(std::move(ssl_service)),
       ctx(nullptr, deleteContext),
@@ -167,13 +166,13 @@ void TLSSocket::close() {
  */
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners)
     : Socket(context, hostname, port, listeners) {
-  logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
+  logger_ = core::logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 
 TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port)
     : Socket(context, hostname, port, 0) {
-  logger_ = logging::LoggerFactory<TLSSocket>::getLogger();
+  logger_ = core::logging::LoggerFactory<TLSSocket>::getLogger();
   context_ = context;
 }
 

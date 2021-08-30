@@ -43,8 +43,7 @@ class FileUpdateTrigger : public C2Trigger {
   FileUpdateTrigger(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : C2Trigger(name, uuid),
         last_update_(0),
-        update_(false),
-        logger_(logging::LoggerFactory<FileUpdateTrigger>::getLogger()) {
+        update_(false) {
   }
 
   void initialize(const std::shared_ptr<minifi::Configure> &configuration) {
@@ -112,7 +111,7 @@ class FileUpdateTrigger : public C2Trigger {
   std::atomic<bool> update_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FileUpdateTrigger>::getLogger();
 };
 
 }  // namespace c2

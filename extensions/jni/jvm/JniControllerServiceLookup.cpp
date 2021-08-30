@@ -42,6 +42,8 @@
 extern "C" {
 #endif
 
+namespace minifi = org::apache::nifi::minifi;
+
 JNIEXPORT jobject JNICALL  Java_org_apache_nifi_processor_JniControllerServiceLookup_getControllerService(JNIEnv *env, jobject obj, jstring cs) {
   minifi::jni::JniControllerServiceLookup *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniControllerServiceLookup>(env, obj);
   auto str = JniStringToUTF(env, cs);

@@ -75,7 +75,7 @@ class DescriptorStream : public io::BaseStream {
   mutable std::recursive_mutex file_lock_;
   int fd_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DescriptorStream>::getLogger();
 };
 
 }  // namespace io

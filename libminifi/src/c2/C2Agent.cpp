@@ -63,7 +63,6 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
       configuration_(configuration),
       filesystem_(filesystem),
       protocol_(nullptr),
-      logger_(logging::LoggerFactory<C2Agent>::getLogger()),
       thread_pool_(2, false, nullptr, "C2 threadpool") {
   manifest_sent_ = false;
 

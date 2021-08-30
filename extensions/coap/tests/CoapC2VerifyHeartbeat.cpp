@@ -64,11 +64,11 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
   void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setOff<processors::InvokeHTTP>();
+    LogTestController::getInstance().setOff<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
     LogTestController::getInstance().setTrace<minifi::coap::c2::CoapProtocol>();
-    LogTestController::getInstance().setOff<processors::LogAttribute>();
+    LogTestController::getInstance().setOff<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setOff<minifi::core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";

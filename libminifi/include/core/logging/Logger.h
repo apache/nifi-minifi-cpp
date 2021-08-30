@@ -45,7 +45,7 @@ class LoggerControl {
  public:
   LoggerControl();
 
-  bool is_enabled() const;
+  [[nodiscard]] bool is_enabled() const;
 
   void setEnabled(bool status);
 
@@ -71,12 +71,12 @@ inline T conditional_conversion(T t) {
 }
 
 template<typename ... Args>
-inline std::string format_string(int max_size, char const* format_str, Args&&... args) {
+std::string format_string(int max_size, char const* format_str, Args&&... args) {
   // try to use static buffer
   char buf[LOG_BUFFER_SIZE + 1];
   int result = std::snprintf(buf, LOG_BUFFER_SIZE + 1, format_str, conditional_conversion(std::forward<Args>(args))...);
   if (result < 0) {
-    return std::string("Error while formatting log message");
+    return "Error while formatting log message";
   }
   if (result <= LOG_BUFFER_SIZE) {
     // static buffer was large enough
@@ -91,7 +91,7 @@ inline std::string format_string(int max_size, char const* format_str, Args&&...
   std::vector<char> buffer(dynamic_buffer_size + 1);  // extra '\0' character
   result = std::snprintf(buffer.data(), buffer.size(), format_str, conditional_conversion(std::forward<Args>(args))...);
   if (result < 0) {
-    return std::string("Error while formatting log message");
+    return "Error while formatting log message";
   }
   return std::string(buffer.cbegin(), buffer.cend() - 1);  // -1 to not include the terminating '\0'
 }
@@ -236,15 +236,15 @@ class Logger : public BaseLogger {
   Logger& operator=(Logger const&);
 };
 
-#define LOG_DEBUG(x) LogBuilder(x.get(), logging::LOG_LEVEL::debug)
+#define LOG_DEBUG(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::debug)
 
-#define LOG_INFO(x) LogBuilder(x.get(), logging::LOG_LEVEL::info)
+#define LOG_INFO(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::info)
 
-#define LOG_TRACE(x) LogBuilder(x.get(), logging::LOG_LEVEL::trace)
+#define LOG_TRACE(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::trace)
 
-#define LOG_ERROR(x) LogBuilder(x.get(), logging::LOG_LEVEL::err)
+#define LOG_ERROR(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::err)
 
-#define LOG_WARN(x) LogBuilder(x.get(), logging::LOG_LEVEL::warn)
+#define LOG_WARN(x) LogBuilder((x).get(), org::apache::nifi::minifi::core::logging::LOG_LEVEL::warn)
 
 }  // namespace logging
 }  // namespace core

@@ -36,8 +36,7 @@ AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreS
     : PersistableKeyValueStoreService(name, uuid)
     , always_persist_(false)
     , auto_persistence_interval_(0U)
-    , running_(false)
-    , logger_(logging::LoggerFactory<AbstractAutoPersistingKeyValueStoreService>::getLogger()) {
+    , running_(false) {
 }
 
 AbstractAutoPersistingKeyValueStoreService::~AbstractAutoPersistingKeyValueStoreService() {

@@ -203,7 +203,7 @@ ListSFTP::ListSFTP(const std::string& name, const utils::Identifier& uuid /*= ut
     , last_listed_latest_entry_timestamp_(0U)
     , last_processed_latest_entry_timestamp_(0U)
     , initial_listing_complete_(false) {
-  logger_ = logging::LoggerFactory<ListSFTP>::getLogger();
+  logger_ = core::logging::LoggerFactory<ListSFTP>::getLogger();
 }
 
 ListSFTP::~ListSFTP() = default;

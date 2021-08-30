@@ -80,12 +80,12 @@ void HTTPClient::forceClose() {
 }
 
 int HTTPClient::debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr) {
-  std::shared_ptr<logging::Logger>* logger = static_cast<std::shared_ptr<logging::Logger>*>(userptr);
+  auto* const logger = static_cast<std::shared_ptr<core::logging::Logger>*>(userptr);
   if (logger == nullptr) {
     return 0;
   }
   if (type == CURLINFO_TEXT) {
-    logging::LOG_DEBUG((*logger)) << "CURL(" << reinterpret_cast<void*>(handle) << "): " << std::string(data, size);
+    core::logging::LOG_DEBUG((*logger)) << "CURL(" << reinterpret_cast<void*>(handle) << "): " << std::string(data, size);
   }
   return 0;
 }

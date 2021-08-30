@@ -57,8 +57,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
         timestamp_(0),
         bytes_per_token_(0),
         verify_interfaces_(true),
-        clock_(std::move(clock)),
-        logger_(logging::LoggerFactory<NetworkPrioritizerService>::getLogger()) {
+        clock_(std::move(clock)) {
   }
 
   explicit NetworkPrioritizerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
@@ -127,7 +126,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
 
  private:
   std::shared_ptr<utils::timeutils::Clock> clock_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<NetworkPrioritizerService>::getLogger();
 };
 
 }  // namespace controllers

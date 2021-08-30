@@ -68,7 +68,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   std::string ack_uri_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTSender>::getLogger();
 };
 
 }  // namespace c2

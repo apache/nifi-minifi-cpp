@@ -32,8 +32,7 @@ namespace minifi {
 namespace io {
 
 SecureDescriptorStream::SecureDescriptorStream(int fd, SSL *ssl)
-    : fd_(fd), ssl_(ssl),
-      logger_(logging::LoggerFactory<SecureDescriptorStream>::getLogger()) {
+    : fd_(fd), ssl_(ssl) {
 }
 
 void SecureDescriptorStream::seek(size_t offset) {

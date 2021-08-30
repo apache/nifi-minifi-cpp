@@ -84,7 +84,7 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   void initializeNonVirtual();
   bool persistNonVirtual();
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger();
 };
 
 static_assert(std::is_convertible<UnorderedMapKeyValueStoreService*, PersistableKeyValueStoreService*>::value, "UnorderedMapKeyValueStoreService is a PersistableKeyValueStoreService");

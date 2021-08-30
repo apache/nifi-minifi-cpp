@@ -77,10 +77,13 @@ FILE* __cdecl __imp___iob_func() {
 
 #endif
 
+namespace minifi = org::apache::nifi::minifi;
+namespace utils = minifi::utils;
+namespace logging = minifi::core::logging;
+
 bool validHome(const std::string &home_path) {
-  struct stat stat_result { };
   const std::string properties_file_path = utils::file::FileUtils::concat_path(home_path, DEFAULT_NIFI_PROPERTIES_FILE);
-  return stat(properties_file_path.c_str(), &stat_result) == 0;
+  return utils::file::exists(properties_file_path);
 }
 
 void setSyslogLogger() {

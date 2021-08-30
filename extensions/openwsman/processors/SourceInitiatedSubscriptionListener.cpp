@@ -145,7 +145,6 @@ constexpr char const* SourceInitiatedSubscriptionListener::ProcessorName;
 
 SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(const std::string& name, const utils::Identifier& uuid)
     : Processor(name, uuid)
-    , logger_(logging::LoggerFactory<SourceInitiatedSubscriptionListener>::getLogger())
     , session_factory_(nullptr)
     , listen_port_(0U)
     , subscription_expiration_interval_(0)
@@ -324,7 +323,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handlePost(CivetServer* /*ser
     int xml_buf_size = 0;
     ws_xml_dump_memory_node_tree_enc(node, &xml_buf, &xml_buf_size, "UTF-8");
     if (xml_buf != nullptr) {
-        logging::LOG_TRACE(processor_.logger_) << "Received request: \"" << std::string(xml_buf, xml_buf_size) << "\"";
+        core::logging::LOG_TRACE(processor_.logger_) << "Received request: \"" << std::string(xml_buf, xml_buf_size) << "\"";
         ws_xml_free_memory(xml_buf);
     }
   }
@@ -383,7 +382,7 @@ bool SourceInitiatedSubscriptionListener::Handler::isAckRequested(WsXmlDocH doc)
 }
 
 void SourceInitiatedSubscriptionListener::Handler::sendResponse(struct mg_connection* conn, const std::string& machineId, const std::string& remoteIp, char* xml_buf, size_t xml_buf_size) {
-  logging::LOG_TRACE(processor_.logger_) << "Sending response to " << machineId << " (" << remoteIp << "): \"" << std::string(xml_buf, xml_buf_size) << "\"";
+  core::logging::LOG_TRACE(processor_.logger_) << "Sending response to " << machineId << " (" << remoteIp << "): \"" << std::string(xml_buf, xml_buf_size) << "\"";
 
   mg_printf(conn, "HTTP/1.1 200 OK\r\n");
   mg_printf(conn, "Content-Type: application/soap+xml;charset=UTF-8\r\n");
@@ -617,10 +616,10 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
   }
 
   std::shared_ptr<core::ProcessSession> session;
-  std::shared_ptr<logging::Logger> logger;
+  std::shared_ptr<core::logging::Logger> logger;
   std::string machine_id;
   std::string remote_ip;
-  std::tie(session, logger, machine_id, remote_ip) = *static_cast<std::tuple<std::shared_ptr<core::ProcessSession>, std::shared_ptr<logging::Logger>, std::string, std::string>*>(data);
+  std::tie(session, logger, machine_id, remote_ip) = *static_cast<std::tuple<std::shared_ptr<core::ProcessSession>, std::shared_ptr<core::logging::Logger>, std::string, std::string>*>(data);
 
   char* text = ws_xml_get_node_text(node);
   if (text == nullptr) {
@@ -689,7 +688,7 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
     }
     // Enumare Body/Events/Event nodes
     auto session = processor_.session_factory_->createSession();
-    std::tuple<std::shared_ptr<core::ProcessSession>, std::shared_ptr<logging::Logger>, std::string, std::string> callback_args =
+    std::tuple<std::shared_ptr<core::ProcessSession>, std::shared_ptr<core::logging::Logger>, std::string, std::string> callback_args =
         std::forward_as_tuple(session, processor_.logger_, machine_id, remote_ip);
     int ret = ws_xml_enum_children(events_node, &SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback, &callback_args, 0 /*bRecursive*/);
     if (ret != 0) {

@@ -67,8 +67,7 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
       running_(false),
       updating_(false),
       initialized_(false),
-      thread_pool_(2, false, nullptr, "Flowcontroller threadpool"),
-      logger_(logging::LoggerFactory<FlowController>::getLogger()) {
+      thread_pool_(2, false, nullptr, "Flowcontroller threadpool") {
   if (provenance_repo_ == nullptr)
     throw std::runtime_error("Provenance Repo should not be null");
   if (flow_file_repo_ == nullptr)

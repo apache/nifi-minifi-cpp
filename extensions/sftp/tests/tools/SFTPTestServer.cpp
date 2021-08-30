@@ -17,9 +17,11 @@
  */
 
 #include "SFTPTestServer.h"
+
+#include <exception>
+#include <fstream>
 #include <vector>
 #include <thread>
-#include <exception>
 
 #ifndef WIN32
 #include <signal.h>
@@ -33,11 +35,12 @@
 
 #include "utils/file/FileUtils.h"
 
+namespace utils = org::apache::nifi::minifi::utils;
+
 SFTPTestServer::SFTPTestServer(const std::string& working_directory,
                                const std::string& host_key_file /*= "resources/host.pem"*/,
                                const std::string& jar_path /*= "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar"*/)
-    : logger_(logging::LoggerFactory<SFTPTestServer>::getLogger()),
-      working_directory_(working_directory),
+    : working_directory_(working_directory),
       started_(false),
       port_(0U)
 #ifndef WIN32

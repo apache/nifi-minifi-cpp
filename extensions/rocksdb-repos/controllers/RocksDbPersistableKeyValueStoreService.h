@@ -71,7 +71,7 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
   rocksdb::WriteOptions default_write_options;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbPersistableKeyValueStoreService>::getLogger();
 };
 
 } /* namespace controllers */

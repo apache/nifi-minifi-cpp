@@ -50,8 +50,7 @@ class LogAttribute : public core::Processor {
       : Processor(name, uuid),
         flowfiles_to_log_(1),
         hexencode_(false),
-        max_line_length_(80U),
-        logger_(logging::LoggerFactory<LogAttribute>::getLogger()) {
+        max_line_length_(80U) {
   }
   // Destructor
   ~LogAttribute() override = default;
@@ -99,7 +98,7 @@ class LogAttribute : public core::Processor {
   // Nest Callback Class for read stream
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(std::shared_ptr<logging::Logger> logger, size_t size)
+    ReadCallback(std::shared_ptr<core::logging::Logger> logger, size_t size)
         : logger_(std::move(logger))
         , buffer_(size)  {
     }
@@ -112,7 +111,7 @@ class LogAttribute : public core::Processor {
       }
       return gsl::narrow<int64_t>(buffer_.size());
     }
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_;
     std::vector<uint8_t> buffer_;
   };
 
@@ -132,7 +131,7 @@ class LogAttribute : public core::Processor {
   bool hexencode_;
   uint32_t max_line_length_;
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger();
 };
 
 }  // namespace processors

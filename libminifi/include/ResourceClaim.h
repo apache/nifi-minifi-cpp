@@ -103,7 +103,7 @@ class ResourceClaim {
 
  private:
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   ResourceClaim(const ResourceClaim &parent);

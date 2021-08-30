@@ -16,10 +16,19 @@
  * limitations under the License.
  */
 
+#include <memory>
+#include <string>
 #include "../TestBase.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "../../extensions/rocksdb-repos/FlowFileRepository.h"
+#include "repository/FileSystemRepository.h"
+#include "utils/Id.h"
+#include "io/BufferStream.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessorNode.h"
+#include "core/Processor.h"
+#include "repository/VolatileContentRepository.h"
 
 namespace {
 

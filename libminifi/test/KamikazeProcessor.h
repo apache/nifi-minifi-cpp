@@ -32,7 +32,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-// GenerateFlowFile Class
+
 class KamikazeProcessor : public core::Processor {
  public:
   static const std::string OnScheduleExceptionStr;
@@ -42,8 +42,7 @@ class KamikazeProcessor : public core::Processor {
   static const std::string OnUnScheduleLogStr;
 
   explicit KamikazeProcessor(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
-  : Processor(name, uuid), logger_(logging::LoggerFactory<KamikazeProcessor>::getLogger()) {
-    _throwInOnTrigger = false;
+      : Processor(name, uuid) {
   }
 
   // Processor Name
@@ -53,15 +52,14 @@ class KamikazeProcessor : public core::Processor {
   static core::Property ThrowInOnTrigger;
 
  public:
-  virtual void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
-  virtual void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  virtual void initialize();
-  virtual void onUnSchedule();
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void initialize() override;
+  void onUnSchedule() override;
 
  private:
-  bool _throwInOnTrigger;
-  // logger instance
-  std::shared_ptr<logging::Logger> logger_;
+  bool _throwInOnTrigger = false;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<KamikazeProcessor>::getLogger();
 };
 
 } /* namespace processors */

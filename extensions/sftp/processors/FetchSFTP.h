@@ -49,7 +49,7 @@ class FetchSFTP : public SFTPProcessorBase {
    * Create a new processor
    */
   explicit FetchSFTP(const std::string& name, const utils::Identifier& uuid = {});
-  virtual ~FetchSFTP();
+  ~FetchSFTP() override;
 
   // Supported Properties
   static core::Property RemoteFile;
@@ -78,11 +78,11 @@ class FetchSFTP : public SFTPProcessorBase {
    public:
     WriteCallback(const std::string& remote_file,
                  utils::SFTPClient& client);
-    ~WriteCallback();
+    ~WriteCallback() override;
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
    private:
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FetchSFTP::WriteCallback>::getLogger();
     const std::string remote_file_;
     utils::SFTPClient& client_;
   };

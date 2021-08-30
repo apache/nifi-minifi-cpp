@@ -14,10 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+#include <chrono>
 #include "FlowFileQueue.h"
 
 #include "../TestBase.h"
 #include "utils/IntegrationTestUtils.h"
+
+namespace core = minifi::core;
 
 TEST_CASE("After construction, a FlowFileQueue is empty", "[FlowFileQueue]") {
   utils::FlowFileQueue queue;

@@ -27,6 +27,8 @@
 #include "properties/Configure.h"
 #include "io/tls/TLSSocket.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 #ifdef WIN32
 #pragma comment(lib, "Ws2_32.lib")
 using SocketDescriptor = SOCKET;
@@ -144,7 +146,7 @@ class TLSClientSocketSupportedProtocolsTest {
 
  protected:
   void configureSecurity() {
-    host_ = org::apache::nifi::minifi::io::Socket::getMyHostName();
+    host_ = minifi::io::Socket::getMyHostName();
     port_ = "38777";
     if (!key_dir_.empty()) {
       configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
@@ -167,8 +169,8 @@ class TLSClientSocketSupportedProtocolsTest {
     TLSTestSever server(port_, key_dir_);
     server.waitForConnection();
 
-    const auto socket_context = std::make_shared<org::apache::nifi::minifi::io::TLSContext>(configuration_);
-    client_socket_ = std::make_unique<org::apache::nifi::minifi::io::TLSSocket>(socket_context, host_, std::stoi(port_), 0);
+    const auto socket_context = std::make_shared<minifi::io::TLSContext>(configuration_);
+    client_socket_ = std::make_unique<minifi::io::TLSSocket>(socket_context, host_, std::stoi(port_), 0);
     const bool client_initialized_successfully = (client_socket_->initialize() == 0);
     assert(client_initialized_successfully == should_be_compatible);
     server.shutdownServer();
@@ -176,7 +178,7 @@ class TLSClientSocketSupportedProtocolsTest {
   }
 
  protected:
-    std::unique_ptr<org::apache::nifi::minifi::io::TLSSocket> client_socket_;
+    std::unique_ptr<minifi::io::TLSSocket> client_socket_;
     std::string host_;
     std::string port_;
     std::string key_dir_;

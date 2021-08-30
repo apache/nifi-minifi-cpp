@@ -47,7 +47,7 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") { // NOLINT
                                           true);
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     import codecs
 
     class ReadCallback(object):
@@ -66,10 +66,10 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") { // NOLINT
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
 
@@ -132,7 +132,7 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") { // NOLINT
                                           true);
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     class WriteCallback(object):
       def process(self, output_stream):
         new_content = 'hello 2'.encode('utf-8')
@@ -148,10 +148,10 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") { // NOLINT
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
 
@@ -204,7 +204,7 @@ TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") { // NOLINT
   auto executeScript = plan->addProcessor("ExecuteScript",
                                           "executeScript");
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     def onTrigger(context, session):
       flow_file = session.create()
 
@@ -241,7 +241,7 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
                                          core::Relationship("success", "description"),
                                          true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     def onTrigger(context, session):
       flow_file = session.get()
 
@@ -255,7 +255,7 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
   std::stringstream ss;
@@ -293,14 +293,14 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
                                          core::Relationship("success", "description"),
                                          true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     def onTrigger(context, session):
       script_engine = context.getProperty('Script Engine')
       log.info('got Script Engine property: %s' % script_engine)
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
   std::stringstream ss;

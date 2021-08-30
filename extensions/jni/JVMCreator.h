@@ -39,9 +39,7 @@ namespace jni {
 class JVMCreator : public minifi::core::CoreComponent {
  public:
   explicit JVMCreator(const std::string &name, const utils::Identifier &uuid = {})
-      : minifi::core::CoreComponent(name, uuid),
-        loader_(nullptr),
-        logger_(logging::LoggerFactory<JVMCreator>::getLogger()) {
+      : minifi::core::CoreComponent(name, uuid) {
   }
 
   virtual ~JVMCreator();
@@ -92,13 +90,13 @@ class JVMCreator : public minifi::core::CoreComponent {
   }
 
  private:
-  minifi::jni::JVMLoader *loader_;
+  minifi::jni::JVMLoader *loader_ = nullptr;
 
   std::vector<std::string> jvm_options_;
 
   std::vector<std::string> classpaths_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JVMCreator>::getLogger();
 };
 
 } /* namespace jni */

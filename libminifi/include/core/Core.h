@@ -20,10 +20,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
-#include <properties/Configure.h>
 
-#include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -66,31 +63,19 @@
 #endif
 
 #include "utils/Id.h"
+#include "properties/Configure.h"
 
 /**
  * namespace aliasing
  */
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
-}
-}
-namespace processors {
-}
-namespace provenance {
-
-}
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 template<typename T>
 static inline std::string getClassName() {
 #ifndef WIN32
   char *b = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
   if (b == nullptr)
-    return std::string();
+    return {};
   std::string name = b;
   std::free(b);
   return name;
@@ -106,31 +91,8 @@ static inline std::string getClassName() {
 }
 
 template<typename T>
-struct class_operations {
-  template<typename Q = T>
-  static std::true_type canDestruct(decltype(std::declval<Q>().~Q()) *) {
-    return std::true_type();
-  }
-
-  template<typename Q = T>
-  static std::false_type canDestruct(...) {
-    return std::false_type();
-  }
-
-  typedef decltype(canDestruct<T>(0)) type;
-
-  static const bool value = type::value;
-};
-
-template<typename T>
-typename std::enable_if<!class_operations<T>::value, std::shared_ptr<T>>::type instantiate(const std::string name = "") {
-  (void)name;  // against unused variable warnings
-  throw std::runtime_error("Cannot instantiate class");
-}
-
-template<typename T>
-typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type instantiate(const std::string name = "") {
-  if (name.length() == 0) {
+std::shared_ptr<T> instantiate(const std::string name = {}) {
+  if (name.empty()) {
     return std::make_shared<T>();
   } else {
     return std::make_shared<T>(name);
@@ -144,31 +106,16 @@ typename std::enable_if<class_operations<T>::value, std::shared_ptr<T>>::type in
  */
 class CoreComponent {
  public:
-  /**
-   * Constructor that sets the name and uuid.
-   */
-
-  explicit CoreComponent(const std::string &name, const utils::Identifier &uuid = {}, const std::shared_ptr<utils::IdGenerator> &idGenerator = utils::IdGenerator::getIdGenerator())
-      : name_(name) {
-    if (uuid.isNil()) {
-      // Generate the global UUID for the flow record
-      uuid_ = idGenerator->generate();
-    } else {
-      uuid_ = uuid;
-    }
-  }
-
-  explicit CoreComponent(const CoreComponent &other) = default;
-  /**
-   * Move Constructor.
-   */
-
-  explicit CoreComponent(CoreComponent &&other) = default;
+  explicit CoreComponent(const std::string &name, const utils::Identifier &uuid = {}, const std::shared_ptr<utils::IdGenerator> &idGenerator = utils::IdGenerator::getIdGenerator());
+  CoreComponent(const CoreComponent &other) = default;
+  CoreComponent(CoreComponent &&other) = default;
+  CoreComponent& operator=(const CoreComponent&) = default;
+  CoreComponent& operator=(CoreComponent&&) = default;
 
   virtual ~CoreComponent() = default;
 
   // Get component name Name
-  virtual std::string getName() const;
+  [[nodiscard]] virtual std::string getName() const;
 
   /**
    * Set name.
@@ -186,13 +133,12 @@ class CoreComponent {
    * Returns the UUID.
    * @return the uuid of the component
    */
-  utils::Identifier getUUID() const;
+  [[nodiscard]] utils::Identifier getUUID() const;
 
-  // unsigned const char *getUUID();
   /**
    * Return the UUID string
    */
-  utils::SmallString<36> getUUIDStr() const {
+  [[nodiscard]] utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
 
@@ -210,26 +156,6 @@ class CoreComponent {
   std::string name_;
 };
 
-namespace logging {
-}
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-namespace fileutils = org::apache::nifi::minifi::utils::file;
-
-namespace minifi = org::apache::nifi::minifi;
-
-namespace core = org::apache::nifi::minifi::core;
-
-namespace processors = org::apache::nifi::minifi::processors;
-
-namespace logging = org::apache::nifi::minifi::core::logging;
-
-namespace utils = org::apache::nifi::minifi::utils;
-
-namespace provenance = org::apache::nifi::minifi::provenance;
+}  // namespace org::apache::nifi::minifi::core
 
 #endif  // LIBMINIFI_INCLUDE_CORE_CORE_H_

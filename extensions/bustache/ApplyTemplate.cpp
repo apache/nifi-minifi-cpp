@@ -67,7 +67,6 @@ void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 }
 
 ApplyTemplate::WriteCallback::WriteCallback(const std::string &path, const std::shared_ptr<core::FlowFile> &flow_file) {
-  logger_ = logging::LoggerFactory<ApplyTemplate::WriteCallback>::getLogger();
   template_file_ = path;
   flow_file_ = flow_file;
 }

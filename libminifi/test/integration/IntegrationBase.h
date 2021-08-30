@@ -35,6 +35,10 @@
 #include "controllers/SSLContextService.h"
 #include "HTTPUtils.h"
 
+namespace minifi = org::apache::nifi::minifi;
+namespace core = minifi::core;
+namespace utils = minifi::utils;
+
 class IntegrationBase {
  public:
   explicit IntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS);

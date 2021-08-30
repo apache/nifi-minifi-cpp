@@ -54,7 +54,7 @@ class FetchS3Object : public S3Processor {
   static const core::Relationship Success;
 
   explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger()) {
+    : S3Processor(name, uuid, core::logging::LoggerFactory<FetchS3Object>::getLogger()) {
   }
 
   ~FetchS3Object() override = default;
@@ -101,7 +101,7 @@ class FetchS3Object : public S3Processor {
   friend class ::S3TestsFixture<FetchS3Object>;
 
   explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(name, uuid, logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_request_sender)) {
+    : S3Processor(name, uuid, core::logging::LoggerFactory<FetchS3Object>::getLogger(), std::move(s3_request_sender)) {
   }
 
   std::optional<aws::s3::GetObjectRequestParameters> buildFetchS3RequestParams(

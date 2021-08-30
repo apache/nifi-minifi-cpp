@@ -26,6 +26,8 @@
 
 #include "TestBase.h"
 #include "core/Core.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "repository/VolatileContentRepository.h"
 
 #include "core/FlowFile.h"
 #include "core/Processor.h"

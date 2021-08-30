@@ -57,8 +57,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    */
   explicit HttpSiteToSiteClient(const std::string& /*name*/, const utils::Identifier& /*uuid*/ = {})
       : SiteToSiteClient(),
-        current_code(UNRECOGNIZED_RESPONSE_CODE),
-        logger_(logging::LoggerFactory<HttpSiteToSiteClient>::getLogger()) {
+        current_code(UNRECOGNIZED_RESPONSE_CODE) {
     peer_state_ = READY;
   }
 
@@ -67,13 +66,12 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    */
   explicit HttpSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
       : SiteToSiteClient(),
-        current_code(UNRECOGNIZED_RESPONSE_CODE),
-        logger_(logging::LoggerFactory<HttpSiteToSiteClient>::getLogger()) {
+        current_code(UNRECOGNIZED_RESPONSE_CODE) {
     peer_ = std::move(peer);
     peer_state_ = READY;
   }
   // Destructor
-  virtual ~HttpSiteToSiteClient() = default;
+  ~HttpSiteToSiteClient() override = default;
 
   void setPeer(std::unique_ptr<SiteToSitePeer> peer) override {
     peer_ = std::move(peer);
@@ -134,7 +132,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
    */
   std::shared_ptr<minifi::utils::HTTPClient> openConnectionForReceive(const std::shared_ptr<HttpTransaction> &transaction);
 
-  const std::string getBaseURI() {
+  std::string getBaseURI() {
     std::string uri = ssl_context_service_ != nullptr ? "https://" : "http://";
     uri.append(peer_->getHostName());
     uri.append(":");
@@ -148,7 +146,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   std::optional<utils::Identifier> parseTransactionId(const std::string &uri);
 
   std::unique_ptr<utils::HTTPClient> create_http_client(const std::string &uri, const std::string &method = "POST", bool setPropertyHeaders = false) {
-    std::unique_ptr<utils::HTTPClient> http_client_ = std::unique_ptr<utils::HTTPClient>(new minifi::utils::HTTPClient(uri, ssl_context_service_));
+    std::unique_ptr<utils::HTTPClient> http_client_ = std::make_unique<utils::HTTPClient>(uri, ssl_context_service_);
     http_client_->initialize(method, uri, ssl_context_service_);
     if (setPropertyHeaders) {
       if (_currentVersion >= 5) {
@@ -169,7 +167,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
  private:
   RespondCode current_code;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpSiteToSiteClient>::getLogger();
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   HttpSiteToSiteClient(const HttpSiteToSiteClient &parent);

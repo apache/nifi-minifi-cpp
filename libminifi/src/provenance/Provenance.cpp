@@ -38,7 +38,7 @@ namespace minifi {
 namespace provenance {
 
 std::shared_ptr<utils::IdGenerator> ProvenanceEventRecord::id_generator_ = utils::IdGenerator::getIdGenerator();
-std::shared_ptr<logging::Logger> ProvenanceEventRecord::logger_ = logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
+std::shared_ptr<core::logging::Logger> ProvenanceEventRecord::logger_ = core::logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
 
 const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREATE", "RECEIVE", "FETCH", "SEND", "DOWNLOAD", "DROP", "EXPIRE", "FORK", "JOIN", "CLONE", "CONTENT_MODIFIED",
     "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };

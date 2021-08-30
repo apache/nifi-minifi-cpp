@@ -57,11 +57,7 @@ class ExecuteJavaProcessor : public core::Processor {
    * Create a new processor
    */
   explicit ExecuteJavaProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
-        logger_instance_(nullptr),
-        context_instance_(nullptr),
-        logger_(logging::LoggerFactory<ExecuteJavaProcessor>::getLogger()),
-        nifi_logger_(nullptr) {
+      : Processor(name, uuid) {
   }
   // Destructor
   virtual ~ExecuteJavaProcessor();
@@ -262,7 +258,7 @@ class ExecuteJavaProcessor : public core::Processor {
 
   JavaClass jni_logger_class_;
 
-  jobject logger_instance_;
+  jobject logger_instance_ = nullptr;
 
   std::mutex local_mutex_;
 
@@ -278,17 +274,17 @@ class ExecuteJavaProcessor : public core::Processor {
 
   JavaClass current_processor_class;
 
-  jobject context_instance_;
+  jobject context_instance_ = nullptr;
 
-  jobject clazzInstance;
+  jobject clazzInstance = nullptr;
 
   std::shared_ptr<controllers::JavaControllerService> java_servicer_;
 
   std::string class_name_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteJavaProcessor>::getLogger();
 
-  std::shared_ptr<logging::Logger> nifi_logger_;
+  std::shared_ptr<core::logging::Logger> nifi_logger_;
 
   JniControllerServiceLookup csl_;
 
