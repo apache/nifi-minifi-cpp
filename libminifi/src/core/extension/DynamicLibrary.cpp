@@ -20,6 +20,7 @@
 #include <dlfcn.h>
 #define DLL_EXPORT
 #else
+#include <system_error>
 #define WIN32_LEAN_AND_MEAN 1
 #include <Windows.h>    // Windows specific libraries for collecting software metrics.
 #include <Psapi.h>
@@ -91,14 +92,7 @@ void DynamicLibrary::store_error() {
     return;
   }
 
-  LPSTR messageBuffer = nullptr;
-  size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-      NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
-
-  current_error_ = std::string(messageBuffer, size);
-
-  // Free the buffer.
-  LocalFree(messageBuffer);
+  current_error_ = std::system_category().message(error);
 }
 
 void* DynamicLibrary::dlsym(void* handle, const char* name) {
