@@ -218,9 +218,9 @@ auto FilePattern::FilePatternSegment::match(const std::filesystem::path& path) c
 
 static std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<FilePattern>::getLogger();
 
-std::set<std::filesystem::path> match(const FilePattern& pattern) {
+std::vector<std::filesystem::path> match(const FilePattern& pattern) {
   using FilePatternSegment = FilePattern::FilePatternSegment;
-  std::set<std::filesystem::path> files;
+  std::vector<std::filesystem::path> files;
   for (auto it = pattern.segments_.begin(); it != pattern.segments_.end(); ++it) {
     if (it->isExcluding()) continue;
     const auto match_file = [&] (const std::string& dir, const std::string& file) -> bool {
@@ -239,7 +239,7 @@ std::set<std::filesystem::path> match(const FilePattern& pattern) {
           return true;
         }
       }
-      files.insert(concat_path(dir, file));
+      files.emplace_back(concat_path(dir, file));
       return true;
     };
     const auto descend_into_directory = [&] (const std::string& dir) -> bool {
@@ -262,6 +262,8 @@ std::set<std::filesystem::path> match(const FilePattern& pattern) {
     };
     list_dir(it->getBaseDirectory().string(), match_file, logger, descend_into_directory);
   }
+  std::sort(files.begin(), files.end());
+  files.erase(std::unique(files.begin(), files.end()), files.end());
   return files;
 }
 
