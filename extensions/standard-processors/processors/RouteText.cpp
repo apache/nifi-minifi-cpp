@@ -36,7 +36,10 @@ namespace org::apache::nifi::minifi::processors {
 const core::Property RouteText::RoutingStrategy(
     core::PropertyBuilder::createProperty("Routing Strategy")
     ->withDescription("Specifies how to determine which Relationship(s) to use when evaluating the segments "
-                      "of incoming text against the 'Matching Strategy' and user-defined properties.")
+                      "of incoming text against the 'Matching Strategy' and user-defined properties. "
+                      "'Dynamic Routing' routes to all the matching dynamic relationships (or 'unmatched' if none matches). "
+                      "'Route On All' routes to 'matched' iff all dynamic relationships match. "
+                      "'Route On Any' routes to 'matched' iff any of the dynamic relationships match. ")
     ->isRequired(true)
     ->withDefaultValue<std::string>(toString(Routing::DYNAMIC))
     ->withAllowableValues<std::string>(Routing::values())
@@ -73,6 +76,13 @@ const core::Property RouteText::GroupingRegex(
                       "Two segments that have the same Group but different Relationships will never be placed into the same FlowFile.")
     ->build());
 
+const core::Property RouteText::GroupingFallbackValue(
+    core::PropertyBuilder::createProperty("Grouping Fallback Value")
+    ->withDescription("If the 'Grouping Regular Expression' is specified and the matching fails, this value will be considered the group of the segment.")
+    ->isRequired(true)
+    ->withDefaultValue<std::string>("")
+    ->build());
+
 const core::Property RouteText::SegmentationStrategy(
     core::PropertyBuilder::createProperty("Segmentation Strategy")
     ->withDescription("Specifies what portions of the FlowFile content constitutes a single segment to be processed.")
@@ -81,7 +91,7 @@ const core::Property RouteText::SegmentationStrategy(
     ->withAllowableValues<std::string>(Segmentation::values())
     ->build());
 
-const core::Relationship RouteText::Original("original", "The original input file will be routed to this destination when the segments have been successfully routed to 1 or more relationships");
+const core::Relationship RouteText::Original("original", "The original input file will be routed to this destination");
 
 const core::Relationship RouteText::Unmatched("unmatched", "Segments that do not satisfy the required user-defined rules will be routed to this Relationship");
 
@@ -97,6 +107,7 @@ void RouteText::initialize() {
      TrimWhitespace,
      IgnoreCase,
      GroupingRegex,
+     GroupingFallbackValue,
      SegmentationStrategy
   });
   setSupportedRelationships({Original, Unmatched, Matched});
@@ -113,6 +124,7 @@ void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFa
   context->getProperty(IgnoreCase.getName(), ignore_case_);
   group_regex_ = context->getProperty(GroupingRegex) | utils::map(to_regex);
   segmentation_ = utils::parseEnumProperty<Segmentation>(*context, SegmentationStrategy);
+  context->getProperty(GroupingFallbackValue.getName(), group_fallback_);
 }
 
 class RouteText::ReadCallback : public InputStreamCallback {
@@ -146,13 +158,26 @@ class RouteText::ReadCallback : public InputStreamCallback {
         return content.length();
       }
       case Segmentation::PER_LINE: {
-        size_t segment_idx = 0;
+        // 1-based index as in nifi
+        size_t segment_idx = 1;
         // do not strip \n\r characters before invocation to be
         // in-line with the nifi semantics
+        // '\r' is only considered a line terminator if a non-'\n' char follows
         std::string_view::size_type curr = 0;
-        while (curr != std::string_view::npos) {
+        while (curr < content.length()) {
           // find beginning of next line
-          auto next_line = content.find_first_not_of("\r\n", content.find_first_of("\r\n", curr));
+          std::string_view::size_type next_line = std::string_view::npos;
+          if (auto next_marker = content.find_first_of("\r\n", curr); next_marker != std::string_view::npos) {
+            if (content[next_marker] == '\n') {
+              next_line = next_marker + 1;
+            } else if (next_marker + 1 < content.size()) {
+              if (content[next_marker + 1] == '\n') {
+                next_line = next_marker + 2;
+              } else {
+                next_line = next_marker + 1;
+              }
+            }
+          }
 
           if (next_line == std::string_view::npos) {
             fn_({content.substr(curr), segment_idx});
@@ -228,19 +253,16 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
 
   ReadCallback callback(segmentation_, [&] (Segment segment) {
     std::string_view original_value = segment.value_;
-    if (segmentation_ == Segmentation::PER_LINE) {
-      // do not consider the trailing \r\n characters in order to conform to nifi
-      auto len = segment.value_.find_last_not_of("\r\n");
-      if (len != std::string_view::npos) {
-        ++len;
-      }
-      segment.value_ = segment.value_.substr(0, len);
-    }
-    if (trim_) {
-      segment.value_ = utils::StringUtils::trim(segment.value_);
+    std::string_view preprocessed_value = preprocess(segment.value_);
+
+    if (matching_ != Matching::EXPRESSION) {
+      // an Expression has access to the raw segment like in nifi
+      // all others use the preprocessed_value
+      segment.value_ = preprocessed_value;
     }
 
-    auto group = getGroup(segment.value_);
+    // group extraction always uses the preprocessed
+    auto group = getGroup(preprocessed_value);
     switch (routing_.value()) {
       case Routing::ALL: {
         for (const auto& prop : dynamic_properties_) {
@@ -292,6 +314,22 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
   session->transfer(flow_file, Original);
 }
 
+std::string_view RouteText::preprocess(std::string_view str) const {
+  if (segmentation_ == Segmentation::PER_LINE) {
+    // do not consider the trailing \r\n characters in order to conform to nifi
+    auto len = str.find_last_not_of("\r\n");
+    if (len != std::string_view::npos) {
+      str = str.substr(0, len + 1);
+    } else {
+      str = "";
+    }
+  }
+  if (trim_) {
+    str = utils::StringUtils::trim(str);
+  }
+  return str;
+}
+
 bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const {
   switch (matching_.value()) {
     case Matching::EXPRESSION: {
@@ -340,14 +378,14 @@ std::optional<std::string> RouteText::getGroup(const std::string_view& segment) 
   }
   std::cmatch match_result;
   if (!std::regex_match(segment.begin(), segment.end(), match_result, group_regex_.value())) {
-    return std::nullopt;
+    return group_fallback_;
   }
   // TODO(adebreceni): warn if some capturing groups are not used
   auto to_string = [] (const std::cmatch::value_type& submatch) -> std::string {return submatch;};
   return ranges::views::tail(match_result)  // only join the capture groups
     | ranges::views::transform(to_string)
     | ranges::views::cache1
-    | ranges::views::join(", ")
+    | ranges::views::join(std::string(", "))
     | ranges::to<std::string>();
 }
 
@@ -365,5 +403,10 @@ void RouteText::onDynamicPropertyModified(const core::Property& /*orig_property*
 
   setSupportedRelationships(relationships);
 }
+
+REGISTER_RESOURCE(RouteText, "Routes textual data based on a set of user-defined rules. Each segment in an incoming FlowFile is "
+                             "compared against the values specified by user-defined Properties. The mechanism by which the text is compared "
+                             "to these user-defined properties is defined by the 'Matching Strategy'. The data is then routed according to "
+                             "these rules, routing each segment of the text individually.");
 
 }  // org::apache::nifi::minifi::processors

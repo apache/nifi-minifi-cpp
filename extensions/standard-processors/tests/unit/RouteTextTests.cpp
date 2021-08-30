@@ -41,6 +41,11 @@ struct RouteTextController : public TestController {
         push_back(FlowFilePattern().content(arg));
       }
     }
+    FlowFilePatternVec(std::initializer_list<FlowFilePattern> patterns) {
+      for (const auto& pattern : patterns) {
+        push_back(pattern);
+      }
+    }
   };
 
   RouteTextController() {
@@ -65,7 +70,8 @@ struct RouteTextController : public TestController {
       REQUIRE(pattern_idx < patterns.size());
       const auto& pattern = patterns[pattern_idx++];
       for (const auto& attr : pattern.required_attributes_) {
-        REQUIRE(flow_file->getAttribute(attr.first) == attr.second);
+        auto attr_value = flow_file->getAttribute(attr.first);
+        REQUIRE(attr_value == attr.second);
       }
       if (pattern.required_content_) {
         REQUIRE(pattern.required_content_.value() == plan_->getContent(flow_file));
@@ -83,7 +89,10 @@ struct RouteTextController : public TestController {
       }
       verifyOutputRelationship(rel, files);
     }
-    verifyOutputRelationship("original", all);
+    if (patterns.find("original") == patterns.end()) {
+      // expectations on "original" were implicit
+      verifyOutputRelationship("original", all);
+    }
   }
 
   void run() {
@@ -271,6 +280,207 @@ TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Routing Strat
       putFlowFile({}, ff.required_content_.value());
     }
   }
+
+  run();
+
+  verifyAllOutput(expected);
+}
+
+TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation") {
+  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy, "Equals");
+  proc_->setDynamicProperty("A", "A");
+  proc_->setDynamicProperty("B", "B");
+
+  createOutput({"A", ""});
+  createOutput({"B", ""});
+
+  std::string content = "A\nB\r A \r\n\r\rA";
+  // '\r' is a line terminator iff a non-'\n' character follows it
+  putFlowFile({}, content);
+
+  std::map<std::string, FlowFilePatternVec> expected{
+      {"A", {}},
+      {"B", {}},
+      {"matched", {}},
+      {"unmatched", {}},
+      {"original", {content}}
+  };
+
+
+  SECTION("Without trim") {
+    proc_->setProperty(processors::RouteText::TrimWhitespace, "false");
+    expected["A"] = {"A\nA"};
+    expected["B"] = {"B\r"};
+    expected["unmatched"] = {" A \r\n\r\r"};
+  }
+
+  SECTION("With trim") {
+    proc_->setProperty(processors::RouteText::TrimWhitespace, "true");
+    expected["A"] = {"A\n A \r\nA"};
+    expected["B"] = {"B\r"};
+    expected["unmatched"] = {"\r\r"};
+  }
+
+  run();
+
+  verifyAllOutput(expected);
+}
+
+TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation ignores trailing empty line") {
+  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
+  proc_->setProperty(processors::RouteText::RoutingStrategy, "Route On All");
+  proc_->setProperty(processors::RouteText::MatchingStrategy, "Equals");
+  proc_->setDynamicProperty("A", "A");
+
+  std::string content;
+
+  SECTION("Windows line ending") {
+    content = "A\r\n";
+  }
+  SECTION("Simple line ending") {
+    content = "A\n";
+  }
+  SECTION("Not a line ending but a single non-terminated line") {
+    content = "A\r";
+  }
+
+  putFlowFile({}, content);
+
+  std::map<std::string, FlowFilePatternVec> expected{
+      {"matched", {content}},
+      {"unmatched", {}},
+      {"original", {content}}
+  };
+
+  run();
+
+  verifyAllOutput(expected);
+}
+
+TEST_CASE_METHOD(RouteTextController, "RouteText can group segments") {
+  proc_->setProperty(processors::RouteText::RoutingStrategy, "Dynamic Routing");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
+  proc_->setProperty(processors::RouteText::GroupingRegex, "group(.).*");
+  proc_->setProperty(processors::RouteText::GroupingFallbackValue, "GROUPING_FAILURE :(");
+
+  proc_->setDynamicProperty("A", "toA");
+  proc_->setDynamicProperty("B", "toB");
+
+  createOutput({"A", ""});
+  createOutput({"B", ""});
+
+  std::string content =
+      "group1.toA(one)\ngroup1.toB(two)\ngroup1.toA(three)\ngroup2.toA(four)\n"
+      "no_group.toA(five)\nno_group.toA(six)\ntoNone1\ngroup1.toNone2\ngroup1.toNone3";
+
+  putFlowFile({}, content);
+
+  std::map<std::string, FlowFilePatternVec> expected;
+
+  expected["A"] = {
+      FlowFilePattern{}.attr("RouteText.Group", "1").content("group1.toA(one)\ngroup1.toA(three)\n"),
+      FlowFilePattern{}.attr("RouteText.Group", "2").content("group2.toA(four)\n"),
+      FlowFilePattern{}.attr("RouteText.Group", "GROUPING_FAILURE :(").content("no_group.toA(five)\nno_group.toA(six)\n")
+  };
+  expected["B"] = {
+      FlowFilePattern{}.attr("RouteText.Group", "1").content("group1.toB(two)\n")
+  };
+  expected["matched"] = FlowFilePatternVec{};
+  expected["unmatched"] = {
+      FlowFilePattern{}.attr("RouteText.Group", "1").content("group1.toNone2\ngroup1.toNone3"),
+      FlowFilePattern{}.attr("RouteText.Group", "GROUPING_FAILURE :(").content("toNone1\n")
+  };
+  expected["original"] = {content};
+
+  run();
+
+  verifyAllOutput(expected);
+}
+
+TEST_CASE_METHOD(RouteTextController, "RouteText grouping uses empty strings for unused capture groups") {
+  proc_->setProperty(processors::RouteText::RoutingStrategy, "Dynamic Routing");
+  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
+  proc_->setProperty(processors::RouteText::GroupingRegex, "group(.)(?:\\.(.))?.*");
+
+  proc_->setDynamicProperty("A", "toA");
+
+  createOutput({"A", ""});
+
+  std::string content =
+      "group1.1:toA(one)\ngroup1.1:toA(two)\ngroup1.2:toA(three)\ngroup2:toA(four)\ngroup2:toA(five)";
+
+  putFlowFile({}, content);
+
+  std::map<std::string, FlowFilePatternVec> expected;
+
+  expected["A"] = {
+      FlowFilePattern{}.attr("RouteText.Group", "1, 1").content("group1.1:toA(one)\ngroup1.1:toA(two)\n"),
+      FlowFilePattern{}.attr("RouteText.Group", "1, 2").content("group1.2:toA(three)\n"),
+      FlowFilePattern{}.attr("RouteText.Group", "2, ").content("group2:toA(four)\ngroup2:toA(five)")
+  };
+  expected["matched"] = FlowFilePatternVec{};
+  expected["unmatched"] = FlowFilePatternVec{};
+  expected["original"] = {content};
+
+  run();
+
+  verifyAllOutput(expected);
+}
+
+TEST_CASE_METHOD(RouteTextController, "RouteText can match on Full Text") {
+  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Full Text");
+  proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
+
+  proc_->setDynamicProperty("A", "toA");
+
+  createOutput({"A", ""});
+
+  std::string content = "toA\r\ntoA\ntoA\r";
+
+  putFlowFile({}, content);
+
+  std::map<std::string, FlowFilePatternVec> expected{
+      {"matched", {}},
+      {"unmatched", {}},
+      {"A", {content}},
+      {"original", {content}}
+  };
+
+  run();
+
+  verifyAllOutput(expected);
+}
+
+TEST_CASE_METHOD(RouteTextController, "Expressions have access to injected variables") {
+  proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
+  proc_->setProperty(processors::RouteText::MatchingStrategy, "Satisfies Expression");
+
+  SECTION("Segment") {
+    proc_->setDynamicProperty("A1", "${segment:startsWith('toA'):and(${segmentNo:equals('1')})}");
+    proc_->setDynamicProperty("A2", "${segment:startsWith('toA'):and(${segmentNo:equals('2')})}");
+  }
+  SECTION("Line") {
+    proc_->setDynamicProperty("A1", "${line:startsWith('toA'):and(${lineNo:equals('1')})}");
+    proc_->setDynamicProperty("A2", "${line:startsWith('toA'):and(${lineNo:equals('2')})}");
+  }
+
+  createOutput({"A1", ""});
+  createOutput({"A2", ""});
+
+  std::string content = "toA one\ntoA two";
+
+  putFlowFile({}, content);
+
+  std::map<std::string, FlowFilePatternVec> expected{
+      {"matched", {}},
+      {"unmatched", {}},
+      {"A1", {FlowFilePattern{}.attr("line", {}).attr("lineNo", {}).attr("segment", {}).attr("segmentNo", {}).content("toA one\n")}},
+      {"A2", {FlowFilePattern{}.attr("line", {}).attr("lineNo", {}).attr("segment", {}).attr("segmentNo", {}).content("toA two")}},
+      {"original", {content}}
+  };
 
   run();
 

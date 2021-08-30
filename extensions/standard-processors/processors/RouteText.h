@@ -36,6 +36,7 @@ class RouteText : public core::Processor {
   static const core::Property TrimWhitespace;
   static const core::Property IgnoreCase;
   static const core::Property GroupingRegex;
+  static const core::Property GroupingFallbackValue;
   static const core::Property SegmentationStrategy;
 
   static const core::Relationship Original;
@@ -92,9 +93,10 @@ class RouteText : public core::Processor {
 
   struct Segment {
     std::string_view value_;
-    size_t idx_;
+    size_t idx_;  // 1-based index as in nifi
   };
 
+  std::string_view preprocess(std::string_view str) const;
   bool matchSegment(MatchingContext& context, const Segment& segment, const core::Property& prop) const;
   std::optional<std::string> getGroup(const std::string_view& segment) const;
 
@@ -105,6 +107,7 @@ class RouteText : public core::Processor {
   // double negation but consistency with nifi
   bool ignore_case_{false};
   std::optional<std::regex> group_regex_;
+  std::string group_fallback_;
 
   std::map<std::string, core::Property> dynamic_properties_;
   std::map<std::string, core::Relationship> dynamic_relationships_;
