@@ -71,8 +71,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   /*!
    * Create a new control protocol
    */
-  RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer) // NOLINT
-      : logger_(logging::LoggerFactory<RawSiteToSiteClient>::getLogger()) {
+  RawSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer) { // NOLINT
     peer_ = std::move(peer);
     _batchSize = 0;
     _batchCount = 0;
@@ -91,7 +90,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     _currentCodecVersionIndex = 0;
   }
   // Destructor
-  virtual ~RawSiteToSiteClient() {
+  ~RawSiteToSiteClient() override {
     tearDown();
   }
 
@@ -133,7 +132,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   }
 
   // get peerList
-  virtual bool getPeerList(std::vector<PeerStatus> &peer);
+  bool getPeerList(std::vector<PeerStatus> &peer) override;
   // negotiateCodec
   virtual bool negotiateCodec();
   // initiateResourceNegotiation
@@ -141,7 +140,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // initiateCodecResourceNegotiation
   virtual bool initiateCodecResourceNegotiation();
   // tearDown
-  virtual void tearDown();
+  void tearDown() override;
   // write Request Type
   virtual int writeRequestType(RequestType type);
   // read Request Type
@@ -152,30 +151,30 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // write respond
   virtual int writeRespond(const std::shared_ptr<Transaction> &transaction, RespondCode code, std::string message);
   // getRespondCodeContext
-  virtual RespondCodeContext *getRespondCodeContext(RespondCode code) {
+  RespondCodeContext *getRespondCodeContext(RespondCode code) override {
     return SiteToSiteClient::getRespondCodeContext(code);
   }
 
   // Creation of a new transaction, return the transaction ID if success,
   // Return NULL when any error occurs
-  virtual std::shared_ptr<Transaction> createTransaction(TransferDirection direction);
+  std::shared_ptr<Transaction> createTransaction(TransferDirection direction) override;
 
   //! Transfer string for the process session
-  virtual bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
-                               std::map<std::string, std::string> attributes);
+  bool transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
+      std::map<std::string, std::string> attributes) override;
 
   // bootstrap the protocol to the ready for transaction state by going through the state machine
-  virtual bool bootstrap();
+  bool bootstrap() override;
 
  protected:
   // establish
-  virtual bool establish();
+  bool establish() override;
   // handShake
   virtual bool handShake();
 
  private:
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RawSiteToSiteClient>::getLogger();
   // Batch Count
   std::atomic<uint64_t> _batchCount;
   // Batch Size

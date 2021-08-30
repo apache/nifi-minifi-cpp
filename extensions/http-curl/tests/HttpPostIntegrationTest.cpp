@@ -42,12 +42,12 @@ class HttpTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<core::ProcessGroup>();
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
     LogTestController::getInstance().setDebug<core::ProcessContext>();
-    LogTestController::getInstance().setTrace<processors::InvokeHTTP>();
+    LogTestController::getInstance().setTrace<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setDebug<processors::ListenHTTP>();
-    LogTestController::getInstance().setDebug<processors::ListenHTTP::WriteCallback>();
-    LogTestController::getInstance().setDebug<processors::ListenHTTP::Handler>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::ListenHTTP>();
+    LogTestController::getInstance().setDebug<minifi::processors::ListenHTTP::WriteCallback>();
+    LogTestController::getInstance().setDebug<minifi::processors::ListenHTTP::Handler>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<minifi::ThreadedSchedulingAgent>();
     LogTestController::getInstance().setDebug<minifi::TimerDrivenSchedulingAgent>();

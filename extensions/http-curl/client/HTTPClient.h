@@ -293,7 +293,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   std::chrono::milliseconds keep_alive_idle_{-1};
 
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<HTTPClient>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HTTPClient>::getLogger()};
 };
 
 }  // namespace utils

@@ -38,7 +38,7 @@ class SQLProcessor: public core::Processor {
   static const core::Property DBControllerService;
 
  protected:
-  SQLProcessor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<logging::Logger> logger)
+  SQLProcessor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
     : core::Processor(name, uuid), logger_(std::move(logger)) {
   }
 
@@ -59,7 +59,7 @@ class SQLProcessor: public core::Processor {
     connection_.reset();
   }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   std::shared_ptr<sql::controllers::DatabaseService> db_service_;
   std::unique_ptr<sql::Connection> connection_;
 };

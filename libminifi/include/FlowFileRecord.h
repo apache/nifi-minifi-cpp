@@ -82,7 +82,7 @@ class FlowFileRecord : public core::FlowFile {
   static std::atomic<uint64_t> local_flow_seq_number_;
 
  private:
-  static std::shared_ptr<logging::Logger> logger_;
+  static std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace minifi

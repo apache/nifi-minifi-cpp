@@ -26,6 +26,7 @@
 #include "../TestBase.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "spdlog/formatter.h"
+#include "spdlog/sinks/ostream_sink.h"
 
 TEST_CASE("TestLoggerProperties::get_keys_of_type", "[test get_keys_of_type]") {
   TestController test_controller;

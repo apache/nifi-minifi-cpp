@@ -21,6 +21,7 @@
 
 #include "rapidjson/document.h"
 #include "NetworkInterfaceInfo.h"
+#include "io/ClientSocket.h"
 
 namespace org {
 namespace apache {

@@ -55,7 +55,6 @@ class CompressContent : public core::Processor {
    */
   explicit CompressContent(const std::string& name, const utils::Identifier& uuid = {})
     : core::Processor(name, uuid)
-    , logger_(logging::LoggerFactory<CompressContent>::getLogger())
     , updateFileName_(false)
     , encapsulateInTar_(false) {
   }
@@ -98,7 +97,7 @@ class CompressContent : public core::Processor {
   class ReadCallbackCompress: public InputStreamCallback {
    public:
     ReadCallbackCompress(std::shared_ptr<core::FlowFile> &flow, struct archive *arch, struct archive_entry *entry) :
-        flow_(flow), arch_(arch), entry_(entry), status_(0), logger_(logging::LoggerFactory<CompressContent>::getLogger()) {
+        flow_(flow), arch_(arch), entry_(entry), status_(0) {
     }
     ~ReadCallbackCompress() override = default;
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
@@ -136,7 +135,7 @@ class CompressContent : public core::Processor {
     struct archive *arch_;
     struct archive_entry *entry_;
     int status_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
   };
   // Nest Callback Class for read stream from flow for decompress
   struct ReadCallbackDecompress : InputStreamCallback {
@@ -165,7 +164,6 @@ class CompressContent : public core::Processor {
         const std::shared_ptr<core::FlowFile> &flow, const std::shared_ptr<core::ProcessSession> &session) :
         compress_mode_(compress_mode), compress_level_(compress_level), compress_format_(compress_format),
         flow_(flow), session_(session),
-        logger_(logging::LoggerFactory<CompressContent>::getLogger()),
         readDecompressCb_(flow) {
       size_ = 0;
       stream_ = nullptr;
@@ -180,7 +178,7 @@ class CompressContent : public core::Processor {
     std::shared_ptr<core::ProcessSession> session_;
     std::shared_ptr<io::BaseStream> stream_;
     int64_t size_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
     CompressContent::ReadCallbackDecompress readDecompressCb_;
     int status_;
 
@@ -357,14 +355,13 @@ class CompressContent : public core::Processor {
   class GzipWriteCallback : public OutputStreamCallback {
    public:
     GzipWriteCallback(CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
-      : logger_(logging::LoggerFactory<CompressContent>::getLogger())
-      , compress_mode_(std::move(compress_mode))
+      : compress_mode_(std::move(compress_mode))
       , compress_level_(compress_level)
       , flow_(std::move(flow))
       , session_(std::move(session)) {
     }
 
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
     CompressionMode compress_mode_;
     int compress_level_;
     std::shared_ptr<core::FlowFile> flow_;
@@ -444,7 +441,7 @@ class CompressContent : public core::Processor {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
   int compressLevel_{};
   CompressionMode compressMode_;
   ExtendedCompressionFormat compressFormat_;

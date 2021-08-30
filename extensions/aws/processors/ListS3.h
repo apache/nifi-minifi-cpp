@@ -55,11 +55,11 @@ class ListS3 : public S3Processor {
   static const core::Relationship Success;
 
   explicit ListS3(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : S3Processor(name, uuid, logging::LoggerFactory<ListS3>::getLogger()) {
+    : S3Processor(name, uuid, core::logging::LoggerFactory<ListS3>::getLogger()) {
   }
 
   explicit ListS3(const std::string& name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-    : S3Processor(name, uuid, logging::LoggerFactory<ListS3>::getLogger(), std::move(s3_request_sender)) {
+    : S3Processor(name, uuid, core::logging::LoggerFactory<ListS3>::getLogger(), std::move(s3_request_sender)) {
   }
 
   ~ListS3() override = default;

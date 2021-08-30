@@ -47,12 +47,12 @@ class C2CallbackAgent : public c2::C2Agent {
  public:
 
   explicit C2CallbackAgent(
-    core::controller::ControllerServiceProvider* controller,
-    state::Pausable* pause_handler,
-    const std::shared_ptr<state::StateMonitor> &updateSink,
-    const std::shared_ptr<Configure> &configure);
+      core::controller::ControllerServiceProvider* controller,
+      state::Pausable* pause_handler,
+      const std::shared_ptr<state::StateMonitor> &updateSink,
+      const std::shared_ptr<Configure> &configure);
 
-  virtual ~C2CallbackAgent() = default;
+  ~C2CallbackAgent() override = default;
 
   void setStopCallback(c2_ag_stop_callback *st) {
     stop = st;
@@ -64,12 +64,12 @@ class C2CallbackAgent : public c2::C2Agent {
      * Handles a C2 event requested by the server.
      * @param resp c2 server response.
      */
-    virtual void handle_c2_server_response(const C2ContentResponse &resp);
+  void handle_c2_server_response(const C2ContentResponse &resp) override;
 
-    c2_ag_stop_callback *stop;
+  c2_ag_stop_callback *stop;
 
  private:
-    std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<C2CallbackAgent>::getLogger();
 };
 
 } /* namesapce c2 */

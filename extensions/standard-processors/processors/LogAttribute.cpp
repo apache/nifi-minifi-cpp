@@ -169,19 +169,19 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
     switch (level) {
       case LogAttrLevelInfo:
-        logging::LOG_INFO(logger_) << output;
+        core::logging::LOG_INFO(logger_) << output;
         break;
       case LogAttrLevelDebug:
-        logging::LOG_DEBUG(logger_) << output;
+        core::logging::LOG_DEBUG(logger_) << output;
         break;
       case LogAttrLevelError:
-        logging::LOG_ERROR(logger_) << output;
+        core::logging::LOG_ERROR(logger_) << output;
         break;
       case LogAttrLevelTrace:
-        logging::LOG_TRACE(logger_) << output;
+        core::logging::LOG_TRACE(logger_) << output;
         break;
       case LogAttrLevelWarn:
-        logging::LOG_WARN(logger_) << output;
+        core::logging::LOG_WARN(logger_) << output;
         break;
       default:
         break;

@@ -67,7 +67,7 @@ void setSyslogLogger();
  * Determines the full path of MINIFI_HOME
  * @return MINIFI_HOME on success, empty string on failure
  */
-std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger);
+std::string determineMinifiHome(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
 
 

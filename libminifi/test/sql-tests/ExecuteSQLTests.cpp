@@ -39,7 +39,7 @@ TEST_CASE("ExecuteSQL works without incoming flow file", "[ExecuteSQL1]") {
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
   std::string row_count;
-  flow_files[0]->getAttribute(processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "2");
 
   auto content = plan->getContent(flow_files[0]);
@@ -70,7 +70,7 @@ TEST_CASE("ExecuteSQL uses statement in property", "[ExecuteSQL2]") {
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
   std::string row_count;
-  flow_files[0]->getAttribute(processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "1");
 
   auto content = plan->getContent(flow_files[0]);
@@ -96,7 +96,7 @@ TEST_CASE("ExecuteSQL uses statement in content", "[ExecuteSQL3]") {
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
   std::string row_count;
-  flow_files[0]->getAttribute(processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "2");
 
   auto content = plan->getContent(flow_files[0]);
@@ -128,7 +128,7 @@ TEST_CASE("ExecuteSQL uses sql.args.N.value attributes", "[ExecuteSQL4]") {
   auto flow_files = plan->getOutputs({"success", "d"});
   REQUIRE(flow_files.size() == 1);
   std::string row_count;
-  flow_files[0]->getAttribute(processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
+  flow_files[0]->getAttribute(minifi::processors::ExecuteSQL::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "1");
 
   auto content = plan->getContent(flow_files[0]);
@@ -145,8 +145,8 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
 
   auto plan = controller.createSQLPlan("ExecuteSQL", {{"success", "d"}});
   auto sql_proc = plan->getSQLProcessor();
-  sql_proc->setProperty(processors::ExecuteSQL::MaxRowsPerFlowFile.getName(), "2");
-  sql_proc->setProperty(processors::ExecuteSQL::SQLSelectQuery.getName(), "SELECT text_col FROM test_table ORDER BY int_col ASC");
+  sql_proc->setProperty(minifi::processors::ExecuteSQL::MaxRowsPerFlowFile.getName(), "2");
+  sql_proc->setProperty(minifi::processors::ExecuteSQL::SQLSelectQuery.getName(), "SELECT text_col FROM test_table ORDER BY int_col ASC");
 
   controller.insertValues({
     {101, "apple"},
@@ -165,10 +165,10 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
   };
 
   FlowFileMatcher matcher{content_verifier, {
-      processors::ExecuteSQL::RESULT_ROW_COUNT,
-      processors::ExecuteSQL::FRAGMENT_COUNT,
-      processors::ExecuteSQL::FRAGMENT_INDEX,
-      processors::ExecuteSQL::FRAGMENT_IDENTIFIER
+      minifi::processors::ExecuteSQL::RESULT_ROW_COUNT,
+      minifi::processors::ExecuteSQL::FRAGMENT_COUNT,
+      minifi::processors::ExecuteSQL::FRAGMENT_INDEX,
+      minifi::processors::ExecuteSQL::FRAGMENT_IDENTIFIER
   }};
 
   std::optional<std::string> fragment_id;

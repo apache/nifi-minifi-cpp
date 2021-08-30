@@ -44,7 +44,7 @@ class AzureBlobStorageClient : public BlobStorageClient {
   AzureStorageCredentials credentials_;
   std::string container_name_;
   std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> container_client_;
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureBlobStorageClient>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureBlobStorageClient>::getLogger()};
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

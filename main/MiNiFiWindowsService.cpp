@@ -27,6 +27,8 @@
 #include "MainHelper.h"
 #include "core/FlowConfiguration.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 // Implemented in MiNiFiMain.cpp
 void SignalExitProcess();
 
@@ -59,7 +61,7 @@ void RunAsServiceIfNeeded() {
   static char serviceNameMutable[] = SERVICE_NAME;
 
   static auto Log = []() {
-    static std::shared_ptr<logging::Logger> s_logger = logging::LoggerConfiguration::getConfiguration().getLogger("service");
+    static std::shared_ptr<minifi::core::logging::Logger> s_logger = minifi::core::logging::LoggerConfiguration::getConfiguration().getLogger("service");
     return s_logger;
   };
 
@@ -259,7 +261,7 @@ HANDLE GetTerminationEventHandle(bool* isStartedByService) {
   return hEvent;
 }
 
-bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger, HANDLE terminationEventHandle) {
+bool CreateServiceTerminationThread(std::shared_ptr<minifi::core::logging::Logger> logger, HANDLE terminationEventHandle) {
   // Get hService and monitor it - if service is terminated, then terminate current exe, otherwise the exe becomes unmanageable when service is restarted.
   auto hService = [&logger]() -> HANDLE {
     auto hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -330,7 +332,7 @@ bool CreateServiceTerminationThread(std::shared_ptr<logging::Logger> logger, HAN
   if (!hService)
     return false;
 
-  using ThreadInfo = std::tuple<std::shared_ptr<logging::Logger>, HANDLE, HANDLE>;
+  using ThreadInfo = std::tuple<std::shared_ptr<minifi::core::logging::Logger>, HANDLE, HANDLE>;
   auto pThreadInfo = new ThreadInfo(logger, terminationEventHandle, hService);
 
   HANDLE hThread = (HANDLE)_beginthreadex(

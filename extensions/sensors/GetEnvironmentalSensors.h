@@ -46,10 +46,7 @@ class GetEnvironmentalSensors : public SensorBase {
    * Create a new processor
    */
   explicit GetEnvironmentalSensors(const std::string& name, const utils::Identifier& uuid = {})
-      : SensorBase(name, uuid),
-        humidity_sensor_(nullptr),
-        pressure_sensor_(nullptr),
-        logger_(logging::LoggerFactory<GetEnvironmentalSensors>::getLogger()) {
+      : SensorBase(name, uuid) {
   }
   // Destructor
   ~GetEnvironmentalSensors() override;
@@ -66,9 +63,9 @@ class GetEnvironmentalSensors : public SensorBase {
   void notifyStop() override;
 
  private:
-  RTHumidity *humidity_sensor_;
-  RTPressure *pressure_sensor_;
-  std::shared_ptr<logging::Logger> logger_;
+  RTHumidity *humidity_sensor_ = nullptr;
+  RTPressure *pressure_sensor_ = nullptr;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetEnvironmentalSensors>::getLogger();
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 

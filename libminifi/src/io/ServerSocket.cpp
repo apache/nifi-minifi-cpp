@@ -43,7 +43,7 @@ namespace io {
 ServerSocket::ServerSocket(const std::shared_ptr<SocketContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners = -1)
     : Socket(context, hostname, port, listeners),
       running_(true),
-      logger_(logging::LoggerFactory<ServerSocket>::getLogger()) {
+      logger_(core::logging::LoggerFactory<ServerSocket>::getLogger()) {
 }
 
 ServerSocket::~ServerSocket() {

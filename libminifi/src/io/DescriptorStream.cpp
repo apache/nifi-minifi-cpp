@@ -36,8 +36,7 @@ namespace minifi {
 namespace io {
 
 DescriptorStream::DescriptorStream(int fd)
-    : fd_(fd),
-      logger_(logging::LoggerFactory<DescriptorStream>::getLogger()) {
+    : fd_(fd) {
 }
 
 void DescriptorStream::seek(size_t offset) {

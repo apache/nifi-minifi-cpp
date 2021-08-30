@@ -64,7 +64,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
     return;
   }
 
-  fileutils::FileManager file_man;
+  utils::file::FileManager file_man;
 
   // Extract archive contents
   ArchiveMetadata archiveMetadata;
@@ -248,10 +248,9 @@ int64_t FocusArchiveEntry::ReadCallback::process(const std::shared_ptr<io::BaseS
   return nlen;
 }
 
-FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata)
+FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata)
     : file_man_(file_man),
       proc_(processor) {
-  logger_ = logging::LoggerFactory<FocusArchiveEntry>::getLogger();
   _archiveMetadata = archiveMetadata;
 }
 

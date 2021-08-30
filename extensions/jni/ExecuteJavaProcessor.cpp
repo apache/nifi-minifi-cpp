@@ -99,7 +99,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
     throw std::runtime_error("NiFi Processor must be defined");
   }
 
-  nifi_logger_ = logging::LoggerFactory<ExecuteJavaProcessor>::getAliasedLogger(class_name_);
+  nifi_logger_ = core::logging::LoggerFactory<ExecuteJavaProcessor>::getAliasedLogger(class_name_);
 
   jni_logger_ref_.logger_reference_ = nifi_logger_;
 

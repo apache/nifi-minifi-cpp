@@ -66,7 +66,7 @@ namespace { // NOLINT
     if (ret_val.second > 0) {
       unsigned char digest[MD5_DIGEST_LENGTH];
       MD5_Final(digest, &context);
-      ret_val.first = utils::StringUtils::to_hex(digest, MD5_DIGEST_LENGTH, true /*uppercase*/);
+      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, MD5_DIGEST_LENGTH, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -90,7 +90,7 @@ namespace { // NOLINT
     if (ret_val.second > 0) {
       unsigned char digest[SHA_DIGEST_LENGTH];
       SHA1_Final(digest, &context);
-      ret_val.first = utils::StringUtils::to_hex(digest, SHA_DIGEST_LENGTH, true /*uppercase*/);
+      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, SHA_DIGEST_LENGTH, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -114,7 +114,7 @@ namespace { // NOLINT
     if (ret_val.second > 0) {
       unsigned char digest[SHA256_DIGEST_LENGTH];
       SHA256_Final(digest, &context);
-      ret_val.first = utils::StringUtils::to_hex(digest, SHA256_DIGEST_LENGTH, true /*uppercase*/);
+      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, SHA256_DIGEST_LENGTH, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -139,7 +139,6 @@ class HashContent : public core::Processor {
   */
   explicit HashContent(const std::string& name,  const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
-    logger_ = logging::LoggerFactory<HashContent>::getLogger();
   }
   //! Processor Name
   EXTENSIONAPI static constexpr char const* ProcessorName = "HashContent";
@@ -175,7 +174,7 @@ class HashContent : public core::Processor {
   }
 
   //! Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HashContent>::getLogger();
   std::string algoName_;
   std::string attrKey_;
   bool failOnEmpty_;

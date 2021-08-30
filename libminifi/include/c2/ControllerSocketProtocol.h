@@ -40,8 +40,7 @@ namespace c2 {
 class ControllerSocketProtocol : public HeartbeatReporter {
  public:
   ControllerSocketProtocol(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
-      : HeartbeatReporter(name, uuid),
-        logger_(logging::LoggerFactory<ControllerSocketProtocol>::getLogger()) {
+      : HeartbeatReporter(name, uuid) {
   }
 
   /**
@@ -80,7 +79,7 @@ class ControllerSocketProtocol : public HeartbeatReporter {
   std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ControllerSocketProtocol>::getLogger();
 };
 
 }  // namespace c2

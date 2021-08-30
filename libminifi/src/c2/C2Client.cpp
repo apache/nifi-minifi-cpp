@@ -41,7 +41,7 @@ C2Client::C2Client(
     std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
     std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
-    std::shared_ptr<logging::Logger> logger)
+    std::shared_ptr<core::logging::Logger> logger)
     : core::Flow(std::move(provenance_repo), std::move(flow_file_repo), std::move(content_repo), std::move(flow_configuration)),
       configuration_(std::move(configuration)),
       filesystem_(std::move(filesystem)),

@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+#include <fstream>
+
 #include "../TestBase.h"
 #include "../../extensions/rocksdb-repos/database/RocksDatabase.h"
 #include "../../extensions/rocksdb-repos/database/RocksDbInstance.h"
@@ -22,6 +24,7 @@
 #include "IntegrationTestUtils.h"
 #include "database/StringAppender.h"
 #include "../../extensions/rocksdb-repos/encryption/RocksDbEncryptionProvider.h"
+#include "../Path.h"
 
 #undef NDEBUG
 

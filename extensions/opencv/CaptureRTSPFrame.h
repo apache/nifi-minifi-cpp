@@ -40,8 +40,7 @@ namespace processors {
 class CaptureRTSPFrame : public core::Processor {
  public:
   explicit CaptureRTSPFrame(const std::string &name, const utils::Identifier &uuid = {})
-      : Processor(name, uuid),
-        logger_(logging::LoggerFactory<CaptureRTSPFrame>::getLogger()) {
+      : Processor(name, uuid) {
   }
 
   EXTENSIONAPI static core::Property RTSPUsername;
@@ -84,7 +83,7 @@ class CaptureRTSPFrame : public core::Processor {
   };
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CaptureRTSPFrame>::getLogger();
   std::mutex mutex_;
   std::string rtsp_username_;
   std::string rtsp_password_;

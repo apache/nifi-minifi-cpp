@@ -34,7 +34,7 @@ ExecutionPlan::ExecutionPlan(std::shared_ptr<core::ContentRepository> content_re
       finalized(false),
       location(-1),
       current_flowfile_(nullptr),
-      logger_(logging::LoggerFactory<ExecutionPlan>::getLogger()) {
+      logger_(core::logging::LoggerFactory<ExecutionPlan>::getLogger()) {
   stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
 }
 
@@ -209,7 +209,7 @@ void ExecutionPlan::finalize() {
   if (failure_handler_) {
     auto failure_proc = createProcessor(CallbackProcessorName, CallbackProcessorName);
 
-    std::shared_ptr<processors::CallbackProcessor> callback_proc = std::static_pointer_cast<processors::CallbackProcessor>(failure_proc);
+    const auto callback_proc = std::static_pointer_cast<minifi::processors::CallbackProcessor>(failure_proc);
     callback_proc->setCallback(nullptr, std::bind(&FailureHandler::operator(), failure_handler_, std::placeholders::_1));
 
     for (const auto& proc : processor_queue_) {
@@ -283,7 +283,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::createCallback(void *obj,
   if (!ptr)
     return nullptr;
 
-  std::shared_ptr<processors::CallbackProcessor> processor = std::static_pointer_cast<processors::CallbackProcessor>(ptr);
+  const auto processor = std::static_pointer_cast<minifi::processors::CallbackProcessor>(ptr);
   processor->setCallback(obj, ontrigger_callback, onschedule_callback);
 
   return ptr;

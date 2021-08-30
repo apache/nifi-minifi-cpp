@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include <fstream>
 #include <optional>
 #include <string>
 #include <vector>

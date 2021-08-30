@@ -85,14 +85,14 @@ class SSLContextService : public core::controller::ControllerService {
       : ControllerService(name, uuid),
         initialized_(false),
         valid_(false),
-        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
+        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
   explicit SSLContextService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(name),
         initialized_(false),
         valid_(false),
-        logger_(logging::LoggerFactory<SSLContextService>::getLogger()) {
+        logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {
     setConfiguration(configuration);
     initialize();
 
@@ -233,7 +233,7 @@ class SSLContextService : public core::controller::ControllerService {
 #endif  // WIN32
 #endif  // OPENSSL_SUPPORT
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 typedef int (SSLContextService::*ptr)(char *, int, int, void *);
 

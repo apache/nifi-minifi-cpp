@@ -179,7 +179,7 @@ std::map<std::string, TailState> update_keys_in_legacy_states(const std::map<std
   return new_tail_states;
 }
 
-void openFile(const std::string &file_name, uint64_t offset, std::ifstream &input_stream, const std::shared_ptr<logging::Logger> &logger) {
+void openFile(const std::string &file_name, uint64_t offset, std::ifstream &input_stream, const std::shared_ptr<core::logging::Logger> &logger) {
   logger->log_debug("Opening %s", file_name);
   input_stream.open(file_name.c_str(), std::fstream::in | std::fstream::binary);
   if (!input_stream.is_open() || !input_stream.good()) {
@@ -204,8 +204,7 @@ class FileReaderCallback : public OutputStreamCallback {
                      char input_delimiter,
                      uint64_t checksum)
     : input_delimiter_(input_delimiter),
-      checksum_(checksum),
-      logger_(logging::LoggerFactory<TailFile>::getLogger()) {
+      checksum_(checksum) {
     openFile(file_name, offset, input_stream_, logger_);
   }
 
@@ -260,7 +259,7 @@ class FileReaderCallback : public OutputStreamCallback {
   char input_delimiter_;
   uint64_t checksum_;
   std::ifstream input_stream_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 
   std::array<char, BUFFER_SIZE> buffer_;
   char *begin_ = buffer_.data();
@@ -274,8 +273,7 @@ class WholeFileReaderCallback : public OutputStreamCallback {
   WholeFileReaderCallback(const std::string &file_name,
                           uint64_t offset,
                           uint64_t checksum)
-    : checksum_(checksum),
-      logger_(logging::LoggerFactory<TailFile>::getLogger()) {
+    : checksum_(checksum) {
     openFile(file_name, offset, input_stream_, logger_);
   }
 
@@ -310,7 +308,7 @@ class WholeFileReaderCallback : public OutputStreamCallback {
  private:
   uint64_t checksum_;
   std::ifstream input_stream_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
 }  // namespace
 
@@ -557,8 +555,8 @@ bool TailFile::getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessCo
 
 void TailFile::logState() {
   logger_->log_info("State of the TailFile processor %s:", name_);
-  for (const auto& key_value_pair : tail_states_) {
-    logging::LOG_INFO(logger_) << key_value_pair.first << " => { " << key_value_pair.second << " }";
+  for (const auto& [key, value] : tail_states_) {
+    core::logging::LOG_INFO(logger_) << key << " => { " << value << " }";
   }
 }
 

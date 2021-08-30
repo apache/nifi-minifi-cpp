@@ -296,8 +296,7 @@ ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context
     : base_uri_(std::move(base_uri)),
       auth_dn_regex_(std::move(auth_dn_regex)),
       headers_as_attrs_regex_(std::move(header_as_attrs_regex)),
-      process_context_(context),
-      logger_(logging::LoggerFactory<ListenHTTP::Handler>::getLogger()) {
+      process_context_(context) {
   context->getProperty(BufferSize.getName(), buffer_size_);
   logger_->log_debug("ListenHTTP using %s: %zu", BufferSize.getName(), buffer_size_);
 }

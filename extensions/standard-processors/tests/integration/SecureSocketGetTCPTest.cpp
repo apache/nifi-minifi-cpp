@@ -63,7 +63,7 @@ class SecureSocketTest : public IntegrationBase {
     LogTestController::getInstance().setDebug<minifi::io::TLSContext>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setTrace<minifi::io::TLSSocket>();
-    LogTestController::getInstance().setTrace<processors::GetTCP>();
+    LogTestController::getInstance().setTrace<minifi::processors::GetTCP>();
     std::fstream file;
     ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);

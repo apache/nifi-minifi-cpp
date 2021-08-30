@@ -37,7 +37,7 @@ class HeartbeatLogger : public RESTProtocol, public HeartbeatReporter {
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HeartbeatLogger>::getLogger();
 };
 
 }  // namespace c2

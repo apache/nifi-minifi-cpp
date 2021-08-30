@@ -47,11 +47,10 @@ class FocusArchiveEntry : public core::Processor {
    * Create a new processor
    */
   explicit FocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
-  : core::Processor(name, uuid),
-    logger_(logging::LoggerFactory<FocusArchiveEntry>::getLogger()) {
+  : core::Processor(name, uuid) {
   }
   //! Destructor
-  virtual ~FocusArchiveEntry()   = default;
+  ~FocusArchiveEntry()   override = default;
   //! Processor Name
   EXTENSIONAPI static constexpr char const* ProcessorName = "FocusArchiveEntry";
   //! Supported Properties
@@ -60,22 +59,22 @@ class FocusArchiveEntry : public core::Processor {
   EXTENSIONAPI static core::Relationship Success;
 
   //! OnTrigger method, implemented by NiFi FocusArchiveEntry
-  virtual void onTrigger(core::ProcessContext *context,
-      core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context,
+      core::ProcessSession *session) override;
   //! Initialize, over write by NiFi FocusArchiveEntry
-  virtual void initialize(void);
+  void initialize() override;
 
   class ReadCallback : public InputStreamCallback {
    public:
-    explicit ReadCallback(core::Processor*, fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata);
-    ~ReadCallback();
-    virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+    explicit ReadCallback(core::Processor*, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata);
+    ~ReadCallback() override;
+    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
     bool isRunning() {return proc_->isRunning();}
 
    private:
-    fileutils::FileManager *file_man_;
+    utils::file::FileManager *file_man_;
     core::Processor * const proc_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger();
     ArchiveMetadata *_archiveMetadata;
     static int ok_cb(struct archive *, void* /*d*/) { return ARCHIVE_OK; }
     static la_ssize_t read_cb(struct archive * a, void *d, const void **buf);
@@ -83,7 +82,7 @@ class FocusArchiveEntry : public core::Processor {
 
  private:
   //! Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger();
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 

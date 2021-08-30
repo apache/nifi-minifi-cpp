@@ -22,35 +22,36 @@
 #include "core/Resource.h"
 #include "../TestBase.h"
 #include "ContentRepositoryDependentTests.h"
+#include "Processor.h"
 
 namespace {
 
-class DummyProcessor : public core::Processor {
-  using core::Processor::Processor;
+class DummyProcessor : public minifi::core::Processor {
+  using minifi::core::Processor::Processor;
 };
 
 REGISTER_RESOURCE(DummyProcessor, "A processor that does nothing.");
 
 class Fixture {
  public:
-  core::ProcessSession &processSession() { return *process_session_; }
+  minifi::core::ProcessSession &processSession() { return *process_session_; }
 
  private:
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan();
-  std::shared_ptr<core::Processor> dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
-  std::shared_ptr<core::ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
-  std::unique_ptr<core::ProcessSession> process_session_ = std::make_unique<core::ProcessSession>(context_);
+  std::shared_ptr<minifi::core::Processor> dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
+  std::shared_ptr<minifi::core::ProcessContext> context_ = [this] { test_plan_->runNextProcessor(); return test_plan_->getCurrentContext(); }();
+  std::unique_ptr<minifi::core::ProcessSession> process_session_ = std::make_unique<core::ProcessSession>(context_);
 };
 
-const core::Relationship Success{"success", "everything is fine"};
-const core::Relationship Failure{"failure", "something has gone awry"};
+const minifi::core::Relationship Success{"success", "everything is fine"};
+const minifi::core::Relationship Failure{"failure", "something has gone awry"};
 
 }  // namespace
 
 TEST_CASE("ProcessSession::existsFlowFileInRelationship works", "[existsFlowFileInRelationship]") {
   Fixture fixture;
-  core::ProcessSession &process_session = fixture.processSession();
+  minifi::core::ProcessSession &process_session = fixture.processSession();
 
   REQUIRE_FALSE(process_session.existsFlowFileInRelationship(Failure));
   REQUIRE_FALSE(process_session.existsFlowFileInRelationship(Success));
@@ -70,7 +71,7 @@ TEST_CASE("ProcessSession::existsFlowFileInRelationship works", "[existsFlowFile
 
 TEST_CASE("ProcessSession::rollback penalizes affected flowfiles", "[rollback]") {
   Fixture fixture;
-  core::ProcessSession &process_session = fixture.processSession();
+  minifi::core::ProcessSession &process_session = fixture.processSession();
 
   const auto flow_file_1 = process_session.create();
   const auto flow_file_2 = process_session.create();
@@ -97,8 +98,8 @@ TEST_CASE("ProcessSession::rollback penalizes affected flowfiles", "[rollback]")
 }
 
 TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
-  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::VolatileContentRepository>());
-  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::FileSystemRepository>());
-  ContentRepositoryDependentTests::testAppendSize(std::make_shared<core::repository::VolatileContentRepository>());
-  ContentRepositoryDependentTests::testAppendSize(std::make_shared<core::repository::FileSystemRepository>());
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<minifi::core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<minifi::core::repository::FileSystemRepository>());
+  ContentRepositoryDependentTests::testAppendSize(std::make_shared<minifi::core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testAppendSize(std::make_shared<minifi::core::repository::FileSystemRepository>());
 }

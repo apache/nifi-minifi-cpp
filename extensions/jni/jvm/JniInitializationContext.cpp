@@ -31,6 +31,8 @@
 #include "properties/Configure.h"
 #include "JVMLoader.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniInitializationContext_getIdentifier(JNIEnv *env, jobject obj) {
   minifi::jni::JniInitializationContext *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniInitializationContext>(env, obj);
   return env->NewStringUTF(ptr->identifier_.c_str());

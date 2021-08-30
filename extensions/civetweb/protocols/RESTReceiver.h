@@ -88,7 +88,7 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
   std::unique_ptr<ListeningProtocol> handler;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTReceiver>::getLogger();
 };
 
 } /* namespace c2 */

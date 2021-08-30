@@ -38,7 +38,7 @@ void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::strin
   }
 }
 
-void print_topics_list(logging::Logger& logger, rd_kafka_topic_partition_list_t& kf_topic_partition_list) {
+void print_topics_list(core::logging::Logger& logger, rd_kafka_topic_partition_list_t& kf_topic_partition_list) {
   for (int i = 0; i < kf_topic_partition_list.cnt; ++i) {
     logger.log_debug("kf_topic_partition_list: topic: %s, partition: %d, offset: %" PRId64 ".",
     kf_topic_partition_list.elems[i].topic, kf_topic_partition_list.elems[i].partition, kf_topic_partition_list.elems[i].offset);
@@ -59,7 +59,7 @@ std::string get_human_readable_kafka_message_timestamp(const rd_kafka_message_t&
   return {"[Timestamp](" + std::string(tsname) + " " + std::to_string(timestamp) + " (" + std::to_string(seconds_since_timestamp) + " s ago)"};
 }
 
-std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t& rkmessage, logging::Logger& logger) {
+std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t& rkmessage, core::logging::Logger& logger) {
   rd_kafka_headers_t* hdrs;
   const rd_kafka_resp_err_t get_header_response = rd_kafka_message_headers(&rkmessage, &hdrs);
   if (RD_KAFKA_RESP_ERR_NO_ERROR == get_header_response) {
@@ -74,7 +74,7 @@ std::string get_human_readable_kafka_message_headers(const rd_kafka_message_t& r
   return "[Error]";
 }
 
-void print_kafka_message(const rd_kafka_message_t& rkmessage, logging::Logger& logger) {
+void print_kafka_message(const rd_kafka_message_t& rkmessage, core::logging::Logger& logger) {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage.err) {
     const std::string error_msg = "ConsumeKafka: received error message from broker. Librdkafka error msg: " + std::string(rd_kafka_err2str(rkmessage.err));
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, error_msg);

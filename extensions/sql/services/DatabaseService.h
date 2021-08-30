@@ -40,15 +40,13 @@ class DatabaseService : public core::controller::ControllerService {
  public:
   explicit DatabaseService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid),
-        initialized_(false),
-        logger_(logging::LoggerFactory<DatabaseService>::getLogger()) {
+        initialized_(false) {
     initialize();
   }
 
   explicit DatabaseService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(name),
-        initialized_(false),
-        logger_(logging::LoggerFactory<DatabaseService>::getLogger()) {
+        initialized_(false) {
     setConfiguration(configuration);
     initialize();
   }
@@ -88,7 +86,7 @@ class DatabaseService : public core::controller::ControllerService {
 
  private:
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DatabaseService>::getLogger();
 };
 
 } /* namespace controllers */

@@ -51,8 +51,7 @@ class AbstractMQTTProcessor : public core::Processor {
    * Create a new processor
    */
   explicit AbstractMQTTProcessor(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AbstractMQTTProcessor>::getLogger()) {
+      : core::Processor(name, uuid) {
     client_ = nullptr;
     cleanSession_ = false;
     keepAliveInterval_ = 60;
@@ -61,7 +60,7 @@ class AbstractMQTTProcessor : public core::Processor {
     isSubscriber_ = false;
   }
   // Destructor
-  virtual ~AbstractMQTTProcessor() {
+  ~AbstractMQTTProcessor() override {
     if (isSubscriber_) {
       MQTTClient_unsubscribe(client_, topic_.c_str());
     }
@@ -141,7 +140,7 @@ class AbstractMQTTProcessor : public core::Processor {
   bool isSubscriber_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
   MQTTClient_SSLOptions sslopts_;
   bool sslEnabled_;
   std::string securityCA_;

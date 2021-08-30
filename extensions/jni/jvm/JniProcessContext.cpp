@@ -30,6 +30,8 @@
 #include "properties/Configure.h"
 #include "JVMLoader.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniProcessContext_getPropertyValue(JNIEnv *env, jobject obj, jstring propertyName) {
   if (obj == nullptr || propertyName == nullptr) {
     return nullptr;

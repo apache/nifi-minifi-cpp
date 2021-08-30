@@ -54,8 +54,7 @@ class Bin {
         maxEntries_(maxEntries),
         minEntries_(minEntries),
         fileCount_(fileCount),
-        groupId_(groupId),
-        logger_(logging::LoggerFactory<Bin>::getLogger()) {
+        groupId_(groupId) {
     queued_data_size_ = 0;
     creation_dated_ = utils::timeutils::getTimeMillis();
     uuid_ = utils::IdGenerator::getIdGenerator()->generate();
@@ -65,25 +64,18 @@ class Bin {
     logger_->log_debug("Bin %s for group %s destroyed", getUUIDStr(), groupId_);
   }
   // check whether the bin is full
-  bool isFull() {
-    if (queued_data_size_ >= maxSize_ || queue_.size() >= maxEntries_)
-      return true;
-    else
-      return false;
+  [[nodiscard]] bool isFull() const {
+    return queued_data_size_ >= maxSize_ || queue_.size() >= maxEntries_;
   }
   // check whether the bin meet the min required size and entries so that it can be processed for merge
-  bool isReadyForMerge() {
+  [[nodiscard]] bool isReadyForMerge() const {
     return isFull() || (queued_data_size_ >= minSize_ && queue_.size() >= minEntries_);
   }
   // check whether the bin is older than the time specified in msec
-  bool isOlderThan(const uint64_t &duration) {
-    uint64_t currentTime = utils::timeutils::getTimeMillis();
-    if (currentTime > (creation_dated_ + duration))
-      return true;
-    else
-      return false;
+  [[nodiscard]] bool isOlderThan(const uint64_t &duration) const {
+    return utils::timeutils::getTimeMillis() > (creation_dated_ + duration);
   }
-  std::deque<std::shared_ptr<core::FlowFile>> & getFlowFile() {
+  std::deque<std::shared_ptr<core::FlowFile>>& getFlowFile() {
     return queue_;
   }
   // offer the flowfile to the bin
@@ -111,18 +103,18 @@ class Bin {
     return true;
   }
   // getBinAge
-  uint64_t getBinAge() {
+  [[nodiscard]] uint64_t getBinAge() const {
     return creation_dated_;
   }
-  int getSize() {
+  [[nodiscard]] int getSize() const {
     return gsl::narrow<int>(queue_.size());
   }
 
-  utils::SmallString<36> getUUIDStr() {
+  [[nodiscard]] utils::SmallString<36> getUUIDStr() const {
     return uuid_.to_string();
   }
 
-  std::string getGroupId() {
+  [[nodiscard]] std::string getGroupId() const {
     return groupId_;
   }
 
@@ -138,7 +130,7 @@ class Bin {
   uint64_t creation_dated_;
   std::string fileCount_;
   std::string groupId_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<Bin>::getLogger();
   // A global unique identifier
   utils::Identifier uuid_;
 };
@@ -164,7 +156,7 @@ class BinManager {
   void setBinAge(uint64_t age) {
     binAge_ = {age};
   }
-  int getBinCount() {
+  [[nodiscard]] int getBinCount() const {
     return binCount_;
   }
   void setFileCount(const std::string &value) {
@@ -196,7 +188,7 @@ class BinManager {
   std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>> >groupBinMap_;
   std::deque<std::unique_ptr<Bin>> readyBin_;
   int binCount_{0};
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<BinManager>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinManager>::getLogger()};
 };
 
 // BinFiles Class
@@ -207,7 +199,7 @@ class BinFiles : public core::Processor {
  public:
   using core::Processor::Processor;
   // Destructor
-  virtual ~BinFiles() = default;
+  ~BinFiles() override = default;
   // Processor Name
   static constexpr char const* ProcessorName = "BinFiles";
   // Supported Properties
@@ -248,7 +240,7 @@ class BinFiles : public core::Processor {
   // OnTrigger method, implemented by NiFi BinFiles
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi BinFiles
-  void initialize(void) override;
+  void initialize() override;
 
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
 
@@ -287,7 +279,7 @@ class BinFiles : public core::Processor {
     std::unordered_set<std::shared_ptr<core::FlowFile>> incoming_files_;
   };
 
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<BinFiles>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinFiles>::getLogger()};
   uint32_t batchSize_{1};
   uint32_t maxBinCount_{100};
   FlowFileStore file_store_;

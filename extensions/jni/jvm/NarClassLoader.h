@@ -461,7 +461,6 @@ class NarClassLoader {
     return details;
   }
 
-  std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::jni::JavaServicer> java_servicer_;
   JavaClass class_ref_;
   jobject class_loader_;

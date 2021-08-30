@@ -47,7 +47,6 @@ class ExecutePythonProcessor : public core::Processor {
   explicit ExecutePythonProcessor(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
         python_dynamic_(false),
-        logger_(logging::LoggerFactory<ExecutePythonProcessor>::getLogger()),
         script_engine_q_() {
   }
 
@@ -98,8 +97,8 @@ class ExecutePythonProcessor : public core::Processor {
 
   bool python_dynamic_;
 
-  std::shared_ptr<logging::Logger> logger_;
-  std::shared_ptr<logging::Logger> python_logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger();
+  std::shared_ptr<core::logging::Logger> python_logger_;
 
   std::string script_to_exec_;
   std::string module_directory_;

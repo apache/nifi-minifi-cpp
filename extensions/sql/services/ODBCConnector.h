@@ -39,14 +39,12 @@ namespace controllers {
 class ODBCService : public DatabaseService {
  public:
   explicit ODBCService(const std::string &name, const utils::Identifier &uuid = {})
-    : DatabaseService(name, uuid),
-      logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+    : DatabaseService(name, uuid) {
     initialize();
   }
 
   explicit ODBCService(const std::string &name, const std::shared_ptr<Configure> &configuration)
-      : DatabaseService(name),
-        logger_(logging::LoggerFactory<ODBCService>::getLogger()) {
+      : DatabaseService(name) {
     setConfiguration(configuration);
     initialize();
   }
@@ -54,7 +52,7 @@ class ODBCService : public DatabaseService {
   std::unique_ptr<sql::Connection> getConnection() const override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ODBCService>::getLogger();
 };
 
 } /* namespace controllers */

@@ -40,6 +40,8 @@
 extern "C" {
 #endif
 
+namespace minifi = org::apache::nifi::minifi;
+
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_create(JNIEnv *env, jobject obj) {
   if (obj == nullptr) {
     return nullptr;
@@ -242,7 +244,7 @@ JNIEXPORT void JNICALL Java_org_apache_nifi_processor_JniProcessSession_transfer
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
-  core::Relationship rel(JniStringToUTF(env, relationship), "description");
+  minifi::core::Relationship rel(JniStringToUTF(env, relationship), "description");
   session->getSession()->transfer(ptr->get(), rel);
 }
 
@@ -251,7 +253,7 @@ jstring Java_org_apache_nifi_processor_JniProcessSession_getPropertyValue(JNIEnv
   if (obj == nullptr) {
     return env->NewStringUTF(value.c_str());
   }
-  core::ProcessContext *context = minifi::jni::JVMLoader::getPtr<core::ProcessContext>(env, obj);
+  minifi::core::ProcessContext *context = minifi::jni::JVMLoader::getPtr<minifi::core::ProcessContext>(env, obj);
   std::string keystr = JniStringToUTF(env, propertyName);
   if (!context->getProperty(keystr, value)) {
     context->getDynamicProperty(keystr, value);

@@ -34,8 +34,7 @@ uint8_t CoapProtocol::REGISTRATION_MSG[8] = { 0x72, 0x65, 0x67, 0x69, 0x73, 0x74
 
 CoapProtocol::CoapProtocol(const std::string &name, const utils::Identifier &uuid)
     : RESTSender(name, uuid),
-      require_registration_(false),
-      logger_(logging::LoggerFactory<CoapProtocol>::getLogger()) {
+      require_registration_(false) {
 }
 
 CoapProtocol::~CoapProtocol() = default;

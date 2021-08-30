@@ -21,6 +21,7 @@
 #include <direct.h>
 #include <vector>
 #include <unordered_map>
+#include <utility>
 #include <fstream>
 
 #include "wel/UnicodeConversion.h"
@@ -39,8 +40,8 @@ Bookmark::Bookmark(const std::wstring& channel,
     const utils::Identifier& uuid,
     bool processOldEvents,
     std::shared_ptr<core::CoreComponentStateManager> state_manager,
-    std::shared_ptr<logging::Logger> logger)
-    : logger_(logger),
+    std::shared_ptr<core::logging::Logger> logger)
+    : logger_(std::move(logger)),
       state_manager_(state_manager) {
   std::unordered_map<std::string, std::string> state_map;
   if (state_manager_->get(state_map) && state_map.count(BOOKMARK_KEY) == 1U) {

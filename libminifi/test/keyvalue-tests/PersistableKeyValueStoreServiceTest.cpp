@@ -29,6 +29,8 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 #include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "repository/VolatileContentRepository.h"
 
 static std::string config_yaml; // NOLINT
 

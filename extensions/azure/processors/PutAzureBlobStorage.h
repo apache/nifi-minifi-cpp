@@ -96,7 +96,7 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
   friend class ::PutAzureBlobStorageTestsFixture;
 
   explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureStorageProcessorBase(name, uuid, logging::LoggerFactory<PutAzureBlobStorage>::getLogger())
+    : AzureStorageProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger())
     , azure_blob_storage_(std::move(blob_storage_client)) {
   }
 

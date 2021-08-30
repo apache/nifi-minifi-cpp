@@ -48,7 +48,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
       std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
       std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
       std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
-      std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<C2Client>::getLogger());
+      std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger());
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, const std::shared_ptr<state::StateMonitor> &update_sink);
 
@@ -74,7 +74,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
  private:
   std::unique_ptr<C2Agent> c2_agent_;
   std::atomic_bool initialized_{false};
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 
   mutable std::mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;

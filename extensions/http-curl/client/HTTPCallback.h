@@ -56,15 +56,14 @@ namespace utils {
 class HttpStreamingCallback : public ByteInputCallBack {
  public:
   HttpStreamingCallback()
-      : logger_(logging::LoggerFactory<HttpStreamingCallback>::getLogger()),
-        is_alive_(true),
+      : is_alive_(true),
         total_bytes_loaded_(0U),
         current_buffer_start_(0U),
         current_pos_(0U),
         ptr_(nullptr) {
   }
 
-  virtual ~HttpStreamingCallback() = default;
+  ~HttpStreamingCallback() override = default;
 
   void close() {
     logger_->log_trace("close() called");
@@ -209,7 +208,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     }
   }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpStreamingCallback>::getLogger();
 
   std::mutex mutex_;
   std::condition_variable cv;

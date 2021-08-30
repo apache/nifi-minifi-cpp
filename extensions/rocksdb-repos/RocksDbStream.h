@@ -98,7 +98,7 @@ class RocksDbStream : public io::BaseStream {
   size_t size_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbStream>::getLogger();
 };
 
 } /* namespace io */

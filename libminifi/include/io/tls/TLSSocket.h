@@ -79,7 +79,7 @@ class TLSContext : public SocketContext {
  private:
   static void deleteContext(SSL_CTX* ptr) { SSL_CTX_free(ptr); }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TLSContext>::getLogger();
   std::shared_ptr<Configure> configure_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
   std::unique_ptr<SSL_CTX, decltype(&deleteContext)> ctx;

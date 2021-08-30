@@ -42,7 +42,7 @@ namespace io {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<uint16_t> dis(offset, offset + range);
-    auto logger = logging::LoggerFactory<RandomServerSocket>::getLogger();
+    auto logger = core::logging::LoggerFactory<RandomServerSocket>::getLogger();
     for (uint16_t i = 0; i < retries; ++i) {
       setPort(dis(gen));
       if (RandomServerSocket::initialize() == 0) {

@@ -182,8 +182,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
         reconnect_interval_(5000),
         receive_buffer_size_(16 * 1024 * 1024),
         connection_attempt_limit_(3),
-        ssl_service_(nullptr),
-        logger_(logging::LoggerFactory<GetTCP>::getLogger()) {
+        ssl_service_(nullptr) {
     metrics_ = std::make_shared<GetTCPMetrics>();
   }
 // Destructor
@@ -274,7 +273,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   // last listing time for root directory ( if recursive, we will consider the root
   // as the top level time.
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger();
 };
 
 }  // namespace processors

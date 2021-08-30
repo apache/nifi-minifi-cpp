@@ -59,7 +59,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     return;
   }
 
-  fileutils::FileManager file_man;
+  utils::file::FileManager file_man;
   ArchiveMetadata lensArchiveMetadata;
 
   // Get lens stack from attribute
@@ -145,7 +145,6 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
 }
 
 UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetadata) {
-  logger_ = logging::LoggerFactory<UnfocusArchiveEntry>::getLogger();
   _archiveMetadata = archiveMetadata;
 }
 

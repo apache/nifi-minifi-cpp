@@ -207,7 +207,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   utils::FlowFileQueue queue_;
   // flow repository
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<Connection>::getLogger();
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   Connection(const Connection &parent);

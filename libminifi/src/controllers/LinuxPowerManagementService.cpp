@@ -152,7 +152,7 @@ bool LinuxPowerManagerService::shouldReduce() {
           overConsume = true;
           logger_->log_trace("All banks are discharging, suggesting reduction");
         } else {
-          logging::LOG_DEBUG(logger_) << "dischaging but can't reduce due to time " << curr_time << " " << last_time_ << "  " << wait_period_;
+          core::logging::LOG_DEBUG(logger_) << "dischaging but can't reduce due to time " << curr_time << " " << last_time_ << "  " << wait_period_;
         }
       }
     }

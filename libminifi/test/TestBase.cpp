@@ -17,12 +17,47 @@
  */
 
 #include "./TestBase.h"
+
+#include <map>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <utility>
+
+#include "core/FlowConfiguration.h"
+#include "core/Processor.h"
+#include "core/ProcessContextBuilder.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "core/state/nodes/FlowInformation.h"
+#include "core/controller/StandardControllerServiceProvider.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "utils/ClassUtils.h"
 #include "utils/IntegrationTestUtils.h"
 #include "core/extension/ExtensionManager.h"
+#include "utils/Id.h"
+#include "utils/StringUtils.h"
+#include "LogUtils.h"
 
 #include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_sinks.h"
+#include "spdlog/sinks/ostream_sink.h"
+#include "spdlog/sinks/dist_sink.h"
 
-void LogTestController::setLevel(const std::string name, spdlog::level::level_enum level) {
+std::shared_ptr<LogTestController> LogTestController::getInstance(const std::shared_ptr<logging::LoggerProperties>& logger_properties) {
+  static std::map<std::shared_ptr<logging::LoggerProperties>, std::shared_ptr<LogTestController>> map;
+  auto fnd = map.find(logger_properties);
+  if (fnd != std::end(map)) {
+    return fnd->second;
+  } else {
+    // in practice I'd use a derivation here or another paradigm entirely but for the purposes of this test code
+    // having extra overhead is negligible. this is the most readable and least impactful way
+    auto instance = std::shared_ptr<LogTestController>(new LogTestController(logger_properties));
+    map.insert(std::make_pair(logger_properties, instance));
+    return map.find(logger_properties)->second;
+  }
+}
+
+void LogTestController::setLevel(const std::string& name, spdlog::level::level_enum level) {
   const auto levelView(spdlog::level::to_string_view(level));
   logger_->log_info("Setting log level for %s to %s", name, std::string(levelView.begin(), levelView.end()));
   std::string adjusted_name = name;
@@ -31,40 +66,150 @@ void LogTestController::setLevel(const std::string name, spdlog::level::level_en
   if (haz_clazz == 0)
     adjusted_name = name.substr(clazz.length(), name.length() - clazz.length());
   if (config && config->shortenClassNames()) {
-    utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
+    minifi::utils::ClassUtils::shortenClassName(adjusted_name, adjusted_name);
   }
   logging::LoggerConfiguration::getSpdlogLogger(adjusted_name)->set_level(level);
 }
 
-TestPlan::TestPlan(std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::Repository> prov_repo,
-                   const std::shared_ptr<minifi::state::response::FlowVersion> &flow_version, const std::shared_ptr<minifi::Configure> &configuration, const char* state_dir)
-    : configuration_(configuration),
-      content_repo_(content_repo),
-      flow_repo_(flow_repo),
-      prov_repo_(prov_repo),
+std::shared_ptr<logging::Logger> LogTestController::getLoggerByClassName(const std::string& class_name) {
+  return config ? config->getLogger(class_name) : logging::LoggerConfiguration::getConfiguration().getLogger(class_name);
+}
+
+void LogTestController::setLevelByClassName(spdlog::level::level_enum level, const std::string& class_name) {
+  if (config)
+    config->getLogger(class_name);
+  else
+    logging::LoggerConfiguration::getConfiguration().getLogger(class_name);
+  modified_loggers.push_back(class_name);
+  setLevel(class_name, level);
+  // also support shortened classnames
+  if (config && config->shortenClassNames()) {
+    std::string adjusted = class_name;
+    if (minifi::utils::ClassUtils::shortenClassName(class_name, adjusted)) {
+      modified_loggers.push_back(class_name);
+      setLevel(class_name, level);
+    }
+  }
+}
+
+bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) {
+  if (ending.length() == 0) {
+    return false;
+  }
+  auto start = std::chrono::system_clock::now();
+  bool found = false;
+  bool timed_out = false;
+  do {
+    std::string str = stream.str();
+    found = (str.find(ending) != std::string::npos);
+    auto now = std::chrono::system_clock::now();
+    timed_out = (now - start > timeout);
+    if (!found && !timed_out) {
+      std::this_thread::sleep_for(sleep_interval);
+    }
+  } while (!found && !timed_out);
+
+  logger_->log_info("%s %s in log output.", found ? "Successfully found" : "Failed to find", ending);
+  return found;
+}
+
+std::optional<std::smatch> LogTestController::matchesRegex(const std::string& regex_str, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) {
+  if (regex_str.length() == 0) {
+    return std::nullopt;
+  }
+  auto start = std::chrono::system_clock::now();
+  bool found = false;
+  bool timed_out = false;
+  std::regex matcher_regex(regex_str);
+  std::smatch match;
+  do {
+    std::string str = log_output.str();
+    found = std::regex_search(str, match, matcher_regex);
+    auto now = std::chrono::system_clock::now();
+    timed_out = (now - start > timeout);
+    if (!found && !timed_out) {
+      std::this_thread::sleep_for(sleep_interval);
+    }
+  } while (!found && !timed_out);
+
+  logger_->log_info("%s %s in log output.", found ? "Successfully matched regex" : "Failed to match regex", regex_str);
+  return found ? std::make_optional<std::smatch>(match) : std::nullopt;
+}
+
+int LogTestController::countOccurrences(const std::string& pattern) const {
+  return minifi::utils::StringUtils::countOccurrences(log_output.str(), pattern).second;
+}
+
+void LogTestController::reset() {
+  for (auto const & name : modified_loggers) {
+    setLevel(name, spdlog::level::err);
+  }
+  modified_loggers.clear();
+  if (config)
+    config = logging::LoggerConfiguration::newInstance();
+  resetStream(log_output);
+}
+
+void LogTestController::resetStream(std::ostringstream& stream) {
+  stream.str("");
+  stream.clear();
+}
+
+LogTestController::LogTestController(const std::shared_ptr<logging::LoggerProperties>& loggerProps) {
+  my_properties_ = loggerProps;
+  bool initMain = false;
+  if (nullptr == my_properties_) {
+    my_properties_ = std::make_shared<logging::LoggerProperties>();
+    initMain = true;
+  }
+  my_properties_->set("logger.root", "ERROR,ostream");
+  my_properties_->set("logger." + minifi::core::getClassName<LogTestController>(), "INFO");
+  my_properties_->set("logger." + minifi::core::getClassName<logging::LoggerConfiguration>(), "INFO");
+  std::shared_ptr<spdlog::sinks::dist_sink_mt> dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
+  dist_sink->add_sink(std::make_shared<StringStreamSink>(log_output_ptr, true));
+  dist_sink->add_sink(std::make_shared<spdlog::sinks::stderr_sink_mt>());
+  my_properties_->add_sink("ostream", dist_sink);
+  if (initMain) {
+    logging::LoggerConfiguration::getConfiguration().initialize(my_properties_);
+    logger_ = logging::LoggerConfiguration::getConfiguration().getLogger(minifi::core::getClassName<LogTestController>());
+  } else {
+    config = logging::LoggerConfiguration::newInstance();
+    // create for test purposes. most tests use the main logging factory, but this exists to test the logging
+    // framework itself.
+    config->initialize(my_properties_);
+    logger_ = config->getLogger(minifi::core::getClassName<LogTestController>());
+  }
+}
+
+TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::core::Repository> prov_repo,
+                   std::shared_ptr<minifi::state::response::FlowVersion> flow_version, std::shared_ptr<minifi::Configure> configuration, const char* state_dir)
+    : configuration_(std::move(configuration)),
+      content_repo_(std::move(content_repo)),
+      flow_repo_(std::move(flow_repo)),
+      prov_repo_(std::move(prov_repo)),
       finalized(false),
       location(-1),
       current_flowfile_(nullptr),
-      flow_version_(flow_version),
+      flow_version_(std::move(flow_version)),
       logger_(logging::LoggerFactory<TestPlan>::getLogger()) {
   stream_factory = org::apache::nifi::minifi::io::StreamFactory::getInstance(std::make_shared<minifi::Configure>());
-  controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
-  controller_services_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
+  controller_services_ = std::make_shared<minifi::core::controller::ControllerServiceMap>();
+  controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
   /* Inject the default state provider ahead of ProcessContext to make sure we have a unique state directory */
   if (state_dir == nullptr) {
-    state_dir_.reset(new StateDir());
+    state_dir_ = std::make_unique<StateDir>();
   } else {
-    state_dir_.reset(new StateDir(state_dir));
+    state_dir_ = std::make_unique<StateDir>(state_dir);
   }
   if (!configuration_->get(minifi::Configure::nifi_state_management_provider_local_path)) {
     configuration_->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir_->getPath());
   }
-  state_manager_provider_ = core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_services_provider_.get(), configuration_);
+  state_manager_provider_ = minifi::core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_services_provider_.get(), configuration_);
 }
 
 TestPlan::~TestPlan() {
   for (auto& processor : configured_processors_) {
-    processor->setScheduledState(core::ScheduledState::STOPPED);
+    processor->setScheduledState(minifi::core::ScheduledState::STOPPED);
   }
   for (auto& connection : relationships_) {
     // This is a patch solving circular references between processors and connections
@@ -74,7 +219,7 @@ TestPlan::~TestPlan() {
   controller_services_provider_->clearControllerServices();
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<core::Processor> &processor, const std::string& /*name*/, const std::initializer_list<core::Relationship>& relationships,
+std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::shared_ptr<minifi::core::Processor> &processor, const std::string& /*name*/, const std::initializer_list<minifi::core::Relationship>& relationships,
     bool linkToPrevious) {
   if (finalized) {
     return nullptr;
@@ -88,7 +233,7 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   if (!linkToPrevious) {
     termination_ = *(relationships.begin());
   } else {
-    std::shared_ptr<core::Processor> last = processor_queue_.back();
+    std::shared_ptr<minifi::core::Processor> last = processor_queue_.back();
     if (last == nullptr) {
       last = processor;
       termination_ = *(relationships.begin());
@@ -113,10 +258,10 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
     }
     relationships_.push_back(connection);
   }
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<minifi::core::ProcessorNode> node = std::make_shared<minifi::core::ProcessorNode>(processor);
   processor_nodes_.push_back(node);
   // std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, controller_services_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
-  auto contextBuilder = core::ClassLoader::getDefaultClassLoader().instantiate<core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
+  auto contextBuilder = minifi::core::ClassLoader::getDefaultClassLoader().instantiate<minifi::core::ProcessContextBuilder>("ProcessContextBuilder", "ProcessContextBuilder");
   contextBuilder = contextBuilder->withContentRepository(content_repo_)->withFlowFileRepository(flow_repo_)->withProvider(controller_services_provider_.get())->withProvenanceRepository(prov_repo_)->withConfiguration(configuration_);
   auto context = contextBuilder->build(node);
   processor_contexts_.push_back(context);
@@ -124,34 +269,34 @@ std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::shared_ptr<co
   return processor;
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const utils::Identifier &uuid, const std::string &name,
-    const std::initializer_list<core::Relationship> &relationships, bool linkToPrevious) {
+std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::string &processor_name, const minifi::utils::Identifier &uuid, const std::string &name,
+    const std::initializer_list<minifi::core::Relationship> &relationships, bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
+  auto ptr = minifi::core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
   if (nullptr == ptr) {
     throw std::runtime_error{fmt::format("Failed to instantiate processor name: {0} uuid: {1}", processor_name, uuid.to_string().c_str())};
   }
-  std::shared_ptr<core::Processor> processor = std::static_pointer_cast<core::Processor>(ptr);
+  std::shared_ptr<minifi::core::Processor> processor = std::static_pointer_cast<minifi::core::Processor>(ptr);
 
   processor->setName(name);
 
   return addProcessor(processor, name, relationships, linkToPrevious);
 }
 
-std::shared_ptr<core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<core::Relationship>& relationships,
+std::shared_ptr<minifi::core::Processor> TestPlan::addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships,
     bool linkToPrevious) {
   if (finalized) {
     return nullptr;
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
-  return addProcessor(processor_name, utils::IdGenerator::getIdGenerator()->generate(), name, relationships, linkToPrevious);
+  return addProcessor(processor_name, minifi::utils::IdGenerator::getIdGenerator()->generate(), name, relationships, linkToPrevious);
 }
 
-std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_ptr<core::Processor>& source_proc, const core::Relationship& source_relationship, const std::shared_ptr<core::Processor>& destination_proc) {
+std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_ptr<minifi::core::Processor>& source_proc, const minifi::core::Relationship& source_relationship, const std::shared_ptr<minifi::core::Processor>& destination_proc) {
   std::stringstream connection_name;
   connection_name
     << (source_proc ? source_proc->getUUIDStr().c_str() : "none")
@@ -181,15 +326,15 @@ std::shared_ptr<minifi::Connection> TestPlan::addConnection(const std::shared_pt
   return connection;
 }
 
-std::shared_ptr<core::controller::ControllerServiceNode> TestPlan::addController(const std::string &controller_name, const std::string &name) {
+std::shared_ptr<minifi::core::controller::ControllerServiceNode> TestPlan::addController(const std::string &controller_name, const std::string &name) {
   if (finalized) {
     return nullptr;
   }
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  utils::Identifier uuid = utils::IdGenerator::getIdGenerator()->generate();
+  minifi::utils::Identifier uuid = minifi::utils::IdGenerator::getIdGenerator()->generate();
 
-  std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node =
+  std::shared_ptr<minifi::core::controller::ControllerServiceNode> controller_service_node =
       controller_services_provider_->createControllerService(controller_name, controller_name, name, true /*firstTimeAdded*/);
   if (controller_service_node == nullptr) {
     return nullptr;
@@ -204,7 +349,7 @@ std::shared_ptr<core::controller::ControllerServiceNode> TestPlan::addController
   return controller_service_node;
 }
 
-bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const std::string &prop, const std::string &value, bool dynamic) {
+bool TestPlan::setProperty(const std::shared_ptr<minifi::core::Processor>& proc, const std::string &prop, const std::string &value, bool dynamic) {
   std::lock_guard<std::recursive_mutex> guard(mutex);
   size_t i = 0;
   logger_->log_info("Attempting to set property %s %s for %s", prop, value, proc->getName());
@@ -225,7 +370,7 @@ bool TestPlan::setProperty(const std::shared_ptr<core::Processor> proc, const st
   }
 }
 
-bool TestPlan::setProperty(const std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node, const std::string &prop, const std::string &value, bool dynamic /*= false*/) {
+bool TestPlan::setProperty(const std::shared_ptr<minifi::core::controller::ControllerServiceNode>& controller_service_node, const std::string &prop, const std::string &value, bool dynamic /*= false*/) {
   if (dynamic) {
     controller_service_node->setDynamicProperty(prop, value);
     return controller_service_node->getControllerServiceImplementation()->setDynamicProperty(prop, value);
@@ -242,15 +387,15 @@ void TestPlan::reset(bool reschedule) {
   location = -1;
   if (reschedule)
     configured_processors_.clear();
-  for (auto proc : processor_queue_) {
+  for (const auto& proc : processor_queue_) {
     while (proc->getActiveTasks() > 0) {
       proc->decrementActiveTask();
     }
   }
 }
 
-std::vector<std::shared_ptr<core::Processor>>::iterator TestPlan::getProcessorItByUuid(const std::string& uuid) {
-  const auto processor_node_matches_processor = [&uuid] (const std::shared_ptr<core::Processor>& processor) {
+std::vector<std::shared_ptr<minifi::core::Processor>>::iterator TestPlan::getProcessorItByUuid(const std::string& uuid) {
+  const auto processor_node_matches_processor = [&uuid] (const std::shared_ptr<minifi::core::Processor>& processor) {
     return processor->getUUIDStr() == uuid;
   };
   auto processor_found_at = std::find_if(processor_queue_.begin(), processor_queue_.end(), processor_node_matches_processor);
@@ -260,8 +405,8 @@ std::vector<std::shared_ptr<core::Processor>>::iterator TestPlan::getProcessorIt
   return processor_found_at;
 }
 
-std::shared_ptr<core::ProcessContext> TestPlan::getProcessContextForProcessor(const std::shared_ptr<core::Processor>& processor) {
-  const auto contextMatchesProcessor = [&processor] (const std::shared_ptr<core::ProcessContext>& context) {
+std::shared_ptr<minifi::core::ProcessContext> TestPlan::getProcessContextForProcessor(const std::shared_ptr<minifi::core::Processor>& processor) {
+  const auto contextMatchesProcessor = [&processor] (const std::shared_ptr<minifi::core::ProcessContext>& context) {
     return context->getProcessorNode()->getUUIDStr() ==  processor->getUUIDStr();
   };
   const auto context_found_at = std::find_if(processor_contexts_.begin(), processor_contexts_.end(), contextMatchesProcessor);
@@ -271,31 +416,31 @@ std::shared_ptr<core::ProcessContext> TestPlan::getProcessContextForProcessor(co
   return *context_found_at;
 }
 
-void TestPlan::scheduleProcessor(const std::shared_ptr<core::Processor>& processor, const std::shared_ptr<core::ProcessContext>& context) {
+void TestPlan::scheduleProcessor(const std::shared_ptr<minifi::core::Processor>& processor, const std::shared_ptr<minifi::core::ProcessContext>& context) {
   if (std::find(configured_processors_.begin(), configured_processors_.end(), processor) == configured_processors_.end()) {
     // Ordering on factories and list of configured processors do not matter
-    std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
+    const auto factory = std::make_shared<minifi::core::ProcessSessionFactory>(context);
     factories_.push_back(factory);
     processor->onSchedule(context, factory);
     configured_processors_.push_back(processor);
   }
 }
 
-void TestPlan::scheduleProcessor(const std::shared_ptr<core::Processor>& processor) {
+void TestPlan::scheduleProcessor(const std::shared_ptr<minifi::core::Processor>& processor) {
   scheduleProcessor(processor, getProcessContextForProcessor(processor));
 }
 
 void TestPlan::scheduleProcessors() {
   for(std::size_t target_location = 0; target_location < processor_queue_.size(); ++target_location) {
-    std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
-    std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
+    std::shared_ptr<minifi::core::Processor> processor = processor_queue_.at(target_location);
+    std::shared_ptr<minifi::core::ProcessContext> context = processor_contexts_.at(target_location);
     scheduleProcessor(processor, context);
   }
 }
 
-bool TestPlan::runProcessor(const std::shared_ptr<core::Processor>& processor, const PreTriggerVerifier& verify) {
-  const std::size_t processor_location = std::distance(processor_queue_.begin(), getProcessorItByUuid(processor->getUUIDStr()));
-  return runProcessor(gsl::narrow<int>(processor_location), verify);
+bool TestPlan::runProcessor(const std::shared_ptr<minifi::core::Processor>& processor, const PreTriggerVerifier& verify) {
+  const auto processor_location = gsl::narrow<size_t>(std::distance(processor_queue_.begin(), getProcessorItByUuid(processor->getUUIDStr())));
+  return runProcessor(processor_location, verify);
 }
 
 bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& verify) {
@@ -305,14 +450,14 @@ bool TestPlan::runProcessor(size_t target_location, const PreTriggerVerifier& ve
   logger_->log_info("Running next processor %d, processor_queue_.size %d, processor_contexts_.size %d", target_location, processor_queue_.size(), processor_contexts_.size());
   std::lock_guard<std::recursive_mutex> guard(mutex);
 
-  std::shared_ptr<core::Processor> processor = processor_queue_.at(target_location);
-  std::shared_ptr<core::ProcessContext> context = processor_contexts_.at(target_location);
+  std::shared_ptr<minifi::core::Processor> processor = processor_queue_.at(target_location);
+  std::shared_ptr<minifi::core::ProcessContext> context = processor_contexts_.at(target_location);
   scheduleProcessor(processor, context);
-  std::shared_ptr<core::ProcessSession> current_session = std::make_shared<core::ProcessSession>(context);
+  const auto current_session = std::make_shared<minifi::core::ProcessSession>(context);
   process_sessions_.push_back(current_session);
   current_flowfile_ = nullptr;
   processor->incrementActiveTasks();
-  processor->setScheduledState(core::ScheduledState::RUNNING);
+  processor->setScheduledState(minifi::core::ScheduledState::RUNNING);
   if (verify != nullptr) {
     verify(context, current_session);
   } else {
@@ -345,7 +490,7 @@ bool TestPlan::runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::sec
 }
 
 std::size_t TestPlan::getNumFlowFileProducedByCurrentProcessor() {
-  const std::shared_ptr<core::Processor>& processor = processor_queue_.at(location);
+  const auto& processor = processor_queue_.at(gsl::narrow<size_t>(location));
   std::vector<minifi::Connection*> connections = getProcessorOutboundConnections(processor);
   std::size_t num_flow_files = 0;
   for (auto connection : connections) {
@@ -354,12 +499,12 @@ std::size_t TestPlan::getNumFlowFileProducedByCurrentProcessor() {
   return num_flow_files;
 }
 
-std::shared_ptr<core::FlowFile> TestPlan::getFlowFileProducedByCurrentProcessor() {
-  const std::shared_ptr<core::Processor>& processor = processor_queue_.at(location);
+std::shared_ptr<minifi::core::FlowFile> TestPlan::getFlowFileProducedByCurrentProcessor() {
+  const std::shared_ptr<minifi::core::Processor>& processor = processor_queue_.at(location);
   std::vector<minifi::Connection*> connections = getProcessorOutboundConnections(processor);
   for (auto connection : connections) {
-    std::set<std::shared_ptr<core::FlowFile>> expiredFlowRecords;
-    std::shared_ptr<core::FlowFile> flowfile = connection->poll(expiredFlowRecords);
+    std::set<std::shared_ptr<minifi::core::FlowFile>> expiredFlowRecords;
+    std::shared_ptr<minifi::core::FlowFile> flowfile = connection->poll(expiredFlowRecords);
     if (flowfile) {
       return flowfile;
     }
@@ -374,24 +519,24 @@ std::shared_ptr<core::FlowFile> TestPlan::getFlowFileProducedByCurrentProcessor(
   return nullptr;
 }
 
-std::set<std::shared_ptr<provenance::ProvenanceEventRecord>> TestPlan::getProvenanceRecords() {
+std::set<std::shared_ptr<minifi::provenance::ProvenanceEventRecord>> TestPlan::getProvenanceRecords() {
   return process_sessions_.at(location)->getProvenanceReporter()->getEvents();
 }
 
-std::shared_ptr<core::FlowFile> TestPlan::getCurrentFlowFile() {
+std::shared_ptr<minifi::core::FlowFile> TestPlan::getCurrentFlowFile() {
   if (current_flowfile_ == nullptr) {
     current_flowfile_ = process_sessions_.at(location)->get();
   }
   return current_flowfile_;
 }
 
-std::vector<minifi::Connection*> TestPlan::getProcessorOutboundConnections(const std::shared_ptr<core::Processor>& processor) {
+std::vector<minifi::Connection*> TestPlan::getProcessorOutboundConnections(const std::shared_ptr<minifi::core::Processor>& processor) {
   const auto is_processor_outbound_connection = [&processor] (const std::shared_ptr<minifi::Connection>& connection) {
     // A connection is outbound from a processor if its source uuid matches the processor
     return connection->getSource()->getUUIDStr() == processor->getUUIDStr();
   };
   std::vector<minifi::Connection*> connections;
-  for (auto relationship : relationships_) {
+  for (const auto& relationship : relationships_) {
     if (is_processor_outbound_connection(relationship)) {
       connections.emplace_back(relationship.get());
     }
@@ -400,23 +545,22 @@ std::vector<minifi::Connection*> TestPlan::getProcessorOutboundConnections(const
 }
 
 
-std::shared_ptr<core::ProcessContext> TestPlan::getCurrentContext() {
+std::shared_ptr<minifi::core::ProcessContext> TestPlan::getCurrentContext() {
   return processor_contexts_.at(location);
 }
 
-std::shared_ptr<minifi::Connection> TestPlan::buildFinalConnection(std::shared_ptr<core::Processor> processor, bool setDest) {
+std::shared_ptr<minifi::Connection> TestPlan::buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest) {
   std::stringstream connection_name;
-  std::shared_ptr<core::Processor> last = processor;
-  connection_name << last->getUUIDStr() << "-to-" << processor->getUUIDStr();
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+  connection_name << processor->getUUIDStr() << "-to-" << processor->getUUIDStr();
+  auto connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
   connection->addRelationship(termination_);
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(last);
+  connection->setSource(processor);
   if (setDest)
     connection->setDestination(processor);
 
-  utils::Identifier uuid_copy = last->getUUID();
+  minifi::utils::Identifier uuid_copy = processor->getUUID();
   connection->setSourceUUID(uuid_copy);
   if (setDest)
     connection->setDestinationUUID(uuid_copy);
@@ -430,7 +574,7 @@ void TestPlan::finalize() {
   if (relationships_.size() > 0) {
     relationships_.push_back(buildFinalConnection(processor_queue_.back()));
   } else {
-    for (auto processor : processor_queue_) {
+    for (const auto& processor : processor_queue_) {
       relationships_.push_back(buildFinalConnection(processor, true));
     }
   }
@@ -446,4 +590,39 @@ void TestPlan::validateAnnotations() const {
   for (const auto& processor : processor_queue_) {
     processor->validateAnnotations();
   }
+}
+
+std::string TestPlan::getContent(const std::shared_ptr<minifi::core::FlowFile>& file) {
+  auto content_claim = file->getResourceClaim();
+  auto content_stream = content_repo_->read(*content_claim);
+  auto output_stream = std::make_shared<minifi::io::BufferStream>();
+  minifi::InputStreamPipe{output_stream}.process(content_stream);
+  return {reinterpret_cast<const char*>(output_stream->getBuffer()), output_stream->size()};
+}
+
+TestController::TestController()
+    : log(LogTestController::getInstance()) {
+  minifi::setDefaultDirectory("./");
+  log.reset();
+  minifi::utils::IdGenerator::getIdGenerator()->initialize(std::make_shared<minifi::Properties>());
+  flow_version_ = std::make_shared<minifi::state::response::FlowVersion>("test", "test", "test");
+}
+
+std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Configure> configuration, const char* state_dir, std::shared_ptr<minifi::core::ContentRepository> content_repo) {
+  if (configuration == nullptr) {
+    configuration = std::make_shared<minifi::Configure>();
+    configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
+      configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory());
+  }
+
+  content_repo->initialize(configuration);
+
+  return std::make_shared<TestPlan>(std::move(content_repo), std::make_shared<TestRepository>(), std::make_shared<TestRepository>(), flow_version_, configuration, state_dir);
+}
+
+std::string TestController::createTempDirectory() {
+  char format[] = "/var/tmp/nifi-minifi-cpp.test.XXXXXX";
+  auto dir = minifi::utils::file::FileUtils::create_temp_directory(format);
+  directories.push_back(dir);
+  return dir;
 }

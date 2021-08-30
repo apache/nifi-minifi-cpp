@@ -25,6 +25,8 @@
 #include "core/FlowFile.h"
 #include "../TestBase.h"
 #include "utils/gsl.h"
+#include "FlowFile.h"
+#include "FlowFileRecord.h"
 
 std::shared_ptr<minifi::FlowFileRecord> createEmptyFlowFile() {
   auto flowFile = std::make_shared<minifi::FlowFileRecord>();

@@ -49,8 +49,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
    * Create a new processor
    */
   explicit PublishMQTT(const std::string& name, const utils::Identifier& uuid = {})
-      : processors::AbstractMQTTProcessor(name, uuid),
-        logger_(logging::LoggerFactory<PublishMQTT>::getLogger()) {
+      : processors::AbstractMQTTProcessor(name, uuid) {
     retain_ = false;
     max_seg_size_ = ULLONG_MAX;
   }
@@ -134,7 +133,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   // OnTrigger method, implemented by NiFi PublishMQTT
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   // Initialize, over write by NiFi PublishMQTT
-  void initialize(void) override;
+  void initialize() override;
 
  private:
   core::annotation::Input getInputRequirement() const override {
@@ -143,7 +142,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   uint64_t max_seg_size_;
   bool retain_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();
 };
 
 } /* namespace processors */

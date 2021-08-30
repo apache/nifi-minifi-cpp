@@ -42,8 +42,7 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   TimerDrivenSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<core::Repository> repo,
                              std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure,
                              utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
-      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configure, thread_pool),
-        logger_(logging::LoggerFactory<TimerDrivenSchedulingAgent>::getLogger()) {
+      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configure, thread_pool) {
   }
 
   /**
@@ -58,7 +57,7 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   TimerDrivenSchedulingAgent(const TimerDrivenSchedulingAgent &parent);
   TimerDrivenSchedulingAgent &operator=(const TimerDrivenSchedulingAgent &parent);
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TimerDrivenSchedulingAgent>::getLogger();
 };
 
 }  // namespace minifi

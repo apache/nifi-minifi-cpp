@@ -34,7 +34,7 @@ class AzureSdkLogger {
   AzureSdkLogger();
   void setLogLevel();
 
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureSdkLogger>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureSdkLogger>::getLogger()};
 };
 
 }  // namespace org::apache::nifi::minifi::azure::utils

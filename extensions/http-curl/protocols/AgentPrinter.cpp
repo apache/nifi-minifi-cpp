@@ -32,8 +32,7 @@ namespace minifi {
 namespace c2 {
 
 AgentPrinter::AgentPrinter(const std::string& name, const utils::Identifier& uuid)
-    : HeartbeatReporter(name, uuid),
-      logger_(logging::LoggerFactory<AgentPrinter>::getLogger()) {
+    : HeartbeatReporter(name, uuid) {
 }
 
 void AgentPrinter::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,

@@ -25,8 +25,7 @@ namespace minifi {
 namespace c2 {
 
 HeartbeatLogger::HeartbeatLogger(const std::string& name, const utils::Identifier& id)
-  : HeartbeatReporter(name, id),
-    logger_(logging::LoggerFactory<HeartbeatLogger>::getLogger()) {
+  : HeartbeatReporter(name, id) {
   logger_->set_max_log_size(-1);  // log however huge the heartbeat is
 }
 

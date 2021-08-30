@@ -232,7 +232,7 @@ class Socket : public BaseStream {
 
   bool nonBlocking_{ false };
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 
  private:
 #ifdef WIN32

@@ -34,12 +34,12 @@ namespace processors {
 class GetGPS : public core::Processor {
  public:
   explicit GetGPS(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid), logger_(logging::LoggerFactory<GetGPS>::getLogger()) {
+      : core::Processor(name, uuid) {
     gpsdHost_ = "localhost";
     gpsdPort_ = "2947";
     gpsdWaitTime_ = 50000000;
   }
-  virtual ~GetGPS() = default;
+  ~GetGPS() override = default;
   static const std::string ProcessorName;
   // Supported Properties
   static core::Property GPSDHost;
@@ -60,14 +60,14 @@ class GetGPS : public core::Processor {
   //! OnTrigger method, implemented by NiFi GetGPS
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   //! Initialize, over write by NiFi GetGPS
-  void initialize(void) override;
+  void initialize() override;
 
  private:
   std::string gpsdHost_;
   std::string gpsdPort_;
   int64_t gpsdWaitTime_;
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetGPS>::getLogger();
 };
 
 } /* namespace processors */

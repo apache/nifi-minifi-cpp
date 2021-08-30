@@ -73,7 +73,7 @@ auto find_if_custom_linked_list(T* const list, const Adv advance_func, const Pre
 }
 
 #ifndef WIN32
-std::error_code bind_to_local_network_interface(const minifi::io::SocketDescriptor fd, const minifi::io::NetworkInterface& interface) {
+std::error_code bind_to_local_network_interface(const mio::SocketDescriptor fd, const mio::NetworkInterface& interface) {
   using ifaddrs_uniq_ptr = std::unique_ptr<ifaddrs, util::ifaddrs_deleter>;
   const auto if_list_ptr = []() -> ifaddrs_uniq_ptr {
     ifaddrs *list = nullptr;
@@ -98,7 +98,7 @@ std::error_code bind_to_local_network_interface(const minifi::io::SocketDescript
 }
 #endif /* !WIN32 */
 
-std::error_code set_non_blocking(const minifi::io::SocketDescriptor fd) noexcept {
+std::error_code set_non_blocking(const mio::SocketDescriptor fd) noexcept {
 #ifndef WIN32
   if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
     return { errno, std::generic_category() };
@@ -140,7 +140,7 @@ Socket::Socket(const std::shared_ptr<SocketContext>& /*context*/, std::string ho
     : requested_hostname_(std::move(hostname)),
       port_(port),
       listeners_(listeners),
-      logger_(logging::LoggerFactory<Socket>::getLogger()) {
+      logger_(core::logging::LoggerFactory<Socket>::getLogger()) {
   FD_ZERO(&total_list_);
   FD_ZERO(&read_fds_);
   initialize_socket();
@@ -202,7 +202,7 @@ Socket::~Socket() {
 
 void Socket::close() {
   if (valid_socket(socket_file_descriptor_)) {
-    logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
+    core::logging::LOG_DEBUG(logger_) << "Closing " << socket_file_descriptor_;
 #ifdef WIN32
     closesocket(socket_file_descriptor_);
 #else

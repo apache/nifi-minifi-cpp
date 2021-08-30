@@ -47,10 +47,9 @@ class AppendHostInfo : public core::Processor {
 
   explicit AppendHostInfo(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<AppendHostInfo>::getLogger()),
         refresh_on_trigger_(false) {
   }
-  virtual ~AppendHostInfo() = default;
+  ~AppendHostInfo() override = default;
   static constexpr char const* ProcessorName = "AppendHostInfo";
 
   EXTENSIONAPI static core::Property InterfaceNameFilter;
@@ -70,7 +69,7 @@ class AppendHostInfo : public core::Processor {
 
  private:
   std::shared_mutex shared_mutex_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AppendHostInfo>::getLogger();
   std::string hostname_attribute_name_;
   std::string ipaddress_attribute_name_;
   std::optional<std::regex> interface_name_filter_;

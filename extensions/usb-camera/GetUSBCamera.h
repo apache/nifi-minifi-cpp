@@ -41,13 +41,12 @@ namespace processors {
 class GetUSBCamera : public core::Processor {
  public:
   explicit GetUSBCamera(const std::string &name, const utils::Identifier &uuid = {})
-      : core::Processor(name, uuid),
-        logger_(logging::LoggerFactory<GetUSBCamera>::getLogger()) {
+      : core::Processor(name, uuid) {
     png_write_mtx_ = std::make_shared<std::mutex>();
     dev_access_mtx_ = std::make_shared<std::recursive_mutex>();
   }
 
-  virtual ~GetUSBCamera() {
+  ~GetUSBCamera() override {
     // We cannot interrupt the PNG write process
     std::lock_guard<std::mutex> lock(*png_write_mtx_);
     cleanupUvc();
@@ -79,7 +78,7 @@ class GetUSBCamera : public core::Processor {
   typedef struct {
     core::ProcessContext *context;
     core::ProcessSessionFactory *session_factory;
-    std::shared_ptr<logging::Logger> logger;
+    std::shared_ptr<core::logging::Logger> logger;
     std::shared_ptr<std::mutex> png_write_mtx;
     std::shared_ptr<std::recursive_mutex> dev_access_mtx;
     std::string format;
@@ -105,7 +104,7 @@ class GetUSBCamera : public core::Processor {
     const uint32_t width_;
     const uint32_t height_;
     std::vector<uint8_t> png_output_buf_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PNGWriteCallback>::getLogger();
   };
 
   // Write callback for storing camera capture data as a raw RGB pixel buffer
@@ -116,11 +115,11 @@ class GetUSBCamera : public core::Processor {
 
    private:
     uvc_frame_t *frame_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RawWriteCallback>::getLogger();
   };
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetUSBCamera>::getLogger();
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 
   std::shared_ptr<std::thread> camera_thread_;

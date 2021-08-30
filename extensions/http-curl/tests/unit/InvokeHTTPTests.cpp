@@ -258,7 +258,7 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
 }
 
 TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
-  using processors::InvokeHTTP;
+  using minifi::processors::InvokeHTTP;
 
   TestController testController;
   TestHTTPServer http_server;
@@ -289,7 +289,7 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
 }
 
 TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
-  using processors::InvokeHTTP;
+  using minifi::processors::InvokeHTTP;
 
   TestController testController;
   TestHTTPServer http_server;

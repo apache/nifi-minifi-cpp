@@ -26,6 +26,8 @@ namespace {
 enum class ParsingStatus { ParsingFail , ParsingSuccessful , ValuesMatch };
 enum class ConversionTestTarget { MS, NS };
 
+namespace core = minifi::core;
+
 ParsingStatus checkTimeValue(const std::string &input, int64_t t1, core::TimeUnit t2) {
   int64_t TimeVal = 0;
   core::TimeUnit unit;

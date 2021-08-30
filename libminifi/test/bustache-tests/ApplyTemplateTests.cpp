@@ -32,6 +32,8 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
+#include "repository/VolatileContentRepository.h"
+#include "../unit/ProvenanceTestHelper.h"
 
 #include "ApplyTemplate.h"
 #include "processors/GetFile.h"

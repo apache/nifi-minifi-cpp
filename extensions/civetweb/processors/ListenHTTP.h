@@ -53,7 +53,6 @@ class ListenHTTP : public core::Processor {
    */
   explicit ListenHTTP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
-        logger_(logging::LoggerFactory<ListenHTTP>::getLogger()),
         batch_size_(0) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
@@ -120,7 +119,7 @@ class ListenHTTP : public core::Processor {
     std::regex auth_dn_regex_;
     std::regex headers_as_attrs_regex_;
     core::ProcessContext *process_context_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
     std::map<std::string, ResponseBody> response_uri_map_;
     std::mutex uri_map_mutex_;
     uint64_t buffer_size_;
@@ -164,11 +163,11 @@ class ListenHTTP : public core::Processor {
       if (server == nullptr) {
         return 0;
       }
-      auto* const logger = static_cast<std::shared_ptr<logging::Logger>*>(const_cast<void*>(server->getUserContext()));
+      auto* const logger = static_cast<std::shared_ptr<core::logging::Logger>*>(const_cast<void*>(server->getUserContext()));
       if (logger == nullptr) {
         return 0;
       }
-      logging::LOG_ERROR((*logger)) << "CivetWeb error: " << message;
+      core::logging::LOG_ERROR((*logger)) << "CivetWeb error: " << message;
     } catch (...) {
     }
     return 0;
@@ -178,15 +177,15 @@ class ListenHTTP : public core::Processor {
     try {
       struct mg_context* ctx = mg_get_context(conn);
       /* CivetServer stores 'this' as the userdata when calling mg_start */
-      CivetServer* server = static_cast<CivetServer*>(mg_get_user_data(ctx));
+      auto* server = static_cast<CivetServer*>(mg_get_user_data(ctx));
       if (server == nullptr) {
         return 0;
       }
-      std::shared_ptr<logging::Logger>* logger = static_cast<std::shared_ptr<logging::Logger>*>(const_cast<void*>(server->getUserContext()));
+      auto* logger = static_cast<std::shared_ptr<core::logging::Logger>*>(const_cast<void*>(server->getUserContext()));
       if (logger == nullptr) {
         return 0;
       }
-      logging::LOG_DEBUG((*logger)) << "CivetWeb access: " << message;
+      core::logging::LOG_DEBUG((*logger)) << "CivetWeb access: " << message;
     } catch (...) {
     }
     return 0;
@@ -205,7 +204,7 @@ class ListenHTTP : public core::Processor {
   void processIncomingFlowFile(core::ProcessSession *session);
   void processRequestBuffer(core::ProcessSession *session);
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
   CivetCallbacks callbacks_;
   std::unique_ptr<CivetServer> server_;
   std::unique_ptr<Handler> handler_;

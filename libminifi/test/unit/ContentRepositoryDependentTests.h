@@ -21,6 +21,7 @@
 #include <vector>
 
 #include <catch.hpp>
+#include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "../TestBase.h"

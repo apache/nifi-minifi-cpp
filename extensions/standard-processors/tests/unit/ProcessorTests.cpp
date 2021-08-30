@@ -242,8 +242,8 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   content_repo->initialize(std::make_shared<minifi::Configure>());
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GenerateFlowFile>("GFF");
   processor->initialize();
-  processor->setProperty(processors::GenerateFlowFile::BatchSize, "10");
-  processor->setProperty(processors::GenerateFlowFile::FileSize, "0");
+  processor->setProperty(minifi::processors::GenerateFlowFile::BatchSize, "10");
+  processor->setProperty(minifi::processors::GenerateFlowFile::FileSize, "0");
 
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -455,7 +455,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   REQUIRE(2 == repo->getRepoMap().size());
 
   for (auto entry : repo->getRepoMap()) {
-    provenance::ProvenanceEventRecord newRecord;
+    minifi::provenance::ProvenanceEventRecord newRecord;
     newRecord.DeSerialize(reinterpret_cast<uint8_t*>(const_cast<char*>(entry.second.data())), entry.second.length());
 
     bool found = false;
@@ -478,7 +478,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
       org::apache::nifi::minifi::core::reporting::SiteToSiteProvenanceReportingTask>(processorReport);
   taskReport->setBatchSize(1);
   std::vector<std::shared_ptr<core::SerializableComponent>> recordsReport;
-  recordsReport.push_back(std::make_shared<provenance::ProvenanceEventRecord>());
+  recordsReport.push_back(std::make_shared<minifi::provenance::ProvenanceEventRecord>());
   processorReport->incrementActiveTasks();
   processorReport->setScheduledState(core::ScheduledState::RUNNING);
   std::string jsonStr;
@@ -634,7 +634,7 @@ ProcessorWithIncomingConnectionTest::ProcessorWithIncomingConnectionTest() {
   const auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(std::make_shared<minifi::Configure>());
 
-  processor_ = std::make_shared<processors::LogAttribute>("test_processor");
+  processor_ = std::make_shared<minifi::processors::LogAttribute>("test_processor");
   incoming_connection_ = std::make_shared<minifi::Connection>(repo, content_repo, "incoming_connection");
   incoming_connection_->addRelationship(core::Relationship{"success", ""});
   incoming_connection_->setDestinationUUID(processor_->getUUID());

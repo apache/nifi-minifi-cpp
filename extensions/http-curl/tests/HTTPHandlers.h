@@ -36,6 +36,7 @@
 #include "HTTPUtils.h"
 #include "ServerAwareHandler.h"
 #include "utils/gsl.h"
+#include "agent/build_description.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;

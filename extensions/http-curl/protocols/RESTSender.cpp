@@ -33,8 +33,7 @@ namespace minifi {
 namespace c2 {
 
 RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
-    : C2Protocol(name, uuid),
-      logger_(logging::LoggerFactory<RESTSender>::getLogger()) {
+    : C2Protocol(name, uuid) {
 }
 
 void RESTSender::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {

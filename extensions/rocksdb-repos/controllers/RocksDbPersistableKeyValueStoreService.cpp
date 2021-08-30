@@ -36,8 +36,7 @@ core::Property RocksDbPersistableKeyValueStoreService::Directory(
 
 RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
-    , AbstractAutoPersistingKeyValueStoreService(name, uuid)
-    , logger_(logging::LoggerFactory<RocksDbPersistableKeyValueStoreService>::getLogger()) {
+    , AbstractAutoPersistingKeyValueStoreService(name, uuid) {
 }
 
 void RocksDbPersistableKeyValueStoreService::initialize() {

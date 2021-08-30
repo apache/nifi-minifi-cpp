@@ -98,10 +98,9 @@ class ConsumeKafka : public core::Processor {
   static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
 
   explicit ConsumeKafka(const std::string& name, const utils::Identifier& uuid = utils::Identifier()) :
-      Processor(name, uuid),
-      logger_(logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
+      Processor(name, uuid) {}
 
-  virtual ~ConsumeKafka() = default;
+  ~ConsumeKafka() override = default;
 
  public:
   bool supportsDynamicProperties() override {
@@ -183,7 +182,7 @@ class ConsumeKafka : public core::Processor {
 
   std::mutex do_not_call_on_trigger_concurrently_;
 
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ConsumeKafka>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ConsumeKafka>::getLogger()};
 };
 
 }  // namespace processors

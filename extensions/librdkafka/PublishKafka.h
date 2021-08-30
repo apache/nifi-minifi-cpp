@@ -90,7 +90,7 @@ class PublishKafka : public core::Processor {
   EXTENSIONAPI static const core::Relationship Success;
 
   explicit PublishKafka(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+      : core::Processor(name, uuid) {
   }
 
   ~PublishKafka() override = default;
@@ -119,7 +119,7 @@ class PublishKafka : public core::Processor {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PublishKafka>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PublishKafka>::getLogger()};
 
   KafkaConnectionKey key_;
   std::unique_ptr<KafkaConnection> conn_;

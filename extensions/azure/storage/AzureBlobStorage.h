@@ -45,7 +45,7 @@ class AzureBlobStorage {
   std::optional<UploadBlobResult> uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer);
 
  private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureBlobStorage>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureBlobStorage>::getLogger()};
   gsl::not_null<std::unique_ptr<BlobStorageClient>> blob_storage_client_;
 };
 

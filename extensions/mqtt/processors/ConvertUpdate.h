@@ -47,10 +47,10 @@ class ConvertUpdate : public ConvertBase {
    * Create a new processor
    */
   explicit ConvertUpdate(const std::string& name, const utils::Identifier& uuid = {})
-    : ConvertBase(name, uuid), logger_(logging::LoggerFactory<ConvertUpdate>::getLogger()) {
+    : ConvertBase(name, uuid) {
   }
   // Destructor
-  virtual ~ConvertUpdate() = default;
+  ~ConvertUpdate() override = default;
 
   static core::Property SSLContext;
   // Processor Name
@@ -74,7 +74,7 @@ class ConvertUpdate : public ConvertBase {
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConvertUpdate>::getLogger();
 };
 
 } /* namespace processors */

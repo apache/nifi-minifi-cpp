@@ -18,8 +18,10 @@
 
 #pragma once
 
-#include <string>
+#include <chrono>
+#include <fstream>
 #include <memory>
+#include <string>
 
 #include "../../test/TestBase.h"
 #include "utils/file/FileUtils.h"
@@ -45,7 +47,7 @@ std::string putFileToDir(const std::string& dir_path, const std::string& file_na
 std::string getFileContent(const std::string& file_name) {
   std::ifstream file_handle(file_name, std::ios::binary | std::ios::in);
   REQUIRE(file_handle.is_open());
-  const std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
+  std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
   return file_content;
 }
 
@@ -57,7 +59,7 @@ Identifier generateUUID() {
 
 class ManualClock : public timeutils::Clock {
  public:
-  std::chrono::milliseconds timeSinceEpoch() const override { return time_; }
+  [[nodiscard]] std::chrono::milliseconds timeSinceEpoch() const override { return time_; }
   void advance(std::chrono::milliseconds elapsed_time) { time_ += elapsed_time; }
 
  private:

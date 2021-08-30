@@ -97,7 +97,7 @@ class FileStream : public io::BaseStream {
   std::string path_;
   size_t length_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FileStream>::getLogger();
 };
 
 }  // namespace io

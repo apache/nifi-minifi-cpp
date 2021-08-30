@@ -29,9 +29,9 @@
 std::atomic<bool> disabled;
 std::mutex control_mutex;
 
-class MockControllerService : public core::controller::ControllerService {
+class MockControllerService : public org::apache::nifi::minifi::core::controller::ControllerService {
  public:
-  explicit MockControllerService(const std::string &name, const utils::Identifier &uuid)
+  explicit MockControllerService(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid)
       : ControllerService(name, uuid) {
   }
 
@@ -43,7 +43,7 @@ class MockControllerService : public core::controller::ControllerService {
   ~MockControllerService() = default;
 
   virtual void initialize() {
-    core::controller::ControllerService::initialize();
+    org::apache::nifi::minifi::core::controller::ControllerService::initialize();
     enable();
   }
 
@@ -70,9 +70,9 @@ class MockControllerService : public core::controller::ControllerService {
   std::string str;
 };
 
-class MockProcessor : public core::Processor {
+class MockProcessor : public org::apache::nifi::minifi::core::Processor {
  public:
-  explicit MockProcessor(const std::string &name, const utils::Identifier &uuid)
+  explicit MockProcessor(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid)
       : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }
@@ -85,18 +85,18 @@ class MockProcessor : public core::Processor {
   ~MockProcessor() = default;
 
   void initialize() override {
-    core::Property property("linkedService", "Linked service");
-    std::set<core::Property> properties;
+    org::apache::nifi::minifi::core::Property property("linkedService", "Linked service");
+    std::set<org::apache::nifi::minifi::core::Property> properties;
     properties.insert(property);
     setSupportedProperties(properties);
   }
 
   // OnTrigger method, implemented by NiFi Processor Designer
-  void onTrigger(core::ProcessContext *context, core::ProcessSession* /*session*/) override {
+  void onTrigger(org::apache::nifi::minifi::core::ProcessContext *context, org::apache::nifi::minifi::core::ProcessSession* /*session*/) override {
     std::string linked_service = "";
     getProperty("linkedService", linked_service);
     if (!IsNullOrEmpty(linked_service)) {
-      std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(linked_service);
+      std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> service = context->getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {
         assert(true == context->isControllerServiceEnabled(linked_service));

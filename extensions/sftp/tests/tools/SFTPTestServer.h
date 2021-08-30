@@ -43,7 +43,7 @@ class SFTPTestServer {
   uint16_t getPort();
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<SFTPTestServer>::getLogger();
 
   std::string host_key_file_;
   std::string jar_path_;

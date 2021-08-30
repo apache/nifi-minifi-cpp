@@ -22,11 +22,15 @@
 #include <memory>
 #include <utility>
 
+#include "FlowController.h"
+#include "unit/ProvenanceTestHelper.h"
+#include "repository/VolatileContentRepository.h"
+
 class TestControllerWithFlow: public TestController{
  public:
   explicit TestControllerWithFlow(const char* yamlConfigContent) {
-    LogTestController::getInstance().setTrace<processors::TestProcessor>();
-    LogTestController::getInstance().setTrace<processors::TestFlowFileGenerator>();
+    LogTestController::getInstance().setTrace<minifi::processors::TestProcessor>();
+    LogTestController::getInstance().setTrace<minifi::processors::TestFlowFileGenerator>();
     LogTestController::getInstance().setTrace<minifi::Connection>();
     LogTestController::getInstance().setTrace<core::Connectable>();
     LogTestController::getInstance().setTrace<minifi::SchedulingAgent>();

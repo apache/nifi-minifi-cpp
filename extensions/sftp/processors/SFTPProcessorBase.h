@@ -71,7 +71,7 @@ class SFTPProcessorBase : public core::Processor {
   void notifyStop() override;
 
  protected:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 
   int64_t connection_timeout_;
   int64_t data_timeout_;

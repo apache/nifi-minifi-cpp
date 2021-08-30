@@ -88,7 +88,7 @@ class ByteOutputCallback : public OutputStreamCallback {
   explicit ByteOutputCallback(size_t max_size, bool wait_on_read = false)
       : max_size_(max_size),
         read_started_(wait_on_read ? false : true),
-        logger_(logging::LoggerFactory<ByteOutputCallback>::getLogger()) {
+        logger_(core::logging::LoggerFactory<ByteOutputCallback>::getLogger()) {
     current_str_pos = 0;
     size_ = 0;
     total_written_ = 0;
@@ -137,7 +137,7 @@ class ByteOutputCallback : public OutputStreamCallback {
 
   moodycamel::ConcurrentQueue<std::string> queue_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 class StreamOutputCallback : public ByteOutputCallback {

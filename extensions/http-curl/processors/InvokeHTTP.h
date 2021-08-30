@@ -159,7 +159,7 @@ class InvokeHTTP : public core::Processor {
   bool send_body_{true};
 
  private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<InvokeHTTP>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger()};
 };
 
 } /* namespace processors */

@@ -34,13 +34,13 @@ namespace utils {
 
 class AWSSdkLogger : public Aws::Utils::Logging::LogSystemInterface {
  public:
-  Aws::Utils::Logging::LogLevel GetLogLevel() const override;
+  [[nodiscard]] Aws::Utils::Logging::LogLevel GetLogLevel() const override;
   void Log(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, ...) override;
   void LogStream(Aws::Utils::Logging::LogLevel log_level, const char* tag, const Aws::OStringStream &message_stream) override;
   void Flush() override;
 
  private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AWSSdkLogger>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AWSSdkLogger>::getLogger()};
 };
 
 } /* namespace utils */

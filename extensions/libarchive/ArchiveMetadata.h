@@ -66,7 +66,7 @@ class ArchiveMetadata {
   ArchiveEntryIterator eraseEntry(ArchiveEntryIterator position);
   ArchiveEntryIterator insertEntry(ArchiveEntryIterator it, const ArchiveEntryMetadata& entry);
 
-  void seedTempPaths(fileutils::FileManager* file_man, bool keep);
+  void seedTempPaths(org::apache::nifi::minifi::utils::file::FileManager* file_man, bool keep);
 
   rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;
   static ArchiveMetadata fromJson(const rapidjson::Value&);

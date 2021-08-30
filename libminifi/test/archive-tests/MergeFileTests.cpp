@@ -154,7 +154,7 @@ class MergeTestController : public TestController {
     auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(std::make_shared<minifi::Configure>());
 
-    processor = std::make_shared<processors::MergeContent>("mergecontent");
+    processor = std::make_shared<minifi::processors::MergeContent>("mergecontent");
     processor->initialize();
     utils::Identifier processoruuid = processor->getUUID();
     REQUIRE(processoruuid);
@@ -164,7 +164,7 @@ class MergeTestController : public TestController {
 
     // output from merge processor to log attribute
     output = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
-    output->addRelationship(processors::MergeContent::Merge);
+    output->addRelationship(minifi::processors::MergeContent::Merge);
     output->setSource(processor);
     output->setDestination(logAttributeProcessor);
     output->setSourceUUID(processoruuid);
@@ -176,7 +176,7 @@ class MergeTestController : public TestController {
     input->setDestinationUUID(processoruuid);
     processor->addConnection(input);
 
-    processor->setAutoTerminatedRelationships({processors::MergeContent::Original, processors::MergeContent::Failure});
+    processor->setAutoTerminatedRelationships({minifi::processors::MergeContent::Original, minifi::processors::MergeContent::Failure});
 
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
@@ -206,9 +206,9 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
     flowFileContents[3] + flowFileContents[4] + flowFileContents[5]
   };
 
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 6 flowfiles, first three merged to one, second three merged to one
@@ -217,14 +217,14 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
     sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     // three bundle
     if (i < 3)
-      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
     else
-      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
     if (i < 3)
-      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
     else
-      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
-    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
     sessionGenFlowFile.flushContent();
     input->put(flow);
   }
@@ -264,12 +264,12 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
   std::ofstream(FOOTER_FILE, std::ios::binary) << "footer";
   std::ofstream(DEMARCATOR_FILE, std::ios::binary) << "demarcator";
 
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_FILENAME);
-  context->setProperty(processors::MergeContent::Header, HEADER_FILE);
-  context->setProperty(processors::MergeContent::Footer, FOOTER_FILE);
-  context->setProperty(processors::MergeContent::Demarcator, DEMARCATOR_FILE);
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_FILENAME);
+  context->setProperty(minifi::processors::MergeContent::Header, HEADER_FILE);
+  context->setProperty(minifi::processors::MergeContent::Footer, FOOTER_FILE);
+  context->setProperty(minifi::processors::MergeContent::Demarcator, DEMARCATOR_FILE);
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 6 flowfiles, first three merged to one, second three merged to one
@@ -278,14 +278,14 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
     sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     // three bundle
     if (i < 3)
-      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
     else
-      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
     if (i < 3)
-      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
     else
-      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
-    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
     sessionGenFlowFile.flushContent();
     input->put(flow);
   }
@@ -323,10 +323,10 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
     flowFileContents[3] + flowFileContents[5]
   };
 
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::MergeContent::MaxBinAge, "1 sec");
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::MaxBinAge, "1 sec");
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 5 flowfiles, first threes merged to one, the other two merged to one
@@ -335,14 +335,14 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
     sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
     // three bundle
     if (i < 3)
-      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
     else
-      flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(1));
     if (i < 3)
-      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
     else
-      flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
-    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+      flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i-3));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
     sessionGenFlowFile.flushContent();
     input->put(flow);
   }
@@ -385,11 +385,11 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
     flowFileContents[3] + flowFileContents[4] + flowFileContents[5]
   };
 
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::MergeContent::MinSize, "96");
-  context->setProperty(processors::MergeContent::CorrelationAttributeName, "tag");
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::MinSize, "96");
+  context->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
@@ -429,11 +429,11 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
 
 
 TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::MergeContent::MinSize, "96");
-  context->setProperty(processors::MergeContent::CorrelationAttributeName, "tag");
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::MinSize, "96");
+  context->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
@@ -480,11 +480,11 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
 }
 
 TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_ZIP_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::MergeContent::MinSize, "96");
-  context->setProperty(processors::MergeContent::CorrelationAttributeName, "tag");
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_ZIP_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::MinSize, "96");
+  context->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 6 flowfiles, first threes merged to one, second thress merged to one
@@ -536,11 +536,11 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]"
       flowFileContents[1] + flowFileContents[3] + flowFileContents[5]
   };
 
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::MergeContent::MinEntries, "3");
-  context->setProperty(processors::MergeContent::CorrelationAttributeName, "tag");
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::MinEntries, "3");
+  context->setProperty(minifi::processors::MergeContent::CorrelationAttributeName, "tag");
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 6 flowfiles, even files are merged to one, odd files are merged to an other
@@ -580,9 +580,9 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]"
 }
 
 TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only Common Attributes", "[testMergeFileKeepOnlyCommonAttributes]") {
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
 
   core::ProcessSession sessionGenFlowFile(context);
 
@@ -590,9 +590,9 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only C
   for (const int i : {1, 2, 0}) {
     const auto flow = sessionGenFlowFile.create();
     sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
-    flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
-    flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
-    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
     flow->setAttribute("mime.type", "application/octet-stream");
     if (i == 1)
       flow->setAttribute("tagUnique1", "unique1");
@@ -629,19 +629,19 @@ TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping Only C
 }
 
 TEST_CASE_METHOD(MergeTestController, "Test Merge File Attributes Keeping All Unique Attributes", "[testMergeFileKeepAllUniqueAttributes]") {
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::MergeContent::AttributeStrategy, processors::merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_TAR_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_DEFRAGMENT);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::AttributeStrategy, minifi::processors::merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE);
 
   core::ProcessSession sessionGenFlowFile(context);
   // Generate 3 flowfiles merging all into one
   for (const int i : {1, 2, 0}) {
     const auto flow = sessionGenFlowFile.create();
     sessionGenFlowFile.importFrom(minifi::io::BufferStream(flowFileContents[i]), flow);
-    flow->setAttribute(processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
-    flow->setAttribute(processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
-    flow->setAttribute(processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_ID_ATTRIBUTE, std::to_string(0));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_INDEX_ATTRIBUTE, std::to_string(i));
+    flow->setAttribute(minifi::processors::BinFiles::FRAGMENT_COUNT_ATTRIBUTE, std::to_string(3));
     flow->setAttribute("mime.type", "application/octet-stream");
     if (i == 1)
       flow->setAttribute("tagUnique1", "unique1");
@@ -717,19 +717,19 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
     input->put(ff);
   }
 
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::MergeContent::Header, header);
-  context->setProperty(processors::MergeContent::Footer, footer);
-  context->setProperty(processors::MergeContent::Demarcator, demarcator);
-  context->setProperty(processors::BinFiles::MinEntries, "3");
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::MergeContent::Header, header);
+  context->setProperty(minifi::processors::MergeContent::Footer, footer);
+  context->setProperty(minifi::processors::MergeContent::Demarcator, demarcator);
+  context->setProperty(minifi::processors::BinFiles::MinEntries, "3");
 
   SECTION("Payload Serializer") {
-    context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+    context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
     usedSerializer = &payloadSerializer;
   }
   SECTION("FlowFileV3 Serializer") {
-    context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE);
+    context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE);
     usedSerializer = &ffV3Serializer;
     // only Binary Concatenation take these into account
     header = "";
@@ -778,10 +778,10 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
     flowFileContents[3] + flowFileContents[4]
   };
 
-  context->setProperty(processors::MergeContent::MergeFormat, processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
-  context->setProperty(processors::MergeContent::MergeStrategy, processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
-  context->setProperty(processors::MergeContent::DelimiterStrategy, processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
-  context->setProperty(processors::BinFiles::BatchSize, "3");
+  context->setProperty(minifi::processors::MergeContent::MergeFormat, minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
+  context->setProperty(minifi::processors::MergeContent::MergeStrategy, minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
+  context->setProperty(minifi::processors::MergeContent::DelimiterStrategy, minifi::processors::merge_content_options::DELIMITER_STRATEGY_TEXT);
+  context->setProperty(minifi::processors::BinFiles::BatchSize, "3");
 
   core::ProcessSession sessionGenFlowFile(context);
   // enqueue 5 (five) flowFiles

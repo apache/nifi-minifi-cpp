@@ -138,7 +138,7 @@ LastSFTPError::operator SFTPError() const {
 
 
 SFTPClient::SFTPClient(const std::string &hostname, uint16_t port, const std::string& username)
-    : logger_(logging::LoggerFactory<SFTPClient>::getLogger()),
+    : logger_(core::logging::LoggerFactory<SFTPClient>::getLogger()),
       hostname_(hostname),
       port_(port),
       username_(username),

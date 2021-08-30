@@ -163,7 +163,7 @@ class SFTPClient {
    */
   static constexpr size_t MAX_BUFFER_SIZE = 30000U;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 
   const std::string hostname_;
   const uint16_t port_;

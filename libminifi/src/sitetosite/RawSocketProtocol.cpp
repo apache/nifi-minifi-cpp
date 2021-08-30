@@ -154,7 +154,7 @@ bool RawSiteToSiteClient::initiateResourceNegotiation() {
         }
       }
 
-      logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
+      core::logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
 
       for (unsigned int i = (_currentVersionIndex + 1); i < sizeof(_supportedVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedVersion[i]) {
@@ -218,7 +218,7 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
           return false;
         }
       }
-      logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
+      core::logging::LOG_INFO(logger_) << "Site2Site Server Response asked for a different protocol version " << serverVersion;
 
       for (unsigned int i = (_currentCodecVersionIndex + 1); i < sizeof(_supportedCodecVersion) / sizeof(uint32_t); i++) {
         if (serverVersion >= _supportedCodecVersion[i]) {
@@ -397,7 +397,7 @@ bool RawSiteToSiteClient::getPeerList(std::vector<PeerStatus> &peers) {
         }
       }
       peers.push_back(PeerStatus{std::make_shared<Peer>(port_id_, host, gsl::narrow<uint16_t>(port), secure != 0), count, true});
-      logging::LOG_TRACE(logger_) << "Site2Site Peer host " << host << " port " << port << " Secure " << std::to_string(secure);
+      core::logging::LOG_TRACE(logger_) << "Site2Site Peer host " << host << " port " << port << " Secure " << std::to_string(secure);
     }
 
     tearDown();
@@ -588,7 +588,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     if (resp == -1) {
       throw Exception(SITE2SITE_EXCEPTION, "Send Failed in transaction " + transactionID.to_string());
     }
-    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string() << " sent bytes length" << payload.length();
+    core::logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string() << " sent bytes length" << payload.length();
 
     if (!confirm(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Confirm Failed in transaction " + transactionID.to_string());
@@ -596,7 +596,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
     if (!complete(transactionID)) {
       throw Exception(SITE2SITE_EXCEPTION, "Complete Failed in transaction " + transactionID.to_string());
     }
-    logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string()
+    core::logging::LOG_INFO(logger_) << "Site2Site transaction " << transactionID.to_string()
         << " successfully send flow record " << transaction->current_transfers_ << " content bytes " << transaction->_bytes;
   } catch (std::exception &exception) {
     if (transaction)

@@ -38,8 +38,7 @@ HttpStream::HttpStream(std::shared_ptr<utils::HTTPClient> client)
       // given the nature of the stream we don't want to slow libCURL, we will produce
       // a warning instead allowing us to adjust it server side or through the local configuration.
       http_read_callback_(66560, true),
-      started_(false),
-      logger_(logging::LoggerFactory<HttpStream>::getLogger()) {
+      started_(false) {
   // submit early on
 }
 

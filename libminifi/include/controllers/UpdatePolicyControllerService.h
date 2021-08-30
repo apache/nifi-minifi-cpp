@@ -42,10 +42,7 @@ namespace controllers {
 class UpdatePolicyControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<UpdatePolicyControllerService> {
  public:
   explicit UpdatePolicyControllerService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
-        persist_updates_(false),
-        policy_(new state::UpdatePolicy(false)),
-        logger_(logging::LoggerFactory<UpdatePolicyControllerService>::getLogger()) {
+      : ControllerService(name, uuid) {
   }
 
   explicit UpdatePolicyControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
@@ -59,15 +56,15 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   MINIFIAPI static core::Property AllowedProperties;
   MINIFIAPI static core::Property DisallowedProperties;
 
-  void initialize();
+  void initialize() override;
 
-  void yield();
+  void yield() override;
 
-  bool isRunning();
+  bool isRunning() override;
 
-  bool isWorkAvailable();
+  bool isWorkAvailable() override;
 
-  void onEnable();
+  void onEnable() override;
 
   bool canUpdate(const std::string &property) const {
     return policy_->canUpdate(property);
@@ -78,9 +75,9 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   }
 
  private:
-  bool persist_updates_;
-  std::unique_ptr<state::UpdatePolicy> policy_;
-  std::shared_ptr<logging::Logger> logger_;
+  bool persist_updates_ = false;
+  std::unique_ptr<state::UpdatePolicy> policy_ = std::make_unique<state::UpdatePolicy>(false);
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdatePolicyControllerService>::getLogger();
 };
 
 }  // namespace controllers

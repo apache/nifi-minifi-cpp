@@ -44,10 +44,9 @@ namespace processors {
 class RetryFlowFile : public core::Processor {
  public:
   explicit RetryFlowFile(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
-        logger_(logging::LoggerFactory<RetryFlowFile>::getLogger()) {}
+      : Processor(name, uuid) {}
   // Destructor
-  virtual ~RetryFlowFile() = default;
+  ~RetryFlowFile() override = default;
   // Processor Name
   EXTENSIONAPI static constexpr char const* ProcessorName = "RetryFlowFile";
   // Supported Properties
@@ -103,7 +102,7 @@ class RetryFlowFile : public core::Processor {
   std::string reuse_mode_;
   std::vector<core::Property> exceeded_flowfile_attribute_keys_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RetryFlowFile>::getLogger();
 };
 
 } /* namespace processors */

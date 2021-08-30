@@ -69,7 +69,7 @@ class ServerSocket : public BaseServerSocket, public Socket {
 
   std::thread server_read_thread_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace io

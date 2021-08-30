@@ -114,8 +114,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   explicit GetFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         metrics_(std::make_shared<GetFileMetrics>()),
-        last_listing_time_(0),
-        logger_(logging::LoggerFactory<GetFile>::getLogger()) {
+        last_listing_time_(0) {
   }
   // Destructor
   ~GetFile() override = default;
@@ -153,7 +152,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
 
   // Initialize, over write by NiFi GetFile
-  void initialize(void) override;
+  void initialize() override;
   /**
    * performs a listing on the directory.
    * @param request get file request.
@@ -178,7 +177,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   std::queue<std::string> directory_listing_;
   mutable std::mutex directory_listing_mutex_;
   std::atomic<uint64_t> last_listing_time_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger();
 };
 
 }  // namespace processors

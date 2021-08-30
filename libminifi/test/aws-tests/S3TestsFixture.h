@@ -45,7 +45,7 @@ class S3TestsFixture {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<T>();
     LogTestController::getInstance().setDebug<minifi::aws::AWSCredentialsProvider>();
 
@@ -126,16 +126,16 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
   const std::string INPUT_DATA = "input_data";
 
   FlowProcessorS3TestsFixture() {
-    LogTestController::getInstance().setTrace<processors::GetFile>();
-    LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
+    LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
 
     auto input_dir = this->test_controller.createTempDirectory();
     std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + INPUT_FILENAME);
     input_file_stream << INPUT_DATA;
     input_file_stream.close();
     auto get_file = this->plan->addProcessor("GetFile", "GetFile");
-    this->plan->setProperty(get_file, processors::GetFile::Directory.getName(), input_dir);
-    this->plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
+    this->plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), input_dir);
+    this->plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
     update_attribute = this->plan->addProcessor(
       "UpdateAttribute",
       "UpdateAttribute",
@@ -151,7 +151,7 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
       "LogAttribute",
       core::Relationship("success", "d"),
       true);
-    this->plan->setProperty(log_attribute, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+    this->plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
   }
 
   void setAccesKeyCredentialsInProcessor() override {
@@ -193,7 +193,7 @@ class FlowProducerS3TestsFixture : public S3TestsFixture<T> {
       "LogAttribute",
       core::Relationship("success", "d"),
       true);
-    this->plan->setProperty(log_attribute, processors::LogAttribute::FlowFilesToLog.getName(), "0");
+    this->plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
   }
 
   void setAccesKeyCredentialsInProcessor() override {

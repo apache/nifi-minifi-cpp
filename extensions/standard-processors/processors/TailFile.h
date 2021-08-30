@@ -82,8 +82,7 @@ SMART_ENUM(InitialStartPositions,
 class TailFile : public core::Processor {
  public:
   explicit TailFile(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid),
-        logger_(logging::LoggerFactory<TailFile>::getLogger()) {
+      : core::Processor(name, uuid) {
   }
 
   ~TailFile() override = default;
@@ -186,7 +185,7 @@ class TailFile : public core::Processor {
   std::string rolling_filename_pattern_;
   InitialStartPositions initial_start_position_;
   bool first_trigger_{true};
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
 
 }  // namespace processors

@@ -36,8 +36,7 @@ RocksDbStream::RocksDbStream(std::string path, gsl::not_null<minifi::internal::R
       path_(std::move(path)),
       write_enable_(write_enable),
       db_(db),
-      batch_(batch),
-      logger_(logging::LoggerFactory<RocksDbStream>::getLogger()) {
+      batch_(batch) {
   auto opendb = db_->open();
   exists_ = opendb && opendb->Get(rocksdb::ReadOptions(), path_, &value_).ok();
   offset_ = 0;

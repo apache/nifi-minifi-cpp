@@ -165,7 +165,6 @@ class ArchiveMerge {
     WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer)
         : merge_type_(merge_type),
           flows_(flows),
-          logger_(logging::LoggerFactory<ArchiveMerge>::getLogger()),
           serializer_(serializer) {
       size_ = 0;
       stream_ = nullptr;
@@ -176,7 +175,7 @@ class ArchiveMerge {
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     std::shared_ptr<io::BaseStream> stream_;
     size_t size_;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ArchiveMerge>::getLogger();
     FlowFileSerializer& serializer_;
 
     static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
@@ -305,8 +304,7 @@ class MergeContent : public processors::BinFiles {
    * Create a new processor
    */
   explicit MergeContent(const std::string& name, const utils::Identifier& uuid = {})
-      : processors::BinFiles(name, uuid),
-        logger_(logging::LoggerFactory<MergeContent>::getLogger()) {
+      : processors::BinFiles(name, uuid) {
     mergeStrategy_ = merge_content_options::MERGE_STRATEGY_DEFRAGMENT;
     mergeFormat_ = merge_content_options::MERGE_FORMAT_CONCAT_VALUE;
     delimiterStrategy_ = merge_content_options::DELIMITER_STRATEGY_FILENAME;
@@ -358,7 +356,7 @@ class MergeContent : public processors::BinFiles {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MergeContent>::getLogger();
   std::string mergeStrategy_;
   std::string mergeFormat_;
   std::string correlationAttributeName_;

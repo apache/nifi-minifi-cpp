@@ -32,6 +32,7 @@
 #include "processors/ExecuteSQL.h"
 #include "processors/QueryDatabaseTable.h"
 #include "SQLTestPlan.h"
+#include "Path.h"
 
 #ifdef USE_REAL_ODBC_TEST_DRIVER
 #include "services/ODBCConnector.h"
@@ -56,12 +57,12 @@ class SQLTestController : public TestController {
  public:
   SQLTestController() {
     LogTestController::getInstance().setTrace<TestPlan>();
-    LogTestController::getInstance().setTrace<processors::GenerateFlowFile>();
-    LogTestController::getInstance().setTrace<processors::UpdateAttribute>();
-    LogTestController::getInstance().setTrace<processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<processors::PutSQL>();
-    LogTestController::getInstance().setTrace<processors::ExecuteSQL>();
-    LogTestController::getInstance().setTrace<processors::QueryDatabaseTable>();
+    LogTestController::getInstance().setTrace<minifi::processors::GenerateFlowFile>();
+    LogTestController::getInstance().setTrace<minifi::processors::UpdateAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
+    LogTestController::getInstance().setTrace<minifi::processors::PutSQL>();
+    LogTestController::getInstance().setTrace<minifi::processors::ExecuteSQL>();
+    LogTestController::getInstance().setTrace<minifi::processors::QueryDatabaseTable>();
 
     test_dir_ = createTempDirectory();
     database_ = test_dir_ / "test.db";

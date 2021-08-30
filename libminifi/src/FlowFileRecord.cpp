@@ -38,7 +38,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-std::shared_ptr<logging::Logger> FlowFileRecord::logger_ = logging::LoggerFactory<FlowFileRecord>::getLogger();
+std::shared_ptr<core::logging::Logger> FlowFileRecord::logger_ = core::logging::LoggerFactory<FlowFileRecord>::getLogger();
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
 
 FlowFileRecord::FlowFileRecord() {
@@ -56,7 +56,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
     logger_->log_error("NiFi FlowFile Store event %s can not found", key);
     return nullptr;
   }
-  io::BufferStream stream((const uint8_t*) value.data(), gsl::narrow<int>(value.length()));
+  io::BufferStream stream((const uint8_t*) value.data(), value.length());
 
   auto record = DeSerialize(stream, content_repo, container);
 

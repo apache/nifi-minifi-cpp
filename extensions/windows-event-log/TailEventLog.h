@@ -40,7 +40,7 @@ const char log_name[255] = "Application";
 class TailEventLog : public core::Processor {
  public:
   explicit TailEventLog(const std::string& name, const utils::Identifier& uuid = {})
-  : core::Processor(name, uuid), logger_(logging::LoggerFactory<TailEventLog>::getLogger()), max_events_(1) {
+      : core::Processor(name, uuid) {
   }
   virtual ~TailEventLog() = default;
   static const std::string ProcessorName;
@@ -129,13 +129,13 @@ class TailEventLog : public core::Processor {
  private:
   std::mutex log_mutex_;
   std::string log_source_;
-  uint32_t max_events_;
+  uint32_t max_events_ = 1;
   DWORD current_record_;
   DWORD num_records_;
 
   HANDLE log_handle_;
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailEventLog>::getLogger();
 };
 
 } /* namespace processors */

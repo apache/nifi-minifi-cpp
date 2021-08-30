@@ -152,8 +152,7 @@ class FlowControlProtocol {
   /*!
    * Create a new control protocol
    */
-  FlowControlProtocol(FlowController *controller, const std::shared_ptr<Configure> &configure)
-      : logger_(logging::LoggerFactory<FlowControlProtocol>::getLogger()) {
+  FlowControlProtocol(FlowController *controller, const std::shared_ptr<Configure> &configure) {
     _controller = controller;
     _socket = 0;
     _serverName = "localhost";
@@ -251,7 +250,7 @@ class FlowControlProtocol {
   }
 
   std::mutex mutex_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowControlProtocol>::getLogger();
   // NiFi server Name
   std::string _serverName;
   // NiFi server port

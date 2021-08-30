@@ -20,11 +20,17 @@
 #include <memory>
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
+
+CoreComponent::CoreComponent(const std::string& name, const utils::Identifier& uuid, const std::shared_ptr<utils::IdGenerator>& idGenerator)
+    : name_(name) {
+  if (uuid.isNil()) {
+    // Generate the global UUID for the flow record
+    uuid_ = idGenerator->generate();
+  } else {
+    uuid_ = uuid;
+  }
+}
 
 // Set UUID
 void CoreComponent::setUUID(const utils::Identifier& uuid) {
@@ -44,8 +50,5 @@ void CoreComponent::setName(const std::string &name) {
 std::string CoreComponent::getName() const {
   return name_;
 }
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+
+} /* namespace org::apache::nifi::minifi::core */

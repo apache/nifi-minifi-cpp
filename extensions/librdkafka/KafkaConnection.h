@@ -79,7 +79,7 @@ class KafkaConnection {
   static void logCallback(const rd_kafka_t* rk, int level, const char* /*fac*/, const char* buf);
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 
   bool initialized_;
 
@@ -92,9 +92,9 @@ class KafkaConnection {
   std::atomic<bool> poll_;
   std::thread thread_kafka_poll_;
 
-  static void modifyLoggers(const std::function<void(std::unordered_map<const rd_kafka_t*, std::weak_ptr<logging::Logger>>&)>& func) {
+  static void modifyLoggers(const std::function<void(std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>>&)>& func) {
     static std::mutex loggers_mutex;
-    static std::unordered_map<const rd_kafka_t*, std::weak_ptr<logging::Logger>> loggers;
+    static std::unordered_map<const rd_kafka_t*, std::weak_ptr<core::logging::Logger>> loggers;
 
     std::lock_guard<std::mutex> lock(loggers_mutex);
     func(loggers);

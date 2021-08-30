@@ -22,6 +22,8 @@
 #include <string>
 #include <regex>
 
+#include "io/ClientSocket.h"
+
 /**
 This function, unfortunately, assumes that we're parsing http components of a local host. On windows this is problematic
 so we convert localhost to our local hostname.

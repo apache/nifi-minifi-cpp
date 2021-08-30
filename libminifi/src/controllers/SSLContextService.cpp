@@ -30,8 +30,8 @@
 #endif  // OPENSSL_SUPPORT
 
 #include <fstream>
-#include <string>
 #include <memory>
+#include <string>
 #include <set>
 
 #include "core/Property.h"
@@ -145,7 +145,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
     }
 
     if (!SSL_CTX_check_private_key(ctx)) {
-      logging::LOG_ERROR(logger_) << "Private key does not match the public certificate, " << getLatestOpenSSLErrorString();
+      core::logging::LOG_ERROR(logger_) << "Private key does not match the public certificate, " << getLatestOpenSSLErrorString();
       return false;
     }
   }
@@ -154,7 +154,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
 
   if (!IsNullOrEmpty(ca_certificate_)) {
     if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0) == 0) {
-      logging::LOG_ERROR(logger_) << "Cannot load CA certificate, exiting, " << getLatestOpenSSLErrorString();
+      core::logging::LOG_ERROR(logger_) << "Cannot load CA certificate, exiting, " << getLatestOpenSSLErrorString();
       return false;
     }
   }
@@ -178,17 +178,17 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
   const auto fp_deleter = [](BIO* ptr) { BIO_free(ptr); };
   std::unique_ptr<BIO, decltype(fp_deleter)> fp(BIO_new(BIO_s_file()), fp_deleter);
   if (fp == nullptr) {
-    logging::LOG_ERROR(logger_) << "Failed create new file BIO, " << getLatestOpenSSLErrorString();
+    core::logging::LOG_ERROR(logger_) << "Failed create new file BIO, " << getLatestOpenSSLErrorString();
     return false;
   }
   if (BIO_read_filename(fp.get(), certificate_.c_str()) <= 0) {
-    logging::LOG_ERROR(logger_) << "Failed to read certificate file " << certificate_ << ", " << getLatestOpenSSLErrorString();
+    core::logging::LOG_ERROR(logger_) << "Failed to read certificate file " << certificate_ << ", " << getLatestOpenSSLErrorString();
     return false;
   }
   const auto p12_deleter = [](PKCS12* ptr) { PKCS12_free(ptr); };
   std::unique_ptr<PKCS12, decltype(p12_deleter)> p12(d2i_PKCS12_bio(fp.get(), nullptr), p12_deleter);
   if (p12 == nullptr) {
-    logging::LOG_ERROR(logger_) << "Failed to DER decode certificate file " << certificate_ << ", " << getLatestOpenSSLErrorString();
+    core::logging::LOG_ERROR(logger_) << "Failed to DER decode certificate file " << certificate_ << ", " << getLatestOpenSSLErrorString();
     return false;
   }
 
@@ -196,7 +196,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
   X509* cert = nullptr;
   STACK_OF(X509)* ca = nullptr;
   if (!PKCS12_parse(p12.get(), passphrase_.c_str(), &pkey, &cert, &ca)) {
-    logging::LOG_ERROR(logger_) << "Failed to parse certificate file " << certificate_ << " as PKCS#12, " << getLatestOpenSSLErrorString();
+    core::logging::LOG_ERROR(logger_) << "Failed to parse certificate file " << certificate_ << " as PKCS#12, " << getLatestOpenSSLErrorString();
     return false;
   }
   utils::tls::EVP_PKEY_unique_ptr pkey_ptr{pkey};
@@ -204,19 +204,19 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
   const auto ca_deleter = gsl::finally([ca] { sk_X509_pop_free(ca, X509_free); });
 
   if (SSL_CTX_use_certificate(ctx, cert) != 1) {
-    logging::LOG_ERROR(logger_) << "Failed to set certificate from " << certificate_ << ", " << getLatestOpenSSLErrorString();
+    core::logging::LOG_ERROR(logger_) << "Failed to set certificate from " << certificate_ << ", " << getLatestOpenSSLErrorString();
     return false;
   }
   while (ca != nullptr && sk_X509_num(ca) > 0) {
     utils::tls::X509_unique_ptr cacert{sk_X509_pop(ca)};
     if (SSL_CTX_add_extra_chain_cert(ctx, cacert.get()) != 1) {
-      logging::LOG_ERROR(logger_) << "Failed to set additional certificate from " << certificate_ << ", " << getLatestOpenSSLErrorString();
+      core::logging::LOG_ERROR(logger_) << "Failed to set additional certificate from " << certificate_ << ", " << getLatestOpenSSLErrorString();
       return false;
     }
     cacert.release();  // a successful SSL_CTX_add_extra_chain_cert() takes ownership of cacert
   }
   if (SSL_CTX_use_PrivateKey(ctx, pkey) != 1) {
-    logging::LOG_ERROR(logger_) << "Failed to set private key from " << certificate_ << ", " << getLatestOpenSSLErrorString();
+    core::logging::LOG_ERROR(logger_) << "Failed to set private key from " << certificate_ << ", " << getLatestOpenSSLErrorString();
     return false;
   }
 
@@ -225,7 +225,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
 
 bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   if (SSL_CTX_use_certificate_chain_file(ctx, certificate_.c_str()) <= 0) {
-    logging::LOG_ERROR(logger_) << "Could not load client certificate " << certificate_ << ", " << getLatestOpenSSLErrorString();
+    core::logging::LOG_ERROR(logger_) << "Could not load client certificate " << certificate_ << ", " << getLatestOpenSSLErrorString();
     return false;
   }
 
@@ -238,7 +238,7 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   if (!IsNullOrEmpty(private_key_)) {
     int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
     if (retp != 1) {
-      logging::LOG_ERROR(logger_) << "Could not load private key, " << retp << " on " << private_key_ << ", " << getLatestOpenSSLErrorString();
+      core::logging::LOG_ERROR(logger_) << "Could not load private key, " << retp << " on " << private_key_ << ", " << getLatestOpenSSLErrorString();
       return false;
     }
   }
@@ -411,7 +411,7 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
     return nullptr;
   }
 
-  return std::unique_ptr<SSLContext>(new SSLContext(ctx));
+  return std::make_unique<SSLContext>(ctx);
 #else
   return nullptr;
 #endif

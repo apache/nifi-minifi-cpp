@@ -59,10 +59,7 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
    * Create a new processor
    */
   explicit ExecuteJavaControllerService(const std::string& name, const utils::Identifier& uuid = {})
-      : ConfigurationContext(name, uuid),
-        contextInstance(nullptr),
-        clazzInstance(nullptr),
-        logger_(logging::LoggerFactory<ExecuteJavaControllerService>::getLogger()) {
+      : ConfigurationContext(name, uuid) {
   }
   // Destructor
   virtual ~ExecuteJavaControllerService();
@@ -137,17 +134,17 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
  private:
   minifi::jni::JniConfigurationContext config_context_;
 
-  jobject contextInstance;
+  jobject contextInstance = nullptr;
 
   JavaClass current_cs_class;
 
-  jobject clazzInstance;
+  jobject clazzInstance = nullptr;
 
   std::shared_ptr<controllers::JavaControllerService> java_servicer_;
 
   std::string class_name_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteJavaControllerService>::getLogger();
 };
 
 } /* namespace controllers */

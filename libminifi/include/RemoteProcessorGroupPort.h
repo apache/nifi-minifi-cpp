@@ -91,7 +91,7 @@ class RemoteProcessorGroupPort : public core::Processor {
         http_enabled_(false),
         bypass_rest_api_(false),
         ssl_service(nullptr),
-        logger_(logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()) {
+        logger_(core::logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()) {
     client_type_ = sitetosite::CLIENT_TYPE::RAW;
     stream_factory_ = stream_factory;
     protocol_uuid_ = uuid;
@@ -233,7 +233,7 @@ class RemoteProcessorGroupPort : public core::Processor {
 
  private:
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };
 

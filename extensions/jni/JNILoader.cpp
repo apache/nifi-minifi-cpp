@@ -26,7 +26,7 @@ static minifi::jni::JVMCreator& getJVMCreator() {
   return instance;
 }
 
-static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& config) {
+static bool init(const std::shared_ptr<minifi::Configure>& config) {
   getJVMCreator().configure(config);
   return true;
 }

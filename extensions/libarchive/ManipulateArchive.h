@@ -35,15 +35,14 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-using logging::Logger;
+using core::logging::Logger;
 
 class ManipulateArchive : public core::Processor {
  public:
   explicit ManipulateArchive(const std::string& name, const utils::Identifier& uuid = {})
-  : core::Processor(name, uuid),
-    logger_(logging::LoggerFactory<ManipulateArchive>::getLogger()) {
+      : core::Processor(name, uuid) {
   }
-  virtual ~ManipulateArchive() = default;
+  ~ManipulateArchive() override = default;
   EXTENSIONAPI static constexpr char const* ProcessorName = "ManipulateArchive";
 
   // Supported operations
@@ -63,14 +62,14 @@ class ManipulateArchive : public core::Processor {
   EXTENSIONAPI static core::Relationship Failure;
 
   // OnTrigger method, implemented by NiFi ManipulateArchive
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session);
-  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory);
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   // Initialize, over write by NiFi ManipulateArchive
-  void initialize(void);
+  void initialize() override;
 
  private:
   // Logger
-  std::shared_ptr<Logger> logger_;
+  std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<ManipulateArchive>::getLogger();
   std::string before_, after_, operation_, destination_, targetEntry_;
 };
 

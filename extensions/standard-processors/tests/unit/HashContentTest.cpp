@@ -29,6 +29,7 @@
 #include "TestBase.h"
 #include "TestUtils.h"
 #include "core/Core.h"
+#include "unit/ProvenanceTestHelper.h"
 
 #include "core/FlowFile.h"
 #include "core/Processor.h"
@@ -131,7 +132,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
 }
 
 TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
-  using processors::HashContent;
+  using minifi::processors::HashContent;
   TestController testController;
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GetFile>();

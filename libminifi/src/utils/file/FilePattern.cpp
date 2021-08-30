@@ -217,7 +217,7 @@ auto FilePattern::FilePatternSegment::match(const std::filesystem::path& path) c
   return match(path.parent_path().string());
 }
 
-static std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<FilePattern>::getLogger();
+static std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<FilePattern>::getLogger();
 
 std::set<std::filesystem::path> match(const FilePattern& pattern) {
   using FilePatternSegment = FilePattern::FilePatternSegment;

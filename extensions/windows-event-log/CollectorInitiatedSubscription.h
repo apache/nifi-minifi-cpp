@@ -84,7 +84,7 @@ class CollectorInitiatedSubscription : public core::Processor {
 
  private:
   // Logger
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
   moodycamel::ConcurrentQueue<std::string> renderedXMLs_;
   std::string provenanceUri_;
   std::string computerName_;

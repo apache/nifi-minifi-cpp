@@ -28,7 +28,7 @@ namespace extension {
 
 class Executable : public Module {
  public:
-  Executable(): Module("executable") {}
+  Executable() : Module("executable") {}
   ~Executable() override = default;
 };
 

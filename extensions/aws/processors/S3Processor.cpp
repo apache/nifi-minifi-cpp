@@ -23,6 +23,7 @@
 #include <string>
 #include <set>
 #include <memory>
+#include <utility>
 
 #include "S3Wrapper.h"
 #include "AWSCredentialsService.h"
@@ -114,14 +115,14 @@ const core::Property S3Processor::UseDefaultCredentials(
     ->isRequired(true)
     ->build());
 
-S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
+S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
   : core::Processor(name, uuid),
-    logger_(logger) {
+    logger_(std::move(logger)) {
 }
 
-S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
+S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
   : core::Processor(name, uuid),
-    logger_(logger),
+    logger_(std::move(logger)),
     s3_wrapper_(std::move(s3_request_sender)) {
 }
 
