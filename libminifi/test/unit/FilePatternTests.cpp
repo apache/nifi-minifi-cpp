@@ -139,10 +139,6 @@ TEST_CASE("Matching files with trailing double asterisk") {
   REQUIRE_INCLUDE(pattern.match(root / "one" / "banana" / "file.txt"));
 }
 
-std::set<std::filesystem::path> as_set(const std::vector<std::filesystem::path>& files) {
-  return {files.begin(), files.end()};
-}
-
 TEST_CASE("Matching directory with exclusion") {
   TestController controller;
   std::filesystem::path root{controller.createTempDirectory()};
@@ -175,19 +171,19 @@ TEST_CASE("Matching directory with exclusion") {
 
   // match all
   auto matched_files = fileutils::match(FilePattern((root / "**").string()));
-  REQUIRE(as_set(matched_files) == files);
+  REQUIRE(matched_files == files);
 
   // match txt files
   matched_files = fileutils::match(FilePattern((root / "**" / "*.txt").string()));
-  REQUIRE((as_set(matched_files) == std::set<std::filesystem::path>{file1, file2, file4, file5, file6}));
+  REQUIRE((matched_files == std::set<std::filesystem::path>{file1, file2, file4, file5, file6}));
 
   // match everything in /one, but not in /one/apple
   matched_files = fileutils::match(FilePattern((root / "one" / "**").string() + ",!" + (root / "one" / "apple" / "**").string()));
-  REQUIRE((as_set(matched_files) == std::set<std::filesystem::path>{file2, file5}));
+  REQUIRE((matched_files == std::set<std::filesystem::path>{file2, file5}));
 
   // match everything in /one/banana, and in /two
   matched_files = fileutils::match(FilePattern((root / "one" / "banana" / "**").string() + "," + (root / "two" / "**").string()));
-  REQUIRE((as_set(matched_files) == std::set<std::filesystem::path>{file5, file6}));
+  REQUIRE((matched_files == std::set<std::filesystem::path>{file5, file6}));
 
   // match everything in / not in /one, /two but in /one/apple
   matched_files = fileutils::match(FilePattern(
@@ -195,19 +191,19 @@ TEST_CASE("Matching directory with exclusion") {
       ",!" + (root / "one" / "**").string() +
       "," + (root / "one" / "apple" / "**").string() +
       ",!" + (root / "two" / "**").string()));
-  REQUIRE((as_set(matched_files) == std::set<std::filesystem::path>{file3, file4}));
+  REQUIRE((matched_files == std::set<std::filesystem::path>{file3, file4}));
 
   // exclude a single file
   matched_files = fileutils::match(FilePattern((root / "one" / "apple" / "**").string() + ",!" + (root / "one" / "apple" / "file3.jpg").string()));
-  REQUIRE((as_set(matched_files) == std::set<std::filesystem::path>{file4}));
+  REQUIRE((matched_files == std::set<std::filesystem::path>{file4}));
 
   // exclude by file extension
   matched_files = fileutils::match(FilePattern((root / "**").string() + ",!" + (root / "**" / "*.txt").string()));
-  REQUIRE((as_set(matched_files) == std::set<std::filesystem::path>{file3}));
+  REQUIRE((matched_files == std::set<std::filesystem::path>{file3}));
 
   // exclude files with name "*tx*" (everything except the jpg)
   matched_files = fileutils::match(FilePattern((root / "**").string() + ",!" + (root / "**" / "*tx*").string()));
-  REQUIRE((as_set(matched_files) == std::set<std::filesystem::path>{file3}));
+  REQUIRE((matched_files == std::set<std::filesystem::path>{file3}));
 }
 
 TEST_CASE("Excluding directories with directory-tree exclusion") {

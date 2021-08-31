@@ -22,6 +22,7 @@
 #include <utility>
 #include <memory>
 #include <filesystem>
+#include <set>
 
 #include "utils/OptionalUtils.h"
 #include "core/logging/Logger.h"
@@ -43,7 +44,7 @@ class FilePatternError : public std::invalid_argument {
 class FilePattern {
   friend struct ::FilePatternTestAccessor;
 
-  friend std::vector<std::filesystem::path> match(const FilePattern& pattern);
+  friend std::set<std::filesystem::path> match(const FilePattern& pattern);
 
   class FilePatternSegmentError : public std::invalid_argument {
    public:
@@ -107,7 +108,7 @@ class FilePattern {
   std::vector<FilePatternSegment> segments_;
 };
 
-std::vector<std::filesystem::path> match(const FilePattern& pattern);
+std::set<std::filesystem::path> match(const FilePattern& pattern);
 
 }  // namespace file
 }  // namespace utils
