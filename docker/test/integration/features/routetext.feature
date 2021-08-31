@@ -15,8 +15,8 @@ Feature: Processing log files line-by-line using RouteText
     And the "success" relationship of the GetFile processor is connected to the RouteText
     And the "Info" relationship of the RouteText processor is connected to the UpdateInfo
     And the "Warning" relationship of the RouteText processor is connected to the UpdateWarning
-    And the "success" relationship of the UpdateInfo processor is connected to PutFile
-    And the "success" relationship of the UpdateWarning processor is connected to PutFile
+    And the "success" relationship of the UpdateInfo processor is connected to the PutFile
+    And the "success" relationship of the UpdateWarning processor is connected to the PutFile
     When the MiNiFi instance starts up
     Then a flowfile with the content "[INFO] one\n[INFO] three\n" is placed in the monitored directory in less than 10 seconds
     Then a flowfile with the content "[WARNING] two\n[WARNING] four\n" is placed in the monitored directory in less than 10 seconds
