@@ -55,7 +55,11 @@ std::string StringUtils::trim(const std::string& s) {
 std::string_view StringUtils::trim(const std::string_view& sv) {
   auto begin = std::find_if(sv.begin(), sv.end(), [](unsigned char c) -> bool { return !isspace(c); });
   auto end = std::find_if(sv.rbegin(), std::reverse_iterator(begin), [](unsigned char c) -> bool { return !isspace(c); }).base();
-  return std::string_view(begin, std::distance(begin, end));
+  // c++20 iterator constructor
+  // return std::string_view(begin, end);
+  // but for now
+  // on windows std::string_view::const_iterator is not a const char*
+  return std::string_view(sv.begin() + std::distance(sv.begin(), begin), std::distance(begin, end));
 }
 
 std::string_view StringUtils::trim(const char* str) {

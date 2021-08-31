@@ -21,6 +21,10 @@
 #include "RouteText.h"
 
 #include <map>
+#include <vector>
+#include <utility>
+#include <algorithm>
+#include <set>
 
 #include "logging/LoggerConfiguration.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -70,9 +74,10 @@ const core::Property RouteText::IgnoreCase(
 const core::Property RouteText::GroupingRegex(
     core::PropertyBuilder::createProperty("Grouping Regular Expression")
     ->withDescription("Specifies a Regular Expression to evaluate against each segment to determine which Group it should be placed in. "
-                      "The Regular Expression must have at least one Capturing Group that defines the segment's Group. If multiple Capturing Groups exist in the Regular Expression, the values from all "
-                      "Capturing Groups will be concatenated together. Two segments will not be placed into the same FlowFile unless they both have the same value for the Group "
-                      "(or neither matches the Regular Expression). For example, to group together all lines in a CSV File by the first column, we can set this value to \"(.*?),.*\" (and use \"Per Line\" segmentation). "
+                      "The Regular Expression must have at least one Capturing Group that defines the segment's Group. If multiple Capturing Groups "
+                      "exist in the Regular Expression, the values from all Capturing Groups will be concatenated together. Two segments will not be "
+                      "placed into the same FlowFile unless they both have the same value for the Group (or neither matches the Regular Expression). "
+                      "For example, to group together all lines in a CSV File by the first column, we can set this value to \"(.*?),.*\" (and use \"Per Line\" segmentation). "
                       "Two segments that have the same Group but different Relationships will never be placed into the same FlowFile.")
     ->build());
 
@@ -129,6 +134,7 @@ void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFa
 
 class RouteText::ReadCallback : public InputStreamCallback {
   using Fn = std::function<void(Segment)>;
+
  public:
   explicit ReadCallback(Segmentation segmentation, Fn&& fn) : segmentation_(segmentation), fn_(std::move(fn)) {}
 
@@ -409,4 +415,4 @@ REGISTER_RESOURCE(RouteText, "Routes textual data based on a set of user-defined
                              "to these user-defined properties is defined by the 'Matching Strategy'. The data is then routed according to "
                              "these rules, routing each segment of the text individually.");
 
-}  // org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors

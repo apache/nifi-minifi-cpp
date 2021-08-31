@@ -23,6 +23,9 @@
 #include <regex>
 #include <optional>
 #include <string_view>
+#include <map>
+#include <string>
+#include <memory>
 
 #include "Processor.h"
 #include "utils/Enum.h"
@@ -115,4 +118,4 @@ class RouteText : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors
