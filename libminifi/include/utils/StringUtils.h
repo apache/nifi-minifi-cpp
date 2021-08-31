@@ -108,6 +108,8 @@ class StringUtils {
 
   static std::string_view trim(const std::string_view& sv);
 
+  static std::string_view trim(const char* str);
+
   /**
    * Compares strings by lower casing them.
    */
@@ -159,38 +161,28 @@ class StringUtils {
 
   static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string);
 
-  inline static bool endsWithIgnoreCase(const std::string &value, const std::string & endString) {
-    if (endString.size() > value.size())
-      return false;
-    return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
-  }
-
-  inline static bool startsWith(const std::string& value, const std::string& start_string) {
-    if (start_string.size() > value.size())
-      return false;
-    return std::equal(start_string.begin(), start_string.end(), value.begin());
-  }
-
   inline static bool startsWith(const std::string_view& value, const std::string_view& start, bool case_sensitive = true) {
-    if (case_sensitive) {
-      return value.starts_with(start);
+    if (start.length() > value.length()) {
+      return false;
     }
-    if (start.length() > value.length()) return false;
+    if (case_sensitive) {
+      return std::equal(start.begin(), start.end(), value.begin());
+    }
     return std::equal(start.begin(), start.end(), value.begin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
-  inline static bool endsWith(const std::string& value, const std::string& end_string) {
-    if (end_string.size() > value.size())
+  inline static bool endsWith(const std::string_view& value, const std::string_view& end, bool case_sensitive = true) {
+    if (end.length() > value.length()) {
       return false;
-    return std::equal(end_string.rbegin(), end_string.rend(), value.rbegin());
+    }
+    if (case_sensitive) {
+      return std::equal(end.rbegin(), end.rend(), value.rbegin());
+    }
+    return std::equal(end.rbegin(), end.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
-  inline static bool endsWith(const std::string_view& value, const std::string_view& end, bool case_sensitive = true) {
-    if (case_sensitive) {
-      return value.ends_with(end);
-    }
-    if (end.length() > value.length()) return false;
-    return std::equal(end.rbegin(), end.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
+  inline static bool endsWithIgnoreCase(const std::string_view& value, const std::string_view& endString) {
+    return endsWith(value, endString, false);
   }
 
   inline static std::string_view::size_type find(const std::string_view& value, const std::string_view& target, bool case_sensitive = true) {

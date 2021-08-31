@@ -54,8 +54,12 @@ std::string StringUtils::trim(const std::string& s) {
 
 std::string_view StringUtils::trim(const std::string_view& sv) {
   auto begin = std::find_if(sv.begin(), sv.end(), [](unsigned char c) -> bool { return !isspace(c); });
-  auto end = std::find_if(sv.rbegin(), sv.rend(), [](unsigned char c) -> bool { return !isspace(c); }).base();
+  auto end = std::find_if(sv.rbegin(), std::reverse_iterator(begin), [](unsigned char c) -> bool { return !isspace(c); }).base();
   return std::string_view(begin, std::distance(begin, end));
+}
+
+std::string_view StringUtils::trim(const char* str) {
+  return trim(std::string_view(str));
 }
 
 template<typename Fun>

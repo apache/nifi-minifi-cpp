@@ -162,6 +162,7 @@ TEST_CASE("TestStringUtils::testJoin", "[test string join]") {
 }
 
 TEST_CASE("TestStringUtils::trim", "[test trim]") {
+  REQUIRE("" == StringUtils::trim(""));
   REQUIRE("" == StringUtils::trim(" \n\t"));
   REQUIRE("foobar" == StringUtils::trim("foobar"));
   REQUIRE("foo bar" == StringUtils::trim("foo bar"));
