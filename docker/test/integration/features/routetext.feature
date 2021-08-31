@@ -9,8 +9,8 @@ Feature: Processing log files line-by-line using RouteText
     And the "Matching Strategy" property of the RouteText processor is set to "Starts With"
     And the "Info" property of the RouteText processor is set to "[INFO]"
     And the "Warning" property of the RouteText processor is set to "[WARNING]"
-    And a UpdateAttribute with the name "UpdateInfo" and the "filename" property set to "info.txt"
-    And a UpdateAttribute with the name "UpdateWarning" and the "filename" property set to "warning.txt"
+    And a UpdateAttribute processor with the name "UpdateInfo" and the "filename" property set to "info.txt"
+    And a UpdateAttribute processor with the name "UpdateWarning" and the "filename" property set to "warning.txt"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the RouteText
     And the "Info" relationship of the RouteText processor is connected to the UpdateInfo
