@@ -84,7 +84,6 @@ const core::Property RouteText::GroupingRegex(
 const core::Property RouteText::GroupingFallbackValue(
     core::PropertyBuilder::createProperty("Grouping Fallback Value")
     ->withDescription("If the 'Grouping Regular Expression' is specified and the matching fails, this value will be considered the group of the segment.")
-    ->isRequired(true)
     ->withDefaultValue<std::string>("")
     ->build());
 
