@@ -40,8 +40,8 @@ function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             yaml-cpp-external
-            GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
-            GIT_TAG "yaml-cpp-0.7.0"
+            URL "https://github.com/jbeder/yaml-cpp/archive/refs/tags/yaml-cpp-0.7.0.tar.gz"
+            URL_HASH "SHA256=43e6a9fcb146ad871515f0d0873947e5d497a1c9c60c58cb102a97b47208b7c3"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/yaml-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/yaml-cpp-install"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
