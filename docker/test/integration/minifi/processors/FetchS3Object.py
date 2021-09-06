@@ -20,4 +20,4 @@ class FetchS3Object(Processor):
                 'Proxy Username': proxy_username,
                 'Proxy Password': proxy_password,
             },
-            auto_terminate=['failure'])
+            auto_terminate=['success', 'failure'])
