@@ -22,7 +22,7 @@ class Container:
         try:
             self.client.containers.get(self.name).remove(v=True, force=True)
         except docker.errors.NotFound:
-            logging.warn("Container '%s' has been cleaned up already, nothing to be done.", self.name)
+            logging.warning("Container '%s' has been cleaned up already, nothing to be done.", self.name)
             pass
 
     def set_deployed(self):

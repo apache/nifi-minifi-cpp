@@ -59,7 +59,7 @@ class SingleNodeDockerCluster(Cluster):
 
         if name is None and (engine == 'nifi' or engine == 'minifi-cpp'):
             name = engine + '-' + str(uuid.uuid4())
-            logging.info('Container name was not provided; using generated name \'%s\'', self.name)
+            logging.info('Container name was not provided; using generated name \'%s\'', name)
 
         if engine == 'nifi':
             return self.containers.setdefault(name, NifiContainer(self.data_directories["nifi_config_dir"], name, self.vols, self.network, self.image_store))
@@ -78,7 +78,7 @@ class SingleNodeDockerCluster(Cluster):
         elif engine == 'postgresql-server':
             return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network, self.image_store))
         else:
-            raise Exception('invalid flow engine: \'%s\'' % self.engine)
+            raise Exception('invalid flow engine: \'%s\'' % engine)
 
     def deploy(self, name):
         if name is None or name not in self.containers:

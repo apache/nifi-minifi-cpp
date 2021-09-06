@@ -30,7 +30,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             return 'not started', None
 
         if b'Segmentation fault' in container.logs():
-            logging.warn('Container segfaulted: %s', container.name)
+            logging.warning('Container segfaulted: %s', container.name)
             self.segfault = True
 
         log_file_path = self.containers[container_name].get_log_file_path()

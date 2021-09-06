@@ -18,9 +18,9 @@ class ImageStore:
 
     def cleanup(self):
         # Clean up images
-        for image_id in self.images:
-            logging.info('Cleaning up image: %s', self.images[image_id].id)
-            self.client.images.remove(self.images[image_id].id, force=True)
+        for image in self.images.values():
+            logging.info('Cleaning up image: %s', image.id)
+            self.client.images.remove(image.id, force=True)
 
     def get_image(self, container_engine):
         if container_engine == "minifi-cpp":
