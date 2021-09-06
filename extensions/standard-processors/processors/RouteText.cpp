@@ -366,11 +366,11 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
       return utils::StringUtils::equals(segment.value_, context.getStringProperty(prop), !ignore_case_);
     }
     case Matching::CONTAINS_REGEX: {
-      std::cmatch match_result;
+      std::match_results<std::string_view::const_iterator> match_result;
       return std::regex_search(segment.value_.begin(), segment.value_.end(), match_result, context.getRegexProperty(prop));
     }
     case Matching::MATCHES_REGEX: {
-      std::cmatch match_result;
+      std::match_results<std::string_view::const_iterator> match_result;
       return std::regex_match(segment.value_.begin(), segment.value_.end(), match_result, context.getRegexProperty(prop));
     }
   }
@@ -381,12 +381,12 @@ std::optional<std::string> RouteText::getGroup(const std::string_view& segment) 
   if (!group_regex_) {
     return std::nullopt;
   }
-  std::cmatch match_result;
+  std::match_results<std::string_view::const_iterator> match_result;
   if (!std::regex_match(segment.begin(), segment.end(), match_result, group_regex_.value())) {
     return group_fallback_;
   }
-  // TODO(adebreceni): warn if some capturing groups are not used
-  auto to_string = [] (const std::cmatch::value_type& submatch) -> std::string {return submatch;};
+  // unused capturing groups default to empty string
+  auto to_string = [] (const auto& submatch) -> std::string {return submatch;};
   return ranges::views::tail(match_result)  // only join the capture groups
     | ranges::views::transform(to_string)
     | ranges::views::cache1
