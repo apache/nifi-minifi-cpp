@@ -18,6 +18,8 @@ from minifi.validators.NoContentCheckFileNumberValidator import NoContentCheckFi
 from minifi.validators.NumFileRangeValidator import NumFileRangeValidator
 from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutputValidator
 
+from minifi.core.utils import decode_escaped_str
+
 
 class MiNiFi_integration_test():
     def __init__(self, image_store):
@@ -104,6 +106,7 @@ class MiNiFi_integration_test():
         return input_port_node
 
     def add_test_data(self, path, test_data, file_name=str(uuid.uuid4())):
+        test_data = decode_escaped_str(test_data)
         self.docker_directory_bindings.put_file_to_docker_path(self.test_id, path, file_name, test_data.encode('utf-8'))
 
     def put_test_resource(self, file_name, contents):
@@ -121,7 +124,7 @@ class MiNiFi_integration_test():
         self.check_output(timeout_seconds, output_validator, 1)
 
     def check_for_single_file_with_content_generated(self, content, timeout_seconds):
-        output_validator = SingleFileOutputValidator(content)
+        output_validator = SingleFileOutputValidator(decode_escaped_str(content))
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1)
 
@@ -131,12 +134,12 @@ class MiNiFi_integration_test():
         self.check_output(timeout_seconds, output_validator, 1)
 
     def check_for_multiple_files_generated(self, file_count, timeout_seconds, expected_content=[]):
-        output_validator = MultiFileOutputValidator(file_count, expected_content)
+        output_validator = MultiFileOutputValidator(file_count, [decode_escaped_str(content) for content in expected_content])
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, file_count)
 
     def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds):
-        output_validator = SingleOrMultiFileOutputValidator(content)
+        output_validator = SingleOrMultiFileOutputValidator(decode_escaped_str(content))
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
         self.check_output(timeout_seconds, output_validator, 1)
 

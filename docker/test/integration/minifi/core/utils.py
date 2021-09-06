@@ -16,3 +16,8 @@ def retry_check(max_tries=5, retry_interval=1):
             return False
         return retry_wrapper
     return retry_check_func
+
+def decode_escaped_str(str):
+    # encode('ascii') makes sure that we don't mess up unicode characters
+    # (as it throws if there are any)
+    return str.encode('ascii').decode('unicode_escape')
