@@ -21,8 +21,7 @@ jobs:
             macos-xcode12.0-ccache-refs/heads/main-
       - id: install_dependencies
         run: |
-          brew update
-          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc automake autoconf
+          brew install ossp-uuid boost flex lua@5.3 ccache sqliteodbc automake autoconf python
       - id: setup_env
         name: setup enviroment
         run: |
