@@ -19,6 +19,20 @@ def retry_check(max_tries=5, retry_interval=1):
 
 
 def decode_escaped_str(str):
-    # encode('ascii') makes sure that we don't mess up unicode characters
-    # (as it throws if there are any)
-    return str.encode('ascii').decode('unicode_escape')
+    special = {"n": "\n", "v": "\v", "t": "\t", "f": "\f", "r": "\r", "a": "\a", "\\": "\\"}
+    escaped = False
+    result = ""
+    for ch in str:
+        if escaped:
+            if ch in special:
+                result += special[ch]
+            else:
+                result += "\\" + ch
+            escaped = False
+        elif ch == "\\":
+            escaped = True
+        else:
+            result += ch
+    if escaped:
+        result += "\\"
+    return result
