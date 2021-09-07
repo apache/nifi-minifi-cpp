@@ -90,6 +90,11 @@ class RouteText : public core::Processor {
     (PER_LINE, "Per Line")
   )
 
+  enum class CasePolicy {
+    CASE_SENSITIVE,
+    IGNORE_CASE
+  };
+
   class ReadCallback;
 
   class MatchingContext;
@@ -107,8 +112,7 @@ class RouteText : public core::Processor {
   Matching matching_;
   Segmentation segmentation_;
   bool trim_{true};
-  // double negation but consistency with nifi
-  bool ignore_case_{false};
+  CasePolicy case_policy_{CasePolicy::CASE_SENSITIVE};
   std::optional<std::regex> group_regex_;
   std::string group_fallback_;
 

@@ -26,6 +26,16 @@
 #include <algorithm>
 #include <set>
 
+#ifdef __APPLE__
+#include <experimental/functional>
+template<typename It, typename Hash, typename Eq>
+using boyer_moore_searcher = std::experimental::boyer_moore_searcher<It, Hash, Eq>;
+#else
+#include <functional>
+template<typename It, typename Hash, typename Eq>
+using boyer_moore_searcher = std::boyer_moore_searcher<It, Hash, Eq>;
+#endif
+
 #include "logging/LoggerConfiguration.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/OptionalUtils.h"
@@ -125,7 +135,7 @@ void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFa
   routing_ = utils::parseEnumProperty<Routing>(*context, RoutingStrategy);
   matching_ = utils::parseEnumProperty<Matching>(*context, MatchingStrategy);
   context->getProperty(TrimWhitespace.getName(), trim_);
-  context->getProperty(IgnoreCase.getName(), ignore_case_);
+  case_policy_ = context->getProperty<bool>(IgnoreCase).value_or(false) ? CasePolicy::IGNORE_CASE : CasePolicy::CASE_SENSITIVE;
   group_regex_ = context->getProperty(GroupingRegex) | utils::map(to_regex);
   segmentation_ = utils::parseEnumProperty<Segmentation>(*context, SegmentationStrategy);
   context->getProperty(GroupingFallbackValue.getName(), group_fallback_);
@@ -204,11 +214,38 @@ class RouteText::ReadCallback : public InputStreamCallback {
 };
 
 class RouteText::MatchingContext {
+  struct CaseAwareHash {
+    explicit CaseAwareHash(CasePolicy policy): policy_(policy) {}
+    size_t operator()(char ch) const {
+      if (policy_ == CasePolicy::CASE_SENSITIVE) {
+        return static_cast<size_t>(ch);
+      }
+      return std::hash<int>{}(std::tolower(static_cast<unsigned char>(ch)));
+    }
+
+   private:
+    CasePolicy policy_;
+  };
+
+  struct CaseAwareEq {
+    explicit CaseAwareEq(CasePolicy policy): policy_(policy) {}
+    bool operator()(char a, char b) const {
+      if (policy_ == CasePolicy::CASE_SENSITIVE) {
+        return a == b;
+      }
+      return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+    }
+
+   private:
+    CasePolicy policy_;
+  };
+  using Searcher = boyer_moore_searcher<std::string::const_iterator, CaseAwareHash, CaseAwareEq>;
+
  public:
-  MatchingContext(core::ProcessContext& process_context, std::shared_ptr<core::FlowFile> flow_file, bool ignore_case)
+  MatchingContext(core::ProcessContext& process_context, std::shared_ptr<core::FlowFile> flow_file, CasePolicy case_policy)
     : process_context_(process_context),
       flow_file_(std::move(flow_file)),
-      ignore_case_(ignore_case) {}
+      case_policy_(case_policy) {}
 
   const std::regex& getRegexProperty(const core::Property& prop) {
     auto it = regex_values_.find(prop.getName());
@@ -220,7 +257,9 @@ class RouteText::MatchingContext {
       throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
     }
     std::regex::flag_type flags = std::regex::ECMAScript;
-    if (ignore_case_) flags |= std::regex::icase;
+    if (case_policy_ == CasePolicy::IGNORE_CASE) {
+      flags |= std::regex::icase;
+    }
     return (regex_values_[prop.getName()] = std::regex(value, flags));
   }
 
@@ -236,12 +275,41 @@ class RouteText::MatchingContext {
     return (string_values_[prop.getName()] = value);
   }
 
+  const Searcher& getSearcher(const core::Property& prop) {
+    auto it = searcher_values_.find(prop.getName());
+    if (it != searcher_values_.end()) {
+      return it->second.searcher_;
+    }
+    std::string value;
+    if (!process_context_.getDynamicProperty(prop, value, flow_file_)) {
+      throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
+    }
+
+    return searcher_values_.emplace(
+        std::piecewise_construct, std::forward_as_tuple(prop.getName()),
+        std::forward_as_tuple(value, case_policy_)).first->second.searcher_;
+  }
+
   core::ProcessContext& process_context_;
   std::shared_ptr<core::FlowFile> flow_file_;
-  bool ignore_case_;
+  CasePolicy case_policy_;
 
   std::map<std::string, std::string> string_values_;
   std::map<std::string, std::regex> regex_values_;
+
+  struct OwningSearcher {
+    explicit OwningSearcher(std::string str, CasePolicy case_policy)
+      : str_(std::move(str)), searcher_(str_.cbegin(), str_.cend(), CaseAwareHash{case_policy}, CaseAwareEq{case_policy}) {}
+    OwningSearcher(const OwningSearcher&) = delete;
+    OwningSearcher(OwningSearcher&&) = delete;
+    OwningSearcher& operator=(const OwningSearcher&) = delete;
+    OwningSearcher& operator=(OwningSearcher&&) = delete;
+
+    std::string str_;
+    Searcher searcher_;
+  };
+
+  std::map<std::string, OwningSearcher> searcher_values_;
 };
 
 void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -254,7 +322,7 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
   using GroupName = std::string;
   std::map<std::pair<core::Relationship, std::optional<GroupName>>, std::string> flow_file_contents;
 
-  MatchingContext matching_context(*context, flow_file, ignore_case_);
+  MatchingContext matching_context(*context, flow_file, case_policy_);
 
   ReadCallback callback(segmentation_, [&] (Segment segment) {
     std::string_view original_value = segment.value_;
@@ -354,16 +422,16 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
       }
     }
     case Matching::STARTS_WITH: {
-      return utils::StringUtils::startsWith(segment.value_, context.getStringProperty(prop), !ignore_case_);
+      return utils::StringUtils::startsWith(segment.value_, context.getStringProperty(prop), case_policy_ == CasePolicy::CASE_SENSITIVE);
     }
     case Matching::ENDS_WITH: {
-      return utils::StringUtils::endsWith(segment.value_, context.getStringProperty(prop), !ignore_case_);
+      return utils::StringUtils::endsWith(segment.value_, context.getStringProperty(prop), case_policy_ == CasePolicy::CASE_SENSITIVE);
     }
     case Matching::CONTAINS: {
-      return utils::StringUtils::find(segment.value_, context.getStringProperty(prop), !ignore_case_) != std::string_view::npos;
+      return std::search(segment.value_.begin(), segment.value_.end(), context.getSearcher(prop)) != segment.value_.end();
     }
     case Matching::EQUALS: {
-      return utils::StringUtils::equals(segment.value_, context.getStringProperty(prop), !ignore_case_);
+      return utils::StringUtils::equals(segment.value_, context.getStringProperty(prop), case_policy_ == CasePolicy::CASE_SENSITIVE);
     }
     case Matching::CONTAINS_REGEX: {
       std::match_results<std::string_view::const_iterator> match_result;

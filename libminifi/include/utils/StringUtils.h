@@ -185,30 +185,6 @@ class StringUtils {
     return endsWith(value, endString, false);
   }
 
-  inline static std::string_view::size_type find(const std::string_view& value, const std::string_view& target, bool case_sensitive = true) {
-    if (target.length() > value.length()) {
-      return std::string_view::npos;
-    }
-    // brute force
-    for (std::string_view::size_type off = 0; off <= value.length() - target.length(); ++off) {
-      bool mismatch = false;
-      for (std::string_view::size_type idx = 0; idx < target.length(); ++idx) {
-        if (case_sensitive && value[off + idx] != target[idx]) {
-          mismatch = true;
-          break;
-        }
-        if (!case_sensitive && tolower((unsigned char)value[off + idx]) != tolower((unsigned char)target[idx])) {
-          mismatch = true;
-          break;
-        }
-      }
-      if (!mismatch) {
-        return off;
-      }
-    }
-    return std::string_view::npos;
-  }
-
   inline static std::string hex_ascii(const std::string& in) {
     std::string newString;
     newString.reserve(in.length() / 2);
