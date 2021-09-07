@@ -68,7 +68,7 @@ void FetchAzureDataLakeStorage::initialize() {
 std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeStorage::buildFetchParameters(
     core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::FetchAzureDataLakeStorageParameters params;
-  if (!setCommonParameters(params, context, flow_file)) {
+  if (!setFileOperationCommonParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 

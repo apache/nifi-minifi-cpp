@@ -24,14 +24,14 @@
 #include <utility>
 #include <memory>
 
-#include "AzureDataLakeStorageProcessorBase.h"
+#include "AzureDataLakeStorageSingleFileProcessor.h"
 
 template<typename AzureDataLakeStorageProcessor>
 class AzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
+class FetchAzureDataLakeStorage final : public AzureDataLakeStorageSingleFileProcessor {
  public:
   // Supported Properties
   EXTENSIONAPI static const core::Property RangeStart;
@@ -43,7 +43,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase
   static const core::Relationship Success;
 
   explicit FetchAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger()) {
+    : AzureDataLakeStorageSingleFileProcessor(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger()) {
   }
 
   ~FetchAzureDataLakeStorage() override = default;
@@ -91,7 +91,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase
   }
 
   explicit FetchAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageSingleFileProcessor(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::FetchAzureDataLakeStorageParameters> buildFetchParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);

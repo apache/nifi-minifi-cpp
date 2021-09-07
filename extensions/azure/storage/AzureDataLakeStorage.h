@@ -24,6 +24,7 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <string_view>
 
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -43,6 +44,18 @@ struct UploadDataLakeStorageResult {
   std::string primary_uri;
 };
 
+struct ListDataLakeStorageElement {
+    std::string filesystem;
+    std::string file_path;
+    std::string directory;
+    std::string filename;
+    uint64_t length = 0;
+    uint64_t last_modified;
+    std::string etag;
+};
+
+using ListDataLakeStorageResult = std::vector<ListDataLakeStorageElement>;
+
 class AzureDataLakeStorage {
  public:
   explicit AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client = nullptr);
@@ -50,8 +63,11 @@ class AzureDataLakeStorage {
   storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer);
   bool deleteFile(const storage::DeleteAzureDataLakeStorageParameters& params);
   std::optional<uint64_t> fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream);
+  std::optional<ListDataLakeStorageResult> listDirectory(const ListAzureDataLakeStorageParameters& params);
 
  private:
+  bool matchesPathFilter(const std::string& base_directory, const std::string& path_filter, std::string path);
+  bool matchesFileFilter(const std::string& file_filter, const std::string& filename);
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};
   std::unique_ptr<DataLakeStorageClient> data_lake_storage_client_;
 };

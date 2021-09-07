@@ -61,10 +61,13 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentia
   number_of_retries_ = number_of_retries;
 }
 
-Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const AzureDataLakeStorageParameters& params) {
+Azure::Storage::Files::DataLake::DataLakeDirectoryClient AzureDataLakeStorageClient::getDirectoryClient(const AzureDataLakeStorageParameters& params) {
   resetClientIfNeeded(params.credentials, params.file_system_name, params.number_of_retries);
+  return client_->GetDirectoryClient(params.directory_name);
+}
 
-  auto directory_client = client_->GetDirectoryClient(params.directory_name);
+Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const AzureDataLakeStorageFileOperationParameters& params) {
+  auto directory_client = getDirectoryClient(params);
   if (!params.directory_name.empty()) {
     directory_client.CreateIfNotExists();
   }
@@ -105,6 +108,11 @@ std::unique_ptr<io::InputStream> AzureDataLakeStorageClient::fetchFile(const Fet
   }
   auto result = file_client.Download(options);
   return std::make_unique<AzureDataLakeStorageInputStream>(std::move(result.Value));
+}
+
+std::vector<Azure::Storage::Files::DataLake::Models::PathItem> AzureDataLakeStorageClient::listDirectory(const ListAzureDataLakeStorageParameters& params) {
+  auto directory_client = getDirectoryClient(params);
+  return directory_client.ListPaths(params.recurse_subdirectories).Paths;
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

@@ -20,8 +20,13 @@
 
 #include "AzureDataLakeStorage.h"
 
+#include <regex>
+
 #include "AzureDataLakeStorageClient.h"
 #include "io/StreamPipe.h"
+#include "utils/file/FileUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -68,6 +73,68 @@ std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLake
     return internal::pipe(result.get(), &stream);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
+    return std::nullopt;
+  }
+}
+
+bool AzureDataLakeStorage::matchesPathFilter(const std::string& base_directory, const std::string& path_filter, std::string path) {
+  if (path_filter.empty()) {
+    return true;
+  }
+
+  if (!base_directory.empty()) {
+    gsl_Expects(minifi::utils::StringUtils::startsWith(path, base_directory));
+    if (path.size() == base_directory.size()) {
+      path = "";
+    } else {
+      path = path.substr(base_directory.size() + 1);
+    }
+  }
+
+  std::regex pattern(path_filter);
+  return std::regex_match(path, pattern);
+}
+
+bool AzureDataLakeStorage::matchesFileFilter(const std::string& file_filter, const std::string& filename) {
+  if (file_filter.empty()) {
+    return true;
+  }
+
+  std::regex pattern(file_filter);
+  return std::regex_match(filename, pattern);
+}
+
+std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(const ListAzureDataLakeStorageParameters& params) {
+  try {
+    auto list_res = data_lake_storage_client_->listDirectory(params);
+
+    ListDataLakeStorageResult result;
+    for (const auto& azure_element : list_res) {
+      if (azure_element.IsDirectory) {
+        continue;
+      }
+      ListDataLakeStorageElement element;
+      auto [directory, filename] = minifi::utils::file::FileUtils::split_path(azure_element.Name, true /*force_posix*/);
+      if (!directory.empty()) {
+        directory = directory.substr(0, directory.size() - 1);  // Remove ending '/' character
+      }
+
+      if (!matchesPathFilter(params.directory_name, params.path_filter, directory) || !matchesFileFilter(params.file_filter, filename)) {
+        continue;
+      }
+
+      element.filename = filename;
+      element.last_modified = std::chrono::duration_cast<std::chrono::milliseconds>(static_cast<std::chrono::system_clock::time_point>(azure_element.LastModified).time_since_epoch()).count();
+      element.etag = azure_element.ETag;
+      element.length = azure_element.FileSize;
+      element.filesystem = params.file_system_name;
+      element.file_path = azure_element.Name;
+      element.directory = directory;
+      result.push_back(element);
+    }
+    return result;
+  } catch (const std::runtime_error& err) {
+    logger_->log_error("Runtime error while listing directory '%s' of filesystem '%s': %s", params.directory_name, params.file_system_name, err.what());
     return std::nullopt;
   }
 }

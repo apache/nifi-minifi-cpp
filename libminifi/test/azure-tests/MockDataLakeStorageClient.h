@@ -81,6 +81,33 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_.data(), buffer_.size());
   }
 
+  std::vector<Azure::Storage::Files::DataLake::Models::PathItem> listDirectory(const org::apache::nifi::minifi::azure::storage::ListAzureDataLakeStorageParameters& params) override {
+    list_params_ = params;
+    std::vector<Azure::Storage::Files::DataLake::Models::PathItem> result;
+    Azure::Storage::Files::DataLake::Models::PathItem diritem;
+    diritem.IsDirectory = true;
+    diritem.Name = "testdir/";
+
+    Azure::Storage::Files::DataLake::Models::PathItem item1;
+    item1.IsDirectory = false;
+    item1.Name = "testdir/item1.log";
+    item1.LastModified = Azure::DateTime(2021, 9, 10, 16, 42, 0);
+    item1.ETag = "etag1";
+    item1.FileSize = 128;
+
+    Azure::Storage::Files::DataLake::Models::PathItem item2;
+    item2.IsDirectory = false;
+    item2.Name = "testdir/sub/item2.log";
+    item2.LastModified = Azure::DateTime(2021, 10, 13, 12, 12, 0);
+    item2.ETag = "etag2";
+    item2.FileSize = 256;
+
+    result.push_back(diritem);
+    result.push_back(item1);
+    result.push_back(item2);
+    return result;
+  }
+
   void setFileCreation(bool create_file) {
     create_file_ = create_file;
   }
@@ -117,6 +144,10 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return fetch_params_;
   }
 
+  org::apache::nifi::minifi::azure::storage::ListAzureDataLakeStorageParameters getPassedListParams() const {
+    return list_params_;
+  }
+
  private:
   const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
   bool create_file_ = true;
@@ -130,4 +161,5 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters put_params_;
   org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters delete_params_;
   org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters fetch_params_;
+  org::apache::nifi::minifi::azure::storage::ListAzureDataLakeStorageParameters list_params_;
 };
