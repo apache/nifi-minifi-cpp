@@ -1,4 +1,3 @@
-#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,22 +14,31 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-#
 
-include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core)
+include(FetchContent)
 
-file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
+# Set build options
+set(PAHO_BUILD_STATIC ON CACHE BOOL "" FORCE)
+set(PAHO_BUILD_SHARED OFF CACHE BOOL "" FORCE)
+set(PAHO_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 
-add_library(minifi-mqtt-extensions STATIC ${SOURCES})
-set_property(TARGET minifi-mqtt-extensions PROPERTY POSITION_INDEPENDENT_CODE ON)
+if (OPENSSL_OFF)
+    set(PAHO_WITH_SSL OFF CACHE BOOL "" FORCE)
+else()
+    set(PAHO_WITH_SSL ON CACHE BOOL "" FORCE)
+endif()
 
-target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
+FetchContent_Declare(
+    paho.mqtt.c-external
+    URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.9.tar.gz"
+    URL_HASH "SHA256=386c9b5fa1cf6d0d516db12d57fd8f6a410dd0fdc5e9a2da870aae437a2535ed"
+)
 
-include(PahoMqttC)
-target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
+FetchContent_MakeAvailable(paho.mqtt.c-external)
 
-SET (MQTT-EXTENSIONS minifi-mqtt-extensions PARENT_SCOPE)
-
-register_extension(minifi-mqtt-extensions)
-register_extension_linter(minifi-mqtt-extensions-linter)
+# Set dependencies and target to link to
+if (NOT OPENSSL_OFF)
+    add_library(paho.mqtt.c ALIAS paho-mqtt3cs-static)
+else()
+    add_library(paho.mqtt.c ALIAS paho-mqtt3c-static)
+endif()
