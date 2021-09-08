@@ -18,11 +18,13 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 
 #include "../TestBase.h"
 #include "core/Processor.h"
 #include "processors/PutAzureBlobStorage.h"
 #include "processors/GetFile.h"
+#include "processors/PutFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
 #include "storage/BlobStorage.h"
@@ -57,6 +59,10 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
   }
 
   std::optional<minifi::azure::storage::UploadBlobResult> uploadBlob(const std::string& /*blob_name*/, const uint8_t* buffer, std::size_t buffer_size) override {
+    if (upload_fails_) {
+      return std::nullopt;
+    }
+
     input_data = std::string(buffer, buffer + buffer_size);
     minifi::azure::storage::UploadBlobResult result;
     result.etag = ETAG;
@@ -78,10 +84,15 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
     return container_created_;
   }
 
+  void setUploadFailure(bool upload_fails) {
+    upload_fails_ = upload_fails;
+  }
+
   std::string input_data;
 
  private:
   bool container_created_ = false;
+  bool upload_fails_ = false;
 };
 
 class PutAzureBlobStorageTestsFixture {
@@ -91,6 +102,7 @@ class PutAzureBlobStorageTestsFixture {
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
     LogTestController::getInstance().setTrace<processors::GetFile>();
+    LogTestController::getInstance().setTrace<processors::PutFile>();
     LogTestController::getInstance().setDebug<processors::UpdateAttribute>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::azure::processors::PutAzureBlobStorage>();
@@ -110,7 +122,15 @@ class PutAzureBlobStorageTestsFixture {
     plan->setProperty(get_file, processors::GetFile::KeepSourceFile.getName(), "false");
     update_attribute = plan->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
     plan->addProcessor(put_azure_blob_storage, "PutAzureBlobStorage", { {"success", "d"} }, true);
-    plan->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
+    auto logattribute = plan->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
+    logattribute->setAutoTerminatedRelationships({{"success", "d"}});
+
+    putfile = plan->addProcessor("PutFile", "PutFile", { {"success", "d"} }, false);
+    plan->addConnection(put_azure_blob_storage, {"failure", "d"}, putfile);
+    putfile->setAutoTerminatedRelationships({{"success", "d"}});
+    putfile->setAutoTerminatedRelationships({{"failure", "d"}});
+    output_dir = test_controller.createTempDirectory();
+    plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), output_dir);
   }
 
   void setDefaultCredentials() {
@@ -118,6 +138,20 @@ class PutAzureBlobStorageTestsFixture {
     plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
     plan->setProperty(update_attribute, "test.account_key", STORAGE_ACCOUNT_KEY, true);
     plan->setProperty(put_azure_blob_storage, "Storage Account Key", "${test.account_key}");
+  }
+
+  std::vector<std::string> getFailedFlowFileContents() {
+    std::vector<std::string> file_contents;
+
+    auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
+      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+      std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
+      file_contents.push_back(file_content);
+      return true;
+    };
+
+    utils::file::FileUtils::list_dir(output_dir, lambda, plan->getLogger(), false);
+    return file_contents;
   }
 
   virtual ~PutAzureBlobStorageTestsFixture() {
@@ -131,6 +165,8 @@ class PutAzureBlobStorageTestsFixture {
   std::shared_ptr<core::Processor> put_azure_blob_storage;
   std::shared_ptr<core::Processor> get_file;
   std::shared_ptr<core::Processor> update_attribute;
+  std::shared_ptr<core::Processor> putfile;
+  std::string output_dir;
 };
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test required parameters", "[azureStorageParameters]") {
@@ -238,6 +274,15 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     test_controller.runSession(plan, true);
     REQUIRE(mock_blob_storage_ptr->getConnectionString() == CONNECTION_STRING);
   }
+
+  SECTION("Connection string is empty after substituting it from expression language") {
+    plan->setProperty(update_attribute, "test.connection_string", "", true);
+    plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connection_string}");
+    test_controller.runSession(plan, true);
+    auto failed_flowfiles = getFailedFlowFileContents();
+    REQUIRE(failed_flowfiles.size() == 1);
+    REQUIRE(failed_flowfiles[0] == TEST_DATA);
+  }
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[azureBlobStorageUpload]") {
@@ -256,6 +301,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[az
   REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == false);
   REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+  REQUIRE(getFailedFlowFileContents().size() == 0);
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with container creation", "[azureBlobStorageUpload]") {
@@ -275,4 +321,18 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with c
   REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == true);
   REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+  REQUIRE(getFailedFlowFileContents().size() == 0);
+}
+
+TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failure", "[azureBlobStorageUpload]") {
+  plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
+  plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
+  plan->setProperty(update_attribute, "test.blob", BLOB_NAME, true);
+  plan->setProperty(put_azure_blob_storage, "Blob", "${test.blob}");
+  mock_blob_storage_ptr->setUploadFailure(true);
+  setDefaultCredentials();
+  test_controller.runSession(plan, true);
+  auto failed_flowfiles = getFailedFlowFileContents();
+  REQUIRE(failed_flowfiles.size() == 1);
+  REQUIRE(failed_flowfiles[0] == TEST_DATA);
 }
