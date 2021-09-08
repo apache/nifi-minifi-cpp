@@ -260,7 +260,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And an ssl context service set up for ConsumeKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the publisher flow
+    And a kafka broker is set up in correspondence with the publisher flow
 
     When all instances start up
     And a message with content "Alice's Adventures in Wonderland" is published to the "ConsumeKafkaTest" topic using an ssl connection
