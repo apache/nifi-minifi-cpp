@@ -138,7 +138,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
             "source relationship names:\n"
             "- \n" });
         YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-        CHECK_THROWS(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(connection));
+        CHECK_NOTHROW(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(connection));
       }
       SECTION("Source and destination lookup from via id") {
         YAML::Node connection_node = YAML::Load(std::string {
@@ -163,10 +163,10 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
             "flowfile expiration: \n"
             "drop empty: \n"});
         YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-        CHECK_THROWS(yaml_connection_parser.getWorkQueueSizeFromYaml());
-        CHECK_THROWS(yaml_connection_parser.getWorkQueueDataSizeFromYaml());
-        CHECK_THROWS(yaml_connection_parser.getFlowFileExpirationFromYaml());
-        CHECK_THROWS(yaml_connection_parser.getDropEmptyFromYaml());
+        CHECK(0 == yaml_connection_parser.getWorkQueueSizeFromYaml());
+        CHECK(0 == yaml_connection_parser.getWorkQueueDataSizeFromYaml());
+        CHECK(0 == yaml_connection_parser.getFlowFileExpirationFromYaml());
+        CHECK(0 == yaml_connection_parser.getDropEmptyFromYaml());
       }
     }
     SECTION("With a configuration that has values of incorrect format") {
@@ -188,9 +188,9 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
           "flowfile expiration: 0\n"
           "drop empty: NULL\n"});
       YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-      REQUIRE(2 == yaml_connection_parser.getWorkQueueDataSizeFromYaml());
-      REQUIRE(0 == yaml_connection_parser.getFlowFileExpirationFromYaml());
-      CHECK_THROWS(yaml_connection_parser.getDropEmptyFromYaml());
+      CHECK(2 == yaml_connection_parser.getWorkQueueDataSizeFromYaml());
+      CHECK(0 == yaml_connection_parser.getFlowFileExpirationFromYaml());
+      CHECK(0 == yaml_connection_parser.getDropEmptyFromYaml());
     }
   }
 }
