@@ -58,9 +58,6 @@ if (ENABLE_LUA_SCRIPTING)
     SET(CMAKE_FIND_PACKAGE_SORT_ORDER NATURAL)
     SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION ASC)
     find_package(Lua 5.1 REQUIRED)
-    if ("${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}" VERSION_GREATER_EQUAL "5.4")
-        message(FATAL_ERROR "No supported LUA version was found. Supported versions: 5.1, 5.2, 5.3")
-    endif()
 
     include_directories(${LUA_INCLUDE_DIR})
 
@@ -71,7 +68,7 @@ if (ENABLE_LUA_SCRIPTING)
     add_library(minifi-lua-extensions STATIC ${LUA_SOURCES})
 
     target_link_libraries(minifi-lua-extensions ${LIBMINIFI})
-    target_link_libraries(minifi-lua-extensions ${LUA_LIBRARIES} sol)
+    target_link_libraries(minifi-lua-extensions ${LUA_LIBRARIES} sol2)
     target_link_libraries(minifi-script-extensions minifi-lua-extensions)
 
     target_compile_features(minifi-lua-extensions PUBLIC cxx_std_14)

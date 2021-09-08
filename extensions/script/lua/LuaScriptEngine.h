@@ -22,7 +22,7 @@
 #include <string>
 #include <memory>
 
-#include "sol.hpp"
+#include "sol/sol.hpp"
 #include "core/ProcessSession.h"
 
 #include "../ScriptEngine.h"

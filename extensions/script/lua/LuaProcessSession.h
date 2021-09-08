@@ -23,7 +23,7 @@
 #include "core/ProcessSession.h"
 #include "../ScriptFlowFile.h"
 
-#include "sol.hpp"
+#include "sol/sol.hpp"
 #include "LuaBaseStream.h"
 
 namespace org {

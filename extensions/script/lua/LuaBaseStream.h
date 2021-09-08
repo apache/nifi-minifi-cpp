@@ -20,7 +20,7 @@
 #include <memory>
 #include <string>
 
-#include "sol.hpp"
+#include "sol/sol.hpp"
 #include "io/BaseStream.h"
 
 namespace org {

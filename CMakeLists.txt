@@ -497,9 +497,7 @@ endif()
 
 ## Scripting extensions
 if (NOT DISABLE_SCRIPTING)
-	# sol
-	add_library(sol INTERFACE)
-	target_include_directories(sol SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/sol2-2.20.0")
+	include(Sol2)
 	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()
 
