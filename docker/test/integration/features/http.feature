@@ -35,7 +35,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
       | InvokeHTTP     | invokehttp-proxy-password | test101        |
     And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
 
-    And a http proxy server "http-proxy" is set up accordingly
+    And a http proxy server is set up accordingly
 
     And a ListenHTTP processor with the "Listening Port" property set to "8080" in a "minifi-listen" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "minifi-listen" flow
@@ -43,7 +43,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
     When all instances start up
     Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
-    And no errors were generated on the "http-proxy" regarding "http://minifi-listen:8080/contentListener"
+    And no errors were generated on the http-proxy regarding "http://minifi-listen:8080/contentListener"
 
   Scenario: A MiNiFi instance and transfers hashed data to another MiNiFi instance
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"

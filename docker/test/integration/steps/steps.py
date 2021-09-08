@@ -3,13 +3,6 @@ from minifi.core.RemoteProcessGroup import RemoteProcessGroup
 from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback
 from minifi.core.Funnel import Funnel
 
-from minifi.processors.ConsumeKafka import ConsumeKafka
-from minifi.processors.DeleteS3Object import DeleteS3Object
-from minifi.processors.FetchS3Object import FetchS3Object
-from minifi.processors.PutAzureBlobStorage import PutAzureBlobStorage
-from minifi.processors.PublishKafka import PublishKafka
-from minifi.processors.PutS3Object import PutS3Object
-
 from minifi.controllers.SSLContextService import SSLContextService
 from minifi.controllers.ODBCService import ODBCService
 
@@ -36,56 +29,64 @@ def step_impl(context, directory):
 
 
 # MiNiFi cluster setups
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{cluster_name}\" flow")
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow")
-def step_impl(context, processor_type, property, property_value, cluster_name, processor_name):
-    logging.info("Acquiring " + cluster_name)
-    cluster = context.test.acquire_cluster(cluster_name)
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, processor_name, property, property_value, minifi_container_name):
+    container = context.test.acquire_container(minifi_container_name)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
     processor.set_name(processor_name)
     if property:
         processor.set_property(property, property_value)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
-    if not cluster.get_start_nodes():
-        cluster.set_name(cluster_name)
-        cluster.add_start_node(processor)
+    if not container.get_start_nodes():
+        container.add_start_node(processor)
 
 
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{cluster_name}\" flow")
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow")
-def step_impl(context, processor_type, property, property_value, cluster_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, cluster_name=cluster_name, processor_name=processor_type))
+@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, property, property_value, minifi_container_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name=minifi_container_name, processor_name=processor_type))
 
 
 @given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\"")
 def step_impl(context, processor_type, property, property_value):
-    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, cluster_name="primary_cluster"))
+    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow"))
 
 
 @given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\"")
 def step_impl(context, processor_type, property, property_value, processor_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{cluster_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, cluster_name="primary_cluster", processor_name=processor_name))
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow", processor_name=processor_name))
 
 
-@given("a {processor_type} processor in the \"{cluster_name}\" flow")
-@given("a {processor_type} processor in a \"{cluster_name}\" flow")
-def step_impl(context, processor_type, cluster_name):
-    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{cluster_name}\" flow".
-                          format(processor_type=processor_type, property=None, property_value=None, cluster_name=cluster_name))
+@given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor set up in a \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, minifi_container_name):
+    container = context.test.acquire_container(minifi_container_name)
+    processor = locate("minifi.processors." + processor_type + "." + processor_type)()
+    processor.set_name(processor_type)
+    context.test.add_node(processor)
+    # Assume that the first node declared is primary unless specified otherwise
+    if not container.get_start_nodes():
+        container.add_start_node(processor)
 
 
 @given("a {processor_type} processor")
+@given("a {processor_type} processor set up to communicate with an s3 server")
+@given("a {processor_type} processor set up to communicate with the same s3 server")
+@given("a {processor_type} processor set up to communicate with an Azure blob storage")
+@given("a {processor_type} processor set up to communicate with a kafka broker instance")
 def step_impl(context, processor_type):
-    context.execute_steps("given a {processor_type} processor in the \"{cluster_name}\" flow".format(processor_type=processor_type, cluster_name="primary_cluster"))
+    context.execute_steps("given a {processor_type} processor in the \"{minifi_container_name}\" flow".format(processor_type=processor_type, minifi_container_name="minifi-cpp-flow"))
 
 
-@given("a set of processors in the \"{cluster_name}\" flow")
-def step_impl(context, cluster_name):
-    cluster = context.test.acquire_cluster(cluster_name)
+@given("a set of processors in the \"{minifi_container_name}\" flow")
+def step_impl(context, minifi_container_name):
+    container = context.test.acquire_container(minifi_container_name)
     logging.info(context.table)
     for row in context.table:
         processor = locate("minifi.processors." + row["type"] + "." + row["type"])()
@@ -93,60 +94,22 @@ def step_impl(context, cluster_name):
         processor.set_uuid(row["uuid"])
         context.test.add_node(processor)
         # Assume that the first node declared is primary unless specified otherwise
-        if not cluster.get_start_nodes():
-            cluster.add_start_node(processor)
+        if not container.get_start_nodes():
+            container.add_start_node(processor)
 
 
 @given("a set of processors")
 def step_impl(context):
     rendered_table = ModelDescriptor.describe_table(context.table, "    ")
-    context.execute_steps("""given a set of processors in the \"{cluster_name}\" flow
+    context.execute_steps("""given a set of processors in the \"{minifi_container_name}\" flow
         {table}
-        """.format(cluster_name="primary_cluster", table=rendered_table))
+        """.format(minifi_container_name="minifi-cpp-flow", table=rendered_table))
 
 
 @given("a RemoteProcessGroup node opened on \"{address}\"")
 def step_impl(context, address):
     remote_process_group = RemoteProcessGroup(address, "RemoteProcessGroup")
     context.test.add_remote_process_group(remote_process_group)
-
-
-@given("a PutS3Object processor set up to communicate with an s3 server")
-def step_impl(context):
-    put_s3 = PutS3Object()
-    put_s3.set_name("PutS3Object")
-    context.test.add_node(put_s3)
-
-
-@given("a DeleteS3Object processor set up to communicate with the same s3 server")
-@given("a DeleteS3Object processor set up to communicate with an s3 server")
-def step_impl(context):
-    delete_s3 = DeleteS3Object()
-    delete_s3.set_name("DeleteS3Object")
-    context.test.add_node(delete_s3)
-
-
-@given("a FetchS3Object processor set up to communicate with the same s3 server")
-@given("a FetchS3Object processor set up to communicate with an s3 server")
-def step_impl(context):
-    fetch_s3 = FetchS3Object()
-    fetch_s3.set_name("FetchS3Object")
-    context.test.add_node(fetch_s3)
-
-
-@given("a PutAzureBlobStorage processor set up to communicate with an Azure blob storage")
-def step_impl(context):
-    put_azure_blob_storage = PutAzureBlobStorage()
-    put_azure_blob_storage.set_name("PutAzureBlobStorage")
-    context.test.add_node(put_azure_blob_storage)
-
-
-@given("a PublishKafka processor set up to communicate with a kafka broker instance")
-def step_impl(context):
-    # PublishKafka is never the first node of a flow potential cluster-flow setup is omitted
-    publish_kafka = PublishKafka()
-    publish_kafka.set_name("PublishKafka")
-    context.test.add_node(publish_kafka)
 
 
 @given("a kafka producer workflow publishing files placed in \"{directory}\" to a broker exactly once")
@@ -156,19 +119,6 @@ def step_impl(context, directory):
         and the \"Keep Source File\" property of the GetFile processor is set to \"false\"
         and a PublishKafka processor set up to communicate with a kafka broker instance
         and the "success" relationship of the GetFile processor is connected to the PublishKafka""".format(directory=directory))
-
-
-@given("a ConsumeKafka processor set up in a \"{cluster_name}\" flow")
-def step_impl(context, cluster_name):
-    consume_kafka = ConsumeKafka()
-    consume_kafka.set_name("ConsumeKafka")
-    context.test.add_node(consume_kafka)
-    logging.info("Acquiring " + cluster_name)
-    cluster = context.test.acquire_cluster(cluster_name)
-    # Assume that the first node declared is primary unless specified otherwise
-    if not cluster.get_start_nodes():
-        cluster.set_name(cluster_name)
-        cluster.add_start_node(consume_kafka)
 
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to \"{property_value}\"")
@@ -284,42 +234,28 @@ def step_impl(context, source_name, destination_name):
 
 @given("\"{processor_name}\" processor is a start node")
 def step_impl(context, processor_name):
-    cluster = context.test.acquire_cluster("primary_cluster")
+    container = context.test.acquire_container("minifi-cpp-flow")
     processor = context.test.get_or_create_node_by_name(processor_name)
-    cluster.add_start_node(processor)
+    container.add_start_node(processor)
 
 
 # NiFi setups
-@given("a NiFi flow \"{cluster_name}\" receiving data from a RemoteProcessGroup \"{source_name}\" on port {port}")
-def step_impl(context, cluster_name, source_name, port):
+@given("a NiFi flow receiving data from a RemoteProcessGroup \"{source_name}\" on port 8080")
+def step_impl(context, source_name):
     remote_process_group = context.test.get_remote_process_group_by_name("RemoteProcessGroup")
-    source = context.test.generate_input_port_for_remote_process_group(remote_process_group, "from-minifi")
+    source = context.test.generate_input_port_for_remote_process_group(remote_process_group, source_name)
     context.test.add_node(source)
-    cluster = context.test.acquire_cluster(cluster_name)
-    cluster.set_name('nifi')
-    cluster.set_engine('nifi')
+    container = context.test.acquire_container('nifi', 'nifi')
     # Assume that the first node declared is primary unless specified otherwise
-    if not cluster.get_start_nodes():
-        cluster.add_start_node(source)
-
-
-@given("in the \"{cluster_name}\" flow the \"{relationship}\" relationship of the {source_name} processor is connected to the {destination_name}")
-def step_impl(context, cluster_name, relationship, source_name, destination_name):
-    cluster = context.test.acquire_cluster(cluster_name)
-    source = context.test.get_or_create_node_by_name(source_name)
-    destination = context.test.get_or_create_node_by_name(destination_name)
-    source.out_proc.connect({relationship: destination})
-    if not cluster.get_start_nodes():
-        cluster.add_start_node(source)
+    if not container.get_start_nodes():
+        container.add_start_node(source)
 
 
 # HTTP proxy setup
-@given("the http proxy server \"{cluster_name}\" is set up")
-@given("a http proxy server \"{cluster_name}\" is set up accordingly")
-def step_impl(context, cluster_name):
-    cluster = context.test.acquire_cluster(cluster_name)
-    cluster.set_name(cluster_name)
-    cluster.set_engine("http-proxy")
+@given("the http proxy server is set up")
+@given("a http proxy server is set up accordingly")
+def step_impl(context):
+    context.test.acquire_container("http-proxy", "http-proxy")
 
 
 # TLS
@@ -338,35 +274,29 @@ def step_impl(context, producer_name, consumer_name):
 
 
 # Kafka setup
-@given("a kafka broker \"{cluster_name}\" is set up in correspondence with the PublishKafka")
-@given("a kafka broker \"{cluster_name}\" is set up in correspondence with the third-party kafka publisher")
-@given("a kafka broker \"{cluster_name}\" is set up in correspondence with the publisher flow")
-def step_impl(context, cluster_name):
-    cluster = context.test.acquire_cluster(cluster_name)
-    cluster.set_name(cluster_name)
-    cluster.set_engine("kafka-broker")
+@given("a kafka broker is set up in correspondence with the PublishKafka")
+@given("a kafka broker is set up in correspondence with the third-party kafka publisher")
+@given("a kafka broker is set up in correspondence with the publisher flow")
+def step_impl(context):
+    context.test.acquire_container("kafka-broker", "kafka-broker")
 
 
 # s3 setup
-@given("a s3 server \"{cluster_name}\" is set up in correspondence with the PutS3Object")
-@given("a s3 server \"{cluster_name}\" is set up in correspondence with the DeleteS3Object")
-def step_impl(context, cluster_name):
-    cluster = context.test.acquire_cluster(cluster_name)
-    cluster.set_name(cluster_name)
-    cluster.set_engine("s3-server")
+@given("a s3 server is set up in correspondence with the PutS3Object")
+@given("a s3 server is set up in correspondence with the DeleteS3Object")
+def step_impl(context):
+    context.test.acquire_container("s3-server", "s3-server")
 
 
 # azure storage setup
-@given("an Azure storage server \"{cluster_name}\" is set up in correspondence with the PutAzureBlobStorage")
-def step_impl(context, cluster_name):
-    cluster = context.test.acquire_cluster(cluster_name)
-    cluster.set_name(cluster_name)
-    cluster.set_engine("azure-storage-server")
+@given("an Azure storage server is set up in correspondence with the PutAzureBlobStorage")
+def step_impl(context):
+    context.test.acquire_container("azure-storage-server", "azure-storage-server")
 
 
-@given("the kafka broker \"{cluster_name}\" is started")
-def step_impl(context, cluster_name):
-    context.test.start_single_cluster(cluster_name)
+@given("the kafka broker is started")
+def step_impl(context):
+    context.test.start_kafka_broker()
 
 
 @given("the topic \"{topic_name}\" is initialized on the kafka broker")
@@ -392,11 +322,9 @@ def step_impl(context, processor_name, service_name, connection_string):
     processor.set_property("DB Controller Service", odbc_service.name)
 
 
-@given("a PostgreSQL server \"{cluster_name}\" is set up")
-def step_impl(context, cluster_name):
-    cluster = context.test.acquire_cluster(cluster_name)
-    cluster.set_name(cluster_name)
-    cluster.set_engine("postgresql-server")
+@given("a PostgreSQL server is set up")
+def step_impl(context):
+    context.test.acquire_container("postgresql-server", "postgresql-server")
 
 
 @when("the MiNiFi instance starts up")
@@ -494,9 +422,9 @@ def step_impl(context, content, topic_name, semicolon_separated_headers):
     assert future.get(timeout=60)
 
 
-@when("the Kafka consumer is registered in kafka broker \"{cluster_name}\"")
-def step_impl(context, cluster_name):
-    context.test.wait_for_kafka_consumer_to_be_registered(cluster_name)
+@when("the Kafka consumer is registered in kafka broker")
+def step_impl(context):
+    context.test.wait_for_kafka_consumer_to_be_registered("kafka-broker")
     # After the consumer is registered there is still some time needed for consumer-broker synchronization
     # Unfortunately there are no additional log messages that could be checked for this
     time.sleep(2)
@@ -560,42 +488,37 @@ def step_impl(context, duration):
     context.test.check_for_no_files_generated(timeparse(duration))
 
 
-@then("no errors were generated on the \"{cluster_name}\" regarding \"{url}\"")
-def step_impl(context, cluster_name, url):
-    context.test.check_http_proxy_access(cluster_name, url)
+@then("no errors were generated on the http-proxy regarding \"{url}\"")
+def step_impl(context, url):
+    context.test.check_http_proxy_access('http-proxy', url)
 
 
-@then("the object on the \"{cluster_name}\" s3 server is \"{object_data}\"")
-def step_impl(context, cluster_name, object_data):
-    context.test.check_s3_server_object_data(cluster_name, object_data)
+@then("the object on the s3 server is \"{object_data}\"")
+def step_impl(context, object_data):
+    context.test.check_s3_server_object_data("s3-server", object_data)
 
 
-@then("the object content type on the \"{cluster_name}\" s3 server is \"{content_type}\" and the object metadata matches use metadata")
-def step_impl(context, cluster_name, content_type):
-    context.test.check_s3_server_object_metadata(cluster_name, content_type)
+@then("the object content type on the s3 server is \"{content_type}\" and the object metadata matches use metadata")
+def step_impl(context, content_type):
+    context.test.check_s3_server_object_metadata("s3-server", content_type)
 
 
-@then("the object bucket on the \"{cluster_name}\" s3 server is empty")
-def step_impl(context, cluster_name):
-    context.test.check_empty_s3_bucket(cluster_name)
+@then("the object bucket on the s3 server is empty")
+def step_impl(context):
+    context.test.check_empty_s3_bucket("s3-server")
 
 
-@then("the object on the \"{cluster_name}\" Azure storage server is \"{object_data}\"")
-def step_impl(context, cluster_name, object_data):
-    context.test.check_azure_storage_server_data(cluster_name, object_data)
+@then("the object on the Azure storage server is \"{object_data}\"")
+def step_impl(context, object_data):
+    context.test.check_azure_storage_server_data("azure-storage-server", object_data)
 
 
 # SQL
-@then("the query \"{query}\" returns {number_of_rows:d} rows in less than {timeout_seconds:d} seconds on the \"{cluster_name}\" PostgreSQL server")
-def step_impl(context, cluster_name, query, number_of_rows, timeout_seconds):
-    context.test.check_query_results(cluster_name, query, number_of_rows, timeout_seconds)
+@then("the query \"{query}\" returns {number_of_rows:d} rows in less than {timeout_seconds:d} seconds on the PostgreSQL server")
+def step_impl(context, query, number_of_rows, timeout_seconds):
+    context.test.check_query_results("postgresql-server", query, number_of_rows, timeout_seconds)
 
 
-@then("the minifi log contains \"{line}\"")
-def step_impl(context, line):
-    context.test.check_minifi_log_contents(line)
-
-
-@then("the Minifi logs in the \"{cluster_name}\" contain the following message: \"{log_message}\" in less than {duration}")
-def step_impl(context, cluster_name, log_message, duration):
-    context.test.check_minifi_logs_for_message(cluster_name, log_message, timeparse(duration))
+@then("the Minifi logs contain the following message: \"{log_message}\" in less than {duration}")
+def step_impl(context, log_message, duration):
+    context.test.check_minifi_log_contents(log_message, timeparse(duration))

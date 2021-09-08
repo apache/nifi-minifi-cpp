@@ -14,7 +14,9 @@ class DockerTestDirectoryBindings:
         self.data_directories[test_id] = {
             "input_dir": "/tmp/.nifi-test-input." + test_id,
             "output_dir": "/tmp/.nifi-test-output." + test_id,
-            "resources_dir": "/tmp/.nifi-test-resources." + test_id
+            "resources_dir": "/tmp/.nifi-test-resources." + test_id,
+            "minifi_config_dir": "/tmp/.nifi-test-minifi-config-dir." + test_id,
+            "nifi_config_dir": "/tmp/.nifi-test-nifi-config-dir." + test_id
         }
 
         [self.create_directory(directory) for directory in self.data_directories[test_id].values()]
@@ -53,6 +55,8 @@ class DockerTestDirectoryBindings:
         vols[self.data_directories[test_id]["input_dir"]] = {"bind": "/tmp/input", "mode": "rw"}
         vols[self.data_directories[test_id]["output_dir"]] = {"bind": "/tmp/output", "mode": "rw"}
         vols[self.data_directories[test_id]["resources_dir"]] = {"bind": "/tmp/resources", "mode": "rw"}
+        vols[self.data_directories[test_id]["minifi_config_dir"]] = {"bind": "/tmp/minifi_config", "mode": "rw"}
+        vols[self.data_directories[test_id]["nifi_config_dir"]] = {"bind": "/tmp/nifi_config", "mode": "rw"}
         return vols
 
     @staticmethod

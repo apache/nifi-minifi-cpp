@@ -14,9 +14,9 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And the "success" relationship of the GetFile processor is connected to the PutAzureBlobStorage
     And the "success" relationship of the PutAzureBlobStorage processor is connected to the PutFile
 
-    And an Azure storage server "azure-storage" is set up in correspondence with the PutAzureBlobStorage
+    And an Azure storage server is set up in correspondence with the PutAzureBlobStorage
 
     When all instances start up
 
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the object on the "azure-storage" Azure storage server is "#test_data$123$#"
+    And the object on the Azure storage server is "#test_data$123$#"

@@ -15,7 +15,7 @@ Feature: Hash value is added to Flowfiles by HashContent processor
     And the "success" relationship of the GetFile processor is connected to the HashContent
     And the "success" relationship of the HashContent processor is connected to the LogAttribute
     When the MiNiFi instance starts up
-    Then the minifi log contains "key:hash value:<hash_value>"
+    Then the Minifi logs contain the following message: "key:hash value:<hash_value>" in less than 60 seconds
 
     Examples:
       | content  | hash_algorithm | hash_value                                                       |

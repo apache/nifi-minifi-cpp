@@ -14,7 +14,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the PublishKafka
+    And a kafka broker is set up in correspondence with the PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
@@ -43,17 +43,17 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Compress Codec         | none                                       |
       | PublishKafka   | Delivery Guarantee     | 1                                          |
       | PublishKafka   | Request Timeout        | 10 sec                                     |
-      | PublishKafka   | Message Timeout Phrase | 12 sec                                     |
-      | PublishKafka   | Security CA Key        | /tmp/resources/certs/ca-cert               |
+      | PublishKafka   | Message Timeout        | 12 sec                                     |
+      | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
       | PublishKafka   | Security Cert          | /tmp/resources/certs/client_LMN_client.pem |
       | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
       | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_LMN_client.key |
       | PublishKafka   | Security Protocol      | ssl                                        |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
-    And the "success" relationship of the GetFile processor is connected to the PutFile
+    And the "success" relationship of the PublishKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the PublishKafka
+    And a kafka broker is set up in correspondence with the PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
@@ -63,7 +63,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
 
     When all instances start up
     And a message with content "some test message" is published to the "ConsumeKafkaTest" topic
@@ -78,8 +78,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
-    And the kafka broker "broker" is started
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
+    And the kafka broker is started
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker
 
     When a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
@@ -103,13 +103,13 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
-    And the kafka broker "broker" is started
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
+    And the kafka broker is started
     And the topic "ConsumeKafkaTest" is initialized on the kafka broker
 
     When a message with content "Ulysses" is published to the "ConsumeKafkaTest" topic
     And all other processes start up
-    And the Kafka consumer is registered in kafka broker "broker"
+    And the Kafka consumer is registered in kafka broker
     And a message with content "James Joyce" is published to the "ConsumeKafkaTest" topic
 
     Then a flowfile with the content "James Joyce" is placed in the monitored directory in less than 60 seconds
@@ -126,7 +126,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the LogAttribute processor is connected to the RouteOnAttribute
     And the "success" relationship of the RouteOnAttribute processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
 
     When all instances start up
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with key "consume_kafka_test_key"
@@ -148,12 +148,12 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
 
     When all instances start up
     And the publisher performs a <transaction type> transaction publishing to the "ConsumeKafkaTest" topic these messages: <messages sent>
 
-    Then <number of flowfiles expected> flowfiles are placed in the monitored directory in less than 30 seconds
+    Then <number of flowfiles expected> flowfiles are placed in the monitored directory in less than 15 seconds
 
   Examples: Transaction descriptions
     | messages sent                     | transaction type             | honor transactions | number of flowfiles expected |
@@ -177,7 +177,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the LogAttribute processor is connected to the RouteOnAttribute
     And the "success" relationship of the RouteOnAttribute processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
 
     When all instances start up
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic with headers "<message headers sent>"
@@ -201,7 +201,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
 
     When all instances start up
     And a message with content "Barbapapa" is published to the "ConsumeKafkaTest" topic
@@ -222,7 +222,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And the "success" relationship of the ConsumeKafka processor is connected to the LogAttribute
     And the "success" relationship of the LogAttribute processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
 
     When all instances start up
     And 1000 kafka messages are sent to the topic "ConsumeKafkaTest"
@@ -240,13 +240,13 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
     And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
 
-    And a kafka broker "broker" is set up in correspondence with the third-party kafka publisher
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
 
     When all instances start up
     And a message with content "<message 1>" is published to the "ConsumeKafkaTest" topic
     And a message with content "<message 2>" is published to the "ConsumeKafkaTest" topic
 
-    Then no files are placed in the monitored directory in 30 seconds of running time
+    Then no files are placed in the monitored directory in 20 seconds of running time
 
     Examples: Unsupported property values
       | message 1        | message 2      | property name           | property value |
