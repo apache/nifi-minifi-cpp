@@ -723,6 +723,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
         std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(value);
         if (service) {
           ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+        } else {
+          logger_->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", value);
         }
       }
 
@@ -785,6 +787,10 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
           auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
           throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
         }
+      }
+
+      if (security_ca.empty() && security_cert.empty() && security_private_key.empty() && security_private_key_password.empty()) {
+        logger_->log_warn("Security protocol is set to %s, but no valid security parameters are set in the properties or in the SSL Context Service.", SECURITY_PROTOCOL_SSL);
       }
     } else if (value == SECURITY_PROTOCOL_PLAINTEXT) {
       // Do nothing

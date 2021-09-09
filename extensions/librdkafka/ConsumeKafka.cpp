@@ -228,7 +228,11 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
       ssl_data_.cert_loc = ssl_service->getCertificateFile();
       ssl_data_.key_loc = ssl_service->getPrivateKeyFile();
       ssl_data_.key_pw = ssl_service->getPassphrase();
+    } else {
+      logger_->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", ssl_service_name);
     }
+  } else if (security_protocol_ == SECURITY_PROTOCOL_SSL) {
+    logger_->log_warn("Security protocol is set to %s, but no valid SSL Context Service property is set.", SECURITY_PROTOCOL_SSL);
   }
 
   headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
