@@ -23,6 +23,7 @@
 #include <memory>
 #include <filesystem>
 #include <set>
+#include <functional>
 
 struct FilePatternTestAccessor;
 
