@@ -360,12 +360,14 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
   // append all headers
   client.build_header_list(attribute_to_send_regex_, flowFile->getAttributes());
-
   logger_->log_trace("InvokeHTTP -- curl performed");
   if (client.submit()) {
     logger_->log_trace("InvokeHTTP -- curl successful");
 
     bool putToAttribute = !IsNullOrEmpty(put_attribute_name_);
+    if(putToAttribute) {
+      logger_->log_debug("Put to attribute is true");
+    }
 
     const std::vector<char> &response_body = client.getResponseBody();
     const std::vector<std::string> &response_headers = client.getHeaders();
@@ -446,6 +448,7 @@ void InvokeHTTP::route(const std::shared_ptr<core::FlowFile> &request, const std
   } else {
     if (request != nullptr) {
       if (penalize_no_retry_) {
+        logger_->log_debug("Flowfile has been penalized");
         session->penalize(request);
       }
       session->transfer(request, RelNoRetry);

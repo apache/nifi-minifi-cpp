@@ -21,7 +21,6 @@
 #include <string>
 #include "io/BaseStream.h"
 #include "TestBase.h"
-#include "processors/GetFile.h"
 #include "core/Core.h"
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
@@ -34,6 +33,8 @@
 #include "core/ProcessorNode.h"
 #include "processors/LogAttribute.h"
 #include "utils/gsl.h"
+#include "processors/GenerateFlowFile.h"
+#include "processors/ListenHTTP.h"
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   TestController testController;
@@ -42,8 +43,6 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
-
-  std::shared_ptr<core::Processor> getfileprocessor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
 
   std::shared_ptr<core::Processor> logAttribute = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
@@ -58,9 +57,6 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
 
   utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
-
-  std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
-  gcConnection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
   laConnection->addRelationship(core::Relationship("success", "description"));
@@ -158,12 +154,9 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   TestController testController;
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::InvokeHTTP>();
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
-
-  std::shared_ptr<core::Processor> getfileprocessor = std::make_shared<org::apache::nifi::minifi::processors::GetFile>("getfileCreate2");
-
-  std::shared_ptr<core::Processor> logAttribute = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
   listenhttp->initialize();
@@ -180,12 +173,6 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   auto configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
-
-  std::shared_ptr<minifi::Connection> gcConnection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
-  gcConnection->addRelationship(core::Relationship("success", "description"));
-
-  std::shared_ptr<minifi::Connection> laConnection = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
-  laConnection->addRelationship(core::Relationship("success", "description"));
 
   std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   connection->addRelationship(core::Relationship("success", "description"));
@@ -305,4 +292,109 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
 
   REQUIRE(true == LogTestController::getInstance().contains("Exiting because method is POST"));
   LogTestController::getInstance().reset();
+}
+
+TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
+  TestController testController;
+  using processors::InvokeHTTP;
+  std::string url = "http://localhost:8681/testytesttest";
+
+  std::shared_ptr<core::ContentRepository>
+  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GenerateFlowFile>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::ListenHTTP>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::InvokeHTTP>();
+  LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
+
+  std::shared_ptr<core::Processor>
+  listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
+  listenhttp->initialize();
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
+  std::shared_ptr<core::ProcessContext>
+  context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
+  auto session = std::make_shared<core::ProcessSession>(context);
+  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
+  listenhttp->setScheduledState(core::ScheduledState::RUNNING);
+  listenhttp->onSchedule(context, factory);
+  listenhttp->onTrigger(context, session);
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
+  std::shared_ptr<core::Processor>
+  invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
+
+  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method.getName(), "GET");
+  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), url);
+
+  SECTION("with penalize on no retry set to true") {
+    plan->setProperty(invokehttp,
+                      org::apache::nifi::minifi::processors::InvokeHTTP::PenalizeOnNoRetry.getName(),
+                      "true");
+    invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse,
+                                                InvokeHTTP::RelRetry});
+    testController.runSession(plan, false);
+    testController.runSession(plan, false);
+
+    REQUIRE(LogTestController::getInstance().contains("Flowfile has been penalized"));
+
+  } SECTION("with penalize on no retry set to false") {
+
+    plan->setProperty(invokehttp,
+                      org::apache::nifi::minifi::processors::InvokeHTTP::PenalizeOnNoRetry.getName(),
+                      "false");
+    invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse,
+                                                InvokeHTTP::RelRetry});
+    testController.runSession(plan, false);
+    testController.runSession(plan, false);
+
+    REQUIRE(LogTestController::getInstance().contains("Flowfile has been penalized") == false);
+  }
+}
+
+TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
+  TestController testController;
+  using processors::InvokeHTTP;
+  std::string url = "http://localhost:8681/testytesttest";
+
+  std::shared_ptr<core::ContentRepository>
+  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GenerateFlowFile>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::ListenHTTP>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::InvokeHTTP>();
+  LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
+
+  std::shared_ptr<core::Processor>
+  listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
+  listenhttp->initialize();
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
+  std::shared_ptr<core::ProcessContext>
+  context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
+  context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
+  auto session = std::make_shared<core::ProcessSession>(context);
+  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
+  listenhttp->setScheduledState(core::ScheduledState::RUNNING);
+  listenhttp->onSchedule(context, factory);
+  listenhttp->onTrigger(context, session);
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
+  std::shared_ptr<core::Processor>
+  invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
+
+  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method.getName(), "GET");
+  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), url);
+  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::PropPutOutputAttributes.getName(), "true");
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse,
+                                                InvokeHTTP::RelRetry});
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("Put to attribute is true"));
 }
