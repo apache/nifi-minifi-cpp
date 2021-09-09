@@ -18,6 +18,7 @@
 #include "utils/file/FilePattern.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org {
 namespace apache {

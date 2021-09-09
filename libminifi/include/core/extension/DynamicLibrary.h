@@ -58,7 +58,7 @@ class DynamicLibrary : public Module {
   std::filesystem::path library_path_;
   gsl::owner<void*> handle_ = nullptr;
 
-  static std::shared_ptr<logging::Logger> logger_;
+  static const std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace extension

@@ -41,6 +41,7 @@ struct LibraryDescriptor {
     return true;
   }
 
+  [[nodiscard]]
   std::filesystem::path getFullPath() const {
     return dir / filename;
   }

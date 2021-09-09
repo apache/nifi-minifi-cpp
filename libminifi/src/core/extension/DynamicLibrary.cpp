@@ -45,7 +45,7 @@ namespace minifi {
 namespace core {
 namespace extension {
 
-std::shared_ptr<logging::Logger> DynamicLibrary::logger_ = logging::LoggerFactory<DynamicLibrary>::getLogger();
+const std::shared_ptr<logging::Logger> DynamicLibrary::logger_ = logging::LoggerFactory<DynamicLibrary>::getLogger();
 
 DynamicLibrary::DynamicLibrary(std::string name, std::filesystem::path library_path)
   : Module(std::move(name)),
@@ -141,7 +141,7 @@ void* DynamicLibrary::dlopen(const char* file, int mode) {
     if (EnumProcessModules(current_process_handle, allModules, sizeof(allModules), &cbNeeded) != 0) {
       for (uint32_t i = 0; i < cbNeeded / sizeof(HMODULE); i++) {
         // Get the full path to the module's file.
-        resource_mapping_.insert(std::make_pair(reinterpret_cast<void*>(allModules[i]), "minifi-system"));
+        resource_mapping_.insert(std::make_pair(static_cast<void*>(allModules[i]), "minifi-system"));
       }
     }
   } else {

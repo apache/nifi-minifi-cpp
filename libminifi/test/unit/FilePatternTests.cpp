@@ -59,7 +59,7 @@ TEST_CASE("Invalid paths") {
 }
 
 TEST_CASE("FilePattern reports error in correct subpattern") {
-  std::vector<std::pair<std::string, std::string>> invalid_subpattern{
+  std::vector<std::pair<std::string_view, std::string_view>> invalid_subpattern{
       {"", "Empty pattern"},
       {".", "Invalid file pattern '.'"},
       {"..", "Invalid file pattern '..'"},

@@ -24,9 +24,6 @@
 #include <filesystem>
 #include <set>
 
-#include "utils/OptionalUtils.h"
-#include "core/logging/Logger.h"
-
 struct FilePatternTestAccessor;
 
 namespace org {
@@ -73,6 +70,7 @@ class FilePattern {
     /**
      * @return The lowermost parent directory without wildcards.
      */
+    [[nodiscard]]
     std::filesystem::path getBaseDirectory() const;
 
    private:
