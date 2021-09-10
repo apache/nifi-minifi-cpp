@@ -62,7 +62,7 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete file fails", "[
   REQUIRE(failed_flowfiles.size() == 1);
   REQUIRE(failed_flowfiles[0] == TEST_DATA);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-  REQUIRE(!verifyLogLinePresenceInPollTime(0s, "key:filename value:"));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:filename value:", 0s, 0ms));
 }
 
 TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete result is false", "[azureDataLakeStorageDelete]") {
@@ -72,7 +72,7 @@ TEST_CASE_METHOD(DeleteAzureDataLakeStorageTestsFixture, "Delete result is false
   REQUIRE(failed_flowfiles.size() == 1);
   REQUIRE(failed_flowfiles[0] == TEST_DATA);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-  REQUIRE(!verifyLogLinePresenceInPollTime(0s, "key:filename value:"));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:filename value:", 0s, 0ms));
 }
 
 }  // namespace
