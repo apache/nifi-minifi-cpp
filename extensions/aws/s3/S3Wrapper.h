@@ -38,6 +38,8 @@
 #include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/ListingStateUtils.h"
+#include "utils/gsl.h"
 #include "io/BaseStream.h"
 #include "S3RequestSender.h"
 
@@ -177,7 +179,7 @@ struct ListRequestParameters : public RequestParameters {
   uint64_t min_object_age = 0;
 };
 
-struct ListedObjectAttributes {
+struct ListedObjectAttributes : public minifi::utils::ListedObject {
   std::string filename;
   std::string etag;
   bool is_latest = false;
@@ -185,6 +187,14 @@ struct ListedObjectAttributes {
   int64_t length = 0;
   std::string store_class;
   std::string version;
+
+  uint64_t getLastModified() const override {
+    return gsl::narrow<uint64_t>(last_modified);
+  }
+
+  std::string getKey() const override {
+    return filename;
+  }
 };
 
 using HeadObjectRequestParameters = GetObjectRequestParameters;

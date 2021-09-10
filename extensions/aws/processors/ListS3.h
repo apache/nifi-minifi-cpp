@@ -39,8 +39,6 @@ namespace processors {
 class ListS3 : public S3Processor {
  public:
   static constexpr char const* ProcessorName = "ListS3";
-  static const std::string LATEST_LISTED_KEY_PREFIX;
-  static const std::string LATEST_LISTED_KEY_TIMESTAMP;
 
   // Supported Properties
   static const core::Property Delimiter;
@@ -57,7 +55,6 @@ class ListS3 : public S3Processor {
   explicit ListS3(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : S3Processor(name, uuid, core::logging::LoggerFactory<ListS3>::getLogger()) {
   }
-
   explicit ListS3(const std::string& name, minifi::utils::Identifier uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
     : S3Processor(name, uuid, core::logging::LoggerFactory<ListS3>::getLogger(), std::move(s3_request_sender)) {
   }
@@ -73,17 +70,6 @@ class ListS3 : public S3Processor {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
-  struct ListingState {
-    int64_t listed_key_timestamp = 0;
-    std::vector<std::string> listed_keys;
-
-    bool wasObjectListedAlready(const aws::s3::ListedObjectAttributes &object_attributes) const;
-    void updateState(const aws::s3::ListedObjectAttributes &object_attributes);
-  };
-
-  static std::vector<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
-  static uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state);
-
   void writeObjectTags(
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
@@ -92,8 +78,6 @@ class ListS3 : public S3Processor {
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
     const std::shared_ptr<core::FlowFile> &flow_file);
-  ListingState getCurrentState(const std::shared_ptr<core::ProcessContext> &context);
-  void storeState(const ListingState &latest_listing_state);
   void createNewFlowFile(
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes);
@@ -102,7 +86,7 @@ class ListS3 : public S3Processor {
   bool write_object_tags_ = false;
   bool write_user_metadata_ = false;
   bool requester_pays_ = false;
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_ = nullptr;
+  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_ = nullptr;
 };
 
 }  // namespace processors

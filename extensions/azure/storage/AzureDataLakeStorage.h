@@ -50,7 +50,7 @@ struct ListDataLakeStorageElement {
     std::string directory;
     std::string filename;
     uint64_t length = 0;
-    uint64_t last_modified;
+    uint64_t last_modified = 0;
     std::string etag;
 };
 

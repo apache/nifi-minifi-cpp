@@ -41,7 +41,10 @@ class AzureDataLakeStorageSingleFileProcessor : public AzureDataLakeStorageProce
     : AzureDataLakeStorageProcessorBase(name, uuid, logger, std::move(data_lake_storage_client)) {
   }
 
-  bool setFileOperationCommonParameters(storage::AzureDataLakeStorageFileOperationParameters& params, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  bool setFileOperationCommonParameters(
+    storage::AzureDataLakeStorageFileOperationParameters& params,
+    const std::shared_ptr<core::ProcessContext>& context,
+    const std::shared_ptr<core::FlowFile>& flow_file);
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

@@ -22,6 +22,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include <azure/storage/files/datalake.hpp>
 

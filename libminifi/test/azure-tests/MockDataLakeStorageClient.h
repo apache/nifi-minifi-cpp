@@ -31,6 +31,8 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
  public:
   const std::string PRIMARY_URI = "http://test-uri/file";
   const std::string FETCHED_DATA = "test azure data for stream";
+  const std::string ITEM1_LAST_MODIFIED = "1631292120000";
+  const std::string ITEM2_LAST_MODIFIED = "1634127120000";
 
   bool createFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& /*params*/) override {
     if (file_creation_error_) {
