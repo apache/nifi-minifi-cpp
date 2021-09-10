@@ -365,8 +365,8 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     logger_->log_trace("InvokeHTTP -- curl successful");
 
     bool putToAttribute = !IsNullOrEmpty(put_attribute_name_);
-    if(putToAttribute) {
-      logger_->log_debug("Put to attribute is true");
+    if (putToAttribute) {
+      logger_->log_debug("Adding http response body to flow file attribute %s", put_attribute_name_);
     }
 
     const std::vector<char> &response_body = client.getResponseBody();

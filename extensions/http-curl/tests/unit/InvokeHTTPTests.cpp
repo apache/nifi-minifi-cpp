@@ -34,7 +34,6 @@
 #include "processors/LogAttribute.h"
 #include "utils/gsl.h"
 #include "processors/GenerateFlowFile.h"
-#include "processors/ListenHTTP.h"
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   TestController testController;
@@ -154,7 +153,6 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   TestController testController;
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::InvokeHTTP>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
 
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
@@ -297,7 +295,6 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
 TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   TestController testController;
   using processors::InvokeHTTP;
-  std::string url = "http://localhost:8681/testytesttest";
 
   std::shared_ptr<core::ContentRepository>
   content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -312,8 +309,7 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
   listenhttp->initialize();
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
-  std::shared_ptr<core::ProcessContext>
-  context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
   auto session = std::make_shared<core::ProcessSession>(context);
@@ -324,11 +320,10 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
-  std::shared_ptr<core::Processor>
-  invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
 
   plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method.getName(), "GET");
-  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), url);
+  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), "http://localhost:8681/testytesttest");
 
   SECTION("with penalize on no retry set to true") {
     plan->setProperty(invokehttp,
@@ -336,22 +331,18 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
                       "true");
     invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse,
                                                 InvokeHTTP::RelRetry});
-    testController.runSession(plan, false);
-    testController.runSession(plan, false);
+    testController.runSession(plan, true);
 
     REQUIRE(LogTestController::getInstance().contains("Flowfile has been penalized"));
-
   } SECTION("with penalize on no retry set to false") {
-
     plan->setProperty(invokehttp,
                       org::apache::nifi::minifi::processors::InvokeHTTP::PenalizeOnNoRetry.getName(),
                       "false");
     invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse,
                                                 InvokeHTTP::RelRetry});
-    testController.runSession(plan, false);
-    testController.runSession(plan, false);
+    testController.runSession(plan, true);
 
-    REQUIRE(LogTestController::getInstance().contains("Flowfile has been penalized") == false);
+    REQUIRE_FALSE(LogTestController::getInstance().contains("Flowfile has been penalized"));
   }
 }
 
@@ -370,11 +361,10 @@ TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
   LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
 
   std::shared_ptr<core::Processor>
-  listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
+  listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP> ("listenhttp");
   listenhttp->initialize();
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
-  std::shared_ptr<core::ProcessContext>
-  context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8681");
   auto session = std::make_shared<core::ProcessSession>(context);
@@ -385,16 +375,13 @@ TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
-  std::shared_ptr<core::Processor>
-  invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
+  std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
 
   plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method.getName(), "GET");
   plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), url);
-  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::PropPutOutputAttributes.getName(), "true");
-  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse,
-                                                InvokeHTTP::RelRetry});
+  plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::PropPutOutputAttributes.getName(), "http.type");
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
 
   testController.runSession(plan, true);
-
-  REQUIRE(LogTestController::getInstance().contains("Put to attribute is true"));
+  REQUIRE(LogTestController::getInstance().contains("Adding http response body to flow file attribute http.type"));
 }
