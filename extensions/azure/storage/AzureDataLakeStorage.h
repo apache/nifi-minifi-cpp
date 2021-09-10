@@ -29,7 +29,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "DataLakeStorageClient.h"
-#include "azure/core/io/body_stream.hpp"
+#include "utils/ListingStateUtils.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -44,14 +44,22 @@ struct UploadDataLakeStorageResult {
   std::string primary_uri;
 };
 
-struct ListDataLakeStorageElement {
-    std::string filesystem;
-    std::string file_path;
-    std::string directory;
-    std::string filename;
-    uint64_t length = 0;
-    uint64_t last_modified = 0;
-    std::string etag;
+struct ListDataLakeStorageElement : public minifi::utils::ListedObject {
+  std::string filesystem;
+  std::string file_path;
+  std::string directory;
+  std::string filename;
+  uint64_t length = 0;
+  uint64_t last_modified = 0;
+  std::string etag;
+
+  uint64_t getLastModified() const override {
+    return last_modified;
+  }
+
+  std::string getKey() const override {
+    return file_path;
+  }
 };
 
 using ListDataLakeStorageResult = std::vector<ListDataLakeStorageElement>;

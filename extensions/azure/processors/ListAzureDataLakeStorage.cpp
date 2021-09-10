@@ -73,6 +73,12 @@ void ListAzureDataLakeStorage::initialize() {
 void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
   AzureDataLakeStorageProcessorBase::onSchedule(context, sessionFactory);
 
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+  state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
+
   auto params = buildListParameters(context);
   if (!params) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required parameters for ListAzureDataLakeStorage processor are missing or invalid");
@@ -101,6 +107,18 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
   return params;
 }
 
+void ListAzureDataLakeStorage::createNewFlowFile( core::ProcessSession &session, const storage::ListDataLakeStorageElement &element) {
+  auto flow_file = session.create();
+  session.putAttribute(flow_file, "azure.filesystem", element.filesystem);
+  session.putAttribute(flow_file, "azure.filePath", element.file_path);
+  session.putAttribute(flow_file, "azure.directory", element.directory);
+  session.putAttribute(flow_file, "azure.filename", element.filename);
+  session.putAttribute(flow_file, "azure.length", std::to_string(element.length));
+  session.putAttribute(flow_file, "azure.lastModified", std::to_string(element.last_modified));
+  session.putAttribute(flow_file, "azure.etag", element.etag);
+  session.transfer(flow_file, Success);
+}
+
 void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   logger_->log_debug("ListAzureDataLakeStorage onTrigger");
 
@@ -110,16 +128,28 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
     return;
   }
 
+  auto stored_listing_state = state_manager_->getCurrentState();
+  auto latest_listing_state = stored_listing_state;
+  std::size_t files_transferred = 0;
+
   for (const auto& element : *list_result) {
-    auto flow_file = session->create();
-    session->putAttribute(flow_file, "azure.filesystem", element.filesystem);
-    session->putAttribute(flow_file, "azure.filePath", element.file_path);
-    session->putAttribute(flow_file, "azure.directory", element.directory);
-    session->putAttribute(flow_file, "azure.filename", element.filename);
-    session->putAttribute(flow_file, "azure.length", std::to_string(element.length));
-    session->putAttribute(flow_file, "azure.lastModified", std::to_string(element.last_modified));
-    session->putAttribute(flow_file, "azure.etag", element.etag);
-    session->transfer(flow_file, Success);
+    if (tracking_strategy_ == storage::EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
+      continue;
+    }
+
+    createNewFlowFile(*session, element);
+    ++files_transferred;
+    latest_listing_state.updateState(element);
+  }
+
+  state_manager_->storeState(latest_listing_state);
+
+  logger_->log_debug("ListAzureDataLakeStorage transferred %zu flow files", files_transferred);
+
+  if (files_transferred == 0) {
+    logger_->log_debug("No new Azure Data Lake Storage files were found in directory '%s' of filesystem '%s'", list_parameters_.directory_name, list_parameters_.file_system_name);
+    context->yield();
+    return;
   }
 }
 

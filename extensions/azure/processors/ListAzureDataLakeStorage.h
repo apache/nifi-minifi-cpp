@@ -62,10 +62,12 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   }
 
   std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(const std::shared_ptr<core::ProcessContext>& context);
+  void createNewFlowFile( core::ProcessSession &session, const storage::ListDataLakeStorageElement &element);
 
   bool recurse_subdirectories_ = true;
   storage::EntityTracking tracking_strategy_ = storage::EntityTracking::TIMESTAMPS;
   storage::ListAzureDataLakeStorageParameters list_parameters_;
+  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_ = nullptr;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors
