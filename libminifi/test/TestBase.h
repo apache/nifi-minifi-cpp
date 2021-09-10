@@ -31,7 +31,7 @@
 
 #include "ResourceClaim.h"
 #include "utils/file/FileUtils.h"
-#include "catch.hpp"
+#include "Catch.h"
 #include "core/logging/Logger.h"
 #include "core/Core.h"
 #include "properties/Configure.h"

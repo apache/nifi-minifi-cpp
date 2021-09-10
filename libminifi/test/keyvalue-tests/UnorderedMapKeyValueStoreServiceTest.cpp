@@ -24,7 +24,7 @@
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 
-#include "catch.hpp"
+#include "Catch.h"
 
 namespace {
   std::string config_yaml; // NOLINT

@@ -21,7 +21,7 @@
 #include <memory>
 #include <string>
 
-#include "catch.hpp"
+#include "Catch.h"
 
 #include "../TestBase.h"
 #include "core/controller/ControllerService.h"

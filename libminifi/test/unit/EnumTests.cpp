@@ -20,7 +20,7 @@
 #include <string>
 #include <type_traits>
 #include "utils/Enum.h"
-#include "catch.hpp"
+#include "../Catch.h"
 
 // we need this instead of void_t in GeneralUtils because of GCC4.8
 template<typename ...>

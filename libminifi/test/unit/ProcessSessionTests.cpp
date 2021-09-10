@@ -18,7 +18,6 @@
 #include <memory>
 #include <string>
 
-#include <catch.hpp>
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "../TestBase.h"

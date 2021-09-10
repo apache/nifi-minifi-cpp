@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,5 +15,7 @@
  * limitations under the License.
  */
 
-#define CATCH_CONFIG_MAIN
-#include "Catch.h"
+#pragma once
+
+#define CATCH_CONFIG_FAST_COMPILE
+#include "catch.hpp"
