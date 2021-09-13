@@ -63,8 +63,8 @@ export JAVA_HOME
 PATH="$PATH:/usr/lib/jvm/default-jvm/bin"
 export PATH
 
-PYTHONPATH="${PYTHONPATH}:${docker_dir}/test/integration"
-export PYTHONPATH
+TEST_DIRECTORY="${docker_dir}/test/integration"
+export TEST_DIRECTORY
 
 # Add --no-logcapture to see logs interleaved with the test output
 BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)

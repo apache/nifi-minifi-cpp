@@ -12,6 +12,7 @@ class ImageStore:
     def __init__(self):
         self.client = docker.from_env()
         self.images = dict()
+        self.test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
 
     def __del__(self):
         self.cleanup()
@@ -23,21 +24,28 @@ class ImageStore:
             self.client.images.remove(image.id, force=True)
 
     def get_image(self, container_engine):
+        if container_engine in self.images:
+            return self.images[container_engine]
+
         if container_engine == "minifi-cpp":
-            return self.__get_minifi_cpp_image()
-        if container_engine == "http-proxy":
-            return self.__get_http_proxy_image()
-        if container_engine == "nifi":
-            return self.__get_nifi_image()
-        if container_engine == "postgresql-server":
-            return self.__get_postgresql_server_image()
-        if container_engine == "kafka-broker":
-            return self.__get_kafka_broker_image()
+            image = self.__build_minifi_cpp_image()
+        elif container_engine == "http-proxy":
+            image = self.__build_http_proxy_image()
+        elif container_engine == "nifi":
+            image = self.__build_nifi_image()
+        elif container_engine == "postgresql-server":
+            image = self.__build_postgresql_server_image()
+        elif container_engine == "kafka-broker":
+            image = self.__build_kafka_broker_image()
+        elif container_engine == "mqtt-broker":
+            image = self.__build_mqtt_broker_image()
+        else:
+            raise Exception("There is no associated image for " + container_engine)
 
-    def __get_minifi_cpp_image(self):
-        if "minifi-cpp" in self.images:
-            return self.images["minifi-cpp"]
+        self.images[container_engine] = image
+        return image
 
+    def __build_minifi_cpp_image(self):
         dockerfile = dedent("""FROM {base_image}
                 USER root
                 RUN apk --update --no-cache add psqlodbc
@@ -71,13 +79,9 @@ class ImageStore:
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
                            minifi_root=MinifiContainer.MINIFI_ROOT))
 
-        self.images["minifi-cpp"] = self.__build_image(dockerfile)
-        return self.images["minifi-cpp"]
+        return self.__build_image(dockerfile)
 
-    def __get_http_proxy_image(self):
-        if "http-proxy" in self.images:
-            return self.images["http-proxy"]
-
+    def __build_http_proxy_image(self):
         dockerfile = dedent("""FROM {base_image}
                 RUN apt -y update && apt install -y apache2-utils
                 RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
@@ -89,13 +93,9 @@ class ImageStore:
                 ENTRYPOINT ["/sbin/entrypoint.sh"]
                 """.format(base_image='sameersbn/squid:3.5.27-2', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
 
-        self.images["http-proxy"] = self.__build_image(dockerfile)
-        return self.images["http-proxy"]
+        return self.__build_image(dockerfile)
 
-    def __get_nifi_image(self):
-        if "nifi" in self.images:
-            return self.images["nifi"]
-
+    def __build_nifi_image(self):
         dockerfile = dedent(r"""FROM {base_image}
                 USER root
                 RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties
@@ -105,13 +105,9 @@ class ImageStore:
                            base_image='apache/nifi:' + NifiContainer.NIFI_VERSION,
                            nifi_root=NifiContainer.NIFI_ROOT))
 
-        self.images["nifi"] = self.__build_image(dockerfile)
-        return self.images["nifi"]
+        return self.__build_image(dockerfile)
 
-    def __get_postgresql_server_image(self):
-        if "postgresql-server" in self.images:
-            return self.images["postgresql-server"]
-
+    def __build_postgresql_server_image(self):
         dockerfile = dedent("""FROM {base_image}
                 RUN mkdir -p /docker-entrypoint-initdb.d
                 RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/init-user-db.sh && \
@@ -123,16 +119,18 @@ class ImageStore:
                     echo "    INSERT INTO test_table (int_col, text_col) VALUES (3, 'pear');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
                 """.format(base_image='postgres:13.2'))
-        self.images["postgresql-server"] = self.__build_image(dockerfile)
-        return self.images["postgresql-server"]
+        return self.__build_image(dockerfile)
 
-    def __get_kafka_broker_image(self):
-        if "kafka-broker" in self.images:
-            return self.images["kafka-broker"]
+    def __build_kafka_broker_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/kafka_broker", 'minifi-kafka')
 
-        test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
-        self.images["kafka-broker"] = self.__build_image_by_path(test_dir + "/resources/kafka_broker", 'minifi-kafka')
-        return self.images["kafka-broker"]
+    def __build_mqtt_broker_image(self):
+        dockerfile = dedent("""FROM {base_image}
+            RUN echo 'log_dest stderr' >> /mosquitto-no-auth.conf
+            CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto-no-auth.conf"]
+            """.format(base_image='eclipse-mosquitto:2.0.12'))
+
+        return self.__build_image(dockerfile)
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()
