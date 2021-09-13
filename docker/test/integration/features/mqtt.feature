@@ -1,0 +1,66 @@
+Feature: Sending data to using MQTT streaming platform using PublishMQTT
+  In order to send and receive data via MQTT
+  As a user of MiNiFi
+  I need to have PublishMQTT and ConsumeMQTT processors
+
+  Background:
+    Given the content of "/tmp/output" is monitored
+
+  Scenario: A MiNiFi instance transfers data to an MQTT broker
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishMQTT processor set up to communicate with an MQTT broker instance
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+    And the "success" relationship of the PublishMQTT processor is connected to the PutFile
+
+    And an MQTT broker is set up in correspondence with the PublishMQTT
+
+    When both instances start up
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the MQTT broker has 1 log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+
+  Scenario: A MiNiFi instance tries to transfer data to a non-existent MQTT broker
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishMQTT processor set up to communicate with an MQTT broker instance
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+    And the "success" relationship of the PublishMQTT processor is connected to the PutFile
+    And the "failure" relationship of the PublishMQTT processor is connected to the PutFile
+
+    When the MiNiFi instance starts up
+    Then no files are placed in the monitored directory in 30 seconds of running time
+
+  Scenario: Verify delivery of message when MQTT broker is unstable
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishMQTT processor set up to communicate with an MQTT broker instance
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+    And the "success" relationship of the PublishMQTT processor is connected to the PutFile
+
+    When the MiNiFi instance starts up
+
+    Then no files are placed in the monitored directory in 30 seconds of running time
+    And an MQTT broker is deployed in correspondence with the PublishMQTT
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the MQTT broker has 1 log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+
+  Scenario: A MiNiFi instance publishes and consumes data to/from an MQTT broker
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishMQTT processor set up to communicate with an MQTT broker instance
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+
+    And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And "ConsumeMQTT" processor is a start node
+    And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+
+    And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
+
+    When both instances start up
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the MQTT broker has 1 log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has 1 log line matching "Received SUBSCRIBE from"

@@ -204,3 +204,6 @@ class MiNiFi_integration_test():
 
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         assert self.cluster.check_query_results(postgresql_container_name, query, number_of_rows, timeout_seconds)
+
+    def check_mosquitto_logs(self, broker_name, log_pattern, timeout_seconds, count=1, use_regex=False):
+        self.cluster.wait_for_app_logs(broker_name, log_pattern, timeout_seconds, count=count, use_regex=use_regex)

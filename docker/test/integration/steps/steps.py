@@ -81,6 +81,7 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with the same s3 server")
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
 @given("a {processor_type} processor set up to communicate with a kafka broker instance")
+@given("a {processor_type} processor set up to communicate with an MQTT broker instance")
 def step_impl(context, processor_type):
     context.execute_steps("given a {processor_type} processor in the \"{minifi_container_name}\" flow".format(processor_type=processor_type, minifi_container_name="minifi-cpp-flow"))
 
@@ -288,6 +289,13 @@ def step_impl(context, producer_name):
 @given("a kafka broker is set up in correspondence with the publisher flow")
 def step_impl(context):
     context.test.acquire_container("kafka-broker", "kafka-broker")
+
+
+# MQTT setup
+@given("an MQTT broker is set up in correspondence with the PublishMQTT")
+@given("an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT")
+def step_impl(context):
+    context.test.acquire_container("mqtt-broker", "mqtt-broker")
 
 
 # s3 setup
@@ -551,3 +559,14 @@ def step_impl(context, log_message, duration):
 @then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
 def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, timeparse(duration))
+
+# MQTT
+@then("the MQTT broker has 1 log line matching \"{log_pattern}\"")
+def step_impl(context, log_pattern):
+    context.test.check_mosquitto_logs('mqtt-broker', log_pattern, 30, count=1, use_regex=True)
+
+
+@then("an MQTT broker is deployed in correspondence with the PublishMQTT")
+def step_impl(context):
+    context.test.acquire_container("mqtt-broker", "mqtt-broker")
+    context.test.start()
