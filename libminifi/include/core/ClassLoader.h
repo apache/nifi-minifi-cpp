@@ -77,7 +77,7 @@ class ClassLoader {
       logger_->log_error("Class '%s' is already registered at '%s'", clazz, name_);
       return;
     }
-    logger_->log_error("Registering class '%s' at '%s'", clazz, name_);
+    logger_->log_trace("Registering class '%s' at '%s'", clazz, name_);
     loaded_factories_.insert(std::make_pair(clazz, std::move(factory)));
   }
 
@@ -87,7 +87,7 @@ class ClassLoader {
       logger_->log_error("Could not unregister non-registered class '%s' at '%s'", clazz, name_);
       return;
     } else {
-      logger_->log_error("Unregistered class '%s' at '%s'", clazz, name_);
+      logger_->log_trace("Unregistered class '%s' at '%s'", clazz, name_);
     }
   }
 

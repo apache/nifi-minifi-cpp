@@ -55,7 +55,7 @@ bool Module::unregisterExtension(Extension& extension) {
   std::lock_guard<std::mutex> guard(mtx_);
   auto it = std::find(extensions_.begin(), extensions_.end(), &extension);
   if (it == extensions_.end()) {
-    logger_->log_error("Couldn't find extension '%s' in module '%s'", extension.getName(), name_);
+    logger_->log_trace("Couldn't find extension '%s' in module '%s'", extension.getName(), name_);
     return false;
   }
   extensions_.erase(it);
