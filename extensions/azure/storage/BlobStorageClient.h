@@ -1,6 +1,6 @@
 /**
- * @file AzureBlobStorage.h
- * AzureBlobStorage class declaration
+ * @file BlobStorageClient.h
+ * BlobStorageClient class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -19,34 +19,29 @@
  */
 #pragma once
 
-#include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
-#include "BlobStorageClient.h"
-#include "azure/storage/blobs.hpp"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "azure/storage/blobs/protocol/blob_rest_client.hpp"
+#include "AzureStorageCredentials.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-struct UploadBlobResult {
-  std::string primary_uri;
-  std::string etag;
-  std::string timestamp;
+struct PutAzureBlobStorageParameters {
+  AzureStorageCredentials credentials;
+  std::string container_name;
+  std::string blob_name;
 };
 
-class AzureBlobStorage {
+class BlobStorageClient {
  public:
-  explicit AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_storage_client = nullptr);
-  std::optional<bool> createContainerIfNotExists(const PutAzureBlobStorageParameters& params);
-  std::optional<UploadBlobResult> uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer);
-
- private:
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureBlobStorage>::getLogger()};
-  gsl::not_null<std::unique_ptr<BlobStorageClient>> blob_storage_client_;
+  virtual bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) = 0;
+  virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
+  virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
+  virtual ~BlobStorageClient() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

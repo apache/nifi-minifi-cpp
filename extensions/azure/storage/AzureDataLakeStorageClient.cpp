@@ -20,19 +20,35 @@
 
 #include "AzureDataLakeStorageClient.h"
 
+#include "azure/identity.hpp"
+
 namespace org::apache::nifi::minifi::azure::storage {
 
-void AzureDataLakeStorageClient::resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name) {
-  if (client_ == nullptr || connection_string_ != connection_string || file_system_name_ != file_system_name) {
-    client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
-      Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(connection_string, file_system_name));
-    file_system_name_ = file_system_name;
-    connection_string_ = connection_string;
+void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name) {
+  if (client_ && credentials_ == credentials && file_system_name_ == file_system_name) {
+    logger_->log_debug("Azure Data Lake Storge client credentials have not changed, no need to reset client");
+    return;
   }
+
+  if (credentials.getUseManagedIdentityCredentials()) {
+    auto datalake_service_client = Azure::Storage::Files::DataLake::DataLakeServiceClient(
+      "https://" + credentials.getStorageAccountName() + ".dfs." + credentials.getEndpointSuffix(), std::make_shared<Azure::Identity::ManagedIdentityCredential>());
+
+    client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(datalake_service_client.GetFileSystemClient(file_system_name));
+    logger_->log_debug("Azure Data Lake Storge client has been reset with new managed identity credentials.");
+  } else {
+    client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
+    Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(credentials.buildConnectionString(), file_system_name));
+    logger_->log_debug("Azure Data Lake Storge client has been reset with new connection string credentials.");
+  }
+
+  file_system_name_ = file_system_name;
+  credentials_ = credentials;
 }
 
 Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const PutAzureDataLakeStorageParameters& params) {
-  resetClientIfNeeded(params.connection_string, params.file_system_name);
+  resetClientIfNeeded(params.credentials, params.file_system_name);
+
   auto directory_client = client_->GetDirectoryClient(params.directory_name);
   if (!params.directory_name.empty()) {
     directory_client.CreateIfNotExists();

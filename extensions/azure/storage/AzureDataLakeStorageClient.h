@@ -48,12 +48,13 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) override;
 
  private:
-  void resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name);
+  void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name);
   Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const PutAzureDataLakeStorageParameters& params);
 
-  std::string connection_string_;
+  AzureStorageCredentials credentials_;
   std::string file_system_name_;
   std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureDataLakeStorageClient>::getLogger()};
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

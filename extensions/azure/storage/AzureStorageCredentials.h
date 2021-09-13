@@ -21,53 +21,32 @@
 
 #include <string>
 
-#include "utils/StringUtils.h"
+namespace org::apache::nifi::minifi::azure::storage {
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace storage {
+class AzureStorageCredentials {
+ public:
+  void setStorageAccountName(const std::string& storage_account_name);
+  void setStorageAccountKey(const std::string& storage_account_key);
+  void setSasToken(const std::string& sas_token);
+  void setEndpontSuffix(const std::string& endpoint_suffix);
+  void setConnectionString(const std::string& connection_string);
+  void setUseManagedIdentityCredentials(bool use_managed_identity_credentials);
 
-struct AzureStorageCredentials {
-  std::string storage_account_name;
-  std::string storage_account_key;
-  std::string sas_token;
-  std::string endpoint_suffix;
-  std::string connection_string;
+  std::string getStorageAccountName() const;
+  std::string getEndpointSuffix() const;
+  bool getUseManagedIdentityCredentials() const;
+  std::string buildConnectionString() const;
+  bool isValid() const;
 
-  std::string getConnectionString() const {
-    if (!connection_string.empty()) {
-      return connection_string;
-    }
+  bool operator==(const AzureStorageCredentials& other) const;
 
-    if (storage_account_name.empty() || (storage_account_key.empty() && sas_token.empty())) {
-      return "";
-    }
-
-    std::string credentials;
-    credentials += "AccountName=" + storage_account_name;
-
-    if (!storage_account_key.empty()) {
-      credentials += ";AccountKey=" + storage_account_key;
-    }
-
-    if (!sas_token.empty()) {
-      credentials += ";SharedAccessSignature=" + (sas_token[0] == '?' ? sas_token.substr(1) : sas_token);
-    }
-
-    if (!endpoint_suffix.empty()) {
-      credentials += ";EndpointSuffix=" + endpoint_suffix;
-    }
-
-    return credentials;
-  }
+ private:
+  std::string storage_account_name_;
+  std::string storage_account_key_;
+  std::string sas_token_;
+  std::string endpoint_suffix_;
+  std::string connection_string_;
+  bool use_managed_identity_credentials_ = false;
 };
 
-}  // namespace storage
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::storage

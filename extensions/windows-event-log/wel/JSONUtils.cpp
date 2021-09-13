@@ -28,7 +28,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
 
-#include "gsl/gsl-lite.hpp";
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {

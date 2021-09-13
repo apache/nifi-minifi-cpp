@@ -72,10 +72,17 @@ void PutAzureDataLakeStorage::initialize() {
 }
 
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  connection_string_ = getConnectionStringFromControllerService(context);
-  if (connection_string_.empty()) {
+  std::optional<storage::AzureStorageCredentials> credentials;
+  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(context);
+  if (!credentials) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
   }
+
+  if (!credentials->isValid()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
+  }
+
+  credentials_ = *credentials;
 
   conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), FileExistsResolutionStrategy::values()).c_str());
@@ -84,7 +91,7 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
 std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
     const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::PutAzureDataLakeStorageParameters params;
-  params.connection_string = connection_string_;
+  params.credentials = credentials_;
   params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE_FILE;
 
   if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
@@ -168,7 +175,7 @@ int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io:
     return -1;
   }
 
-  result_ = azure_data_lake_storage_.uploadFile(params_, gsl::span<const uint8_t>{buffer.data(), flow_size_});
+  result_ = azure_data_lake_storage_.uploadFile(params_, gsl::make_span(buffer.data(), flow_size_));
   return read_ret;
 }
 

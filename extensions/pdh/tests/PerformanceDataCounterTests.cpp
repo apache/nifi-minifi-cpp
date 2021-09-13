@@ -19,7 +19,7 @@
 #include "TestBase.h"
 #include "PDHCounters.h"
 #include "MemoryConsumptionCounter.h"
-#include "gsl/gsl-lite.hpp"
+#include "utils/gsl.h"
 
 using org::apache::nifi::minifi::processors::SinglePDHCounter;
 using org::apache::nifi::minifi::processors::PDHCounterArray;

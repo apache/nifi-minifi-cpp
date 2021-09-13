@@ -26,12 +26,7 @@
 #include "storage/AzureStorageCredentials.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace controllers {
+namespace org::apache::nifi::minifi::azure::controllers {
 
 class AzureStorageCredentialsService : public core::controller::ControllerService {
  public:
@@ -40,6 +35,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   EXTENSIONAPI static const core::Property SASToken;
   EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
   EXTENSIONAPI static const core::Property ConnectionString;
+  EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
 
   explicit AzureStorageCredentialsService(const std::string& name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
@@ -66,8 +62,8 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
 
   void onEnable() override;
 
-  std::string getConnectionString() const {
-    return credentials_.getConnectionString();
+  storage::AzureStorageCredentials getCredentials() const {
+    return credentials_;
   }
 
  private:
@@ -75,9 +71,4 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace controllers
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::controllers

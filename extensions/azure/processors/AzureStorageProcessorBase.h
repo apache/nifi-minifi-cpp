@@ -22,10 +22,13 @@
 
 #include <memory>
 #include <string>
+#include <optional>
+#include <tuple>
 
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
+#include "storage/AzureStorageCredentials.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -39,10 +42,14 @@ class AzureStorageProcessorBase : public core::Processor {
       logger_(logger) {
   }
 
-  ~AzureStorageProcessorBase() override = default;
-
  protected:
-  std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
+  enum class GetCredentialsFromControllerResult {
+    OK,
+    CONTROLLER_NAME_EMPTY,
+    CONTROLLER_NAME_INVALID
+  };
+
+  std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
 
   std::mutex azure_storage_mutex_;
   std::shared_ptr<logging::Logger> logger_;

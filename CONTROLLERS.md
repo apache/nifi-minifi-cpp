@@ -31,15 +31,14 @@ controller service so that AWS credentials can be managed and controlled in a ce
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other
-properties (not in bold) are considered optional. The table also indicates any
-default values, and whether a property supports the NiFi Expression Language.
+properties (not in bold) are considered optional.
 
-| Name | Default Value | Allowable Values | Expression Language Supported? | Description |
-| - | - | - | - | - |
-|**Use Default Credentials**|false||No|If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.|
-|Access Key|||Yes|Specifies the AWS Access Key|
-|Secret Key|||Yes|Specifies the AWS Secret Key|
-|Credentials File|||No|Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Use Default Credentials**|false||If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.|
+|Access Key|||Specifies the AWS Access Key|
+|Secret Key|||Specifies the AWS Secret Key|
+|Credentials File|||Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
 
 ## AzureStorageCredentialsService
 
@@ -51,13 +50,13 @@ controller service so that Azure storage credentials can be managed and controll
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other
-properties (not in bold) are considered optional. The table also indicates any
-default values, and whether a property supports the NiFi Expression Language.
+properties (not in bold) are considered optional.
 
-| Name | Default Value | Allowable Values | Expression Language Supported? | Description |
-| - | - | - | - | - |
-|Storage Account Name||||The storage account name.|
-|Storage Account Key||||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.|
-|SAS Token||||Shared Access Signature token. Specify either SAS Token (recommended) or Account Key.|
-|Common Storage Account Endpoint Suffix||||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).|
-|Connection String||||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Storage Account Name|||The storage account name.|
+|Storage Account Key|||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.|
+|SAS Token|||Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.|
+|Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).|
+|Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.|
+|**Use Managed Identity Credentials**|false||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|
