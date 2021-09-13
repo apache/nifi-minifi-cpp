@@ -104,7 +104,7 @@ option(ENABLE_SQL "Enables the SQL Suite of Tools." OFF)
 option(ENABLE_MQTT "Enables the mqtt extension." OFF)
 option(ENABLE_PCAP "Enables the PCAP extension." OFF)
 option(ENABLE_LIBRDKAFKA "Enables the librdkafka extension." OFF)
-option(DISABLE_SCRIPTING "Disables the scripting extensions." OFF)
+option(ENABLE_SCRIPTING "Enables the scripting extensions." OFF)
 option(ENABLE_SENSORS "Enables the Sensors package." OFF)
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
 option(ENABLE_TENSORFLOW "Enables the TensorFlow extensions." OFF)  ## Disabled by default because TF can be complex/environment-specific to build
@@ -494,7 +494,7 @@ if (ENABLE_ALL OR ENABLE_LIBRDKAFKA)
 endif()
 
 ## Scripting extensions
-if (NOT DISABLE_SCRIPTING)
+if (ENABLE_ALL OR ENABLE_SCRIPTING)
 	include(Sol2)
 	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
 endif()

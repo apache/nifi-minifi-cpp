@@ -68,8 +68,8 @@
           "value": "OFF"
         },
         {
-          "name": "DISABLE_SCRIPTING",
-          "value": "ON"
+          "name": "ENABLE_SCRIPTING",
+          "value": "OFF"
         },
         {
           "name": "EXCLUDE_BOOST",
