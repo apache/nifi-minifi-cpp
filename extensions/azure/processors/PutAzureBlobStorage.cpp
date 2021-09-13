@@ -27,22 +27,13 @@
 #include "controllerservices/AzureStorageCredentialsService.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
 const core::Property PutAzureBlobStorage::ContainerName(
   core::PropertyBuilder::createProperty("Container Name")
     ->withDescription("Name of the Azure Storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.")
     ->supportsExpressionLanguage(true)
     ->isRequired(true)
-    ->build());
-const core::Property PutAzureBlobStorage::AzureStorageCredentialsService(
-  core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
-    ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
     ->build());
 const core::Property PutAzureBlobStorage::StorageAccountName(
     core::PropertyBuilder::createProperty("Storage Account Name")
@@ -91,14 +82,13 @@ const core::Relationship PutAzureBlobStorage::Failure("failure", "Unsuccessful o
 
 void PutAzureBlobStorage::initialize() {
   // Set the supported properties
-  setSupportedProperties({
+  updateSupportedProperties({
     ContainerName,
     StorageAccountName,
     StorageAccountKey,
     SASToken,
     CommonStorageAccountEndpointSuffix,
     ConnectionString,
-    AzureStorageCredentialsService,
     Blob,
     CreateContainer
   });
@@ -145,27 +135,6 @@ void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>
   }
 
   logger_->log_info("Using storage account name and SAS token for authentication");
-}
-
-std::string PutAzureBlobStorage::getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
-  std::string service_name;
-  if (!context->getProperty(AzureStorageCredentialsService.getName(), service_name) || service_name.empty()) {
-    return "";
-  }
-
-  std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
-  if (nullptr == service) {
-    logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name.c_str());
-    return "";
-  }
-
-  auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
-  if (!azure_credentials_service) {
-    logger_->log_error("Controller service with name: '%s' is not an Azure Storage credentials service", service_name.c_str());
-    return "";
-  }
-
-  return azure_credentials_service->getConnectionString();
 }
 
 std::string PutAzureBlobStorage::getAzureConnectionStringFromProperties(
@@ -260,9 +229,4 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
 
 REGISTER_RESOURCE(PutAzureBlobStorage, "Puts content into an Azure Storage Blob");
 
-}  // namespace processors
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::processors

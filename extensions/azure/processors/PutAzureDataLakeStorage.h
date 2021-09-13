@@ -27,20 +27,19 @@
 #include <vector>
 
 #include "core/Property.h"
-#include "core/Processor.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureDataLakeStorage.h"
 #include "utils/Enum.h"
+#include "AzureStorageProcessor.h"
 
 class PutAzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureDataLakeStorage final : public core::Processor {
+class PutAzureDataLakeStorage final : public AzureStorageProcessor {
  public:
   // Supported Properties
-  static const core::Property AzureStorageCredentialsService;
   static const core::Property FilesystemName;
   static const core::Property DirectoryName;
   static const core::Property FileName;
@@ -57,7 +56,7 @@ class PutAzureDataLakeStorage final : public core::Processor {
   )
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : core::Processor(name, uuid) {
+    : PutAzureDataLakeStorage(name, uuid, nullptr) {
   }
 
   ~PutAzureDataLakeStorage() override = default;
@@ -91,14 +90,12 @@ class PutAzureDataLakeStorage final : public core::Processor {
   }
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : core::Processor(name, uuid),
+    : AzureStorageProcessor(name, uuid, logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()),
       azure_data_lake_storage_(std::move(data_lake_storage_client)) {
   }
 
-  std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
   std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
 
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()};
   std::string connection_string_;
   FileExistsResolutionStrategy conflict_resolution_strategy_;
   storage::AzureDataLakeStorage azure_data_lake_storage_;

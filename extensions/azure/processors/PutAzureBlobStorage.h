@@ -27,27 +27,19 @@
 #include <vector>
 
 #include "core/Property.h"
-#include "core/Processor.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/BlobStorage.h"
+#include "AzureStorageProcessor.h"
 
 class PutAzureBlobStorageTestsFixture;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace processors {
+namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureBlobStorage : public core::Processor {
+class PutAzureBlobStorage final : public AzureStorageProcessor {
  public:
-  static constexpr char const* ProcessorName = "PutAzureBlobStorage";
-
   // Supported Properties
   static const core::Property ContainerName;
-  static const core::Property AzureStorageCredentialsService;
   static const core::Property StorageAccountName;
   static const core::Property StorageAccountKey;
   static const core::Property SASToken;
@@ -107,11 +99,10 @@ class PutAzureBlobStorage : public core::Processor {
   friend class ::PutAzureBlobStorageTestsFixture;
 
   explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorage> blob_storage_wrapper)
-    : core::Processor(name, uuid)
+    : AzureStorageProcessor(name, uuid, logging::LoggerFactory<PutAzureBlobStorage>::getLogger())
     , blob_storage_wrapper_(std::move(blob_storage_wrapper)) {
   }
 
-  std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
   static std::string getAzureConnectionStringFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file);
@@ -123,12 +114,6 @@ class PutAzureBlobStorage : public core::Processor {
   std::mutex azure_storage_mutex_;
   std::unique_ptr<storage::BlobStorage> blob_storage_wrapper_;
   bool create_container_ = false;
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<PutAzureBlobStorage>::getLogger()};
 };
 
-}  // namespace processors
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::processors

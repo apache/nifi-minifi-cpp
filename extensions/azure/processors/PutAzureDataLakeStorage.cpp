@@ -26,11 +26,6 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property PutAzureDataLakeStorage::AzureStorageCredentialsService(
-    core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
-      ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
-      ->isRequired(true)
-      ->build());
 const core::Property PutAzureDataLakeStorage::FilesystemName(
     core::PropertyBuilder::createProperty("Filesystem Name")
       ->withDescription("Name of the Azure Storage File System. It is assumed to be already existing.")
@@ -61,8 +56,7 @@ const core::Relationship PutAzureDataLakeStorage::Failure("failure", "Files that
 
 void PutAzureDataLakeStorage::initialize() {
   // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
+  updateSupportedProperties({
     FilesystemName,
     DirectoryName,
     FileName,
@@ -73,27 +67,6 @@ void PutAzureDataLakeStorage::initialize() {
     Success,
     Failure
   });
-}
-
-std::string PutAzureDataLakeStorage::getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
-  std::string service_name;
-  if (!context->getProperty(AzureStorageCredentialsService.getName(), service_name) || service_name.empty()) {
-    return "";
-  }
-
-  auto service = context->getControllerService(service_name);
-  if (nullptr == service) {
-    logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name.c_str());
-    return "";
-  }
-
-  auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
-  if (!azure_credentials_service) {
-    logger_->log_error("Controller service with name: '%s' is not an Azure Storage credentials service", service_name.c_str());
-    return "";
-  }
-
-  return azure_credentials_service->getConnectionString();
 }
 
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
