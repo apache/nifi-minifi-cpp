@@ -31,6 +31,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/BlobStorage.h"
 #include "AzureStorageProcessorBase.h"
+#include "storage/AzureStorageCredentials.h"
 
 class PutAzureBlobStorageTestsFixture;
 
@@ -47,6 +48,7 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
   static const core::Property ConnectionString;
   static const core::Property Blob;
   static const core::Property CreateContainer;
+  static const core::Property UseManagedIdentityCredentials;
 
   // Supported Relationships
   static const core::Relationship Failure;
@@ -55,8 +57,6 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
   explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : PutAzureBlobStorage(name, uuid, nullptr) {
   }
-
-  ~PutAzureBlobStorage() override = default;
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
@@ -103,16 +103,20 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
     , blob_storage_wrapper_(std::move(blob_storage_wrapper)) {
   }
 
-  static std::string getAzureConnectionStringFromProperties(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file);
-  std::string getConnectionString(
+  storage::AzureStorageCredentials getAzureCredentialsFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const;
-  void createAzureStorageClient(const std::string &connection_string, const std::string &container_name);
+  std::optional<storage::AzureStorageCredentials> getCredentials(
+    const std::shared_ptr<core::ProcessContext> &context,
+    const std::shared_ptr<core::FlowFile> &flow_file) const;
+  bool createAzureStorageClient(
+    const std::shared_ptr<core::ProcessContext> &context,
+    const std::shared_ptr<core::FlowFile> &flow_file,
+    const std::string &container_name);
 
   std::unique_ptr<storage::BlobStorage> blob_storage_wrapper_;
   bool create_container_ = false;
+  bool use_managed_identity_credentials_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

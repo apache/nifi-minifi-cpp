@@ -32,25 +32,25 @@ const core::Property AzureStorageProcessorBase::AzureStorageCredentialsService(
     ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
     ->build());
 
-std::string AzureStorageProcessorBase::getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
+std::optional<storage::AzureStorageCredentials> AzureStorageProcessorBase::getCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string service_name;
   if (!context->getProperty(AzureStorageCredentialsService.getName(), service_name) || service_name.empty()) {
-    return "";
+    return std::nullopt;
   }
 
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
   if (nullptr == service) {
     logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name);
-    return "";
+    return std::nullopt;
   }
 
   auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
   if (!azure_credentials_service) {
     logger_->log_error("Controller service with name: '%s' is not an Azure Storage credentials service", service_name);
-    return "";
+    return std::nullopt;
   }
 
-  return azure_credentials_service->getConnectionString();
+  return azure_credentials_service->getCredentials();
 }
 
 }  // namespace org::apache::nifi::minifi::azure::processors

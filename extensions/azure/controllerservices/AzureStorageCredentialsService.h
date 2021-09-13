@@ -40,6 +40,7 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   EXTENSIONAPI static const core::Property SASToken;
   EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
   EXTENSIONAPI static const core::Property ConnectionString;
+  EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
 
   explicit AzureStorageCredentialsService(const std::string& name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid),
@@ -66,8 +67,8 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
 
   void onEnable() override;
 
-  std::string getConnectionString() const {
-    return credentials_.getConnectionString();
+  storage::AzureStorageCredentials getCredentials() const {
+    return credentials_;
   }
 
  private:

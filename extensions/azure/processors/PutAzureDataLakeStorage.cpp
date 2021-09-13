@@ -72,9 +72,14 @@ void PutAzureDataLakeStorage::initialize() {
 }
 
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  connection_string_ = getConnectionStringFromControllerService(context);
-  if (connection_string_.empty()) {
+  auto credentials = getCredentialsFromControllerService(context);
+  if (!credentials) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
+  }
+
+  connection_string_ = credentials->getConnectionString();
+  if (connection_string_.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
   }
 
   conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(

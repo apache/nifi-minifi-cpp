@@ -46,15 +46,20 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
   const std::string TEST_TIMESTAMP = "test-timestamp";
 
   MockBlobStorage()
-    : BlobStorage("", "") {
+    : BlobStorage("", "", "") {
   }
 
-  void createContainer() override {
+  void createContainerIfNotExists() override {
     container_created_ = true;
   }
 
-  void resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) override {
-    connection_string_ = connection_string;
+  void resetClientIfNeeded(const minifi::azure::storage::ConnectionString &connection_string, const std::string &container_name) override {
+    connection_string_ = connection_string.value;
+    container_name_ = container_name;
+  }
+
+  void resetClientIfNeeded(const minifi::azure::storage::StorageAccount &storage_account, const std::string &container_name) override {
+    account_name_ = storage_account.name;
     container_name_ = container_name;
   }
 
@@ -74,6 +79,10 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
 
   std::string getConnectionString() const {
     return connection_string_;
+  }
+
+  std::string getAccountName() const {
+    return account_name_;
   }
 
   std::string getContainerName() const {
@@ -283,6 +292,37 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     REQUIRE(failed_flowfiles.size() == 1);
     REQUIRE(failed_flowfiles[0] == TEST_DATA);
   }
+
+  SECTION("Account name and managed identity are used in properties") {
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(put_azure_blob_storage, "Use Managed Identity Credentials", "true");
+    test_controller.runSession(plan, true);
+    REQUIRE(getFailedFlowFileContents().size() == 0);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == "");
+    REQUIRE(mock_blob_storage_ptr->getAccountName() == STORAGE_ACCOUNT_NAME);
+    REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+  }
+
+  SECTION("Account name and managed identity are used from Azure Storage Credentials Service") {
+    auto azure_storage_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(azure_storage_cred_service, "Use Managed Identity Credentials", "true");
+    plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
+    test_controller.runSession(plan, true);
+    REQUIRE(getFailedFlowFileContents().size() == 0);
+    REQUIRE(mock_blob_storage_ptr->getConnectionString() == "");
+    REQUIRE(mock_blob_storage_ptr->getAccountName() == STORAGE_ACCOUNT_NAME);
+    REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+  }
+}
+
+TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failure in case Blob is not set and filename is empty", "[azureBlobStorageUpload]") {
+  plan->setProperty(update_attribute, "test.container", CONTAINER_NAME, true);
+  plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
+  plan->setProperty(update_attribute, "filename", "", true);
+  setDefaultCredentials();
+  test_controller.runSession(plan, true);
+  REQUIRE(LogTestController::getInstance().contains("Blob is not set and default 'filename' attribute could not be found!"));
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[azureBlobStorageUpload]") {

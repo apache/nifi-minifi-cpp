@@ -36,6 +36,7 @@ struct AzureStorageCredentials {
   std::string sas_token;
   std::string endpoint_suffix;
   std::string connection_string;
+  bool use_managed_identity_credentials = false;
 
   std::string getConnectionString() const {
     if (!connection_string.empty()) {

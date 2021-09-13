@@ -31,6 +31,14 @@ namespace minifi {
 namespace azure {
 namespace storage {
 
+struct StorageAccount {
+  std::string name;
+};
+
+struct ConnectionString {
+  std::string value;
+};
+
 struct UploadBlobResult {
   std::string primary_uri;
   std::string etag;
@@ -40,18 +48,21 @@ struct UploadBlobResult {
 
 class BlobStorage {
  public:
-  BlobStorage(std::string connection_string, std::string container_name)
-    : connection_string_(std::move(connection_string))
-    , container_name_(std::move(container_name)) {
+  BlobStorage(std::string connection_string, std::string account_name, std::string container_name)
+    : connection_string_(std::move(connection_string)),
+      account_name_(account_name),
+      container_name_(std::move(container_name)) {
   }
 
-  virtual void createContainer() = 0;
-  virtual void resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) = 0;
+  virtual void createContainerIfNotExists() = 0;
+  virtual void resetClientIfNeeded(const ConnectionString &connection_string, const std::string &container_name) = 0;
+  virtual void resetClientIfNeeded(const StorageAccount &storage_account, const std::string &container_name) = 0;
   virtual std::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) = 0;
   virtual ~BlobStorage() = default;
 
  protected:
   std::string connection_string_;
+  std::string account_name_;
   std::string container_name_;
 };
 

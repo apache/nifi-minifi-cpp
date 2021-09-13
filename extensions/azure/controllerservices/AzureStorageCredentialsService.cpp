@@ -40,7 +40,7 @@ const core::Property AzureStorageCredentialsService::StorageAccountKey(
       ->build());
 const core::Property AzureStorageCredentialsService::SASToken(
     core::PropertyBuilder::createProperty("SAS Token")
-      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key.")
+      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key if no Managed Identity is used.")
       ->build());
 const core::Property AzureStorageCredentialsService::CommonStorageAccountEndpointSuffix(
     core::PropertyBuilder::createProperty("Common Storage Account Endpoint Suffix")
@@ -51,9 +51,15 @@ const core::Property AzureStorageCredentialsService::ConnectionString(
   core::PropertyBuilder::createProperty("Connection String")
     ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties.")
     ->build());
+const core::Property AzureStorageCredentialsService::UseManagedIdentityCredentials(
+  core::PropertyBuilder::createProperty("Use Managed Identity Credentials")
+    ->withDescription("If true Managed Identity credentials will be used together with the Storage Account Name for authentication.")
+    ->isRequired(true)
+    ->withDefaultValue<bool>(false)
+    ->build());
 
 void AzureStorageCredentialsService::initialize() {
-  setSupportedProperties({StorageAccountName, StorageAccountKey, SASToken, CommonStorageAccountEndpointSuffix, ConnectionString});
+  setSupportedProperties({StorageAccountName, StorageAccountKey, SASToken, CommonStorageAccountEndpointSuffix, ConnectionString, UseManagedIdentityCredentials});
 }
 
 void AzureStorageCredentialsService::onEnable() {
@@ -62,6 +68,7 @@ void AzureStorageCredentialsService::onEnable() {
   getProperty(SASToken.getName(), credentials_.sas_token);
   getProperty(CommonStorageAccountEndpointSuffix.getName(), credentials_.endpoint_suffix);
   getProperty(ConnectionString.getName(), credentials_.connection_string);
+  getProperty(UseManagedIdentityCredentials.getName(), credentials_.use_managed_identity_credentials);
 }
 
 REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");

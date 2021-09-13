@@ -23,6 +23,8 @@
 #include <memory>
 #include <utility>
 
+#include "azure/identity.hpp"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -30,29 +32,51 @@ namespace minifi {
 namespace azure {
 namespace storage {
 
-AzureBlobStorage::AzureBlobStorage(std::string connection_string, std::string container_name)
-  : BlobStorage(std::move(connection_string), std::move(container_name))
+AzureBlobStorage::AzureBlobStorage(const StorageAccount& storage_account, const std::string& container_name)
+  : BlobStorage("", storage_account.name, container_name) {
+  auto storage_client = Azure::Storage::Blobs::BlobServiceClient(
+      "https://" + storage_account.name + ".blob.core.windows.net", std::make_shared<Azure::Identity::ManagedIdentityCredential>());
+
+  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(storage_client.GetBlobContainerClient(container_name));
+}
+
+AzureBlobStorage::AzureBlobStorage(const ConnectionString& connection_string, std::string container_name)
+  : BlobStorage(connection_string.value, "", std::move(container_name))
   , container_client_(std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
       Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string_, container_name_))) {
 }
 
-void AzureBlobStorage::resetClientIfNeeded(const std::string &connection_string, const std::string &container_name) {
-  if (connection_string == connection_string_ && container_name_ == container_name) {
+void AzureBlobStorage::resetClientIfNeeded(const StorageAccount &storage_account, const std::string &container_name) {
+  if (storage_account.name == account_name_ && container_name_ == container_name) {
     logger_->log_debug("Client credentials have not changed, no need to reset client");
     return;
   }
-  connection_string_ = connection_string;
+  account_name_ = storage_account.name;
   container_name_ = container_name;
   logger_->log_debug("Client has been reset with new credentials");
-  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string, container_name));
+  auto storage_client = Azure::Storage::Blobs::BlobServiceClient(
+      "https://" + storage_account.name + ".blob.core.windows.net", std::make_shared<Azure::Identity::ManagedIdentityCredential>());
+
+  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(storage_client.GetBlobContainerClient(container_name));
 }
 
-void AzureBlobStorage::createContainer() {
+void AzureBlobStorage::resetClientIfNeeded(const ConnectionString &connection_string, const std::string &container_name) {
+  if (connection_string.value == connection_string_ && container_name_ == container_name) {
+    logger_->log_debug("Client credentials have not changed, no need to reset client");
+    return;
+  }
+  connection_string_ = connection_string.value;
+  container_name_ = container_name;
+  logger_->log_debug("Client has been reset with new credentials");
+  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string_, container_name_));
+}
+
+void AzureBlobStorage::createContainerIfNotExists() {
   try {
-    auto blob_client = container_client_->Create();
+    auto blob_client = container_client_->CreateIfNotExists();
     logger_->log_debug("Container created");
-  } catch (const std::runtime_error&) {
-    logger_->log_debug("Container creation failed, it already exists.");
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while creating container: %s", ex.what());
   }
 }
 
@@ -69,8 +93,8 @@ std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string &
     }
     result.timestamp = response.Value.LastModified.ToString(Azure::DateTime::DateFormat::Rfc1123);
     return result;
-  } catch (const std::runtime_error& err) {
-    logger_->log_error("A runtime error occurred while uploading blob: %s", err.what());
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while uploading blob: %s", ex.what());
     return std::nullopt;
   }
 }
