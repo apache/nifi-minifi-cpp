@@ -16,7 +16,7 @@
 # under the License.
 
 function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/azure-sdk-cpp-openssl-include-fix.patch")
+    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/azure-sdk-cpp/azure-sdk-cpp-remove-samples.patch")
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
     # Define byproducts
@@ -53,7 +53,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             azure-sdk-cpp-external
             GIT_REPOSITORY "https://github.com/Azure/azure-sdk-for-cpp.git"
-            GIT_TAG "azure-storage-files-datalake_12.0.1"
+            GIT_TAG "azure-storage-files-datalake_12.2.0"
             BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
