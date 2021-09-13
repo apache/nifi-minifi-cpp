@@ -29,7 +29,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 
 RUN apt-get update \
-    && DEBIAN_FRONTEND="noninteractive" apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven autogen autoconf automake \
+    && DEBIAN_FRONTEND="noninteractive" apt-get install -y openjdk-8-jdk openjdk-8-source sudo git maven autogen autoconf automake pkgconf libtool \
     && mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
 

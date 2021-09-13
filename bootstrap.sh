@@ -268,7 +268,7 @@ add_enabled_option HTTP_CURL_ENABLED ${TRUE} "DISABLE_CURL"
 add_enabled_option LIBARCHIVE_ENABLED ${TRUE} "DISABLE_LIBARCHIVE"
 add_dependency LIBARCHIVE_ENABLED "libarchive"
 
-add_enabled_option EXECUTE_SCRIPT_ENABLED ${TRUE} "DISABLE_SCRIPTING"
+add_disabled_option EXECUTE_SCRIPT_ENABLED ${FALSE} "ENABLE_SCRIPTING"
 add_dependency EXECUTE_SCRIPT_ENABLED "python"
 add_dependency EXECUTE_SCRIPT_ENABLED "lua"
 
