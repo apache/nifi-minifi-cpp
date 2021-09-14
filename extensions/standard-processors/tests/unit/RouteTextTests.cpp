@@ -339,9 +339,6 @@ TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation ignores
   SECTION("Simple line ending") {
     content = "A\n";
   }
-  SECTION("Not a line ending but a single non-terminated line") {
-    content = "A\r";
-  }
 
   putFlowFile({}, content);
 
