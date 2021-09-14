@@ -220,7 +220,7 @@ TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Matching Stra
       expected["here"] = {"seven"};
       expected["unmatched"] = {"SeVeN", "ven"};
     }
-    SECTION("Case insensitive") {
+    SECTION("Case insensitive matching does not apply in Satisfy Expression mode") {
       proc_->setProperty(processors::RouteText::IgnoreCase, "true");
       expected["here"] = {"seven"};
       expected["unmatched"] = {"SeVeN", "ven"};
@@ -295,8 +295,7 @@ TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation") {
   createOutput({"A", ""});
   createOutput({"B", ""});
 
-  std::string content = "A\nB\r A \r\n\r\rA";
-  // '\r' is a line terminator iff a non-'\n' character follows it
+  std::string content = "A\nB\r\n A \r\n\r\rA";
   putFlowFile({}, content);
 
   std::map<std::string, FlowFilePatternVec> expected{
@@ -310,16 +309,15 @@ TEST_CASE_METHOD(RouteTextController, "RouteText 'Per Line' segmentation") {
 
   SECTION("Without trim") {
     proc_->setProperty(processors::RouteText::TrimWhitespace, "false");
-    expected["A"] = {"A\nA"};
-    expected["B"] = {"B\r"};
-    expected["unmatched"] = {" A \r\n\r\r"};
+    expected["A"] = {"A\n"};
+    expected["B"] = {"B\r\n"};
+    expected["unmatched"] = {" A \r\n\r\rA"};
   }
 
   SECTION("With trim") {
     proc_->setProperty(processors::RouteText::TrimWhitespace, "true");
-    expected["A"] = {"A\n A \r\nA"};
-    expected["B"] = {"B\r"};
-    expected["unmatched"] = {"\r\r"};
+    expected["A"] = {"A\n A \r\n\r\rA"};
+    expected["B"] = {"B\r\n"};
   }
 
   run();

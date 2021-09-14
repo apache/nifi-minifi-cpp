@@ -1,7 +1,4 @@
 /**
- * @file RouteText.cpp
- * TailFile class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -85,7 +82,7 @@ const core::Property RouteText::GroupingRegex(
     core::PropertyBuilder::createProperty("Grouping Regular Expression")
     ->withDescription("Specifies a Regular Expression to evaluate against each segment to determine which Group it should be placed in. "
                       "The Regular Expression must have at least one Capturing Group that defines the segment's Group. If multiple Capturing Groups "
-                      "exist in the Regular Expression, the values from all Capturing Groups will be concatenated together. Two segments will not be "
+                      "exist in the Regular Expression, the values from all Capturing Groups will be joined together with \", \". Two segments will not be "
                       "placed into the same FlowFile unless they both have the same value for the Group (or neither matches the Regular Expression). "
                       "For example, to group together all lines in a CSV File by the first column, we can set this value to \"(.*?),.*\" (and use \"Per Line\" segmentation). "
                       "Two segments that have the same Group but different Relationships will never be placed into the same FlowFile.")
@@ -145,7 +142,7 @@ class RouteText::ReadCallback : public InputStreamCallback {
   using Fn = std::function<void(Segment)>;
 
  public:
-  explicit ReadCallback(Segmentation segmentation, Fn&& fn) : segmentation_(segmentation), fn_(std::move(fn)) {}
+  ReadCallback(Segmentation segmentation, Fn&& fn) : segmentation_(segmentation), fn_(std::move(fn)) {}
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     std::vector<uint8_t> buffer;
@@ -175,28 +172,16 @@ class RouteText::ReadCallback : public InputStreamCallback {
       case Segmentation::PER_LINE: {
         // 1-based index as in nifi
         size_t segment_idx = 1;
-        // do not strip \n\r characters before invocation to be
-        // in-line with the nifi semantics
-        // '\r' is only considered a line terminator if a non-'\n' char follows
         std::string_view::size_type curr = 0;
         while (curr < content.length()) {
           // find beginning of next line
-          std::string_view::size_type next_line = std::string_view::npos;
-          if (auto next_marker = content.find_first_of("\r\n", curr); next_marker != std::string_view::npos) {
-            if (content[next_marker] == '\n') {
-              next_line = next_marker + 1;
-            } else if (next_marker + 1 < content.size()) {
-              if (content[next_marker + 1] == '\n') {
-                next_line = next_marker + 2;
-              } else {
-                next_line = next_marker + 1;
-              }
-            }
-          }
+          std::string_view::size_type next_line = content.find('\n', curr);
 
           if (next_line == std::string_view::npos) {
             fn_({content.substr(curr), segment_idx});
           } else {
+            // include newline character to be in-line with nifi semantics
+            ++next_line;
             fn_({content.substr(curr, next_line - curr), segment_idx});
           }
           curr = next_line;
@@ -298,7 +283,7 @@ class RouteText::MatchingContext {
   std::map<std::string, std::regex> regex_values_;
 
   struct OwningSearcher {
-    explicit OwningSearcher(std::string str, CasePolicy case_policy)
+    OwningSearcher(std::string str, CasePolicy case_policy)
       : str_(std::move(str)), searcher_(str_.cbegin(), str_.cend(), CaseAwareHash{case_policy}, CaseAwareEq{case_policy}) {}
     OwningSearcher(const OwningSearcher&) = delete;
     OwningSearcher(OwningSearcher&&) = delete;
@@ -312,6 +297,17 @@ class RouteText::MatchingContext {
   std::map<std::string, OwningSearcher> searcher_values_;
 };
 
+namespace {
+struct Route {
+  core::Relationship relationship_;
+  std::optional<std::string> group_name_;
+
+  bool operator<(const Route& other) const {
+    return std::tie(relationship_, group_name_) < std::tie(other.relationship_, other.group_name_);
+  }
+};
+}  // namespace
+
 void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
   auto flow_file = session->get();
   if (!flow_file) {
@@ -319,8 +315,7 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
     return;
   }
 
-  using GroupName = std::string;
-  std::map<std::pair<core::Relationship, std::optional<GroupName>>, std::string> flow_file_contents;
+  std::map<Route, std::string> flow_file_contents;
 
   MatchingContext matching_context(*context, flow_file, case_policy_);
 
@@ -338,23 +333,23 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
     auto group = getGroup(preprocessed_value);
     switch (routing_.value()) {
       case Routing::ALL: {
-        for (const auto& prop : dynamic_properties_) {
-          if (!matchSegment(matching_context, segment, prop.second)) {
-            flow_file_contents[{Unmatched, group}] += original_value;
-            return;
-          }
+        if (std::all_of(dynamic_properties_.cbegin(), dynamic_properties_.cend(), [&] (const auto& prop) {
+          return matchSegment(matching_context, segment, prop.second);
+        })) {
+          flow_file_contents[{Matched, group}] += original_value;
+        } else {
+          flow_file_contents[{Unmatched, group}] += original_value;
         }
-        flow_file_contents[{Matched, group}] += original_value;
         return;
       }
       case Routing::ANY: {
-        for (const auto& prop : dynamic_properties_) {
-          if (matchSegment(matching_context, segment, prop.second)) {
-            flow_file_contents[{Matched, group}] += original_value;
-            return;
-          }
+        if (std::any_of(dynamic_properties_.cbegin(), dynamic_properties_.cend(), [&] (const auto& prop) {
+          return matchSegment(matching_context, segment, prop.second);
+        })) {
+          flow_file_contents[{Matched, group}] += original_value;
+        } else {
+          flow_file_contents[{Unmatched, group}] += original_value;
         }
-        flow_file_contents[{Unmatched, group}] += original_value;
         return;
       }
       case Routing::DYNAMIC: {
@@ -375,13 +370,13 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
   });
   session->read(flow_file, &callback);
 
-  for (const auto& flow_file_content : flow_file_contents) {
+  for (const auto& [route, content] : flow_file_contents) {
     auto new_flow_file = session->create(flow_file);
-    if (flow_file_content.first.second) {
-      new_flow_file->setAttribute(GROUP_ATTRIBUTE_NAME, flow_file_content.first.second.value());
+    if (route.group_name_) {
+      new_flow_file->setAttribute(GROUP_ATTRIBUTE_NAME, route.group_name_.value());
     }
-    session->writeBuffer(new_flow_file, flow_file_content.second);
-    session->transfer(new_flow_file, flow_file_content.first.first);
+    session->writeBuffer(new_flow_file, content);
+    session->transfer(new_flow_file, route.relationship_);
   }
 
   session->transfer(flow_file, Original);
