@@ -47,8 +47,8 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
     result.length = buffer_size;
     result.primary_uri = upload_url;
     return result;
-  } catch(const std::runtime_error& err) {
-    logger_->log_error("A runtime error occurred while uploading file to Azure Data Lake storage: %s", err.what());
+  } catch(const std::exception& ex) {
+    logger_->log_error("An exception occurred while uploading file to Azure Data Lake storage: %s", ex.what());
     result.result_code = UploadResultCode::FAILURE;
     return result;
   }
