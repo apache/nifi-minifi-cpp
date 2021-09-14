@@ -89,7 +89,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     target_include_directories(AZURE::azure-core INTERFACE ${LIBAZURE_INCLUDE_DIRS})
     target_link_libraries(AZURE::azure-core INTERFACE CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
     if (WIN32)
-        target_link_libraries(AZURE::azure-core INTERFACE winhttp.lib)
+        target_link_libraries(AZURE::azure-core INTERFACE winhttp.lib WebServices.lib)
     endif()
 
     add_library(AZURE::azure-identity STATIC IMPORTED)
