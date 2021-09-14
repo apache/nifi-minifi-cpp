@@ -354,9 +354,9 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
       }
       case Routing::DYNAMIC: {
         bool routed = false;
-        for (const auto& prop : dynamic_properties_) {
-          if (matchSegment(matching_context, segment, prop.second)) {
-            flow_file_contents[{dynamic_relationships_[prop.first], group}] += original_value;
+        for (const auto& [property_name, prop] : dynamic_properties_) {
+          if (matchSegment(matching_context, segment, prop)) {
+            flow_file_contents[{dynamic_relationships_[property_name], group}] += original_value;
             routed = true;
           }
         }
@@ -465,11 +465,11 @@ void RouteText::onDynamicPropertyModified(const core::Property& /*orig_property*
 
   std::set<core::Relationship> relationships{Original, Unmatched, Matched};
 
-  for (const auto& prop : dynamic_properties_) {
-    core::Relationship rel{prop.first, "Dynamic Route"};
-    dynamic_relationships_[prop.first] = rel;
+  for (const auto& [property_name, prop] : dynamic_properties_) {
+    core::Relationship rel{property_name, "Dynamic Route"};
+    dynamic_relationships_[property_name] = rel;
     relationships.insert(rel);
-    logger_->log_info("RouteText registered dynamic route '%s' with expression '%s'", prop.first, prop.second.getValue().to_string());
+    logger_->log_info("RouteText registered dynamic route '%s' with expression '%s'", property_name, prop.getValue().to_string());
   }
 
   setSupportedRelationships(relationships);
