@@ -64,9 +64,8 @@ const core::Property PutAzureBlobStorage::ConnectionString(
     ->build());
 const core::Property PutAzureBlobStorage::Blob(
   core::PropertyBuilder::createProperty("Blob")
-    ->withDescription("The filename of the blob.")
+    ->withDescription("The filename of the blob. If left empty the filename attribute will be used by default.")
     ->supportsExpressionLanguage(true)
-    ->isRequired(true)
     ->build());
 const core::Property PutAzureBlobStorage::CreateContainer(
   core::PropertyBuilder::createProperty("Create Container")
@@ -113,10 +112,6 @@ void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>
   std::string value;
   if (!context->getProperty(ContainerName.getName(), value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Container Name property missing or invalid");
-  }
-
-  if (!context->getProperty(Blob.getName(), value) || value.empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Blob property missing or invalid");
   }
 
   if (context->getProperty(AzureStorageCredentialsService.getName(), value) && !value.empty()) {
@@ -245,8 +240,9 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   }
 
   std::string blob_name;
-  if (!context->getProperty(Blob, blob_name, flow_file) || blob_name.empty()) {
-    logger_->log_error("Blob name is invalid or empty!");
+  context->getProperty(Blob, blob_name, flow_file);
+  if (blob_name.empty() && (!flow_file->getAttribute("filename", blob_name) || blob_name.empty())) {
+    logger_->log_error("Blob is not set and default 'filename' attribute could not be found!");
     session->transfer(flow_file, Failure);
     return;
   }

@@ -1228,7 +1228,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).<br/>**Supports Expression Language: true**|
 |Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.<br/>**Supports Expression Language: true**|
 |Azure Storage Credentials Service|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
-|**Blob**|||The filename of the blob.<br/>**Supports Expression Language: true**|
+|**Blob**|||The filename of the blob. If left empty the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
 |**Create Container**|false||Specifies whether to check if the container exists and to automatically create it if it does not. Permission to list containers is required. If false, this check is not made, but the Put operation will fail if the container does not exist.|
 
 ### Relationships
