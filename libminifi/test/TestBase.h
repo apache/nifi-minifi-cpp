@@ -476,6 +476,16 @@ class TestController {
   std::vector<std::string> directories;
 };
 
+static bool disableAwsMetadata = [] {
+  // Disable retrieving AWS metadata for tests
+#ifdef WIN32
+  _putenv_s("AWS_EC2_METADATA_DISABLED", "true");
+#else
+  setenv("AWS_EC2_METADATA_DISABLED", "true", 1);
+#endif
+  return true;
+}();
+
 #if defined(LOAD_EXTENSIONS) && !defined(CUSTOM_EXTENSION_INIT)
 static bool extensionInitializer = [] {
   LogTestController::getInstance().setTrace<core::extension::ExtensionManager>();

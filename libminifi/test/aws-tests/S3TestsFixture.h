@@ -42,13 +42,6 @@ class S3TestsFixture {
   const std::string S3_BUCKET = "testBucket";
 
   S3TestsFixture() {
-    // Disable retrieving AWS metadata for tests
-    #ifdef WIN32
-    _putenv_s("AWS_EC2_METADATA_DISABLED", "true");
-    #else
-    setenv("AWS_EC2_METADATA_DISABLED", "true", 1);
-    #endif
-
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
