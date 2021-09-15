@@ -296,8 +296,7 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   TestController testController;
   using processors::InvokeHTTP;
 
-  std::shared_ptr<core::ContentRepository>
-  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GenerateFlowFile>();
@@ -305,8 +304,7 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::InvokeHTTP>();
   LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
 
-  std::shared_ptr<core::Processor>
-  listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
+  std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
   listenhttp->initialize();
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
   std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
@@ -351,8 +349,7 @@ TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
   using processors::InvokeHTTP;
   std::string url = "http://localhost:8681/testytesttest";
 
-  std::shared_ptr<core::ContentRepository>
-  content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GenerateFlowFile>();
@@ -360,8 +357,7 @@ TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::InvokeHTTP>();
   LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
 
-  std::shared_ptr<core::Processor>
-  listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP> ("listenhttp");
+  std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP> ("listenhttp");
   listenhttp->initialize();
   std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
   std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
