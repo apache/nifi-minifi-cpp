@@ -1,6 +1,6 @@
 /**
- * @file AzureStorageProcessor.h
- * AzureStorageProcessor class declaration
+ * @file AzureStorageProcessorBase.h
+ * AzureStorageProcessorBase class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -30,18 +30,18 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class AzureStorageProcessor : public core::Processor {
+class AzureStorageProcessorBase : public core::Processor {
  public:
   // Supported Properties
   static const core::Property AzureStorageCredentialsService;
 
-  explicit AzureStorageProcessor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger>& logger)
+  AzureStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger>& logger)
     : core::Processor(name, uuid),
       logger_(logger) {
     setSupportedProperties({AzureStorageCredentialsService});
   }
 
-  ~AzureStorageProcessor() override = default;
+  ~AzureStorageProcessorBase() override = default;
 
  protected:
   std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;

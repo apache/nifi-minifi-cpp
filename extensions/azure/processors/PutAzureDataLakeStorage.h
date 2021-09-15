@@ -31,13 +31,13 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureDataLakeStorage.h"
 #include "utils/Enum.h"
-#include "AzureStorageProcessor.h"
+#include "AzureStorageProcessorBase.h"
 
 class PutAzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureDataLakeStorage final : public AzureStorageProcessor {
+class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
  public:
   // Supported Properties
   static const core::Property FilesystemName;
@@ -59,8 +59,6 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessor {
     : PutAzureDataLakeStorage(name, uuid, nullptr) {
   }
 
-  ~PutAzureDataLakeStorage() override = default;
-
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
@@ -73,7 +71,7 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessor {
     ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger);
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
-    azure::storage::UploadDataLakeStorageResult getResult() const {
+    storage::UploadDataLakeStorageResult getResult() const {
       return result_;
     }
 
@@ -81,7 +79,7 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessor {
     uint64_t flow_size_;
     storage::AzureDataLakeStorage& azure_data_lake_storage_;
     const storage::PutAzureDataLakeStorageParameters& params_;
-    azure::storage::UploadDataLakeStorageResult result_;
+    storage::UploadDataLakeStorageResult result_;
     std::shared_ptr<logging::Logger> logger_;
   };
 
@@ -90,7 +88,7 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessor {
   }
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureStorageProcessor(name, uuid, logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()),
+    : AzureStorageProcessorBase(name, uuid, logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()),
       azure_data_lake_storage_(std::move(data_lake_storage_client)) {
   }
 

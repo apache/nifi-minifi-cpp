@@ -40,7 +40,6 @@ enum class UploadResultCode {
 struct UploadDataLakeStorageResult {
   UploadResultCode result_code = UploadResultCode::SUCCESS;
   std::string primary_uri;
-  std::size_t length;
 };
 
 class AzureDataLakeStorage {
@@ -48,7 +47,7 @@ class AzureDataLakeStorage {
   AzureDataLakeStorage();
   explicit AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client);
 
-  azure::storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size);
+  storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size);
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};

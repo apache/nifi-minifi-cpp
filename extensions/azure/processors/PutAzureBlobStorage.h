@@ -30,13 +30,13 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/BlobStorage.h"
-#include "AzureStorageProcessor.h"
+#include "AzureStorageProcessorBase.h"
 
 class PutAzureBlobStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureBlobStorage final : public AzureStorageProcessor {
+class PutAzureBlobStorage final : public AzureStorageProcessorBase {
  public:
   // Supported Properties
   static const core::Property ContainerName;
@@ -64,7 +64,7 @@ class PutAzureBlobStorage final : public AzureStorageProcessor {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(uint64_t flow_size, azure::storage::BlobStorage& blob_storage_wrapper, const std::string &blob_name)
+    ReadCallback(uint64_t flow_size, storage::BlobStorage& blob_storage_wrapper, const std::string &blob_name)
       : flow_size_(flow_size)
       , blob_storage_wrapper_(blob_storage_wrapper)
       , blob_name_(blob_name) {
@@ -84,22 +84,22 @@ class PutAzureBlobStorage final : public AzureStorageProcessor {
       return result_->length;
     }
 
-    std::optional<azure::storage::UploadBlobResult> getResult() const {
+    std::optional<storage::UploadBlobResult> getResult() const {
       return result_;
     }
 
    private:
     uint64_t flow_size_;
-    azure::storage::BlobStorage &blob_storage_wrapper_;
+    storage::BlobStorage &blob_storage_wrapper_;
     std::string blob_name_;
-    std::optional<azure::storage::UploadBlobResult> result_ = std::nullopt;
+    std::optional<storage::UploadBlobResult> result_ = std::nullopt;
   };
 
  private:
   friend class ::PutAzureBlobStorageTestsFixture;
 
   explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorage> blob_storage_wrapper)
-    : AzureStorageProcessor(name, uuid, logging::LoggerFactory<PutAzureBlobStorage>::getLogger())
+    : AzureStorageProcessorBase(name, uuid, logging::LoggerFactory<PutAzureBlobStorage>::getLogger())
     , blob_storage_wrapper_(std::move(blob_storage_wrapper)) {
   }
 

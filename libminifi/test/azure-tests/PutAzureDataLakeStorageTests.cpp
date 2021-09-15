@@ -18,6 +18,7 @@
 
 #include "../TestBase.h"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/TestUtils.h"
 #include "core/Processor.h"
 #include "processors/PutAzureDataLakeStorage.h"
 #include "processors/GetFile.h"
@@ -103,9 +104,7 @@ class PutAzureDataLakeStorageTestsFixture {
     put_azure_data_lake_storage_ = std::shared_ptr<minifi::azure::processors::PutAzureDataLakeStorage>(
       new minifi::azure::processors::PutAzureDataLakeStorage("PutAzureDataLakeStorage", utils::Identifier(), std::move(mock_data_lake_storage_client)));
     auto input_dir = test_controller_.createTempDirectory();
-    std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + GETFILE_FILE_NAME);
-    input_file_stream << TEST_DATA;
-    input_file_stream.close();
+    utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
 
     get_file_ = plan_->addProcessor("GetFile", "GetFile");
     plan_->setProperty(get_file_, processors::GetFile::Directory.getName(), input_dir);

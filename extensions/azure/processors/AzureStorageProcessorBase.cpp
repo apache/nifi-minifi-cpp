@@ -1,6 +1,6 @@
 /**
- * @file AzureStorageProcessor.cpp
- * AzureStorageProcessor class implementation
+ * @file AzureStorageProcessorBase.cpp
+ * AzureStorageProcessorBase class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 
-#include "AzureStorageProcessor.h"
+#include "AzureStorageProcessorBase.h"
 
 #include <memory>
 #include <string>
@@ -27,12 +27,12 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property AzureStorageProcessor::AzureStorageCredentialsService(
+const core::Property AzureStorageProcessorBase::AzureStorageCredentialsService(
   core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
     ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
     ->build());
 
-std::string AzureStorageProcessor::getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
+std::string AzureStorageProcessorBase::getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {
   std::string service_name;
   if (!context->getProperty(AzureStorageCredentialsService.getName(), service_name) || service_name.empty()) {
     return "";

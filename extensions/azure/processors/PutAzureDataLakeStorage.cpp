@@ -139,7 +139,7 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     session->putAttribute(flow_file, "azure.directory", params->directory_name);
     session->putAttribute(flow_file, "azure.filename", params->filename);
     session->putAttribute(flow_file, "azure.primaryUri", result.primary_uri);
-    session->putAttribute(flow_file, "azure.length", std::to_string(result.length));
+    session->putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
     logger_->log_debug("Successfully uploaded file '%s/%s' to filesystem '%s' on Azure Data Lake storage", params->directory_name, params->filename, params->file_system_name);
     session->transfer(flow_file, Success);
   }

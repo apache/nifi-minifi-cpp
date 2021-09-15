@@ -140,7 +140,7 @@ void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>
 std::string PutAzureBlobStorage::getAzureConnectionStringFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
-  azure::storage::AzureStorageCredentials credentials;
+  storage::AzureStorageCredentials credentials;
   context->getProperty(StorageAccountName, credentials.storage_account_name, flow_file);
   context->getProperty(StorageAccountKey, credentials.storage_account_key, flow_file);
   context->getProperty(SASToken, credentials.sas_token, flow_file);
@@ -199,7 +199,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
     return;
   }
 
-  std::optional<azure::storage::UploadBlobResult> upload_result;
+  std::optional<storage::UploadBlobResult> upload_result;
   {
     std::lock_guard<std::mutex> lock(azure_storage_mutex_);
     createAzureStorageClient(connection_string, container_name);
