@@ -40,7 +40,7 @@ const core::Property PutAzureDataLakeStorage::DirectoryName(
       ->build());
 const core::Property PutAzureDataLakeStorage::FileName(
     core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename")
+      ->withDescription("The filename to be uploaded. If left empty the filename attribute will be used by default.")
       ->supportsExpressionLanguage(true)
       ->build());
 const core::Property PutAzureDataLakeStorage::ConflictResolutionStrategy(
