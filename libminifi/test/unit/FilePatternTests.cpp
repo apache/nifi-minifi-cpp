@@ -21,13 +21,9 @@
 
 #include "../TestBase.h"
 #include "utils/file/FilePattern.h"
-#include "range/v3/view/transform.hpp"
 #include "range/v3/view/map.hpp"
 #include "range/v3/view/join.hpp"
-#include "range/v3/view/cache1.hpp"
-#include "range/v3/view/c_str.hpp"
 #include "range/v3/range/conversion.hpp"
-#include "range/v3/range.hpp"
 
 struct FilePatternTestAccessor {
   using FilePatternSegment = fileutils::FilePattern::FilePatternSegment;

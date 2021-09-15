@@ -32,7 +32,7 @@ static bool init(const std::shared_ptr<org::apache::nifi::minifi::Configure>& co
 }
 
 static void deinit() {
-  // TODO(adebreceni)
+  // TODO(adebreceni): deinitialization is not implemented
 }
 
 REGISTER_EXTENSION("JNIExtension", init, deinit);

@@ -30,7 +30,7 @@ static bool init(const std::shared_ptr<minifi::Configure>& config) {
 }
 
 static void deinit() {
-  // TODO(adebreceni)
+  // TODO(adebreceni): deinitialization is not implemented
 }
 
 REGISTER_EXTENSION("PythonExtension", init, deinit);
