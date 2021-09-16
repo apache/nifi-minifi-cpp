@@ -26,6 +26,7 @@
 #include "provenance/Provenance.h"
 #include "../TestBase.h"
 #include "../unit/ProvenanceTestHelper.h"
+#include "../unit/ContentRepositoryDependentTests.h"
 
 TEST_CASE("Write Claim", "[TestDBCR1]") {
   TestController testController;
@@ -225,3 +226,8 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
   REQUIRE(readstr == "well hello there");
 }
+
+TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles<core::repository::DatabaseContentRepository>();
+}
+

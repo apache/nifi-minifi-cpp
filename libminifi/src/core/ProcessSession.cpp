@@ -290,6 +290,28 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
   }
 }
 
+namespace {
+class FlowFileStream : public io::BaseStream {
+ public:
+  FlowFileStream(std::shared_ptr<io::BaseStream>& stream, const std::shared_ptr<core::FlowFile>& flow_file) : stream_(stream), flow_file_(flow_file) {
+    stream->seek(flow_file->getOffset());
+  }
+  // from InputStream
+  size_t size() const override { return flow_file_->getSize(); }
+  size_t read(uint8_t *value, size_t len) override { return stream_->read(value, len); }
+  // from OutputStream
+  size_t write(const uint8_t *value, size_t len) override { return stream_->write(value, len); }
+  // from Stream
+  void close() override { stream_->close(); }
+  void seek(size_t offset) override { stream_->seek(offset); }
+  int initialize() override { return stream_->initialize(); }
+  const uint8_t* getBuffer() const override { return stream_->getBuffer(); }
+ private:
+  const std::shared_ptr<io::BaseStream>& stream_;
+  const std::shared_ptr<core::FlowFile>& flow_file_;
+};
+}  // namespace
+
 int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback) {
   try {
     std::shared_ptr<ResourceClaim> claim = nullptr;
@@ -311,9 +333,8 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputS
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
     }
 
-    stream->seek(flow->getOffset());
-
-    auto ret = callback->process(stream);
+    auto flow_file_stream = std::make_shared<FlowFileStream>(stream, flow);
+    auto ret = callback->process(flow_file_stream);
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
