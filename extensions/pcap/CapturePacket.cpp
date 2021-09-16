@@ -34,7 +34,6 @@
 #include "PcapFilter.h"
 #include "PcapPlusPlusVersion.h"
 #include "PcapFileDevice.h"
-#include "PlatformSpecificUtils.h"
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"

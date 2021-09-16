@@ -1,2 +1,0 @@
-_f_data_transfered
-_f_trace_duration
