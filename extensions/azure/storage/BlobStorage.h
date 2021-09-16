@@ -24,20 +24,14 @@
 #include <utility>
 #include <vector>
 
+#include "AzureStorageEntities.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace azure {
 namespace storage {
-
-struct StorageAccount {
-  std::string name;
-};
-
-struct ConnectionString {
-  std::string value;
-};
 
 struct UploadBlobResult {
   std::string primary_uri;

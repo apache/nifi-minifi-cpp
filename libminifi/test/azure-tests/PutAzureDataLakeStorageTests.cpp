@@ -170,6 +170,18 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Azure storage credentials
   REQUIRE(getFailedFlowFileContents().size() == 0);
 }
 
+TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure credentials with managed identity use", "[azureDataLakeStorageParameters]") {
+  setDefaultProperties();
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString.getName(), "");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::UseManagedIdentityCredentials.getName(), "true");
+  plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::StorageAccountName.getName(), "TEST_ACCOUNT");
+  test_controller_.runSession(plan_, true);
+  REQUIRE(getFailedFlowFileContents().size() == 0);
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  REQUIRE(passed_params.connection_string.empty());
+  REQUIRE(passed_params.account_name == "TEST_ACCOUNT");
+}
+
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Filesystem name is not set", "[azureDataLakeStorageParameters]") {
   plan_->setProperty(update_attribute_, "test.filesystemname", "", true);
   test_controller_.runSession(plan_, true);
@@ -197,6 +209,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "key:azure.primaryUri value:" + mock_data_lake_storage_client_ptr_->PRIMARY_URI + "\n"));
   auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
   REQUIRE(passed_params.connection_string == CONNECTION_STRING);
+  REQUIRE(passed_params.account_name.empty());
   REQUIRE(passed_params.file_system_name == FILESYSTEM_NAME);
   REQUIRE(passed_params.directory_name == DIRECTORY_NAME);
   REQUIRE(passed_params.filename == GETFILE_FILE_NAME);

@@ -20,19 +20,39 @@
 
 #include "AzureDataLakeStorageClient.h"
 
+#include "azure/identity.hpp"
+
 namespace org::apache::nifi::minifi::azure::storage {
 
-void AzureDataLakeStorageClient::resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name) {
-  if (client_ == nullptr || connection_string_ != connection_string || file_system_name_ != file_system_name) {
+void AzureDataLakeStorageClient::resetClientIfNeeded(const ConnectionString& connection_string, const std::string& file_system_name) {
+  if (client_ == nullptr || connection_string_ != connection_string.value || file_system_name_ != file_system_name) {
     client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
-      Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(connection_string, file_system_name));
+      Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(connection_string.value, file_system_name));
     file_system_name_ = file_system_name;
-    connection_string_ = connection_string;
+    connection_string_ = connection_string.value;
+    storage_account_ = "";
+  }
+}
+
+void AzureDataLakeStorageClient::resetClientIfNeeded(const StorageAccount& storage_account, const std::string& file_system_name) {
+  if (client_ == nullptr || storage_account_ != storage_account.name || file_system_name_ != file_system_name) {
+    auto datalake_service_client = Azure::Storage::Files::DataLake::DataLakeServiceClient(
+      "https://" + storage_account.name + ".dfs.core.windows.net", std::make_shared<Azure::Identity::ManagedIdentityCredential>());
+
+    client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(datalake_service_client.GetFileSystemClient(file_system_name));
+    file_system_name_ = file_system_name;
+    storage_account_ = storage_account.name;
+    connection_string_ = "";
   }
 }
 
 Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const PutAzureDataLakeStorageParameters& params) {
-  resetClientIfNeeded(params.connection_string, params.file_system_name);
+  if (params.connection_string.empty()) {
+    resetClientIfNeeded(StorageAccount{params.account_name}, params.file_system_name);
+  } else {
+    resetClientIfNeeded(ConnectionString{params.connection_string}, params.file_system_name);
+  }
+
   auto directory_client = client_->GetDirectoryClient(params.directory_name);
   if (!params.directory_name.empty()) {
     directory_client.CreateIfNotExists();

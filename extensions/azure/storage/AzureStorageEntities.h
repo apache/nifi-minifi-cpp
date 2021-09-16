@@ -1,6 +1,6 @@
 /**
- * @file DataLakeStorageClient.h
- * DataLakeStorageClient class declaration
+ * @file AzureStorageCredentials.h
+ * AzureStorageCredentials class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -21,24 +21,14 @@
 
 #include <string>
 
-#include "gsl/gsl-lite.hpp"
-
 namespace org::apache::nifi::minifi::azure::storage {
 
-struct PutAzureDataLakeStorageParameters {
-  std::string account_name;
-  std::string connection_string;
-  std::string file_system_name;
-  std::string directory_name;
-  std::string filename;
-  bool replace_file = false;
+struct StorageAccount {
+  std::string name;
 };
 
-class DataLakeStorageClient {
- public:
-  virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
-  virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
-  virtual ~DataLakeStorageClient() {}
+struct ConnectionString {
+  std::string value;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

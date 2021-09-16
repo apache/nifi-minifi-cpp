@@ -53,6 +53,7 @@ void AzureBlobStorage::resetClientIfNeeded(const StorageAccount &storage_account
   }
   account_name_ = storage_account.name;
   container_name_ = container_name;
+  connection_string_ = "";
   logger_->log_debug("Client has been reset with new credentials");
   auto storage_client = Azure::Storage::Blobs::BlobServiceClient(
       "https://" + storage_account.name + ".blob.core.windows.net", std::make_shared<Azure::Identity::ManagedIdentityCredential>());
@@ -67,6 +68,7 @@ void AzureBlobStorage::resetClientIfNeeded(const ConnectionString &connection_st
   }
   connection_string_ = connection_string.value;
   container_name_ = container_name;
+  account_name_ = "";
   logger_->log_debug("Client has been reset with new credentials");
   container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string_, container_name_));
 }
