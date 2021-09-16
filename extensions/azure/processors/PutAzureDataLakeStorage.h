@@ -31,6 +31,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureDataLakeStorage.h"
 #include "utils/Enum.h"
+#include "utils/Export.h"
 #include "AzureStorageProcessorBase.h"
 
 class PutAzureDataLakeStorageTestsFixture;
@@ -40,14 +41,14 @@ namespace org::apache::nifi::minifi::azure::processors {
 class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
  public:
   // Supported Properties
-  static const core::Property FilesystemName;
-  static const core::Property DirectoryName;
-  static const core::Property FileName;
-  static const core::Property ConflictResolutionStrategy;
+  EXTENSIONAPI static const core::Property FilesystemName;
+  EXTENSIONAPI static const core::Property DirectoryName;
+  EXTENSIONAPI static const core::Property FileName;
+  EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
 
   // Supported Relationships
-  static const core::Relationship Failure;
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Success;
 
   SMART_ENUM(FileExistsResolutionStrategy,
     (FAIL_FLOW, "fail"),
@@ -98,7 +99,5 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
   FileExistsResolutionStrategy conflict_resolution_strategy_;
   storage::AzureDataLakeStorage azure_data_lake_storage_;
 };
-
-REGISTER_RESOURCE(PutAzureDataLakeStorage, "Puts content into an Azure Data Lake Storage Gen 2");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

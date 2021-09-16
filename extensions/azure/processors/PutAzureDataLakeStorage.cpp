@@ -23,6 +23,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
+#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -163,5 +164,7 @@ int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io:
   result_ = azure_data_lake_storage_.uploadFile(params_, buffer.data(), flow_size_);
   return read_ret;
 }
+
+REGISTER_RESOURCE(PutAzureDataLakeStorage, "Puts content into an Azure Data Lake Storage Gen 2");
 
 }  // namespace org::apache::nifi::minifi::azure::processors
