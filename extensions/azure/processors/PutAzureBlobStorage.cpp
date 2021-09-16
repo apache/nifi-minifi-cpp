@@ -202,6 +202,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
 
   std::optional<storage::UploadBlobResult> upload_result;
   {
+    // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
     std::lock_guard<std::mutex> lock(azure_storage_mutex_);
     createAzureStorageClient(connection_string, container_name);
     if (create_container_) {
