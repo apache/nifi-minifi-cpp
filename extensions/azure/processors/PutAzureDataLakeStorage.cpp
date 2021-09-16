@@ -57,7 +57,8 @@ const core::Relationship PutAzureDataLakeStorage::Failure("failure", "Files that
 
 void PutAzureDataLakeStorage::initialize() {
   // Set the supported properties
-  updateSupportedProperties({
+  setSupportedProperties({
+    AzureStorageCredentialsService,
     FilesystemName,
     DirectoryName,
     FileName,
@@ -103,7 +104,7 @@ std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorag
 }
 
 void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  logger_->log_debug("PutAzureDataLakeStorage onTrigger");
+  logger_->log_trace("PutAzureDataLakeStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     context->yield();
@@ -116,9 +117,14 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     return;
   }
 
-  PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, *params, logger_);
-  session->read(flow_file, &callback);
-  auto result = callback.getResult();
+  storage::UploadDataLakeStorageResult result;
+  {
+    std::lock_guard<std::mutex> lock(azure_storage_mutex_);
+    PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, *params, logger_);
+    session->read(flow_file, &callback);
+    result = callback.getResult();
+  }
+
   if (result.result_code == storage::UploadResultCode::FILE_ALREADY_EXISTS) {
     gsl_Expects(conflict_resolution_strategy_ != FileExistsResolutionStrategy::REPLACE_FILE);
     if (conflict_resolution_strategy_ == FileExistsResolutionStrategy::FAIL_FLOW) {
@@ -156,7 +162,7 @@ PutAzureDataLakeStorage::ReadCallback::ReadCallback(
 
 int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   std::vector<uint8_t> buffer;
-  int read_ret = stream->read(buffer, flow_size_);
+  size_t read_ret = stream->read(buffer, flow_size_);
   if (io::isError(read_ret)) {
     return -1;
   }

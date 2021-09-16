@@ -72,8 +72,8 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       std::vector<uint8_t> buffer;
-      int read_ret = stream->read(buffer, flow_size_);
-      if (read_ret < 0) {
+      size_t read_ret = stream->read(buffer, flow_size_);
+      if (io::isError(read_ret)) {
         return -1;
       }
 
@@ -111,7 +111,6 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
     const std::shared_ptr<core::FlowFile> &flow_file) const;
   void createAzureStorageClient(const std::string &connection_string, const std::string &container_name);
 
-  std::mutex azure_storage_mutex_;
   std::unique_ptr<storage::BlobStorage> blob_storage_wrapper_;
   bool create_container_ = false;
 };

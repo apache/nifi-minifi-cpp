@@ -83,7 +83,9 @@ const core::Relationship ListS3::Success("success", "FlowFiles are routed to suc
 
 void ListS3::initialize() {
   // Add new supported properties
-  updateSupportedProperties({Delimiter, Prefix, UseVersions, MinimumObjectAge, WriteObjectTags, WriteUserMetadata, RequesterPays});
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, Delimiter, Prefix, UseVersions,
+                          MinimumObjectAge, WriteObjectTags, WriteUserMetadata, RequesterPays});
   // Set the supported relationships
   setSupportedRelationships({Success});
 }
@@ -243,7 +245,7 @@ void ListS3::createNewFlowFile(
 }
 
 void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_debug("ListS3 onTrigger");
+  logger_->log_trace("ListS3 onTrigger");
 
   auto aws_results = s3_wrapper_.listBucket(*list_request_params_);
   if (!aws_results) {

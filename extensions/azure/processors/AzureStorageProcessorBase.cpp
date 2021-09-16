@@ -40,13 +40,13 @@ std::string AzureStorageProcessorBase::getConnectionStringFromControllerService(
 
   std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
   if (nullptr == service) {
-    logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name.c_str());
+    logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name);
     return "";
   }
 
   auto azure_credentials_service = std::dynamic_pointer_cast<minifi::azure::controllers::AzureStorageCredentialsService>(service);
   if (!azure_credentials_service) {
-    logger_->log_error("Controller service with name: '%s' is not an Azure Storage credentials service", service_name.c_str());
+    logger_->log_error("Controller service with name: '%s' is not an Azure Storage credentials service", service_name);
     return "";
   }
 

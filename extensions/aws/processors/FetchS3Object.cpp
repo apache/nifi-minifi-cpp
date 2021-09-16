@@ -55,7 +55,8 @@ const core::Relationship FetchS3Object::Failure("failure", "FlowFiles are routed
 
 void FetchS3Object::initialize() {
   // Add new supported properties
-  updateSupportedProperties({ObjectKey, Version, RequesterPays});
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, ObjectKey, Version, RequesterPays});
   // Set the supported relationships
   setSupportedRelationships({Failure, Success});
 }
@@ -89,7 +90,7 @@ std::optional<aws::s3::GetObjectRequestParameters> FetchS3Object::buildFetchS3Re
 }
 
 void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_debug("FetchS3Object onTrigger");
+  logger_->log_trace("FetchS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     context->yield();

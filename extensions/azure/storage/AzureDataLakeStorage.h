@@ -27,7 +27,7 @@
 
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "AzureDataLakeStorageClient.h"
+#include "DataLakeStorageClient.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -44,7 +44,6 @@ struct UploadDataLakeStorageResult {
 
 class AzureDataLakeStorage {
  public:
-  AzureDataLakeStorage();
   explicit AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client);
 
   storage::UploadDataLakeStorageResult uploadFile(const storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size);

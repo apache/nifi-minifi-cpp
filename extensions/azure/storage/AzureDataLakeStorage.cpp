@@ -22,10 +22,6 @@
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-AzureDataLakeStorage::AzureDataLakeStorage()
-  : data_lake_storage_client_(std::make_unique<AzureDataLakeStorageClient>()) {
-}
-
 AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client)
   : data_lake_storage_client_(std::move(data_lake_storage_client)) {
 }

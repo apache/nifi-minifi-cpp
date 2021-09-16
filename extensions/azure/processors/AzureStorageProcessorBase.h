@@ -26,7 +26,6 @@
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -38,13 +37,14 @@ class AzureStorageProcessorBase : public core::Processor {
   AzureStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger>& logger)
     : core::Processor(name, uuid),
       logger_(logger) {
-    setSupportedProperties({AzureStorageCredentialsService});
   }
 
   ~AzureStorageProcessorBase() override = default;
 
  protected:
   std::string getConnectionStringFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
+
+  std::mutex azure_storage_mutex_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

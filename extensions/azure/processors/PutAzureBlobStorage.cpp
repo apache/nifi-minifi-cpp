@@ -82,7 +82,8 @@ const core::Relationship PutAzureBlobStorage::Failure("failure", "Unsuccessful o
 
 void PutAzureBlobStorage::initialize() {
   // Set the supported properties
-  updateSupportedProperties({
+  setSupportedProperties({
+    AzureStorageCredentialsService,
     ContainerName,
     StorageAccountName,
     StorageAccountKey,
@@ -172,7 +173,7 @@ std::string PutAzureBlobStorage::getConnectionString(
 }
 
 void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_debug("PutAzureBlobStorage onTrigger");
+  logger_->log_trace("PutAzureBlobStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     return;
