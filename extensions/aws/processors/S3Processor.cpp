@@ -115,13 +115,14 @@ const core::Property S3Processor::UseDefaultCredentials(
     ->build());
 
 S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
-  : S3Processor(name, uuid, logger, nullptr) {
+  : core::Processor(name, uuid),
+    logger_(logger) {
 }
 
 S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
-  : core::Processor(name, uuid)
-  , logger_(logger)
-  , s3_wrapper_(std::move(s3_request_sender)) {
+  : core::Processor(name, uuid),
+    logger_(logger),
+    s3_wrapper_(std::move(s3_request_sender)) {
 }
 
 std::optional<Aws::Auth::AWSCredentials> S3Processor::getAWSCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const {

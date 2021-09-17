@@ -164,7 +164,7 @@ PutAzureDataLakeStorage::ReadCallback::ReadCallback(
 int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   std::vector<uint8_t> buffer;
   size_t read_ret = stream->read(buffer, flow_size_);
-  if (io::isError(read_ret)) {
+  if (io::isError(read_ret) || read_ret != flow_size_) {
     return -1;
   }
 
