@@ -19,4 +19,4 @@
 set -euo pipefail
 
 directory=${1:-.}
-flake8 --exclude thirdparty,build,cmake-build-debug,cmake-build-release,cmake-build-relwithdebinfo --builtins log,REL_SUCCESS,REL_FAILURE,raw_input --ignore E501,W503 --per-file-ignores="steps.py:F811" "${directory}"
+flake8 --exclude thirdparty,build,cmake-build-* --builtins log,REL_SUCCESS,REL_FAILURE,raw_input --ignore E501,W503 --per-file-ignores="steps.py:F811" "${directory}"
