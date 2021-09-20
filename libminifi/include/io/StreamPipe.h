@@ -42,6 +42,11 @@ class OutputStreamCallback {
   virtual ~OutputStreamCallback() = default;
   virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) = 0;
 };
+class InputOutputStreamCallback {
+ public:
+  virtual ~InputOutputStreamCallback() = default;
+  virtual int64_t process(const std::shared_ptr<io::BaseStream>& input, const std::shared_ptr<io::BaseStream>& output) = 0;
+};
 
 namespace internal {
 

@@ -97,6 +97,8 @@ class ProcessSession : public ReferenceContainer {
   int64_t read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback);
   // Execute the given write callback against the content
   void write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
+  // Read and write the flow file at the same time (eg. for processing it line by line)
+  int64_t readWrite(const std::shared_ptr<core::FlowFile> &flow, InputOutputStreamCallback *callback);
   // Replace content with buffer
   void writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer);
   // Execute the given write/append callback against the content
