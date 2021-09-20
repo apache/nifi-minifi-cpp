@@ -291,6 +291,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 }
 
 namespace {
+// FlowFileStream uses the flowfile's size instead of the stream size (so it will not be over-read)
 class FlowFileStream : public io::BaseStream {
  public:
   FlowFileStream(std::shared_ptr<io::BaseStream>& stream, const std::shared_ptr<core::FlowFile>& flow_file) : stream_(stream), flow_file_(flow_file) {

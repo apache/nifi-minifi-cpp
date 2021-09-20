@@ -66,7 +66,7 @@ class Fixture {
   const core::Relationship Failure{"failure", "something has gone awry"};
 
   Fixture() {
-    test_plan_ = test_controller_.createPlan<ContentRepositoryClass>();
+    test_plan_ = test_controller_.createPlan(nullptr, nullptr, std::make_shared<ContentRepositoryClass>());
     dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
     context_ = [this] {
       test_plan_->runNextProcessor();
