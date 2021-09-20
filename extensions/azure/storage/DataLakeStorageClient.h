@@ -20,15 +20,17 @@
 #pragma once
 
 #include <string>
+#include <optional>
+
+#include "AzureStorageEntities.h"
 
 #include "gsl/gsl-lite.hpp"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
 struct PutAzureDataLakeStorageParameters {
-  std::string account_name;
-  std::string endpoint_suffix;
-  std::string connection_string;
+  std::optional<ConnectionString> connection_string;
+  std::optional<ManagedIdentityParameters> managed_identity_parameters;
   std::string file_system_name;
   std::string directory_name;
   std::string filename;

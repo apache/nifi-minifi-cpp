@@ -77,7 +77,7 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
   }
 
-  if ((!credentials->use_managed_identity_credentials && credentials->getConnectionString().empty()) ||
+  if ((!credentials->use_managed_identity_credentials && credentials->buildConnectionString().empty()) ||
       (credentials->use_managed_identity_credentials && credentials->storage_account_name.empty())) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
   }
@@ -91,9 +91,12 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
 std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
     const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::PutAzureDataLakeStorageParameters params;
-  params.connection_string = credentials_.connection_string;
-  params.account_name = credentials_.storage_account_name;
-  params.endpoint_suffix = credentials_.endpoint_suffix;
+  auto connection_string = credentials_.buildConnectionString();
+  if (!connection_string.empty()) {
+    params.connection_string = storage::ConnectionString{connection_string};
+  } else {
+    params.managed_identity_parameters = storage::ManagedIdentityParameters{credentials_.storage_account_name, credentials_.endpoint_suffix};
+  }
   params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE_FILE;
 
   if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {

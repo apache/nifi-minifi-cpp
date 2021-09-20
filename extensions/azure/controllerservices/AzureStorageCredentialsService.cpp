@@ -32,24 +32,29 @@ namespace controllers {
 const core::Property AzureStorageCredentialsService::StorageAccountName(
     core::PropertyBuilder::createProperty("Storage Account Name")
       ->withDescription("The storage account name.")
+      ->supportsExpressionLanguage(true)
       ->build());
 const core::Property AzureStorageCredentialsService::StorageAccountKey(
     core::PropertyBuilder::createProperty("Storage Account Key")
       ->withDescription("The storage account key. This is an admin-like password providing access to every container in this account. "
                         "It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.")
+      ->supportsExpressionLanguage(true)
       ->build());
 const core::Property AzureStorageCredentialsService::SASToken(
     core::PropertyBuilder::createProperty("SAS Token")
-      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key if no Managed Identity is used.")
+      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key together with Storage Account Key if Managed Identity is not used.")
+      ->supportsExpressionLanguage(true)
       ->build());
 const core::Property AzureStorageCredentialsService::CommonStorageAccountEndpointSuffix(
     core::PropertyBuilder::createProperty("Common Storage Account Endpoint Suffix")
       ->withDescription("Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a "
                         "different suffix in certain circumstances (like Azure Stack or non-public Azure regions).")
+      ->supportsExpressionLanguage(true)
       ->build());
 const core::Property AzureStorageCredentialsService::ConnectionString(
   core::PropertyBuilder::createProperty("Connection String")
-    ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties.")
+    ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.")
+    ->supportsExpressionLanguage(true)
     ->build());
 const core::Property AzureStorageCredentialsService::UseManagedIdentityCredentials(
   core::PropertyBuilder::createProperty("Use Managed Identity Credentials")

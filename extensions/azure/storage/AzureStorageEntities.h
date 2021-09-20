@@ -20,6 +20,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 namespace org::apache::nifi::minifi::azure::storage {
 

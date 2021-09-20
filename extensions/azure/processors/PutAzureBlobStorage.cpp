@@ -48,7 +48,7 @@ const core::Property PutAzureBlobStorage::StorageAccountKey(
       ->build());
 const core::Property PutAzureBlobStorage::SASToken(
     core::PropertyBuilder::createProperty("SAS Token")
-      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key if no Managed Identity is used.")
+      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key together with Storage Account Key if Managed Identity is not used.")
       ->supportsExpressionLanguage(true)
       ->build());
 const core::Property PutAzureBlobStorage::CommonStorageAccountEndpointSuffix(
@@ -59,7 +59,7 @@ const core::Property PutAzureBlobStorage::CommonStorageAccountEndpointSuffix(
       ->build());
 const core::Property PutAzureBlobStorage::ConnectionString(
   core::PropertyBuilder::createProperty("Connection String")
-    ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties.")
+    ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.")
     ->supportsExpressionLanguage(true)
     ->build());
 const core::Property PutAzureBlobStorage::Blob(
@@ -119,15 +119,6 @@ void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>
     return;
   }
 
-  if (context->getProperty(ConnectionString.getName(), value) && !value.empty()) {
-    logger_->log_info("Using connectionstring directly for Azure Storage authentication");
-    return;
-  }
-
-  if (!context->getProperty(StorageAccountName.getName(), value) || value.empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Account Name property missing or invalid");
-  }
-
   if (!context->getProperty(UseManagedIdentityCredentials.getName(), use_managed_identity_credentials_)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Use Managed Identity Credentials is invalid.");
   }
@@ -135,6 +126,15 @@ void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>
   if (use_managed_identity_credentials_) {
     logger_->log_info("Using Managed Identity for authentication");
     return;
+  }
+
+  if (context->getProperty(ConnectionString.getName(), value) && !value.empty()) {
+    logger_->log_info("Using connectionstring directly for Azure Storage authentication");
+    return;
+  }
+
+  if (!context->getProperty(StorageAccountName.getName(), value) || value.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Storage Account Name property missing or invalid");
   }
 
   if (context->getProperty(StorageAccountKey.getName(), value) && !value.empty()) {
@@ -184,7 +184,7 @@ bool PutAzureBlobStorage::createAzureStorageClient(
 
     blob_storage_wrapper_->resetClientIfNeeded(managed_identity_params, container_name);
   } else {
-    storage::ConnectionString connection_string{credentials->getConnectionString()};
+    storage::ConnectionString connection_string{credentials->buildConnectionString()};
     if (blob_storage_wrapper_ == nullptr) {
       blob_storage_wrapper_ = std::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
       return true;
@@ -201,27 +201,24 @@ std::optional<storage::AzureStorageCredentials> PutAzureBlobStorage::getCredenti
     const std::shared_ptr<core::FlowFile> &flow_file) const {
   auto credentialsValid = [](const storage::AzureStorageCredentials& creds) {
     return (creds.use_managed_identity_credentials && !creds.storage_account_name.empty()) ||
-           (!creds.use_managed_identity_credentials && !creds.getConnectionString().empty());
+           (!creds.use_managed_identity_credentials && !creds.buildConnectionString().empty());
   };
 
-  auto property_creds = getAzureCredentialsFromProperties(context, flow_file);
-  if (credentialsValid(property_creds)) {
-    return property_creds;
-  }
-
-  logger_->log_debug("No valid Azure credentials are set in properties, checking credentials controller service...");
   auto controller_service_creds = getCredentialsFromControllerService(context);
-  if (!controller_service_creds) {
-    logger_->log_error("No Azure credentials controller service was found!");
-    return std::nullopt;
-  }
-
-  if (credentialsValid(*controller_service_creds)) {
-    logger_->log_debug("Azure credentials are set in controller service!");
+  if (controller_service_creds && credentialsValid(*controller_service_creds)) {
+    logger_->log_debug("Azure credentials read from credentials controller service!");
     return controller_service_creds;
   }
 
-  logger_->log_error("No valid Azure credentials are set in properties nor in controller service!");
+  logger_->log_debug("No valid Azure credentials are set in credentials controller service, checking properties...");
+
+  auto property_creds = getAzureCredentialsFromProperties(context, flow_file);
+  if (credentialsValid(property_creds)) {
+    logger_->log_debug("Azure credentials read from properties!");
+    return property_creds;
+  }
+
+  logger_->log_error("No valid Azure credentials are set in credentials controller service nor in properties!");
   return std::nullopt;
 }
 

@@ -49,10 +49,10 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const ManagedIdentityParame
 }
 
 Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const PutAzureDataLakeStorageParameters& params) {
-  if (params.connection_string.empty()) {
-    resetClientIfNeeded(ManagedIdentityParameters{params.account_name, params.endpoint_suffix}, params.file_system_name);
+  if (!params.connection_string) {
+    resetClientIfNeeded(*params.managed_identity_parameters, params.file_system_name);
   } else {
-    resetClientIfNeeded(ConnectionString{params.connection_string}, params.file_system_name);
+    resetClientIfNeeded(*params.connection_string, params.file_system_name);
   }
 
   auto directory_client = client_->GetDirectoryClient(params.directory_name);

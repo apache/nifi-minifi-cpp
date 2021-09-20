@@ -56,8 +56,9 @@ default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Expression Language Supported? | Description |
 | - | - | - | - | - |
-|Storage Account Name||||The storage account name.|
-|Storage Account Key||||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.|
-|SAS Token||||Shared Access Signature token. Specify either SAS Token (recommended) or Account Key.|
+|Storage Account Name|||Yes|The storage account name.|
+|Storage Account Key|||Yes|The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.|
+|SAS Token|||Yes|Shared Access Signature token. Specify either SAS Token (recommended) or Account Key together with Storage Account Key if Managed Identity is not used.|
 |Common Storage Account Endpoint Suffix||||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).|
-|Connection String||||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|
+|Connection String|||Yes|Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.|
+|**Use Managed Identity Credentials**|false||No|Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|
