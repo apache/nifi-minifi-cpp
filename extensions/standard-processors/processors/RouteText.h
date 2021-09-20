@@ -26,22 +26,23 @@
 
 #include "Processor.h"
 #include "utils/Enum.h"
+#include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class RouteText : public core::Processor {
  public:
-  static const core::Property RoutingStrategy;
-  static const core::Property MatchingStrategy;
-  static const core::Property TrimWhitespace;
-  static const core::Property IgnoreCase;
-  static const core::Property GroupingRegex;
-  static const core::Property GroupingFallbackValue;
-  static const core::Property SegmentationStrategy;
+  EXTENSIONAPI static const core::Property RoutingStrategy;
+  EXTENSIONAPI static const core::Property MatchingStrategy;
+  EXTENSIONAPI static const core::Property TrimWhitespace;
+  EXTENSIONAPI static const core::Property IgnoreCase;
+  EXTENSIONAPI static const core::Property GroupingRegex;
+  EXTENSIONAPI static const core::Property GroupingFallbackValue;
+  EXTENSIONAPI static const core::Property SegmentationStrategy;
 
-  static const core::Relationship Original;
-  static const core::Relationship Unmatched;
-  static const core::Relationship Matched;
+  EXTENSIONAPI static const core::Relationship Original;
+  EXTENSIONAPI static const core::Relationship Unmatched;
+  EXTENSIONAPI static const core::Relationship Matched;
 
   explicit RouteText(const std::string& name, const utils::Identifier& uuid = {});
 

@@ -41,6 +41,7 @@ using boyer_moore_searcher = std::boyer_moore_searcher<It, Hash, Eq>;
 #include "range/v3/view/tail.hpp"
 #include "range/v3/view/join.hpp"
 #include "range/v3/view/cache1.hpp"
+#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
 
