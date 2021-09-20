@@ -50,6 +50,7 @@
 - [PutSFTP](#putsftp)
 - [PutSQL](#putsql)
 - [QueryDatabaseTable](#querydatabasetable)
+- [ReplaceText](#replacetext)
 - [RetryFlowFile](#retryflowfile)
 - [RouteOnAttribute](#routeonattribute)
 - [RouteText](#routetext)
@@ -1485,6 +1486,29 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Value | Description |
 | - | - | - |
 |initial.maxvalue.<max_value_column>|Initial maximum value for the specified column|Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. This value is only used the first time the table is accessed (when a Maximum Value Column is specified).<br/>**Supports Expression Language: true**|
+
+
+## ReplaceText
+
+### Description
+Updates the content of a FlowFile by replacing parts of it using various replacement strategies.
+
+### Properties
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Evaluation Mode**|Line-by-Line|Entire text<br>Line-by-Line<br>|Run the 'Replacement Strategy' against each line separately (Line-by-Line) or against the whole input treated as a single string (Entire Text).|
+|Line-by-Line Evaluation Mode|All|All<br>Except-First-Line<br>Except-Last-Line<br>First-Line<br>Last-Line<br>|Run the 'Replacement Strategy' against each line separately (Line-by-Line) for All lines in the FlowFile, First Line (Header) only, Last Line (Footer) only, all Except the First Line (Header) or all Except the Last Line (Footer).|
+|**Replacement Strategy**|Regex Replace|Always Replace<br>Append<br>Literal Replace<br>Prepend<br>Regex Replace<br>Substitute Variables<br>|The strategy for how and what to replace within the FlowFile's text content. Substitute Variables replaces ${attribute_name} placeholders with the corresponding attribute's value (if an attribute is not found, the placeholder is kept as it was).|
+|**Replacement Value**|||The value to insert using the 'Replacement Strategy'. Using 'Regex Replace' back-references to Regular Expression capturing groups are supported: $& is the entire matched substring, $1, $2, ... are the matched capturing groups. Use $$1 for a literal $1. Back-references to non-existent capturing groups will be replaced by empty strings. Supports expression language except in Regex Replace mode.<br/>**Supports Expression Language: true**|
+|Search Value|||The Search Value to search for in the FlowFile content. Only used for 'Literal Replace' and 'Regex Replace' matching strategies. Supports expression language except in Regex Replace mode.<br/>**Supports Expression Language: true**|
+
+### Relationships
+| Name | Description |
+| - | - |
+|failure|FlowFiles that could not be updated are routed to this relationship.|
+|success|FlowFiles that have been successfully processed are routed to this relationship. This includes both FlowFiles that had text replaced and those that did not.|
 
 
 ## RetryFlowFile

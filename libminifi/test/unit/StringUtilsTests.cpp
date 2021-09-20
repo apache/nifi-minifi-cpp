@@ -31,6 +31,14 @@
 
 using org::apache::nifi::minifi::utils::StringUtils;
 
+TEST_CASE("StringUtils::chomp works correctly", "[StringUtils][chomp]") {
+  using pair_of = std::pair<std::string, std::string>;
+  CHECK(StringUtils::chomp("foobar") == pair_of{"foobar", ""});
+  CHECK(StringUtils::chomp("foobar\n") == pair_of{"foobar", "\n"});
+  CHECK(StringUtils::chomp("foobar\r\n") == pair_of{"foobar", "\r\n"});
+  CHECK(StringUtils::chomp("foo\rbar\n") == pair_of{"foo\rbar", "\n"});
+}
+
 TEST_CASE("TestStringUtils::split", "[test split no delimiter]") {
   std::vector<std::string> expected = { "hello" };
   REQUIRE(expected == StringUtils::split("hello", ","));

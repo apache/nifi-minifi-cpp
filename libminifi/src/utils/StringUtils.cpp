@@ -48,6 +48,16 @@ std::string StringUtils::toLower(std::string_view str) {
   return str | views::transform(tolower) | ranges::to<std::string>();
 }
 
+std::pair<std::string, std::string> StringUtils::chomp(const std::string& input_line) {
+  if (endsWith(input_line, "\r\n")) {
+    return std::make_pair(input_line.substr(0, input_line.size() - 2), "\r\n");
+  } else if (endsWith(input_line, "\n")) {
+    return std::make_pair(input_line.substr(0, input_line.size() - 1), "\n");
+  } else {
+    return std::make_pair(input_line, "");
+  }
+}
+
 std::string StringUtils::trim(const std::string& s) {
   return trimRight(trimLeft(s));
 }

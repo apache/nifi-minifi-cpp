@@ -328,6 +328,53 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputS
   }
 }
 
+int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, InputOutputStreamCallback *callback) {
+  gsl_Expects(callback);
+
+  try {
+    if (flow->getResourceClaim() == nullptr) {
+      logger_->log_debug("For %s, no resource claim but size is %d", flow->getUUIDStr(), flow->getSize());
+      if (flow->getSize() == 0) {
+        return 0;
+      }
+      throw Exception(FILE_OPERATION_EXCEPTION, "No Content Claim existed for read");
+    }
+
+    std::shared_ptr<ResourceClaim> input_claim = flow->getResourceClaim();
+    std::shared_ptr<io::BaseStream> input_stream = content_session_->read(input_claim);
+    if (!input_stream) {
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
+    }
+    input_stream->seek(flow->getOffset());
+
+    std::shared_ptr<ResourceClaim> output_claim = content_session_->create();
+    std::shared_ptr<io::BaseStream> output_stream = content_session_->write(output_claim);
+    if (!output_stream) {
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
+    }
+
+    int64_t bytes_written = callback->process(input_stream, output_stream);
+    if (bytes_written < 0) {
+      throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
+    }
+
+    input_stream->close();
+    output_stream->close();
+
+    flow->setSize(gsl::narrow<uint64_t>(bytes_written));
+    flow->setOffset(0);
+    flow->setResourceClaim(output_claim);
+
+    return bytes_written;
+  } catch (const std::exception& exception) {
+    logger_->log_debug("Caught exception %s during process session readWrite", exception.what());
+    throw;
+  } catch (...) {
+    logger_->log_debug("Caught unknown exception during process session readWrite");
+    throw;
+  }
+}
+
 void ProcessSession::importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) {
   importFrom(stream, flow);
 }

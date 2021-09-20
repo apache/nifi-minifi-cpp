@@ -76,7 +76,12 @@ class StringUtils {
 
   static std::string toLower(std::string_view str);
 
-  // Trim String utils
+  /**
+   * Strips the line ending (\n or \r\n) from the end of the input line.
+   * @param input_line
+   * @return (stripped line, line ending) pair
+   */
+  static std::pair<std::string, std::string> chomp(const std::string& input_line);
 
   /**
    * Trims a string left to right
