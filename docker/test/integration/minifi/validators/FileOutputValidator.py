@@ -16,6 +16,7 @@ class FileOutputValidator(OutputValidator):
         listing = listdir(dir_path)
         if not listing:
             return 0
+        expected_content = expected_content.replace('\\n', '\n')
         files_of_matching_content_found = 0
         for file_name in listing:
             full_path = join(dir_path, file_name)

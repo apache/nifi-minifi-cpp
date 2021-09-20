@@ -104,7 +104,7 @@ class MiNiFi_integration_test():
         return input_port_node
 
     def add_test_data(self, path, test_data, file_name=str(uuid.uuid4())):
-        self.docker_directory_bindings.put_file_to_docker_path(self.test_id, path, file_name, test_data.encode('utf-8'))
+        self.docker_directory_bindings.put_file_to_docker_path(self.test_id, path, file_name, test_data.replace('\\n', '\n').encode('utf-8'))
 
     def put_test_resource(self, file_name, contents):
         self.docker_directory_bindings.put_test_resource(self.test_id, file_name, contents)
