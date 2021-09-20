@@ -78,7 +78,7 @@ class BufferStream : public BaseStream {
    * Returns the underlying buffer
    * @return vector's array
    **/
-  std::optional<const uint8_t*> tryGetBuffer() const override {
+  const uint8_t* getBuffer() const override {
     return buffer_.data();
   }
 

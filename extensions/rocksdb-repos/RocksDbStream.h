@@ -80,8 +80,6 @@ class RocksDbStream : public io::BaseStream {
    */
   size_t write(const uint8_t *value, size_t size) override;
 
-  std::optional<const uint8_t*> tryGetBuffer() const override;
-
  protected:
   std::string path_;
 

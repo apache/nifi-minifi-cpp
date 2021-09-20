@@ -142,28 +142,19 @@ class RouteText::ReadCallback : public InputStreamCallback {
   using Fn = std::function<void(Segment)>;
 
  public:
-  ReadCallback(Segmentation segmentation, Fn&& fn) : segmentation_(segmentation), fn_(std::move(fn)) {}
+  ReadCallback(Segmentation segmentation, size_t file_size, Fn&& fn)
+    : segmentation_(segmentation), file_size_(file_size), fn_(std::move(fn)) {}
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     std::vector<uint8_t> buffer;
-    std::string_view content;
-    if (auto opt_content = stream->tryGetBuffer()) {
-      content = std::string_view{reinterpret_cast<const char*>(opt_content.value()), stream->size()};
-    } else {
-      // no O(1) content access, read it into our local buffer
-      size_t total_read = 0;
-      size_t remaining = stream->size();
-      buffer.resize(remaining);
-      while (remaining != 0) {
-        size_t ret = stream->read(buffer.data() + total_read, remaining);
-        if (io::isError(ret)) return -1;
-        if (ret == 0) break;
-        remaining -= ret;
-        total_read += ret;
-      }
-      buffer.resize(total_read);
-      content = std::string_view{reinterpret_cast<const char*>(buffer.data()), buffer.size()};
+    size_t ret = stream->read(buffer, file_size_);
+    if (io::isError(ret)) {
+      return -1;
     }
+    if (ret != file_size_) {
+      throw Exception(PROCESS_SESSION_EXCEPTION, "Couldn't read whole flowfile content");
+    }
+    std::string_view content{reinterpret_cast<const char*>(buffer.data()), buffer.size()};
     switch (segmentation_.value()) {
       case Segmentation::FULL_TEXT: {
         fn_({content, 0});
@@ -195,6 +186,7 @@ class RouteText::ReadCallback : public InputStreamCallback {
 
  private:
   Segmentation segmentation_;
+  size_t file_size_;
   Fn fn_;
 };
 
@@ -319,7 +311,7 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
 
   MatchingContext matching_context(*context, flow_file, case_policy_);
 
-  ReadCallback callback(segmentation_, [&] (Segment segment) {
+  ReadCallback callback(segmentation_, flow_file->getSize(), [&] (Segment segment) {
     std::string_view original_value = segment.value_;
     std::string_view preprocessed_value = preprocess(segment.value_);
 

@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include <optional>
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -52,18 +50,8 @@ class Stream {
     return 1;
   }
 
-  const uint8_t* getBuffer() const {
-    auto opt_buffer = tryGetBuffer();
-    if (!opt_buffer) {
-      throw std::runtime_error("Not a buffered stream");
-    }
-    return opt_buffer.value();
-  }
-
-  // using std::optional as nullptr could be a valid buffer address
-  // when the size of the stream is zero
-  virtual std::optional<const uint8_t*> tryGetBuffer() const {
-    return std::nullopt;
+  virtual const uint8_t* getBuffer() const {
+    throw std::runtime_error("Not a buffered stream");
   }
 
   virtual ~Stream() = default;
