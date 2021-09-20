@@ -47,7 +47,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
   const std::string TEST_TIMESTAMP = "test-timestamp";
 
   MockBlobStorage()
-    : BlobStorage("", "", "") {
+    : BlobStorage("", "", "", "") {
   }
 
   void createContainerIfNotExists() override {
@@ -59,8 +59,9 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
     container_name_ = container_name;
   }
 
-  void resetClientIfNeeded(const minifi::azure::storage::StorageAccount &storage_account, const std::string &container_name) override {
-    account_name_ = storage_account.name;
+  void resetClientIfNeeded(const minifi::azure::storage::ManagedIdentityParameters &managed_identity_params, const std::string &container_name) override {
+    account_name_ = managed_identity_params.storage_account;
+    endpoint_suffix_ = managed_identity_params.endpoint_suffix;
     container_name_ = container_name;
   }
 
@@ -84,6 +85,10 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
 
   std::string getAccountName() const {
     return account_name_;
+  }
+
+  std::string getEndpointSuffix() const {
+    return endpoint_suffix_;
   }
 
   std::string getContainerName() const {
@@ -293,6 +298,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     REQUIRE(getFailedFlowFileContents().size() == 0);
     REQUIRE(mock_blob_storage_ptr->getConnectionString() == "");
     REQUIRE(mock_blob_storage_ptr->getAccountName() == STORAGE_ACCOUNT_NAME);
+    REQUIRE(mock_blob_storage_ptr->getEndpointSuffix() == "core.windows.net");
     REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
   }
 
@@ -300,11 +306,13 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     auto azure_storage_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
     plan->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
     plan->setProperty(azure_storage_cred_service, "Use Managed Identity Credentials", "true");
+    plan->setProperty(azure_storage_cred_service, "Common Storage Account Endpoint Suffix", "core.chinacloudapi.cn");
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller.runSession(plan, true);
     REQUIRE(getFailedFlowFileContents().size() == 0);
     REQUIRE(mock_blob_storage_ptr->getConnectionString() == "");
     REQUIRE(mock_blob_storage_ptr->getAccountName() == STORAGE_ACCOUNT_NAME);
+    REQUIRE(mock_blob_storage_ptr->getEndpointSuffix() == "core.chinacloudapi.cn");
     REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
   }
 }

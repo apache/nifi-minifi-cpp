@@ -30,25 +30,27 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const ConnectionString& con
       Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(connection_string.value, file_system_name));
     file_system_name_ = file_system_name;
     connection_string_ = connection_string.value;
-    storage_account_ = "";
+    storage_account_.clear();
+    endpoint_suffix_.clear();
   }
 }
 
-void AzureDataLakeStorageClient::resetClientIfNeeded(const StorageAccount& storage_account, const std::string& file_system_name) {
-  if (client_ == nullptr || storage_account_ != storage_account.name || file_system_name_ != file_system_name) {
+void AzureDataLakeStorageClient::resetClientIfNeeded(const ManagedIdentityParameters& managed_identity_params, const std::string& file_system_name) {
+  if (client_ == nullptr || storage_account_ != managed_identity_params.storage_account || endpoint_suffix_ != managed_identity_params.endpoint_suffix || file_system_name_ != file_system_name) {
     auto datalake_service_client = Azure::Storage::Files::DataLake::DataLakeServiceClient(
-      "https://" + storage_account.name + ".dfs.core.windows.net", std::make_shared<Azure::Identity::ManagedIdentityCredential>());
+      "https://" + managed_identity_params.storage_account + ".dfs." + managed_identity_params.endpoint_suffix, std::make_shared<Azure::Identity::ManagedIdentityCredential>());
 
     client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(datalake_service_client.GetFileSystemClient(file_system_name));
     file_system_name_ = file_system_name;
-    storage_account_ = storage_account.name;
-    connection_string_ = "";
+    storage_account_ = managed_identity_params.storage_account;
+    endpoint_suffix_ = managed_identity_params.endpoint_suffix;
+    connection_string_.clear();
   }
 }
 
 Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const PutAzureDataLakeStorageParameters& params) {
   if (params.connection_string.empty()) {
-    resetClientIfNeeded(StorageAccount{params.account_name}, params.file_system_name);
+    resetClientIfNeeded(ManagedIdentityParameters{params.account_name, params.endpoint_suffix}, params.file_system_name);
   } else {
     resetClientIfNeeded(ConnectionString{params.connection_string}, params.file_system_name);
   }

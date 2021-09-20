@@ -93,6 +93,7 @@ std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorag
   storage::PutAzureDataLakeStorageParameters params;
   params.connection_string = credentials_.connection_string;
   params.account_name = credentials_.storage_account_name;
+  params.endpoint_suffix = credentials_.endpoint_suffix;
   params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE_FILE;
 
   if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {

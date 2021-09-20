@@ -27,6 +27,7 @@ namespace org::apache::nifi::minifi::azure::storage {
 
 struct PutAzureDataLakeStorageParameters {
   std::string account_name;
+  std::string endpoint_suffix;
   std::string connection_string;
   std::string file_system_name;
   std::string directory_name;

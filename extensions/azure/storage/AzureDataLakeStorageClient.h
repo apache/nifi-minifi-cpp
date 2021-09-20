@@ -50,11 +50,12 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
 
  private:
   void resetClientIfNeeded(const ConnectionString& connection_string, const std::string& file_system_name);
-  void resetClientIfNeeded(const StorageAccount& storage_account, const std::string& file_system_name);
+  void resetClientIfNeeded(const ManagedIdentityParameters& managed_identity_params, const std::string& file_system_name);
   Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const PutAzureDataLakeStorageParameters& params);
 
   std::string connection_string_;
   std::string storage_account_;
+  std::string endpoint_suffix_;
   std::string file_system_name_;
   std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
 };

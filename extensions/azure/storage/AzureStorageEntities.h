@@ -23,8 +23,12 @@
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-struct StorageAccount {
-  std::string name;
+struct ManagedIdentityParameters {
+  ManagedIdentityParameters(std::string account, std::string suffix)
+    : storage_account(std::move(account)),
+      endpoint_suffix(suffix.empty() ? "core.windows.net" : std::move(suffix)) {}
+  std::string storage_account;
+  std::string endpoint_suffix;
 };
 
 struct ConnectionString {

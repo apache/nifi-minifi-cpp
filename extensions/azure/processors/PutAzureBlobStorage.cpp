@@ -176,13 +176,13 @@ bool PutAzureBlobStorage::createAzureStorageClient(
   // client is not reset with different configuration while another thread is using it.
 
   if (credentials->use_managed_identity_credentials) {
-    storage::StorageAccount storage_account{credentials->storage_account_name};
+    storage::ManagedIdentityParameters managed_identity_params{credentials->storage_account_name, credentials->endpoint_suffix};
     if (blob_storage_wrapper_ == nullptr) {
-      blob_storage_wrapper_ = std::make_unique<storage::AzureBlobStorage>(storage_account, container_name);
+      blob_storage_wrapper_ = std::make_unique<storage::AzureBlobStorage>(managed_identity_params, container_name);
       return true;
     }
 
-    blob_storage_wrapper_->resetClientIfNeeded(storage_account, container_name);
+    blob_storage_wrapper_->resetClientIfNeeded(managed_identity_params, container_name);
   } else {
     storage::ConnectionString connection_string{credentials->getConnectionString()};
     if (blob_storage_wrapper_ == nullptr) {

@@ -38,10 +38,10 @@ namespace storage {
 
 class AzureBlobStorage : public BlobStorage {
  public:
-  explicit AzureBlobStorage(const StorageAccount &storage_account, const std::string& container_name);
+  explicit AzureBlobStorage(const ManagedIdentityParameters &managed_identity_params, const std::string& container_name);
   explicit AzureBlobStorage(const ConnectionString &connection_string, std::string container_name);
   void createContainerIfNotExists() override;
-  void resetClientIfNeeded(const StorageAccount &storage_account, const std::string &container_name) override;
+  void resetClientIfNeeded(const ManagedIdentityParameters &managed_identity_params, const std::string &container_name) override;
   void resetClientIfNeeded(const ConnectionString &connection_string, const std::string &container_name) override;
   std::optional<UploadBlobResult> uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) override;
 
