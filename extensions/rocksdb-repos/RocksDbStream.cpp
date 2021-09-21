@@ -51,6 +51,10 @@ void RocksDbStream::seek(size_t offset) {
   offset_ = offset;
 }
 
+size_t RocksDbStream::tell() const {
+  return offset_;
+}
+
 size_t RocksDbStream::write(const uint8_t *value, size_t size) {
   if (!write_enable_) return STREAM_ERROR;
   if (size == 0) return 0;

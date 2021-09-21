@@ -68,6 +68,10 @@ class BufferStream : public BaseStream {
     readOffset_ += offset;
   }
 
+  size_t tell() const override {
+    return readOffset_;
+  }
+
   void close() override { }
 
   /**

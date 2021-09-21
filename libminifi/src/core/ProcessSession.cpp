@@ -299,12 +299,16 @@ class FlowFileStream : public io::BaseStream {
   }
   // from InputStream
   size_t size() const override { return flow_file_->getSize(); }
-  size_t read(uint8_t *value, size_t len) override { return stream_->read(value, len); }
+  size_t read(uint8_t *value, size_t len) override {
+    const size_t max_size = std::min(len, size() - tell());
+    return stream_->read(value, max_size);
+  }
   // from OutputStream
   size_t write(const uint8_t *value, size_t len) override { return stream_->write(value, len); }
   // from Stream
   void close() override { stream_->close(); }
   void seek(size_t offset) override { stream_->seek(offset); }
+  size_t tell() const override { return stream_->tell() - flow_file_->getOffset(); }
   int initialize() override { return stream_->initialize(); }
   const uint8_t* getBuffer() const override { return stream_->getBuffer(); }
  private:

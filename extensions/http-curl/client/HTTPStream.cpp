@@ -49,8 +49,13 @@ void HttpStream::close() {
 }
 
 void HttpStream::seek(size_t /*offset*/) {
-  // seek is an unnecessary part of this implementatino
+  // seek is an unnecessary part of this implementation
   throw std::logic_error{"HttpStream::seek is unimplemented"};
+}
+
+size_t HttpStream::tell() const  {
+  // tell is an unnecessary part of this implementation
+  throw std::logic_error{"HttpStream::tell is unimplemented"};
 }
 
 // data stream overrides

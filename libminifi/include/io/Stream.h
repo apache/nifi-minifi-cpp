@@ -42,6 +42,10 @@ class Stream {
     throw std::runtime_error("Seek is not supported");
   }
 
+  virtual size_t tell() const {
+    throw std::runtime_error("Tell is not supported");
+  }
+
   virtual int initialize() {
     return 1;
   }

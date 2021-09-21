@@ -66,6 +66,10 @@ class AtomicEntryStream : public BaseStream {
    */
   void seek(size_t offset) override;
 
+
+  size_t tell() const override;
+
+
   size_t size() const override {
     return length_;
   }
@@ -106,6 +110,11 @@ template<typename T>
 void AtomicEntryStream<T>::seek(size_t offset) {
   std::lock_guard<std::recursive_mutex> lock(entry_lock_);
   offset_ = gsl::narrow<size_t>(offset);
+}
+
+template<typename T>
+size_t AtomicEntryStream<T>::tell() const {
+  return offset_;
 }
 
 // data stream overrides
