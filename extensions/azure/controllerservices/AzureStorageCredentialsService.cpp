@@ -22,12 +22,7 @@
 
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace controllers {
+namespace org::apache::nifi::minifi::azure::controllers {
 
 const core::Property AzureStorageCredentialsService::StorageAccountName(
     core::PropertyBuilder::createProperty("Storage Account Name")
@@ -68,19 +63,28 @@ void AzureStorageCredentialsService::initialize() {
 }
 
 void AzureStorageCredentialsService::onEnable() {
-  getProperty(StorageAccountName.getName(), credentials_.storage_account_name);
-  getProperty(StorageAccountKey.getName(), credentials_.storage_account_key);
-  getProperty(SASToken.getName(), credentials_.sas_token);
-  getProperty(CommonStorageAccountEndpointSuffix.getName(), credentials_.endpoint_suffix);
-  getProperty(ConnectionString.getName(), credentials_.connection_string);
-  getProperty(UseManagedIdentityCredentials.getName(), credentials_.use_managed_identity_credentials);
+  std::string value;
+  if (getProperty(StorageAccountName.getName(), value)) {
+    credentials_.setStorageAccountName(value);
+  }
+  if (getProperty(StorageAccountKey.getName(), value)) {
+    credentials_.setStorageAccountKey(value);
+  }
+  if (getProperty(SASToken.getName(), value)) {
+    credentials_.setSasToken(value);
+  }
+  if (getProperty(CommonStorageAccountEndpointSuffix.getName(), value)) {
+    credentials_.setEndpontSuffix(value);
+  }
+  if (getProperty(ConnectionString.getName(), value)) {
+    credentials_.setConnectionString(value);
+  }
+  bool use_managed_identity_credentials = false;
+  if (getProperty(UseManagedIdentityCredentials.getName(), use_managed_identity_credentials)) {
+    credentials_.setUseManagedIdentityCredentials(use_managed_identity_credentials);
+  }
 }
 
 REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");
 
-}  // namespace controllers
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::controllers

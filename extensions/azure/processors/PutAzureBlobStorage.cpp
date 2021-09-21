@@ -153,55 +153,58 @@ storage::AzureStorageCredentials PutAzureBlobStorage::getAzureCredentialsFromPro
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const {
   storage::AzureStorageCredentials credentials;
-  context->getProperty(StorageAccountName, credentials.storage_account_name, flow_file);
-  context->getProperty(StorageAccountKey, credentials.storage_account_key, flow_file);
-  context->getProperty(SASToken, credentials.sas_token, flow_file);
-  context->getProperty(CommonStorageAccountEndpointSuffix, credentials.endpoint_suffix, flow_file);
-  context->getProperty(ConnectionString, credentials.connection_string, flow_file);
-  credentials.use_managed_identity_credentials = use_managed_identity_credentials_;
+  std::string value;
+  if (context->getProperty(StorageAccountName, value, flow_file)) {
+    credentials.setStorageAccountName(value);
+  }
+  if (context->getProperty(StorageAccountKey, value, flow_file)) {
+    credentials.setStorageAccountKey(value);
+  }
+  if (context->getProperty(SASToken, value, flow_file)) {
+    credentials.setSasToken(value);
+  }
+  if (context->getProperty(CommonStorageAccountEndpointSuffix, value, flow_file)) {
+    credentials.setEndpontSuffix(value);
+  }
+  if (context->getProperty(ConnectionString, value, flow_file)) {
+    credentials.setConnectionString(value);
+  }
+  credentials.setUseManagedIdentityCredentials(use_managed_identity_credentials_);
   return credentials;
 }
 
-bool PutAzureBlobStorage::createAzureStorageClient(
+std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildAzureBlobStorageParameters(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file,
-    const std::string &container_name) {
+    const std::shared_ptr<core::FlowFile> &flow_file) {
+  storage::PutAzureBlobStorageParameters params;
   auto credentials = getCredentials(context, flow_file);
   if (!credentials) {
     logger_->log_error("No valid credentials are set!");
-    return false;
+    return std::nullopt;
   }
 
-  // When used in multithreaded environment make sure to use the azure_storage_mutex_ to lock the wrapper so the
-  // client is not reset with different configuration while another thread is using it.
+  params.credentials = *credentials;
 
-  if (credentials->use_managed_identity_credentials) {
-    storage::ManagedIdentityParameters managed_identity_params{credentials->storage_account_name, credentials->endpoint_suffix};
-    if (blob_storage_wrapper_ == nullptr) {
-      blob_storage_wrapper_ = std::make_unique<storage::AzureBlobStorage>(managed_identity_params, container_name);
-      return true;
-    }
-
-    blob_storage_wrapper_->resetClientIfNeeded(managed_identity_params, container_name);
-  } else {
-    storage::ConnectionString connection_string{credentials->buildConnectionString()};
-    if (blob_storage_wrapper_ == nullptr) {
-      blob_storage_wrapper_ = std::make_unique<storage::AzureBlobStorage>(connection_string, container_name);
-      return true;
-    }
-
-    blob_storage_wrapper_->resetClientIfNeeded(connection_string, container_name);
+  if (!context->getProperty(ContainerName, params.container_name, flow_file) || params.container_name.empty()) {
+    logger_->log_error("Container Name is invalid or empty!");
+    return std::nullopt;
   }
 
-  return true;
+  context->getProperty(Blob, params.blob_name, flow_file);
+  if (params.blob_name.empty() && (!flow_file->getAttribute("filename", params.blob_name) || params.blob_name.empty())) {
+    logger_->log_error("Blob is not set and default 'filename' attribute could not be found!");
+    return std::nullopt;
+  }
+
+  return params;
 }
 
 std::optional<storage::AzureStorageCredentials> PutAzureBlobStorage::getCredentials(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const {
-  auto credentialsValid = [](const storage::AzureStorageCredentials& creds) {
-    return (creds.use_managed_identity_credentials && !creds.storage_account_name.empty()) ||
-           (!creds.use_managed_identity_credentials && !creds.buildConnectionString().empty());
+  auto credentialsValid = [](const storage::AzureStorageCredentials& credentials) {
+    return (credentials.getUseManagedIdentityCredentials() && !credentials.getStorageAccountName().empty()) ||
+           (!credentials.getUseManagedIdentityCredentials() && !credentials.buildConnectionString().empty());
   };
 
   auto controller_service_creds = getCredentialsFromControllerService(context);
@@ -229,17 +232,8 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
     return;
   }
 
-  std::string container_name;
-  if (!context->getProperty(ContainerName, container_name, flow_file) || container_name.empty()) {
-    logger_->log_error("Container Name is invalid or empty!");
-    session->transfer(flow_file, Failure);
-    return;
-  }
-
-  std::string blob_name;
-  context->getProperty(Blob, blob_name, flow_file);
-  if (blob_name.empty() && (!flow_file->getAttribute("filename", blob_name) || blob_name.empty())) {
-    logger_->log_error("Blob is not set and default 'filename' attribute could not be found!");
+  auto params = buildAzureBlobStorageParameters(context, flow_file);
+  if (!params) {
     session->transfer(flow_file, Failure);
     return;
   }
@@ -247,33 +241,34 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   std::optional<storage::UploadBlobResult> upload_result;
   {
     // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
+    // When used in multithreaded environment make sure to use the azure_storage_mutex_ to lock the wrapper so the
+    // client is not reset with different configuration while another thread is using it.
     std::lock_guard<std::mutex> lock(azure_storage_mutex_);
-    if (!createAzureStorageClient(context, flow_file, container_name)) {
-      session->transfer(flow_file, Failure);
-      return;
-    }
-
     if (create_container_) {
-      blob_storage_wrapper_->createContainerIfNotExists();
+      auto result = azure_blob_storage_.createContainerIfNotExists(*params);
+      if (!result) {
+        session->transfer(flow_file, Failure);
+        return;
+      }
     }
-    PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), *blob_storage_wrapper_, blob_name);
+    PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), azure_blob_storage_, *params);
     session->read(flow_file, &callback);
     upload_result = callback.getResult();
   }
 
   if (!upload_result) {
-    logger_->log_error("Failed to upload blob '%s' to Azure Storage container '%s'", blob_name, container_name);
+    logger_->log_error("Failed to upload blob '%s' to Azure Storage container '%s'", params->blob_name, params->container_name);
     session->transfer(flow_file, Failure);
     return;
   }
 
-  session->putAttribute(flow_file, "azure.container", container_name);
-  session->putAttribute(flow_file, "azure.blobname", blob_name);
+  session->putAttribute(flow_file, "azure.container", params->container_name);
+  session->putAttribute(flow_file, "azure.blobname", params->blob_name);
   session->putAttribute(flow_file, "azure.primaryUri", upload_result->primary_uri);
   session->putAttribute(flow_file, "azure.etag", upload_result->etag);
-  session->putAttribute(flow_file, "azure.length", std::to_string(upload_result->length));
+  session->putAttribute(flow_file, "azure.length", std::to_string(flow_file->getSize()));
   session->putAttribute(flow_file, "azure.timestamp", upload_result->timestamp);
-  logger_->log_debug("Successfully uploaded blob '%s' to Azure Storage container '%s'", blob_name, container_name);
+  logger_->log_debug("Successfully uploaded blob '%s' to Azure Storage container '%s'", params->blob_name, params->container_name);
   session->transfer(flow_file, Success);
 }
 

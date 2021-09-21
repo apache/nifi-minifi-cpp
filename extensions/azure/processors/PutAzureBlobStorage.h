@@ -29,7 +29,7 @@
 #include "core/Property.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "storage/BlobStorage.h"
+#include "storage/AzureBlobStorage.h"
 #include "AzureStorageProcessorBase.h"
 #include "storage/AzureStorageCredentials.h"
 
@@ -64,10 +64,10 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
 
   class ReadCallback : public InputStreamCallback {
    public:
-    ReadCallback(uint64_t flow_size, storage::BlobStorage& blob_storage_wrapper, const std::string &blob_name)
+    ReadCallback(uint64_t flow_size, storage::AzureBlobStorage& azure_blob_storage, const storage::PutAzureBlobStorageParameters& params)
       : flow_size_(flow_size)
-      , blob_storage_wrapper_(blob_storage_wrapper)
-      , blob_name_(blob_name) {
+      , azure_blob_storage_(azure_blob_storage)
+      , params_(params) {
     }
 
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
@@ -77,11 +77,8 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
         return -1;
       }
 
-      result_ = blob_storage_wrapper_.uploadBlob(blob_name_, buffer.data(), flow_size_);
-      if (!result_) {
-        return read_ret;
-      }
-      return result_->length;
+      result_ = azure_blob_storage_.uploadBlob(params_, gsl::span<const uint8_t>{buffer.data(), flow_size_});
+      return read_ret;
     }
 
     std::optional<storage::UploadBlobResult> getResult() const {
@@ -90,17 +87,17 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
 
    private:
     uint64_t flow_size_;
-    storage::BlobStorage &blob_storage_wrapper_;
-    std::string blob_name_;
+    storage::AzureBlobStorage &azure_blob_storage_;
+    const storage::PutAzureBlobStorageParameters& params_;
     std::optional<storage::UploadBlobResult> result_ = std::nullopt;
   };
 
  private:
   friend class ::PutAzureBlobStorageTestsFixture;
 
-  explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorage> blob_storage_wrapper)
+  explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
     : AzureStorageProcessorBase(name, uuid, logging::LoggerFactory<PutAzureBlobStorage>::getLogger())
-    , blob_storage_wrapper_(std::move(blob_storage_wrapper)) {
+    , azure_blob_storage_(std::move(blob_storage_client)) {
   }
 
   storage::AzureStorageCredentials getAzureCredentialsFromProperties(
@@ -109,12 +106,11 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
   std::optional<storage::AzureStorageCredentials> getCredentials(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const;
-  bool createAzureStorageClient(
+  std::optional<storage::PutAzureBlobStorageParameters> buildAzureBlobStorageParameters(
     const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file,
-    const std::string &container_name);
+    const std::shared_ptr<core::FlowFile> &flow_file);
 
-  std::unique_ptr<storage::BlobStorage> blob_storage_wrapper_;
+  storage::AzureBlobStorage azure_blob_storage_;
   bool create_container_ = false;
   bool use_managed_identity_credentials_ = false;
 };

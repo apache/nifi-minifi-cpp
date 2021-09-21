@@ -22,26 +22,25 @@
 #include <string>
 #include <optional>
 
-#include "AzureStorageEntities.h"
+#include "AzureStorageClient.h"
 
 #include "gsl/gsl-lite.hpp"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
 struct PutAzureDataLakeStorageParameters {
-  std::optional<ConnectionString> connection_string;
-  std::optional<ManagedIdentityParameters> managed_identity_parameters;
+  AzureStorageCredentials credentials;
   std::string file_system_name;
   std::string directory_name;
   std::string filename;
   bool replace_file = false;
 };
 
-class DataLakeStorageClient {
+class DataLakeStorageClient : public AzureStorageClient {
  public:
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
-  virtual ~DataLakeStorageClient() {}
+  virtual ~DataLakeStorageClient() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

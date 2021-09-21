@@ -1,6 +1,6 @@
 /**
- * @file AzureStorageCredentials.h
- * AzureStorageCredentials class declaration
+ * @file BlobStorage.h
+ * BlobStorage class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -19,21 +19,28 @@
  */
 #pragma once
 
+#include <optional>
 #include <string>
 #include <utility>
+#include <vector>
+
+#include "azure/storage/blobs/protocol/blob_rest_client.hpp"
+#include "AzureStorageClient.h"
+#include "gsl/gsl-lite.hpp"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-struct ManagedIdentityParameters {
-  ManagedIdentityParameters(std::string account, std::string suffix)
-    : storage_account(std::move(account)),
-      endpoint_suffix(suffix.empty() ? "core.windows.net" : std::move(suffix)) {}
-  std::string storage_account;
-  std::string endpoint_suffix;
+struct PutAzureBlobStorageParameters {
+  AzureStorageCredentials credentials;
+  std::string container_name;
+  std::string blob_name;
 };
 
-struct ConnectionString {
-  std::string value;
+class BlobStorageClient : public AzureStorageClient {
+ public:
+  virtual bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) = 0;
+  virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
+  virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

@@ -24,78 +24,33 @@
 #include <utility>
 
 #include "azure/identity.hpp"
+#include "AzureBlobStorageClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace storage {
+namespace org::apache::nifi::minifi::azure::storage {
 
-AzureBlobStorage::AzureBlobStorage(const ManagedIdentityParameters& managed_identity_params, const std::string& container_name)
-    : BlobStorage("", managed_identity_params.storage_account, managed_identity_params.endpoint_suffix, container_name) {
-  auto storage_client = Azure::Storage::Blobs::BlobServiceClient(
-    "https://" + managed_identity_params.storage_account + ".blob." + managed_identity_params.endpoint_suffix, std::make_shared<Azure::Identity::ManagedIdentityCredential>());
-
-  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(storage_client.GetBlobContainerClient(container_name));
+AzureBlobStorage::AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_storage_client)
+  : blob_storage_client_(blob_storage_client ? std::move(blob_storage_client) : std::make_unique<AzureBlobStorageClient>()) {
 }
 
-AzureBlobStorage::AzureBlobStorage(const ConnectionString& connection_string, std::string container_name)
-  : BlobStorage(connection_string.value, "", "", std::move(container_name)),
-    container_client_(std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
-      Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string_, container_name_))) {
-}
-
-void AzureBlobStorage::resetClientIfNeeded(const ManagedIdentityParameters &managed_identity_params, const std::string &container_name) {
-  if (managed_identity_params.storage_account == account_name_ && managed_identity_params.endpoint_suffix == endpoint_suffix_ && container_name_ == container_name) {
-    logger_->log_debug("Client credentials have not changed, no need to reset client");
-    return;
-  }
-  account_name_ = managed_identity_params.storage_account;
-  endpoint_suffix_ = managed_identity_params.endpoint_suffix;
-  container_name_ = container_name;
-  connection_string_.clear();
-  logger_->log_debug("Client has been reset with new credentials");
-  auto storage_client = Azure::Storage::Blobs::BlobServiceClient(
-    "https://" + managed_identity_params.storage_account + ".blob." + managed_identity_params.endpoint_suffix, std::make_shared<Azure::Identity::ManagedIdentityCredential>());
-
-  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(storage_client.GetBlobContainerClient(container_name));
-}
-
-void AzureBlobStorage::resetClientIfNeeded(const ConnectionString &connection_string, const std::string &container_name) {
-  if (connection_string.value == connection_string_ && container_name_ == container_name) {
-    logger_->log_debug("Client credentials have not changed, no need to reset client");
-    return;
-  }
-  connection_string_ = connection_string.value;
-  container_name_ = container_name;
-  account_name_.clear();
-  endpoint_suffix_.clear();
-  logger_->log_debug("Client has been reset with new credentials");
-  container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(connection_string_, container_name_));
-}
-
-void AzureBlobStorage::createContainerIfNotExists() {
+std::optional<bool> AzureBlobStorage::createContainerIfNotExists(const PutAzureBlobStorageParameters& params) {
   try {
-    auto blob_client = container_client_->CreateIfNotExists();
-    logger_->log_debug("Container created");
+    return blob_storage_client_->createContainerIfNotExists(params);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while creating container: %s", ex.what());
+    return std::nullopt;
   }
 }
 
-std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string &blob_name, const uint8_t* buffer, std::size_t buffer_size) {
+std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) {
   try {
-    auto blob_client = container_client_->GetBlockBlobClient(blob_name);
-    auto response = blob_client.UploadFrom(buffer, buffer_size);
+    auto response = blob_storage_client_->uploadBlob(params, buffer);
 
     UploadBlobResult result;
-    result.length = buffer_size;
-    result.primary_uri = container_client_->GetUrl();
-    if (response.Value.ETag.HasValue()) {
-      result.etag = response.Value.ETag.ToString();
+    result.primary_uri = blob_storage_client_->getUrl(params);
+    if (response.ETag.HasValue()) {
+      result.etag = response.ETag.ToString();
     }
-    result.timestamp = response.Value.LastModified.ToString(Azure::DateTime::DateFormat::Rfc1123);
+    result.timestamp = response.LastModified.ToString(Azure::DateTime::DateFormat::Rfc1123);
     return result;
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while uploading blob: %s", ex.what());
@@ -103,9 +58,4 @@ std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const std::string &
   }
 }
 
-}  // namespace storage
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::storage

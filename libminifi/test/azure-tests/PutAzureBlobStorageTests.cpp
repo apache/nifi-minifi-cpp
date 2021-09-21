@@ -27,7 +27,7 @@
 #include "processors/PutFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"
-#include "storage/BlobStorage.h"
+#include "storage/BlobStorageClient.h"
 #include "utils/file/FileUtils.h"
 
 const std::string CONTAINER_NAME = "test-container";
@@ -40,59 +40,39 @@ const std::string BLOB_NAME = "test-blob.txt";
 const std::string TEST_DATA = "data";
 const std::string GET_FILE_NAME = "input_data.log";
 
-class MockBlobStorage : public minifi::azure::storage::BlobStorage {
+class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
  public:
   const std::string ETAG = "test-etag";
   const std::string PRIMARY_URI = "test-uri";
-  const std::string TEST_TIMESTAMP = "test-timestamp";
+  const std::string TEST_TIMESTAMP = "Sun, 21 Oct 2018 12:16:24 GMT";
 
-  MockBlobStorage()
-    : BlobStorage("", "", "", "") {
-  }
-
-  void createContainerIfNotExists() override {
+  bool createContainerIfNotExists(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
+    params_ = params;
     container_created_ = true;
+    return true;
   }
 
-  void resetClientIfNeeded(const minifi::azure::storage::ConnectionString &connection_string, const std::string &container_name) override {
-    connection_string_ = connection_string.value;
-    container_name_ = container_name;
-  }
-
-  void resetClientIfNeeded(const minifi::azure::storage::ManagedIdentityParameters &managed_identity_params, const std::string &container_name) override {
-    account_name_ = managed_identity_params.storage_account;
-    endpoint_suffix_ = managed_identity_params.endpoint_suffix;
-    container_name_ = container_name;
-  }
-
-  std::optional<minifi::azure::storage::UploadBlobResult> uploadBlob(const std::string& /*blob_name*/, const uint8_t* buffer, std::size_t buffer_size) override {
+  Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const minifi::azure::storage::PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) override {
+    params_ = params;
     if (upload_fails_) {
-      return std::nullopt;
+      throw std::runtime_error("error");
     }
 
-    input_data = std::string(buffer, buffer + buffer_size);
-    minifi::azure::storage::UploadBlobResult result;
-    result.etag = ETAG;
-    result.length = buffer_size;
-    result.primary_uri = PRIMARY_URI;
-    result.timestamp = TEST_TIMESTAMP;
+    input_data_ = std::string(buffer.begin(), buffer.end());
+
+    Azure::Storage::Blobs::Models::UploadBlockBlobResult result;
+    result.ETag = Azure::ETag{ETAG};
+    result.LastModified = Azure::DateTime::Parse(TEST_TIMESTAMP, Azure::DateTime::DateFormat::Rfc1123);
     return result;
   }
 
-  std::string buildConnectionString() const {
-    return connection_string_;
+  std::string getUrl(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
+    params_ = params;
+    return PRIMARY_URI;
   }
 
-  std::string getAccountName() const {
-    return account_name_;
-  }
-
-  std::string getEndpointSuffix() const {
-    return endpoint_suffix_;
-  }
-
-  std::string getContainerName() const {
-    return container_name_;
+  minifi::azure::storage::PutAzureBlobStorageParameters getPassedParams() const {
+    return params_;
   }
 
   bool getContainerCreated() const {
@@ -103,11 +83,15 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorage {
     upload_fails_ = upload_fails;
   }
 
-  std::string input_data;
+  std::string getInputData() const {
+    return input_data_;
+  }
 
  private:
+  minifi::azure::storage::PutAzureBlobStorageParameters params_;
   bool container_created_ = false;
   bool upload_fails_ = false;
+  std::string input_data_;
 };
 
 class PutAzureBlobStorageTestsFixture {
@@ -209,7 +193,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
   SECTION("Overriding credentials set in Azure Storage Credentials Service with connection string") {
@@ -219,7 +204,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(azure_storage_cred_service, "Connection String", CONNECTION_STRING);
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == CONNECTION_STRING);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
   SECTION("Account name and key set in properties") {
@@ -228,7 +214,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(update_attribute, "test.account_key", STORAGE_ACCOUNT_KEY, true);
     plan->setProperty(put_azure_blob_storage, "Storage Account Key", "${test.account_key}");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
   SECTION("Account name and SAS token set in properties") {
@@ -237,7 +224,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(update_attribute, "test.sas_token", SAS_TOKEN, true);
     plan->setProperty(put_azure_blob_storage, "SAS Token", "${test.sas_token}");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
   }
 
   SECTION("Account name and SAS token with question mark set in properties") {
@@ -246,7 +234,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(update_attribute, "test.sas_token", "?" + SAS_TOKEN, true);
     plan->setProperty(put_azure_blob_storage, "SAS Token", "${test.sas_token}");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
   }
 
   SECTION("Endpoint suffix overriden") {
@@ -257,14 +246,16 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(update_attribute, "test.endpoint_suffix", ENDPOINT_SUFFIX, true);
     plan->setProperty(put_azure_blob_storage, "Common Storage Account Endpoint Suffix", "${test.endpoint_suffix}");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY + ";EndpointSuffix=" + ENDPOINT_SUFFIX);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY + ";EndpointSuffix=" + ENDPOINT_SUFFIX);
   }
 
   SECTION("Use connection string") {
     plan->setProperty(update_attribute, "test.connection_string", CONNECTION_STRING, true);
     plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connection_string}");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == CONNECTION_STRING);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
   SECTION("Overriding credentials with connection string") {
@@ -275,7 +266,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(update_attribute, "test.connection_string", CONNECTION_STRING, true);
     plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connection_string}");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == CONNECTION_STRING);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
   SECTION("Connection string is empty after substituting it from expression language") {
@@ -292,10 +284,11 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(put_azure_blob_storage, "Use Managed Identity Credentials", "true");
     test_controller.runSession(plan, true);
     REQUIRE(getFailedFlowFileContents().size() == 0);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "");
-    REQUIRE(mock_blob_storage_ptr->getAccountName() == STORAGE_ACCOUNT_NAME);
-    REQUIRE(mock_blob_storage_ptr->getEndpointSuffix() == "core.windows.net");
-    REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString().empty());
+    REQUIRE(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
+    REQUIRE(passed_params.credentials.getEndpointSuffix() == "core.windows.net");
+    REQUIRE(passed_params.container_name == CONTAINER_NAME);
   }
 
   SECTION("Account name and managed identity are used from Azure Storage Credentials Service") {
@@ -306,10 +299,11 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller.runSession(plan, true);
     REQUIRE(getFailedFlowFileContents().size() == 0);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "");
-    REQUIRE(mock_blob_storage_ptr->getAccountName() == STORAGE_ACCOUNT_NAME);
-    REQUIRE(mock_blob_storage_ptr->getEndpointSuffix() == "core.chinacloudapi.cn");
-    REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString().empty());
+    REQUIRE(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
+    REQUIRE(passed_params.credentials.getEndpointSuffix() == "core.chinacloudapi.cn");
+    REQUIRE(passed_params.container_name == CONTAINER_NAME);
   }
 
   SECTION("Azure Storage Credentials Service overrides properties") {
@@ -324,7 +318,8 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(update_attribute, "test.connection_string", CONNECTION_STRING, true);
     plan->setProperty(put_azure_blob_storage, "Connection String", "${test.connection_string}");
     test_controller.runSession(plan, true);
-    REQUIRE(mock_blob_storage_ptr->buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 }
 
@@ -348,9 +343,10 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[az
   REQUIRE(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
   REQUIRE(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
   REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
-  REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
+  REQUIRE(mock_blob_storage_ptr->getInputData() == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == false);
-  REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+  auto passed_params = mock_blob_storage_ptr->getPassedParams();
+  REQUIRE(passed_params.container_name == CONTAINER_NAME);
   REQUIRE(getFailedFlowFileContents().size() == 0);
 }
 
@@ -368,9 +364,10 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with c
   REQUIRE(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
   REQUIRE(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
   REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
-  REQUIRE(mock_blob_storage_ptr->input_data == TEST_DATA);
+  REQUIRE(mock_blob_storage_ptr->getInputData() == TEST_DATA);
   REQUIRE(mock_blob_storage_ptr->getContainerCreated() == true);
-  REQUIRE(mock_blob_storage_ptr->getContainerName() == CONTAINER_NAME);
+  auto passed_params = mock_blob_storage_ptr->getPassedParams();
+  REQUIRE(passed_params.container_name == CONTAINER_NAME);
   REQUIRE(getFailedFlowFileContents().size() == 0);
 }
 

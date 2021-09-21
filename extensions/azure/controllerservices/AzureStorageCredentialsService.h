@@ -26,12 +26,7 @@
 #include "storage/AzureStorageCredentials.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace azure {
-namespace controllers {
+namespace org::apache::nifi::minifi::azure::controllers {
 
 class AzureStorageCredentialsService : public core::controller::ControllerService {
  public:
@@ -76,9 +71,4 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace controllers
-}  // namespace azure
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::azure::controllers
