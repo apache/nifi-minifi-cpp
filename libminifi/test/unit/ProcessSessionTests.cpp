@@ -98,6 +98,6 @@ TEST_CASE("ProcessSession::rollback penalizes affected flowfiles", "[rollback]")
 }
 
 TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
-  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles<core::repository::VolatileContentRepository>();
-  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles<core::repository::FileSystemRepository>();
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::FileSystemRepository>());
 }

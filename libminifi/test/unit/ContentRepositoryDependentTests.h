@@ -59,14 +59,13 @@ class DummyProcessor : public core::Processor {
 
 REGISTER_RESOURCE(DummyProcessor, "A processor that does nothing.");
 
-template<class ContentRepositoryClass>
 class Fixture {
  public:
   const core::Relationship Success{"success", "everything is fine"};
   const core::Relationship Failure{"failure", "something has gone awry"};
 
-  Fixture() {
-    test_plan_ = test_controller_.createPlan(nullptr, nullptr, std::make_shared<ContentRepositoryClass>());
+  explicit Fixture(std::shared_ptr<core::ContentRepository> content_repo) {
+    test_plan_ = test_controller_.createPlan(nullptr, nullptr, content_repo);
     dummy_processor_ = test_plan_->addProcessor("DummyProcessor", "dummyProcessor");
     context_ = [this] {
       test_plan_->runNextProcessor();
@@ -94,9 +93,8 @@ class Fixture {
   std::unique_ptr<core::ProcessSession> process_session_;
 };
 
-template<class ContentRepositoryClass>
-void testReadOnSmallerClonedFlowFiles() {
-  Fixture<ContentRepositoryClass> fixture;
+void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> content_repo) {
+  Fixture fixture = Fixture(content_repo);
   core::ProcessSession& process_session = fixture.processSession();
   fixture.commitFlowFile("foobar");
   const auto original_ff = process_session.get();

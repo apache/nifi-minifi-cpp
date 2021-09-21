@@ -228,6 +228,6 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 }
 
 TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
-  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles<core::repository::DatabaseContentRepository>();
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::DatabaseContentRepository>());
 }
 
