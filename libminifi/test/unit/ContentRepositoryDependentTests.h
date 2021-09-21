@@ -123,21 +123,21 @@ void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> c
   REQUIRE(clone_first_half != nullptr);
   REQUIRE(clone_second_half != nullptr);
   ReadUntilStreamSize read_until_stream_size_callback;
-  ReadUntilItCan read_until_buffer_size_callback;
+  ReadUntilItCan read_until_it_can_callback;
   process_session.read(original_ff, &read_until_stream_size_callback);
-  process_session.read(original_ff, &read_until_buffer_size_callback);
+  process_session.read(original_ff, &read_until_it_can_callback);
   CHECK(original_ff->getSize() == 6);
   CHECK(read_until_stream_size_callback.value_ == "foobar");
-  CHECK(read_until_buffer_size_callback.value_ == "foobar");
+  CHECK(read_until_it_can_callback.value_ == "foobar");
   process_session.read(clone_first_half, &read_until_stream_size_callback);
-  process_session.read(clone_first_half, &read_until_buffer_size_callback);
+  process_session.read(clone_first_half, &read_until_it_can_callback);
   CHECK(clone_first_half->getSize() == 3);
   CHECK(read_until_stream_size_callback.value_ == "foo");
-  CHECK(read_until_buffer_size_callback.value_ == "foo");
+  CHECK(read_until_it_can_callback.value_ == "foo");
   process_session.read(clone_second_half, &read_until_stream_size_callback);
-  process_session.read(clone_second_half, &read_until_buffer_size_callback);
+  process_session.read(clone_second_half, &read_until_it_can_callback);
   CHECK(clone_second_half->getSize() == 3);
   CHECK(read_until_stream_size_callback.value_ == "bar");
-  CHECK(read_until_buffer_size_callback.value_ == "bar");
+  CHECK(read_until_it_can_callback.value_ == "bar");
 }
 }  // namespace ContentRepositoryDependentTests
