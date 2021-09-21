@@ -66,7 +66,7 @@ class ReplaceText : public core::Processor {
   EXTENSIONAPI static const core::Relationship Failure;
 
   explicit ReplaceText(const std::string& name, const utils::Identifier& uuid = {});
-  core::annotation::Input getInputRequirement() const override;
+  core::annotation::Input getInputRequirement() const override { return core::annotation::Input::INPUT_REQUIRED; }
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;

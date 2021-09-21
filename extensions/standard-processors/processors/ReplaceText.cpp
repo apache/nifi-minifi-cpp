@@ -79,10 +79,6 @@ ReplaceText::ReplaceText(const std::string& name, const utils::Identifier& uuid)
     logger_(logging::LoggerFactory<ReplaceText>::getLogger()) {
 }
 
-core::annotation::Input ReplaceText::getInputRequirement() const {
-  return core::annotation::Input::INPUT_REQUIRED;
-}
-
 void ReplaceText::initialize() {
   setSupportedProperties({
       EvaluationMode,
