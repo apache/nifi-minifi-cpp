@@ -21,6 +21,8 @@
 
 #include <string>
 
+#include "gsl/gsl-lite.hpp"
+
 namespace org::apache::nifi::minifi::azure::storage {
 
 struct PutAzureDataLakeStorageParameters {
@@ -34,7 +36,7 @@ struct PutAzureDataLakeStorageParameters {
 class DataLakeStorageClient {
  public:
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
-  virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) = 0;
+  virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual ~DataLakeStorageClient() {}
 };
 

@@ -46,9 +46,9 @@ bool AzureDataLakeStorageClient::createFile(const PutAzureDataLakeStorageParamet
   return response.Value.Created;
 }
 
-std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
+std::string AzureDataLakeStorageClient::uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) {
   auto file_client = getFileClient(params);
-  file_client.UploadFrom(buffer, buffer_size);
+  file_client.UploadFrom(buffer.data(), buffer.size());
   return file_client.GetUrl();
 }
 

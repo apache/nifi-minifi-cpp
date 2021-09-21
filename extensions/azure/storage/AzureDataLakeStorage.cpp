@@ -28,7 +28,7 @@ AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient
   : data_lake_storage_client_(data_lake_storage_client ? std::move(data_lake_storage_client) : std::make_unique<AzureDataLakeStorageClient>()) {
 }
 
-UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
+UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) {
   UploadDataLakeStorageResult result;
   try {
     auto file_created = data_lake_storage_client_->createFile(params);
@@ -38,7 +38,7 @@ UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataL
       return result;
     }
 
-    auto upload_url = data_lake_storage_client_->uploadFile(params, buffer, buffer_size);
+    auto upload_url = data_lake_storage_client_->uploadFile(params, buffer);
     if (auto query_string_pos = upload_url.find('?'); query_string_pos != std::string::npos) {
       upload_url = upload_url.substr(0, query_string_pos);
     }

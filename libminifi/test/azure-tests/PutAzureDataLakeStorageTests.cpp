@@ -49,8 +49,8 @@ class MockDataLakeStorageClient : public minifi::azure::storage::DataLakeStorage
     return create_file_;
   }
 
-  std::string uploadFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) override {
-    input_data_ = std::string(buffer, buffer + buffer_size);
+  std::string uploadFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) override {
+    input_data_ = std::string(buffer.begin(), buffer.end());
     params_ = params;
 
     if (upload_fails_) {

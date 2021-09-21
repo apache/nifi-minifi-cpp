@@ -43,10 +43,9 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
    * Creates a file on the Azure Data Lake Storage
    * @param params Parameters required for connecting and file access on Azure
    * @param buffer Buffer containing the data to be uploaded
-   * @param buffer_size Size of the data to be uploaded
    * @return URI of the file uploaded
    */
-  std::string uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) override;
+  std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) override;
 
  private:
   void resetClientIfNeeded(const std::string& connection_string, const std::string& file_system_name);
