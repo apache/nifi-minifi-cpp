@@ -20,10 +20,12 @@
 
 #include "AzureDataLakeStorage.h"
 
+#include "AzureDataLakeStorageClient.h"
+
 namespace org::apache::nifi::minifi::azure::storage {
 
 AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client)
-  : data_lake_storage_client_(std::move(data_lake_storage_client)) {
+  : data_lake_storage_client_(data_lake_storage_client ? std::move(data_lake_storage_client) : std::make_unique<AzureDataLakeStorageClient>()) {
 }
 
 UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, const uint8_t* buffer, std::size_t buffer_size) {
