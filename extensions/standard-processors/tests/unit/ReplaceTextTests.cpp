@@ -238,6 +238,41 @@ TEST_CASE("Regex Replace works correctly in ReplaceText in line by line mode", "
     plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "[aeiou]$");
     expected_output = "appl_\r\n pear\r\n orang_\r\n banan_";
   }
+  SECTION("Prepend works correctly in line by line mode") {
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\npear\norange\nbanana\n");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::PREPEND));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "- ");
+    expected_output = "- apple\n- pear\n- orange\n- banana\n";
+  }
+  SECTION("Append works correctly in line by line mode") {
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::APPEND));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), " tree");
+    expected_output = "apple tree\n pear tree\n orange tree\n banana tree\n";
+  }
+  SECTION("Literal Replace works correctly in line by line mode") {
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::LITERAL_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::SearchValue.getName(), "a");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "*");
+    expected_output = "*pple\n pe*r\n or*nge\n b*n*n*\n";
+  }
+  SECTION("Always Replace works correctly in line by line mode - without newline") {
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "fruit");
+    expected_output = "fruit\nfruit\nfruit\nfruit";
+  }
+  SECTION("Always Replace works correctly in line by line mode - with newline") {
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "fruit\n");
+    expected_output = "fruit\nfruit\nfruit\nfruit";
+  }
+  SECTION("Always Replace works correctly in line by line mode - with Windows line endings") {
+    plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\r\n pear\r\n orange\r\n banana");
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementStrategy.getName(), toString(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE));
+    plan->setProperty(replace_text, minifi::processors::ReplaceText::ReplacementValue.getName(), "fruit");
+    expected_output = "fruit\r\nfruit\r\nfruit\r\nfruit";
+  }
 
   std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", minifi::processors::ReplaceText::Success, true);
   plan->setProperty(log_attribute, minifi::processors::LogAttribute::LogPayload.getName(), "true");

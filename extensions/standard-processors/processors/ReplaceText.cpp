@@ -167,6 +167,11 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
     throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Missing required property: ", ReplacementValue.getName())};
   }
 
+  if (evaluation_mode_ == EvaluationModeType::LINE_BY_LINE) {
+    const auto [chomped_value, line_ending] = utils::StringUtils::chomp(parameters.replacement_value_);
+    parameters.replacement_value_ = chomped_value;
+  }
+
   return parameters;
 }
 
@@ -245,33 +250,29 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
 }
 
 std::string ReplaceText::applyReplacements(const std::string& input, const std::shared_ptr<core::FlowFile>& flow_file, const Parameters& parameters) const {
+  const auto [chomped_input, line_ending] = utils::StringUtils::chomp(input);
+
   switch (replacement_strategy_.value()) {
     case ReplacementStrategyType::PREPEND:
       return parameters.replacement_value_ + input;
 
     case ReplacementStrategyType::APPEND:
-      return input + parameters.replacement_value_;
+      return chomped_input + parameters.replacement_value_ + line_ending;
 
     case ReplacementStrategyType::REGEX_REPLACE:
-      return applyRegexReplace(input, parameters);
+      return std::regex_replace(chomped_input, parameters.search_regex_, parameters.replacement_value_) + line_ending;
 
     case ReplacementStrategyType::LITERAL_REPLACE:
-      return applyLiteralReplace(input, parameters);
+      return applyLiteralReplace(chomped_input, parameters) + line_ending;
 
     case ReplacementStrategyType::ALWAYS_REPLACE:
-      return parameters.replacement_value_;
+      return parameters.replacement_value_ + line_ending;
 
     case ReplacementStrategyType::SUBSTITUTE_VARIABLES:
-      return applySubstituteVariables(input, flow_file);
+      return applySubstituteVariables(chomped_input, flow_file) + line_ending;
   }
 
   throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.getName(), ": ", replacement_strategy_.toString())};
-}
-
-std::string ReplaceText::applyRegexReplace(const std::string& input, const Parameters& parameters) const {
-  const auto [chomped_line, line_ending] = utils::StringUtils::chomp(input);
-  std::string output = std::regex_replace(chomped_line, parameters.search_regex_, parameters.replacement_value_);
-  return output + line_ending;
 }
 
 std::string ReplaceText::applyLiteralReplace(const std::string& input, const Parameters& parameters) const {
