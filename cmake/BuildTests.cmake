@@ -67,10 +67,6 @@ function(createTests testName)
   message(DEBUG "-- Adding test: ${testName}")
   appendIncludes("${testName}")
 
-  if (ENABLE_BINARY_DIFF)
-    target_include_directories(${testName} SYSTEM BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/bsdiff/")
-  endif(ENABLE_BINARY_DIFF)
-
   if (Boost_FOUND)
     target_include_directories(${testName} BEFORE PRIVATE "${Boost_INCLUDE_DIRS}")
   endif()
