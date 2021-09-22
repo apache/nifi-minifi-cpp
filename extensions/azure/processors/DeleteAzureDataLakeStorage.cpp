@@ -22,6 +22,7 @@
 
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
+#include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -69,5 +70,7 @@ void DeleteAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCo
     session->transfer(flow_file, Success);
   }
 }
+
+REGISTER_RESOURCE(DeleteAzureDataLakeStorage, "Deletes the provided file from Azure Data Lake Storage");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

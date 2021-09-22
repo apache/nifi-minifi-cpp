@@ -60,6 +60,4 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
   std::optional<storage::DeleteAzureDataLakeStorageParameters> buildDeleteParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
 };
 
-REGISTER_RESOURCE(DeleteAzureDataLakeStorage, "Deletes the provided file from Azure Data Lake Storage");
-
 }  // namespace org::apache::nifi::minifi::azure::processors
