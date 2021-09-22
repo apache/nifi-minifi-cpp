@@ -36,7 +36,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
 
   std::string uploadFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) override {
     input_data_ = std::string(buffer.begin(), buffer.end());
-    params_ = params;
+    put_params_ = params;
 
     if (upload_fails_) {
       throw std::runtime_error("error");
@@ -45,7 +45,9 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return RETURNED_PRIMARY_URI;
   }
 
-  bool deleteFile(const org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters& /*params*/) override {
+  bool deleteFile(const org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters& params) override {
+    delete_params_ = params;
+
     if (delete_fails_) {
       throw std::runtime_error("error");
     }
@@ -73,8 +75,12 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     delete_result_ = delete_result;
   }
 
-  org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters getPassedParams() const {
-    return params_;
+  org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters getPassedPutParams() const {
+    return put_params_;
+  }
+
+  org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters getPassedDeleteParams() const {
+    return delete_params_;
   }
 
  private:
@@ -85,5 +91,6 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   bool delete_fails_ = false;
   bool delete_result_ = true;
   std::string input_data_;
-  org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters params_;
+  org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters put_params_;
+  org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters delete_params_;
 };
