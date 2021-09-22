@@ -48,7 +48,8 @@ const core::Relationship DeleteS3Object::Failure("failure", "FlowFiles are route
 
 void DeleteS3Object::initialize() {
   // Add new supported properties
-  updateSupportedProperties({ObjectKey, Version});
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, ObjectKey, Version});
   // Set the supported relationships
   setSupportedRelationships({Failure, Success});
 }
@@ -74,7 +75,7 @@ std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDelet
 }
 
 void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_debug("DeleteS3Object onTrigger");
+  logger_->log_trace("DeleteS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     context->yield();

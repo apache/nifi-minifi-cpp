@@ -24,6 +24,7 @@
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureStorageCredentials.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -34,11 +35,11 @@ namespace controllers {
 
 class AzureStorageCredentialsService : public core::controller::ControllerService {
  public:
-  static const core::Property StorageAccountName;
-  static const core::Property StorageAccountKey;
-  static const core::Property SASToken;
-  static const core::Property CommonStorageAccountEndpointSuffix;
-  static const core::Property ConnectionString;
+  EXTENSIONAPI static const core::Property StorageAccountName;
+  EXTENSIONAPI static const core::Property StorageAccountKey;
+  EXTENSIONAPI static const core::Property SASToken;
+  EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
+  EXTENSIONAPI static const core::Property ConnectionString;
 
   explicit AzureStorageCredentialsService(const std::string& name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid),

@@ -57,7 +57,6 @@ This software includes third party software subject to the following copyrights:
 - libsodium - Copyright (c) 2013 - 2018 Frank Denis under the ISC software license
 - IANA timezone database - public domain
 - date (HowardHinnant/date) - notices below
-- JSON for Modern C++ (nlohmann/json) - Copyright (c) 2013-2021 Niels Lohmann
 - range-v3 - Eric Niebler and other contributors
 
 The licenses for these third party components are included in LICENSE.txt

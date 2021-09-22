@@ -581,9 +581,6 @@ endif()
 
 ## Azure Extensions
 if (ENABLE_ALL OR ENABLE_AZURE)
-	include(NlohmannJson)
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/nlohmann_json/dummy")
-
 	include(BundledAzureSdkCpp)
 	use_bundled_libazure(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	createExtension(AZURE-EXTENSIONS "AZURE EXTENSIONS" "This enables Azure support" "extensions/azure" "${TEST_DIR}/azure-tests")

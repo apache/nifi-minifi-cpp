@@ -107,8 +107,9 @@ const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed t
 
 void PutS3Object::initialize() {
   // Add new supported properties
-  updateSupportedProperties({ObjectKey, ContentType, StorageClass, FullControlUserList, ReadPermissionUserList,
-    ReadACLUserList, WriteACLUserList, CannedACL, ServerSideEncryption});
+  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
+                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, ObjectKey, ContentType, StorageClass,
+                          FullControlUserList, ReadPermissionUserList, ReadACLUserList, WriteACLUserList, CannedACL, ServerSideEncryption});
   // Set the supported relationships
   setSupportedRelationships({Failure, Success});
 }
@@ -257,7 +258,7 @@ void PutS3Object::setAttributes(
 }
 
 void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  logger_->log_debug("PutS3Object onTrigger");
+  logger_->log_trace("PutS3Object onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     context->yield();
