@@ -59,7 +59,8 @@ const core::Property RouteText::RoutingStrategy(
 
 const core::Property RouteText::MatchingStrategy(
     core::PropertyBuilder::createProperty("Matching Strategy")
-    ->withDescription("Specifies how to evaluate each segment of incoming text against the user-defined properties.")
+    ->withDescription("Specifies how to evaluate each segment of incoming text against the user-defined properties. "
+                      "Possible values are: 'Starts With', 'Ends With', 'Contains', 'Equals', 'Matches Regex', 'Contains Regex', 'Satisfies Expression'.")
     ->isRequired(true)
     ->withAllowableValues<std::string>(Matching::values())
     ->build());
@@ -97,7 +98,8 @@ const core::Property RouteText::GroupingFallbackValue(
 
 const core::Property RouteText::SegmentationStrategy(
     core::PropertyBuilder::createProperty("Segmentation Strategy")
-    ->withDescription("Specifies what portions of the FlowFile content constitutes a single segment to be processed.")
+    ->withDescription("Specifies what portions of the FlowFile content constitutes a single segment to be processed. "
+                      "'Full Text' considers the whole content as a single segment, 'Per Line' considers each line of the content as a separate segment")
     ->isRequired(true)
     ->withDefaultValue<std::string>(toString(Segmentation::PER_LINE))
     ->withAllowableValues<std::string>(Segmentation::values())
@@ -125,16 +127,12 @@ void RouteText::initialize() {
   setSupportedRelationships({Original, Unmatched, Matched});
 }
 
-static std::regex to_regex(const std::string& str) {
-  return std::regex(str);
-}
-
 void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
   routing_ = utils::parseEnumProperty<Routing>(*context, RoutingStrategy);
   matching_ = utils::parseEnumProperty<Matching>(*context, MatchingStrategy);
   context->getProperty(TrimWhitespace.getName(), trim_);
   case_policy_ = context->getProperty<bool>(IgnoreCase).value_or(false) ? CasePolicy::IGNORE_CASE : CasePolicy::CASE_SENSITIVE;
-  group_regex_ = context->getProperty(GroupingRegex) | utils::map(to_regex);
+  group_regex_ = context->getProperty(GroupingRegex) | utils::map([] (const auto& str) {return std::regex(str);});
   segmentation_ = utils::parseEnumProperty<Segmentation>(*context, SegmentationStrategy);
   context->getProperty(GroupingFallbackValue.getName(), group_fallback_);
 }
