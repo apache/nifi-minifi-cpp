@@ -560,6 +560,7 @@ def step_impl(context, log_message, duration):
 def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, timeparse(duration))
 
+
 # MQTT
 @then("the MQTT broker has a log line matching \"{log_pattern}\"")
 def step_impl(context, log_pattern):
