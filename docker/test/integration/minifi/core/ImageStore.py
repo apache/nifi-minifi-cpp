@@ -12,7 +12,7 @@ class ImageStore:
     def __init__(self):
         self.client = docker.from_env()
         self.images = dict()
-        self.test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
+        self.test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
 
     def __del__(self):
         self.cleanup()
@@ -28,24 +28,24 @@ class ImageStore:
             return self.images[container_engine]
 
         if container_engine == "minifi-cpp":
-            image = self.__get_minifi_cpp_image()
+            image = self.__build_minifi_cpp_image()
         elif container_engine == "http-proxy":
-            image = self.__get_http_proxy_image()
+            image = self.__build_http_proxy_image()
         elif container_engine == "nifi":
-            image = self.__get_nifi_image()
+            image = self.__build_nifi_image()
         elif container_engine == "postgresql-server":
-            image = self.__get_postgresql_server_image()
+            image = self.__build_postgresql_server_image()
         elif container_engine == "kafka-broker":
-            image = self.__get_kafka_broker_image()
+            image = self.__build_kafka_broker_image()
         elif container_engine == "mqtt-broker":
-            image = self.__get_mqtt_broker_image()
+            image = self.__build_mqtt_broker_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
         self.images[container_engine] = image
         return image
 
-    def __get_minifi_cpp_image(self):
+    def __build_minifi_cpp_image(self):
         dockerfile = dedent("""FROM {base_image}
                 USER root
                 RUN apk --update --no-cache add psqlodbc
@@ -81,7 +81,7 @@ class ImageStore:
 
         return self.__build_image(dockerfile)
 
-    def __get_http_proxy_image(self):
+    def __build_http_proxy_image(self):
         dockerfile = dedent("""FROM {base_image}
                 RUN apt -y update && apt install -y apache2-utils
                 RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
@@ -95,7 +95,7 @@ class ImageStore:
 
         return self.__build_image(dockerfile)
 
-    def __get_nifi_image(self):
+    def __build_nifi_image(self):
         dockerfile = dedent(r"""FROM {base_image}
                 USER root
                 RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties
@@ -107,7 +107,7 @@ class ImageStore:
 
         return self.__build_image(dockerfile)
 
-    def __get_postgresql_server_image(self):
+    def __build_postgresql_server_image(self):
         dockerfile = dedent("""FROM {base_image}
                 RUN mkdir -p /docker-entrypoint-initdb.d
                 RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/init-user-db.sh && \
@@ -121,26 +121,16 @@ class ImageStore:
                 """.format(base_image='postgres:13.2'))
         return self.__build_image(dockerfile)
 
-    def __get_kafka_broker_image(self):
+    def __build_kafka_broker_image(self):
         return self.__build_image_by_path(self.test_dir + "/resources/kafka_broker", 'minifi-kafka')
 
-    def __get_mqtt_broker_image(self):
+    def __build_mqtt_broker_image(self):
         dockerfile = dedent("""FROM {base_image}
-            COPY mosquitto_test.conf /mosquitto/data/mosquitto_test.conf
-            CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto/data/mosquitto_test.conf"]
-            """.format(base_image='eclipse-mosquitto:2.0.11'))
+            RUN echo 'log_dest stderr' >> /mosquitto-no-auth.conf
+            CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto-no-auth.conf"]
+            """.format(base_image='eclipse-mosquitto:2.0.12'))
 
-        conf_path = self.test_dir + '/resources/mqtt_broker/mosquitto_test.conf'
-
-        with open(conf_path, 'rb') as conf_file:
-            context_files = [
-                {
-                    'name': 'mosquitto_test.conf',
-                    'size': os.stat(conf_path).st_size,
-                    'file_obj': conf_file
-                }
-            ]
-            return self.__build_image(dockerfile, context_files)
+        return self.__build_image(dockerfile)
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()

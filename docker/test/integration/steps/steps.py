@@ -375,7 +375,7 @@ def step_impl(context, content, topic_name):
 
 @when("a message with content \"{content}\" is published to the \"{topic_name}\" topic using an ssl connection")
 def step_impl(context, content, topic_name):
-    test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
+    test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
     producer = Producer({
         "bootstrap.servers": "localhost:29093",
         "security.protocol": "ssl",
@@ -561,9 +561,9 @@ def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, timeparse(duration))
 
 # MQTT
-@then("the MQTT broker has 1 log line matching \"{log_pattern}\"")
+@then("the MQTT broker has a log line matching \"{log_pattern}\"")
 def step_impl(context, log_pattern):
-    context.test.check_mosquitto_logs('mqtt-broker', log_pattern, 30, count=1, use_regex=True)
+    context.test.wait_for_container_logs('mqtt-broker', log_pattern, 30, count=1)
 
 
 @then("an MQTT broker is deployed in correspondence with the PublishMQTT")

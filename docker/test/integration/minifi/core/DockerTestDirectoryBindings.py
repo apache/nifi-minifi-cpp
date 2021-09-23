@@ -22,7 +22,7 @@ class DockerTestDirectoryBindings:
         [self.create_directory(directory) for directory in self.data_directories[test_id].values()]
 
         # Add resources
-        test_dir = os.environ['PYTHONPATH'].split(':')[-1]  # Based on DockerVerify.sh
+        test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
         shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.data_directories[test_id]["resources_dir"] + "/certs")
         shutil.copytree(test_dir + "/resources/python", self.data_directories[test_id]["resources_dir"] + "/python")
 

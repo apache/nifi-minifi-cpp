@@ -1,4 +1,4 @@
-Feature: Sending data to using MQTT streaming platform using PublishMQTT
+Feature: Sending data to MQTT streaming platform using PublishMQTT
   In order to send and receive data via MQTT
   As a user of MiNiFi
   I need to have PublishMQTT and ConsumeMQTT processors
@@ -18,7 +18,7 @@ Feature: Sending data to using MQTT streaming platform using PublishMQTT
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has 1 log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
 
   Scenario: A MiNiFi instance tries to transfer data to a non-existent MQTT broker
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -41,11 +41,11 @@ Feature: Sending data to using MQTT streaming platform using PublishMQTT
     And the "success" relationship of the PublishMQTT processor is connected to the PutFile
 
     When the MiNiFi instance starts up
-
     Then no files are placed in the monitored directory in 30 seconds of running time
+
     And an MQTT broker is deployed in correspondence with the PublishMQTT
     And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has 1 log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
 
   Scenario: A MiNiFi instance publishes and consumes data to/from an MQTT broker
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -62,5 +62,5 @@ Feature: Sending data to using MQTT streaming platform using PublishMQTT
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has 1 log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
-    And the MQTT broker has 1 log line matching "Received SUBSCRIBE from"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received SUBSCRIBE from"

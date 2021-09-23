@@ -7,7 +7,7 @@ class MqttBrokerContainer(Container):
         super().__init__(name, 'mqtt-broker', vols, network, image_store)
 
     def get_startup_finished_log_entry(self):
-        return "mosquitto version 2.0.11 running"
+        return "mosquitto version [0-9\\.]+ running"
 
     def deploy(self):
         if not self.set_deployed():
