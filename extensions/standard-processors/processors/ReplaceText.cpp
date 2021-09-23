@@ -168,8 +168,8 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
   }
 
   if (evaluation_mode_ == EvaluationModeType::LINE_BY_LINE) {
-    const auto [chomped_value, line_ending] = utils::StringUtils::chomp(parameters.replacement_value_);
-    parameters.replacement_value_ = chomped_value;
+    auto [chomped_value, line_ending] = utils::StringUtils::chomp(parameters.replacement_value_);
+    parameters.replacement_value_ = std::move(chomped_value);
   }
 
   return parameters;
