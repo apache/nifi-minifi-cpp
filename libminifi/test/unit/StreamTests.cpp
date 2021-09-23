@@ -25,6 +25,7 @@
 #include <utility>
 #include "../TestBase.h"
 #include "io/BaseStream.h"
+#include "io/StreamSlice.h"
 
 TEST_CASE("TestReadData", "[testread]") {
   auto base = std::make_shared<minifi::io::BufferStream>();
@@ -76,4 +77,24 @@ TEST_CASE("TestWrite1", "[testwrite]") {
   std::string bytes(8, '\0');
   REQUIRE(8 == base->read(reinterpret_cast<uint8_t*>(const_cast<char*>(bytes.data())), 8));
   REQUIRE(bytes == "\x01\x02\x03\x04\x05\x06\x07\x08");
+}
+
+TEST_CASE("InvalidStreamSliceTest", "[teststreamslice]") {
+  std::shared_ptr<minifi::io::BaseStream> base = std::make_shared<minifi::io::BufferStream>();
+  base->write((const uint8_t*)"\x01\x02\x03\x04\x05\x06\x07\x08", 8);
+  REQUIRE_THROWS_WITH(std::make_shared<minifi::io::StreamSlice>(base, 0, 9), "StreamSlice is bigger than the Stream");
+  REQUIRE_THROWS_WITH(std::make_shared<minifi::io::StreamSlice>(base, 7, 3), "StreamSlice is bigger than the Stream");
+}
+
+TEST_CASE("StreamSliceTest1", "[teststreamslice]") {
+  std::shared_ptr<minifi::io::BaseStream> base = std::make_shared<minifi::io::BufferStream>();
+  base->write((const uint8_t*)"\x01\x02\x03\x04\x05\x06\x07\x08", 8);
+  std::shared_ptr<minifi::io::BaseStream> stream_slice = std::make_shared<minifi::io::StreamSlice>(base, 2, 4);
+  std::vector<uint8_t> buffer;
+  REQUIRE(stream_slice->read(buffer, stream_slice->size()) == 4);
+  stream_slice->seek(0);
+  std::vector<uint8_t> buffer2;
+  REQUIRE(stream_slice->read(buffer2, 1000) == 4);
+  REQUIRE(buffer == buffer2);
+  REQUIRE(buffer == std::vector<uint8_t>({3, 4, 5, 6}));
 }

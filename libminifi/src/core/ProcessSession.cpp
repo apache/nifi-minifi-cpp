@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "core/ProcessSessionReadCallback.h"
+#include "io/StreamSlice.h"
 #include "utils/gsl.h"
 
 /* This implementation is only for native Windows systems.  */
@@ -290,33 +291,6 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
   }
 }
 
-namespace {
-// FlowFileStream uses the flowfile's size instead of the stream size (so it will not be over-read)
-class FlowFileStream : public io::BaseStream {
- public:
-  FlowFileStream(std::shared_ptr<io::BaseStream>& stream, const std::shared_ptr<core::FlowFile>& flow_file) : stream_(stream), flow_file_(flow_file) {
-    stream->seek(flow_file->getOffset());
-  }
-  // from InputStream
-  size_t size() const override { return flow_file_->getSize(); }
-  size_t read(uint8_t *value, size_t len) override {
-    const size_t max_size = std::min(len, size() - tell());
-    return stream_->read(value, max_size);
-  }
-  // from OutputStream
-  size_t write(const uint8_t *value, size_t len) override { return stream_->write(value, len); }
-  // from Stream
-  void close() override { stream_->close(); }
-  void seek(size_t offset) override { stream_->seek(offset); }
-  size_t tell() const override { return stream_->tell() - flow_file_->getOffset(); }
-  int initialize() override { return stream_->initialize(); }
-  const uint8_t* getBuffer() const override { return stream_->getBuffer(); }
- private:
-  const std::shared_ptr<io::BaseStream>& stream_;
-  const std::shared_ptr<core::FlowFile>& flow_file_;
-};
-}  // namespace
-
 int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback) {
   try {
     std::shared_ptr<ResourceClaim> claim = nullptr;
@@ -338,7 +312,7 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputS
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
     }
 
-    auto flow_file_stream = std::make_shared<FlowFileStream>(stream, flow);
+    auto flow_file_stream = std::make_shared<io::StreamSlice>(stream, flow->getOffset(), flow->getSize());
     auto ret = callback->process(flow_file_stream);
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");

@@ -67,7 +67,9 @@ class AtomicEntryStream : public BaseStream {
   void seek(size_t offset) override;
 
 
-  size_t tell() const override;
+  size_t tell() const override {
+    return offset_;
+  }
 
 
   size_t size() const override {
@@ -112,10 +114,6 @@ void AtomicEntryStream<T>::seek(size_t offset) {
   offset_ = gsl::narrow<size_t>(offset);
 }
 
-template<typename T>
-size_t AtomicEntryStream<T>::tell() const {
-  return offset_;
-}
 
 // data stream overrides
 template<typename T>
