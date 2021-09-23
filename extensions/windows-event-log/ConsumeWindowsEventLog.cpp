@@ -671,7 +671,7 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
     case TIME_ZONE_ID_DAYLIGHT:
       tzstr = tzinfo.DaylightName;
       dst = true;
-      // [[fallthrough]];
+      [[fallthrough]];
     case TIME_ZONE_ID_STANDARD:
       tzstr = tzstr.empty() ? tzinfo.StandardName : tzstr;  // Use standard timezome name in case there is no daylight name or in case it's not DST
       tzbias = tzinfo.Bias + (dst ? tzinfo.DaylightBias : tzinfo.StandardBias);
