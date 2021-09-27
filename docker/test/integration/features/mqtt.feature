@@ -20,7 +20,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
 
-  Scenario: A MiNiFi instance tries to transfer data to a non-existent MQTT broker
+  Scenario: If the MQTT broker does not exist, then no flow files are processed
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
