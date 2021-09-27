@@ -18,11 +18,7 @@
 
 #include "io/StreamSlice.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 StreamSlice::StreamSlice(std::shared_ptr<io::BaseStream>& stream, size_t offset, size_t size) : stream_(stream), slice_offset_(offset), slice_size_(size) {
   stream_->seek(slice_offset_);
@@ -48,8 +44,4 @@ const uint8_t* StreamSlice::getBuffer() const {
   return buffer + slice_offset_;
 }
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::io

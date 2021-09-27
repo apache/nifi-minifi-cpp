@@ -22,11 +22,7 @@
 
 #include "BaseStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 /**
  * A wrapped Base Stream with configurable offset and size
@@ -57,8 +53,4 @@ class StreamSlice : public BaseStream {  // TODO(MINIFICPP-1648) This should be 
   size_t slice_size_;
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::io
