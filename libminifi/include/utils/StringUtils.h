@@ -106,7 +106,7 @@ class StringUtils {
     return s;
   }
 
-  static std::string_view trim(const std::string_view& sv);
+  static std::string_view trim(std::string_view sv);
 
   static std::string_view trim(const char* str);
 

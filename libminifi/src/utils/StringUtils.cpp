@@ -52,7 +52,7 @@ std::string StringUtils::trim(const std::string& s) {
   return trimRight(trimLeft(s));
 }
 
-std::string_view StringUtils::trim(const std::string_view& sv) {
+std::string_view StringUtils::trim(std::string_view sv) {
   auto begin = std::find_if(sv.begin(), sv.end(), [](unsigned char c) -> bool { return !isspace(c); });
   auto end = std::find_if(sv.rbegin(), std::reverse_iterator(begin), [](unsigned char c) -> bool { return !isspace(c); }).base();
   // c++20 iterator constructor
