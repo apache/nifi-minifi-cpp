@@ -39,8 +39,9 @@ int64_t LineByLineInputOutputStreamCallback::process(const std::shared_ptr<io::B
   do {
     readLine();
     std::string output_line = callback_(*current_line_, is_first_line, isLastLine());
-    output->write(reinterpret_cast<const uint8_t *>(output_line.data()), output_line.size());
-    total_bytes_written_ += output_line.size();
+    const auto bytes_written = output->write(reinterpret_cast<const uint8_t *>(output_line.data()), output_line.size());
+    if (io::isError(bytes_written)) { return -1; }
+    total_bytes_written_ += bytes_written;
     is_first_line = false;
   } while (!isLastLine());
 
