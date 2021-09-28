@@ -323,7 +323,7 @@ bool StringUtils::from_base64(uint8_t* data, size_t* data_length, const char* ba
       return false;
     case 2:
       digits[2] = 0x00;
-      // fall through
+      [[fallthrough]];
     case 3: {
       digits[3] = 0x00;
 
