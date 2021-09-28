@@ -60,6 +60,7 @@ class ClassDescription {
   std::vector<core::Relationship> class_relationships_;
   bool dynamic_properties_ = false;
   std::string inputRequirement_;
+  bool isSingleThreaded_ = false;
   bool dynamic_relationships_ = false;
   bool is_controller_service_ = false;
 };
@@ -151,6 +152,7 @@ class BuildDescription {
           description.dynamic_relationships_ = component->supportsDynamicRelationships();
           if (is_processor) {
             description.inputRequirement_ = processor->getInputRequirementAsString();
+            description.isSingleThreaded_ = processor->isSingleThreaded();
             description.class_relationships_ = processor->getSupportedRelationships();
             class_mappings[group].processors_.emplace_back(description);
           } else if (is_controller_service) {

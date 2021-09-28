@@ -17,12 +17,9 @@
  */
 
 #include <memory>
-#include <algorithm>
-#include "core/Processor.h"
 #include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "TestBase.h"
-#include "io/ClientSocket.h"
 #include "core/ClassLoader.h"
 
 // Include some processor headers to make sure they are part of the manifest
@@ -107,8 +104,17 @@ TEST_CASE("Test Relationships", "[rel1]") {
     }
   }
 #ifndef WIN32
+  const auto& inputRequirement = proc_0.children[1];
+  REQUIRE(inputRequirement.name == "inputRequirement");
+  REQUIRE(inputRequirement.value.to_string() == "INPUT_REQUIRED");
+
+  const auto& isSingleThreaded = proc_0.children[2];
+  REQUIRE(isSingleThreaded.name == "isSingleThreaded");
+  REQUIRE(isSingleThreaded.value.getValue()->getTypeIndex() == org::apache::nifi::minifi::state::response::Value::BOOL_TYPE);
+  REQUIRE(isSingleThreaded.value.to_string() == "false");
+
   REQUIRE(proc_0.children.size() > 0);
-  const auto& relationships = proc_0.children[2];
+  const auto& relationships = proc_0.children[3];
   REQUIRE("supportedRelationships" == relationships.name);
   // this is because they are now nested
   REQUIRE("supportedRelationships" == relationships.children[0].name);
@@ -118,10 +124,6 @@ TEST_CASE("Test Relationships", "[rel1]") {
 
   REQUIRE("success" == relationships.children[1].children[0].value.to_string());
   REQUIRE("description" == relationships.children[1].children[1].name);
-
-  const auto& inputRequirement = proc_0.children[1];
-  REQUIRE("inputRequirement" == inputRequirement.name);
-  REQUIRE("INPUT_REQUIRED" == inputRequirement.value.to_string());
 #endif
 }
 

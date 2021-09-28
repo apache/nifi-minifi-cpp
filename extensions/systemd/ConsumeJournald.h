@@ -83,6 +83,10 @@ class ConsumeJournald final : public core::Processor {
     std::chrono::system_clock::time_point timestamp;
   };
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   static std::optional<gsl::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
   static std::optional<journal_field> getNextField(libwrapper::Journal&);
   std::future<std::pair<std::string, std::vector<journal_message>>> getCursorAndMessageBatch();

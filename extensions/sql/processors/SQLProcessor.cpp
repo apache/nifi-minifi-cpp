@@ -52,8 +52,6 @@ void SQLProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
 }
 
 void SQLProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  std::lock_guard<std::mutex> guard(on_trigger_mutex_);
-
   try {
     if (!connection_) {
       connection_ = db_service_->getConnection();

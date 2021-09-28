@@ -20,7 +20,6 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <string>
 #include <optional>
 #include <thread>
@@ -156,12 +155,6 @@ namespace processors {
 
   void PutOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
     logger_->log_trace("PutOPCProcessor::onTrigger");
-
-    std::unique_lock<std::mutex> lock(onTriggerMutex_, std::try_to_lock);
-    if (!lock.owns_lock()) {
-      logger_->log_warn("processor was triggered before previous listing finished, configuration should be revised!");
-      return;
-    }
 
     if (!reconnect()) {
       yield();

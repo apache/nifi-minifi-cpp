@@ -113,6 +113,10 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   };
 
  protected:
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   std::shared_ptr<logging::Logger> logger_;
 
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
@@ -152,7 +156,6 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
       void clearBookmark();
   };
 
-  std::mutex mutex_;
   std::map<std::string /*machineId*/, SubscriberData> subscribers_;
 
   bool persistState() const;

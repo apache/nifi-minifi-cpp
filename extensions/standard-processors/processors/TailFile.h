@@ -140,6 +140,10 @@ class TailFile : public core::Processor {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
   void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
   void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states);
@@ -170,7 +174,6 @@ class TailFile : public core::Processor {
   static const char *POSITION_STR;
   static const int BUFFER_SIZE = 512;
 
-  std::mutex tail_file_mutex_;
   std::string delimiter_;  // Delimiter for the data incoming from the tailed file.
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::map<std::string, TailState> tail_states_;

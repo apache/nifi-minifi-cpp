@@ -779,3 +779,44 @@ TEST_CASE("InputRequirementTestRequired", "[InputRequirement]") {
   REQUIRE_THROWS_WITH(plan->validateAnnotations(), Catch::EndsWith("INPUT_REQUIRED was specified for the processor, but no incoming connections were found"));
   testController.runSession(plan);
 }
+
+TEST_CASE("isSingleThreaded - one thread for a multithreaded processor", "[isSingleThreaded]") {
+  TestController testController;
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  plan->addProcessor("GenerateFlowFile", "myProc");
+  // default max concurrent tasks value is 1 for every processor
+
+  REQUIRE_NOTHROW(plan->validateAnnotations());
+}
+
+TEST_CASE("isSingleThreaded - two threads for a multithreaded processor", "[isSingleThreaded]") {
+  TestController testController;
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  auto processor = plan->addProcessor("GenerateFlowFile", "myProc");
+  processor->setMaxConcurrentTasks(2);
+
+  REQUIRE_NOTHROW(plan->validateAnnotations());
+}
+
+TEST_CASE("isSingleThreaded - one thread for a single threaded processor", "[isSingleThreaded]") {
+  TestController testController;
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  plan->addProcessor("TailFile", "myProc");
+  // default max concurrent tasks value is 1 for every processor
+
+  REQUIRE_NOTHROW(plan->validateAnnotations());
+}
+
+TEST_CASE("isSingleThreaded - two threads for a single threaded processor", "[isSingleThreaded]") {
+  TestController testController;
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  auto processor = plan->addProcessor("TailFile", "myProc");
+  processor->setMaxConcurrentTasks(2);
+
+  REQUIRE_THROWS_WITH(plan->validateAnnotations(),
+                      Catch::EndsWith("Processor can not be run in parallel, its \"max concurrent tasks\" value is too high. It must be set to 1."));
+}

@@ -143,14 +143,12 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     penalization_period_ = period;
   }
 
-  // Set Processor Maximum Concurrent Tasks
-  void setMaxConcurrentTasks(uint8_t tasks) {
-    max_concurrent_tasks_ = tasks;
+  // Overriding to yield true can be used to indicate that the Processor is not safe for concurrent execution
+  // of its onTrigger() method. By default, Processors are assumed to be safe for concurrent execution.
+  virtual bool isSingleThreaded() const {
+    return false;
   }
-  // Get Processor Maximum Concurrent Tasks
-  uint8_t getMaxConcurrentTasks() const {
-    return (max_concurrent_tasks_);
-  }
+
   // Set Trigger when empty
   void setTriggerWhenEmpty(bool value) {
     _triggerWhenEmpty = value;

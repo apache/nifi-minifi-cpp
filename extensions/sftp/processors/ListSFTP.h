@@ -60,7 +60,7 @@ class ListSFTP : public SFTPProcessorBase {
    * Create a new processor
    */
   explicit ListSFTP(const std::string& name, const utils::Identifier& uuid = {});
-  virtual ~ListSFTP();
+  ~ListSFTP() override;
 
   // Supported Properties
   static core::Property ListingStrategy;
@@ -102,6 +102,9 @@ class ListSFTP : public SFTPProcessorBase {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
 
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string listing_strategy_;

@@ -435,7 +435,6 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptionManager(str
   ws_xml_set_ns(subscription, XML_NS_CUSTOM_SUBSCRIPTION, "m");
 
   // Body/EnumerationResponse/Items/Subscription/Version
-  std::lock_guard<std::mutex> lock(processor_.mutex_);
   auto it = processor_.subscribers_.find(machine_id);
 
   std::string subscription_version;
@@ -665,7 +664,6 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
   const struct mg_request_info* req_info = mg_get_request_info(conn);
   std::string remote_ip = req_info->remote_addr;
   if (action == EVT_ACTION_SUBEND) {
-    std::lock_guard<std::mutex> lock(processor_.mutex_);
     auto it = processor_.subscribers_.find(machine_id);
     if (it != processor_.subscribers_.end()) {
         processor_.subscribers_.erase(it);
@@ -705,7 +703,6 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptions(struct mg
       WsXmlNodeH temp = ws_xml_get_doc_root(bookmark_doc);
       ws_xml_duplicate_children(temp, bookmark_node);
 
-      std::lock_guard<std::mutex> lock(processor_.mutex_);
       auto it = processor_.subscribers_.find(machine_id);
       if (it != processor_.subscribers_.end()) {
         it = processor_.subscribers_.emplace(machine_id, SubscriberData()).first;

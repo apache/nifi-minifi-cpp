@@ -22,7 +22,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "opc.h"
 #include "opcbase.h"
@@ -80,8 +79,6 @@ class PutOPCProcessor : public BaseOPCProcessor {
     std::vector<uint8_t> buf_;
     std::shared_ptr<logging::Logger> logger_;
   };
-
-  std::mutex onTriggerMutex_;
 
   std::string nodeID_;
   int32_t nameSpaceIdx_;

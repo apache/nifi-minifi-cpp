@@ -100,6 +100,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     minifi::ClassDescription description(fullname);
     description.dynamic_properties_ = processor->getPythonSupportDynamicProperties();
     description.inputRequirement_ = processor->getInputRequirementAsString();
+    description.isSingleThreaded_ = processor->isSingleThreaded();
     auto properties = processor->getPythonProperties();
 
     minifi::AgentDocs::putDescription(scriptname, processor->getDescription());
