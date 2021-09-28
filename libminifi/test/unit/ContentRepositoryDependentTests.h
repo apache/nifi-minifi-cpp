@@ -103,6 +103,13 @@ class Fixture {
     process_session_->commit();
   }
 
+  void appendAndCommit(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content_to_append) {
+    WriteStringToFlowFile callback(content_to_append);
+    process_session_->append(flow_file, &callback);
+    process_session_->transfer(flow_file, Success);
+    process_session_->commit();
+  }
+
  private:
   TestController test_controller_;
 
@@ -139,5 +146,21 @@ void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> c
   CHECK(clone_second_half->getSize() == 3);
   CHECK(read_until_stream_size_callback.value_ == "bar");
   CHECK(read_until_it_can_callback.value_ == "bar");
+}
+
+void testAppendSize(std::shared_ptr<core::ContentRepository> content_repo) {
+  Fixture fixture = Fixture(content_repo);
+  core::ProcessSession& process_session = fixture.processSession();
+  fixture.commitFlowFile("my");
+  const auto flow_file = process_session.get();
+  fixture.appendAndCommit(flow_file, "foobar");
+  REQUIRE(flow_file);
+  CHECK(flow_file->getSize() == 8);
+  ReadUntilStreamSize read_until_stream_size_callback;
+  ReadUntilItCan read_until_it_can_callback;
+  process_session.read(flow_file, &read_until_stream_size_callback);
+  process_session.read(flow_file, &read_until_it_can_callback);
+  CHECK(read_until_stream_size_callback.value_ == "myfoobar");
+  CHECK(read_until_it_can_callback.value_ == "myfoobar");
 }
 }  // namespace ContentRepositoryDependentTests
