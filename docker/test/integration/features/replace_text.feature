@@ -4,6 +4,7 @@ Feature: Changing flowfile contents using the ReplaceText processor
 
   Scenario Outline: Replace text using Entire text mode
     Given a GenerateFlowFile processor with the "Custom Text" property set to "<input>"
+    And the scheduling period of the GenerateFlowFile processor is set to "1 hour"
     And the "Data Format" property of the GenerateFlowFile processor is set to "Text"
     And the "Unique FlowFiles" property of the GenerateFlowFile processor is set to "false"
     And a ReplaceText processor with the "Evaluation Mode" property set to "Entire text"
