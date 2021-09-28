@@ -43,9 +43,18 @@ DescriptorStream::DescriptorStream(int fd)
 void DescriptorStream::seek(size_t offset) {
   std::lock_guard<std::recursive_mutex> lock(file_lock_);
 #ifdef WIN32
-  _lseeki64(fd_, gsl::narrow<int64_t>(offset), 0x00);
+  _lseeki64(fd_, gsl::narrow<int64_t>(offset), SEEK_SET);
 #else
-  lseek(fd_, gsl::narrow<off_t>(offset), 0x00);
+  lseek(fd_, gsl::narrow<off_t>(offset), SEEK_SET);
+#endif
+}
+
+size_t DescriptorStream::tell() const {
+  std::lock_guard<std::recursive_mutex> lock(file_lock_);
+#ifdef WIN32
+  return _lseeki64(fd_, 0, SEEK_CUR);
+#else
+  return lseek(fd_, 0, SEEK_CUR);
 #endif
 }
 

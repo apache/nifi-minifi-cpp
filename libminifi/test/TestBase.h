@@ -427,12 +427,14 @@ class TestController {
     flow_version_ = std::make_shared<minifi::state::response::FlowVersion>("test", "test", "test");
   }
 
-  std::shared_ptr<TestPlan> createPlan(std::shared_ptr<minifi::Configure> configuration = nullptr, const char* state_dir = nullptr) {
+  std::shared_ptr<TestPlan> createPlan(std::shared_ptr<minifi::Configure> configuration = nullptr,
+                                       const char* state_dir = nullptr,
+                                       std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>()) {
     if (configuration == nullptr) {
       configuration = std::make_shared<minifi::Configure>();
       configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
+      configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory());
     }
-    std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
     content_repo->initialize(configuration);
 

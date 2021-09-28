@@ -113,6 +113,10 @@ void FileStream::seek(size_t offset) {
     logging::LOG_ERROR(logger_) << SEEK_ERROR_MSG << SEEKP_CALL_ERROR_MSG;
 }
 
+size_t FileStream::tell() const {
+  return offset_;
+}
+
 size_t FileStream::write(const uint8_t *value, size_t size) {
   if (size == 0) return 0;
   if (IsNullOrEmpty(value)) {

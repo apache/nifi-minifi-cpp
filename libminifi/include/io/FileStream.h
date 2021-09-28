@@ -65,6 +65,8 @@ class FileStream : public io::BaseStream {
    */
   void seek(size_t offset) override;
 
+  size_t tell() const override;
+
   size_t size() const override {
     return length_;
   }

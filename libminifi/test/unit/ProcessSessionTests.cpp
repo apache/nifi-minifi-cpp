@@ -21,6 +21,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "../TestBase.h"
+#include "ContentRepositoryDependentTests.h"
 
 namespace {
 
@@ -93,4 +94,9 @@ TEST_CASE("ProcessSession::rollback penalizes affected flowfiles", "[rollback]")
   REQUIRE_FALSE(flow_file_3->isPenalized());
   next_flow_file_to_be_processed = process_session.get();
   REQUIRE(next_flow_file_to_be_processed == flow_file_3);
+}
+
+TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::FileSystemRepository>());
 }

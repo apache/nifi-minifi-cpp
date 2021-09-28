@@ -54,6 +54,9 @@ class DescriptorStream : public io::BaseStream {
    */
   void seek(size_t offset) override;
 
+
+  size_t tell() const override;
+
   /**
    * Reads data and places it into buf
    * @param buf buffer in which we extract data
@@ -69,7 +72,7 @@ class DescriptorStream : public io::BaseStream {
   size_t write(const uint8_t *value, size_t size) override;
 
  private:
-  std::recursive_mutex file_lock_;
+  mutable std::recursive_mutex file_lock_;
   int fd_;
 
   std::shared_ptr<logging::Logger> logger_;

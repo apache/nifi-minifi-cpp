@@ -65,6 +65,8 @@ class SecureDescriptorStream : public io::BaseStream {
    */
   void seek(size_t offset) override;
 
+  size_t tell() const override;
+
   size_t size() const override {
     return -1;
   }
@@ -84,7 +86,7 @@ class SecureDescriptorStream : public io::BaseStream {
   size_t write(const uint8_t *value, size_t size) override;
 
  protected:
-  std::recursive_mutex file_lock_;
+  mutable std::recursive_mutex file_lock_;
 
   int fd_;
 

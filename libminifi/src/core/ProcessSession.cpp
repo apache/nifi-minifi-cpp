@@ -31,6 +31,7 @@
 #include <vector>
 
 #include "core/ProcessSessionReadCallback.h"
+#include "io/StreamSlice.h"
 #include "utils/gsl.h"
 
 /* This implementation is only for native Windows systems.  */
@@ -311,9 +312,8 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputS
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for read");
     }
 
-    stream->seek(flow->getOffset());
-
-    auto ret = callback->process(stream);
+    auto flow_file_stream = std::make_shared<io::StreamSlice>(stream, flow->getOffset(), flow->getSize());
+    auto ret = callback->process(flow_file_stream);
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
