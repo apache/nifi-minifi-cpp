@@ -86,7 +86,7 @@ class ReplaceText : public core::Processor {
   void replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session, const Parameters& parameters) const;
 
   std::string applyReplacements(const std::string& input, const std::shared_ptr<core::FlowFile>& flow_file, const Parameters& parameters) const;
-  std::string applyLiteralReplace(const std::string& input, const Parameters& parameters) const;
+  static std::string applyLiteralReplace(const std::string& input, const Parameters& parameters);
   std::string applySubstituteVariables(const std::string& input, const std::shared_ptr<core::FlowFile>& flow_file) const;
   std::string getAttributeValue(const std::shared_ptr<core::FlowFile>& flow_file, const std::smatch& match) const;
 

@@ -275,7 +275,7 @@ std::string ReplaceText::applyReplacements(const std::string& input, const std::
   throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.getName(), ": ", replacement_strategy_.toString())};
 }
 
-std::string ReplaceText::applyLiteralReplace(const std::string& input, const Parameters& parameters) const {
+std::string ReplaceText::applyLiteralReplace(const std::string& input, const Parameters& parameters) {
   std::vector<char> output;
   output.reserve(input.size());
 
