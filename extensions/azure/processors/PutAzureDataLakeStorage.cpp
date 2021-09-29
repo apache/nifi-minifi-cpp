@@ -77,8 +77,7 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
   }
 
-  if ((!credentials->getUseManagedIdentityCredentials() && credentials->buildConnectionString().empty()) ||
-      (credentials->getUseManagedIdentityCredentials() && credentials->getStorageAccountName().empty())) {
+  if (!credentials->isValid()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
   }
 

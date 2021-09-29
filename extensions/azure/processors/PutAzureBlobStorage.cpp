@@ -48,7 +48,7 @@ const core::Property PutAzureBlobStorage::StorageAccountKey(
       ->build());
 const core::Property PutAzureBlobStorage::SASToken(
     core::PropertyBuilder::createProperty("SAS Token")
-      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Account Key together with Storage Account Key if Managed Identity is not used.")
+      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.")
       ->supportsExpressionLanguage(true)
       ->build());
 const core::Property PutAzureBlobStorage::CommonStorageAccountEndpointSuffix(
@@ -202,13 +202,8 @@ std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::build
 std::optional<storage::AzureStorageCredentials> PutAzureBlobStorage::getCredentials(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const {
-  auto credentialsValid = [](const storage::AzureStorageCredentials& credentials) {
-    return (credentials.getUseManagedIdentityCredentials() && !credentials.getStorageAccountName().empty()) ||
-           (!credentials.getUseManagedIdentityCredentials() && !credentials.buildConnectionString().empty());
-  };
-
   auto controller_service_creds = getCredentialsFromControllerService(context);
-  if (controller_service_creds && credentialsValid(*controller_service_creds)) {
+  if (controller_service_creds && controller_service_creds->isValid()) {
     logger_->log_debug("Azure credentials read from credentials controller service!");
     return controller_service_creds;
   }
@@ -216,7 +211,7 @@ std::optional<storage::AzureStorageCredentials> PutAzureBlobStorage::getCredenti
   logger_->log_debug("No valid Azure credentials are set in credentials controller service, checking properties...");
 
   auto property_creds = getAzureCredentialsFromProperties(context, flow_file);
-  if (credentialsValid(property_creds)) {
+  if (property_creds.isValid()) {
     logger_->log_debug("Azure credentials read from properties!");
     return property_creds;
   }

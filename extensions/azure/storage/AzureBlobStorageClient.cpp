@@ -26,20 +26,20 @@ namespace org::apache::nifi::minifi::azure::storage {
 
 void AzureBlobStorageClient::resetClientIfNeeded(const AzureStorageCredentials &credentials, const std::string &container_name) {
   if (container_client_ && credentials == credentials_ && container_name == container_name_) {
-    logger_->log_debug("Client credentials have not changed, no need to reset client");
+    logger_->log_debug("Azure Blob Storage client credentials have not changed, no need to reset client");
     return;
   }
 
   if (credentials.getUseManagedIdentityCredentials()) {
-    logger_->log_debug("Client has been reset with new managed identity credentials.");
     auto storage_client = Azure::Storage::Blobs::BlobServiceClient(
       "https://" + credentials.getStorageAccountName() + ".blob." + credentials.getEndpointSuffix(), std::make_shared<Azure::Identity::ManagedIdentityCredential>());
 
     container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(storage_client.GetBlobContainerClient(container_name));
+    logger_->log_debug("Azure Blob Storage client has been reset with new managed identity credentials.");
   } else {
-    logger_->log_debug("Client has been reset with new connection string credentials.");
     container_client_ = std::make_unique<Azure::Storage::Blobs::BlobContainerClient>(
       Azure::Storage::Blobs::BlobContainerClient::CreateFromConnectionString(credentials.buildConnectionString(), container_name));
+    logger_->log_debug("Azure Blob Storage client has been reset with new connection string credentials.");
   }
 
   credentials_ = credentials;

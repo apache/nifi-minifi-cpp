@@ -283,12 +283,12 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(put_azure_blob_storage, "Storage Account Name", STORAGE_ACCOUNT_NAME);
     plan->setProperty(put_azure_blob_storage, "Use Managed Identity Credentials", "true");
     test_controller.runSession(plan, true);
-    REQUIRE(getFailedFlowFileContents().size() == 0);
+    CHECK(getFailedFlowFileContents().size() == 0);
     auto passed_params = mock_blob_storage_ptr->getPassedParams();
-    REQUIRE(passed_params.credentials.buildConnectionString().empty());
-    REQUIRE(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
-    REQUIRE(passed_params.credentials.getEndpointSuffix() == "core.windows.net");
-    REQUIRE(passed_params.container_name == CONTAINER_NAME);
+    CHECK(passed_params.credentials.buildConnectionString().empty());
+    CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
+    CHECK(passed_params.credentials.getEndpointSuffix() == "core.windows.net");
+    CHECK(passed_params.container_name == CONTAINER_NAME);
   }
 
   SECTION("Account name and managed identity are used from Azure Storage Credentials Service") {
@@ -298,12 +298,12 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan->setProperty(azure_storage_cred_service, "Common Storage Account Endpoint Suffix", "core.chinacloudapi.cn");
     plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller.runSession(plan, true);
-    REQUIRE(getFailedFlowFileContents().size() == 0);
+    CHECK(getFailedFlowFileContents().size() == 0);
     auto passed_params = mock_blob_storage_ptr->getPassedParams();
-    REQUIRE(passed_params.credentials.buildConnectionString().empty());
-    REQUIRE(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
-    REQUIRE(passed_params.credentials.getEndpointSuffix() == "core.chinacloudapi.cn");
-    REQUIRE(passed_params.container_name == CONTAINER_NAME);
+    CHECK(passed_params.credentials.buildConnectionString().empty());
+    CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
+    CHECK(passed_params.credentials.getEndpointSuffix() == "core.chinacloudapi.cn");
+    CHECK(passed_params.container_name == CONTAINER_NAME);
   }
 
   SECTION("Azure Storage Credentials Service overrides properties") {
@@ -337,17 +337,17 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[az
   plan->setProperty(put_azure_blob_storage, "Container Name", "${test.container}");
   setDefaultCredentials();
   test_controller.runSession(plan, true);
-  REQUIRE(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.blobname value:" + GET_FILE_NAME));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
-  REQUIRE(mock_blob_storage_ptr->getInputData() == TEST_DATA);
-  REQUIRE(mock_blob_storage_ptr->getContainerCreated() == false);
+  CHECK(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
+  CHECK(LogTestController::getInstance().contains("key:azure.blobname value:" + GET_FILE_NAME));
+  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI));
+  CHECK(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
+  CHECK(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
+  CHECK(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
+  CHECK(mock_blob_storage_ptr->getInputData() == TEST_DATA);
+  CHECK(mock_blob_storage_ptr->getContainerCreated() == false);
   auto passed_params = mock_blob_storage_ptr->getPassedParams();
-  REQUIRE(passed_params.container_name == CONTAINER_NAME);
-  REQUIRE(getFailedFlowFileContents().size() == 0);
+  CHECK(passed_params.container_name == CONTAINER_NAME);
+  CHECK(getFailedFlowFileContents().size() == 0);
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with container creation", "[azureBlobStorageUpload]") {
@@ -358,17 +358,17 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with c
   plan->setProperty(put_azure_blob_storage, "Create Container", "true");
   setDefaultCredentials();
   test_controller.runSession(plan, true);
-  REQUIRE(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.blobname value:" + BLOB_NAME));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
-  REQUIRE(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
-  REQUIRE(mock_blob_storage_ptr->getInputData() == TEST_DATA);
-  REQUIRE(mock_blob_storage_ptr->getContainerCreated() == true);
+  CHECK(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
+  CHECK(LogTestController::getInstance().contains("key:azure.blobname value:" + BLOB_NAME));
+  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI));
+  CHECK(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
+  CHECK(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
+  CHECK(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
+  CHECK(mock_blob_storage_ptr->getInputData() == TEST_DATA);
+  CHECK(mock_blob_storage_ptr->getContainerCreated() == true);
   auto passed_params = mock_blob_storage_ptr->getPassedParams();
-  REQUIRE(passed_params.container_name == CONTAINER_NAME);
-  REQUIRE(getFailedFlowFileContents().size() == 0);
+  CHECK(passed_params.container_name == CONTAINER_NAME);
+  CHECK(getFailedFlowFileContents().size() == 0);
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failure", "[azureBlobStorageUpload]") {

@@ -38,13 +38,11 @@ const core::Property AWSCredentialsService::UseDefaultCredentials(
 
 const core::Property AWSCredentialsService::AccessKey(
     core::PropertyBuilder::createProperty("Access Key")->withDescription("Specifies the AWS Access Key.")
-    ->supportsExpressionLanguage(true)
     ->build());
 
 const core::Property AWSCredentialsService::SecretKey(
     core::PropertyBuilder::createProperty("Secret Key")
     ->withDescription("Specifies the AWS Secret Key.")
-    ->supportsExpressionLanguage(true)
     ->build());
 
 const core::Property AWSCredentialsService::CredentialsFile(

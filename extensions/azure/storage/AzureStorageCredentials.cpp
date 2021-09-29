@@ -89,7 +89,12 @@ std::string AzureStorageCredentials::buildConnectionString() const {
   return credentials;
 }
 
-bool AzureStorageCredentials::operator==(const AzureStorageCredentials& other) {
+bool AzureStorageCredentials::isValid() const {
+  return (getUseManagedIdentityCredentials() && !getStorageAccountName().empty()) ||
+         (!getUseManagedIdentityCredentials() && !buildConnectionString().empty());
+}
+
+bool AzureStorageCredentials::operator==(const AzureStorageCredentials& other) const {
   if (other.use_managed_identity_credentials_ != use_managed_identity_credentials_) {
     return false;
   }

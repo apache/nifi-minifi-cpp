@@ -36,8 +36,9 @@ class AzureStorageCredentials {
   std::string getEndpointSuffix() const;
   bool getUseManagedIdentityCredentials() const;
   std::string buildConnectionString() const;
+  bool isValid() const;
 
-  bool operator==(const AzureStorageCredentials& other);
+  bool operator==(const AzureStorageCredentials& other) const;
 
  private:
   std::string storage_account_name_;

@@ -53,6 +53,7 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
 
   std::string file_system_name_;
   std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
+  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureDataLakeStorageClient>::getLogger()};
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage
