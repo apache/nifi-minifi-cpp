@@ -24,6 +24,7 @@
 #include <memory>
 
 #include "core/Resource.h"
+#include "utils/OptionalUtils.h"
 
 namespace org {
 namespace apache {
@@ -109,10 +110,13 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     return;
   }
 
-  WriteCallback callback(flow_file->getSize(), *get_object_params, s3_wrapper_);
-  session->write(flow_file, &callback);
+  std::optional<minifi::aws::s3::GetObjectResult> result;
+  session->write(flow_file, [&get_object_params, &result, this](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+    result = s3_wrapper_.getObject(*get_object_params, *stream);
+    return (result | minifi::utils::map(&s3::GetObjectResult::write_size)).value_or(0);
+  });
 
-  if (callback.result_) {
+  if (result) {
     auto putAttributeIfNotEmpty = [&](const std::string& attribute, const std::string& value) {
       if (!value.empty()) {
         session->putAttribute(flow_file, attribute, value);
@@ -121,15 +125,15 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 
     logger_->log_debug("Successfully fetched S3 object %s from bucket %s", get_object_params->object_key, get_object_params->bucket);
     session->putAttribute(flow_file, "s3.bucket", get_object_params->bucket);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::PATH, callback.result_->path);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, callback.result_->absolute_path);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, callback.result_->filename);
-    putAttributeIfNotEmpty(core::SpecialFlowAttribute::MIME_TYPE, callback.result_->mime_type);
-    putAttributeIfNotEmpty("s3.etag", callback.result_->etag);
-    putAttributeIfNotEmpty("s3.expirationTime", callback.result_->expiration.expiration_time);
-    putAttributeIfNotEmpty("s3.expirationTimeRuleId", callback.result_->expiration.expiration_time_rule_id);
-    putAttributeIfNotEmpty("s3.sseAlgorithm", callback.result_->ssealgorithm);
-    putAttributeIfNotEmpty("s3.version", callback.result_->version);
+    session->putAttribute(flow_file, core::SpecialFlowAttribute::PATH, result->path);
+    session->putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path);
+    session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, result->filename);
+    putAttributeIfNotEmpty(core::SpecialFlowAttribute::MIME_TYPE, result->mime_type);
+    putAttributeIfNotEmpty("s3.etag", result->etag);
+    putAttributeIfNotEmpty("s3.expirationTime", result->expiration.expiration_time);
+    putAttributeIfNotEmpty("s3.expirationTimeRuleId", result->expiration.expiration_time_rule_id);
+    putAttributeIfNotEmpty("s3.sseAlgorithm", result->ssealgorithm);
+    putAttributeIfNotEmpty("s3.version", result->version);
     session->transfer(flow_file, Success);
   } else {
     logger_->log_error("Failed to fetch S3 object %s from bucket %s", get_object_params->object_key, get_object_params->bucket);

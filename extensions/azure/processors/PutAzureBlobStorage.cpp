@@ -209,7 +209,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
       blob_storage_wrapper_->createContainer();
     }
     PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), *blob_storage_wrapper_, blob_name);
-    session->read(flow_file, &callback);
+    session->read(flow_file, std::ref(callback));
     upload_result = callback.getResult();
   }
 

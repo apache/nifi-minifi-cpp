@@ -122,7 +122,7 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
     std::lock_guard<std::mutex> lock(azure_storage_mutex_);
     PutAzureDataLakeStorage::ReadCallback callback(flow_file->getSize(), azure_data_lake_storage_, *params, logger_);
-    session->read(flow_file, &callback);
+    session->read(flow_file, std::ref(callback));
     result = callback.getResult();
   }
 
@@ -161,7 +161,7 @@ PutAzureDataLakeStorage::ReadCallback::ReadCallback(
     logger_(std::move(logger)) {
 }
 
-int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t PutAzureDataLakeStorage::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
   std::vector<uint8_t> buffer;
   size_t read_ret = stream->read(buffer, flow_size_);
   if (io::isError(read_ret) || read_ret != flow_size_) {

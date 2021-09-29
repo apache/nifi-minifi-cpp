@@ -62,7 +62,7 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  class ReadCallback : public InputStreamCallback {
+  class ReadCallback {
    public:
     ReadCallback(uint64_t flow_size, storage::BlobStorage& blob_storage_wrapper, const std::string &blob_name)
       : flow_size_(flow_size)
@@ -70,7 +70,7 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
       , blob_name_(blob_name) {
     }
 
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
       std::vector<uint8_t> buffer;
       size_t read_ret = stream->read(buffer, flow_size_);
       if (io::isError(read_ret) || read_ret != flow_size_) {

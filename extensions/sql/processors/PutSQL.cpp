@@ -79,10 +79,9 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
   std::string sql_statement;
   if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
-    auto buffer = std::make_shared<io::BufferStream>();
-    InputStreamPipe read_callback{buffer};
-    session.read(flow_file, &read_callback);
-    sql_statement = std::string{reinterpret_cast<const char*>(buffer->getBuffer()), buffer->size()};
+    io::BufferStream buffer;
+    session.read(flow_file, InputStreamPipe{buffer});
+    sql_statement = std::string{reinterpret_cast<const char*>(buffer.getBuffer()), buffer.size()};
   }
   if (sql_statement.empty()) {
     throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");

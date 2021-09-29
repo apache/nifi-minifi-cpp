@@ -304,13 +304,11 @@ void ListenSyslog::onTrigger(core::ProcessContext *context, core::ProcessSession
       flowFile = session->create();
       if (!flowFile)
         return;
-      ListenSyslog::WriteCallback callback(event.payload, event.len);
-      session->write(flowFile, &callback);
+      session->writeBuffer(flowFile, gsl::make_span(event.payload, event.len));
       delete[] event.payload;
       firstEvent = false;
     } else {
-      ListenSyslog::WriteCallback callback(event.payload, event.len);
-      session->append(flowFile, &callback);
+      session->appendBuffer(flowFile, gsl::make_span(event.payload, event.len));
       delete[] event.payload;
     }
   }

@@ -64,19 +64,6 @@ class GenerateFlowFile : public core::Processor {
   EXTENSIONAPI static const char *DATA_FORMAT_TEXT;
   // Supported Relationships
   EXTENSIONAPI static core::Relationship Success;
-  // Nest Callback Class for write stream
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    explicit WriteCallback(const std::vector<char>& data)
-        :data_(&data)
-    { }
-    gsl::not_null<const std::vector<char>*> data_;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      if (data_->empty()) return 0;
-      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_->data()), data_->size());
-      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-    }
-  };
 
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;

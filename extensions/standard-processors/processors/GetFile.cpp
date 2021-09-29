@@ -187,8 +187,7 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::string& fi
   flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, file_name);
 
   try {
-    utils::FileReaderCallback file_reader_callback{file_name};
-    session.write(flow_file, &file_reader_callback);
+    session.write(flow_file, utils::FileReaderCallback{file_name});
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
       auto remove_status = remove(file_name.c_str());

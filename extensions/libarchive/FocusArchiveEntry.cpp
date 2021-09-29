@@ -71,8 +71,7 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   context->getProperty(Path.getName(), archiveMetadata.focusedEntry);
   flowFile->getAttribute("filename", archiveMetadata.archiveName);
 
-  ReadCallback cb(this, &file_man, &archiveMetadata);
-  session->read(flowFile, &cb);
+  session->read(flowFile, ReadCallback{this, &file_man, &archiveMetadata});
 
   // For each extracted entry, import & stash to key
   std::string targetEntryStashKey;
@@ -163,7 +162,7 @@ la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d,
   return gsl::narrow<la_ssize_t>(read);
 }
 
-int64_t FocusArchiveEntry::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) const {
   auto inputArchive = archive_read_new();
   struct archive_entry *entry;
   int64_t nlen = 0;
@@ -183,7 +182,7 @@ int64_t FocusArchiveEntry::ReadCallback::process(const std::shared_ptr<io::BaseS
     return nlen;
   }
 
-  while (isRunning()) {
+  while (proc_->isRunning()) {
     res = archive_read_next_header(inputArchive, &entry);
 
     if (res == ARCHIVE_EOF) {

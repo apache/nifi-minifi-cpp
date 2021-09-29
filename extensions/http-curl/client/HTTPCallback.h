@@ -53,7 +53,7 @@ namespace utils {
  *  - because of this, all functions that request data at a specific offset are implicit seeks and potentially modify
  *    the current buffer
  */
-class HttpStreamingCallback : public ByteInputCallBack {
+class HttpStreamingCallback final : public ByteInputCallback {
  public:
   HttpStreamingCallback()
       : logger_(logging::LoggerFactory<HttpStreamingCallback>::getLogger()),
@@ -64,7 +64,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
         ptr_(nullptr) {
   }
 
-  virtual ~HttpStreamingCallback() = default;
+  ~HttpStreamingCallback() override = default;
 
   void close() {
     logger_->log_trace("close() called");
@@ -79,7 +79,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     seekInner(lock, pos);
   }
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) override {
     std::vector<char> vec;
 
     if (stream->size() > 0) {
@@ -90,7 +90,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     return processInner(std::move(vec));
   }
 
-  virtual int64_t process(const uint8_t* data, size_t size) {
+  int64_t process(const uint8_t* data, size_t size) {
     std::vector<char> vec;
     vec.resize(size);
     memcpy(vec.data(), reinterpret_cast<const char*>(data), size);

@@ -74,19 +74,6 @@ class FetchSFTP : public SFTPProcessorBase {
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    WriteCallback(const std::string& remote_file,
-                 utils::SFTPClient& client);
-    ~WriteCallback();
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-
-   private:
-    std::shared_ptr<logging::Logger> logger_;
-    const std::string remote_file_;
-    utils::SFTPClient& client_;
-  };
-
  private:
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;

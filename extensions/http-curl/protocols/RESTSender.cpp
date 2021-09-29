@@ -90,7 +90,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   }
 
   // Callback for transmit. Declared in order to destruct in proper order - take care!
-  std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
+  std::unique_ptr<utils::ByteInputCallback> input = nullptr;
   std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
 
   // Callback for transfer. Declared in order to destruct in proper order - take care!
@@ -103,8 +103,8 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   client.setKeepAliveIdle(std::chrono::milliseconds(2000));
   client.setConnectionTimeout(std::chrono::milliseconds(2000));
   if (direction == Direction::TRANSMIT) {
-    input = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
-    callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback());
+    input = std::make_unique<utils::ByteInputCallback>();
+    callback = std::make_unique<utils::HTTPUploadCallback>();
     input->write(outputConfig);
     callback->ptr = input.get();
     callback->pos = 0;
@@ -124,7 +124,7 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   }
 
   if (payload.getOperation() == Operation::TRANSFER) {
-    file_callback = std::unique_ptr<utils::ByteOutputCallback>(new utils::ByteOutputCallback(std::numeric_limits<size_t>::max()));
+    file_callback = std::make_unique<utils::ByteOutputCallback>(std::numeric_limits<size_t>::max());
     read.pos = 0;
     read.ptr = file_callback.get();
     client.setReadCallback(&read);
@@ -148,7 +148,8 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
       response_payload.setRawData(client.getResponseBody());
       return response_payload;
     }
-    return parseJsonResponse(payload, client.getResponseBody());
+    const auto response_body = client.getResponseBody();
+    return parseJsonResponse(payload, gsl::make_span(reinterpret_cast<const std::byte*>(response_body.data()), response_body.size()));
   } else {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }

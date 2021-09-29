@@ -65,10 +65,10 @@ class UnfocusArchiveEntry : public core::Processor {
   virtual void initialize(void);
 
   //! Write callback for reconstituting lensed archive into flow file content
-  class WriteCallback : public OutputStreamCallback {
+  class WriteCallback {
    public:
     explicit WriteCallback(ArchiveMetadata *archiveMetadata);
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const;
    private:
     //! Logger
     std::shared_ptr<Logger> logger_;

@@ -144,14 +144,13 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
     }
     if (logPayload && flow->getSize() <= 1024 * 1024) {
       message << "\n" << "Payload:" << "\n";
-      ReadCallback callback(logger_, gsl::narrow<size_t>(flow->getSize()));
-      session->read(flow, &callback);
+      const auto read_result = session->readBuffer(flow);
 
       std::string printable_payload;
       if (hexencode_) {
-        printable_payload = utils::StringUtils::to_hex(callback.buffer_.data(), callback.buffer_.size());
+        printable_payload = utils::StringUtils::to_hex(read_result.buffer);
       } else {
-        printable_payload = std::string(reinterpret_cast<char*>(callback.buffer_.data()), callback.buffer_.size());
+        printable_payload = std::string(reinterpret_cast<const char*>(read_result.buffer.data()), read_result.buffer.size());
       }
 
       if (max_line_length_ == 0U) {

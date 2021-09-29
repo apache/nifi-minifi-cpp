@@ -31,7 +31,6 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
 #include "../../extensions/libarchive/MergeContent.h"
-#include "../test/BufferReader.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "utils/gsl.h"
@@ -106,11 +105,8 @@ struct TestFlow{
     return flow;
   }
   std::string read(const std::shared_ptr<core::FlowFile>& file) {
-    core::ProcessSession session(processorContext);
-    std::vector<uint8_t> buffer;
-    BufferReader reader(buffer);
-    session.read(file, &reader);
-    return {buffer.data(), buffer.data() + buffer.size()};
+    const auto read_result = core::ProcessSession{processorContext}.readBuffer(file);
+    return std::string(reinterpret_cast<const char*>(read_result.buffer.data()), read_result.buffer.size());
   }
   void trigger() {
     auto session = std::make_shared<core::ProcessSession>(processorContext);

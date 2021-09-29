@@ -18,20 +18,11 @@
 #ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
-#include <map> // NOLINT
-#include <stdexcept> // NOLINT
-
-#include <vector> // NOLINT
-#include <string> // NOLINT
-#include <mutex> // NOLINT
+#include <map>
 #include <memory>
+#include <string>
 
-#include "utils/ByteArrayCallback.h"
-#include "c2/C2Protocol.h"
-#include "c2/HeartbeatReporter.h"
-#include "controllers/SSLContextService.h"
-#include "utils/HTTPClient.h"
-#include "Exception.h"
+#include "utils/gsl.h"
 #include "c2/HeartbeatJsonSerializer.h"
 
 namespace org {
@@ -58,7 +49,7 @@ class RESTProtocol : public HeartbeatJsonSerializer {
 
   void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) override;
 
-  virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
+  static C2Payload parseJsonResponse(const C2Payload &payload, gsl::span<const std::byte> response);
 
  private:
   bool containsPayload(const C2Payload &o);

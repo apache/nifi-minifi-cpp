@@ -124,21 +124,6 @@ class ListenSyslog : public core::Processor {
   // Supported Relationships
   static core::Relationship Success;
   static core::Relationship Invalid;
-  // Nest Callback Class for write stream
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    WriteCallback(char *data, uint64_t size)
-        : _data(reinterpret_cast<uint8_t*>(data)),
-          _dataSize(size) {
-    }
-    uint8_t *_data;
-    uint64_t _dataSize;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      if (!_data || _dataSize <= 0) return 0;
-      const auto write_ret = stream->write(_data, _dataSize);
-      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-    }
-  };
 
  public:
   // OnTrigger method, implemented by NiFi ListenSyslog

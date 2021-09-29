@@ -28,7 +28,6 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "ConvertBase.h"
-#include "utils/gsl.h"
 
 
 namespace org {
@@ -68,25 +67,11 @@ class ConvertJSONAck : public ConvertBase {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  protected:
-  class ReadCallback : public InputStreamCallback {
-   public:
-    ReadCallback() = default;
-    ~ReadCallback() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      if (nullptr == stream)
-        return 0;
-      buffer_.resize(stream->size());
-      const auto ret = stream->read(reinterpret_cast<uint8_t*>(buffer_.data()), stream->size());
-      return !io::isError(ret) ? gsl::narrow<int64_t>(ret) : -1;
-    }
-    std::vector<char> buffer_;
-  };
-
   /**
    * Parse Topic name from the json -- given a known structure that we expect.
    * @param json json representation defined by the restful protocol
    */
-  std::string parseTopicName(const std::string &json);
+  static std::string parseTopicName(const std::string &json);
 
  private:
   std::shared_ptr<logging::Logger> logger_;

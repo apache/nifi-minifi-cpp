@@ -58,7 +58,7 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
       minifi::utils::StreamOutputCallback byteCallback(serialized.size() + 1);
       byteCallback.write(const_cast<char*>(serialized.c_str()), serialized.size());
       auto newff = session->create();
-      session->write(newff, &byteCallback);
+      session->write(newff, std::ref(byteCallback));
       session->transfer(newff, Success);
       received_heartbeat = true;
     } else {

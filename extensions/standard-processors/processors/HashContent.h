@@ -158,17 +158,6 @@ class HashContent : public core::Processor {
   //! Initialize, over write by NiFi HashContent
   void initialize() override;
 
-  class ReadCallback : public InputStreamCallback {
-   public:
-    ReadCallback(std::shared_ptr<core::FlowFile> flowFile, const HashContent& parent);
-    ~ReadCallback() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-
-   private:
-    std::shared_ptr<core::FlowFile> flowFile_;
-    const HashContent& parent_;
-  };
-
  private:
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;
@@ -178,7 +167,7 @@ class HashContent : public core::Processor {
   std::shared_ptr<logging::Logger> logger_;
   std::string algoName_;
   std::string attrKey_;
-  bool failOnEmpty_;
+  bool failOnEmpty_{};
 };
 
 }  // namespace processors

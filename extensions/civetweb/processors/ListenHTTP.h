@@ -127,35 +127,6 @@ class ListenHTTP : public core::Processor {
     utils::ConcurrentQueue<FlowFileBufferPair> request_buffer_;
   };
 
-  class ResponseBodyReadCallback : public InputStreamCallback {
-   public:
-    explicit ResponseBodyReadCallback(std::string *out_str)
-        : out_str_(out_str) {
-    }
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      out_str_->resize(stream->size());
-      const auto num_read = stream->read(reinterpret_cast<uint8_t *>(&(*out_str_)[0]), stream->size());
-      if (num_read != stream->size()) {
-        throw std::runtime_error("GraphReadCallback failed to fully read flow file input stream");
-      }
-
-      return gsl::narrow<int64_t>(num_read);
-    }
-
-   private:
-    std::string *out_str_;
-  };
-
-  // Write callback for transferring data from HTTP request to content repo
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    explicit WriteCallback(std::unique_ptr<io::BufferStream>);
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-
-   private:
-    std::unique_ptr<io::BufferStream> request_content_;
-  };
-
   static int logMessage(const struct mg_connection *conn, const char *message) {
     try {
       struct mg_context* ctx = mg_get_context(conn);

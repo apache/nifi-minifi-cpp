@@ -166,13 +166,12 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
             if (numRead <= 0)
               break;
             logger_->log_debug("Execute Command Respond %zd", numRead);
-            ExecuteProcess::WriteCallback callback(buffer, gsl::narrow<uint64_t>(numRead));
             auto flowFile = session->create();
             if (!flowFile)
               continue;
             flowFile->addAttribute("command", _command);
             flowFile->addAttribute("command.arguments", _commandArgument);
-            session->write(flowFile, &callback);
+            session->writeBuffer(flowFile, gsl::make_span(buffer, gsl::narrow<size_t>(numRead)));
             session->transfer(flowFile, Success);
             session->commit();
           }
@@ -187,16 +186,16 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
               if (totalRead > 0) {
                 logger_->log_debug("Execute Command Respond %zu", totalRead);
                 // child exits and close the pipe
-                ExecuteProcess::WriteCallback callback(buffer, totalRead);
+                const auto buffer_span = gsl::make_span(buffer, totalRead);
                 if (!flowFile) {
                   flowFile = session->create();
                   if (!flowFile)
                     break;
                   flowFile->addAttribute("command", _command);
                   flowFile->addAttribute("command.arguments", _commandArgument);
-                  session->write(flowFile, &callback);
+                  session->writeBuffer(flowFile, buffer_span);
                 } else {
-                  session->append(flowFile, &callback);
+                  session->appendBuffer(flowFile, buffer_span);
                 }
                 session->transfer(flowFile, Success);
               }
@@ -205,16 +204,15 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
               if (numRead == static_cast<ssize_t>((sizeof(buffer) - totalRead))) {
                 // we reach the max buffer size
                 logger_->log_debug("Execute Command Max Respond %zu", sizeof(buffer));
-                ExecuteProcess::WriteCallback callback(buffer, sizeof(buffer));
                 if (!flowFile) {
                   flowFile = session->create();
                   if (!flowFile)
                     continue;
                   flowFile->addAttribute("command", _command);
                   flowFile->addAttribute("command.arguments", _commandArgument);
-                  session->write(flowFile, &callback);
+                  session->writeBuffer(flowFile, buffer);
                 } else {
-                  session->append(flowFile, &callback);
+                  session->appendBuffer(flowFile, buffer);
                 }
                 // Rewind
                 totalRead = 0;

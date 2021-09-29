@@ -45,7 +45,6 @@ class HttpTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setTrace<processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<processors::ListenHTTP>();
-    LogTestController::getInstance().setDebug<processors::ListenHTTP::WriteCallback>();
     LogTestController::getInstance().setDebug<processors::ListenHTTP::Handler>();
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<core::Processor>();

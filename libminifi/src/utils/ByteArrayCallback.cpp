@@ -30,7 +30,7 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-int64_t ByteOutputCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t ByteOutputCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
   stream->seek(0);
   if (stream->size() > 0) {
     std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[stream->size()]);
@@ -41,7 +41,7 @@ int64_t ByteOutputCallback::process(const std::shared_ptr<io::BaseStream>& strea
   return gsl::narrow<int64_t>(size_.load());
 }
 
-int64_t StreamOutputCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t StreamOutputCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
   stream->seek(0);
   std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[size_.load()]);
   auto written = readFully(buffer.get(), size_);

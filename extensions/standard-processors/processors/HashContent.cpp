@@ -25,6 +25,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "HashContent.h"
 #include "core/ProcessContext.h"
@@ -91,27 +92,19 @@ void HashContent::onTrigger(core::ProcessContext *, core::ProcessSession *sessio
   }
 
   logger_->log_trace("attempting read");
-  ReadCallback cb(flowFile, *this);
-  session->read(flowFile, &cb);
+  session->read(flowFile, [&flowFile, this](const std::shared_ptr<io::BaseStream>& stream) {
+    // This throws in case algo is not found, but that's fine
+    logger_->log_trace("Searching for %s", algoName_);
+    auto algo = HashAlgos.at(algoName_);
+
+    const auto& ret_val = algo(stream);
+
+    flowFile->setAttribute(attrKey_, ret_val.first);
+
+    return ret_val.second;
+  });
   session->transfer(flowFile, Success);
 }
-
-int64_t HashContent::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  // This throws in case algo is not found, but that's fine
-  parent_.logger_->log_trace("Searching for %s", parent_.algoName_);
-  auto algo = HashAlgos.at(parent_.algoName_);
-
-  const auto& ret_val = algo(stream);
-
-  flowFile_->setAttribute(parent_.attrKey_, ret_val.first);
-
-  return ret_val.second;
-}
-
-HashContent::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile, const HashContent& parent)
-  : flowFile_(flowFile),
-    parent_(parent)
-  {}
 
 REGISTER_RESOURCE(HashContent,"HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. Configuration options exist to select hashing algorithm and set the name of the attribute."); // NOLINT
 

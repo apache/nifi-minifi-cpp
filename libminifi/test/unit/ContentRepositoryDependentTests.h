@@ -30,21 +30,10 @@
 
 namespace ContentRepositoryDependentTests {
 
-struct WriteStringToFlowFile : public minifi::OutputStreamCallback {
-  const std::vector<uint8_t> buffer_;
-
-  explicit WriteStringToFlowFile(const std::string& buffer) : buffer_(buffer.begin(), buffer.end()) {}
-
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream> &stream) override {
-    size_t bytes_written = stream->write(buffer_, buffer_.size());
-    return minifi::io::isError(bytes_written) ? -1 : gsl::narrow<int64_t>(bytes_written);
-  }
-};
-
-struct ReadUntilStreamSize : public minifi::InputStreamCallback {
+struct ReadUntilStreamSize {
   std::string value_;
 
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream> &stream) override {
+  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream> &stream) {
     value_.clear();
     std::vector<uint8_t> buffer;
     size_t bytes_read = stream->read(buffer, stream->size());
@@ -53,10 +42,10 @@ struct ReadUntilStreamSize : public minifi::InputStreamCallback {
   }
 };
 
-struct ReadUntilItCan : public minifi::InputStreamCallback {
+struct ReadUntilItCan {
   std::string value_;
 
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream> &stream) override {
+  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream> &stream) {
     value_.clear();
     std::vector<uint8_t> buffer;
     size_t bytes_read = 0;
@@ -97,8 +86,7 @@ class Fixture {
 
   void commitFlowFile(const std::string& content) {
     const auto original_ff = process_session_->create();
-    WriteStringToFlowFile callback(content);
-    process_session_->write(original_ff, &callback);
+    process_session_->writeBuffer(original_ff, content);
     process_session_->transfer(original_ff, Success);
     process_session_->commit();
   }
@@ -124,18 +112,18 @@ void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> c
   REQUIRE(clone_second_half != nullptr);
   ReadUntilStreamSize read_until_stream_size_callback;
   ReadUntilItCan read_until_it_can_callback;
-  process_session.read(original_ff, &read_until_stream_size_callback);
-  process_session.read(original_ff, &read_until_it_can_callback);
+  process_session.read(original_ff, std::ref(read_until_stream_size_callback));
+  process_session.read(original_ff, std::ref(read_until_it_can_callback));
   CHECK(original_ff->getSize() == 6);
   CHECK(read_until_stream_size_callback.value_ == "foobar");
   CHECK(read_until_it_can_callback.value_ == "foobar");
-  process_session.read(clone_first_half, &read_until_stream_size_callback);
-  process_session.read(clone_first_half, &read_until_it_can_callback);
+  process_session.read(clone_first_half, std::ref(read_until_stream_size_callback));
+  process_session.read(clone_first_half, std::ref(read_until_it_can_callback));
   CHECK(clone_first_half->getSize() == 3);
   CHECK(read_until_stream_size_callback.value_ == "foo");
   CHECK(read_until_it_can_callback.value_ == "foo");
-  process_session.read(clone_second_half, &read_until_stream_size_callback);
-  process_session.read(clone_second_half, &read_until_it_can_callback);
+  process_session.read(clone_second_half, std::ref(read_until_stream_size_callback));
+  process_session.read(clone_second_half, std::ref(read_until_it_can_callback));
   CHECK(clone_second_half->getSize() == 3);
   CHECK(read_until_stream_size_callback.value_ == "bar");
   CHECK(read_until_it_can_callback.value_ == "bar");

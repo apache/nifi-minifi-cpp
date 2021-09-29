@@ -51,7 +51,7 @@ class FocusArchiveEntry : public core::Processor {
     logger_(logging::LoggerFactory<FocusArchiveEntry>::getLogger()) {
   }
   //! Destructor
-  virtual ~FocusArchiveEntry()   = default;
+  ~FocusArchiveEntry()   override = default;
   //! Processor Name
   EXTENSIONAPI static constexpr char const* ProcessorName = "FocusArchiveEntry";
   //! Supported Properties
@@ -60,17 +60,16 @@ class FocusArchiveEntry : public core::Processor {
   EXTENSIONAPI static core::Relationship Success;
 
   //! OnTrigger method, implemented by NiFi FocusArchiveEntry
-  virtual void onTrigger(core::ProcessContext *context,
-      core::ProcessSession *session);
+  void onTrigger(core::ProcessContext *context,
+      core::ProcessSession *session) override;
   //! Initialize, over write by NiFi FocusArchiveEntry
-  virtual void initialize(void);
+  void initialize() override;
 
-  class ReadCallback : public InputStreamCallback {
+  class ReadCallback {
    public:
     explicit ReadCallback(core::Processor*, fileutils::FileManager *file_man, ArchiveMetadata *archiveMetadata);
     ~ReadCallback();
-    virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
-    bool isRunning() {return proc_->isRunning();}
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const;
 
    private:
     fileutils::FileManager *file_man_;

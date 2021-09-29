@@ -256,14 +256,21 @@ void ListenHTTP::processIncomingFlowFile(core::ProcessSession *session) {
 
   if (type == "response_body" && handler_) {
     ResponseBody response;
-    ResponseBodyReadCallback cb(&response.body);
     flow_file->getAttribute("filename", response.uri);
     flow_file->getAttribute("mime.type", response.mime_type);
     if (response.mime_type.empty()) {
       logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s", response.uri);
       response.mime_type = "application/octet-stream";
     }
-    session->read(flow_file, &cb);
+    session->read(flow_file, [out_str = &response.body](const std::shared_ptr<io::BaseStream>& stream) {
+      out_str->resize(stream->size());
+      const auto num_read = stream->read(reinterpret_cast<uint8_t *>(&(*out_str)[0]), stream->size());
+      if (num_read != stream->size()) {
+        throw std::runtime_error("GraphReadCallback failed to fully read flow file input stream");
+      }
+
+      return gsl::narrow<int64_t>(num_read);
+    });
     handler_->setResponseBody(std::move(response));
   }
 
@@ -282,8 +289,10 @@ void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
     session->add(flow_file);
 
     if (flow_file_buffer_pair.second) {
-      WriteCallback callback(std::move(flow_file_buffer_pair.second));
-      session->write(flow_file, &callback);
+      session->write(flow_file, [request_content = flow_file_buffer_pair.second.get()](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+        const auto write_ret = stream->write(request_content->getBuffer(), request_content->size());
+        return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
+      });
     }
 
     session->transfer(flow_file, Success);
@@ -504,15 +513,6 @@ std::unique_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struc
   }
 
   return content_buffer;
-}
-
-ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> request_content)
-    : request_content_(std::move(request_content)) {
-}
-
-int64_t ListenHTTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  const auto write_ret = stream->write(request_content_->getBuffer(), request_content_->size());
-  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
 bool ListenHTTP::isSecure() const {

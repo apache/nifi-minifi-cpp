@@ -278,7 +278,7 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   }
 
   PutS3Object::ReadCallback callback(flow_file->getSize(), *put_s3_request_params, s3_wrapper_);
-  session->read(flow_file, &callback);
+  session->read(flow_file, std::ref(callback));
   if (!callback.result_.has_value()) {
     logger_->log_error("Failed to upload S3 object to bucket '%s'", put_s3_request_params->bucket);
     session->transfer(flow_file, Failure);

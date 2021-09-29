@@ -20,42 +20,27 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <utility>
 #include "BaseStream.h"
+#include "StreamCallback.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-
-// FlowFile IO Callback functions for input and output
-// throw exception for error
-class InputStreamCallback {
- public:
-  virtual ~InputStreamCallback() = default;
-
-  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) = 0;
-};
-class OutputStreamCallback {
- public:
-  virtual ~OutputStreamCallback() = default;
-  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream) = 0;
-};
+namespace org::apache::nifi::minifi {
 
 namespace internal {
 
-inline int64_t pipe(const std::shared_ptr<io::InputStream>& src, const std::shared_ptr<io::OutputStream>& dst) {
+inline int64_t pipe(io::InputStream& src, io::OutputStream& dst) {
   uint8_t buffer[4096U];
   int64_t totalTransferred = 0;
   while (true) {
-    const auto readRet = src->read(buffer, sizeof(buffer));
+    const auto readRet = src.read(buffer, sizeof(buffer));
     if (io::isError(readRet)) return -1;
     if (readRet == 0) break;
     auto remaining = readRet;
     int transferred = 0;
     while (remaining > 0) {
-      const auto writeRet = dst->write(buffer + transferred, remaining);
+      const auto writeRet = dst.write(buffer + transferred, remaining);
       // TODO(adebreceni):
       //   write might return 0, e.g. in case of a congested server
       //   what should we return then?
@@ -74,33 +59,28 @@ inline int64_t pipe(const std::shared_ptr<io::InputStream>& src, const std::shar
 
 }  // namespace internal
 
-class InputStreamPipe : public InputStreamCallback {
+class InputStreamPipe {
  public:
-  explicit InputStreamPipe(std::shared_ptr<io::OutputStream> output) : output_(std::move(output)) {}
+  explicit InputStreamPipe(io::OutputStream& output) : output_(&output) {}
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    return internal::pipe(stream, output_);
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+    return internal::pipe(*stream, *output_);
   }
 
  private:
-  std::shared_ptr<io::OutputStream> output_;
+  gsl::not_null<io::OutputStream*> output_;
 };
 
-class OutputStreamPipe : public OutputStreamCallback {
+class OutputStreamPipe {
  public:
-  explicit OutputStreamPipe(std::shared_ptr<io::InputStream> input) : input_(std::move(input)) {}
+  explicit OutputStreamPipe(io::InputStream& input) : input_(&input) {}
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    return internal::pipe(input_, stream);
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
+    return internal::pipe(*input_, *stream);
   }
 
  private:
-  std::shared_ptr<io::InputStream> input_;
+  gsl::not_null<io::InputStream*> input_;
 };
 
-
-
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

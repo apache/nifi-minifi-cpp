@@ -94,10 +94,10 @@ class GetUSBCamera : public core::Processor {
   static void onFrame(uvc_frame_t *frame, void *ptr);
 
   // Write callback for storing camera capture data in PNG format
-  class PNGWriteCallback : public OutputStreamCallback {
+  class PNGWriteCallback {
    public:
     PNGWriteCallback(std::shared_ptr<std::mutex> write_mtx, uvc_frame_t *frame, uint32_t width, uint32_t height);
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
 
    private:
     std::shared_ptr<std::mutex> png_write_mtx_;
@@ -105,17 +105,6 @@ class GetUSBCamera : public core::Processor {
     const uint32_t width_;
     const uint32_t height_;
     std::vector<uint8_t> png_output_buf_;
-    std::shared_ptr<logging::Logger> logger_;
-  };
-
-  // Write callback for storing camera capture data as a raw RGB pixel buffer
-  class RawWriteCallback : public OutputStreamCallback {
-   public:
-    explicit RawWriteCallback(uvc_frame_t *frame);
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-
-   private:
-    uvc_frame_t *frame_;
     std::shared_ptr<logging::Logger> logger_;
   };
 

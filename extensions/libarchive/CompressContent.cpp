@@ -177,11 +177,11 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
   bool success = false;
   if (encapsulateInTar_) {
     CompressContent::WriteCallback callback(compressMode_, compressLevel_, compressFormat, flowFile, session);
-    session->write(result, &callback);
+    session->write(result, std::ref(callback));
     success = callback.status_ >= 0;
   } else {
     CompressContent::GzipWriteCallback callback(compressMode_, compressLevel_, flowFile, session);
-    session->write(result, &callback);
+    session->write(result, std::ref(callback));
     success = callback.success_;
   }
 

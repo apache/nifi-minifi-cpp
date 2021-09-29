@@ -57,6 +57,7 @@
 #include "Path.h"
 #include "LogUtils.h"
 #include "core/extension/ExtensionManager.h"
+#include "io/BufferStream.h"
 
 class LogTestController {
  public:
@@ -336,10 +337,10 @@ class TestPlan {
 
   std::string getContent(const std::shared_ptr<core::FlowFile>& file) {
     auto content_claim = file->getResourceClaim();
-    auto content_stream = content_repo_->read(*content_claim.get());
-    auto output_stream = std::make_shared<minifi::io::BufferStream>();
-    minifi::InputStreamPipe{output_stream}.process(content_stream);
-    return {reinterpret_cast<const char*>(output_stream->getBuffer()), output_stream->size()};
+    auto content_stream = content_repo_->read(*content_claim);
+    minifi::io::BufferStream output_stream;
+    minifi::InputStreamPipe{output_stream}(content_stream);
+    return {reinterpret_cast<const char*>(output_stream.getBuffer()), output_stream.size()};
   }
 
   void finalize();

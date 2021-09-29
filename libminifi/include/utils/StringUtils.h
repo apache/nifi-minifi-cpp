@@ -401,6 +401,10 @@ class StringUtils {
     return to_hex(data.data(), data.size(), uppercase);
   }
 
+  inline static std::string to_hex(gsl::span<const std::byte> data, bool uppercase = false) {
+    return to_hex(reinterpret_cast<const uint8_t*>(data.data()), data.size(), uppercase);
+  }
+
   /**
    * Decodes the Base64 encoded string into data
    * @param data the output buffer where the decoded bytes will be written. Must be at least (base64_length / 4 + 1) * 3 bytes long.

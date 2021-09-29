@@ -61,11 +61,11 @@ AnnotatedValue parseAnnotatedValue(const rapidjson::Value& jsonValue) {
   return result;
 }
 
-const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const std::vector<char> &response) {
+C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, gsl::span<const std::byte> response) {
   rapidjson::Document root;
 
   try {
-    rapidjson::ParseResult ok = root.Parse(response.data(), response.size());
+    rapidjson::ParseResult ok = root.Parse(reinterpret_cast<const char*>(response.data()), response.size());
     if (ok) {
       std::string identifier;
       for (auto key : {"operationid", "operationId", "identifier"}) {

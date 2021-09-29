@@ -33,13 +33,13 @@ namespace utils {
 /**
  * Simple callback to read a file, to be used with ProcessSession::write().
  */
-class FileReaderCallback : public OutputStreamCallback {
+class FileReaderCallback {
  public:
-  explicit FileReaderCallback(const std::string& file_name);
-  int64_t process(const std::shared_ptr<io::BaseStream>& output_stream) override;
+  explicit FileReaderCallback(std::string file_name);
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& output_stream) const;
 
  private:
-  std::ifstream input_stream_;
+  std::string file_name_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 

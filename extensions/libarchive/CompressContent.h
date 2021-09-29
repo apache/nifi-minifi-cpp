@@ -95,13 +95,13 @@ class CompressContent : public core::Processor {
 
  public:
   // Nest Callback Class for read stream from flow for compress
-  class ReadCallbackCompress: public InputStreamCallback {
+  class ReadCallbackCompress {
    public:
     ReadCallbackCompress(std::shared_ptr<core::FlowFile> &flow, struct archive *arch, struct archive_entry *entry) :
         flow_(flow), arch_(arch), entry_(entry), status_(0), logger_(logging::LoggerFactory<CompressContent>::getLogger()) {
     }
-    ~ReadCallbackCompress() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
       uint8_t buffer[4096U];
       int64_t ret = 0;
       uint64_t read_size = 0;
@@ -139,12 +139,11 @@ class CompressContent : public core::Processor {
     std::shared_ptr<logging::Logger> logger_;
   };
   // Nest Callback Class for read stream from flow for decompress
-  struct ReadCallbackDecompress : InputStreamCallback {
+  struct ReadCallbackDecompress {
     explicit ReadCallbackDecompress(std::shared_ptr<core::FlowFile> flow) :
         flow_file(std::move(flow)) {
     }
-    ~ReadCallbackDecompress() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
       stream->seek(offset);
       const auto readRet = stream->read(buffer, sizeof(buffer));
       stream_read_result = readRet;
@@ -159,7 +158,7 @@ class CompressContent : public core::Processor {
     std::shared_ptr<core::FlowFile> flow_file;
   };
   // Nest Callback Class for write stream
-  class WriteCallback: public OutputStreamCallback {
+  class WriteCallback {
    public:
     WriteCallback(CompressionMode compress_mode, int compress_level, CompressionFormat compress_format,
         const std::shared_ptr<core::FlowFile> &flow, const std::shared_ptr<core::ProcessSession> &session) :
@@ -171,7 +170,6 @@ class CompressContent : public core::Processor {
       stream_ = nullptr;
       status_ = 0;
     }
-    ~WriteCallback() = default;
 
     CompressionMode compress_mode_;
     int compress_level_;
@@ -193,7 +191,7 @@ class CompressContent : public core::Processor {
 
     static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
       auto *callback = reinterpret_cast<WriteCallback *>(context);
-      callback->session_->read(callback->flow_, &callback->readDecompressCb_);
+      callback->session_->read(callback->flow_, std::ref(callback->readDecompressCb_));
       *buff = callback->readDecompressCb_.buffer;
       if (io::isError(callback->readDecompressCb_.stream_read_result)) {
         archive_set_error(archive, EIO, "Error reading flowfile");
@@ -218,7 +216,7 @@ class CompressContent : public core::Processor {
       archive_read_free(arch);
     }
 
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
       struct archive *arch;
       int r;
 
@@ -290,7 +288,7 @@ class CompressContent : public core::Processor {
         archive_entry_set_size(entry, flow_->getSize());
         archive_entry_set_mode(entry, S_IFREG | 0755);
         ReadCallbackCompress readCb(flow_, arch, entry);
-        session_->read(flow_, &readCb);
+        session_->read(flow_, std::ref(readCb));
         if (readCb.status_ < 0) {
           archive_entry_free(entry);
           archive_write_log_error_cleanup(arch);
@@ -354,7 +352,7 @@ class CompressContent : public core::Processor {
     }
   };
 
-  class GzipWriteCallback : public OutputStreamCallback {
+  class GzipWriteCallback {
    public:
     GzipWriteCallback(CompressionMode compress_mode, int compress_level, std::shared_ptr<core::FlowFile> flow, std::shared_ptr<core::ProcessSession> session)
       : logger_(logging::LoggerFactory<CompressContent>::getLogger())
@@ -371,47 +369,33 @@ class CompressContent : public core::Processor {
     std::shared_ptr<core::ProcessSession> session_;
     bool success_{false};
 
-    int64_t process(const std::shared_ptr<io::BaseStream>& outputStream) override {
-      class ReadCallback : public InputStreamCallback {
-       public:
-        ReadCallback(GzipWriteCallback& writer, std::shared_ptr<io::OutputStream> outputStream)
-          : writer_(writer)
-          , outputStream_(std::move(outputStream)) {
-        }
-
-        int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) override {
-          std::vector<uint8_t> buffer(16 * 1024U);
-          size_t read_size = 0;
-          while (read_size < writer_.flow_->getSize()) {
-            const auto ret = inputStream->read(buffer.data(), buffer.size());
-            if (io::isError(ret)) {
-              return -1;
-            } else if (ret == 0) {
-              break;
-            } else {
-              const auto writeret = outputStream_->write(buffer.data(), ret);
-              if (io::isError(writeret) || gsl::narrow<size_t>(writeret) != ret) {
-                return -1;
-              }
-              read_size += ret;
-            }
-          }
-          outputStream_->close();
-          return gsl::narrow<int64_t>(read_size);
-        }
-
-        GzipWriteCallback& writer_;
-        std::shared_ptr<io::OutputStream> outputStream_;
-      };
-
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& outputStream) {
       std::shared_ptr<io::ZlibBaseStream> filterStream;
       if (compress_mode_ == CompressionMode::Compress) {
         filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
         filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP);
       }
-      ReadCallback readCb(*this, filterStream);
-      session_->read(flow_, &readCb);
+      session_->read(flow_, [this, &filterStream](const std::shared_ptr<io::BaseStream>& inputStream) -> int64_t {
+        std::vector<uint8_t> buffer(16 * 1024U);
+        size_t read_size = 0;
+        while (read_size < flow_->getSize()) {
+          const auto ret = inputStream->read(buffer.data(), buffer.size());
+          if (io::isError(ret)) {
+            return -1;
+          } else if (ret == 0) {
+            break;
+          } else {
+            const auto writeret = filterStream->write(buffer.data(), ret);
+            if (io::isError(writeret) || gsl::narrow<size_t>(writeret) != ret) {
+              return -1;
+            }
+            read_size += ret;
+          }
+        }
+        filterStream->close();
+        return gsl::narrow<int64_t>(read_size);
+      });
 
       success_ = filterStream->isFinished();
 

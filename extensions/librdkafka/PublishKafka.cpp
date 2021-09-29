@@ -296,7 +296,7 @@ class PublishKafka::Messages {
 };
 
 namespace {
-class ReadCallback : public InputStreamCallback {
+class ReadCallback {
  public:
   struct rd_kafka_headers_deleter {
     void operator()(rd_kafka_headers_t* ptr) const noexcept {
@@ -391,7 +391,7 @@ class ReadCallback : public InputStreamCallback {
   ReadCallback(const ReadCallback&) = delete;
   ReadCallback& operator=(ReadCallback) = delete;
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
     std::vector<unsigned char> buffer;
 
     buffer.resize(max_seg_size_);
@@ -1009,11 +1009,11 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
     ReadCallback callback(max_flow_seg_size_, kafkaKey, thisTopic->getTopic(), conn_->getConnection(), *flowFile,
                                         attributeNameRegex_, messages, flow_file_index, failEmptyFlowFiles, logger_);
-    session->read(flowFile, &callback);
+    session->read(flowFile, std::ref(callback));
 
     if (!callback.called_) {
       // workaround: call callback since ProcessSession doesn't do so for empty flow files without resource claims
-      callback.process(nullptr);
+      callback(nullptr);
     }
 
     if (flowFile->getSize() == 0 && failEmptyFlowFiles) {

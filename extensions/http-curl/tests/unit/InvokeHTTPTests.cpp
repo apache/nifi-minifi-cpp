@@ -140,20 +140,6 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   LogTestController::getInstance().reset();
 }
 
-class CallBack : public minifi::OutputStreamCallback {
- public:
-  CallBack() {
-  }
-  virtual ~CallBack() {
-  }
-  virtual int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
-    // leaving the typo for posterity sake
-    std::string st = "we're gnna write some test stuff";
-    const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(st.c_str()), st.length());
-    return minifi::io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-  }
-};
-
 TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   TestController testController;
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
@@ -222,11 +208,14 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   std::shared_ptr<core::FlowFile> record;
 
-  CallBack callback;
-
   auto flow = std::make_shared<minifi::FlowFileRecord>();
   flow->setAttribute("testy", "test");
-  session2->write(flow, &callback);
+  session2->write(flow, [](const std::shared_ptr<minifi::io::BaseStream>& stream) {
+    // leaving the typo for posterity sake
+    std::string st = "we're gnna write some test stuff";
+    const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(st.c_str()), st.length());
+    return minifi::io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
+  });
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);

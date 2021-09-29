@@ -266,14 +266,14 @@ class SiteToSiteClient : public core::Connectable {
 };
 
 // Nest Callback Class for write stream
-class WriteCallback : public OutputStreamCallback {
+class WriteCallback {
  public:
   WriteCallback(DataPacket *packet) // NOLINT
       : _packet(packet) {
   }
   DataPacket *_packet;
   // void process(std::ofstream *stream) {
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
     uint8_t buffer[16384];
     uint64_t len = _packet->_size;
     uint64_t total = 0;
@@ -293,13 +293,13 @@ class WriteCallback : public OutputStreamCallback {
   }
 };
 // Nest Callback Class for read stream
-class ReadCallback : public InputStreamCallback {
+class ReadCallback {
  public:
   ReadCallback(DataPacket *packet) // NOLINT
       : _packet(packet) {
   }
   DataPacket *_packet;
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
     _packet->_size = 0;
     uint8_t buffer[8192] = { 0 };
     size_t size = 0;

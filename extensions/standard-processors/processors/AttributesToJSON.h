@@ -71,17 +71,6 @@ class AttributesToJSON : public core::Processor {
   }
 
  private:
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    explicit WriteCallback(const std::string& json_data) : json_data_(json_data) {}
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(json_data_.data()), json_data_.length());
-      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-    }
-   private:
-    std::string json_data_;
-  };
-
   bool isCoreAttributeToBeFiltered(const std::string& attribute) const;
   std::optional<std::unordered_set<std::string>> getAttributesToBeWritten(const core::FlowFile::AttributeMap& flowfile_attributes) const;
   void addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value);

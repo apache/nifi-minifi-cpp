@@ -43,53 +43,24 @@
 #include "../Utils.h"
 #include "utils/gsl.h"
 
-class ReadCallback: public minifi::InputStreamCallback {
- public:
-  explicit ReadCallback(size_t size)
-      :buffer_size_{size}  // default member initializers use this
-  {}
-  ReadCallback(const ReadCallback&) = delete;
-  ReadCallback(ReadCallback&&) = delete;
-  ReadCallback& operator=(const ReadCallback&) = delete;
-  ReadCallback& operator=(ReadCallback&&) = delete;
+namespace {
+std::string decompress(gsl::span<const std::byte> buffer) {
+  struct archive* const a = archive_read_new();
+  const auto cleanup = gsl::finally([a] { archive_read_free(a); });
+  archive_read_support_format_all(a);
+  archive_read_support_filter_all(a);
+  archive_read_open_memory(a, buffer.data(), buffer.size());
+  struct archive_entry *ae;
 
-  ~ReadCallback() override {
-    delete[] buffer_;
-    delete[] archive_buffer_;
-  }
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
-    int64_t total_read = 0;
-    do {
-      const auto ret = stream->read(buffer_ + read_size_, buffer_size_ - read_size_);
-      if (ret == 0) break;
-      if (minifi::io::isError(ret)) return -1;
-      read_size_ += gsl::narrow<size_t>(ret);
-      total_read += ret;
-    } while (buffer_size_ != read_size_);
-    return total_read;
-  }
-  void archive_read() {
-    struct archive *a;
-    a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    archive_read_open_memory(a, buffer_, read_size_);
-    struct archive_entry *ae;
-
-    REQUIRE(archive_read_next_header(a, &ae) == ARCHIVE_OK);
-    const auto size = archive_entry_size(ae);
-    archive_buffer_ = new char[size];
-    archive_buffer_size_ = size;
-    archive_read_data(a, archive_buffer_, gsl::narrow<size_t>(size));
-    archive_read_free(a);
-  }
-
-  size_t buffer_size_;
-  uint8_t *buffer_ = new uint8_t[buffer_size_];
-  size_t read_size_ = 0;
-  char *archive_buffer_ = nullptr;
-  int64_t archive_buffer_size_ = 0;
-};
+  REQUIRE(archive_read_next_header(a, &ae) == ARCHIVE_OK);
+  const auto size = archive_entry_size(ae);
+  REQUIRE(size >= 0);
+  std::string archive_buffer;
+  archive_buffer.resize(gsl::narrow<size_t>(size));
+  archive_read_data(a, archive_buffer.data(), archive_buffer.size());
+  return archive_buffer;
+}
+}  // namespace
 
 /**
  * There is strong coupling between these compression and decompression
@@ -214,10 +185,9 @@ class CompressTestController : public CompressDecompressionTestController {
     setupFlow();
   }
 
-  template<class ...Args>
-  void writeCompressed(Args&& ...args) {
+  void writeCompressed(gsl::span<const std::byte> data) {
     std::ofstream file(compressed_content_path_, std::ios::binary);
-    file.write(std::forward<Args>(args)...);
+    file.write(reinterpret_cast<const char*>(data.data()), data.size());
   }
 };
 
@@ -267,13 +237,11 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
     REQUIRE(attribute_value == "application/gzip");
     flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
     REQUIRE(attribute_value == "inputfile.tar.gz");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    callback.archive_read();
-    std::string content(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(getRawContent() == content);
+    const auto [_, compressed_flow_file_content] = sessionGenFlowFile.readBuffer(flow1);
+    const auto decompressed_content = decompress(compressed_flow_file_content);
+    REQUIRE(getRawContent() == decompressed_content);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(compressed_flow_file_content);
   }
 }
 
@@ -307,10 +275,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
     REQUIRE_FALSE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, attribute_value));
     flow1->getAttribute(core::SpecialFlowAttribute::FILENAME, attribute_value);
     REQUIRE(attribute_value == "inputfile");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    std::string content(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(getRawContent() == content);
+    const auto flow_file_content = to_string(sessionGenFlowFile.readBuffer(flow1));
+    REQUIRE(getRawContent() == flow_file_content);
   }
 }
 
@@ -342,13 +308,11 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
     std::string mime;
     flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/bzip2");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(getRawContent() == contents);
+    const auto [_, compressed_flow_file_content] = sessionGenFlowFile.readBuffer(flow1);
+    const auto decompressed_contents = decompress(compressed_flow_file_content);
+    REQUIRE(getRawContent() == decompressed_contents);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(compressed_flow_file_content);
   }
 }
 
@@ -380,10 +344,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
     REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(getRawContent() == contents);
+    const auto flow_file_contents = to_string(sessionGenFlowFile.readBuffer(flow1));
+    REQUIRE(getRawContent() == flow_file_contents);
   }
 }
 
@@ -421,13 +383,11 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
     std::string mime;
     flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/x-lzma");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(getRawContent() == contents);
+    const auto [_, compressed_flow_file_content] = sessionGenFlowFile.readBuffer(flow1);
+    const auto decompressed_contents = decompress(compressed_flow_file_content);
+    REQUIRE(getRawContent() == decompressed_contents);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(compressed_flow_file_content);
   }
 }
 
@@ -466,10 +426,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
     REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(getRawContent() == contents);
+    const auto flow_file_contents = to_string(sessionGenFlowFile.readBuffer(flow1));
+    REQUIRE(getRawContent() == flow_file_contents);
   }
 }
 
@@ -507,13 +465,11 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
     std::string mime;
     flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/x-xz");
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(getRawContent() == contents);
+    const auto [_, compressed_flow_file_content] = sessionGenFlowFile.readBuffer(flow1);
+    const auto decompressed_contents = decompress(compressed_flow_file_content);
+    REQUIRE(getRawContent() == decompressed_contents);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(compressed_flow_file_content);
   }
 }
 
@@ -552,10 +508,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
     REQUIRE(flow1->getSize() != flow->getSize());
     std::string mime;
     REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
-    ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
-    REQUIRE(getRawContent() == contents);
+    const auto flow_file_contents = to_string(sessionGenFlowFile.readBuffer(flow1));
+    REQUIRE(getRawContent() == flow_file_contents);
   }
 }
 
@@ -718,10 +672,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
     std::string mime;
     file->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime);
     REQUIRE(mime == "application/gzip");
-    ReadCallback callback(gsl::narrow<size_t>(file->getSize()));
-    sessionGenFlowFile.read(file, &callback);
-    callback.archive_read();
-    std::string content(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
-    REQUIRE(flowFileContents[idx] == content);
+    const auto decompressed_content = decompress(sessionGenFlowFile.readBuffer(file).buffer);
+    REQUIRE(flowFileContents[idx] == decompressed_content);
   }
 }

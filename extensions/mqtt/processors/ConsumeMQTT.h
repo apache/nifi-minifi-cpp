@@ -73,28 +73,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
   static core::Relationship Success;
 
-  // Nest Callback Class for write stream
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    explicit WriteCallback(MQTTClient_message *message)
-        : message_(message) {
-    }
-    MQTTClient_message *message_;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      if (message_->payloadlen < 0) {
-        status_ = -1;
-        return -1;
-      }
-      const auto len = stream->write(reinterpret_cast<uint8_t*>(message_->payload), gsl::narrow<size_t>(message_->payloadlen));
-      if (io::isError(len)) {
-        status_ = -1;
-        return -1;
-      }
-      return gsl::narrow<int64_t>(len);
-    }
-    int status_ = 0;
-  };
-
  public:
   /**
    * Function that's executed when the processor is scheduled.

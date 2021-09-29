@@ -140,17 +140,6 @@ class ConsumeKafka : public core::Processor {
   void process_pending_messages(core::ProcessSession& session);
 
  private:
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    WriteCallback(char *data, uint64_t size) :
-        data_(reinterpret_cast<uint8_t*>(data)),
-        dataSize_(size) {}
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream);
-   private:
-    uint8_t* data_;
-    uint64_t dataSize_;
-  };
-
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
