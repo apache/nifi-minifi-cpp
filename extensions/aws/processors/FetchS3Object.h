@@ -64,27 +64,6 @@ class FetchS3Object : public S3Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    WriteCallback(const minifi::aws::s3::GetObjectRequestParameters& get_object_params, aws::s3::S3Wrapper& s3_wrapper)
-      : get_object_params_(get_object_params),
-        s3_wrapper_(s3_wrapper) {
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      result_ = s3_wrapper_.getObject(get_object_params_, *stream);
-      if (!result_) {
-        return 0;
-      }
-
-      return result_->write_size;
-    }
-
-    const minifi::aws::s3::GetObjectRequestParameters& get_object_params_;
-    aws::s3::S3Wrapper& s3_wrapper_;
-    std::optional<minifi::aws::s3::GetObjectResult> result_;
-  };
-
  private:
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;

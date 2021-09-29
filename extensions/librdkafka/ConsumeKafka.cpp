@@ -493,8 +493,7 @@ std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transf
         return {};
       }
       // flowfile content is consumed here
-      WriteCallback stream_writer_callback(&flowfile_content[0], flowfile_content.size());
-      session.write(flow_file, &stream_writer_callback);
+      session.writeBuffer(flow_file, flowfile_content);
       for (const auto& kv : attributes_from_headers) {
         flow_file->setAttribute(kv.first, kv.second);
       }
@@ -536,13 +535,6 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
     return;
   }
   process_pending_messages(*session);
-}
-
-int64_t ConsumeKafka::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  if (!data_) return 0;
-  const auto write_ret = stream->write(data_, dataSize_);
-  if (io::isError(write_ret)) return -1;
-  return gsl::narrow<int64_t>(write_ret);
 }
 
 REGISTER_RESOURCE(ConsumeKafka, "Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles. "

@@ -35,16 +35,15 @@ class ApplyTemplate : public core::Processor {
  public:
   explicit ApplyTemplate(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {}
-  ~ApplyTemplate() override = default;
   static constexpr char const *ProcessorName = "ApplyTemplate";
 
   static const core::Property Template;
 
   static const core::Relationship Success;
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-                 const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
+
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ApplyTemplate>::getLogger();
 };

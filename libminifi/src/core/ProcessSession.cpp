@@ -232,11 +232,12 @@ void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relat
   flow->setDeleted(false);
 }
 
-void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
+void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) {
   auto flow_file_equality_checker = [&flow](const auto& flow_file) { return flow == flow_file; };
   gsl_ExpectsAudit(_updatedFlowFiles.contains(flow->getUUID())
       || _addedFlowFiles.contains(flow->getUUID())
       || std::any_of(_clonedFlowFiles.begin(), _clonedFlowFiles.end(), flow_file_equality_checker));
+
 
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
 
@@ -247,7 +248,7 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
-    if (callback->process(stream) < 0) {
+    if (callback(stream) < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
 
@@ -269,18 +270,16 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
 }
 
 void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) {
-  struct BufferOutputStreamCallback : OutputStreamCallback {
-    explicit BufferOutputStreamCallback(gsl::span<const char> buffer) :buffer{buffer} {}
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) final {
-      return stream->write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
-    }
-    gsl::span<const char> buffer;
-  };
-  BufferOutputStreamCallback cb{ buffer };
-  write(flow_file, &cb);
+  write(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& outputStream) {
+    const auto write_status = outputStream->write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
+    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
+  });
+}
+void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const std::byte> buffer) {
+  writeBuffer(flow_file, gsl::make_span(reinterpret_cast<const char*>(buffer.data()), buffer.size()));
 }
 
-void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
+void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) {
   auto flow_file_equality_checker = [&flow](const auto& flow_file) { return flow == flow_file; };
   gsl_ExpectsAudit(_updatedFlowFiles.contains(flow->getUUID())
       || _addedFlowFiles.contains(flow->getUUID())
@@ -305,7 +304,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
     // this prevents an issue if we write, above, with zero length.
     if (stream_size_before_callback > 0)
       stream->seek(stream_size_before_callback + 1);
-    if (callback->process(stream) < 0) {
+    if (callback(stream) < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
     flow->setSize(flow_file_size + (stream->size() - stream_size_before_callback));
@@ -322,8 +321,17 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
     throw;
   }
 }
+void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) {
+  append(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& outputStream) {
+    const auto write_status = outputStream->write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
+    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
+  });
+}
+void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const std::byte> buffer) {
+  appendBuffer(flow_file, gsl::make_span(reinterpret_cast<const char*>(buffer.data()), buffer.size()));
+}
 
-int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback) {
+int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, const io::InputStreamCallback& callback) {
   try {
     std::shared_ptr<ResourceClaim> claim = nullptr;
 
@@ -345,7 +353,7 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputS
     }
 
     auto flow_file_stream = std::make_shared<io::StreamSlice>(stream, flow->getOffset(), flow->getSize());
-    auto ret = callback->process(flow_file_stream);
+    auto ret = callback(flow_file_stream);
     if (ret < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
@@ -359,7 +367,8 @@ int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, InputS
   }
 }
 
-int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, InputOutputStreamCallback *callback) {
+
+int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, const io::InputOutputStreamCallback& callback) {
   gsl_Expects(callback);
 
   try {
@@ -384,7 +393,7 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, I
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for write");
     }
 
-    int64_t bytes_written = callback->process(input_stream, output_stream);
+    int64_t bytes_written = callback(input_stream, output_stream);
     if (bytes_written < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
@@ -408,25 +417,15 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, I
 
 detail::ReadBufferResult ProcessSession::readBuffer(const std::shared_ptr<core::FlowFile>& flow) {
   detail::ReadBufferResult result;
-  struct Callback : InputStreamCallback {
-    detail::ReadBufferResult& result;
-    ProcessSession& session;
-    Callback(detail::ReadBufferResult& result, ProcessSession& session)
-      :result{result}, session{session}
-    {}
-    int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) final {
-      gsl_Expects(inputStream);
-      result.buffer.resize(inputStream->size());
-      const auto read_status = inputStream->read(result.buffer);
-      if (read_status != result.buffer.size()) {
-        session.logger_->log_error("readBuffer: %zu bytes were requested from the stream but %zu bytes were read. Rolling back.", result.buffer.size(), read_status);
-        throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
-      }
-      return gsl::narrow<int64_t>(read_status);
+  result.status = read(flow, [&result, this](const std::shared_ptr<io::BaseStream>& inputStream) {
+    result.buffer.resize(inputStream->size());
+    const auto read_status = inputStream->read(result.buffer);
+    if (read_status != result.buffer.size()) {
+      logger_->log_error("readBuffer: %zu bytes were requested from the stream but %zu bytes were read. Rolling back.", result.buffer.size(), read_status);
+      throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
     }
-  };
-  Callback cb{result, *this};
-  result.status = read(flow, &cb);
+    return gsl::narrow<int64_t>(read_status);
+  });
   return result;
 }
 
@@ -686,7 +685,7 @@ bool ProcessSession::exportContent(const std::string &destination, const std::st
   logger_->log_debug("Exporting content of %s to %s", flow->getUUIDStr(), destination);
 
   ProcessSessionReadCallback cb(tmpFile, destination, logger_);
-  read(flow, &cb);
+  read(flow, std::ref(cb));
 
   logger_->log_info("Committing %s", destination);
   bool commit_ok = cb.commit();
@@ -1022,8 +1021,8 @@ void ProcessSession::ensureNonNullResourceClaim(
         logger_->log_debug("Processor %s (%s) did not create a ResourceClaim, creating an empty one",
                            process_context_->getProcessorNode()->getUUIDStr(),
                            process_context_->getProcessorNode()->getName());
-        OutputStreamPipe emptyStreamCallback(std::make_shared<io::BufferStream>());
-        write(flowFile, &emptyStreamCallback);
+        io::BufferStream emptyBufferStream;
+        write(flowFile, OutputStreamPipe{emptyBufferStream});
       }
     }
   }

@@ -65,7 +65,7 @@ void init_file_paths() {
   static Initializer initializer;
 }
 
-class FixedBuffer : public minifi::InputStreamCallback {
+class FixedBuffer {
  public:
   explicit FixedBuffer(std::size_t capacity) : capacity_(capacity) {
     buf_.reset(new uint8_t[capacity_]);
@@ -97,7 +97,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     } while (size_ != capacity_);
     return total_read;
   }
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream>& stream) {
     return write(*stream, capacity_);
   }
 
@@ -246,13 +246,13 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragment", "[mergefiletest1]")
   REQUIRE(flow1->getSize() == 96);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     REQUIRE(callback.to_string() == expected[0]);
   }
   REQUIRE(flow2->getSize() == 96);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     REQUIRE(callback.to_string() == expected[1]);
   }
 }
@@ -308,13 +308,13 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDelimiter", "[mergefil
   REQUIRE(flow1->getSize() == 128);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     REQUIRE(callback.to_string() == expected[0]);
   }
   REQUIRE(flow2->getSize() == 128);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     REQUIRE(callback.to_string() == expected[1]);
   }
 }
@@ -371,13 +371,13 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileDefragmentDropFlow", "[mergefile
   REQUIRE(flow1->getSize() == 96);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     REQUIRE(callback.to_string() == expected[0]);
   }
   REQUIRE(flow2->getSize() == 64);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     REQUIRE(callback.to_string() == expected[1]);
   }
 }
@@ -419,13 +419,13 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileBinPack", "[mergefiletest4]") {
   REQUIRE(flow1->getSize() == 96);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     REQUIRE(callback.to_string() == expected[0]);
   }
   REQUIRE(flow2->getSize() == 96);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     REQUIRE(callback.to_string() == expected[1]);
   }
 }
@@ -463,7 +463,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
   REQUIRE(flow1->getSize() > 0);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
     for (int i = 0; i < 3; i++) {
@@ -473,7 +473,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileTar", "[mergefiletest4]") {
   REQUIRE(flow2->getSize() > 0);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
     for (int i = 3; i < 6; i++) {
@@ -514,7 +514,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
   REQUIRE(flow1->getSize() > 0);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
     for (int i = 0; i < 3; i++) {
@@ -524,7 +524,7 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileZip", "[mergefiletest5]") {
   REQUIRE(flow2->getSize() > 0);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     auto archives = read_archives(callback);
     REQUIRE(archives.size() == 3);
     for (int i = 3; i < 6; i++) {
@@ -572,12 +572,12 @@ TEST_CASE_METHOD(MergeTestController, "MergeFileOnAttribute", "[mergefiletest5]"
   std::shared_ptr<core::FlowFile> flow2 = output_->poll(expiredFlowRecords);
   {
     FixedBuffer callback(flow1->getSize());
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     REQUIRE(callback.to_string() == expected[0]);
   }
   {
     FixedBuffer callback(flow2->getSize());
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     REQUIRE(callback.to_string() == expected[1]);
   }
 }
@@ -697,10 +697,10 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
 
   core::ProcessSession session(context);
 
-  minifi::PayloadSerializer payloadSerializer([&] (const std::shared_ptr<core::FlowFile>& ff, minifi::InputStreamCallback* cb) {
+  minifi::PayloadSerializer payloadSerializer([&] (const std::shared_ptr<core::FlowFile>& ff, const minifi::io::InputStreamCallback& cb) {
     return session.read(ff, cb);
   });
-  minifi::FlowFileV3Serializer ffV3Serializer([&] (const std::shared_ptr<core::FlowFile>& ff, minifi::InputStreamCallback* cb) {
+  minifi::FlowFileV3Serializer ffV3Serializer([&] (const std::shared_ptr<core::FlowFile>& ff, const minifi::io::InputStreamCallback& cb) {
     return session.read(ff, cb);
   });
 
@@ -768,7 +768,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   REQUIRE(expiredFlowRecords.empty());
   {
     FixedBuffer callback(flow->getSize());
-    session.read(flow, &callback);
+    session.read(flow, std::ref(callback));
     REQUIRE(callback.to_string() == expected);
   }
 
@@ -812,13 +812,13 @@ TEST_CASE_METHOD(MergeTestController, "Batch Size", "[testMergeFileBatchSize]") 
   REQUIRE(flow1);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow1->getSize()));
-    sessionGenFlowFile.read(flow1, &callback);
+    sessionGenFlowFile.read(flow1, std::ref(callback));
     REQUIRE(callback.to_string() == expected[0]);
   }
   REQUIRE(flow2);
   {
     FixedBuffer callback(gsl::narrow<size_t>(flow2->getSize()));
-    sessionGenFlowFile.read(flow2, &callback);
+    sessionGenFlowFile.read(flow2, std::ref(callback));
     REQUIRE(callback.to_string() == expected[1]);
   }
 }

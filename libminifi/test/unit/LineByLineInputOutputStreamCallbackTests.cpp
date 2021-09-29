@@ -70,7 +70,7 @@ TEST_CASE("LineByLineInputOutputStreamCallback can process a stream line by line
   }
 
   LineByLineInputOutputStreamCallback line_by_line_input_output_stream_callback{line_processor};
-  line_by_line_input_output_stream_callback.process(input_stream, output_stream);
+  line_by_line_input_output_stream_callback(input_stream, output_stream);
   const auto output_data = utils::span_to<std::string>(output_stream->getBuffer().as_span<const char>());
   CHECK(output_data == expected_output);
 }
@@ -91,7 +91,7 @@ TEST_CASE("LineByLineInputOutputStreamCallback can handle Windows line endings",
                                "3: Five six, picking up sticks\r\n";
 
   LineByLineInputOutputStreamCallback line_by_line_input_output_stream_callback{line_processor};
-  line_by_line_input_output_stream_callback.process(input_stream, output_stream);
+  line_by_line_input_output_stream_callback(input_stream, output_stream);
   const auto output_data = utils::span_to<std::string>(output_stream->getBuffer().as_span<const char>());
   CHECK(output_data == expected_output);
 }
@@ -101,6 +101,6 @@ TEST_CASE("LineByLineInputOutputStreamCallback can handle an empty input", "[pro
   const auto output_stream = std::make_shared<minifi::io::BufferStream>();
   const auto line_processor = [](const std::string& input_line, bool, bool) { return input_line; };
   LineByLineInputOutputStreamCallback line_by_line_input_output_stream_callback{line_processor};
-  line_by_line_input_output_stream_callback.process(input_stream, output_stream);
+  line_by_line_input_output_stream_callback(input_stream, output_stream);
   CHECK(output_stream->size() == 0);
 }

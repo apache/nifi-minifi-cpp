@@ -126,16 +126,6 @@ class ListenHTTP : public core::Processor {
     utils::ConcurrentQueue<FlowFileBufferPair> request_buffer_;
   };
 
-  // Write callback for transferring data from HTTP request to content repo
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    explicit WriteCallback(std::unique_ptr<io::BufferStream>);
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-
-   private:
-    std::unique_ptr<io::BufferStream> request_content_;
-  };
-
   static int logMessage(const struct mg_connection *conn, const char *message) {
     try {
       struct mg_context* ctx = mg_get_context(conn);

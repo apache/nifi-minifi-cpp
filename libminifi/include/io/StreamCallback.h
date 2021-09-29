@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,20 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
 
-#include "serialization/PayloadSerializer.h"
-#include "core/ProcessSession.h"
+#include <functional>
+#include <memory>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi::io {
 
-int64_t PayloadSerializer::serialize(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<io::OutputStream>& out) {
-  return reader_(flowFile, InputStreamPipe{*out});
-}
+class BaseStream;
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+// FlowFile IO Callback functions for input and output
+// throw exception for error
+using InputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& inputStream)>;
+using OutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& outputStream)>;
+using InputOutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& inputStream, const std::shared_ptr<BaseStream>& outputStream)>;
+
+}  // namespace org::apache::nifi::minifi::io

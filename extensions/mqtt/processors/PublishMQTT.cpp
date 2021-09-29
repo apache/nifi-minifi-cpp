@@ -90,7 +90,7 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 
   PublishMQTT::ReadCallback callback(flowFile->getSize(), max_seg_size_, topic_, client_, qos_, retain_, delivered_token_);
-  session->read(flowFile, &callback);
+  session->read(flowFile, std::ref(callback));
   if (callback.status_ < 0) {
     logger_->log_error("Failed to send flow to MQTT topic %s", topic_);
     session->transfer(flowFile, Failure);

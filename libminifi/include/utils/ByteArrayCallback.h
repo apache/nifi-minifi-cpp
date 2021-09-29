@@ -31,12 +31,11 @@ namespace org::apache::nifi::minifi::utils {
 /**
  * General vector based uint8_t callback.
  */
-class ByteInputCallBack : public InputStreamCallback {
+class ByteInputCallback {
  public:
-  ByteInputCallBack() = default;
-  ~ByteInputCallBack() override = default;
+  virtual ~ByteInputCallback() = default;
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  virtual int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
     stream->seek(0);
 
     if (stream->size() > 0) {
@@ -76,13 +75,13 @@ class ByteInputCallBack : public InputStreamCallback {
  * While calls are thread safe, the class is intended to have
  * a single consumer.
  */
-class ByteOutputCallback : public OutputStreamCallback {
+class ByteOutputCallback {
  public:
   ByteOutputCallback() = delete;
 
   explicit ByteOutputCallback(size_t max_size, bool wait_on_read = false)
       : max_size_(max_size),
-        read_started_(wait_on_read ? false : true),
+        read_started_(!wait_on_read),
         logger_(core::logging::LoggerFactory<ByteOutputCallback>::getLogger()) {
     current_str_pos = 0;
     size_ = 0;
@@ -95,7 +94,7 @@ class ByteOutputCallback : public OutputStreamCallback {
     close();
   }
 
-  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+  virtual int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
 
   virtual std::vector<char> to_string();
 
@@ -141,9 +140,9 @@ class StreamOutputCallback : public ByteOutputCallback {
       : ByteOutputCallback(max_size, wait_on_read) {
   }
 
-  virtual void write(char *data, size_t size);
+  void write(char *data, size_t size) override;
 
-  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) override;
 };
 
 }  // namespace org::apache::nifi::minifi::utils

@@ -89,7 +89,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
   }
 
   // Callback for transmit. Declared in order to destruct in proper order - take care!
-  std::vector<std::unique_ptr<utils::ByteInputCallBack>> inputs;
+  std::vector<std::unique_ptr<utils::ByteInputCallback>> inputs;
   std::vector<std::unique_ptr<utils::HTTPUploadCallback>> callbacks;
 
   // Callback for transfer. Declared in order to destruct in proper order - take care!
@@ -113,7 +113,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
         if (filename.empty()) {
           throw std::logic_error("Missing filename");
         }
-        auto file_input = std::make_unique<utils::ByteInputCallBack>();
+        auto file_input = std::make_unique<utils::ByteInputCallback>();
         auto file_cb = std::make_unique<utils::HTTPUploadCallback>();
         file_input->write(file.getRawDataAsString());
         file_cb->ptr = file_input.get();
@@ -122,7 +122,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
         callbacks.push_back(std::move(file_cb));
       }
     } else {
-      auto data_input = std::make_unique<utils::ByteInputCallBack>();
+      auto data_input = std::make_unique<utils::ByteInputCallback>();
       auto data_cb = std::make_unique<utils::HTTPUploadCallback>();
       data_input->write(data.value_or(""));
       data_cb->ptr = data_input.get();
@@ -141,7 +141,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
   }
 
   if (payload.getOperation() == Operation::TRANSFER) {
-    file_callback = std::unique_ptr<utils::ByteOutputCallback>(new utils::ByteOutputCallback(std::numeric_limits<size_t>::max()));
+    file_callback = std::make_unique<utils::ByteOutputCallback>(std::numeric_limits<size_t>::max());
     read.pos = 0;
     read.ptr = file_callback.get();
     client.setReadCallback(&read);

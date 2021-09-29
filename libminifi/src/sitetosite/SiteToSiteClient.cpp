@@ -471,8 +471,12 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
       return -1;
     }
     if (flowFile->getSize() > 0) {
-      sitetosite::ReadCallback callback(packet);
-      session->read(flowFile, &callback);
+      session->read(flowFile, [packet](const std::shared_ptr<io::BaseStream>& inputStream) -> int64_t {
+        const auto result = internal::pipe(*inputStream, packet->transaction_->getStream());
+        if (result == -1) return -1;
+        packet->_size = gsl::narrow<size_t>(result);
+        return result;
+      });
       if (flowFile->getSize() != packet->_size) {
         logger_->log_debug("Mismatched sizes %llu %llu", flowFile->getSize(), packet->_size);
         return -2;
@@ -694,8 +698,9 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       }
 
       if (packet._size > 0) {
-        sitetosite::WriteCallback callback(&packet);
-        session->write(flowFile, &callback);
+        session->write(flowFile, [&packet](const std::shared_ptr<io::BaseStream>& outputStream) -> int64_t {
+          return internal::pipe(packet.transaction_->getStream(), *outputStream);
+        });
         if (flowFile->getSize() != packet._size) {
           std::stringstream message;
           message << "Receive size not correct, expected to send " << flowFile->getSize() << " bytes, but actually sent " << packet._size;

@@ -266,60 +266,6 @@ class SiteToSiteClient : public core::Connectable {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<SiteToSiteClient>::getLogger()};
 };
 
-// Nest Callback Class for write stream
-class WriteCallback : public OutputStreamCallback {
- public:
-  WriteCallback(DataPacket *packet) // NOLINT
-      : _packet(packet) {
-  }
-  DataPacket *_packet;
-  // void process(std::ofstream *stream) {
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    std::array<std::byte, 16384> buffer{};
-    uint64_t len = _packet->_size;
-    uint64_t total = 0;
-    while (len > 0) {
-      const auto size = std::min(len, uint64_t{16384});
-      const auto ret = _packet->transaction_->getStream().read(buffer);
-      if (ret != size) {
-        core::logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
-        return -1;
-      }
-      stream->write(buffer);
-      len -= size;
-      total += size;
-    }
-    core::logging::LOG_INFO(_packet->logger_reference_) << "Received " << total << " from stream";
-    return gsl::narrow<int64_t>(len);
-  }
-};
-// Nest Callback Class for read stream
-class ReadCallback : public InputStreamCallback {
- public:
-  ReadCallback(DataPacket *packet) // NOLINT
-      : _packet(packet) {
-  }
-  DataPacket *_packet;
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    _packet->_size = 0;
-    std::array<std::byte, 8192> buffer{};
-    size_t size = 0;
-    do {
-      const auto readSize = stream->read(buffer);
-      if (readSize == 0) break;
-      if (io::isError(readSize)) return -1;
-      const auto ret = _packet->transaction_->getStream().write(gsl::make_span(buffer).subspan(0, readSize));
-      if (io::isError(ret) || gsl::narrow<size_t>(ret) != readSize) {
-        core::logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
-        return -1;
-      }
-      size += readSize;
-    } while (size < stream->size());
-    _packet->_size = size;
-    return gsl::narrow<int64_t>(size);
-  }
-};
-
 }  // namespace sitetosite
 }  // namespace minifi
 }  // namespace nifi

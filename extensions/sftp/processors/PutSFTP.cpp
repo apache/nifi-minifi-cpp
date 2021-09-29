@@ -212,26 +212,6 @@ void PutSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, c
   startKeepaliveThreadIfNeeded();
 }
 
-PutSFTP::ReadCallback::ReadCallback(const std::string& target_path,
-                                    utils::SFTPClient& client,
-                                    const std::string& conflict_resolution)
-    : target_path_(target_path)
-    , client_(client)
-    , conflict_resolution_(conflict_resolution) {
-}
-
-PutSFTP::ReadCallback::~ReadCallback() = default;
-
-int64_t PutSFTP::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  if (!client_.putFile(target_path_,
-      *stream,
-      conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
-      stream->size() /*expected_size*/)) {
-    throw utils::SFTPException{client_.getLastError()};
-  }
-  return stream->size();
-}
-
 bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   auto flow_file = session->get();
   if (flow_file == nullptr) {
@@ -436,9 +416,16 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   std::string final_target_path = utils::file::concat_path(remote_path, resolved_filename, true /*force_posix*/);
   logger_->log_debug("The target path is %s, final target path is %s", target_path.c_str(), final_target_path.c_str());
 
-  ReadCallback read_callback(target_path.c_str(), *client, conflict_resolution_);
   try {
-    session->read(flow_file, &read_callback);
+    session->read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::BaseStream>& stream) {
+      if (!client->putFile(target_path,
+          *stream,
+          conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
+          stream->size() /*expected_size*/)) {
+        throw utils::SFTPException{client->getLastError()};
+      }
+      return stream->size();
+    });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug(ex.what());
     session->transfer(flow_file, Failure);

@@ -85,9 +85,7 @@ int16_t DataHandler::handle(std::string source, uint8_t *message, size_t size, b
   std::shared_ptr<core::ProcessSession> my_session = sessionFactory_->createSession();
   std::shared_ptr<core::FlowFile> flowFile = my_session->create();
 
-  DataHandlerCallback callback(message, size);
-
-  my_session->write(flowFile, &callback);
+  my_session->writeBuffer(flowFile, gsl::make_span(reinterpret_cast<const std::byte*>(message), size));
 
   my_session->putAttribute(flowFile, SOURCE_ENDPOINT_ATTRIBUTE, source);
 

@@ -401,6 +401,7 @@ class StringUtils {
     return to_hex(gsl::make_span(str).as_span<const std::byte>(), uppercase);
   }
 
+
   /**
    * Decodes the Base64 encoded string into data
    * @param data the output buffer where the decoded bytes will be written. Must be at least (base64_length / 4 + 1) * 3 bytes long.

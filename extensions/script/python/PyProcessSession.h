@@ -58,36 +58,6 @@ class PyProcessSession {
    */
   void releaseCoreResources();
 
-  class PyInputStreamCallback : public InputStreamCallback {
-   public:
-    explicit PyInputStreamCallback(const py::object &input_stream_callback) {
-      py_callback_ = input_stream_callback;
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      auto py_stream = std::make_shared<PyBaseStream>(stream);
-      return py_callback_.attr("process")(py_stream).cast<int64_t>();
-    }
-
-   private:
-    py::object py_callback_;
-  };
-
-  class PyOutputStreamCallback : public OutputStreamCallback {
-   public:
-    explicit PyOutputStreamCallback(const py::object &output_stream_callback) {
-      py_callback_ = output_stream_callback;
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      auto py_stream = std::make_shared<PyBaseStream>(stream);
-      return py_callback_.attr("process")(py_stream).cast<int64_t>();
-    }
-
-   private:
-    py::object py_callback_;
-  };
-
  private:
   std::vector<std::shared_ptr<script::ScriptFlowFile>> flow_files_;
   std::shared_ptr<core::ProcessSession> session_;

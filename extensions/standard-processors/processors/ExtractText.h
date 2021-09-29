@@ -68,16 +68,14 @@ class ExtractText : public core::Processor {
     return true;
   }
 
-  class ReadCallback : public InputStreamCallback {
+  class ReadCallback {
    public:
     ReadCallback(std::shared_ptr<core::FlowFile> flowFile, core::ProcessContext *ct, std::shared_ptr<core::logging::Logger> lgr);
-    ~ReadCallback() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const;
 
    private:
     std::shared_ptr<core::FlowFile> flowFile_;
     core::ProcessContext *ctx_;
-    std::vector<std::byte> buffer_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
 

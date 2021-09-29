@@ -66,11 +66,8 @@ extern "C" {
 #define WSMAN_CUSTOM_ACTION_HEARTBEAT "http://schemas.dmtf.org/wbem/wsman/1/wsman/Heartbeat"
 #define WSMAN_CUSTOM_ACTION_EVENTS "http://schemas.dmtf.org/wbem/wsman/1/wsman/Events"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
+
 core::Property SourceInitiatedSubscriptionListener::ListenHostname(
     core::PropertyBuilder::createProperty("Listen Hostname")->withDescription("The hostname or IP of this machine that will be advertised to event sources to connect to. "
                                                                               "It must be contained as a Subject Alternative Name in the server certificate, "
@@ -602,15 +599,6 @@ bool SourceInitiatedSubscriptionListener::Handler::handleSubscriptionManager(str
   return true;
 }
 
-SourceInitiatedSubscriptionListener::Handler::WriteCallback::WriteCallback(char* text)
-    : text_(text) {
-}
-
-int64_t SourceInitiatedSubscriptionListener::Handler::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(text_), strlen(text_));
-  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-}
-
 int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNodeH node, void* data) {
   if (data == nullptr) {
     return 1;
@@ -636,8 +624,7 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
       return 1;
     }
 
-    WriteCallback callback(text);
-    session->write(flow_file, &callback);
+    session->writeBuffer(flow_file, std::string_view{text});
 
     session->putAttribute(flow_file, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     flow_file->addAttribute(ATTRIBUTE_WEF_REMOTE_MACHINEID, machine_id);
@@ -906,8 +893,4 @@ void SourceInitiatedSubscriptionListener::notifyStop() {
 REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
                                                        "Windows hosts can be set up to connect and forward Event Logs to this processor.");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

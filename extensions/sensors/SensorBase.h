@@ -33,38 +33,17 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// SensorBase Class
 class SensorBase : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit SensorBase(const std::string& name, const utils::Identifier& uuid = {})
     : Processor(name, uuid) {
   }
-  // Destructor
   ~SensorBase() override;
-  // Processor Name
   static core::Relationship Success;
-  // Supported Properties
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    explicit WriteCallback(std::string data)
-        : data_{std::move(data)} {
-    }
-    std::string data_;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      if (data_.empty()) return 0;
-      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_.data()), data_.size());
-      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-    }
-  };
 
  protected:
   std::optional<RTIMUSettings> settings_;

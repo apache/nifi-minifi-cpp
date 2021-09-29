@@ -123,11 +123,11 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
   }
   if (pretty_output_) {
     utils::PrettyJsonOutputCallback callback(std::move(root), decimal_places_);
-    session->write(flowFile, &callback);
+    session->write(flowFile, std::ref(callback));
     session->transfer(flowFile, Success);
   } else {
     utils::JsonOutputCallback callback(std::move(root), decimal_places_);
-    session->write(flowFile, &callback);
+    session->write(flowFile, std::ref(callback));
     session->transfer(flowFile, Success);
   }
 }

@@ -177,27 +177,6 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
 
 namespace {
 
-struct ReadFlowFileIntoBuffer : public InputStreamCallback {
-  std::vector<std::byte> buffer_;
-
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    buffer_.resize(stream->size());
-    size_t bytes_read = stream->read(buffer_);
-    return io::isError(bytes_read) ? -1 : gsl::narrow<int64_t>(bytes_read);
-  }
-};
-
-struct WriteBufferToFlowFile : public OutputStreamCallback {
-  const std::vector<uint8_t>& buffer_;
-
-  explicit WriteBufferToFlowFile(const std::vector<uint8_t>& buffer) : buffer_(buffer) {}
-
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    size_t bytes_written = stream->write(buffer_, buffer_.size());
-    return io::isError(bytes_written) ? -1 : gsl::narrow<int64_t>(bytes_written);
-  }
-};
-
 }  // namespace
 
 void ReplaceText::replaceTextInEntireFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session, const Parameters& parameters) const {
@@ -205,13 +184,8 @@ void ReplaceText::replaceTextInEntireFile(const std::shared_ptr<core::FlowFile>&
   gsl_Expects(session);
 
   try {
-    const auto read_result = session->readBuffer(flow_file);
-    std::string output = applyReplacements(to_string(read_result), flow_file, parameters);
-    std::vector<uint8_t> modified_text{output.begin(), output.end()};
-
-    WriteBufferToFlowFile write_callback{modified_text};
-    session->write(flow_file, &write_callback);
-
+    const auto input = to_string(session->readBuffer(flow_file));
+    session->writeBuffer(flow_file, applyReplacements(input, flow_file, parameters));
     session->transfer(flow_file, Success);
   } catch (const Exception& exception) {
     logger_->log_error("Error in ReplaceText (Entire text mode): %s", exception.what());
@@ -239,7 +213,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
       }
       throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.getName(), ": ", line_by_line_evaluation_mode_.toString())};
     }};
-    session->readWrite(flow_file, &read_write_callback);
+    session->readWrite(flow_file, std::move(read_write_callback));
     session->transfer(flow_file, Success);
   } catch (const Exception& exception) {
     logger_->log_error("Error in ReplaceText (Line-by-Line mode): %s", exception.what());

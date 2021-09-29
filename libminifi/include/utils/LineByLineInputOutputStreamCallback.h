@@ -28,11 +28,11 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-class LineByLineInputOutputStreamCallback : public InputOutputStreamCallback {
+class LineByLineInputOutputStreamCallback {
  public:
   using CallbackType = std::function<std::string(const std::string& input_line, bool is_first_line, bool is_last_line)>;
   explicit LineByLineInputOutputStreamCallback(CallbackType callback);
-  int64_t process(const std::shared_ptr<io::BaseStream>& input, const std::shared_ptr<io::BaseStream>& output) override;
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& input, const std::shared_ptr<io::BaseStream>& output);
 
  private:
   int64_t readInput(io::InputStream& stream);

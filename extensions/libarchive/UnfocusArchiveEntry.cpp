@@ -138,7 +138,7 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
 
   // Create archive by restoring each entry in the archive from tmp files
   WriteCallback cb(&lensArchiveMetadata);
-  session->write(flowFile, &cb);
+  session->write(flowFile, std::cref(cb));
 
   // Transfer to the relationship
   session->transfer(flowFile, Success);
@@ -158,7 +158,7 @@ la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *
   return io::isError(write_ret) ? -1 : gsl::narrow<la_ssize_t>(write_ret);
 }
 
-int64_t UnfocusArchiveEntry::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) const {
   auto outputArchive = archive_write_new();
   int64_t nlen = 0;
 

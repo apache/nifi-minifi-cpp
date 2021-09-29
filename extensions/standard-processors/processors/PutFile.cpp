@@ -243,7 +243,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
 
   if (flowFile->getSize() > 0) {
     ReadCallback cb(tmpFile, destFile);
-    session->read(flowFile, &cb);
+    session->read(flowFile, std::ref(cb));
     logger_->log_debug("Committing %s", destFile);
     success = cb.commit();
   } else {
@@ -314,7 +314,7 @@ PutFile::ReadCallback::ReadCallback(std::string tmp_file, std::string dest_file)
 }
 
 // Copy the entire file contents to the temporary file
-int64_t PutFile::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t PutFile::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
   // Copy file contents into tmp file
   write_succeeded_ = false;
   size_t size = 0;

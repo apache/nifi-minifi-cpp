@@ -44,7 +44,7 @@
 #include "../Utils.h"
 #include "utils/gsl.h"
 
-class ReadCallback : public minifi::InputStreamCallback {
+class ReadCallback {
  public:
   explicit ReadCallback(size_t size)
       :buffer_{size}
@@ -54,7 +54,7 @@ class ReadCallback : public minifi::InputStreamCallback {
   ReadCallback& operator=(const ReadCallback&) = delete;
   ReadCallback& operator=(ReadCallback&&) = delete;
 
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream>& stream) {
     int64_t total_read = 0;
     do {
       const auto ret = stream->read(gsl::make_span(buffer_).subspan(read_size_));
@@ -175,7 +175,7 @@ class CompressDecompressionTestController : public TestController{
   }
 
   void read(const std::shared_ptr<core::FlowFile>& file, ReadCallback& reader) {
-    helper_session->read(file, &reader);
+    helper_session->read(file, std::ref(reader));
   }
 
  public:

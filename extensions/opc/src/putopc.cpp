@@ -19,6 +19,7 @@
 
 #include <list>
 #include <memory>
+#include <set>
 #include <string>
 
 #include "opc.h"

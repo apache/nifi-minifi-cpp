@@ -96,33 +96,16 @@ struct check_empty_ff : public std::unary_function<std::shared_ptr<JniFlowFile>,
   }
 };
 
-class JniByteOutStream : public minifi::OutputStreamCallback {
- public:
-  JniByteOutStream(jbyte *bytes, size_t length)
-      : bytes_(bytes),
-        length_(length) {
-  }
-
-  virtual ~JniByteOutStream() = default;
-  virtual int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
-    const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(bytes_), length_);
-    return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-  }
- private:
-  jbyte *bytes_;
-  size_t length_;
-};
-
 /**
  * Jni byte input stream
  */
-class JniByteInputStream : public minifi::InputStreamCallback {
+class JniByteInputStream {
  public:
   explicit JniByteInputStream(uint64_t size)
       : buffer_(size),
         read_size_(0) {
   }
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<minifi::io::BaseStream>& stream) {
     stream_ = stream;
     return 0;
   }

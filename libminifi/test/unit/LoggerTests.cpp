@@ -156,7 +156,7 @@ using namespace minifi::io;
 std::string decompress(const std::shared_ptr<InputStream>& input) {
   auto output = std::make_unique<BufferStream>();
   auto decompressor = std::make_shared<ZlibDecompressStream>(gsl::make_not_null(output.get()));
-  minifi::internal::pipe(input, decompressor);
+  minifi::internal::pipe(*input, *decompressor);
   decompressor->close();
   return utils::span_to<std::string>(output->getBuffer().as_span<const char>());
 }

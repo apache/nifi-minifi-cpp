@@ -294,7 +294,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   std::string tx_id = generateId();
 
   // Note: callback must be declared before callbackObj so that they are destructed in the correct order
-  std::unique_ptr<utils::ByteInputCallBack> callback = nullptr;
+  std::unique_ptr<utils::ByteInputCallback> callback = nullptr;
   std::unique_ptr<utils::HTTPUploadCallback> callbackObj = nullptr;
 
   // Client declared after the callbacks to make sure the callbacks are still available when the client is destructed
@@ -324,11 +324,11 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     logger_->log_trace("InvokeHTTP -- reading flowfile");
     std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
     if (claim) {
-      callback = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
+      callback = std::make_unique<utils::ByteInputCallback>();
       if (send_body_) {
-        session->read(flowFile, callback.get());
+        session->read(flowFile, std::ref(*callback));
       }
-      callbackObj = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback);
+      callbackObj = std::make_unique<utils::HTTPUploadCallback>();
       callbackObj->ptr = callback.get();
       callbackObj->pos = 0;
       logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback->getBufferSize());

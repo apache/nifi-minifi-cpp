@@ -17,9 +17,6 @@
 
 #include "WriteToFlowFileTestProcessor.h"
 
-#include <string>
-#include <vector>
-
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -35,19 +32,6 @@ void WriteToFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::Proce
   logger_->log_info("%s", ON_SCHEDULE_LOG_STR);
 }
 
-namespace {
-struct WriteToFlowFileCallback : public OutputStreamCallback {
-  const gsl::span<const uint8_t> content_;
-
-  explicit WriteToFlowFileCallback(const std::string& content) : content_(reinterpret_cast<const uint8_t*>(content.data()), content.size()) {}
-
-  int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
-    size_t bytes_written = stream->write(content_.begin(), content_.size());
-    return io::isError(bytes_written) ? -1 : gsl::narrow<int64_t>(bytes_written);
-  }
-};
-}  // namespace
-
 void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   gsl_Expects(context && session);
   logger_->log_info("%s", ON_TRIGGER_LOG_STR);
@@ -60,8 +44,7 @@ void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core
     logger_->log_error("Failed to create flowfile!");
     return;
   }
-  WriteToFlowFileCallback callback(content_);
-  session->write(flow_file, &callback);
+  session->writeBuffer(flow_file, content_);
   session->transfer(flow_file, Success);
 }
 

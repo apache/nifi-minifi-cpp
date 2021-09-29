@@ -85,8 +85,7 @@ void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& 
       logger_->log_trace("Could not read gyroscope");
     }
 
-    WriteCallback callback("GetMovementSensors");
-    session->write(flow_file_, &callback);
+    session->writeBuffer(flow_file_, "GetMovementSensors");
     session->transfer(flow_file_, Success);
   }
 }

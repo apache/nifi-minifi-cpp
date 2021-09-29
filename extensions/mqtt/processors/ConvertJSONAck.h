@@ -28,7 +28,6 @@
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "ConvertBase.h"
-#include "utils/gsl.h"
 
 
 namespace org::apache::nifi::minifi::processors {

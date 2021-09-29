@@ -32,12 +32,12 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
-class ProcessSessionReadCallback : public InputStreamCallback {
+class ProcessSessionReadCallback {
  public:
   ProcessSessionReadCallback(const std::string &tmpFile, const std::string &destFile,
       std::shared_ptr<logging::Logger> logger);
   ~ProcessSessionReadCallback();
-  virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
   bool commit();
 
  private:

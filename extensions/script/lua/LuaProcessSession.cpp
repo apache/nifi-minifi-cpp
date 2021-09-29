@@ -74,8 +74,10 @@ void LuaProcessSession::read(const std::shared_ptr<script::ScriptFlowFile> &scri
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  LuaInputStreamCallback lua_callback(input_stream_callback);
-  session_->read(flow_file, &lua_callback);
+  session_->read(flow_file, [&input_stream_callback](const std::shared_ptr<io::BaseStream>& inputStream) -> int64_t {
+    sol::function callback = input_stream_callback["process"];
+    return callback(input_stream_callback, std::make_shared<LuaBaseStream>(inputStream));
+  });
 }
 
 void LuaProcessSession::write(const std::shared_ptr<script::ScriptFlowFile> &script_flow_file,
@@ -90,8 +92,10 @@ void LuaProcessSession::write(const std::shared_ptr<script::ScriptFlowFile> &scr
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  LuaOutputStreamCallback lua_callback(output_stream_callback);
-  session_->write(flow_file, &lua_callback);
+  session_->write(flow_file, [&output_stream_callback](const std::shared_ptr<io::BaseStream>& outputStream) -> int64_t {
+    sol::function callback = output_stream_callback["process"];
+    return callback(output_stream_callback, std::make_shared<LuaBaseStream>(outputStream));
+  });
 }
 
 std::shared_ptr<script::ScriptFlowFile> LuaProcessSession::create() {

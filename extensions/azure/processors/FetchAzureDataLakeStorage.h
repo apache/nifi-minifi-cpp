@@ -55,34 +55,6 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessor
  private:
   friend class ::AzureDataLakeStorageTestsFixture<FetchAzureDataLakeStorage>;
 
-  class WriteCallback : public OutputStreamCallback {
-   public:
-    WriteCallback(storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::FetchAzureDataLakeStorageParameters& params, std::shared_ptr<core::logging::Logger> logger)
-      : azure_data_lake_storage_(azure_data_lake_storage),
-        params_(params),
-        logger_(std::move(logger)) {
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      result_size_ = azure_data_lake_storage_.fetchFile(params_, *stream);
-      if (!result_size_) {
-        return 0;
-      }
-
-      return gsl::narrow<int64_t>(*result_size_);
-    }
-
-    auto getResult() const {
-      return result_size_;
-    }
-
-   private:
-    storage::AzureDataLakeStorage& azure_data_lake_storage_;
-    const storage::FetchAzureDataLakeStorageParameters& params_;
-    std::optional<uint64_t> result_size_ = std::nullopt;
-    std::shared_ptr<core::logging::Logger> logger_;
-  };
-
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;
   }

@@ -59,7 +59,7 @@ struct HTTPUploadCallback {
   }
   std::mutex mutex;
   std::atomic<bool> stop;
-  ByteInputCallBack *ptr;
+  ByteInputCallback *ptr;
   size_t pos;
 
   size_t getPos() {

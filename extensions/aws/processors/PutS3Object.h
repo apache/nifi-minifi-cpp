@@ -78,7 +78,7 @@ class PutS3Object : public S3Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  class ReadCallback : public InputStreamCallback {
+  class ReadCallback {
    public:
     static const uint64_t MAX_SIZE;
     static const uint64_t BUFFER_SIZE;
@@ -89,7 +89,7 @@ class PutS3Object : public S3Processor {
       , s3_wrapper_(s3_wrapper) {
     }
 
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
       if (flow_size_ > MAX_SIZE) {
         return -1;
       }

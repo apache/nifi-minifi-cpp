@@ -64,11 +64,10 @@ class FocusArchiveEntry : public core::Processor {
   //! Initialize, over write by NiFi FocusArchiveEntry
   void initialize() override;
 
-  class ReadCallback : public InputStreamCallback {
+  class ReadCallback {
    public:
     explicit ReadCallback(core::Processor*, utils::file::FileManager *file_man, ArchiveMetadata *archiveMetadata);
-    ~ReadCallback() override;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const;
     bool isRunning() {return proc_->isRunning();}
 
    private:
