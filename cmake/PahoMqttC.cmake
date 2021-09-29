@@ -39,6 +39,7 @@ FetchContent_MakeAvailable(paho.mqtt.c-external)
 # Set dependencies and target to link to
 if (NOT OPENSSL_OFF)
     add_library(paho.mqtt.c ALIAS paho-mqtt3cs-static)
+    add_dependencies(common_ssl_obj_static OpenSSL::SSL OpenSSL::Crypto)
 else()
     add_library(paho.mqtt.c ALIAS paho-mqtt3c-static)
 endif()
