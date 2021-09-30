@@ -29,8 +29,8 @@ namespace org::apache::nifi::minifi::core {
 
 struct AttributeExpressionImpl;
 
-// under what condition a given attribute
-// is definitely read or written by a processor
+// Represents a condition under which a given attribute
+// is definitely read or written by a processor.
 class AttributeExpression {
   SMART_ENUM(Kind,
     (Literal, "Literal"),

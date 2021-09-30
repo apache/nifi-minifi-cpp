@@ -28,9 +28,14 @@ namespace org::apache::nifi::minifi::core {
 class AttributeSet {
  public:
   SMART_ENUM(Kind,
+    // represents a simple list of attributes e.g. ["filename", "timestamp"]
     (List, "List"),
+    // represents all the dynamic properties on a processor e.g. UpdateAttribute
     (DynamicProperties, "DynamicProperties"),
+    // represents all the attributes an incoming flowfile definitely has
+    // (only makes sense for the output set)
     (InputAttributes, "InputAttributes"),
+    // represents the value of a given property e.g. HostAttribute
     (Property, "Property")
   )
 

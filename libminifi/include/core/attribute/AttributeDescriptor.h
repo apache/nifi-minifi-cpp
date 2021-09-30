@@ -28,6 +28,13 @@
 
 namespace org::apache::nifi::minifi::core {
 
+/*
+ * Represents a set of attributes that are read/written depending on the condition expression.
+ * e.g. "fragment.count", "fragment.identifier" is read by MergeContent but only when the Merge Strategy is Defragment
+ * AttributeDescriptor({"fragment.count", "fragment.identifier"}, "explanation", AttributeExpression(MergeStrategy) == "Defragment")
+ * 
+ * A missing condition designates the "Maybe" semantics.
+ */
 struct AttributeDescriptor {
   AttributeDescriptor(AttributeSet attributes, std::string description)
     : attributes_(std::move(attributes)), description_(std::move(description)) {}
