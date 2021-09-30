@@ -49,6 +49,7 @@
 #include "Relationship.h"
 #include "Scheduling.h"
 #include "utils/TimeUtil.h"
+#include "core/attribute/AttributeDescriptor.h"
 
 namespace org {
 namespace apache {
@@ -255,6 +256,12 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   void validateAnnotations() const;
 
   std::string getInputRequirementAsString() const;
+
+  virtual const std::vector<AttributeDescriptor>* getInputAttributeDescriptors() const;
+
+  virtual const std::map<Relationship, std::vector<AttributeDescriptor>>* getOutputAttributeDescriptors() const;
+
+  virtual const std::vector<core::AttributeDescriptor>* getDynamicOutputDescriptor() const;
 
  protected:
   virtual void notifyStop() {

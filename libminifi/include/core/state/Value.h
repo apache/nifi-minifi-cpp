@@ -78,6 +78,7 @@ class Value {
   MINIFIAPI static const std::type_index BOOL_TYPE;
   MINIFIAPI static const std::type_index DOUBLE_TYPE;
   MINIFIAPI static const std::type_index STRING_TYPE;
+  MINIFIAPI static const std::type_index NULL_TYPE;
 
  protected:
   template<typename T>
@@ -449,6 +450,13 @@ class DoubleValue : public Value {
   double value;
 };
 
+class NullValue : public Value {
+ public:
+  NullValue(): Value("null") {
+    setTypeId<std::nullopt_t>();
+  }
+};
+
 static inline std::shared_ptr<Value> createValue(const bool &object) {
   return std::make_shared<BoolValue>(object);
 }
@@ -489,6 +497,10 @@ static inline std::shared_ptr<Value> createValue(const double &object) {
   return std::make_shared<DoubleValue>(object);
 }
 
+static inline std::shared_ptr<Value> createValue(const std::nullopt_t &/*object*/) {
+  return std::make_shared<NullValue>();
+}
+
 /**
  * Purpose: ValueNode is the AST container for a value
  */
@@ -515,7 +527,8 @@ class ValueNode {
   std::is_same<T, char* >::value ||
   std::is_same<T, const char* >::value ||
   std::is_same<T, double>::value ||
-  std::is_same<T, std::string>::value, ValueNode&>::type {
+  std::is_same<T, std::string>::value ||
+  std::is_same<T, std::nullopt_t>::value, ValueNode&>::type {
     value_ = createValue(ref);
     return *this;
   }

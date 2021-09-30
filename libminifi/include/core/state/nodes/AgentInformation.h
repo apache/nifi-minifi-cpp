@@ -248,6 +248,27 @@ class ComponentManifest : public DeviceInformation {
         dyn_relat.name = "supportsDynamicRelationships";
         dyn_relat.value = group.dynamic_relationships_;
 
+        if (group.dynamic_output_ && !group.dynamic_output_->empty()) {
+          SerializedResponseNode dynRel;
+          dynRel.name = "dynamicRelationshipAttributes";
+          dynRel.array = true;
+          for (const auto& descriptor : *group.dynamic_output_) {
+            dynRel.children.push_back(serializeAttributeDescriptor(descriptor));
+          }
+
+          desc.children.push_back(dynRel);
+        }
+
+        if (group.input_attributes_ && !group.input_attributes_->empty()) {
+          SerializedResponseNode inputReq;
+          inputReq.name = "inputAttributeRequirements";
+          inputReq.array = true;
+          for (const auto& descriptor : *group.input_attributes_) {
+            inputReq.children.push_back(serializeAttributeDescriptor(descriptor));
+          }
+          desc.children.push_back(inputReq);
+        }
+
         // only for processors
         if (!group.class_relationships_.empty()) {
           SerializedResponseNode inputReq;
@@ -269,6 +290,20 @@ class ComponentManifest : public DeviceInformation {
             SerializedResponseNode descriptorDescription;
             descriptorDescription.name = "description";
             descriptorDescription.value = relationship.getDescription();
+
+            if (group.output_attributes_) {
+              if (auto it = group.output_attributes_->find(relationship); it != group.output_attributes_->end()) {
+                SerializedResponseNode output;
+                output.name = "outputAttributes";
+                output.array = true;
+                for (const auto& descriptor : it->second) {
+                  output.children.push_back(serializeAttributeDescriptor(descriptor));
+                }
+
+                child.children.push_back(output);
+              }
+            }
+
             child.children.push_back(nameNode);
             child.children.push_back(descriptorDescription);
 
@@ -308,6 +343,74 @@ class ComponentManifest : public DeviceInformation {
       }
       response.children.push_back(type);
     }
+  }
+
+  SerializedResponseNode serializeAttributeDescriptor(const core::AttributeDescriptor& attr) const {
+    SerializedResponseNode attrNode;
+    {
+      SerializedResponseNode sourceNode;
+      sourceNode.name = "source";
+      switch (attr.attributes_.kind_.value()) {
+        case core::AttributeSet::Kind::List: {
+          sourceNode.array = true;
+          for (const auto& attrName : attr.attributes_.arguments_) {
+            SerializedResponseNode attrNameNode;
+            attrNameNode.name = attrName;
+            sourceNode.children.push_back(attrNameNode);
+          }
+          break;
+        }
+        case core::AttributeSet::Kind::Property: {
+          sourceNode.value = "Property";
+          SerializedResponseNode valueNode;
+          valueNode.name = "value";
+          valueNode.value = attr.attributes_.arguments_.at(0);
+          attrNode.children.push_back(valueNode);
+          break;
+        }
+        default: {
+          sourceNode.value = attr.attributes_.kind_.toString();
+        }
+      }
+      attrNode.children.push_back(sourceNode);
+    }
+    if (!attr.description_.empty()) {
+      SerializedResponseNode descriptionNode;
+      descriptionNode.name = "description";
+      descriptionNode.value = attr.description_;
+      attrNode.children.push_back(descriptionNode);
+    }
+    if (attr.condition_) {
+      SerializedResponseNode conditionNode = serializeAttributeExpression(attr.condition_.value());
+      conditionNode.name = "condition";
+      attrNode.children.push_back(conditionNode);
+    }
+    return attrNode;
+  }
+
+  SerializedResponseNode serializeAttributeExpression(const core::AttributeExpression& node) const {
+    SerializedResponseNode attrReq;
+    {
+      SerializedResponseNode kind;
+      kind.name = "kind";
+      kind.value = node.getType();
+      attrReq.children.push_back(kind);
+    }
+    if (const auto* value = node.getValue()) {
+      SerializedResponseNode valueNode;
+      valueNode.name = "value";
+      valueNode.value = *value;
+      attrReq.children.push_back(valueNode);
+    } else if (const auto* arguments = node.getArguments()) {
+      SerializedResponseNode argNode;
+      argNode.name = "arguments";
+      argNode.array = true;
+      for (const auto& arg : *arguments) {
+        argNode.children.push_back(serializeAttributeExpression(arg));
+      }
+      attrReq.children.push_back(argNode);
+    }
+    return attrReq;
   }
 };
 

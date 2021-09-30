@@ -411,6 +411,18 @@ std::string Processor::getInputRequirementAsString() const {
   return "ERROR_no_such_input_requirement";
 }
 
+const std::vector<AttributeDescriptor>* Processor::getInputAttributeDescriptors() const {
+  return nullptr;
+}
+
+const std::map<Relationship, std::vector<AttributeDescriptor>>* Processor::getOutputAttributeDescriptors() const {
+  return nullptr;
+}
+
+const std::vector<AttributeDescriptor>* Processor::getDynamicOutputDescriptor() const {
+  return nullptr;
+}
+
 }  // namespace core
 }  // namespace minifi
 }  // namespace nifi

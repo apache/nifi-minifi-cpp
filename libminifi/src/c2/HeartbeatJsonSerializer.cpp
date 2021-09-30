@@ -96,6 +96,8 @@ static void setJsonStr(const std::string& key, const state::response::ValueNode&
       double value = 0;
       base_type->convertValue(value);
       valueVal.SetDouble(value);
+    } else if (type_index == state::response::Value::NULL_TYPE) {
+      // pass, default constructed json value is null
     } else {
       valueVal.SetString(base_type->getStringValue().c_str(), alloc);
     }

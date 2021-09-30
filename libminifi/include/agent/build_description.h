@@ -28,6 +28,7 @@
 #include "core/Relationship.h"
 #include "core/Processor.h"
 #include "core/Annotation.h"
+#include "core/attribute/AttributeDescriptor.h"
 #include "io/validation.h"
 
 namespace org {
@@ -62,6 +63,9 @@ class ClassDescription {
   std::string inputRequirement_;
   bool dynamic_relationships_ = false;
   bool is_controller_service_ = false;
+  const std::vector<core::AttributeDescriptor>* input_attributes_{nullptr};
+  const std::map<core::Relationship, std::vector<core::AttributeDescriptor>>* output_attributes_{nullptr};
+  const std::vector<core::AttributeDescriptor>* dynamic_output_{nullptr};
 };
 
 struct Components {
@@ -152,6 +156,9 @@ class BuildDescription {
           if (is_processor) {
             description.inputRequirement_ = processor->getInputRequirementAsString();
             description.class_relationships_ = processor->getSupportedRelationships();
+            description.input_attributes_ = processor->getInputAttributeDescriptors();
+            description.output_attributes_ = processor->getOutputAttributeDescriptors();
+            description.dynamic_output_ = processor->getDynamicOutputDescriptor();
             class_mappings[group].processors_.emplace_back(description);
           } else if (is_controller_service) {
             class_mappings[group].controller_services_.emplace_back(description);

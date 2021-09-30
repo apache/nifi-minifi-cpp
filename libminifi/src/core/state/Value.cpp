@@ -34,6 +34,7 @@ const std::type_index Value::INT_TYPE = std::type_index(typeid(int));
 const std::type_index Value::BOOL_TYPE = std::type_index(typeid(bool));
 const std::type_index Value::DOUBLE_TYPE = std::type_index(typeid(double));
 const std::type_index Value::STRING_TYPE = std::type_index(typeid(std::string));
+const std::type_index Value::NULL_TYPE = std::type_index(typeid(std::nullopt_t));
 
 } /* namespace response */
 } /* namespace state */
