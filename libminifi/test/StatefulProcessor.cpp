@@ -16,10 +16,11 @@
  * limitations under the License.
  */
 
+#include <string>
+
 #include "StatefulProcessor.h"
 #include "Exception.h"
 #include "core/Resource.h"
-#include <string>
 
 namespace org {
 namespace apache {
