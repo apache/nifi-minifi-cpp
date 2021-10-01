@@ -36,21 +36,5 @@ const std::vector<AttributeExpression>* AttributeExpression::getArguments() cons
     nullptr;
 }
 
-AttributeExpression operator|(AttributeExpression lhs, AttributeExpression rhs) {
-  return {AttributeExpression::Kind::Or, {std::move(lhs), std::move(rhs)}};
-}
-
-AttributeExpression operator&(AttributeExpression lhs, AttributeExpression rhs) {
-  return {AttributeExpression::Kind::And, {std::move(lhs), std::move(rhs)}};
-}
-
-AttributeExpression operator==(AttributeExpression lhs, AttributeExpression rhs) {
-  return {AttributeExpression::Kind::Equals, {std::move(lhs), std::move(rhs)}};
-}
-
-AttributeExpression operator!(AttributeExpression exp) {
-  return {AttributeExpression::Kind::Not, {std::move(exp)}};
-}
-
 }  // namespace org::apache::nifi::minifi::core
 

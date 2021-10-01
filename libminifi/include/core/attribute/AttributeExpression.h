@@ -57,10 +57,21 @@ class AttributeExpression {
     std::get<state::response::ValueNode>(value_) = std::forward<T>(literal);
   }
 
-  friend AttributeExpression operator|(AttributeExpression lhs, AttributeExpression rhs);
-  friend AttributeExpression operator&(AttributeExpression lhs, AttributeExpression rhs);
-  friend AttributeExpression operator!(AttributeExpression exp);
-  friend AttributeExpression operator==(AttributeExpression lhs, AttributeExpression rhs);
+  friend AttributeExpression operator|(AttributeExpression lhs, AttributeExpression rhs) {
+    return {AttributeExpression::Kind::Or, {std::move(lhs), std::move(rhs)}};
+  }
+
+  friend AttributeExpression operator&(AttributeExpression lhs, AttributeExpression rhs) {
+    return {AttributeExpression::Kind::And, {std::move(lhs), std::move(rhs)}};
+  }
+
+  friend AttributeExpression operator!(AttributeExpression exp) {
+    return {AttributeExpression::Kind::Not, {std::move(exp)}};
+  }
+
+  friend AttributeExpression operator==(AttributeExpression lhs, AttributeExpression rhs) {
+    return {AttributeExpression::Kind::Equals, {std::move(lhs), std::move(rhs)}};
+  }
 
   [[nodiscard]]
   std::string getType() const;
