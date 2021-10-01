@@ -1,6 +1,6 @@
 /**
- * @file BlobStorage.h
- * BlobStorage class declaration
+ * @file BlobStorageClient.h
+ * BlobStorageClient class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "azure/storage/blobs/protocol/blob_rest_client.hpp"
-#include "AzureStorageClient.h"
+#include "AzureStorageCredentials.h"
 #include "gsl/gsl-lite.hpp"
 
 namespace org::apache::nifi::minifi::azure::storage {
@@ -36,11 +36,15 @@ struct PutAzureBlobStorageParameters {
   std::string blob_name;
 };
 
-class BlobStorageClient : public AzureStorageClient {
+class BlobStorageClient {
  public:
   virtual bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) = 0;
   virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
+  virtual ~BlobStorageClient() = default;
+
+ protected:
+  AzureStorageCredentials credentials_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

@@ -22,7 +22,7 @@
 #include <string>
 #include <optional>
 
-#include "AzureStorageClient.h"
+#include "AzureStorageCredentials.h"
 
 #include "gsl/gsl-lite.hpp"
 
@@ -36,10 +36,14 @@ struct PutAzureDataLakeStorageParameters {
   bool replace_file = false;
 };
 
-class DataLakeStorageClient : public AzureStorageClient {
+class DataLakeStorageClient {
  public:
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
+  virtual ~DataLakeStorageClient() = default;
+
+ protected:
+  AzureStorageCredentials credentials_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

@@ -77,7 +77,7 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
         return -1;
       }
 
-      result_ = azure_blob_storage_.uploadBlob(params_, gsl::span<const uint8_t>{buffer.data(), flow_size_});
+      result_ = azure_blob_storage_.uploadBlob(params_, gsl::make_span(buffer.data(), flow_size_));
       return read_ret;
     }
 

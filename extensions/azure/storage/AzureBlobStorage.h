@@ -28,6 +28,7 @@
 #include "azure/storage/blobs.hpp"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "gsl/gsl-lite.hpp"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -45,7 +46,7 @@ class AzureBlobStorage {
 
  private:
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureBlobStorage>::getLogger()};
-  std::unique_ptr<BlobStorageClient> blob_storage_client_;
+  gsl::not_null<std::unique_ptr<BlobStorageClient>> blob_storage_client_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

@@ -25,13 +25,11 @@
 
 #include "azure/identity.hpp"
 #include "AzureBlobStorageClient.h"
-#include "gsl/gsl-lite.hpp"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
 AzureBlobStorage::AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_storage_client)
   : blob_storage_client_(blob_storage_client ? std::move(blob_storage_client) : std::make_unique<AzureBlobStorageClient>()) {
-  gsl_Ensures(blob_storage_client_);
 }
 
 std::optional<bool> AzureBlobStorage::createContainerIfNotExists(const PutAzureBlobStorageParameters& params) {

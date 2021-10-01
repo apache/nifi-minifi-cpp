@@ -175,7 +175,7 @@ int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io:
     return -1;
   }
 
-  result_ = azure_data_lake_storage_.uploadFile(params_, gsl::span<const uint8_t>{buffer.data(), flow_size_});
+  result_ = azure_data_lake_storage_.uploadFile(params_, gsl::make_span(buffer.data(), flow_size_));
   return read_ret;
 }
 
