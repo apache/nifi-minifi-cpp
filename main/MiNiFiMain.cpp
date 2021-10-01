@@ -53,6 +53,7 @@
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
 #include "core/RepositoryFactory.h"
+#include "core/extension/ExtensionManager.h"
 #include "DiskSpaceWatchdog.h"
 #include "properties/Decryptor.h"
 #include "utils/file/PathUtils.h"
@@ -222,6 +223,8 @@ int main(int argc, char **argv) {
       std::cerr << "Working directory doesn't exist and cannot be created: " << argv[2] << std::endl;
       exit(1);
     }
+
+    minifi::core::extension::ExtensionManager::get().initialize(configure);
 
     std::cerr << "Dumping docs to " << argv[2] << std::endl;
     if (argc == 4) {
