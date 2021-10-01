@@ -269,14 +269,15 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
     }
     // Call the callback to write the content
 
-    size_t oldPos = stream->size();
+    size_t flow_file_size = flow->getSize();
+    size_t stream_size_before_callback = stream->size();
     // this prevents an issue if we write, above, with zero length.
-    if (oldPos > 0)
-      stream->seek(oldPos + 1);
+    if (stream_size_before_callback > 0)
+      stream->seek(stream_size_before_callback + 1);
     if (callback->process(stream) < 0) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to process flowfile content");
     }
-    flow->setSize(stream->size());
+    flow->setSize(flow_file_size + (stream->size() - stream_size_before_callback));
 
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
