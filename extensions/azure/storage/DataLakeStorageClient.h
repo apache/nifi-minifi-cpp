@@ -41,9 +41,6 @@ class DataLakeStorageClient {
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual ~DataLakeStorageClient() = default;
-
- protected:
-  AzureStorageCredentials credentials_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage

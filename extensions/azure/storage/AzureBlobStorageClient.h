@@ -40,6 +40,7 @@ class AzureBlobStorageClient : public BlobStorageClient {
  private:
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string &container_name);
 
+  AzureStorageCredentials credentials_;
   std::string container_name_;
   std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> container_client_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<AzureBlobStorageClient>::getLogger()};

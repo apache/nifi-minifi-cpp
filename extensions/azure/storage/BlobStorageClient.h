@@ -42,9 +42,6 @@ class BlobStorageClient {
   virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
   virtual ~BlobStorageClient() = default;
-
- protected:
-  AzureStorageCredentials credentials_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::storage
