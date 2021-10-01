@@ -179,7 +179,6 @@ std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::build
   storage::PutAzureBlobStorageParameters params;
   auto credentials = getCredentials(context, flow_file);
   if (!credentials) {
-    logger_->log_error("No valid credentials are set!");
     return std::nullopt;
   }
 
@@ -203,9 +202,14 @@ std::optional<storage::AzureStorageCredentials> PutAzureBlobStorage::getCredenti
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const {
   auto controller_service_creds = getCredentialsFromControllerService(context);
-  if (controller_service_creds && controller_service_creds->isValid()) {
-    logger_->log_debug("Azure credentials read from credentials controller service!");
-    return controller_service_creds;
+  if (controller_service_creds) {
+    if (controller_service_creds->isValid()) {
+      logger_->log_debug("Azure credentials read from credentials controller service!");
+      return controller_service_creds;
+    } else {
+      logger_->log_error("Azure credentials controller service is set with invalid credential parameters!");
+      return std::nullopt;
+    }
   }
 
   logger_->log_debug("No valid Azure credentials are set in credentials controller service, checking properties...");
