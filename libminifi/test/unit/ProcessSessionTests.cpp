@@ -100,6 +100,12 @@ TEST_CASE("ProcessSession::rollback penalizes affected flowfiles", "[rollback]")
 TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
   ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<minifi::core::repository::VolatileContentRepository>());
   ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<minifi::core::repository::FileSystemRepository>());
-  ContentRepositoryDependentTests::testAppendSize(std::make_shared<minifi::core::repository::VolatileContentRepository>());
-  ContentRepositoryDependentTests::testAppendSize(std::make_shared<minifi::core::repository::FileSystemRepository>());
+}
+
+TEST_CASE("ProcessSession::append should append to the flowfile and set its size correctly" "[appendsetsize]") {
+  ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<minifi::core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<minifi::core::repository::FileSystemRepository>());
+
+  ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<minifi::core::repository::VolatileContentRepository>());
+  ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<minifi::core::repository::FileSystemRepository>());
 }

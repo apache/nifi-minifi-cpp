@@ -34,6 +34,7 @@
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/Export.h"
+#include "utils/FlowFileStore.h"
 
 namespace org {
 namespace apache {
@@ -265,24 +266,10 @@ class BinFiles : public core::Processor {
   BinManager binManager_;
 
  private:
-  class FlowFileStore{
-   public:
-    /**
-     * Returns the already-preprocessed FlowFiles that got restored on restart from the FlowFileRepository
-     * @return the resurrected persisted FlowFiles
-     */
-    std::unordered_set<std::shared_ptr<core::FlowFile>> getNewFlowFiles();
-    void put(const std::shared_ptr<core::FlowFile>& flowFile);
-   private:
-    std::atomic_bool has_new_flow_file_{false};
-    std::mutex flow_file_mutex_;
-    std::unordered_set<std::shared_ptr<core::FlowFile>> incoming_files_;
-  };
-
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinFiles>::getLogger()};
   uint32_t batchSize_{1};
   uint32_t maxBinCount_{100};
-  FlowFileStore file_store_;
+  utils::FlowFileStore file_store_;
 };
 
 } /* namespace processors */

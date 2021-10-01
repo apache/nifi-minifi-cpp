@@ -748,13 +748,13 @@ void ProcessSession::commit() {
     }
 
     for (const auto& record : _deletedFlowFiles) {
-        if (!record->isDeleted()) {
-          continue;
-        }
-        if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
-          // mark for deletion in the flowFileRepository
-          record->setStoredToRepository(false);
-        }
+      if (!record->isDeleted()) {
+        continue;
+      }
+      if (record->isStored() && process_context_->getFlowFileRepository()->Delete(record->getUUIDStr())) {
+        // mark for deletion in the flowFileRepository
+        record->setStoredToRepository(false);
+      }
     }
 
     ensureNonNullResourceClaim(connectionQueues);

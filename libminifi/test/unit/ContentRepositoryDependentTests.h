@@ -96,19 +96,19 @@ class Fixture {
 
   core::ProcessSession &processSession() { return *process_session_; }
 
-  void commitFlowFile(const std::string& content) {
-    const auto original_ff = process_session_->create();
-    WriteStringToFlowFile callback(content);
-    process_session_->write(original_ff, &callback);
-    process_session_->transfer(original_ff, Success);
+  void transferAndCommit(const std::shared_ptr<core::FlowFile>& flow_file) {
+    process_session_->transfer(flow_file, Success);
     process_session_->commit();
   }
 
-  void appendAndCommit(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content_to_append) {
+  void writeToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content) {
+    WriteStringToFlowFile callback(content);
+    process_session_->write(flow_file, &callback);
+  }
+
+  void appendToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content_to_append) {
     WriteStringToFlowFile callback(content_to_append);
     process_session_->append(flow_file, &callback);
-    process_session_->transfer(flow_file, Success);
-    process_session_->commit();
   }
 
  private:
@@ -123,8 +123,9 @@ class Fixture {
 void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> content_repo) {
   Fixture fixture = Fixture(content_repo);
   core::ProcessSession& process_session = fixture.processSession();
-  fixture.commitFlowFile("foobar");
-  const auto original_ff = process_session.get();
+  const auto original_ff = process_session.create();
+  fixture.writeToFlowFile(original_ff, "foobar");
+  fixture.transferAndCommit(original_ff);
   REQUIRE(original_ff);
   auto clone_first_half = process_session.clone(original_ff, 0, 3);
   auto clone_second_half = process_session.clone(original_ff, 3, 3);
@@ -149,13 +150,36 @@ void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> c
   CHECK(read_until_it_can_callback.value_ == "bar");
 }
 
-void testAppendSize(std::shared_ptr<core::ContentRepository> content_repo) {
+void testAppendToUnmanagedFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
   Fixture fixture = Fixture(content_repo);
   core::ProcessSession& process_session = fixture.processSession();
-  fixture.commitFlowFile("my");
-  const auto flow_file = process_session.get();
-  fixture.appendAndCommit(flow_file, "foobar");
+  const auto flow_file = process_session.create();
   REQUIRE(flow_file);
+
+  fixture.writeToFlowFile(flow_file, "my");
+  fixture.transferAndCommit(flow_file);
+  fixture.appendToFlowFile(flow_file, "foobar");
+  fixture.transferAndCommit(flow_file);
+
+  CHECK(flow_file->getSize() == 8);
+  ReadUntilStreamSize read_until_stream_size_callback;
+  ReadUntilItCan read_until_it_can_callback;
+  process_session.read(flow_file, &read_until_stream_size_callback);
+  process_session.read(flow_file, &read_until_it_can_callback);
+  CHECK(read_until_stream_size_callback.value_ == "myfoobar");
+  CHECK(read_until_it_can_callback.value_ == "myfoobar");
+}
+
+void testAppendToManagedFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
+  Fixture fixture = Fixture(content_repo);
+  core::ProcessSession& process_session = fixture.processSession();
+  const auto flow_file = process_session.create();
+  REQUIRE(flow_file);
+
+  fixture.writeToFlowFile(flow_file, "my");
+  fixture.appendToFlowFile(flow_file, "foobar");
+  fixture.transferAndCommit(flow_file);
+
   CHECK(flow_file->getSize() == 8);
   ReadUntilStreamSize read_until_stream_size_callback;
   ReadUntilItCan read_until_it_can_callback;

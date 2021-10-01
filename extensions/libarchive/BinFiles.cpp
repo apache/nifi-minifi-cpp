@@ -350,23 +350,6 @@ void BinFiles::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   file_store_.put(flowFile);
 }
 
-void BinFiles::FlowFileStore::put(const std::shared_ptr<core::FlowFile>& flowFile) {
-  {
-    std::lock_guard<std::mutex> guard(flow_file_mutex_);
-    incoming_files_.emplace(std::move(flowFile));
-  }
-  has_new_flow_file_.store(true, std::memory_order_release);
-}
-
-std::unordered_set<std::shared_ptr<core::FlowFile>> BinFiles::FlowFileStore::getNewFlowFiles() {
-  bool hasNewFlowFiles = true;
-  if (!has_new_flow_file_.compare_exchange_strong(hasNewFlowFiles, false, std::memory_order_acquire, std::memory_order_relaxed)) {
-    return {};
-  }
-  std::lock_guard<std::mutex> guard(flow_file_mutex_);
-  return std::move(incoming_files_);
-}
-
 std::set<std::shared_ptr<core::Connectable>> BinFiles::getOutGoingConnections(const std::string &relationship) const {
   auto result = core::Connectable::getOutGoingConnections(relationship);
   if (relationship == Self.getName()) {

@@ -229,6 +229,11 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
 
 TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
   ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::DatabaseContentRepository>());
-  ContentRepositoryDependentTests::testAppendSize(std::make_shared<core::repository::DatabaseContentRepository>());
 }
 
+
+TEST_CASE("ProcessSession::append should append to the flowfile and set its size correctly" "[appendsetsize]") {
+  ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
+
+  ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
+}
