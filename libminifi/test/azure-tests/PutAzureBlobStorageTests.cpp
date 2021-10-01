@@ -337,6 +337,23 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     REQUIRE(failed_flowfiles.size() == 1);
     REQUIRE(failed_flowfiles[0] == TEST_DATA);
   }
+
+  SECTION("Azure Storage Credentials Service name is invalid") {
+    auto azure_storage_cred_service = plan->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
+    plan->setProperty(azure_storage_cred_service, "Storage Account Name", STORAGE_ACCOUNT_NAME);
+    plan->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
+    plan->setProperty(put_azure_blob_storage, "Azure Storage Credentials Service", "invalid_name");
+    plan->setProperty(update_attribute, "test.account_name", STORAGE_ACCOUNT_NAME, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Name", "${test.account_name}");
+    plan->setProperty(update_attribute, "test.account_key", STORAGE_ACCOUNT_KEY, true);
+    plan->setProperty(put_azure_blob_storage, "Storage Account Key", "${test.account_key}");
+    test_controller.runSession(plan, true);
+    auto passed_params = mock_blob_storage_ptr->getPassedParams();
+    REQUIRE(passed_params.credentials.buildConnectionString().empty());
+    auto failed_flowfiles = getFailedFlowFileContents();
+    REQUIRE(failed_flowfiles.size() == 1);
+    REQUIRE(failed_flowfiles[0] == TEST_DATA);
+  }
 }
 
 TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failure in case Blob is not set and filename is empty", "[azureBlobStorageUpload]") {
