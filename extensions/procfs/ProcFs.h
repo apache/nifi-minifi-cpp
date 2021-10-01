@@ -1,0 +1,60 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
+
+#include <unistd.h>
+
+#include <vector>
+#include <unordered_map>
+#include <utility>
+#include <string>
+#include <optional>
+#include <filesystem>
+
+#include "ProcessStat.h"
+#include "MemInfo.h"
+#include "CpuStat.h"
+#include "NetDev.h"
+#include "DiskStat.h"
+
+namespace org::apache::nifi::minifi::procfs {
+
+class ProcFs {
+  static constexpr const char* DEFAULT_ROOT_PATH = "/proc";
+  static constexpr const char* MEMINFO_FILE = "meminfo";
+  static constexpr const char* STAT_FILE = "stat";
+  static constexpr const char* NET_DEV_FILE = "net/dev";
+  static constexpr const char* DISK_STATS_FILE = "diskstats";
+ public:
+  explicit ProcFs(std::string path = DEFAULT_ROOT_PATH)
+      : root_path_(std::move(path)) {
+  }
+
+  std::unordered_map<pid_t, ProcessStat> getProcessStats() const;
+  std::vector<CpuStat> getCpuStats() const;
+  std::optional<MemInfo> getMemInfo() const;
+  std::vector<NetDev> getNetDevs() const;
+  std::vector<DiskStat> getDiskStats() const;
+
+ private:
+  std::filesystem::path root_path_;
+  int page_size_ = sysconf(_SC_PAGESIZE);
+};
+
+
+}  // namespace org::apache::nifi::minifi::procfs

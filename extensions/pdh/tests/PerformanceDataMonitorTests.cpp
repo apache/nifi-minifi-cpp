@@ -46,7 +46,6 @@ class PerformanceDataMonitorTester {
   }
 
   bool runWithRetries(std::function<bool()>&& assertions, uint32_t max_tries = 10) {
-    uint32_t tries = 0;
     for (uint32_t tries = 0; tries < max_tries; ++tries) {
       test_controller_.runSession(plan_);
       if (assertions()) {
