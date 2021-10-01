@@ -1,6 +1,4 @@
 /**
- * @file GenerateFlowFile.h
- * GenerateFlowFile class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -38,35 +36,13 @@ class StatefulProcessor : public core::Processor {
   using HookType = std::function<void(core::CoreComponentStateManager&)>;
   using HookListType = std::vector<HookType>;
 
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override {
-    std::lock_guard<std::mutex> lock(mutex_);
-    stateManager_ = context->getStateManager();
-    if (stateManager_ == nullptr) {
-      throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
-    }
+  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override;
 
-    if (onScheduleHook_) {
-      onScheduleHook_(*stateManager_);
-    }
-  }
+  void onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) override;
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) override {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (onTriggerHookIndex_ < onTriggerHooks_.size()) {
-      onTriggerHooks_[onTriggerHookIndex_++](*stateManager_);
-    }
-  }
+  void setHooks(HookType onScheduleHook, HookListType onTriggerHooks);
 
-  void setHooks(HookType onScheduleHook, HookListType onTriggerHooks) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    onScheduleHook_ = std::move(onScheduleHook);
-    onTriggerHooks_ = std::move(onTriggerHooks);
-  }
-
-  bool hasFinishedHooks() const {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return onTriggerHookIndex_ == onTriggerHooks_.size();
-  }
+  bool hasFinishedHooks() const;
 
  private:
   mutable std::mutex mutex_;
@@ -75,8 +51,6 @@ class StatefulProcessor : public core::Processor {
   HookListType onTriggerHooks_;
   size_t onTriggerHookIndex_ = 0;
 };
-
-REGISTER_RESOURCE(StatefulProcessor, "A processor with state for test purposes.");
 
 } /* namespace processors */
 } /* namespace minifi */
