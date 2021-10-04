@@ -212,7 +212,7 @@ case "\$1" in
         fi
       fi
       echo running
-      \${minifi_executable}
+      exec \${minifi_executable}
       ;;
     status)
         # interpret status as per LSB specifications
@@ -339,7 +339,7 @@ case "$1" in
             exit 0;
         fi
       fi
-      ${minifi_executable}
+      exec ${minifi_executable}
       ;;
     status)
       if [ "${saved_pid}" -gt 0 ]; then
