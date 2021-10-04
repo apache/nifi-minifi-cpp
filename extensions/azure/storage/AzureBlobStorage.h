@@ -28,7 +28,7 @@
 #include "azure/storage/blobs.hpp"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "gsl/gsl-lite.hpp"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 

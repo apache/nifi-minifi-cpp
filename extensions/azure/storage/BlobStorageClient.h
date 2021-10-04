@@ -26,7 +26,7 @@
 
 #include "azure/storage/blobs/protocol/blob_rest_client.hpp"
 #include "AzureStorageCredentials.h"
-#include "gsl/gsl-lite.hpp"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
