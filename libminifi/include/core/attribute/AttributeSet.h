@@ -20,6 +20,8 @@
 
 #include <string>
 #include <vector>
+#include <utility>
+
 #include "utils/Enum.h"
 #include "core/Property.h"
 
@@ -43,16 +45,16 @@ class AttributeSet {
   AttributeSet(Kind kind, std::vector<std::string> arguments): kind_(kind), arguments_(std::move(arguments)) {}
 
  public:
-  AttributeSet(std::string attribute)
+  AttributeSet(std::string attribute)  // NOLINT
       : AttributeSet({std::move(attribute)}) {}
 
-  AttributeSet(const char* attribute)
+  AttributeSet(const char* attribute)  // NOLINT
       : AttributeSet(std::string(attribute)) {}
 
   AttributeSet(std::initializer_list<std::string> attributes)
       : kind_(Kind::List), arguments_(attributes) {}
 
-  AttributeSet(const Property& prop)
+  AttributeSet(const Property& prop)  // NOLINT
       : kind_(Kind::Property), arguments_{prop.getName()} {}
 
   static const AttributeSet DynamicProperties;

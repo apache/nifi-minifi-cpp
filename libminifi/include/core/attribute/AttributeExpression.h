@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include <utility>
 
 #include "utils/Enum.h"
 #include "core/Property.h"
@@ -44,7 +45,7 @@ class AttributeExpression {
   AttributeExpression(Kind kind, std::vector<AttributeExpression> args): kind_(kind), value_(std::move(args)) {}
 
  public:
-  AttributeExpression(const core::Property& property) {
+  AttributeExpression(const core::Property& property) {  // NOLINT
     kind_ = Kind::Property;
     std::get<state::response::ValueNode>(value_) = property.getName();
   }
@@ -52,7 +53,7 @@ class AttributeExpression {
   template<typename T, typename = std::enable_if_t<
       !std::is_same_v<std::decay_t<T>, core::Property> &&
       !std::is_same_v<std::decay_t<T>, AttributeExpression>>>
-  AttributeExpression(T&& literal) {
+  AttributeExpression(T&& literal) {  // NOLINT
     kind_ = Kind::Literal;
     std::get<state::response::ValueNode>(value_) = std::forward<T>(literal);
   }
