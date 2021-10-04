@@ -343,8 +343,7 @@ target_include_directories(cron SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/th
 include(CxxOpts)
 
 # gsl-lite
-add_library(gsl-lite INTERFACE)
-target_include_directories(gsl-lite SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/gsl-lite-0.37.0/include")
+include(GslLite)
 
 # Add necessary definitions based on the value of STRICT_GSL_CHECKS, see gsl-lite README for more details
 list(APPEND GslDefinitions gsl_CONFIG_DEFAULTS_VERSION=1)
