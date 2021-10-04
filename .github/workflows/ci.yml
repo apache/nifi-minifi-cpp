@@ -15,10 +15,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: macos-xcode12.0-ccache-${{github.ref}}-${{github.sha}}
+          key: macos-xcode12.0-ccache-${{github.ref}}
           restore-keys: |
-            macos-xcode12.0-ccache-${{github.ref}}-
-            macos-xcode12.0-ccache-refs/heads/main-
+            macos-xcode12.0-ccache-
       - id: install_dependencies
         run: |
           brew update
@@ -55,10 +54,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.CLCACHE_DIR }}
-          key: windows-vs2019-clcache-${{github.ref}}-${{github.sha}}
+          key: windows-vs2019-clcache-${{github.ref}}
           restore-keys: |
-            windows-vs2019-clcache-${{github.ref}}-
-            windows-vs2019-clcache-refs/heads/main-
+            windows-vs2019-clcache-
       - name: Setup PATH
         uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
@@ -99,10 +97,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: ubuntu-20.04-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-20.04-ccache-${{github.ref}}
           restore-keys: |
-            ubuntu-20.04-ccache-${{github.ref}}-
-            ubuntu-20.04-ccache-refs/heads/main-
+            ubuntu-20.04-ccache-
       - id: install_deps
         run: |
           sudo apt update
@@ -139,10 +136,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: ubuntu-20.04-all-clang-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-20.04-all-clang-ccache-${{github.ref}}
           restore-keys: |
-            ubuntu-20.04-all-clang-ccache-${{github.ref}}-
-            ubuntu-20.04-all-clang-ccache-refs/heads/main-
+            ubuntu-20.04-all-clang-ccache-
       - id: install_deps
         run: |
           sudo apt update
@@ -170,10 +166,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: debian-ccache-${{github.ref}}-${{github.sha}}
+          key: debian-ccache-${{github.ref}}
           restore-keys: |
-            debian-ccache-${{github.ref}}-
-            debian-ccache-refs/heads/main-
+            debian-ccache-
       - id: install_deps
         run: |
           sudo apt update
@@ -192,10 +187,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: centos-ccache-${{github.ref}}-${{github.sha}}
+          key: centos-ccache-${{github.ref}}
           restore-keys: |
-            centos-ccache-${{github.ref}}-
-            centos-ccache-refs/heads/main-
+            centos-ccache-
       - id: install_deps
         run: |
           sudo apt update
@@ -214,10 +208,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: fedora-ccache-${{github.ref}}-${{github.sha}}
+          key: fedora-ccache-${{github.ref}}
           restore-keys: |
-            fedora-ccache-${{github.ref}}-
-            fedora-ccache-refs/heads/main-
+            fedora-ccache-
       - id: install_deps
         run: |
           sudo apt update
@@ -236,10 +229,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: ubuntu-18.04-ccache-${{github.ref}}-${{github.sha}}
+          key: ubuntu-18.04-ccache-${{github.ref}}
           restore-keys: |
-            ubuntu-18.04-ccache-${{github.ref}}-
-            ubuntu-18.04-ccache-refs/heads/main
+            ubuntu-18.04-ccache-
       - id: install_deps
         run: |
           sudo apt update
@@ -265,10 +257,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.ccache
-          key: docker-ccache-${{github.ref}}-${{github.sha}}
+          key: docker-ccache-${{github.ref}}
           restore-keys: |
-            docker-ccache-${{github.ref}}-
-            docker-ccache-refs/heads/main
+            docker-ccache-
       - id: build
         run: |
           if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
