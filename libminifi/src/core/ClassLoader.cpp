@@ -15,10 +15,14 @@
  * limitations under the License.
  */
 
+#include "core/ClassLoader.h"
+
 #include <memory>
 #include <string>
-#include "core/ClassLoader.h"
+
 #include "core/logging/LoggerConfiguration.h"
+#include "range/v3/action/sort.hpp"
+#include "range/v3/action/unique.hpp"
 
 namespace org {
 namespace apache {
@@ -50,6 +54,22 @@ ClassLoader& ClassLoader::getClassLoader(const std::string& child_name) {
   ClassLoader& child = class_loaders_[child_name];
   child.name_ = std::move(full_name);
   return child;
+}
+
+std::vector<std::string> ClassLoader::getClasses(const std::string& group) const {
+  std::lock_guard<std::mutex> lock(internal_mutex_);
+  std::vector<std::string> class_names;
+  for (const auto& child_loader : class_loaders_) {
+    for (auto&& clazz : child_loader.second.getClasses(group)) {
+      class_names.push_back(std::move(clazz));
+    }
+  }
+  for (const auto& factory : loaded_factories_) {
+    if (factory.second->getGroupName() == group) {
+      class_names.push_back(factory.second->getClassName());
+    }
+  }
+  return std::move(class_names) | ranges::actions::sort | ranges::actions::unique;
 }
 
 } /* namespace core */
