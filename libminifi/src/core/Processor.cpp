@@ -379,12 +379,7 @@ std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
   return getNextIncomingConnectionImpl(rel_guard);
 }
 
-void Processor::validateAnnotations() {
-  validateInputRequirements();
-  validateThreads();
-}
-
-void Processor::validateInputRequirements() const {
+void Processor::validateAnnotations() const {
   switch (getInputRequirement()) {
     case annotation::Input::INPUT_REQUIRED: {
       if (!hasIncomingConnections()) {
@@ -402,14 +397,6 @@ void Processor::validateInputRequirements() const {
   }
 }
 
-void Processor::validateThreads() {
-  if (isSingleThreaded() && max_concurrent_tasks_ > 1) {
-    logger_->log_warn("Processor %s can not be run in parallel, its \"max concurrent tasks\" value is too high. "
-                      "It was set to 1 from %d.", name_, max_concurrent_tasks_);
-    max_concurrent_tasks_ = 1;
-  }
-}
-
 std::string Processor::getInputRequirementAsString() const {
   switch (getInputRequirement()) {
     case annotation::Input::INPUT_REQUIRED:
@@ -421,6 +408,17 @@ std::string Processor::getInputRequirementAsString() const {
   }
 
   return "ERROR_no_such_input_requirement";
+}
+
+void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
+  if (isSingleThreaded() && tasks > 1) {
+    logger_->log_warn("Processor %s can not be run in parallel, its \"max concurrent tasks\" value is too high. "
+                      "It was set to 1 from %d.", name_, tasks);
+    max_concurrent_tasks_ = 1;
+    return;
+  }
+
+  max_concurrent_tasks_ = tasks;
 }
 
 }  // namespace core

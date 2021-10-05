@@ -27,6 +27,7 @@
 #include <sstream>
 #include <regex>
 #include <codecvt>
+#include <mutex>
 #include <unordered_map>
 #include <tuple>
 #include <map>
@@ -159,6 +160,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   std::string computerName_;
   uint64_t maxBufferSize_{};
   DWORD lastActivityTimestamp_{};
+  std::mutex cache_mutex_;
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
   uint64_t batch_commit_size_{};
 
@@ -177,6 +179,7 @@ class ConsumeWindowsEventLog : public core::Processor {
   } output_;
 
   std::unique_ptr<Bookmark> bookmark_;
+  std::mutex on_trigger_mutex_;
   std::unordered_map<std::string, std::string> xmlPercentageItemsResolutions_;
   HMODULE hMsobjsDll_{};
 

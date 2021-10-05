@@ -143,6 +143,9 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     penalization_period_ = period;
   }
 
+  // Set Processor Maximum Concurrent Tasks
+  void setMaxConcurrentTasks(const uint8_t tasks) override;
+
   // Overriding to yield true can be used to indicate that the Processor is not safe for concurrent execution
   // of its onTrigger() method. By default, Processors are assumed to be safe for concurrent execution.
   virtual bool isSingleThreaded() const {
@@ -250,7 +253,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   std::shared_ptr<Connectable> pickIncomingConnection() override;
 
-  void validateAnnotations();
+  void validateAnnotations() const;
 
   std::string getInputRequirementAsString() const;
 
@@ -305,10 +308,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
       // default input requirement
       return annotation::Input::INPUT_ALLOWED;
   }
-
-  void validateInputRequirements() const;
-
-  void validateThreads();
 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<std::shared_ptr<Connection>, std::unordered_set<std::shared_ptr<const Processor>>> reachable_processors_;

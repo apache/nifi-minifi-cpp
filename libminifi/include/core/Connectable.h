@@ -110,7 +110,7 @@ class Connectable : public CoreComponent {
     return max_concurrent_tasks_;
   }
 
-  void setMaxConcurrentTasks(const uint8_t tasks) {
+  virtual void setMaxConcurrentTasks(const uint8_t tasks) {
     max_concurrent_tasks_ = tasks;
   }
   /**

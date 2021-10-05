@@ -188,6 +188,7 @@ ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const ut
 }
 
 void ConsumeWindowsEventLog::notifyStop() {
+  std::lock_guard<std::mutex> lock(on_trigger_mutex_);
   logger_->log_trace("start notifyStop");
   bookmark_.reset();
   if (hMsobjsDll_) {
@@ -388,6 +389,12 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
     return;
   }
 
+  std::unique_lock<std::mutex> lock(on_trigger_mutex_, std::try_to_lock);
+  if (!lock.owns_lock()) {
+    logger_->log_warn("processor was triggered before previous listing finished, configuration should be revised!");
+    return;
+  }
+
   logger_->log_trace("CWEL onTrigger");
 
   size_t processed_event_count = 0;
@@ -432,6 +439,7 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 }
 
 wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
+  std::lock_guard<std::mutex> lock(cache_mutex_);
   logger_->log_trace("Getting Event Log Handler corresponding to %s", name.c_str());
   auto provider = providers_.find(name);
   if (provider != std::end(providers_)) {
