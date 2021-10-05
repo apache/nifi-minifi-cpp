@@ -30,11 +30,13 @@
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-struct PutAzureBlobStorageParameters {
+struct AzureBlobStorageParameters {
   AzureStorageCredentials credentials;
   std::string container_name;
   std::string blob_name;
 };
+
+using PutAzureBlobStorageParameters = AzureBlobStorageParameters;
 
 class BlobStorageClient {
  public:
