@@ -38,6 +38,6 @@ ARG ENABLE_JNI
 RUN cd $MINIFI_BASE_DIR \
 	&& ./bootstrap.sh -t \
 	&& cd build \
-	&& scl enable devtoolset-10 -- cmake3 -DUSE_SHARED_LIBS=  -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
+	&& scl enable devtoolset-10 -- cmake3 -DUSE_SHARED_LIBS=  -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DPORTABLE=ON -DENABLE_COAP=ON -DENABLE_SQL=ON -DCMAKE_BUILD_TYPE=Release -DSKIP_TESTS=true -DENABLE_JNI=$ENABLE_JNI .. \
 	&& scl enable devtoolset-10 -- make -j$(nproc) package
 
