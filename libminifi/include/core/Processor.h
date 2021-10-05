@@ -250,7 +250,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   std::shared_ptr<Connectable> pickIncomingConnection() override;
 
-  void validateAnnotations() const;
+  void validateAnnotations();
 
   std::string getInputRequirementAsString() const;
 
@@ -305,6 +305,10 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
       // default input requirement
       return annotation::Input::INPUT_ALLOWED;
   }
+
+  void validateInputRequirements() const;
+
+  void validateThreads();
 
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<std::shared_ptr<Connection>, std::unordered_set<std::shared_ptr<const Processor>>> reachable_processors_;

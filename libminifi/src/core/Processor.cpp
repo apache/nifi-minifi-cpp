@@ -379,7 +379,12 @@ std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
   return getNextIncomingConnectionImpl(rel_guard);
 }
 
-void Processor::validateAnnotations() const {
+void Processor::validateAnnotations() {
+  validateInputRequirements();
+  validateThreads();
+}
+
+void Processor::validateInputRequirements() const {
   switch (getInputRequirement()) {
     case annotation::Input::INPUT_REQUIRED: {
       if (!hasIncomingConnections()) {
@@ -395,9 +400,13 @@ void Processor::validateAnnotations() const {
       }
     }
   }
+}
 
+void Processor::validateThreads() {
   if (isSingleThreaded() && max_concurrent_tasks_ > 1) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Processor can not be run in parallel, its \"max concurrent tasks\" value is too high. It must be set to 1.");
+    logger_->log_warn("Processor %s can not be run in parallel, its \"max concurrent tasks\" value is too high. "
+                      "It was set to 1 from %d.", name_, max_concurrent_tasks_);
+    max_concurrent_tasks_ = 1;
   }
 }
 

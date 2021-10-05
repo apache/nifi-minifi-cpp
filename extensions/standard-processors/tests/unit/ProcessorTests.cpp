@@ -812,11 +812,13 @@ TEST_CASE("isSingleThreaded - one thread for a single threaded processor", "[isS
 
 TEST_CASE("isSingleThreaded - two threads for a single threaded processor", "[isSingleThreaded]") {
   TestController testController;
+  LogTestController::getInstance().setDebug<minifi::core::Processor>();
 
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   auto processor = plan->addProcessor("TailFile", "myProc");
   processor->setMaxConcurrentTasks(2);
 
-  REQUIRE_THROWS_WITH(plan->validateAnnotations(),
-                      Catch::EndsWith("Processor can not be run in parallel, its \"max concurrent tasks\" value is too high. It must be set to 1."));
+  REQUIRE_NOTHROW(plan->validateAnnotations());
+  REQUIRE(LogTestController::getInstance().contains("[warning] Processor myProc can not be run in parallel, its "
+                                                    "\"max concurrent tasks\" value is too high. It was set to 1 from 2."));
 }
