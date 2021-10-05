@@ -20,11 +20,6 @@
 
 #include "PutAzureBlobStorage.h"
 
-#include <memory>
-#include <string>
-
-#include "storage/AzureBlobStorage.h"
-#include "controllerservices/AzureStorageCredentialsService.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
@@ -68,7 +63,7 @@ void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>
   context->getProperty(CreateContainer.getName(), create_container_);
 }
 
-std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildAzureBlobStorageParameters(
+std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildPutAzureBlobStorageParameters(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   storage::PutAzureBlobStorageParameters params;
@@ -86,7 +81,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
     return;
   }
 
-  auto params = buildAzureBlobStorageParameters(context, flow_file);
+  auto params = buildPutAzureBlobStorageParameters(context, flow_file);
   if (!params) {
     session->transfer(flow_file, Failure);
     return;

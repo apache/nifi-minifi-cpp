@@ -43,6 +43,7 @@ class AzureBlobStorage {
   explicit AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_storage_client = nullptr);
   std::optional<bool> createContainerIfNotExists(const PutAzureBlobStorageParameters& params);
   std::optional<UploadBlobResult> uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer);
+  bool deleteBlob(const DeleteAzureBlobStorageParameters& params);
 
  private:
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureBlobStorage>::getLogger()};

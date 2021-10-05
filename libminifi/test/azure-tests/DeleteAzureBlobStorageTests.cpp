@@ -17,17 +17,17 @@
  */
 
 #include "AzureBlobStorageTestsFixture.h"
-#include "processors/PutAzureBlobStorage.h"
+#include "processors/DeleteAzureBlobStorage.h"
 
 namespace {
 
-using PutAzureBlobStorageTestsFixture = AzureBlobStorageTestsFixture<minifi::azure::processors::PutAzureBlobStorage>;
+using DeleteAzureBlobStorageTestsFixture = AzureBlobStorageTestsFixture<minifi::azure::processors::DeleteAzureBlobStorage>;
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Container name not set", "[azureStorageParameters]") {
+TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Container name not set", "[azureStorageParameters]") {
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
 }
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "[azureStorageCredentials]") {
+TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test credentials settings", "[azureStorageCredentials]") {
   plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
   plan_->setProperty(update_attribute_processor_, "test.blob", BLOB_NAME, true);
@@ -48,7 +48,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(azure_storage_cred_service, "Storage Account Key", STORAGE_ACCOUNT_KEY);
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
@@ -59,7 +59,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(azure_storage_cred_service, "Connection String", CONNECTION_STRING);
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
@@ -69,7 +69,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
@@ -79,7 +79,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.sas_token", SAS_TOKEN, true);
     plan_->setProperty(azure_blob_storage_processor_, "SAS Token", "${test.sas_token}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
   }
 
@@ -89,7 +89,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.sas_token", "?" + SAS_TOKEN, true);
     plan_->setProperty(azure_blob_storage_processor_, "SAS Token", "${test.sas_token}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";SharedAccessSignature=" + SAS_TOKEN);
   }
 
@@ -101,7 +101,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.endpoint_suffix", ENDPOINT_SUFFIX, true);
     plan_->setProperty(azure_blob_storage_processor_, "Common Storage Account Endpoint Suffix", "${test.endpoint_suffix}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY + ";EndpointSuffix=" + ENDPOINT_SUFFIX);
   }
 
@@ -109,7 +109,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING, true);
     plan_->setProperty(azure_blob_storage_processor_, "Connection String", "${test.connection_string}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
@@ -121,7 +121,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING, true);
     plan_->setProperty(azure_blob_storage_processor_, "Connection String", "${test.connection_string}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   }
 
@@ -139,7 +139,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(azure_blob_storage_processor_, "Use Managed Identity Credentials", "true");
     test_controller_.runSession(plan_, true);
     CHECK(getFailedFlowFileContents().size() == 0);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
     CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
     CHECK(passed_params.credentials.getEndpointSuffix() == "core.windows.net");
@@ -154,7 +154,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(azure_blob_storage_processor_, "Azure Storage Credentials Service", "AzureStorageCredentialsService");
     test_controller_.runSession(plan_, true);
     CHECK(getFailedFlowFileContents().size() == 0);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     CHECK(passed_params.credentials.buildConnectionString().empty());
     CHECK(passed_params.credentials.getStorageAccountName() == STORAGE_ACCOUNT_NAME);
     CHECK(passed_params.credentials.getEndpointSuffix() == "core.chinacloudapi.cn");
@@ -173,7 +173,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.connection_string", CONNECTION_STRING, true);
     plan_->setProperty(azure_blob_storage_processor_, "Connection String", "${test.connection_string}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString() == "AccountName=" + STORAGE_ACCOUNT_NAME + ";AccountKey=" + STORAGE_ACCOUNT_KEY);
   }
 
@@ -186,7 +186,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString().empty());
     auto failed_flowfiles = getFailedFlowFileContents();
     REQUIRE(failed_flowfiles.size() == 1);
@@ -203,7 +203,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
     plan_->setProperty(update_attribute_processor_, "test.account_key", STORAGE_ACCOUNT_KEY, true);
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
     test_controller_.runSession(plan_, true);
-    auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+    auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
     REQUIRE(passed_params.credentials.buildConnectionString().empty());
     auto failed_flowfiles = getFailedFlowFileContents();
     REQUIRE(failed_flowfiles.size() == 1);
@@ -211,7 +211,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test credentials settings", "
   }
 }
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failure in case Blob is not set and filename is empty", "[azureBlobStorageUpload]") {
+TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete failure in case Blob is not set and filename is empty", "[azureBlobStorageDelete]") {
   plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
   plan_->setProperty(update_attribute_processor_, "filename", "", true);
@@ -220,51 +220,52 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failur
   REQUIRE(LogTestController::getInstance().contains("Blob is not set and default 'filename' attribute could not be found!"));
 }
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[azureBlobStorageUpload]") {
+TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete with default blob name", "[azureBlobStorageDelete]") {
   plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
   setDefaultCredentials();
   test_controller_.runSession(plan_, true);
-  CHECK(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
-  CHECK(LogTestController::getInstance().contains("key:azure.blobname value:" + GET_FILE_NAME));
-  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr_->PRIMARY_URI + "\n"));
-  CHECK(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr_->ETAG));
-  CHECK(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
-  CHECK(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr_->TEST_TIMESTAMP));
-  CHECK(mock_blob_storage_ptr_->getInputData() == TEST_DATA);
-  CHECK(mock_blob_storage_ptr_->getContainerCreated() == false);
-  auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+  auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
   CHECK(passed_params.container_name == CONTAINER_NAME);
+  CHECK(passed_params.blob_name == GET_FILE_NAME);
+  CHECK(passed_params.optional_deletion == minifi::azure::storage::OptionalDeletion::NONE);
   CHECK(getFailedFlowFileContents().size() == 0);
 }
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with container creation", "[azureBlobStorageUpload]") {
+TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete including snapshots", "[azureBlobStorageDelete]") {
   plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
   plan_->setProperty(update_attribute_processor_, "test.blob", BLOB_NAME, true);
   plan_->setProperty(azure_blob_storage_processor_, "Blob", "${test.blob}");
-  plan_->setProperty(azure_blob_storage_processor_, "Create Container", "true");
+  plan_->setProperty(azure_blob_storage_processor_, "Delete Snapshots Option", "Include Snapshots");
   setDefaultCredentials();
   test_controller_.runSession(plan_, true);
-  CHECK(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
-  CHECK(LogTestController::getInstance().contains("key:azure.blobname value:" + BLOB_NAME));
-  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr_->PRIMARY_URI + "\n"));
-  CHECK(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr_->ETAG));
-  CHECK(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
-  CHECK(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr_->TEST_TIMESTAMP));
-  CHECK(mock_blob_storage_ptr_->getInputData() == TEST_DATA);
-  CHECK(mock_blob_storage_ptr_->getContainerCreated() == true);
-  auto passed_params = mock_blob_storage_ptr_->getPassedPutParams();
+  auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
   CHECK(passed_params.container_name == CONTAINER_NAME);
+  CHECK(passed_params.blob_name == BLOB_NAME);
+  CHECK(passed_params.optional_deletion == minifi::azure::storage::OptionalDeletion::INCLUDE_SNAPSHOTS);
   CHECK(getFailedFlowFileContents().size() == 0);
 }
 
-TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload failure", "[azureBlobStorageUpload]") {
+TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete with snapshots only", "[azureBlobStorageDelete]") {
   plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
   plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
   plan_->setProperty(update_attribute_processor_, "test.blob", BLOB_NAME, true);
   plan_->setProperty(azure_blob_storage_processor_, "Blob", "${test.blob}");
-  mock_blob_storage_ptr_->setUploadFailure(true);
+  plan_->setProperty(azure_blob_storage_processor_, "Delete Snapshots Option", "Delete Snapshots Only");
+  setDefaultCredentials();
+  test_controller_.runSession(plan_, true);
+  auto passed_params = mock_blob_storage_ptr_->getPassedDeleteParams();
+  CHECK(passed_params.container_name == CONTAINER_NAME);
+  CHECK(passed_params.blob_name == BLOB_NAME);
+  CHECK(passed_params.optional_deletion == minifi::azure::storage::OptionalDeletion::DELETE_SNAPSHOTS_ONLY);
+  CHECK(getFailedFlowFileContents().size() == 0);
+}
+
+TEST_CASE_METHOD(DeleteAzureBlobStorageTestsFixture, "Test Azure blob delete with remote failure", "[azureBlobStorageDelete]") {
+  plan_->setProperty(update_attribute_processor_, "test.container", CONTAINER_NAME, true);
+  plan_->setProperty(azure_blob_storage_processor_, "Container Name", "${test.container}");
+  mock_blob_storage_ptr_->setDeleteFailure(true);
   setDefaultCredentials();
   test_controller_.runSession(plan_, true);
   auto failed_flowfiles = getFailedFlowFileContents();

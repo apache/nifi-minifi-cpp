@@ -64,4 +64,14 @@ std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const PutAzureBlobS
   }
 }
 
+bool AzureBlobStorage::deleteBlob(const DeleteAzureBlobStorageParameters& params) {
+  try {
+    blob_storage_client_->deleteBlob(params);
+    return true;
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while deleting blob: %s", ex.what());
+    return false;
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::azure::storage

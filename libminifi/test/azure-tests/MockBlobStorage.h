@@ -29,13 +29,13 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   const std::string TEST_TIMESTAMP = "Sun, 21 Oct 2018 12:16:24 GMT";
 
   bool createContainerIfNotExists(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
-    params_ = params;
+    put_params_ = params;
     container_created_ = true;
     return true;
   }
 
   Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const minifi::azure::storage::PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) override {
-    params_ = params;
+    put_params_ = params;
     if (upload_fails_) {
       throw std::runtime_error("error");
     }
@@ -49,12 +49,26 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   }
 
   std::string getUrl(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
-    params_ = params;
+    put_params_ = params;
     return RETURNED_PRIMARY_URI;
   }
 
-  minifi::azure::storage::PutAzureBlobStorageParameters getPassedParams() const {
-    return params_;
+  bool deleteBlob(const minifi::azure::storage::DeleteAzureBlobStorageParameters& params) override {
+    delete_params_ = params;
+
+    if (delete_fails_) {
+      throw std::runtime_error("error");
+    }
+
+    return true;
+  }
+
+  minifi::azure::storage::PutAzureBlobStorageParameters getPassedPutParams() const {
+    return put_params_;
+  }
+
+  minifi::azure::storage::DeleteAzureBlobStorageParameters getPassedDeleteParams() const {
+    return delete_params_;
   }
 
   bool getContainerCreated() const {
@@ -69,10 +83,16 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return input_data_;
   }
 
+  void setDeleteFailure(bool delete_fails) {
+    delete_fails_ = delete_fails;
+  }
+
  private:
   const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
-  minifi::azure::storage::PutAzureBlobStorageParameters params_;
+  minifi::azure::storage::PutAzureBlobStorageParameters put_params_;
+  minifi::azure::storage::DeleteAzureBlobStorageParameters delete_params_;
   bool container_created_ = false;
   bool upload_fails_ = false;
+  bool delete_fails_ = false;
   std::string input_data_;
 };

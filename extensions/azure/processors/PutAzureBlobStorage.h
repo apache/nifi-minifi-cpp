@@ -27,11 +27,8 @@
 #include <vector>
 
 #include "core/Property.h"
-#include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "storage/AzureBlobStorage.h"
 #include "AzureBlobStorageProcessorBase.h"
-#include "storage/AzureStorageCredentials.h"
 
 template<typename T>
 class AzureBlobStorageTestsFixture;
@@ -92,7 +89,7 @@ class PutAzureBlobStorage final : public AzureBlobStorageProcessorBase {
     : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
-  std::optional<storage::PutAzureBlobStorageParameters> buildAzureBlobStorageParameters(
+  std::optional<storage::PutAzureBlobStorageParameters> buildPutAzureBlobStorageParameters(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file);
 
