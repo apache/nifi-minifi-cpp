@@ -17,14 +17,23 @@
  */
 
 #undef NDEBUG
+
 #include "TestBase.h"
+
 #include "c2/C2Agent.h"
+#include "c2/HeartbeatLogger.h"
 #include "protocols/RESTProtocol.h"
 #include "protocols/RESTSender.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
+#include "range/v3/action/sort.hpp"
+#include "range/v3/action/unique.hpp"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/filter.hpp"
+#include "range/v3/view/split.hpp"
+#include "range/v3/view/transform.hpp"
 #include "utils/IntegrationTestUtils.h"
-#include "c2/HeartbeatLogger.h"
+#include "utils/StringUtils.h"
 
 class VerifyLogC2Heartbeat : public VerifyC2Base {
  public:
@@ -42,6 +51,16 @@ class VerifyLogC2Heartbeat : public VerifyC2Base {
     assert(verifyLogLinePresenceInPollTime(
         std::chrono::milliseconds(wait_time_),
         "\"operation\": \"heartbeat\""));
+
+    const auto log = LogTestController::getInstance().log_output.str();
+    auto types_in_heartbeat = log | ranges::views::split('\n')
+        | ranges::views::transform([](auto&& rng) { return rng | ranges::to<std::string>; })
+        | ranges::views::filter([](auto&& line) { return utils::StringUtils::startsWith(line, "                                \"type\":"); })
+        | ranges::to<std::vector<std::string>>;
+    const auto num_types = types_in_heartbeat.size();
+    types_in_heartbeat |= ranges::actions::sort | ranges::actions::unique;
+    const auto num_distinct_types = types_in_heartbeat.size();
+    assert(num_types == num_distinct_types);
   }
 
   void configureC2() override {

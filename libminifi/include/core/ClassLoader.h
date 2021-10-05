@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_
-#define LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_
+#pragma once
 
 #include <utility>
 #include <mutex>
@@ -24,9 +23,8 @@
 #include <string>
 #include <map>
 #include <memory>
-#include "utils/StringUtils.h"
+
 #include "core/Core.h"
-#include "io/BufferStream.h"
 #include "ObjectFactory.h"
 
 namespace org {
@@ -91,22 +89,6 @@ class ClassLoader {
     }
   }
 
-  std::vector<std::string> getClasses(const std::string &group) const {
-    std::lock_guard<std::mutex> lock(internal_mutex_);
-    std::vector<std::string> classes;
-    for (const auto& child_loader : class_loaders_) {
-      for (auto&& clazz : child_loader.second.getClasses(group)) {
-        classes.push_back(std::move(clazz));
-      }
-    }
-    for (const auto& factory : loaded_factories_) {
-      if (factory.second->getGroupName() == group) {
-        classes.push_back(factory.second->getClassName());
-      }
-    }
-    return classes;
-  }
-
   std::optional<std::string> getGroupForClass(const std::string &class_name) const {
     std::lock_guard<std::mutex> lock(internal_mutex_);
     for (const auto& child_loader : class_loaders_) {
@@ -121,6 +103,11 @@ class ClassLoader {
     }
     return {};
   }
+
+  /**
+   * Return the names of all the registered classes in the group.
+   */
+  std::vector<std::string> getClasses(const std::string& group) const;
 
   /**
    * Instantiate object based on class_name
@@ -217,5 +204,3 @@ T *ClassLoader::instantiateRaw(const std::string &class_name, const std::string 
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CLASSLOADER_H_
