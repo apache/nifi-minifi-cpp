@@ -26,7 +26,12 @@
 #include "protocols/RESTSender.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
-#include "range/v3/all.hpp"
+#include "range/v3/action/sort.hpp"
+#include "range/v3/action/unique.hpp"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/filter.hpp"
+#include "range/v3/view/split.hpp"
+#include "range/v3/view/transform.hpp"
 #include "utils/IntegrationTestUtils.h"
 #include "utils/StringUtils.h"
 

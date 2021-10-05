@@ -27,7 +27,8 @@
 
 #include "core/Core.h"
 #include "ObjectFactory.h"
-#include "range/v3/all.hpp"
+#include "range/v3/action/sort.hpp"
+#include "range/v3/action/unique.hpp"
 
 namespace org {
 namespace apache {
