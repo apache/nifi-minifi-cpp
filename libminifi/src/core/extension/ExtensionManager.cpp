@@ -86,7 +86,7 @@ ExtensionManager& ExtensionManager::get() {
   return instance;
 }
 
-static constexpr const char* DEFAULT_EXTENSION_PATH = "../extensions/*";
+constexpr const char* DEFAULT_EXTENSION_PATH = "../extensions/*";
 
 bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
   static bool initialized = ([&] {
