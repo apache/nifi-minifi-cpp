@@ -93,6 +93,10 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
     logger_->log_trace("Initializing extensions");
     // initialize executable
     active_module_->initialize(config);
+    if (!config) {
+      logger_->log_error("Missing configuration");
+      return;
+    }
     std::string pattern = [&] {
       auto opt_pattern = config->get(nifi_extension_path);
       if (!opt_pattern) {
