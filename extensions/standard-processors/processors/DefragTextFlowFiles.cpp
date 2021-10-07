@@ -27,7 +27,6 @@
 namespace org::apache::nifi::minifi::processors {
 
 core::Relationship DefragTextFlowFiles::Success("success", "Flowfiles that have no fragmented messages in them");
-core::Relationship DefragTextFlowFiles::Original("original", "The FlowFiles that were used to create the defragmented flowfiles");
 core::Relationship DefragTextFlowFiles::Failure("failure", "Flowfiles that failed the defragmentation process");
 core::Relationship DefragTextFlowFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
@@ -54,7 +53,7 @@ core::Property DefragTextFlowFiles::MaxBufferAge(
 void DefragTextFlowFiles::initialize() {
   std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
 
-  setSupportedRelationships({Success, Original, Failure});
+  setSupportedRelationships({Success, Failure});
   setSupportedProperties({Pattern, PatternLoc, MaxBufferAge, MaxBufferSize});
 }
 
@@ -147,7 +146,7 @@ void DefragTextFlowFiles::processNextFragment(core::ProcessSession *session, con
       buffer_.flushAndReplace(session, Success, split_after_last_pattern);
     }
     buffer_.store(session);
-    session->transfer(next_fragment, Original);
+    session->remove(next_fragment);
   }
 }
 

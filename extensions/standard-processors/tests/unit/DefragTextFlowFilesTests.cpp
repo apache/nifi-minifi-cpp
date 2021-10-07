@@ -91,7 +91,6 @@ TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragtextflowfi
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({ DefragTextFlowFiles::Original });
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", DefragTextFlowFiles::Success, true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::Pattern.getName(), "<[0-9]+>");
@@ -117,7 +116,6 @@ TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtEndTest", "[defragtextflowfile
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({ DefragTextFlowFiles::Original });
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", DefragTextFlowFiles::Success, true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::Pattern.getName(), "<[0-9]+>");
@@ -143,7 +141,6 @@ TEST_CASE("DefragTextFlowFilesMultilinePatternAtStartTest", "[defragtextflowfile
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Original});
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", core::Relationship("success", "description"), true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::Pattern.getName(), "<[0-9]+>");
@@ -166,7 +163,6 @@ TEST_CASE("DefragTextFlowFilesMultilinePatternAtEndTest", "[defragtextflowfilesm
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Original});
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", core::Relationship("success", "description"), true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::Pattern.getName(), "<[0-9]+>");
@@ -190,7 +186,6 @@ TEST_CASE("DefragTextFlowFilesTimeoutTest", "[defragtextflowfilestimeottest]") {
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Original});
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragTextFlowFiles::Success, DefragTextFlowFiles::Failure}, true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::MaxBufferAge.getName(), "100 ms");
@@ -215,7 +210,6 @@ TEST_CASE("DefragTextFlowFilesNoTimeoutTest", "[defragtextflowfilesnotimeottest]
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Original});
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragTextFlowFiles::Success, DefragTextFlowFiles::Failure}, true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::MaxBufferAge.getName(), "1 h");
@@ -240,7 +234,6 @@ TEST_CASE("DefragTextFlowFilesMaxBufferTest", "[defragtextflowfilesmaxbuffertest
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Original});
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragTextFlowFiles::Success, DefragTextFlowFiles::Failure}, true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::MaxBufferSize.getName(), "100 B");
@@ -263,7 +256,6 @@ TEST_CASE("DefragTextFlowFilesNoMaxBufferTest", "[defragtextflowfilesnomaxbuffer
       plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Original});
   std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
       plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragTextFlowFiles::Success, DefragTextFlowFiles::Failure}, true));
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::MaxBufferSize.getName(), "100 MB");
@@ -284,7 +276,7 @@ TEST_CASE("DefragTextFlowFilesInvalidRegexTest", "[defragtextflowfilesinvalidreg
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<DefragTextFlowFiles> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragTextFlowFiles>(
       plan->addProcessor("DefragTextFlowFiles", "defrag_text_flow_files", core::Relationship("success", "description")));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Original, DefragTextFlowFiles::Success, DefragTextFlowFiles::Failure});
+  defrag_text_flow_files->setAutoTerminatedRelationships({DefragTextFlowFiles::Success, DefragTextFlowFiles::Failure});
   plan->setProperty(defrag_text_flow_files, DefragTextFlowFiles::Pattern.getName(), "\"[a-b][a\"");
 
   REQUIRE_THROWS(testController.runSession(plan));

@@ -6,4 +6,4 @@ class DefragTextFlowFiles(Processor):
         super(DefragTextFlowFiles, self).__init__('DefragTextFlowFiles',
                                                   schedule=schedule,
                                                   properties={'Delimiter': delimiter},
-                                                  auto_terminate=['success', 'original', 'failure'])
+                                                  auto_terminate=['success', 'failure'])

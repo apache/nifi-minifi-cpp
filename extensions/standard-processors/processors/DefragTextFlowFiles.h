@@ -38,7 +38,6 @@ class DefragTextFlowFiles : public core::Processor {
   }
   EXTENSIONAPI static core::Relationship Self;
   EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Original;
   EXTENSIONAPI static core::Relationship Failure;
 
   EXTENSIONAPI static core::Property Pattern;
