@@ -383,15 +383,15 @@ std::tuple<size_t, std::wstring> ConsumeWindowsEventLog::processEventLogs(const 
 }
 
 void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  if (!bookmark_) {
-    logger_->log_debug("bookmark_ is null");
-    context->yield();
-    return;
-  }
-
   std::unique_lock<std::mutex> lock(on_trigger_mutex_, std::try_to_lock);
   if (!lock.owns_lock()) {
     logger_->log_warn("processor was triggered before previous listing finished, configuration should be revised!");
+    return;
+  }
+
+  if (!bookmark_) {
+    logger_->log_debug("bookmark_ is null");
+    context->yield();
     return;
   }
 
@@ -439,7 +439,6 @@ void ConsumeWindowsEventLog::onTrigger(const std::shared_ptr<core::ProcessContex
 }
 
 wel::WindowsEventLogHandler ConsumeWindowsEventLog::getEventLogHandler(const std::string & name) {
-  std::lock_guard<std::mutex> lock(cache_mutex_);
   logger_->log_trace("Getting Event Log Handler corresponding to %s", name.c_str());
   auto provider = providers_.find(name);
   if (provider != std::end(providers_)) {
