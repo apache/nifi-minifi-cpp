@@ -38,7 +38,7 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
   }
 
   static constexpr char const* ProcessorName = "ReadFromFlowFileTestProcessor";
-  static core::Relationship Success;
+  static const core::Relationship Success;
 
  public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;

@@ -26,27 +26,27 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-core::Relationship DefragTextFlowFiles::Success("success", "Flowfiles that have no fragmented messages in them");
-core::Relationship DefragTextFlowFiles::Failure("failure", "Flowfiles that failed the defragmentation process");
-core::Relationship DefragTextFlowFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
+const core::Relationship DefragTextFlowFiles::Success("success", "Flowfiles that have no fragmented messages in them");
+const core::Relationship DefragTextFlowFiles::Failure("failure", "Flowfiles that failed the defragmentation process");
+const core::Relationship DefragTextFlowFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
-core::Property DefragTextFlowFiles::Pattern(
+const core::Property DefragTextFlowFiles::Pattern(
     core::PropertyBuilder::createProperty("Pattern")
         ->withDescription("A regular expression to match at the start or end of messages.")
         ->withDefaultValue("")->isRequired(true)->build());
 
-core::Property DefragTextFlowFiles::PatternLoc(
+const core::Property DefragTextFlowFiles::PatternLoc(
     core::PropertyBuilder::createProperty("Pattern Location")->withDescription("Where to look for the pattern.")
         ->withAllowableValues(PatternLocation::values())
         ->withDefaultValue(toString(PatternLocation::START_OF_MESSAGE))->build());
 
 
-core::Property DefragTextFlowFiles::MaxBufferSize(
+const core::Property DefragTextFlowFiles::MaxBufferSize(
     core::PropertyBuilder::createProperty("Max Buffer Size")
         ->withDescription("The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>")
         ->withType(core::StandardValidators::get().DATA_SIZE_VALIDATOR)->build());
 
-core::Property DefragTextFlowFiles::MaxBufferAge(
+const core::Property DefragTextFlowFiles::MaxBufferAge(
     core::PropertyBuilder::createProperty("Max Buffer Age")->
         withDescription("The maximum age of a buffer after which the buffer will be transferred to failure. Expected format is <duration> <time unit>")->build());
 

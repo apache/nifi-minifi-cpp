@@ -39,7 +39,7 @@ class WriteToFlowFileTestProcessor : public core::Processor {
   }
 
   static constexpr char const* ProcessorName = "WriteToFlowFileTestProcessor";
-  static core::Relationship Success;
+  static const core::Relationship Success;
 
  public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;

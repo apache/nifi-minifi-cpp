@@ -26,7 +26,7 @@ const std::string WriteToFlowFileTestProcessor::OnScheduleLogStr = "WriteToFlowF
 const std::string WriteToFlowFileTestProcessor::OnTriggerLogStr = "WriteToFlowFileTestProcessor::onTrigger executed";
 const std::string WriteToFlowFileTestProcessor::OnUnScheduleLogStr = "WriteToFlowFileTestProcessor::onUnSchedule";
 
-core::Relationship WriteToFlowFileTestProcessor::Success("success", "success operational on the flow record");
+const core::Relationship WriteToFlowFileTestProcessor::Success("success", "success operational on the flow record");
 
 
 void WriteToFlowFileTestProcessor::initialize() {

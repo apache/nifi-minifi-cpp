@@ -26,7 +26,7 @@ const std::string ReadFromFlowFileTestProcessor::OnScheduleLogStr = "ReadFromFlo
 const std::string ReadFromFlowFileTestProcessor::OnTriggerLogStr = "ReadFromFlowFileTestProcessor::onTrigger executed";
 const std::string ReadFromFlowFileTestProcessor::OnUnScheduleLogStr = "ReadFromFlowFileTestProcessor::onUnSchedule";
 
-core::Relationship ReadFromFlowFileTestProcessor::Success("success", "success operational on the flow record");
+const core::Relationship ReadFromFlowFileTestProcessor::Success("success", "success operational on the flow record");
 
 void ReadFromFlowFileTestProcessor::initialize() {
   setSupportedRelationships({ Success });

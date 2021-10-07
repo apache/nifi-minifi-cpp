@@ -36,14 +36,14 @@ class DefragTextFlowFiles : public core::Processor {
       : Processor(name, uuid) {
     logger_ = logging::LoggerFactory<DefragTextFlowFiles>::getLogger();
   }
-  EXTENSIONAPI static core::Relationship Self;
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Self;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
 
-  EXTENSIONAPI static core::Property Pattern;
-  EXTENSIONAPI static core::Property PatternLoc;
-  EXTENSIONAPI static core::Property MaxBufferAge;
-  EXTENSIONAPI static core::Property MaxBufferSize;
+  EXTENSIONAPI static const core::Property Pattern;
+  EXTENSIONAPI static const core::Property PatternLoc;
+  EXTENSIONAPI static const core::Property MaxBufferAge;
+  EXTENSIONAPI static const core::Property MaxBufferSize;
 
   void initialize() override;
   void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) override;
