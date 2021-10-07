@@ -58,6 +58,4 @@ class WriteToFlowFileTestProcessor : public core::Processor {
   std::string content_;
 };
 
-REGISTER_RESOURCE(WriteToFlowFileTestProcessor, "WriteToFlowFileTestProcessor (only for testing purposes)");
-
 }  // namespace org::apache::nifi::minifi::processors

@@ -57,6 +57,4 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
   std::string content_;
 };
 
-REGISTER_RESOURCE(ReadFromFlowFileTestProcessor, "ReadFromFlowFileTestProcessor (only for testing purposes)");
-
 }  // namespace org::apache::nifi::minifi::processors

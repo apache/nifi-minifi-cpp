@@ -61,4 +61,6 @@ void ReadFromFlowFileTestProcessor::onUnSchedule() {
   logger_->log_info("%s", ON_UNSCHEDULE_LOG_STR);
 }
 
+REGISTER_RESOURCE(ReadFromFlowFileTestProcessor, "ReadFromFlowFileTestProcessor (only for testing purposes)");
+
 }  // namespace org::apache::nifi::minifi::processors
