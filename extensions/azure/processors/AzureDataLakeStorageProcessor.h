@@ -36,10 +36,9 @@ namespace org::apache::nifi::minifi::azure::processors {
 class AzureDataLakeStorageProcessor : public AzureStorageProcessorBase {
  public:
   // Supported Properties
-  static const core::Property AzureStorageCredentialsService;
-  static const core::Property FilesystemName;
-  static const core::Property DirectoryName;
-  static const core::Property FileName;
+  EXTENSIONAPI static const core::Property FilesystemName;
+  EXTENSIONAPI static const core::Property DirectoryName;
+  EXTENSIONAPI static const core::Property FileName;
 
   explicit AzureDataLakeStorageProcessor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
     : AzureStorageProcessorBase(name, uuid, logger) {

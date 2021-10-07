@@ -25,11 +25,6 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property AzureDataLakeStorageProcessor::AzureStorageCredentialsService(
-    core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
-      ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
-      ->isRequired(true)
-      ->build());
 const core::Property AzureDataLakeStorageProcessor::FilesystemName(
     core::PropertyBuilder::createProperty("Filesystem Name")
       ->withDescription("Name of the Azure Storage File System. It is assumed to be already existing.")
