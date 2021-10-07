@@ -67,7 +67,7 @@ void DefragTextFlowFiles::onSchedule(core::ProcessContext* context, core::Proces
     uint64_t max_buffer_age;
     if (core::Property::StringToTime(max_buffer_age_str, max_buffer_age, unit) && core::Property::ConvertTimeUnitToMS(max_buffer_age, unit, max_buffer_age)) {
       buffer_.setMaxAge(max_buffer_age);
-      logger_->log_trace("The Buffer maximum age is configured to be %d", max_buffer_age);
+      logger_->log_trace("The Buffer maximum age is configured to be %d ms", max_buffer_age);
     }
   }
 
@@ -76,7 +76,7 @@ void DefragTextFlowFiles::onSchedule(core::ProcessContext* context, core::Proces
     uint64_t max_buffer_size = core::DataSizeValue(max_buffer_size_str).getValue();
     if (max_buffer_size > 0) {
       buffer_.setMaxSize(max_buffer_size);
-      logger_->log_trace("The Buffer maximum size is configured to be %d", max_buffer_size);
+      logger_->log_trace("The Buffer maximum size is configured to be %d B", max_buffer_size);
     }
   }
 
