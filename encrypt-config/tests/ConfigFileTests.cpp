@@ -21,7 +21,7 @@
 
 #include "ConfigFile.h"
 
-#include "gsl/gsl-lite.hpp"
+#include "utils/gsl.h"
 
 #include "TestBase.h"
 #include "utils/file/FileUtils.h"
@@ -185,7 +185,7 @@ TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
 
   TestController test_controller;
   std::string temp_dir = test_controller.createTempDirectory();
-  auto remove_directory = gsl::finally([&temp_dir]() { utils::file::delete_dir(temp_dir); });
+  auto remove_directory = minifi::gsl::finally([&temp_dir]() { utils::file::delete_dir(temp_dir); });
   std::string file_path = utils::file::concat_path(temp_dir, "minifi.properties");
 
   test_file.writeTo(file_path);
