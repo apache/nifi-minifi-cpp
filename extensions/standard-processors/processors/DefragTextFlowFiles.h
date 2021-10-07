@@ -24,9 +24,10 @@
 
 #include "core/Processor.h"
 #include "core/FlowFileStore.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "utils/Enum.h"
 #include "serialization/PayloadSerializer.h"
-
 
 namespace org::apache::nifi::minifi::processors {
 

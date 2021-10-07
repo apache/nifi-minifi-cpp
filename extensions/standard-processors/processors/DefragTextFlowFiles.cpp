@@ -58,6 +58,7 @@ void DefragTextFlowFiles::initialize() {
 }
 
 void DefragTextFlowFiles::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
+  gsl_Expects(context);
   std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
 
   std::string max_buffer_age_str;
@@ -116,6 +117,7 @@ void DefragTextFlowFiles::LastPatternFinder::searchContent(const std::string &co
 
 
 void DefragTextFlowFiles::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
+  gsl_Expects(session);
   std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
   auto flowFiles = flow_file_store_.getNewFlowFiles();
   for (auto& file : flowFiles) {
