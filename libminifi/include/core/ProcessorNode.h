@@ -274,7 +274,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return processor_->getMaxConcurrentTasks();
   }
 
-  void setMaxConcurrentTasks(const uint8_t tasks) {
+  void setMaxConcurrentTasks(const uint8_t tasks) override {
     processor_->setMaxConcurrentTasks(tasks);
   }
 
