@@ -86,14 +86,25 @@ ExtensionManager& ExtensionManager::get() {
   return instance;
 }
 
+constexpr const char* DEFAULT_EXTENSION_PATH = "../extensions/*";
+
 bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
   static bool initialized = ([&] {
     logger_->log_trace("Initializing extensions");
     // initialize executable
     active_module_->initialize(config);
-    std::optional<std::string> pattern = config ? config->get(nifi_extension_path) : std::nullopt;
-    if (!pattern) return;
-    auto candidates = utils::file::match(utils::file::FilePattern(pattern.value(), [&] (std::string_view subpattern, std::string_view error_msg) {
+    if (!config) {
+      logger_->log_error("Missing configuration");
+      return;
+    }
+    std::string pattern = [&] {
+      auto opt_pattern = config->get(nifi_extension_path);
+      if (!opt_pattern) {
+        logger_->log_warn("No extension path is provided, using default: '%s'", DEFAULT_EXTENSION_PATH);
+      }
+      return opt_pattern.value_or(DEFAULT_EXTENSION_PATH);
+    }();
+    auto candidates = utils::file::match(utils::file::FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error_msg) {
       logger_->log_error("Error in subpattern '%s': %s", std::string{subpattern}, std::string{error_msg});
     }));
     for (const auto& candidate : candidates) {
