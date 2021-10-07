@@ -8,6 +8,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance with message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
@@ -23,6 +24,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
   Scenario: A MiNiFi instance sends data through a HTTP proxy and another one listens
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://minifi-listen:8080/contentListener"
     And these processor properties are set to match the http proxy:
       | processor name | property name             | property value |
@@ -45,6 +47,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
   Scenario: A MiNiFi instance and transfers hashed data to another MiNiFi instance
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a HashContent processor with the "Hash Attribute" property set to "hash"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
@@ -61,6 +64,7 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
   Scenario: A MiNiFi instance transfers data to another MiNiFi instance without message body
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
     And a file with the content "test" is present in "/tmp/input"
     And a InvokeHTTP processor with the "Remote URL" property set to "http://secondary:8080/contentListener"
     And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
