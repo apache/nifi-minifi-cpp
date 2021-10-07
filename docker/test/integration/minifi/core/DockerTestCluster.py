@@ -11,9 +11,15 @@ import tempfile
 
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
+from azure.storage.blob import BlobServiceClient
+from azure.core.exceptions import ResourceExistsError
 
 
 class DockerTestCluster(SingleNodeDockerCluster):
+    AZURE_CONNECTION_STRING = \
+        ("DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;"
+         "BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;")
+
     def __init__(self, image_store):
         super(DockerTestCluster, self).__init__(image_store)
         self.segfault = False
@@ -127,6 +133,43 @@ class DockerTestCluster(SingleNodeDockerCluster):
         (code, output) = self.client.containers.get(container_name).exec_run(["cat", data_file])
         file_data = output.decode(self.get_stdout_encoding())
         return code == 0 and test_data in file_data
+
+    def add_test_blob(self, blob_name, with_snapshot=False):
+        blob_service_client = BlobServiceClient.from_connection_string(DockerTestCluster.AZURE_CONNECTION_STRING)
+        try:
+            blob_service_client.create_container("test-container")
+        except ResourceExistsError:
+            logging.debug('test-container already exists')
+
+        blob_client = blob_service_client.get_blob_client(container="test-container", blob=blob_name)
+        blob_client.upload_blob("")
+
+        if with_snapshot:
+            blob_client.create_snapshot()
+
+    def get_blob_and_snapshot_count(self):
+        blob_service_client = BlobServiceClient.from_connection_string(DockerTestCluster.AZURE_CONNECTION_STRING)
+        container_client = blob_service_client.get_container_client("test-container")
+        return len(list(container_client.list_blobs(include=['deleted'])))
+
+    def check_azure_blob_and_snapshot_count(self, blob_and_snapshot_count, timeout_seconds):
+        start_time = time.perf_counter()
+        while (time.perf_counter() - start_time) < timeout_seconds:
+            if self.get_blob_and_snapshot_count() == blob_and_snapshot_count:
+                return True
+            time.sleep(1)
+        return False
+
+    def is_azure_blob_storage_empty(self):
+        return self.get_blob_and_snapshot_count() == 0
+
+    def check_azure_blob_storage_is_empty(self, timeout_seconds):
+        start_time = time.perf_counter()
+        while (time.perf_counter() - start_time) < timeout_seconds:
+            if self.is_azure_blob_storage_empty():
+                return True
+            time.sleep(1)
+        return False
 
     @retry_check()
     def is_s3_bucket_empty(self, container_name):
