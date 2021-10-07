@@ -44,8 +44,8 @@ TEST_CASE("FindLastRegexTest1", "[findlastregextest]") {
     std::string content = "<1> Foo";
     find_pattern_beginning.searchContent(content);
     find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.foundPattern());
-    CHECK(find_pattern_ending.foundPattern());
+    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
+    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
     CHECK(find_pattern_beginning.getLastPatternPosition() == 0);
     CHECK(find_pattern_ending.getLastPatternPosition() == 3);
   }
@@ -53,8 +53,8 @@ TEST_CASE("FindLastRegexTest1", "[findlastregextest]") {
     std::string content = "<1> Foo<2> Bar<3> Baz<4> Qux";
     find_pattern_beginning.searchContent(content);
     find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.foundPattern());
-    CHECK(find_pattern_ending.foundPattern());
+    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
+    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
     CHECK(find_pattern_beginning.getLastPatternPosition() == 21);
     CHECK(find_pattern_ending.getLastPatternPosition() == 24);
   }
@@ -68,8 +68,8 @@ TEST_CASE("FindLastRegexTest2", "[findlastregextest2]") {
     std::string content = "apple<a banana<b strawberry";
     find_pattern_beginning.searchContent(content);
     find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.foundPattern());
-    CHECK(find_pattern_ending.foundPattern());
+    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
+    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
     CHECK(find_pattern_beginning.getLastPatternPosition().value() == 14);
     CHECK(find_pattern_ending.getLastPatternPosition().value() == 16);
   }
@@ -77,8 +77,8 @@ TEST_CASE("FindLastRegexTest2", "[findlastregextest2]") {
     std::string content = "apple<a banana<b strawberry<c pear<d watermelon<e";
     find_pattern_beginning.searchContent(content);
     find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.foundPattern());
-    CHECK(find_pattern_ending.foundPattern());
+    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
+    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
     CHECK(find_pattern_beginning.getLastPatternPosition().value() == 47);
     CHECK(find_pattern_ending.getLastPatternPosition().value() == 49);
   }

@@ -34,7 +34,6 @@ class DefragTextFlowFiles : public core::Processor {
  public:
   explicit DefragTextFlowFiles(const std::string& name,  const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
-    logger_ = logging::LoggerFactory<DefragTextFlowFiles>::getLogger();
   }
   EXTENSIONAPI static const core::Relationship Self;
   EXTENSIONAPI static const core::Relationship Success;
@@ -62,7 +61,6 @@ class DefragTextFlowFiles : public core::Processor {
     ~LastPatternFinder() override = default;
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
 
-    bool foundPattern() const { return last_pattern_location.has_value(); }
     const std::optional<size_t>& getLastPatternPosition() const { return last_pattern_location; }
 
    protected:
@@ -99,7 +97,7 @@ class DefragTextFlowFiles : public core::Processor {
   std::regex pattern_;
   PatternLocation pattern_location_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<DefragTextFlowFiles>::getLogger();
   core::FlowFileStore flow_file_store_;
   Buffer buffer_;
 

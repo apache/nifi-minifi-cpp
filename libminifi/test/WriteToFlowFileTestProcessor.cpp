@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include <gsl-lite/gsl-lite.hpp>
+
 namespace org::apache::nifi::minifi::processors {
 
 const core::Relationship WriteToFlowFileTestProcessor::Success("success", "success operational on the flow record");

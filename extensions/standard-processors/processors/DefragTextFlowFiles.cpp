@@ -91,11 +91,11 @@ void DefragTextFlowFiles::onSchedule(core::ProcessContext* context, core::Proces
 int64_t DefragTextFlowFiles::LastPatternFinder::process(const std::shared_ptr<io::BaseStream>& stream) {
   if (nullptr == stream)
     return 0;
-  std::vector<uint8_t> buffer;
-  const auto ret = stream->read(buffer, stream->size());
+  std::string content;
+  content.resize(stream->size());
+  const auto ret = stream->read(reinterpret_cast<uint8_t*>(content.data()), stream->size());
   if (io::isError(ret))
     return -1;
-  std::string content(buffer.begin(), buffer.end());
   searchContent(content);
 
   return 0;
@@ -105,12 +105,10 @@ void DefragTextFlowFiles::LastPatternFinder::searchContent(const std::string &co
   auto matches_begin = std::sregex_iterator(content.begin(), content.end(), pattern_);
   auto number_of_matches = std::distance(matches_begin, std::sregex_iterator());
   if (number_of_matches > 0) {
-    auto last_match = matches_begin;
-    for (int i = 1; i < number_of_matches; ++i)
-      last_match++;
+    auto last_match = std::next(matches_begin, number_of_matches - 1);
     last_pattern_location = last_match->position(0);
     if (pattern_location_ == PatternLocation::END_OF_MESSAGE)
-      last_pattern_location.value() += last_match->str(0).size();
+      last_pattern_location.value() += last_match->length(0);
   } else {
     last_pattern_location = std::nullopt;
   }
@@ -131,23 +129,23 @@ void DefragTextFlowFiles::onTrigger(core::ProcessContext*, core::ProcessSession*
 }
 
 void DefragTextFlowFiles::processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& next_fragment) {
-  if (next_fragment) {
-    std::shared_ptr<core::FlowFile> split_before_last_pattern;
-    std::shared_ptr<core::FlowFile> split_after_last_pattern;
-    bool found_pattern = splitFlowFileAtLastPattern(session, next_fragment, split_before_last_pattern,
-                                                    split_after_last_pattern);
-    if (buffer_.canBeAppended(split_before_last_pattern)) {
-      buffer_.append(session, split_before_last_pattern);
-    } else {
-      buffer_.flushAndReplace(session, Failure, split_before_last_pattern);
-      session->transfer(split_before_last_pattern, Failure);
-    }
-    if (found_pattern) {
-      buffer_.flushAndReplace(session, Success, split_after_last_pattern);
-    }
-    buffer_.store(session);
-    session->remove(next_fragment);
+  if (!next_fragment)
+    return;
+  std::shared_ptr<core::FlowFile> split_before_last_pattern;
+  std::shared_ptr<core::FlowFile> split_after_last_pattern;
+  bool found_pattern = splitFlowFileAtLastPattern(session, next_fragment, split_before_last_pattern,
+                                                  split_after_last_pattern);
+  if (buffer_.canBeAppended(split_before_last_pattern)) {
+    buffer_.append(session, split_before_last_pattern);
+  } else {
+    buffer_.flushAndReplace(session, Failure, split_before_last_pattern);
+    session->transfer(split_before_last_pattern, Failure);
   }
+  if (found_pattern) {
+    buffer_.flushAndReplace(session, Success, split_after_last_pattern);
+  }
+  buffer_.store(session);
+  session->remove(next_fragment);
 }
 
 
@@ -182,7 +180,7 @@ bool DefragTextFlowFiles::splitFlowFileAtLastPattern(core::ProcessSession *sessi
                                                      std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
   LastPatternFinder find_last_pattern(pattern_, pattern_location_);
   session->read(original_flow_file, &find_last_pattern);
-  if (find_last_pattern.foundPattern()) {
+  if (find_last_pattern.getLastPatternPosition().has_value()) {
     size_t split_position = find_last_pattern.getLastPatternPosition().value();
     if (split_position != 0) {
       split_before_last_pattern = session->clone(original_flow_file, 0, split_position);
