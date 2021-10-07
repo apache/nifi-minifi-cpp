@@ -40,9 +40,12 @@ const core::Relationship PutAzureDataLakeStorage::Success("success", "Files that
 const core::Relationship PutAzureDataLakeStorage::Failure("failure", "Files that could not be written to Azure storage for some reason are transferred to this relationship");
 
 void PutAzureDataLakeStorage::initialize() {
-  AzureDataLakeStorageProcessor::initialize();
-  // Add new supported properties
-  updateSupportedProperties({
+  // Set the supported properties
+  setSupportedProperties({
+    AzureStorageCredentialsService,
+    FilesystemName,
+    DirectoryName,
+    FileName,
     ConflictResolutionStrategy
   });
   // Set the supported relationships

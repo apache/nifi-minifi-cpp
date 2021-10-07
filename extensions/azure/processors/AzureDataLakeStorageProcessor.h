@@ -47,7 +47,6 @@ class AzureDataLakeStorageProcessor : public AzureStorageProcessorBase {
 
   ~AzureDataLakeStorageProcessor() override = default;
 
-  void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:

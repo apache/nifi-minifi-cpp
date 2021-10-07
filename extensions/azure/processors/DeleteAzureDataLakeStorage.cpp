@@ -30,7 +30,14 @@ const core::Relationship DeleteAzureDataLakeStorage::Success("success", "If file
 const core::Relationship DeleteAzureDataLakeStorage::Failure("failure", "If file deletion from Azure storage fails the flowfile is transferred to this relationship");
 
 void DeleteAzureDataLakeStorage::initialize() {
-  AzureDataLakeStorageProcessor::initialize();
+  // Set the supported properties
+  setSupportedProperties({
+    AzureStorageCredentialsService,
+    FilesystemName,
+    DirectoryName,
+    FileName
+  });
+
   // Set the supported relationships
   setSupportedRelationships({
     Success,

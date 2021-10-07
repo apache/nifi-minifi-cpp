@@ -44,19 +44,9 @@ const core::Property AzureDataLakeStorageProcessor::DirectoryName(
       ->build());
 const core::Property AzureDataLakeStorageProcessor::FileName(
     core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename to be uploaded. If left empty the filename attribute will be used by default.")
+      ->withDescription("The filename in Azure Storage. If left empty the filename attribute will be used by default.")
       ->supportsExpressionLanguage(true)
       ->build());
-
-void AzureDataLakeStorageProcessor::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    FilesystemName,
-    DirectoryName,
-    FileName
-  });
-}
 
 void AzureDataLakeStorageProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::optional<storage::AzureStorageCredentials> credentials;
