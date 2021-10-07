@@ -34,7 +34,7 @@
 #include "utils/gsl.h"
 #include "utils/Id.h"
 #include "utils/Export.h"
-#include "utils/FlowFileStore.h"
+#include "core/FlowFileStore.h"
 
 namespace org {
 namespace apache {
@@ -269,7 +269,7 @@ class BinFiles : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinFiles>::getLogger()};
   uint32_t batchSize_{1};
   uint32_t maxBinCount_{100};
-  utils::FlowFileStore file_store_;
+  core::FlowFileStore file_store_;
 };
 
 } /* namespace processors */

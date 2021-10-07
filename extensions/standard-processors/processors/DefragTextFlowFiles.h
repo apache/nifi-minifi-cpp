@@ -23,7 +23,7 @@
 #include <set>
 
 #include "core/Processor.h"
-#include "utils/FlowFileStore.h"
+#include "core/FlowFileStore.h"
 #include "utils/Enum.h"
 #include "serialization/PayloadSerializer.h"
 
@@ -100,7 +100,7 @@ class DefragTextFlowFiles : public core::Processor {
   PatternLocation pattern_location_;
 
   std::shared_ptr<logging::Logger> logger_;
-  utils::FlowFileStore flow_file_store_;
+  core::FlowFileStore flow_file_store_;
   Buffer buffer_;
 
   void processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile> &original_flow_file);

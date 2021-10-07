@@ -156,23 +156,23 @@ void DefragTextFlowFiles::updateAttributesForSplittedFiles(const std::shared_ptr
                                                            const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
                                                            const size_t split_position) const {
   std::string base_name, post_name, offset_str;
-  if (!original_flow_file->getAttribute(utils::TextFragmentUtils::BASE_NAME_ATTRIBUTE, base_name))
+  if (!original_flow_file->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
     return;
-  if (!original_flow_file->getAttribute(utils::TextFragmentUtils::POST_NAME_ATTRIBUTE, post_name))
+  if (!original_flow_file->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
     return;
-  if (!original_flow_file->getAttribute(utils::TextFragmentUtils::OFFSET_ATTRIBUTE, offset_str))
+  if (!original_flow_file->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
     return;
 
   size_t fragment_offset = std::stoi(offset_str);
 
   if (split_before_last_pattern) {
-    std::string first_part_name = utils::TextFragmentUtils::createFileName(base_name, post_name, fragment_offset, split_before_last_pattern->getSize());
+    std::string first_part_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset, split_before_last_pattern->getSize());
     split_before_last_pattern->setAttribute(core::SpecialFlowAttribute::FILENAME, first_part_name);
   }
   if (split_after_last_pattern) {
-    std::string second_part_name = utils::TextFragmentUtils::createFileName(base_name, post_name, fragment_offset + split_position, split_after_last_pattern->getSize());
+    std::string second_part_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset + split_position, split_after_last_pattern->getSize());
     split_after_last_pattern->setAttribute(core::SpecialFlowAttribute::FILENAME, second_part_name);
-    split_after_last_pattern->setAttribute(utils::TextFragmentUtils::OFFSET_ATTRIBUTE, std::to_string(fragment_offset + split_position));
+    split_after_last_pattern->setAttribute(textfragmentutils::OFFSET_ATTRIBUTE, std::to_string(fragment_offset + split_position));
   }
 }
 
@@ -229,15 +229,15 @@ class AppendFlowFileToFlowFile : public OutputStreamCallback {
 
 void updateAppendedAttributes(const std::shared_ptr<core::FlowFile>& buffered_ff) {
   std::string base_name, post_name, offset_str;
-  if (!buffered_ff->getAttribute(utils::TextFragmentUtils::BASE_NAME_ATTRIBUTE, base_name))
+  if (!buffered_ff->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
     return;
-  if (!buffered_ff->getAttribute(utils::TextFragmentUtils::POST_NAME_ATTRIBUTE, post_name))
+  if (!buffered_ff->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
     return;
-  if (!buffered_ff->getAttribute(utils::TextFragmentUtils::OFFSET_ATTRIBUTE, offset_str))
+  if (!buffered_ff->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
     return;
   size_t fragment_offset = std::stoi(offset_str);
 
-  std::string buffer_new_name = utils::TextFragmentUtils::createFileName(base_name, post_name, fragment_offset, buffered_ff->getSize());
+  std::string buffer_new_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset, buffered_ff->getSize());
   buffered_ff->setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
 }
 }  // namespace
@@ -304,20 +304,20 @@ bool DefragTextFlowFiles::Buffer::canBeAppended(const std::shared_ptr<core::Flow
     return true;
   std::string current_base_name, current_post_name, current_offset_str;
   std::string append_base_name, append_post_name, append_offset_str;
-  if (buffered_flow_file_->getAttribute(utils::TextFragmentUtils::BASE_NAME_ATTRIBUTE, current_base_name)
-      != flow_file_to_append->getAttribute(utils::TextFragmentUtils::BASE_NAME_ATTRIBUTE, append_base_name)) {
+  if (buffered_flow_file_->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, current_base_name)
+      != flow_file_to_append->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, append_base_name)) {
     return false;
   }
   if (current_base_name != append_base_name)
     return false;
-  if (buffered_flow_file_->getAttribute(utils::TextFragmentUtils::POST_NAME_ATTRIBUTE, current_post_name)
-      != flow_file_to_append->getAttribute(utils::TextFragmentUtils::POST_NAME_ATTRIBUTE, append_post_name)) {
+  if (buffered_flow_file_->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, current_post_name)
+      != flow_file_to_append->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, append_post_name)) {
     return false;
   }
   if (current_post_name != append_post_name)
     return false;
-  if (buffered_flow_file_->getAttribute(utils::TextFragmentUtils::OFFSET_ATTRIBUTE, current_offset_str)
-      != flow_file_to_append->getAttribute(utils::TextFragmentUtils::OFFSET_ATTRIBUTE, append_offset_str)) {
+  if (buffered_flow_file_->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, current_offset_str)
+      != flow_file_to_append->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, append_offset_str)) {
     return false;
   }
   if (current_offset_str != "" && append_offset_str != "") {

@@ -18,17 +18,14 @@
 #pragma once
 
 #include <string>
-#include "Export.h"
+#include "utils/Export.h"
 
-namespace org::apache::nifi::minifi::utils {
-class TextFragmentUtils {
- public:
-  MINIFIAPI static const char *BASE_NAME_ATTRIBUTE;
-  MINIFIAPI static const char *POST_NAME_ATTRIBUTE;
-  MINIFIAPI static const char *OFFSET_ATTRIBUTE;
+namespace org::apache::nifi::minifi::processors::textfragmentutils {
+  MINIFIAPI static constexpr const char* BASE_NAME_ATTRIBUTE = "TextFragmentAttribute.base_name";
+  MINIFIAPI static constexpr const char* POST_NAME_ATTRIBUTE = "TextFragmentAttribute.post_name";
+  MINIFIAPI static constexpr const char* OFFSET_ATTRIBUTE = "TextFragmentAttribute.offset";
 
-  static std::string createFileName(const std::string& base_name, const std::string& post_name, const size_t offset, const size_t size) {
+  inline std::string createFileName(const std::string& base_name, const std::string& post_name, const size_t offset, const size_t size) {
     return base_name + "." + std::to_string(offset) + "-" + std::to_string(offset + size - 1) + "." + post_name;
   }
-};
-}  // namespace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::processors::textfragmentutils
