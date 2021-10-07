@@ -22,12 +22,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const std::string WriteToFlowFileTestProcessor::OnScheduleLogStr = "WriteToFlowFileTestProcessor::onSchedule executed";
-const std::string WriteToFlowFileTestProcessor::OnTriggerLogStr = "WriteToFlowFileTestProcessor::onTrigger executed";
-const std::string WriteToFlowFileTestProcessor::OnUnScheduleLogStr = "WriteToFlowFileTestProcessor::onUnSchedule";
-
 const core::Relationship WriteToFlowFileTestProcessor::Success("success", "success operational on the flow record");
-
 
 void WriteToFlowFileTestProcessor::initialize() {
   setSupportedProperties({});
@@ -35,24 +30,25 @@ void WriteToFlowFileTestProcessor::initialize() {
 }
 
 void WriteToFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {
-  logger_->log_info("%s", OnScheduleLogStr);
+  logger_->log_info("%s", ON_SCHEDULE_LOG_STR);
 }
 
 namespace {
-struct WriteBufferToFlowFile : public OutputStreamCallback {
-  const std::vector<uint8_t> buffer_;
+struct WriteToFlowFileCallback : public OutputStreamCallback {
+  const gsl::span<const uint8_t> content_;
 
-  explicit WriteBufferToFlowFile(const std::string& buffer) : buffer_(buffer.begin(), buffer.end()) {}
+  explicit WriteToFlowFileCallback(const std::string& content) : content_(reinterpret_cast<const uint8_t*>(content.data()), content.size()) {}
 
   int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
-    size_t bytes_written = stream->write(buffer_, buffer_.size());
+    size_t bytes_written = stream->write(content_.begin(), content_.size());
     return io::isError(bytes_written) ? -1 : gsl::narrow<int64_t>(bytes_written);
   }
 };
 }  // namespace
 
 void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  logger_->log_info("%s", OnTriggerLogStr);
+  gsl_Expects(context && session);
+  logger_->log_info("%s", ON_TRIGGER_LOG_STR);
   if (content_.empty()) {
     context->yield();
     return;
@@ -62,13 +58,13 @@ void WriteToFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core
     logger_->log_error("Failed to create flowfile!");
     return;
   }
-  WriteBufferToFlowFile callback(content_);
+  WriteToFlowFileCallback callback(content_);
   session->write(flow_file, &callback);
   session->transfer(flow_file, Success);
 }
 
 void WriteToFlowFileTestProcessor::onUnSchedule() {
-  logger_->log_info("%s", OnUnScheduleLogStr);
+  logger_->log_info("%s", ON_UNSCHEDULE_LOG_STR);
 }
 
 }  // namespace org::apache::nifi::minifi::processors

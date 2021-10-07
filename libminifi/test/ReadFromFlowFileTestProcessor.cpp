@@ -22,10 +22,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const std::string ReadFromFlowFileTestProcessor::OnScheduleLogStr = "ReadFromFlowFileTestProcessor::onSchedule executed";
-const std::string ReadFromFlowFileTestProcessor::OnTriggerLogStr = "ReadFromFlowFileTestProcessor::onTrigger executed";
-const std::string ReadFromFlowFileTestProcessor::OnUnScheduleLogStr = "ReadFromFlowFileTestProcessor::onUnSchedule";
-
 const core::Relationship ReadFromFlowFileTestProcessor::Success("success", "success operational on the flow record");
 
 void ReadFromFlowFileTestProcessor::initialize() {
@@ -33,7 +29,7 @@ void ReadFromFlowFileTestProcessor::initialize() {
 }
 
 void ReadFromFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {
-  logger_->log_info("%s", OnScheduleLogStr);
+  logger_->log_info("%s", ON_SCHEDULE_LOG_STR);
 }
 
 namespace {
@@ -48,7 +44,8 @@ struct ReadFlowFileIntoBuffer : public InputStreamCallback {
 }
 
 void ReadFromFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
-  logger_->log_info("%s", OnTriggerLogStr);
+  gsl_Expects(context && session);
+  logger_->log_info("%s", ON_TRIGGER_LOG_STR);
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     context->yield();
@@ -61,7 +58,7 @@ void ReadFromFlowFileTestProcessor::onTrigger(core::ProcessContext* context, cor
 }
 
 void ReadFromFlowFileTestProcessor::onUnSchedule() {
-  logger_->log_info("%s", OnUnScheduleLogStr);
+  logger_->log_info("%s", ON_UNSCHEDULE_LOG_STR);
 }
 
 }  // namespace org::apache::nifi::minifi::processors

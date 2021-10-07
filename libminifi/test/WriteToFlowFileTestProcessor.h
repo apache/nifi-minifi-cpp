@@ -23,6 +23,8 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/Resource.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 #pragma once
 
@@ -30,15 +32,15 @@ namespace org::apache::nifi::minifi::processors {
 
 class WriteToFlowFileTestProcessor : public core::Processor {
  public:
-  static const std::string OnScheduleLogStr;
-  static const std::string OnTriggerLogStr;
-  static const std::string OnUnScheduleLogStr;
+  static constexpr const char* ON_SCHEDULE_LOG_STR = "WriteToFlowFileTestProcessor::onSchedule executed";
+  static constexpr const char* ON_TRIGGER_LOG_STR = "WriteToFlowFileTestProcessor::onTrigger executed";
+  static constexpr const char* ON_UNSCHEDULE_LOG_STR = "WriteToFlowFileTestProcessor::onUnSchedule executed";
 
   explicit WriteToFlowFileTestProcessor(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
-      : Processor(name, uuid), logger_(logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger()) {
+      : Processor(name, uuid) {
   }
 
-  static constexpr char const* ProcessorName = "WriteToFlowFileTestProcessor";
+  static constexpr char const* const ProcessorName = "WriteToFlowFileTestProcessor";
   static const core::Relationship Success;
 
  public:
@@ -52,7 +54,7 @@ class WriteToFlowFileTestProcessor : public core::Processor {
   }
 
  private:
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger();
   std::string content_;
 };
 
