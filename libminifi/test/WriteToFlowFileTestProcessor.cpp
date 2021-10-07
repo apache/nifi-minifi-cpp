@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include <gsl-lite/gsl-lite.hpp>
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 

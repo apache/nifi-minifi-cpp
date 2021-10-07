@@ -22,7 +22,7 @@
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
 #include "utils/TextFragmentUtils.h"
-
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
 

@@ -20,6 +20,8 @@
 #include <utility>
 #include <vector>
 
+#include "utils/gsl.h"
+
 namespace org::apache::nifi::minifi::processors {
 
 const core::Relationship ReadFromFlowFileTestProcessor::Success("success", "success operational on the flow record");
