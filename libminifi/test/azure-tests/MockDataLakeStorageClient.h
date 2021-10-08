@@ -75,7 +75,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     }
 
     buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + result.FileSize);
-    result.Body = std::move(std::make_unique<Azure::Core::IO::MemoryBodyStream>(buffer_));
+    result.Body = std::make_unique<Azure::Core::IO::MemoryBodyStream>(buffer_);
     return result;
   }
 

@@ -80,8 +80,8 @@ std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLake
       write_size += next_write_size;
     }
     return gsl::narrow<int64_t>(write_size);
-  } catch (const std::runtime_error& err) {
-    logger_->log_error("Runtime error while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, err.what());
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
     return std::nullopt;
   }
 }

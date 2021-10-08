@@ -69,7 +69,6 @@ __pycache__/
 .vs/**
 *.swp
 .cache
-.ccache
 .cproject
 .settings
 *.pyc

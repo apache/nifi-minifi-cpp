@@ -48,9 +48,12 @@ const core::Relationship FetchAzureDataLakeStorage::Success("success", "Files th
 const core::Relationship FetchAzureDataLakeStorage::Failure("failure", "In case of fetch failure flowfiles are transferred to this relationship");
 
 void FetchAzureDataLakeStorage::initialize() {
-  AzureDataLakeStorageProcessor::initialize();
   // Add new supported properties
-  updateSupportedProperties({
+  setSupportedProperties({
+    AzureStorageCredentialsService,
+    FilesystemName,
+    DirectoryName,
+    FileName,
     RangeStart,
     RangeLength,
     NumberOfRetries
@@ -110,11 +113,11 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
     logger_->log_error("Failed to fetch file '%s' from Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
   } else {
-    logger_->log_debug("Successfully fetch file '%s' from filesystem '%s' on Azure Data Lake storage", params->filename, params->file_system_name);
+    logger_->log_debug("Successfully fetched file '%s' from filesystem '%s' on Azure Data Lake storage", params->filename, params->file_system_name);
     session->transfer(flow_file, Success);
   }
 }
 
-REGISTER_RESOURCE(FetchAzureDataLakeStorage, "Fetch the provided file from Azure Data Lake Storage");
+REGISTER_RESOURCE(FetchAzureDataLakeStorage, "Fetch the provided file from Azure Data Lake Storage Gen 2");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

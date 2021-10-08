@@ -24,26 +24,26 @@
 #include <utility>
 #include <memory>
 
-#include "AzureDataLakeStorageProcessor.h"
+#include "AzureDataLakeStorageProcessorBase.h"
 
 template<typename AzureDataLakeStorageProcessor>
 class AzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
+class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
   // Supported Properties
-  static const core::Property RangeStart;
-  static const core::Property RangeLength;
-  static const core::Property NumberOfRetries;
+  EXTENSIONAPI static const core::Property RangeStart;
+  EXTENSIONAPI static const core::Property RangeLength;
+  EXTENSIONAPI static const core::Property NumberOfRetries;
 
   // Supported Relationships
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
   explicit FetchAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageProcessor(name, uuid, logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger()) {
+    : AzureDataLakeStorageProcessorBase(name, uuid, logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger()) {
   }
 
   ~FetchAzureDataLakeStorage() override = default;
@@ -87,7 +87,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessor {
   }
 
   explicit FetchAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessor(name, uuid, logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageProcessorBase(name, uuid, logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::FetchAzureDataLakeStorageParameters> buildFetchParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
