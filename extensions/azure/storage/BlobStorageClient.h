@@ -49,12 +49,18 @@ struct DeleteAzureBlobStorageParameters : public AzureBlobStorageParameters {
   OptionalDeletion optional_deletion;
 };
 
+struct FetchAzureBlobStorageParameters : public AzureBlobStorageParameters {
+  std::optional<uint64_t> range_start;
+  std::optional<uint64_t> range_length;
+};
+
 class BlobStorageClient {
  public:
   virtual bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) = 0;
   virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
   virtual bool deleteBlob(const DeleteAzureBlobStorageParameters& params) = 0;
+  virtual Azure::Storage::Blobs::Models::DownloadBlobResult fetchBlob(const FetchAzureBlobStorageParameters& params) = 0;
   virtual ~BlobStorageClient() = default;
 };
 

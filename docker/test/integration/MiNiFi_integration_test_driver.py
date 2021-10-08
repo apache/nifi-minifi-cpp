@@ -228,8 +228,8 @@ class MiNiFi_integration_test():
     def wait_for_container_logs(self, container_name, log_pattern, timeout_seconds, count=1):
         self.cluster.wait_for_app_logs_regex(container_name, log_pattern, timeout_seconds, count)
 
-    def add_test_blob(self, blob_name, with_snapshot):
-        self.cluster.add_test_blob(blob_name, with_snapshot)
+    def add_test_blob(self, blob_name, content, with_snapshot):
+        self.cluster.add_test_blob(blob_name, content, with_snapshot)
 
     def check_azure_blob_storage_is_empty(self, timeout_seconds):
         assert self.cluster.check_azure_blob_storage_is_empty(timeout_seconds)

@@ -20,6 +20,8 @@
 
 #include "AzureBlobStorageClient.h"
 
+#include <utility>
+
 #include "azure/identity.hpp"
 #include "azure/storage/blobs/blob_options.hpp"
 
@@ -79,6 +81,25 @@ bool AzureBlobStorageClient::deleteBlob(const DeleteAzureBlobStorageParameters& 
   }
   auto response = container_client_->DeleteBlob(params.blob_name, delete_options);
   return response.Value.Deleted;
+}
+
+Azure::Storage::Blobs::Models::DownloadBlobResult AzureBlobStorageClient::fetchBlob(const FetchAzureBlobStorageParameters& params) {
+  resetClientIfNeeded(params.credentials, params.container_name);
+  auto blob_client = container_client_->GetBlobClient(params.blob_name);
+  Azure::Storage::Blobs::DownloadBlobOptions options;
+  if (params.range_start || params.range_length) {
+    Azure::Core::Http::HttpRange range;
+    if (params.range_start) {
+      range.Offset = *params.range_start;
+    }
+
+    if (params.range_length) {
+      range.Length = *params.range_length;
+    }
+    options.Range = range;
+  }
+  auto result = blob_client.Download(options);
+  return std::move(result.Value);
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

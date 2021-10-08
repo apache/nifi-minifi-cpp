@@ -38,6 +38,7 @@ class AzureBlobStorageClient : public BlobStorageClient {
   Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) override;
   std::string getUrl(const PutAzureBlobStorageParameters& params) override;
   bool deleteBlob(const DeleteAzureBlobStorageParameters& params) override;
+  Azure::Storage::Blobs::Models::DownloadBlobResult fetchBlob(const FetchAzureBlobStorageParameters& params) override;
 
  private:
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string &container_name);

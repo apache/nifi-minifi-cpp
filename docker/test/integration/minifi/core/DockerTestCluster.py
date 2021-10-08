@@ -134,7 +134,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
         file_data = output.decode(self.get_stdout_encoding())
         return code == 0 and test_data in file_data
 
-    def add_test_blob(self, blob_name, with_snapshot=False):
+    def add_test_blob(self, blob_name, content="", with_snapshot=False):
         blob_service_client = BlobServiceClient.from_connection_string(DockerTestCluster.AZURE_CONNECTION_STRING)
         try:
             blob_service_client.create_container("test-container")
@@ -142,7 +142,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             logging.debug('test-container already exists')
 
         blob_client = blob_service_client.get_blob_client(container="test-container", blob=blob_name)
-        blob_client.upload_blob("")
+        blob_client.upload_blob(content)
 
         if with_snapshot:
             blob_client.create_snapshot()

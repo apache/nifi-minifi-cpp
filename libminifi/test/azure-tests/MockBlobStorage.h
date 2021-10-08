@@ -19,14 +19,19 @@
 #pragma once
 
 #include <string>
+#include <memory>
+#include <utility>
+#include <vector>
 
 #include "storage/BlobStorageClient.h"
+#include "azure/core/io/body_stream.hpp"
 
 class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
  public:
   const std::string ETAG = "test-etag";
   const std::string PRIMARY_URI = "http://test-uri/file";
   const std::string TEST_TIMESTAMP = "Sun, 21 Oct 2018 12:16:24 GMT";
+  const std::string FETCHED_DATA = "test azure data for stream";
 
   bool createContainerIfNotExists(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
     put_params_ = params;
@@ -63,12 +68,35 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return true;
   }
 
+  Azure::Storage::Blobs::Models::DownloadBlobResult fetchBlob(const minifi::azure::storage::FetchAzureBlobStorageParameters& params) override {
+    fetch_params_ = params;
+    Azure::Storage::Blobs::Models::DownloadBlobResult result;
+    buffer_.clear();
+    uint64_t range_start = 0;
+    result.BlobSize = FETCHED_DATA.size();
+    if (params.range_start) {
+      range_start = *params.range_start;
+    }
+
+    if (params.range_length) {
+      result.BlobSize = *params.range_length;
+    }
+
+    buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + result.BlobSize);
+    result.BodyStream = std::make_unique<Azure::Core::IO::MemoryBodyStream>(buffer_);
+    return result;
+  }
+
   minifi::azure::storage::PutAzureBlobStorageParameters getPassedPutParams() const {
     return put_params_;
   }
 
   minifi::azure::storage::DeleteAzureBlobStorageParameters getPassedDeleteParams() const {
     return delete_params_;
+  }
+
+  minifi::azure::storage::FetchAzureBlobStorageParameters getPassedFetchParams() const {
+    return fetch_params_;
   }
 
   bool getContainerCreated() const {
@@ -91,8 +119,10 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
   minifi::azure::storage::PutAzureBlobStorageParameters put_params_;
   minifi::azure::storage::DeleteAzureBlobStorageParameters delete_params_;
+  minifi::azure::storage::FetchAzureBlobStorageParameters fetch_params_;
   bool container_created_ = false;
   bool upload_fails_ = false;
   bool delete_fails_ = false;
   std::string input_data_;
+  std::vector<uint8_t> buffer_;
 };
