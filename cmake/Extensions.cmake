@@ -38,14 +38,18 @@ macro(register_extension extension-name)
     set_target_properties(${extension-name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
   endif()
 
+  # component names can only contain [a-zA-Z_]
+  string(REPLACE "-" "_" component_name ${extension-name})
+  string(REPLACE "minifi_" "" component_name ${component_name})
+
   if (WIN32)
-    install(TARGETS ${extension-name} RUNTIME DESTINATION extensions COMPONENT bin)
+    install(TARGETS ${extension-name} RUNTIME DESTINATION extensions COMPONENT ${component_name})
   else()
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
       target_link_options(${extension-name} PRIVATE "-Wl,--disable-new-dtags")
     endif()
     set_target_properties(${extension-name} PROPERTIES INSTALL_RPATH "$ORIGIN")
-    install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT bin)
+    install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT ${component_name})
   endif()
 endmacro()
 

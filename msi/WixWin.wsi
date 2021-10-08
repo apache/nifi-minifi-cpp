@@ -85,6 +85,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
       <DialogRef Id="ProgressDlg" />
       <DialogRef Id="ResumeDlg" />
       <DialogRef Id="ResumeDlg" />
+      <DialogRef Id="CustomizeDlg" />
       <DialogRef Id="UserExit" />
 
       <DialogRef Id="ApacheLicenseDlg"/>
@@ -100,9 +101,12 @@ Licensed to the Apache Software Foundation (ASF) under one or more
       <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="VerifyReadyDlg">Installed AND PATCH</Publish>
 
       <Publish Dialog="ApacheLicenseDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg">1</Publish>
-      <Publish Dialog="ApacheLicenseDlg" Control="Next" Event="NewDialog" Value="UserDialog">LicenseAccepted = "1"</Publish>
+      <Publish Dialog="ApacheLicenseDlg" Control="Next" Event="NewDialog" Value="CustomizeDlg">LicenseAccepted = "1"</Publish>
 
-      <Publish Dialog="UserDialog" Control="Back" Event="NewDialog" Value="ApacheLicenseDlg">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Back" Event="NewDialog" Value="ApacheLicenseDlg">1</Publish>
+      <Publish Dialog="CustomizeDlg" Control="Next" Event="NewDialog" Value="UserDialog">1</Publish>
+
+      <Publish Dialog="UserDialog" Control="Back" Event="NewDialog" Value="CustomizeDlg">1</Publish>
       <Publish Dialog="UserDialog" Control="Next" Event="NewDialog" Value="PropertiesDialog">1</Publish>
 
       <Publish Dialog="PropertiesDialog" Control="Back" Event="NewDialog" Value="UserDialog">1</Publish>
@@ -113,6 +117,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
 
       <Publish Dialog="MaintenanceWelcomeDlg" Control="Next" Event="NewDialog" Value="MaintenanceTypeDlg">1</Publish>
 
+      <Publish Dialog="MaintenanceTypeDlg" Control="ChangeButton" Event="NewDialog" Value="ApacheLicenseDlg">1</Publish>
       <Publish Dialog="MaintenanceTypeDlg" Control="RepairButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
       <Publish Dialog="MaintenanceTypeDlg" Control="RemoveButton" Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
       <Publish Dialog="MaintenanceTypeDlg" Control="Back" Event="NewDialog" Value="MaintenanceWelcomeDlg">1</Publish>
