@@ -29,6 +29,7 @@ namespace minifi {
 namespace processors {
 
 void StatefulProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
+  gsl_Expects(context);
   std::lock_guard<std::mutex> lock(mutex_);
   stateManager_ = context->getStateManager();
   if (stateManager_ == nullptr) {
