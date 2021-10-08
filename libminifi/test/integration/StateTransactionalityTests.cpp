@@ -32,7 +32,7 @@ using LogChecker = std::function<bool()>;
 
 struct HookCollection {
   StatefulProcessor::HookType onScheduleHook_;
-  StatefulProcessor::HookListType onTriggerHooks_;
+  std::vector<StatefulProcessor::HookType> onTriggerHooks_;
   LogChecker logChecker_;
 };
 
@@ -83,7 +83,7 @@ class StatefulIntegrationTest : public IntegrationBase {
 
  private:
   const StatefulProcessor::HookType onScheduleHook_;
-  const StatefulProcessor::HookListType onTriggerHooks_;
+  const std::vector<StatefulProcessor::HookType> onTriggerHooks_;
   const LogChecker logChecker_;
   const std::string testCase_;
   std::shared_ptr<StatefulProcessor> statefulProcessor_;
@@ -121,34 +121,34 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   {"State_is_recorded_after_committing", {
     {},
     {
-     [] (core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [] (core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-     }
-  },
-  standardLogChecker
+      [] (core::CoreComponentStateManager& stateManager) {
+        assert(stateManager.set(exampleState));
+      },
+      [] (core::CoreComponentStateManager& stateManager) {
+        std::unordered_map<std::string, std::string> state;
+        assert(stateManager.get(state));
+        assert(state == exampleState);
+      }
+    },
+    standardLogChecker
   }},
   {"State_is_discarded_after_rolling_back", {
-     {},
-     {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState2));
-       throw std::runtime_error("Triggering rollback");
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-     }
-  },
-  exceptionRollbackWarnings
+    {},
+    {
+      [](core::CoreComponentStateManager& stateManager) {
+        assert(stateManager.set(exampleState));
+      },
+      [](core::CoreComponentStateManager& stateManager) {
+        assert(stateManager.set(exampleState2));
+        throw std::runtime_error("Triggering rollback");
+      },
+      [](core::CoreComponentStateManager& stateManager) {
+        std::unordered_map<std::string, std::string> state;
+        assert(stateManager.get(state));
+        assert(state == exampleState);
+      }
+    },
+    exceptionRollbackWarnings
   }},
   {
     "Get_in_onSchedule_without_previous_state", {
@@ -163,422 +163,426 @@ const std::unordered_map<std::string, HookCollection> testCasesToHookLists {
   },
   {
     "Set_in_onSchedule", {
-    [](core::CoreComponentStateManager& stateManager) {
-      assert(stateManager.set(exampleState));
-    },
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-     }
-    },
-    standardLogChecker
+      [](core::CoreComponentStateManager& stateManager) {
+        assert(stateManager.set(exampleState));
+      },
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+        }
+      },
+      standardLogChecker
     }
   },
   {
     "Clear_in_onSchedule", {
-    [](core::CoreComponentStateManager& stateManager) {
-      assert(!stateManager.clear());
-      assert(stateManager.set(exampleState));
-      assert(stateManager.clear());
-    },
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(!stateManager.get(state));
-      assert(state.empty());
-     }
-    },
-    standardLogChecker
+      [](core::CoreComponentStateManager& stateManager) {
+        assert(!stateManager.clear());
+        assert(stateManager.set(exampleState));
+        assert(stateManager.clear());
+      },
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(!stateManager.get(state));
+          assert(state.empty());
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "Persist_in_onSchedule", {
-    {
-      [](core::CoreComponentStateManager& stateManager) {
-        assert(stateManager.persist());
-      }
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.persist());
+        }
       },
-    {},
-    standardLogChecker
+      {},
+      standardLogChecker
     }
   },
   {
     "Manual_beginTransaction", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(!stateManager.beginTransaction());
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(!stateManager.beginTransaction());
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "Manual_commit", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-       assert(stateManager.commit());
-     }
-    },
-    commitAndRollbackWarnings
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+          assert(stateManager.commit());
+        }
+      },
+      commitAndRollbackWarnings
     },
   },
   {
     "Manual_rollback", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.rollback());
-     }
-    },
-    commitAndRollbackWarnings
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.rollback());
+        }
+      },
+      commitAndRollbackWarnings
     },
   },
   {
     "Get_without_previous_state", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(!stateManager.get(state));
-       assert(state.empty());
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(!stateManager.get(state));
+          assert(state.empty());
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(get,get)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(get,set)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-       assert(stateManager.set(exampleState));
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+          assert(stateManager.set(exampleState));
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(get,clear)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-       assert(stateManager.clear());
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+          assert(stateManager.clear());
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(get,persist)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-       assert(stateManager.persist());
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+          assert(stateManager.persist());
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "(set,!get)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-       std::unordered_map<std::string, std::string> state;
-       assert(!stateManager.get(state));
-       assert(state.empty());
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+          std::unordered_map<std::string, std::string> state;
+          assert(!stateManager.get(state));
+          assert(state.empty());
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(set,set)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-       assert(stateManager.set(exampleState));
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+          assert(stateManager.set(exampleState));
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(set,!clear)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-       assert(!stateManager.clear());
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+          assert(!stateManager.clear());
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(set,persist)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-       assert(stateManager.persist());
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+          assert(stateManager.persist());
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(clear,!get)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.clear());
-       std::unordered_map<std::string, std::string> state;
-       assert(!stateManager.get(state));
-       assert(state.empty());
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.clear());
+          std::unordered_map<std::string, std::string> state;
+          assert(!stateManager.get(state));
+          assert(state.empty());
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(clear),(!get),(set),(get)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.clear());
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(!stateManager.get(state));
-       assert(state.empty());
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-     }
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.clear());
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(!stateManager.get(state));
+          assert(state.empty());
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+        }
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(clear,set)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.clear());
-       assert(stateManager.set(exampleState));
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.clear());
+          assert(stateManager.set(exampleState));
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(clear),(!clear)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.clear());
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(!stateManager.clear());
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.clear());
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(!stateManager.clear());
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(set),(clear),(persist)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.clear());
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.persist());
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.clear());
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.persist());
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(persist),(set),(get)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.persist());
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.persist());
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(persist),(set),(clear)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.persist());
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.clear());
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.persist());
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.clear());
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "(persist),(persist)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.persist());
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.persist());
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.persist());
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.persist());
+        },
+      },
+      standardLogChecker
     },
   },
   {
     "No_change_2_rounds", {
-    {},
-    {
-     [](core::CoreComponentStateManager&) {
-     },
-     [](core::CoreComponentStateManager&) {
-     },
-    },
-    standardLogChecker
+      {},
+      {
+        [](core::CoreComponentStateManager&) {},
+        [](core::CoreComponentStateManager&) {},
+      },
+      standardLogChecker
     },
   },
   {
     "(!clear)", {
-    {},
-    {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(!stateManager.clear());
-     },
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(!stateManager.clear());
+        },
+      },
+      standardLogChecker
     },
-    standardLogChecker
-    },
   },
-  {"(set),(get,throw)", {
-     {},
-     {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-       throw std::runtime_error("Triggering rollback");
-     },
+  {
+    "(set),(get,throw)", {
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+          throw std::runtime_error("Triggering rollback");
+        },
+      },
+      exceptionRollbackWarnings
+    }
   },
-  exceptionRollbackWarnings
-  }},
-  {"(set),(clear,throw),(get)", {
-     {},
-     {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.set(exampleState));
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.clear());
-       throw std::runtime_error("Triggering rollback");
-     },
-     [](core::CoreComponentStateManager& stateManager) {
-       std::unordered_map<std::string, std::string> state;
-       assert(stateManager.get(state));
-       assert(state == exampleState);
-     },
+  {
+    "(set),(clear,throw),(get)", {
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.set(exampleState));
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.clear());
+          throw std::runtime_error("Triggering rollback");
+        },
+        [](core::CoreComponentStateManager& stateManager) {
+          std::unordered_map<std::string, std::string> state;
+          assert(stateManager.get(state));
+          assert(state == exampleState);
+        },
+      },
+      exceptionRollbackWarnings
+    }
   },
-  exceptionRollbackWarnings
-  }},
-  {"(set),(clear,throw),(get)", {
-     {},
-     {
-     [](core::CoreComponentStateManager& stateManager) {
-       assert(stateManager.persist());
-       throw std::runtime_error("Triggering rollback");
-     },
-  },
-  exceptionRollbackWarnings
-  }}
+  {
+    "(set),(clear,throw),(get)", {
+      {},
+      {
+        [](core::CoreComponentStateManager& stateManager) {
+          assert(stateManager.persist());
+          throw std::runtime_error("Triggering rollback");
+        },
+      },
+      exceptionRollbackWarnings
+    }
+  }
 };
 }  // namespace
 

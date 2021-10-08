@@ -34,21 +34,20 @@ class StatefulProcessor : public core::Processor {
   using core::Processor::Processor;
 
   using HookType = std::function<void(core::CoreComponentStateManager&)>;
-  using HookListType = std::vector<HookType>;
 
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override;
 
   void onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) override;
 
-  void setHooks(HookType onScheduleHook, HookListType onTriggerHooks);
+  void setHooks(HookType onScheduleHook, std::vector<HookType> onTriggerHooks);
 
-  bool hasFinishedHooks() const;
+  [[nodiscard]] bool hasFinishedHooks() const;
 
  private:
   mutable std::mutex mutex_;
   std::shared_ptr<core::CoreComponentStateManager> stateManager_;
   HookType onScheduleHook_;
-  HookListType onTriggerHooks_;
+  std::vector<HookType> onTriggerHooks_;
   size_t onTriggerHookIndex_ = 0;
 };
 

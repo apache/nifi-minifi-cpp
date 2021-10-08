@@ -47,7 +47,7 @@ void StatefulProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>&, 
   }
 }
 
-void StatefulProcessor::setHooks(HookType onScheduleHook, HookListType onTriggerHooks) {
+void StatefulProcessor::setHooks(HookType onScheduleHook, std::vector<HookType> onTriggerHooks) {
   std::lock_guard<std::mutex> lock(mutex_);
   onScheduleHook_ = std::move(onScheduleHook);
   onTriggerHooks_ = std::move(onTriggerHooks);
