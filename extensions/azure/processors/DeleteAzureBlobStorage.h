@@ -55,6 +55,10 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  private:
   friend class ::AzureBlobStorageTestsFixture<DeleteAzureBlobStorage>;
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   explicit DeleteAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
     : AzureBlobStorageProcessorBase(name, uuid, logging::LoggerFactory<DeleteAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
