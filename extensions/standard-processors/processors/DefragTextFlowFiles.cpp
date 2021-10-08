@@ -182,15 +182,14 @@ bool DefragTextFlowFiles::splitFlowFileAtLastPattern(core::ProcessSession *sessi
                                                      std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
   LastPatternFinder find_last_pattern(pattern_, pattern_location_);
   session->read(original_flow_file, &find_last_pattern);
-  if (find_last_pattern.getLastPatternPosition().has_value()) {
-    size_t split_position = find_last_pattern.getLastPatternPosition().value();
-    if (split_position != 0) {
-      split_before_last_pattern = session->clone(original_flow_file, 0, split_position);
+  if (auto split_position = find_last_pattern.getLastPatternPosition()) {
+    if (*split_position != 0) {
+      split_before_last_pattern = session->clone(original_flow_file, 0, *split_position);
     }
-    if (split_position != original_flow_file->getSize()) {
-      split_after_last_pattern = session->clone(original_flow_file, split_position, original_flow_file->getSize() - split_position);
+    if (*split_position != original_flow_file->getSize()) {
+      split_after_last_pattern = session->clone(original_flow_file, *split_position, original_flow_file->getSize() - *split_position);
     }
-    updateAttributesForSplittedFiles(original_flow_file, split_before_last_pattern, split_after_last_pattern, split_position);
+    updateAttributesForSplittedFiles(original_flow_file, split_before_last_pattern, split_after_last_pattern, *split_position);
     return true;
   } else {
     split_before_last_pattern = session->clone(original_flow_file);
