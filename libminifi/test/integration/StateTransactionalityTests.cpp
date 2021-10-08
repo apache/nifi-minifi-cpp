@@ -31,18 +31,18 @@ namespace {
 using LogChecker = std::function<bool()>;
 
 struct HookCollection {
-  StatefulProcessor::HookType onScheduleHook_;
-  std::vector<StatefulProcessor::HookType> onTriggerHooks_;
-  LogChecker logChecker_;
+  StatefulProcessor::HookType on_schedule_hook_;
+  std::vector<StatefulProcessor::HookType> on_trigger_hooks_;
+  LogChecker log_checker_;
 };
 
 class StatefulIntegrationTest : public IntegrationBase {
  public:
   explicit StatefulIntegrationTest(std::string testCase, HookCollection hookCollection)
-    : onScheduleHook_(std::move(hookCollection.onScheduleHook_))
-    , onTriggerHooks_(std::move(hookCollection.onTriggerHooks_))
-    , logChecker_(hookCollection.logChecker_)
-    , testCase_(std::move(testCase)) {
+    : on_schedule_hook_(std::move(hookCollection.on_schedule_hook_))
+    , on_trigger_hooks_(std::move(hookCollection.on_trigger_hooks_))
+    , log_checker_(hookCollection.log_checker_)
+    , test_case_(std::move(testCase)) {
   }
 
   void testSetup() override {
@@ -51,7 +51,7 @@ class StatefulIntegrationTest : public IntegrationBase {
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     LogTestController::getInstance().setDebug<StatefulIntegrationTest>();
-    logger_->log_info("Running test case \"%s\"", testCase_);
+    logger_->log_info("Running test case \"%s\"", test_case_);
   }
 
   void updateProperties(std::shared_ptr<minifi::FlowController> fc) override {
@@ -69,24 +69,24 @@ class StatefulIntegrationTest : public IntegrationBase {
     // set hooks
     const auto processController = std::dynamic_pointer_cast<ProcessorController>(controllerVec[1]);
     assert(processController != nullptr);
-    statefulProcessor_ = std::dynamic_pointer_cast<StatefulProcessor>(processController->getProcessor());
-    assert(statefulProcessor_ != nullptr);
-    statefulProcessor_->setHooks(onScheduleHook_, onTriggerHooks_);
+    stateful_processor_ = std::dynamic_pointer_cast<StatefulProcessor>(processController->getProcessor());
+    assert(stateful_processor_ != nullptr);
+    stateful_processor_->setHooks(on_schedule_hook_, on_trigger_hooks_);
   }
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
-      return statefulProcessor_->hasFinishedHooks() && logChecker_();
+      return stateful_processor_->hasFinishedHooks() && log_checker_();
     }));
   }
 
  private:
-  const StatefulProcessor::HookType onScheduleHook_;
-  const std::vector<StatefulProcessor::HookType> onTriggerHooks_;
-  const LogChecker logChecker_;
-  const std::string testCase_;
-  std::shared_ptr<StatefulProcessor> statefulProcessor_;
+  const StatefulProcessor::HookType on_schedule_hook_;
+  const std::vector<StatefulProcessor::HookType> on_trigger_hooks_;
+  const LogChecker log_checker_;
+  const std::string test_case_;
+  std::shared_ptr<StatefulProcessor> stateful_processor_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<StatefulIntegrationTest>::getLogger()};
 };
 

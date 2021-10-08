@@ -76,8 +76,8 @@ AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::Ab
     : provider_(std::move(provider))
     , id_(id)
     , state_valid_(false)
-    , transactionInProgress_(false)
-    , changeType_(ChangeType::NONE) {
+    , transaction_in_progress_(false)
+    , change_type_(ChangeType::NONE) {
   std::string serialized;
   if (provider_->getImpl(id_, serialized)) {
     state_ = deserialize(serialized);
@@ -91,13 +91,13 @@ AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::~A
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::set(const core::CoreComponentState& kvs) {
   bool autoCommit = false;
-  if (!transactionInProgress_) {
+  if (!transaction_in_progress_) {
     autoCommit = true;
-    transactionInProgress_ = true;
+    transaction_in_progress_ = true;
   }
 
-  changeType_ = ChangeType::SET;
-  stateToSet_ = kvs;
+  change_type_ = ChangeType::SET;
+  state_to_set_ = kvs;
 
   if (autoCommit) {
     return commit();
@@ -110,7 +110,7 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
     return false;
   }
   // not allowed, if there were modifications (dirty read)
-  if (changeType_ != ChangeType::NONE) {
+  if (change_type_ != ChangeType::NONE) {
     return false;
   }
   kvs = state_;
@@ -123,13 +123,13 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
   }
 
   bool autoCommit = false;
-  if (!transactionInProgress_) {
+  if (!transaction_in_progress_) {
     autoCommit = true;
-    transactionInProgress_ = true;
+    transaction_in_progress_ = true;
   }
 
-  changeType_ = ChangeType::CLEAR;
-  stateToSet_.clear();
+  change_type_ = ChangeType::CLEAR;
+  state_to_set_.clear();
 
   if (autoCommit) {
     return commit();
@@ -142,33 +142,33 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::isTransactionInProgress() const {
-  return transactionInProgress_;
+  return transaction_in_progress_;
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::beginTransaction() {
-  if (transactionInProgress_) {
+  if (transaction_in_progress_) {
     return false;
   }
-  transactionInProgress_ = true;
+  transaction_in_progress_ = true;
   return true;
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::commit() {
-  if (!transactionInProgress_) {
+  if (!transaction_in_progress_) {
     return false;
   }
 
   bool success = true;
 
   // actually make the pending changes
-  if (changeType_ == ChangeType::SET) {
-    if (provider_->setImpl(id_, serialize(stateToSet_))) {
+  if (change_type_ == ChangeType::SET) {
+    if (provider_->setImpl(id_, serialize(state_to_set_))) {
       state_valid_ = true;
-      state_ = stateToSet_;
+      state_ = state_to_set_;
     } else {
       success = false;
     }
-  } else if (changeType_ == ChangeType::CLEAR) {
+  } else if (change_type_ == ChangeType::CLEAR) {
     if (!state_valid_) {
       success = false;
     } else if (provider_->removeImpl(id_)) {
@@ -179,34 +179,34 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
     }
   }
 
-  if (success && changeType_ != ChangeType::NONE) {
+  if (success && change_type_ != ChangeType::NONE) {
     success = persist();
   }
 
-  changeType_ = ChangeType::NONE;
-  stateToSet_.clear();
-  transactionInProgress_ = false;
+  change_type_ = ChangeType::NONE;
+  state_to_set_.clear();
+  transaction_in_progress_ = false;
   return success;
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::rollback() {
-  if (!transactionInProgress_) {
+  if (!transaction_in_progress_) {
     return false;
   }
 
-  changeType_ = ChangeType::NONE;
-  stateToSet_.clear();
-  transactionInProgress_ = false;
+  change_type_ = ChangeType::NONE;
+  state_to_set_.clear();
+  transaction_in_progress_ = false;
   return true;
 }
 
 std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const utils::Identifier& uuid) {
-  std::lock_guard<std::mutex> guard(mutex);
+  std::lock_guard<std::mutex> guard(mutex_);
 
-  const auto iter = stateManagerCache_.find(uuid);
-  if (iter == stateManagerCache_.end()) {
+  const auto iter = state_manager_cache_.find(uuid);
+  if (iter == state_manager_cache_.end()) {
     auto stateManager = std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
-    stateManagerCache_.emplace(uuid, stateManager);
+    state_manager_cache_.emplace(uuid, stateManager);
     return stateManager;
   }
 
@@ -220,8 +220,8 @@ std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManag
 }
 
 void AbstractCoreComponentStateManagerProvider::removeFromCache(const utils::Identifier id) {
-  std::lock_guard<std::mutex> guard(mutex);
-  stateManagerCache_.erase(id);
+  std::lock_guard<std::mutex> guard(mutex_);
+  state_manager_cache_.erase(id);
 }
 
 std::map<utils::Identifier, core::CoreComponentState> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {

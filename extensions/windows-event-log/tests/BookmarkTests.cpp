@@ -41,8 +41,7 @@ std::unique_ptr<Bookmark> createBookmark(TestPlan &test_plan,
                                          const utils::Identifier &uuid = IdGenerator::getIdGenerator()->generate()) {
   const auto state_manager = test_plan.getStateManagerProvider()->getCoreComponentStateManager(uuid);
   const auto logger = test_plan.getLogger();
-  auto bookmark = std::make_unique<Bookmark>(channel, L"*", "", uuid, false, state_manager, logger);
-  return bookmark;
+  return std::make_unique<Bookmark>(channel, L"*", "", uuid, false, state_manager, logger);
 }
 
 void reportEvent(const std::wstring& channel, const char* message) {

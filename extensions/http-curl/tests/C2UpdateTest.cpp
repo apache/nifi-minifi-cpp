@@ -22,10 +22,12 @@
 #include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
 
+using std::literals::chrono_literals::operator""s;
+
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");
   C2UpdateHandler handler(args.test_file);
-  VerifyC2Update harness(std::chrono::seconds(10));
+  VerifyC2Update harness(10s);
   harness.setKeyDir(args.key_dir);
   harness.setUrl(args.url, &handler);
   handler.setC2RestResponse(harness.getC2RestUrl(), "configuration");

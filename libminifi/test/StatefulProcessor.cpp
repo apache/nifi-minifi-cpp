@@ -31,32 +31,32 @@ namespace processors {
 void StatefulProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
   std::lock_guard<std::mutex> lock(mutex_);
-  stateManager_ = context->getStateManager();
-  if (stateManager_ == nullptr) {
+  state_manager_ = context->getStateManager();
+  if (state_manager_ == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
 
-  if (onScheduleHook_) {
-    onScheduleHook_(*stateManager_);
+  if (on_schedule_hook_) {
+    on_schedule_hook_(*state_manager_);
   }
 }
 
 void StatefulProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (onTriggerHookIndex_ < onTriggerHooks_.size()) {
-    onTriggerHooks_[onTriggerHookIndex_++](*stateManager_);
+  if (on_trigger_hook_index_ < on_trigger_hooks_.size()) {
+    on_trigger_hooks_[on_trigger_hook_index_++](*state_manager_);
   }
 }
 
 void StatefulProcessor::setHooks(HookType onScheduleHook, std::vector<HookType> onTriggerHooks) {
   std::lock_guard<std::mutex> lock(mutex_);
-  onScheduleHook_ = std::move(onScheduleHook);
-  onTriggerHooks_ = std::move(onTriggerHooks);
+  on_schedule_hook_ = std::move(onScheduleHook);
+  on_trigger_hooks_ = std::move(onTriggerHooks);
 }
 
 bool StatefulProcessor::hasFinishedHooks() const {
   std::lock_guard<std::mutex> lock(mutex_);
-  return onTriggerHookIndex_ == onTriggerHooks_.size();
+  return on_trigger_hook_index_ == on_trigger_hooks_.size();
 }
 
 REGISTER_RESOURCE(StatefulProcessor, "A processor with state for test purposes.");

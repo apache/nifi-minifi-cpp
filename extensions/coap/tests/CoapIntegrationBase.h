@@ -26,6 +26,8 @@
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
 
+using std::literals::chrono_literals::operator""s;
+
 int log_message(const struct mg_connection* /*conn*/, const char *message) {
   puts(message);
   return 1;
@@ -37,7 +39,7 @@ int ssl_enable(void *, void *) {
 
 class CoapIntegrationBase : public IntegrationBase {
  public:
-  explicit CoapIntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(5000))
+  explicit CoapIntegrationBase(std::chrono::seconds waitTime = 5s)
       : IntegrationBase(waitTime),
         server(nullptr) {
   }

@@ -22,12 +22,14 @@
 #include "utils/IntegrationTestUtils.h"
 #include "utils/file/PathUtils.h"
 
+using std::literals::chrono_literals::operator""s;
+
 int main(int argc, char **argv) {
   TestController controller;
   std::string minifi_home = controller.createTempDirectory();
   const cmd_args args = parse_cmdline_args(argc, argv);
   C2FlowProvider handler(args.test_file);
-  VerifyFlowFetched harness(std::chrono::seconds(10));
+  VerifyFlowFetched harness(10s);
   harness.setKeyDir(args.key_dir);
   harness.setUrl(args.url, &handler);
   harness.setFlowUrl(harness.getC2RestUrl());

@@ -24,6 +24,8 @@
 #include "utils/IntegrationTestUtils.h"
 #include "utils/crypto/EncryptionProvider.h"
 
+using std::literals::chrono_literals::operator""s;
+
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");
   TestController controller;
@@ -34,7 +36,7 @@ int main(int argc, char **argv) {
   // the C2 server will update the flow with the contents of args.test_file
   // which will be encrypted and persisted to the temporary live_config_file
   C2UpdateHandler handler(args.test_file);
-  VerifyC2Update harness(std::chrono::seconds(10));
+  VerifyC2Update harness(10s);
   harness.getConfiguration()->set(minifi::Configure::nifi_flow_configuration_encrypt, "true");
   harness.setKeyDir(args.key_dir);
   harness.setUrl(args.url, &handler);

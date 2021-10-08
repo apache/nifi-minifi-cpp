@@ -64,9 +64,9 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
     utils::Identifier id_;
     bool state_valid_;
     core::CoreComponentState state_;
-    bool transactionInProgress_;
-    ChangeType changeType_;
-    core::CoreComponentState stateToSet_;
+    bool transaction_in_progress_;
+    ChangeType change_type_;
+    core::CoreComponentState state_to_set_;
   };
 
  protected:
@@ -79,8 +79,8 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
  private:
   void removeFromCache(utils::Identifier id);
 
-  std::mutex mutex;
-  std::map<utils::Identifier, std::weak_ptr<core::CoreComponentStateManager>> stateManagerCache_;
+  std::mutex mutex_;
+  std::map<utils::Identifier, std::weak_ptr<core::CoreComponentStateManager>> state_manager_cache_;
 };
 
 }  // namespace controllers
