@@ -546,3 +546,8 @@ def step_impl(context, query, number_of_rows, timeout_seconds):
 @then("the Minifi logs contain the following message: \"{log_message}\" in less than {duration}")
 def step_impl(context, log_message, duration):
     context.test.check_minifi_log_contents(log_message, timeparse(duration))
+
+
+@then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
+def step_impl(context, regex, duration):
+    context.test.check_minifi_log_matches_regex(regex, timeparse(duration))

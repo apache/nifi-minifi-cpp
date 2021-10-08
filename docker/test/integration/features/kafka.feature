@@ -36,14 +36,14 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the Minifi logs contain the following message: " is 'test'" in less than 60 seconds
-    And the Minifi logs contain the following message: "PublishKafka: request.required.acks [1]" in less than 60 seconds
-    And the Minifi logs contain the following message: "PublishKafka: request.timeout.ms [12000]" in less than 60 seconds
-    And the Minifi logs contain the following message: "PublishKafka: message.timeout.ms [13000]" in less than 60 seconds
-    And the Minifi logs contain the following message: "PublishKafka: bootstrap.servers [kafka-broker:9092]" in less than 60 seconds
-    And the Minifi logs contain the following message: "PublishKafka: client.id [client_no_42]" in less than 60 seconds
-    And the Minifi logs contain the following message: "PublishKafka: Message Key [unique_message_key_123]" in less than 60 seconds
-    And the Minifi logs contain the following message: "PublishKafka: DynamicProperty: [retry.backoff.ms] -> [150]" in less than 60 seconds
-    And the Minifi logs contain the following message: "The Message Key Field property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead." in less than 60 seconds
+    And the Minifi logs contain the following message: "PublishKafka: request.required.acks [1]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: request.timeout.ms [12000]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: message.timeout.ms [13000]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: bootstrap.servers [kafka-broker:9092]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: client.id [client_no_42]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: Message Key [unique_message_key_123]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: DynamicProperty: [retry.backoff.ms] -> [150]" in less than 10 seconds
+    And the Minifi logs contain the following message: "The Message Key Field property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead." in less than 10 seconds
 
   Scenario: PublishKafka sends flowfiles to failure when the broker is not available
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -83,6 +83,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
 
   Scenario: PublishKafka sends can use SSL connect with SSL Context Service
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -108,6 +109,7 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
 
   Scenario: MiNiFi consumes data from a kafka topic
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow

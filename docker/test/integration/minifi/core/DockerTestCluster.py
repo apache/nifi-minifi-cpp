@@ -4,6 +4,7 @@ import subprocess
 import sys
 import time
 import os
+import re
 
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
@@ -54,17 +55,26 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
         return container.status, None
 
-    def wait_for_app_logs(self, container_name, log_entry, timeout_seconds, count=1):
+    def __wait_for_app_logs_impl(self, container_name, log_entry, timeout_seconds, count, use_regex):
         wait_start_time = time.perf_counter()
         while (time.perf_counter() - wait_start_time) < timeout_seconds:
             logging.info('Waiting for app-logs `%s` in container `%s`', log_entry, container_name)
             status, logs = self.get_app_log(container_name)
-            if logs is not None and count <= logs.decode("utf-8").count(log_entry):
-                return True
+            if logs is not None:
+                if not use_regex and logs.decode("utf-8").count(log_entry) >= count:
+                    return True
+                elif use_regex and len(re.findall(log_entry, logs.decode("utf-8"))) >= count:
+                    return True
             elif status == 'exited':
                 return False
             time.sleep(1)
         return False
+
+    def wait_for_app_logs_regex(self, container_name, log_entry, timeout_seconds, count=1):
+        return self.__wait_for_app_logs_impl(container_name, log_entry, timeout_seconds, count, True)
+
+    def wait_for_app_logs(self, container_name, log_entry, timeout_seconds, count=1):
+        return self.__wait_for_app_logs_impl(container_name, log_entry, timeout_seconds, count, False)
 
     def wait_for_startup_log(self, container_name, timeout_seconds):
         return self.wait_for_app_logs(container_name, self.containers[container_name].get_startup_finished_log_entry(), timeout_seconds, 1)
