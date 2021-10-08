@@ -247,8 +247,8 @@ void DefragTextFlowFiles::Buffer::append(core::ProcessSession* session, const st
       auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
         return session->read(ff, cb);
       };
-      std::unique_ptr<PayloadSerializer> serializer = std::make_unique<PayloadSerializer>(flowFileReader);
-      AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, *serializer);
+      PayloadSerializer serializer(flowFileReader);
+      AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, serializer);
       session->append(buffered_flow_file_, &append_flow_file_to_flow_file);
       std::string buffered_flow_file_name;
       std::string appended_flow_file_name;
