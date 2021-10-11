@@ -56,7 +56,7 @@ void PutAzureDataLakeStorage::initialize() {
 }
 
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
-  AzureDataLakeStorageProcessor::onSchedule(context, sessionFactory);
+  AzureDataLakeStorageProcessorBase::onSchedule(context, sessionFactory);
 
   conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), FileExistsResolutionStrategy::values()).c_str());

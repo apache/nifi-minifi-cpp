@@ -1,6 +1,6 @@
 /**
- * @file AzureDataLakeStorageProcessor.cpp
- * AzureDataLakeStorageProcessor class implementation
+ * @file AzureDataLakeStorageProcessorBase.cpp
+ * AzureDataLakeStorageProcessorBase class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,32 +18,32 @@
  * limitations under the License.
  */
 
-#include "AzureDataLakeStorageProcessor.h"
+#include "AzureDataLakeStorageProcessorBase.h"
 
 #include "utils/ProcessorConfigUtils.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property AzureDataLakeStorageProcessor::FilesystemName(
+const core::Property AzureDataLakeStorageProcessorBase::FilesystemName(
     core::PropertyBuilder::createProperty("Filesystem Name")
       ->withDescription("Name of the Azure Storage File System. It is assumed to be already existing.")
       ->supportsExpressionLanguage(true)
       ->isRequired(true)
       ->build());
-const core::Property AzureDataLakeStorageProcessor::DirectoryName(
+const core::Property AzureDataLakeStorageProcessorBase::DirectoryName(
     core::PropertyBuilder::createProperty("Directory Name")
       ->withDescription("Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. "
                         "If left empty it designates the root directory. The directory will be created if not already existing.")
       ->supportsExpressionLanguage(true)
       ->build());
-const core::Property AzureDataLakeStorageProcessor::FileName(
+const core::Property AzureDataLakeStorageProcessorBase::FileName(
     core::PropertyBuilder::createProperty("File Name")
       ->withDescription("The filename in Azure Storage. If left empty the filename attribute will be used by default.")
       ->supportsExpressionLanguage(true)
       ->build());
 
-void AzureDataLakeStorageProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+void AzureDataLakeStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   std::optional<storage::AzureStorageCredentials> credentials;
   std::tie(std::ignore, credentials) = getCredentialsFromControllerService(context);
   if (!credentials) {
@@ -57,7 +57,7 @@ void AzureDataLakeStorageProcessor::onSchedule(const std::shared_ptr<core::Proce
   credentials_ = *credentials;
 }
 
-bool AzureDataLakeStorageProcessor::setCommonParameters(
+bool AzureDataLakeStorageProcessorBase::setCommonParameters(
     storage::AzureDataLakeStorageParameters& params, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   params.credentials = credentials_;
 

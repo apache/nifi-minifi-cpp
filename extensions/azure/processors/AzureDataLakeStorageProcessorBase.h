@@ -1,6 +1,6 @@
 /**
- * @file AzureDataLakeStorageProcessor.h
- * AzureDataLakeStorageProcessor class declaration
+ * @file AzureDataLakeStorageProcessorBase.h
+ * AzureDataLakeStorageProcessorBase class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -33,23 +33,23 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class AzureDataLakeStorageProcessor : public AzureStorageProcessorBase {
+class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
  public:
   // Supported Properties
   EXTENSIONAPI static const core::Property FilesystemName;
   EXTENSIONAPI static const core::Property DirectoryName;
   EXTENSIONAPI static const core::Property FileName;
 
-  explicit AzureDataLakeStorageProcessor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
+  explicit AzureDataLakeStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
     : AzureStorageProcessorBase(name, uuid, logger) {
   }
 
-  ~AzureDataLakeStorageProcessor() override = default;
+  ~AzureDataLakeStorageProcessorBase() override = default;
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:
-  explicit AzureDataLakeStorageProcessor(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger,
+  explicit AzureDataLakeStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger,
     std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
     : AzureStorageProcessorBase(name, uuid, logger),
       azure_data_lake_storage_(std::move(data_lake_storage_client)) {
