@@ -69,7 +69,14 @@ void DeleteAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCo
     return;
   }
 
-  if (!azure_data_lake_storage_.deleteFile(*params)) {
+  bool result = false;
+  {
+    // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
+    std::lock_guard<std::mutex> lock(azure_storage_mutex_);
+    result = azure_data_lake_storage_.deleteFile(*params);
+  }
+
+  if (!result) {
     logger_->log_error("Failed to delete file '%s' to Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
   } else {
