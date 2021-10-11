@@ -448,7 +448,6 @@ void InvokeHTTP::route(const std::shared_ptr<core::FlowFile> &request, const std
   } else {
     if (request != nullptr) {
       if (penalize_no_retry_) {
-        logger_->log_debug("Flowfile has been penalized");
         session->penalize(request);
       }
       session->transfer(request, RelNoRetry);

@@ -323,6 +323,8 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::Method.getName(), "GET");
   plan->setProperty(invokehttp, org::apache::nifi::minifi::processors::InvokeHTTP::URL.getName(), "http://localhost:8681/testytesttest");
 
+  constexpr const char* PENALIZE_LOG_PATTERN = "Penalizing [0-9a-f-]+ for [0-9]+ms at invokehttp";
+
   SECTION("with penalize on no retry set to true") {
     plan->setProperty(invokehttp,
                       org::apache::nifi::minifi::processors::InvokeHTTP::PenalizeOnNoRetry.getName(),
@@ -331,8 +333,10 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
                                                 InvokeHTTP::RelRetry});
     testController.runSession(plan, true);
 
-    REQUIRE(LogTestController::getInstance().contains("Flowfile has been penalized"));
-  } SECTION("with penalize on no retry set to false") {
+    REQUIRE(LogTestController::getInstance().matchesRegex(PENALIZE_LOG_PATTERN));
+  }
+
+  SECTION("with penalize on no retry set to false") {
     plan->setProperty(invokehttp,
                       org::apache::nifi::minifi::processors::InvokeHTTP::PenalizeOnNoRetry.getName(),
                       "false");
@@ -340,7 +344,7 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
                                                 InvokeHTTP::RelRetry});
     testController.runSession(plan, true);
 
-    REQUIRE_FALSE(LogTestController::getInstance().contains("Flowfile has been penalized"));
+    REQUIRE_FALSE(LogTestController::getInstance().matchesRegex(PENALIZE_LOG_PATTERN));
   }
 }
 
