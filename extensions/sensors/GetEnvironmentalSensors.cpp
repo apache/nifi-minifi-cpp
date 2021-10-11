@@ -68,14 +68,14 @@ void GetEnvironmentalSensors::initialize() {
 void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   SensorBase::onSchedule(context, sessionFactory);
 
-  humidity_sensor_ = RTHumidity::createHumidity(&settings);
+  humidity_sensor_ = RTHumidity::createHumidity(settings_.get());
   if (humidity_sensor_) {
     humidity_sensor_->humidityInit();
   } else {
     throw std::runtime_error("RTHumidity could not be initialized");
   }
 
-  pressure_sensor_ = RTPressure::createPressure(&settings);
+  pressure_sensor_ = RTPressure::createPressure(settings_.get());
   if (pressure_sensor_) {
     pressure_sensor_->pressureInit();
   } else {
@@ -93,8 +93,8 @@ GetEnvironmentalSensors::~GetEnvironmentalSensors() = default;
 void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
   auto flow_file_ = session->create();
 
-  if (imu->IMURead()) {
-    RTIMU_DATA imuData = imu->getIMUData();
+  if (imu_->IMURead()) {
+    RTIMU_DATA imuData = imu_->getIMUData();
     auto vector = imuData.accel;
     std::string degrees = RTMath::displayDegrees("acceleration", vector);
     flow_file_->addAttribute("ACCELERATION", degrees);

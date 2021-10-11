@@ -51,11 +51,15 @@ void SensorBase::initialize() {
 }
 
 void SensorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  imu = std::unique_ptr<RTIMU>(RTIMU::createIMU(&settings));
-  if (imu) {
-    imu->IMUInit();
-    imu->setGyroEnable(true);
-    imu->setAccelEnable(true);
+  // Deferred instantiation of RTIMUSettings, because it can create a file "RTIMULib.ini" in the working directory.
+  // SensorBase is instantiated when creating the manifest.
+  settings_ = std::make_unique<RTIMUSettings>();
+
+  imu_ = std::unique_ptr<RTIMU>(RTIMU::createIMU(settings_.get()));
+  if (imu_) {
+    imu_->IMUInit();
+    imu_->setGyroEnable(true);
+    imu_->setAccelEnable(true);
   } else {
     throw std::runtime_error("RTIMU could not be initialized");
   }

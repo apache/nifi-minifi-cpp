@@ -47,7 +47,6 @@ class SensorBase : public core::Processor {
    */
   explicit SensorBase(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
-        imu(nullptr),
         logger_(logging::LoggerFactory<SensorBase>::getLogger()) {
   }
   // Destructor
@@ -74,8 +73,8 @@ class SensorBase : public core::Processor {
   };
 
  protected:
-  RTIMUSettings settings;
-  std::unique_ptr<RTIMU> imu;
+  std::unique_ptr<RTIMUSettings> settings_;
+  std::unique_ptr<RTIMU> imu_;
   std::shared_ptr<logging::Logger> logger_;
 };
 
