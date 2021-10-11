@@ -38,7 +38,6 @@ class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
   // Supported Properties
   EXTENSIONAPI static const core::Property FilesystemName;
   EXTENSIONAPI static const core::Property DirectoryName;
-  EXTENSIONAPI static const core::Property FileName;
 
   explicit AzureDataLakeStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
     : AzureStorageProcessorBase(name, uuid, logger) {

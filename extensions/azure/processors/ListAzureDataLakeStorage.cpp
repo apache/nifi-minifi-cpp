@@ -58,7 +58,6 @@ void ListAzureDataLakeStorage::initialize() {
     AzureStorageCredentialsService,
     FilesystemName,
     DirectoryName,
-    FileName,
     RecurseSubdirectories,
     FileFilter,
     PathFilter,
@@ -107,7 +106,7 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
   return params;
 }
 
-void ListAzureDataLakeStorage::createNewFlowFile( core::ProcessSession &session, const storage::ListDataLakeStorageElement &element) {
+void ListAzureDataLakeStorage::createNewFlowFile(core::ProcessSession &session, const storage::ListDataLakeStorageElement &element) {
   auto flow_file = session.create();
   session.putAttribute(flow_file, "azure.filesystem", element.filesystem);
   session.putAttribute(flow_file, "azure.filePath", element.file_path);

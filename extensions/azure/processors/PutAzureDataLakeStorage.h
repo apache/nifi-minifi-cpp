@@ -24,7 +24,7 @@
 #include <utility>
 #include <memory>
 
-#include "AzureDataLakeStorageSingleFileProcessor.h"
+#include "AzureDataLakeStorageFileProcessorBase.h"
 
 #include "utils/Enum.h"
 #include "utils/Export.h"
@@ -34,7 +34,7 @@ class AzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureDataLakeStorage final : public AzureDataLakeStorageSingleFileProcessor {
+class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBase {
  public:
   // Supported Properties
   EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
@@ -86,7 +86,7 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageSingleFileProce
   }
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageSingleFileProcessor(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);

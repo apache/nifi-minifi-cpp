@@ -91,4 +91,4 @@ void ListingStateManager::storeState(const ListingState &latest_listing_state) {
   state_manager_->set(state);
 }
 
-}  // namsspace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::utils

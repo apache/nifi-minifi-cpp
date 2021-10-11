@@ -37,11 +37,6 @@ const core::Property AzureDataLakeStorageProcessorBase::DirectoryName(
                         "If left empty it designates the root directory. The directory will be created if not already existing.")
       ->supportsExpressionLanguage(true)
       ->build());
-const core::Property AzureDataLakeStorageProcessorBase::FileName(
-    core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename in Azure Storage. If left empty the filename attribute will be used by default.")
-      ->supportsExpressionLanguage(true)
-      ->build());
 
 void AzureDataLakeStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   gsl_Expects(context);

@@ -84,11 +84,7 @@ bool AzureDataLakeStorage::matchesPathFilter(const std::string& base_directory, 
 
   if (!base_directory.empty()) {
     gsl_Expects(minifi::utils::StringUtils::startsWith(path, base_directory));
-    if (path.size() == base_directory.size()) {
-      path = "";
-    } else {
-      path = path.substr(base_directory.size() + 1);
-    }
+    path = path.size() == base_directory.size() ? "" : path.substr(base_directory.size() + 1);
   }
 
   std::regex pattern(path_filter);
@@ -133,8 +129,8 @@ std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(con
       result.push_back(element);
     }
     return result;
-  } catch (const std::runtime_error& err) {
-    logger_->log_error("Runtime error while listing directory '%s' of filesystem '%s': %s", params.directory_name, params.file_system_name, err.what());
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while listing directory '%s' of filesystem '%s': %s", params.directory_name, params.file_system_name, ex.what());
     return std::nullopt;
   }
 }

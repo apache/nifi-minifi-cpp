@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #include "core/CoreComponentState.h"
 #include "core/logging/Logger.h"
@@ -32,14 +33,15 @@ class ListedObject {
  public:
   virtual uint64_t getLastModified() const = 0;
   virtual std::string getKey() const = 0;
+  virtual ~ListedObject() = default;
 };
 
 struct ListingState {
-  uint64_t listed_key_timestamp = 0;
-  std::vector<std::string> listed_keys;
-
   bool wasObjectListedAlready(const ListedObject &object_attributes) const;
   void updateState(const ListedObject &object_attributes);
+
+  uint64_t listed_key_timestamp = 0;
+  std::vector<std::string> listed_keys;
 };
 
 class ListingStateManager {
@@ -64,4 +66,4 @@ class ListingStateManager {
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ListingState>::getLogger()};
 };
 
-}  // namsspace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::utils

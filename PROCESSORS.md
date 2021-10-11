@@ -37,6 +37,7 @@
 - [ListSFTP](#listsftp)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
+- [ListAzureDataLakeStorage](#listazuredatalakestorage)
 - [ListS3](#lists3)
 - [LogAttribute](#logattribute)
 - [ManipulateArchive](#manipulatearchive)
@@ -982,6 +983,32 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |invalid|SysLog message format invalid|
 |success|All files are routed to success|
+
+
+## ListAzureDataLakeStorage
+
+### Description
+
+Lists directory in an Azure Data Lake Storage Gen 2 filesystem
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Azure Storage Credentials Service**|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
+|**Filesystem Name**|||Name of the Azure Storage File System. It is assumed to be already existing.<br/>**Supports Expression Language: true**|
+|Directory Name|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. If left empty it designates the root directory. The directory will be created if not already existing.<br/>**Supports Expression Language: true**|
+|**Recurse Subdirectories**|true||Indicates whether to list files from subdirectories of the directory|
+|File Filter|||Only files whose names match the given regular expression will be listed|
+|Path Filter|||When 'Recurse Subdirectories' is true, then only subdirectories whose paths match the given regular expression will be scanned|
+|Listing Strategy|timestamps|none<br/>timestamps|Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|All FlowFiles that are received are routed to success|
 
 
 ## ListS3

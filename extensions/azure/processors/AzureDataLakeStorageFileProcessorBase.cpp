@@ -1,6 +1,6 @@
 /**
- * @file AzureDataLakeStorageSingleFileProcessor.cpp
- * AzureDataLakeStorageSingleFileProcessor class implementation
+ * @file AzureDataLakeStorageFileProcessorBase.cpp
+ * AzureDataLakeStorageFileProcessorBase class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,20 +18,20 @@
  * limitations under the License.
  */
 
-#include "AzureDataLakeStorageSingleFileProcessor.h"
+#include "AzureDataLakeStorageFileProcessorBase.h"
 
 #include "utils/ProcessorConfigUtils.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property AzureDataLakeStorageSingleFileProcessor::FileName(
+const core::Property AzureDataLakeStorageFileProcessorBase::FileName(
     core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename")
+      ->withDescription("The filename in Azure Storage. If left empty the filename attribute will be used by default.")
       ->supportsExpressionLanguage(true)
       ->build());
 
-bool AzureDataLakeStorageSingleFileProcessor::setFileOperationCommonParameters(
+bool AzureDataLakeStorageFileProcessorBase::setFileOperationCommonParameters(
     storage::AzureDataLakeStorageFileOperationParameters& params, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   if (!setCommonParameters(params, context, flow_file)) {
     return false;

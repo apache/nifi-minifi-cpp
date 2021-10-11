@@ -32,10 +32,10 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
-  static const core::Property RecurseSubdirectories;
-  static const core::Property FileFilter;
-  static const core::Property PathFilter;
-  static const core::Property ListingStrategy;
+  EXTENSIONAPI static const core::Property RecurseSubdirectories;
+  EXTENSIONAPI static const core::Property FileFilter;
+  EXTENSIONAPI static const core::Property PathFilter;
+  EXTENSIONAPI static const core::Property ListingStrategy;
 
   // Supported Relationships
   static const core::Relationship Success;
@@ -62,7 +62,7 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   }
 
   std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(const std::shared_ptr<core::ProcessContext>& context);
-  void createNewFlowFile( core::ProcessSession &session, const storage::ListDataLakeStorageElement &element);
+  void createNewFlowFile(core::ProcessSession &session, const storage::ListDataLakeStorageElement &element);
 
   bool recurse_subdirectories_ = true;
   storage::EntityTracking tracking_strategy_ = storage::EntityTracking::TIMESTAMPS;
