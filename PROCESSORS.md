@@ -344,16 +344,24 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-|**Container Name**|||Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.<br/>**Supports Expression Language: true**|
-|Storage Account Name|||The storage account name.<br/>**Supports Expression Language: true**|
-|Storage Account Key|||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.<br/>**Supports Expression Language: true**|
-|SAS Token|||Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.<br/>**Supports Expression Language: true**|
-|Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).<br/>**Supports Expression Language: true**|
-|Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.<br/>**Supports Expression Language: true**|
 |Azure Storage Credentials Service|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
 |**Blob**|||The filename of the blob. If left empty the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
-|**Use Managed Identity Credentials**|false||If true Managed Identity credentials will be used together with the Storage Account Name for authentication.|
+|Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).<br/>**Supports Expression Language: true**|
+|Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|**Container Name**|||Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.<br/>**Supports Expression Language: true**|
 |**Delete Snapshots Option**|None|None<br/>Include Snapshots<br/>Delete Snapshots Only|Specifies the snapshot deletion options to be used when deleting a blob.<br/>None: Deletes the blob only.<br/>Include Snapshots: Delete the blob and its snapshots.<br/>Delete Snapshots Only: Delete only the blob's snapshots.|
+|SAS Token|||Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|Storage Account Key|||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.<br/>**Supports Expression Language: true**|
+|Storage Account Name|||The storage account name.<br/>**Supports Expression Language: true**|
+|**Use Managed Identity Credentials**|false||If true Managed Identity credentials will be used together with the Storage Account Name for authentication.|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|Unsuccessful operations will be transferred to the failure relationship|
+|success|All successfully processed FlowFiles are routed to this relationship|
+
 
 ## DeleteAzureDataLakeStorage
 
@@ -1335,15 +1343,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-|**Container Name**|||Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.<br/>**Supports Expression Language: true**|
-|Storage Account Name|||The storage account name.<br/>**Supports Expression Language: true**|
-|Storage Account Key|||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.<br/>**Supports Expression Language: true**|
-|SAS Token|||Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.<br/>**Supports Expression Language: true**|
-|Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).<br/>**Supports Expression Language: true**|
-|Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.<br/>**Supports Expression Language: true**|
 |Azure Storage Credentials Service|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
 |**Blob**|||The filename of the blob. If left empty the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
+|Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).<br/>**Supports Expression Language: true**|
+|Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|**Container Name**|||Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.<br/>**Supports Expression Language: true**|
 |**Create Container**|false||Specifies whether to check if the container exists and to automatically create it if it does not. Permission to list containers is required. If false, this check is not made, but the Put operation will fail if the container does not exist.|
+|SAS Token|||Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|Storage Account Key|||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.<br/>**Supports Expression Language: true**|
+|Storage Account Name|||The storage account name.<br/>**Supports Expression Language: true**|
 |**Use Managed Identity Credentials**|false||If true Managed Identity credentials will be used together with the Storage Account Name for authentication.|
 
 ### Relationships
