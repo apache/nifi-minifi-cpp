@@ -360,6 +360,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
   // append all headers
   client.build_header_list(attribute_to_send_regex_, flowFile->getAttributes());
+
   logger_->log_trace("InvokeHTTP -- curl performed");
   if (client.submit()) {
     logger_->log_trace("InvokeHTTP -- curl successful");
