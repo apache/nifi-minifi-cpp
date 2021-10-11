@@ -71,6 +71,7 @@ add_custom_target(
         -c ENABLE_PYTHON=OFF
         -c ENABLE_LIBRDKAFKA=ON
         -c ENABLE_AWS=ON
+        -c ENABLE_AZURE=ON
         -c DISABLE_CONTROLLER=ON
         -c ENABLE_SCRIPTING=OFF
         -c DISABLE_PYTHON_SCRIPTING=ON
