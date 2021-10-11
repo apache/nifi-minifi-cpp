@@ -67,8 +67,8 @@ GetMovementSensors::~GetMovementSensors() = default;
 void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
   auto flow_file_ = session->create();
 
-  if (imu->IMURead()) {
-    RTIMU_DATA imuData = imu->getIMUData();
+  if (imu_->IMURead()) {
+    RTIMU_DATA imuData = imu_->getIMUData();
 
     if (imuData.accelValid) {
       auto vector = imuData.accel;

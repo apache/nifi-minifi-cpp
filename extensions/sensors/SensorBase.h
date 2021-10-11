@@ -18,17 +18,12 @@
 #pragma once
 
 #include <memory>
-#include <regex>
 #include <string>
 #include <utility>
 
-#include "utils/ByteArrayCallback.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
-#include "core/Property.h"
-#include "utils/Id.h"
+#include "io/StreamPipe.h"
 #include "RTIMULib.h"
 #include "RTMath.h"
 
@@ -47,7 +42,6 @@ class SensorBase : public core::Processor {
    */
   explicit SensorBase(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
-        imu(nullptr),
         logger_(logging::LoggerFactory<SensorBase>::getLogger()) {
   }
   // Destructor
@@ -74,8 +68,8 @@ class SensorBase : public core::Processor {
   };
 
  protected:
-  RTIMUSettings settings;
-  std::unique_ptr<RTIMU> imu;
+  std::optional<RTIMUSettings> settings_;
+  std::unique_ptr<RTIMU> imu_;
   std::shared_ptr<logging::Logger> logger_;
 };
 
