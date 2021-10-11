@@ -50,7 +50,7 @@ class PutFile : public core::Processor {
    * Create a new processor
    */
   PutFile(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
-      : core::Processor(std::move(name), uuid) {
+      : core::Processor(name, uuid) {
   }
 
   ~PutFile() override = default;

@@ -42,9 +42,7 @@ namespace controllers {
 class UpdatePolicyControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<UpdatePolicyControllerService> {
  public:
   explicit UpdatePolicyControllerService(const std::string &name, const utils::Identifier &uuid = {})
-      : ControllerService(name, uuid),
-        persist_updates_(false),
-        policy_(new state::UpdatePolicy(false)) {
+      : ControllerService(name, uuid) {
   }
 
   explicit UpdatePolicyControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
@@ -77,8 +75,8 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   }
 
  private:
-  bool persist_updates_;
-  std::unique_ptr<state::UpdatePolicy> policy_;
+  bool persist_updates_ = false;
+  std::unique_ptr<state::UpdatePolicy> policy_ = std::make_unique<state::UpdatePolicy(false);
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdatePolicyControllerService>::getLogger();
 };
 

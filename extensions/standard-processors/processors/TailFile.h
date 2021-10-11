@@ -82,7 +82,7 @@ SMART_ENUM(InitialStartPositions,
 class TailFile : public core::Processor {
  public:
   explicit TailFile(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(std::move(name), uuid) {
+      : core::Processor(name, uuid) {
   }
 
   ~TailFile() override = default;
