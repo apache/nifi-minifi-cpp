@@ -105,10 +105,15 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
     return;
   }
 
-  WriteCallback callback(azure_data_lake_storage_, *params, logger_);
-  session->write(flow_file, &callback);
+  std::optional<uint64_t> result_size;
+  {
+    // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
+    std::lock_guard<std::mutex> lock(azure_storage_mutex_);
+    WriteCallback callback(azure_data_lake_storage_, *params, logger_);
+    session->write(flow_file, &callback);
+    result_size = callback.getResult();
+  }
 
-  auto result_size = callback.getResult();
   if (result_size == std::nullopt) {
     logger_->log_error("Failed to fetch file '%s' from Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
