@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "core/Property.h"
-#include "AzureBlobStorageProcessorBase.h"
+#include "AzureBlobStorageBlobProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
 
 template<typename T>
@@ -35,7 +35,7 @@ class AzureBlobStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class FetchAzureBlobStorage final : public AzureBlobStorageProcessorBase {
+class FetchAzureBlobStorage final : public AzureBlobStorageBlobProcessorBase {
  public:
   EXTENSIONAPI static const core::Property RangeStart;
   EXTENSIONAPI static const core::Property RangeLength;
@@ -58,7 +58,7 @@ class FetchAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   }
 
   explicit FetchAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+    : AzureBlobStorageBlobProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
   std::optional<storage::FetchAzureBlobStorageParameters> buildFetchAzureBlobStorageParameters(

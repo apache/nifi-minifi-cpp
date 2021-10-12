@@ -42,16 +42,19 @@ SMART_ENUM(OptionalDeletion,
 struct AzureBlobStorageParameters {
   AzureStorageCredentials credentials;
   std::string container_name;
+};
+
+struct AzureBlobStorageBlobOperationParameters : public AzureBlobStorageParameters {
   std::string blob_name;
 };
 
-using PutAzureBlobStorageParameters = AzureBlobStorageParameters;
+using PutAzureBlobStorageParameters = AzureBlobStorageBlobOperationParameters;
 
-struct DeleteAzureBlobStorageParameters : public AzureBlobStorageParameters {
+struct DeleteAzureBlobStorageParameters : public AzureBlobStorageBlobOperationParameters {
   OptionalDeletion optional_deletion;
 };
 
-struct FetchAzureBlobStorageParameters : public AzureBlobStorageParameters {
+struct FetchAzureBlobStorageParameters : public AzureBlobStorageBlobOperationParameters {
   std::optional<uint64_t> range_start;
   std::optional<uint64_t> range_length;
 };

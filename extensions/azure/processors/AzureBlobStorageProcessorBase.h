@@ -42,7 +42,6 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
   EXTENSIONAPI static const core::Property SASToken;
   EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
   EXTENSIONAPI static const core::Property ConnectionString;
-  EXTENSIONAPI static const core::Property Blob;
   EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
 
   explicit AzureBlobStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)

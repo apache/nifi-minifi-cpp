@@ -65,7 +65,7 @@ void FetchAzureBlobStorage::initialize() {
 std::optional<storage::FetchAzureBlobStorageParameters> FetchAzureBlobStorage::buildFetchAzureBlobStorageParameters(
     core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   storage::FetchAzureBlobStorageParameters params;
-  if (!setCommonStorageParameters(params, context, flow_file)) {
+  if (!setBlobOperationParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 

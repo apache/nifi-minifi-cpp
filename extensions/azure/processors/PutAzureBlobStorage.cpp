@@ -70,7 +70,7 @@ std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::build
     core::ProcessContext &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   storage::PutAzureBlobStorageParameters params;
-  if (!setCommonStorageParameters(params, context, flow_file)) {
+  if (!setBlobOperationParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 

@@ -68,7 +68,7 @@ void DeleteAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessConte
 std::optional<storage::DeleteAzureBlobStorageParameters> DeleteAzureBlobStorage::buildDeleteAzureBlobStorageParameters(
     core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   storage::DeleteAzureBlobStorageParameters params;
-  if (!setCommonStorageParameters(params, context, flow_file)) {
+  if (!setBlobOperationParameters(params, context, flow_file)) {
     return std::nullopt;
   }
   params.optional_deletion = optional_deletion_;
