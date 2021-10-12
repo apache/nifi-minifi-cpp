@@ -68,8 +68,6 @@ class ListAzureDataLakeStorageTestsFixture {
   MockDataLakeStorageClient* mock_data_lake_storage_client_ptr_;
   std::shared_ptr<core::Processor> list_azure_data_lake_storage_;
   std::shared_ptr<core::controller::ControllerServiceNode> azure_storage_cred_service_;
-  std::string failure_output_dir_;
-  std::string success_output_dir_;
 };
 
 namespace {
