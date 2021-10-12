@@ -88,8 +88,26 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(gsl::make_span(buffer_).as_span<const std::byte>());
   }
 
-  std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const minifi::azure::storage::ListAzureBlobStorageParameters& /*params*/) override {
+  std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const minifi::azure::storage::ListAzureBlobStorageParameters& params) override {
+    list_params_ = params;
     std::vector<Azure::Storage::Blobs::Models::BlobItem> result;
+
+    Azure::Storage::Blobs::Models::BlobItem item1;
+    item1.Name = "testdir/item1.log";
+    item1.Details.LastModified = Azure::DateTime::Parse(TEST_TIMESTAMP, Azure::DateTime::DateFormat::Rfc1123);
+    item1.Details.ETag = Azure::ETag("etag1");
+    item1.BlobSize = 128;
+    item1.BlobType = Azure::Storage::Blobs::Models::BlobType::BlockBlob;
+
+    Azure::Storage::Blobs::Models::BlobItem item2;
+    item2.Name = "testdir/item2.log";
+    item2.Details.LastModified = Azure::DateTime::Parse(TEST_TIMESTAMP, Azure::DateTime::DateFormat::Rfc1123);
+    item2.Details.ETag = Azure::ETag("etag2");
+    item2.BlobSize = 256;
+    item2.BlobType = Azure::Storage::Blobs::Models::BlobType::PageBlob;
+
+    result.push_back(item1);
+    result.push_back(item2);
     return result;
   }
 
@@ -103,6 +121,10 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
 
   minifi::azure::storage::FetchAzureBlobStorageParameters getPassedFetchParams() const {
     return fetch_params_;
+  }
+
+  minifi::azure::storage::ListAzureBlobStorageParameters getPassedListParams() const {
+    return list_params_;
   }
 
   bool getContainerCreated() const {
@@ -130,6 +152,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   minifi::azure::storage::PutAzureBlobStorageParameters put_params_;
   minifi::azure::storage::DeleteAzureBlobStorageParameters delete_params_;
   minifi::azure::storage::FetchAzureBlobStorageParameters fetch_params_;
+  minifi::azure::storage::ListAzureBlobStorageParameters list_params_;
   bool container_created_ = false;
   bool upload_fails_ = false;
   bool delete_fails_ = false;

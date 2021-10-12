@@ -244,6 +244,13 @@ class MiNiFi_integration_test():
                     return
         assert False
 
+    def check_minifi_log_does_not_contain(self, line):
+        for container in self.cluster.containers.values():
+            if container.get_engine() == "minifi-cpp":
+                _, logs = self.cluster.get_app_log(container)
+                if logs is not None and 1 <= logs.decode("utf-8").count(line):
+                    assert False
+
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         assert self.cluster.check_query_results(postgresql_container_name, query, number_of_rows, timeout_seconds)
 

@@ -76,3 +76,19 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
     And test blob "test" with the content "#test_data$123$#" is created on Azure blob storage
 
     Then a flowfile with the content "data$" is placed in the monitored directory in less than 60 seconds
+
+  Scenario: A MiNiFi instance can list a container on Azure blob storage
+    Given a ListAzureBlobStorage processor set up to communicate with an Azure blob storage
+    And the "Prefix" property of the ListAzureBlobStorage processor is set to "test"
+    And a LogAttribute processor with the "FlowFiles To Log" property set to "0"
+    And the "success" relationship of the ListAzureBlobStorage processor is connected to the LogAttribute
+    And an Azure storage server is set up
+
+    When all instances start up
+    And test blob "test_1" with the content "data_1" is created on Azure blob storage
+    And test blob "test_2" with the content "data_2" is created on Azure blob storage
+    And test blob "other_test" with the content "data_3" is created on Azure blob storage
+
+    Then the Minifi logs contain the following message: "key:azure.blobname value:test_1" in less than 60 seconds
+    Then the Minifi logs contain the following message: "key:azure.blobname value:test_2" in less than 60 seconds
+    And the Minifi logs do not contain the following message: "key:azure.blobname value:other_test"

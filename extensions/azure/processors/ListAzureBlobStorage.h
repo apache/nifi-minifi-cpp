@@ -30,8 +30,7 @@
 #include "AzureBlobStorageProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
 
-template<typename T>
-class AzureBlobStorageTestsFixture;
+class ListAzureBlobStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
@@ -58,10 +57,10 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  friend class ::AzureBlobStorageTestsFixture<ListAzureBlobStorage>;
+  friend class ::ListAzureBlobStorageTestsFixture;
 
   core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
+    return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
   explicit ListAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
