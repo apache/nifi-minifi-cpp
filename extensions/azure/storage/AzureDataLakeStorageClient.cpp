@@ -111,8 +111,24 @@ std::unique_ptr<io::InputStream> AzureDataLakeStorageClient::fetchFile(const Fet
 }
 
 std::vector<Azure::Storage::Files::DataLake::Models::PathItem> AzureDataLakeStorageClient::listDirectory(const ListAzureDataLakeStorageParameters& params) {
-  auto directory_client = getDirectoryClient(params);
-  return directory_client.ListPaths(params.recurse_subdirectories).Paths;
+  std::vector<Azure::Storage::Files::DataLake::Models::PathItem> result;
+  if (params.directory_name.empty())
+  {
+    resetClientIfNeeded(params.credentials, params.file_system_name, params.number_of_retries);
+    for (auto page_result = client_->ListPaths(params.recurse_subdirectories); page_result.HasPage(); page_result.MoveToNextPage())
+    {
+      result.insert(result.end(), page_result.Paths.begin(), page_result.Paths.end());
+    }
+  }
+  else
+  {
+    auto directory_client = getDirectoryClient(params);
+    for (auto page_result = directory_client.ListPaths(params.recurse_subdirectories); page_result.HasPage(); page_result.MoveToNextPage())
+    {
+      result.insert(result.end(), page_result.Paths.begin(), page_result.Paths.end());
+    }
+  }
+  return result;
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage
