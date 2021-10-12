@@ -38,6 +38,17 @@ struct UploadBlobResult {
   std::string timestamp;
 };
 
+struct ListContainerResultElement {
+  std::string blob_name;
+  std::string primary_uri;
+  std::string etag;
+  int64_t length = 0;
+  std::string timestamp;
+  std::string blob_type;
+};
+
+using ListContainerResult = std::vector<ListContainerResultElement>;
+
 class AzureBlobStorage {
  public:
   explicit AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_storage_client = nullptr);
@@ -45,6 +56,7 @@ class AzureBlobStorage {
   std::optional<UploadBlobResult> uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer);
   bool deleteBlob(const DeleteAzureBlobStorageParameters& params);
   std::optional<uint64_t> fetchBlob(const FetchAzureBlobStorageParameters& params, io::BaseStream& stream);
+  std::optional<ListContainerResult> listContainer(const ListAzureBlobStorageParameters& params);
 
  private:
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureBlobStorage>::getLogger()};

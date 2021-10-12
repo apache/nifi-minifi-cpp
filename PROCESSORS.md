@@ -36,6 +36,7 @@
 - [GetUSBCamera](#getusbcamera)
 - [HashContent](#hashcontent)
 - [InvokeHTTP](#invokehttp)
+- [ListAzureBlobStorage](#listazureblobstorage)
 - [ListAzureDataLakeStorage](#listazuredatalakestorage)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
@@ -944,6 +945,35 @@ In the list below, the names of required properties appear in bold. Any other pr
 |retry|The original FlowFile will be routed on any status code that can be retried (5xx status codes). It will have new attributes detailing the request.|
 |no retry|The original FlowFile will be routed on any status code that should NOT be retried (1xx, 3xx, 4xx status codes). It will have new attributes detailing the request.|
 |failure|The original FlowFile will be routed on any type of connection failure, timeout or general exception. It will have new attributes detailing the request.|
+
+
+## ListAzureBlobStorage
+
+### Description
+
+Lists blobs in an Azure Storage container. Listing details are attached to an empty FlowFile for use with FetchAzureBlobStorage.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Azure Storage Credentials Service|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
+|Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).<br/>**Supports Expression Language: true**|
+|Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|**Container Name**|||Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.<br/>**Supports Expression Language: true**|
+|Listing Strategy|timestamps|none<br/>timestamps|Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.|
+|Prefix|||Search prefix for listing<br/>**Supports Expression Language: true**|
+|SAS Token|||Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|Storage Account Key|||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.<br/>**Supports Expression Language: true**|
+|Storage Account Name|||The storage account name.<br/>**Supports Expression Language: true**|
+|**Use Managed Identity Credentials**|false||If true Managed Identity credentials will be used together with the Storage Account Name for authentication.|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|All FlowFiles that are received are routed to success|
 
 
 ## ListAzureDataLakeStorage

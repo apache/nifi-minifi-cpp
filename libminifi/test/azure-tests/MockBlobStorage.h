@@ -53,8 +53,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return result;
   }
 
-  std::string getUrl(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
-    put_params_ = params;
+  std::string getUrl(const minifi::azure::storage::AzureBlobStorageParameters& /*params*/) override {
     return RETURNED_PRIMARY_URI;
   }
 
@@ -87,6 +86,11 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
 
     buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + size);
     return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(gsl::make_span(buffer_).as_span<const std::byte>());
+  }
+
+  std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const minifi::azure::storage::ListAzureBlobStorageParameters& /*params*/) override {
+    std::vector<Azure::Storage::Blobs::Models::BlobItem> result;
+    return result;
   }
 
   minifi::azure::storage::PutAzureBlobStorageParameters getPassedPutParams() const {
