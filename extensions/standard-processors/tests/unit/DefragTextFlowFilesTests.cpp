@@ -29,61 +29,6 @@ using WriteToFlowFileTestProcessor = org::apache::nifi::minifi::processors::Writ
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;
 using DefragTextFlowFiles = org::apache::nifi::minifi::processors::DefragTextFlowFiles;
 
-class TestableLastPatternFinder : public DefragTextFlowFiles::LastPatternFinder {
- public:
-  explicit TestableLastPatternFinder(const std::regex& regex, DefragTextFlowFiles::PatternLocation pattern_location) : DefragTextFlowFiles::LastPatternFinder(regex, pattern_location) {
-  }
-  using DefragTextFlowFiles::LastPatternFinder::searchContent;
-};
-
-TEST_CASE("FindLastRegexTest1", "[findlastregextest]") {
-  std::regex pattern("<[0-9]+>");
-  TestableLastPatternFinder find_pattern_beginning(pattern, DefragTextFlowFiles::PatternLocation::START_OF_MESSAGE);
-  TestableLastPatternFinder find_pattern_ending(pattern, DefragTextFlowFiles::PatternLocation::END_OF_MESSAGE);
-  {
-    std::string content = "<1> Foo";
-    find_pattern_beginning.searchContent(content);
-    find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
-    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
-    CHECK(find_pattern_beginning.getLastPatternPosition() == 0);
-    CHECK(find_pattern_ending.getLastPatternPosition() == 3);
-  }
-  {
-    std::string content = "<1> Foo<2> Bar<3> Baz<4> Qux";
-    find_pattern_beginning.searchContent(content);
-    find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
-    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
-    CHECK(find_pattern_beginning.getLastPatternPosition() == 21);
-    CHECK(find_pattern_ending.getLastPatternPosition() == 24);
-  }
-}
-
-TEST_CASE("FindLastRegexTest2", "[findlastregextest2]") {
-  std::regex pattern("<[a-z]");
-  TestableLastPatternFinder find_pattern_beginning(pattern, DefragTextFlowFiles::PatternLocation::START_OF_MESSAGE);
-  TestableLastPatternFinder find_pattern_ending(pattern, DefragTextFlowFiles::PatternLocation::END_OF_MESSAGE);
-  {
-    std::string content = "apple<a banana<b strawberry";
-    find_pattern_beginning.searchContent(content);
-    find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
-    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
-    CHECK(find_pattern_beginning.getLastPatternPosition().value() == 14);
-    CHECK(find_pattern_ending.getLastPatternPosition().value() == 16);
-  }
-  {
-    std::string content = "apple<a banana<b strawberry<c pear<d watermelon<e";
-    find_pattern_beginning.searchContent(content);
-    find_pattern_ending.searchContent(content);
-    CHECK(find_pattern_beginning.getLastPatternPosition().has_value());
-    CHECK(find_pattern_ending.getLastPatternPosition().has_value());
-    CHECK(find_pattern_beginning.getLastPatternPosition().value() == 47);
-    CHECK(find_pattern_ending.getLastPatternPosition().value() == 49);
-  }
-}
-
 TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragtextflowfilesnomultilinepatternatstarttest]") {
   TestController testController;
   std::shared_ptr<TestPlan> plan = testController.createPlan();

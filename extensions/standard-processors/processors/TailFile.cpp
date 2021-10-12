@@ -40,7 +40,7 @@
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
-#include "utils/TextFragmentUtils.h"
+#include "TextFragmentUtils.h"
 #include "TailFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"

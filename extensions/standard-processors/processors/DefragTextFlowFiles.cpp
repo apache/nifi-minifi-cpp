@@ -21,7 +21,7 @@
 
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
-#include "utils/TextFragmentUtils.h"
+#include "TextFragmentUtils.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -89,33 +89,6 @@ void DefragTextFlowFiles::onSchedule(core::ProcessContext* context, core::Proces
   }
 }
 
-int64_t DefragTextFlowFiles::LastPatternFinder::process(const std::shared_ptr<io::BaseStream>& stream) {
-  if (nullptr == stream)
-    return 0;
-  std::string content;
-  content.resize(stream->size());
-  const auto ret = stream->read(reinterpret_cast<uint8_t*>(content.data()), stream->size());
-  if (io::isError(ret))
-    return -1;
-  searchContent(content);
-
-  return 0;
-}
-
-void DefragTextFlowFiles::LastPatternFinder::searchContent(const std::string &content) {
-  auto matches_begin = std::sregex_iterator(content.begin(), content.end(), pattern_);
-  auto number_of_matches = std::distance(matches_begin, std::sregex_iterator());
-  if (number_of_matches > 0) {
-    auto last_match = std::next(matches_begin, number_of_matches - 1);
-    last_pattern_location = last_match->position(0);
-    if (pattern_location_ == PatternLocation::END_OF_MESSAGE)
-      last_pattern_location.value() += last_match->length(0);
-  } else {
-    last_pattern_location = std::nullopt;
-  }
-}
-
-
 void DefragTextFlowFiles::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
   gsl_Expects(session);
   std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
@@ -176,6 +149,75 @@ void DefragTextFlowFiles::updateAttributesForSplittedFiles(const std::shared_ptr
   }
 }
 
+namespace {
+class AppendFlowFileToFlowFile : public OutputStreamCallback {
+ public:
+  explicit AppendFlowFileToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file_to_append, PayloadSerializer& serializer)
+      : flow_file_to_append_(flow_file_to_append), serializer_(serializer) {}
+
+  int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
+    return serializer_.serialize(flow_file_to_append_, stream);
+  }
+ private:
+  const std::shared_ptr<core::FlowFile>& flow_file_to_append_;
+  PayloadSerializer& serializer_;
+};
+
+void updateAppendedAttributes(const std::shared_ptr<core::FlowFile>& buffered_ff) {
+  std::string base_name, post_name, offset_str;
+  if (!buffered_ff->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
+    return;
+  if (!buffered_ff->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
+    return;
+  if (!buffered_ff->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
+    return;
+  size_t fragment_offset = std::stoi(offset_str);
+
+  std::string buffer_new_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset, buffered_ff->getSize());
+  buffered_ff->setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
+}
+
+class LastPatternFinder : public InputStreamCallback {
+ public:
+  LastPatternFinder(const std::regex &pattern, DefragTextFlowFiles::PatternLocation pattern_location) : pattern_(pattern), pattern_location_(pattern_location) {}
+
+  ~LastPatternFinder() override = default;
+
+  int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
+    if (nullptr == stream)
+      return 0;
+    std::string content;
+    content.resize(stream->size());
+    const auto ret = stream->read(reinterpret_cast<uint8_t *>(content.data()), stream->size());
+    if (io::isError(ret))
+      return -1;
+    searchContent(content);
+
+    return 0;
+  }
+
+  const std::optional<size_t> &getLastPatternPosition() const { return last_pattern_location; }
+
+ protected:
+  void searchContent(const std::string &content) {
+    auto matches_begin = std::sregex_iterator(content.begin(), content.end(), pattern_);
+    auto number_of_matches = std::distance(matches_begin, std::sregex_iterator());
+    if (number_of_matches > 0) {
+      auto last_match = std::next(matches_begin, number_of_matches - 1);
+      last_pattern_location = last_match->position(0);
+      if (pattern_location_ == DefragTextFlowFiles::PatternLocation::END_OF_MESSAGE)
+        last_pattern_location.value() += last_match->length(0);
+    } else {
+      last_pattern_location = std::nullopt;
+    }
+  }
+
+  const std::regex &pattern_;
+  DefragTextFlowFiles::PatternLocation pattern_location_;
+  std::optional<size_t> last_pattern_location;
+};
+}  // namespace
+
 bool DefragTextFlowFiles::splitFlowFileAtLastPattern(core::ProcessSession *session,
                                                      const std::shared_ptr<core::FlowFile> &original_flow_file,
                                                      std::shared_ptr<core::FlowFile> &split_before_last_pattern,
@@ -211,35 +253,6 @@ std::set<std::shared_ptr<core::Connectable>> DefragTextFlowFiles::getOutGoingCon
   }
   return result;
 }
-
-namespace {
-class AppendFlowFileToFlowFile : public OutputStreamCallback {
- public:
-  explicit AppendFlowFileToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file_to_append, PayloadSerializer& serializer)
-      : flow_file_to_append_(flow_file_to_append), serializer_(serializer) {}
-
-  int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
-    return serializer_.serialize(flow_file_to_append_, stream);
-  }
- private:
-  const std::shared_ptr<core::FlowFile>& flow_file_to_append_;
-  PayloadSerializer& serializer_;
-};
-
-void updateAppendedAttributes(const std::shared_ptr<core::FlowFile>& buffered_ff) {
-  std::string base_name, post_name, offset_str;
-  if (!buffered_ff->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
-    return;
-  if (!buffered_ff->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
-    return;
-  if (!buffered_ff->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
-    return;
-  size_t fragment_offset = std::stoi(offset_str);
-
-  std::string buffer_new_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset, buffered_ff->getSize());
-  buffered_ff->setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
-}
-}  // namespace
 
 void DefragTextFlowFiles::Buffer::append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append) {
   if (!empty()) {

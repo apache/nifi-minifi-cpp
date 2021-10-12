@@ -56,21 +56,6 @@ class DefragTextFlowFiles : public core::Processor {
              (START_OF_MESSAGE, "Start of Message")
   )
 
-  class LastPatternFinder : public InputStreamCallback {
-   public:
-    LastPatternFinder(const std::regex& pattern, PatternLocation pattern_location) : pattern_(pattern), pattern_location_(pattern_location) {}
-    ~LastPatternFinder() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-
-    const std::optional<size_t>& getLastPatternPosition() const { return last_pattern_location; }
-
-   protected:
-    void searchContent(const std::string& content);
-    const std::regex& pattern_;
-    PatternLocation pattern_location_;
-    std::optional<size_t> last_pattern_location;
-  };
-
  protected:
   class Buffer {
    public:
