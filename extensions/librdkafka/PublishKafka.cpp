@@ -96,7 +96,7 @@ const core::Property PublishKafka::AttributeNameRegex("Attributes to Send as Hea
 const core::Property PublishKafka::QueueBufferMaxTime(
         core::PropertyBuilder::createProperty("Queue Buffering Max Time")
         ->isRequired(false)
-        ->withDefaultValue<core::TimePeriodValue>("10 sec")
+        ->withDefaultValue<core::TimePeriodValue>("5 millis")
         ->withDescription("Delay to wait for messages in the producer queue to accumulate before constructing message batches")
         ->build());
 const core::Property PublishKafka::QueueBufferMaxSize(
