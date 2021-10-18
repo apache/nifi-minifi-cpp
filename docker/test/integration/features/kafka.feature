@@ -83,6 +83,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
+    # We fallback to the flowfile's uuid as message key if the Kafka Key property is not set
     And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
 
   Scenario: PublishKafka sends can use SSL connect with SSL Context Service
@@ -109,6 +111,8 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
+    # We fallback to the flowfile's uuid as message key if the Kafka Key property is not set
     And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
 
   Scenario: MiNiFi consumes data from a kafka topic
