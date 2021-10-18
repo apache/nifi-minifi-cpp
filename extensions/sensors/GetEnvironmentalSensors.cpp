@@ -68,14 +68,14 @@ void GetEnvironmentalSensors::initialize() {
 void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   SensorBase::onSchedule(context, sessionFactory);
 
-  humidity_sensor_ = RTHumidity::createHumidity(settings_.get());
+  humidity_sensor_ = RTHumidity::createHumidity(&settings_.value());
   if (humidity_sensor_) {
     humidity_sensor_->humidityInit();
   } else {
     throw std::runtime_error("RTHumidity could not be initialized");
   }
 
-  pressure_sensor_ = RTPressure::createPressure(settings_.get());
+  pressure_sensor_ = RTPressure::createPressure(&settings_.value());
   if (pressure_sensor_) {
     pressure_sensor_->pressureInit();
   } else {

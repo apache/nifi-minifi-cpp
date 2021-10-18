@@ -18,17 +18,12 @@
 #pragma once
 
 #include <memory>
-#include <regex>
 #include <string>
 #include <utility>
 
-#include "utils/ByteArrayCallback.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
-#include "core/Property.h"
-#include "utils/Id.h"
+#include "io/StreamPipe.h"
 #include "RTIMULib.h"
 #include "RTMath.h"
 
@@ -73,7 +68,7 @@ class SensorBase : public core::Processor {
   };
 
  protected:
-  std::unique_ptr<RTIMUSettings> settings_;
+  std::optional<RTIMUSettings> settings_;
   std::unique_ptr<RTIMU> imu_;
   std::shared_ptr<logging::Logger> logger_;
 };
