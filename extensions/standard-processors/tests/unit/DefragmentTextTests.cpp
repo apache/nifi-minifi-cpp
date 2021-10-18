@@ -29,7 +29,7 @@ using WriteToFlowFileTestProcessor = org::apache::nifi::minifi::processors::Writ
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;
 using DefragmentText = org::apache::nifi::minifi::processors::DefragmentText;
 
-TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragtextflowfilesnomultilinepatternatstarttest]") {
+TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragmenttextnomultilinepatternatstarttest]") {
   TestController testController;
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
@@ -54,7 +54,22 @@ TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragtextflowfi
   CHECK(read_from_flow_file->getContent() == "<2> Bar");
 }
 
-TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtEndTest", "[defragtextflowfilesnomultilinepatternatendtest]") {
+TEST_CASE("DefragmentTextEmptyPattern", "[defragmenttextemptypattern]") {
+  TestController testController;
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
+      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
+      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
+  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
+      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", DefragmentText::Success, true));
+  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "");
+  plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
+
+  REQUIRE_THROWS_WITH(testController.runSession(plan), "Process Schedule Operation: Pattern property missing or invalid");
+}
+
+TEST_CASE("DefragmentTextNoMultilinePatternAtEndTest", "[defragmenttextnomultilinepatternatendtest]") {
   TestController testController;
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(

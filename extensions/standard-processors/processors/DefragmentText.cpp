@@ -33,7 +33,7 @@ const core::Relationship DefragmentText::Self("__self__", "Marks the FlowFile to
 const core::Property DefragmentText::Pattern(
     core::PropertyBuilder::createProperty("Pattern")
         ->withDescription("A regular expression to match at the start or end of messages.")
-        ->withDefaultValue("")->isRequired(true)->build());
+        ->isRequired(true)->build());
 
 const core::Property DefragmentText::PatternLoc(
     core::PropertyBuilder::createProperty("Pattern Location")->withDescription("Where to look for the pattern.")
@@ -51,15 +51,12 @@ const core::Property DefragmentText::MaxBufferAge(
         withDescription("The maximum age of a buffer after which the buffer will be transferred to failure. Expected format is <duration> <time unit>")->build());
 
 void DefragmentText::initialize() {
-  std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
-
   setSupportedRelationships({Success, Failure});
   setSupportedProperties({Pattern, PatternLoc, MaxBufferAge, MaxBufferSize});
 }
 
 void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
   gsl_Expects(context);
-  std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
 
   std::string max_buffer_age_str;
   if (context->getProperty(MaxBufferAge.getName(), max_buffer_age_str)) {
@@ -67,7 +64,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
     uint64_t max_buffer_age;
     if (core::Property::StringToTime(max_buffer_age_str, max_buffer_age, unit) && core::Property::ConvertTimeUnitToMS(max_buffer_age, unit, max_buffer_age)) {
       buffer_.setMaxAge(max_buffer_age);
-      logger_->log_trace("The Buffer maximum age is configured to be %d ms", max_buffer_age);
+      logger_->log_trace("The Buffer maximum age is configured to be %" PRIu64 " ms", max_buffer_age);
     }
   }
 
@@ -76,16 +73,18 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
     uint64_t max_buffer_size = core::DataSizeValue(max_buffer_size_str).getValue();
     if (max_buffer_size > 0) {
       buffer_.setMaxSize(max_buffer_size);
-      logger_->log_trace("The Buffer maximum size is configured to be %d B", max_buffer_size);
+      logger_->log_trace("The Buffer maximum size is configured to be %" PRIu64 " B", max_buffer_size);
     }
   }
 
   context->getProperty(PatternLoc.getName(), pattern_location_);
 
   std::string pattern_str;
-  if (context->getProperty(Pattern.getName(), pattern_str)) {
+  if (context->getProperty(Pattern.getName(), pattern_str) && pattern_str != "") {
     pattern_ = std::regex(pattern_str);
     logger_->log_trace("The Pattern is configured to be %s", pattern_str);
+  } else {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Pattern property missing or invalid");
   }
 }
 
