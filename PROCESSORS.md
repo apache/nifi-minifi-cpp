@@ -13,7 +13,7 @@
 - [ConsumeJournald](#consumejournald)
 - [ConsumeKafka](#consumekafka)
 - [ConsumeMQTT](#consumemqtt)
-- [DefragTextFlowFiles](#defragtextflowfiles)
+- [DefragmentText](#defragmenttext)
 - [DeleteS3Object](#deletes3object)
 - [ExecuteProcess](#executeprocess)
 - [ExecutePythonProcessor](#executepythonprocessor)
@@ -296,11 +296,11 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |success|FlowFiles that are sent successfully to the destination are transferred to this relationship|
 
-## DefragTextFlowFiles
+## DefragmentText
 
 ### Description
 
-DefragTextFlowFiles splits and merges incoming flowfiles so cohesive messages are not split between them
+DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.

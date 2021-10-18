@@ -31,9 +31,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-class DefragTextFlowFiles : public core::Processor {
+class DefragmentText : public core::Processor {
  public:
-  explicit DefragTextFlowFiles(const std::string& name,  const utils::Identifier& uuid = {})
+  explicit DefragmentText(const std::string& name,  const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
   EXTENSIONAPI static const core::Relationship Self;
@@ -83,7 +83,7 @@ class DefragTextFlowFiles : public core::Processor {
   std::regex pattern_;
   PatternLocation pattern_location_;
 
-  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<DefragTextFlowFiles>::getLogger();
+  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<DefragmentText>::getLogger();
   core::FlowFileStore flow_file_store_;
   Buffer buffer_;
 
@@ -94,10 +94,10 @@ class DefragTextFlowFiles : public core::Processor {
                                   std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                   std::shared_ptr<core::FlowFile> &split_after_last_pattern) const;
 
-  void updateAttributesForSplittedFiles(const std::shared_ptr<const core::FlowFile> &original_flow_file,
-                                        const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
-                                        const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
-                                        const size_t split_position) const;
+  void updateAttributesForSplitFiles(const std::shared_ptr<const core::FlowFile> &original_flow_file,
+                                     const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
+                                     const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
+                                     const size_t split_position) const;
 };
 
 

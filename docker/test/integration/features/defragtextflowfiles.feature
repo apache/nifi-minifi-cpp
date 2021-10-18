@@ -1,17 +1,17 @@
-Feature: DefragTextFlowFiles can defragment fragmented data from TailFile
+Feature: DefragmentText can defragment fragmented data from TailFile
   Background:
     Given the content of "/tmp/output" is monitored
 
-  Scenario Outline: DefragTextFlowFiles merges splitted messages from TailFile
+  Scenario Outline: DefragmentText merges split messages from TailFile
     Given a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
     And the "Initial Start Position" property of the TailFile processor is set to "Beginning of File"
     And the "Input Delimiter" property of the TailFile processor is set to "%"
     And a file with filename "test_file.log" and content "<input>" is present in "/tmp/input"
-    And a DefragTextFlowFiles processor with the "Pattern" property set to "<pattern>"
-    And the "Pattern Location" property of the DefragTextFlowFiles processor is set to "<pattern location>"
+    And a DefragmentText processor with the "Pattern" property set to "<pattern>"
+    And the "Pattern Location" property of the DefragmentText processor is set to "<pattern location>"
     And a PutFile processor with the name "SuccessPut" and the "Directory" property set to "/tmp/output"
-    And the "success" relationship of the TailFile processor is connected to the DefragTextFlowFiles
-    And the "success" relationship of the DefragTextFlowFiles processor is connected to the SuccessPut
+    And the "success" relationship of the TailFile processor is connected to the DefragmentText
+    And the "success" relationship of the DefragmentText processor is connected to the SuccessPut
 
 
     When all instances start up

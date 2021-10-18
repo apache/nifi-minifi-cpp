@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "DefragTextFlowFiles.h"
+#include "DefragmentText.h"
 
 #include <vector>
 
@@ -26,38 +26,38 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship DefragTextFlowFiles::Success("success", "Flowfiles that have no fragmented messages in them");
-const core::Relationship DefragTextFlowFiles::Failure("failure", "Flowfiles that failed the defragmentation process");
-const core::Relationship DefragTextFlowFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
+const core::Relationship DefragmentText::Success("success", "Flowfiles that have no fragmented messages in them");
+const core::Relationship DefragmentText::Failure("failure", "Flowfiles that failed the defragmentation process");
+const core::Relationship DefragmentText::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
-const core::Property DefragTextFlowFiles::Pattern(
+const core::Property DefragmentText::Pattern(
     core::PropertyBuilder::createProperty("Pattern")
         ->withDescription("A regular expression to match at the start or end of messages.")
         ->withDefaultValue("")->isRequired(true)->build());
 
-const core::Property DefragTextFlowFiles::PatternLoc(
+const core::Property DefragmentText::PatternLoc(
     core::PropertyBuilder::createProperty("Pattern Location")->withDescription("Where to look for the pattern.")
         ->withAllowableValues(PatternLocation::values())
         ->withDefaultValue(toString(PatternLocation::START_OF_MESSAGE))->build());
 
 
-const core::Property DefragTextFlowFiles::MaxBufferSize(
+const core::Property DefragmentText::MaxBufferSize(
     core::PropertyBuilder::createProperty("Max Buffer Size")
         ->withDescription("The maximum buffer size, if the buffer exceeds this, it will be transferred to failure. Expected format is <size> <data unit>")
         ->withType(core::StandardValidators::get().DATA_SIZE_VALIDATOR)->build());
 
-const core::Property DefragTextFlowFiles::MaxBufferAge(
+const core::Property DefragmentText::MaxBufferAge(
     core::PropertyBuilder::createProperty("Max Buffer Age")->
         withDescription("The maximum age of a buffer after which the buffer will be transferred to failure. Expected format is <duration> <time unit>")->build());
 
-void DefragTextFlowFiles::initialize() {
+void DefragmentText::initialize() {
   std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
 
   setSupportedRelationships({Success, Failure});
   setSupportedProperties({Pattern, PatternLoc, MaxBufferAge, MaxBufferSize});
 }
 
-void DefragTextFlowFiles::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
+void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
   gsl_Expects(context);
   std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
 
@@ -89,7 +89,7 @@ void DefragTextFlowFiles::onSchedule(core::ProcessContext* context, core::Proces
   }
 }
 
-void DefragTextFlowFiles::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
+void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
   gsl_Expects(session);
   std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
   auto flowFiles = flow_file_store_.getNewFlowFiles();
@@ -103,7 +103,7 @@ void DefragTextFlowFiles::onTrigger(core::ProcessContext*, core::ProcessSession*
   }
 }
 
-void DefragTextFlowFiles::processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& next_fragment) {
+void DefragmentText::processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& next_fragment) {
   if (!next_fragment)
     return;
   std::shared_ptr<core::FlowFile> split_before_last_pattern;
@@ -124,10 +124,10 @@ void DefragTextFlowFiles::processNextFragment(core::ProcessSession *session, con
 }
 
 
-void DefragTextFlowFiles::updateAttributesForSplittedFiles(const std::shared_ptr<const core::FlowFile> &original_flow_file,
-                                                           const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
-                                                           const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
-                                                           const size_t split_position) const {
+void DefragmentText::updateAttributesForSplitFiles(const std::shared_ptr<const core::FlowFile> &original_flow_file,
+                                                   const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
+                                                   const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
+                                                   const size_t split_position) const {
   std::string base_name, post_name, offset_str;
   if (!original_flow_file->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
     return;
@@ -179,7 +179,7 @@ void updateAppendedAttributes(const std::shared_ptr<core::FlowFile>& buffered_ff
 
 class LastPatternFinder : public InputStreamCallback {
  public:
-  LastPatternFinder(const std::regex &pattern, DefragTextFlowFiles::PatternLocation pattern_location) : pattern_(pattern), pattern_location_(pattern_location) {}
+  LastPatternFinder(const std::regex &pattern, DefragmentText::PatternLocation pattern_location) : pattern_(pattern), pattern_location_(pattern_location) {}
 
   ~LastPatternFinder() override = default;
 
@@ -205,7 +205,7 @@ class LastPatternFinder : public InputStreamCallback {
     if (number_of_matches > 0) {
       auto last_match = std::next(matches_begin, number_of_matches - 1);
       last_pattern_location = last_match->position(0);
-      if (pattern_location_ == DefragTextFlowFiles::PatternLocation::END_OF_MESSAGE)
+      if (pattern_location_ == DefragmentText::PatternLocation::END_OF_MESSAGE)
         last_pattern_location.value() += last_match->length(0);
     } else {
       last_pattern_location = std::nullopt;
@@ -213,12 +213,12 @@ class LastPatternFinder : public InputStreamCallback {
   }
 
   const std::regex &pattern_;
-  DefragTextFlowFiles::PatternLocation pattern_location_;
+  DefragmentText::PatternLocation pattern_location_;
   std::optional<size_t> last_pattern_location;
 };
 }  // namespace
 
-bool DefragTextFlowFiles::splitFlowFileAtLastPattern(core::ProcessSession *session,
+bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
                                                      const std::shared_ptr<core::FlowFile> &original_flow_file,
                                                      std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                                      std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
@@ -231,7 +231,7 @@ bool DefragTextFlowFiles::splitFlowFileAtLastPattern(core::ProcessSession *sessi
     if (*split_position != original_flow_file->getSize()) {
       split_after_last_pattern = session->clone(original_flow_file, *split_position, original_flow_file->getSize() - *split_position);
     }
-    updateAttributesForSplittedFiles(original_flow_file, split_before_last_pattern, split_after_last_pattern, *split_position);
+    updateAttributesForSplitFiles(original_flow_file, split_before_last_pattern, split_after_last_pattern, *split_position);
     return true;
   } else {
     split_before_last_pattern = session->clone(original_flow_file);
@@ -240,13 +240,13 @@ bool DefragTextFlowFiles::splitFlowFileAtLastPattern(core::ProcessSession *sessi
   }
 }
 
-void DefragTextFlowFiles::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
+void DefragmentText::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   if (!flowFile)
     return;
   flow_file_store_.put(flowFile);
 }
 
-std::set<std::shared_ptr<core::Connectable>> DefragTextFlowFiles::getOutGoingConnections(const std::string &relationship) const {
+std::set<std::shared_ptr<core::Connectable>> DefragmentText::getOutGoingConnections(const std::string &relationship) const {
   auto result = core::Connectable::getOutGoingConnections(relationship);
   if (relationship == Self.getName()) {
     result.insert(std::static_pointer_cast<core::Connectable>(std::const_pointer_cast<core::Processor>(shared_from_this())));
@@ -254,7 +254,7 @@ std::set<std::shared_ptr<core::Connectable>> DefragTextFlowFiles::getOutGoingCon
   return result;
 }
 
-void DefragTextFlowFiles::Buffer::append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append) {
+void DefragmentText::Buffer::append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append) {
   if (!empty()) {
     if (flow_file_to_append) {
       auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
@@ -276,27 +276,27 @@ void DefragTextFlowFiles::Buffer::append(core::ProcessSession* session, const st
   }
 }
 
-bool DefragTextFlowFiles::Buffer::maxSizeReached() const {
+bool DefragmentText::Buffer::maxSizeReached() const {
   return max_size_.has_value()
       && (buffered_flow_file_ != nullptr)
       && (max_size_.value() < buffered_flow_file_->getSize());
 }
 
-bool DefragTextFlowFiles::Buffer::maxAgeReached() const {
+bool DefragmentText::Buffer::maxAgeReached() const {
   return max_age_.has_value()
       && (buffered_flow_file_ != nullptr)
       && (creation_time_ + max_age_.value() < std::chrono::system_clock::now());
 }
 
-void DefragTextFlowFiles::Buffer::setMaxAge(uint64_t max_age) {
+void DefragmentText::Buffer::setMaxAge(uint64_t max_age) {
   max_age_ = std::chrono::milliseconds(max_age);
 }
 
-void DefragTextFlowFiles::Buffer::setMaxSize(size_t max_size) {
+void DefragmentText::Buffer::setMaxSize(size_t max_size) {
   max_size_ = max_size;
 }
 
-void DefragTextFlowFiles::Buffer::flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
+void DefragmentText::Buffer::flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
                      const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
   if (!empty()) {
     session->add(buffered_flow_file_);
@@ -306,12 +306,12 @@ void DefragTextFlowFiles::Buffer::flushAndReplace(core::ProcessSession* session,
   creation_time_ = std::chrono::system_clock::now();
 }
 
-void DefragTextFlowFiles::Buffer::store(core::ProcessSession* session) {
+void DefragmentText::Buffer::store(core::ProcessSession* session) {
   if (!empty())
     session->transfer(buffered_flow_file_, Self);
 }
 
-bool DefragTextFlowFiles::Buffer::canBeAppended(const std::shared_ptr<core::FlowFile> &flow_file_to_append) const {
+bool DefragmentText::Buffer::canBeAppended(const std::shared_ptr<core::FlowFile> &flow_file_to_append) const {
   if (empty() || flow_file_to_append == nullptr)
     return true;
   std::string current_base_name, current_post_name, current_offset_str;
@@ -341,7 +341,7 @@ bool DefragTextFlowFiles::Buffer::canBeAppended(const std::shared_ptr<core::Flow
   return true;
 }
 
-REGISTER_RESOURCE(DefragTextFlowFiles, "DefragTextFlowFiles splits and merges incoming flowfiles so cohesive messages are not split between them");
+REGISTER_RESOURCE(DefragmentText, "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them");
 
 
 }  // namespace org::apache::nifi::minifi::processors
