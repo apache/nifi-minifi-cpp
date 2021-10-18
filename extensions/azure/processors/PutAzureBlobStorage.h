@@ -100,6 +100,14 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
     , azure_blob_storage_(std::move(blob_storage_client)) {
   }
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   storage::AzureStorageCredentials getAzureCredentialsFromProperties(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const;

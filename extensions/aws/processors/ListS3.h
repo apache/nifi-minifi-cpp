@@ -73,10 +73,6 @@ class ListS3 : public S3Processor {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
   struct ListingState {
     int64_t listed_key_timestamp = 0;
     std::vector<std::string> listed_keys;
