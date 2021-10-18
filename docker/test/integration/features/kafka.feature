@@ -9,15 +9,41 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
   Scenario: A MiNiFi instance transfers data to a kafka broker
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
+    And a UpdateAttribute processor
+    And these processor properties are set:
+      | processor name  | property name          | property value                        |
+      | UpdateAttribute | kafka_require_num_acks | 1                                     |
+      | UpdateAttribute | kafka_message_key      | unique_message_key_123                |
     And a PublishKafka processor set up to communicate with a kafka broker instance
+    And these processor properties are set:
+      | processor name | property name          | property value                         |
+      | PublishKafka   | Topic Name             | test                                   |
+      | PublishKafka   | Delivery Guarantee     | ${kafka_require_num_acks}              |
+      | PublishKafka   | Request Timeout        | 12 s                                   |
+      | PublishKafka   | Message Timeout        | 13 s                                   |
+      | PublishKafka   | Known Brokers          | kafka-broker:${literal(9000):plus(92)} |
+      | PublishKafka   | Client Name            | client_no_${literal(6):multiply(7)}    |
+      | PublishKafka   | Kafka Key              | ${kafka_message_key}                   |
+      | PublishKafka   | retry.backoff.ms       | ${literal(2):multiply(25):multiply(3)} |
+      | PublishKafka   | Message Key Field      | kafka.key                              |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And the "success" relationship of the GetFile processor is connected to the PublishKafka
+    And the "success" relationship of the GetFile processor is connected to the UpdateAttribute
+    And the "success" relationship of the UpdateAttribute processor is connected to the PublishKafka
     And the "success" relationship of the PublishKafka processor is connected to the PutFile
 
     And a kafka broker is set up in correspondence with the PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the Minifi logs contain the following message: " is 'test'" in less than 60 seconds
+    And the Minifi logs contain the following message: "PublishKafka: request.required.acks [1]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: request.timeout.ms [12000]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: message.timeout.ms [13000]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: bootstrap.servers [kafka-broker:9092]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: client.id [client_no_42]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: Message Key [unique_message_key_123]" in less than 10 seconds
+    And the Minifi logs contain the following message: "PublishKafka: DynamicProperty: [retry.backoff.ms] -> [150]" in less than 10 seconds
+    And the Minifi logs contain the following message: "The Message Key Field property is set. This property is DEPRECATED and has no effect; please use Kafka Key instead." in less than 10 seconds
 
   Scenario: PublishKafka sends flowfiles to failure when the broker is not available
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -58,6 +84,9 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
+    # We fallback to the flowfile's uuid as message key if the Kafka Key property is not set
+    And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
+
   Scenario: PublishKafka sends can use SSL connect with SSL Context Service
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
@@ -82,6 +111,9 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
+    # We fallback to the flowfile's uuid as message key if the Kafka Key property is not set
+    And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
 
   Scenario: MiNiFi consumes data from a kafka topic
     Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
