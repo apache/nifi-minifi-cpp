@@ -110,7 +110,7 @@ void DefragmentText::processNextFragment(core::ProcessSession *session, const st
   bool found_pattern = splitFlowFileAtLastPattern(session, next_fragment, split_before_last_pattern,
                                                   split_after_last_pattern);
   if (!buffer_.append(session, split_before_last_pattern)) {
-    buffer_.flushAndReplace(session, Failure, split_before_last_pattern);
+    buffer_.flushAndReplace(session, Failure, nullptr);
     session->transfer(split_before_last_pattern, Failure);
   }
   if (found_pattern) {
@@ -262,6 +262,7 @@ bool DefragmentText::Buffer::append(core::ProcessSession* session, const std::sh
       AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, serializer);
       session->append(buffered_flow_file_, &append_flow_file_to_flow_file);
       updateAppendedAttributes(buffered_flow_file_);
+      session->transfer(buffered_flow_file_, Self);
       session->remove(flow_file_to_append);
     }
   } else {
