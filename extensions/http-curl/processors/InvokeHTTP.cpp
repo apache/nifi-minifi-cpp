@@ -163,6 +163,8 @@ void InvokeHTTP::initialize() {
   properties.insert(DisablePeerVerification);
   properties.insert(AlwaysOutputResponse);
   properties.insert(FollowRedirects);
+  properties.insert(PropPutOutputAttributes);
+  properties.insert(PenalizeOnNoRetry);
 
   setSupportedProperties(properties);
   // Set the supported relationships
@@ -364,6 +366,9 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     logger_->log_trace("InvokeHTTP -- curl successful");
 
     bool putToAttribute = !IsNullOrEmpty(put_attribute_name_);
+    if (putToAttribute) {
+      logger_->log_debug("Adding http response body to flow file attribute %s", put_attribute_name_);
+    }
 
     const std::vector<char> &response_body = client.getResponseBody();
     const std::vector<std::string> &response_headers = client.getHeaders();
