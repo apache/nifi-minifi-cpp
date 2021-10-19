@@ -317,7 +317,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|Flowfiles that have no fragmented messages in them|
-|original|The FlowFiles that were used to create the defragmented flowfiles|
 |failure|Flowfiles that failed the defragmentation process|
 
 
