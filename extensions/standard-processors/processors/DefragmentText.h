@@ -59,7 +59,7 @@ class DefragmentText : public core::Processor {
  protected:
   class Buffer {
    public:
-    void append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append);
+    bool append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append);
     bool maxSizeReached() const;
     bool maxAgeReached() const;
     void setMaxAge(uint64_t max_age);
@@ -67,12 +67,12 @@ class DefragmentText : public core::Processor {
     void flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
                          const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
 
-    bool canBeAppended(const std::shared_ptr<core::FlowFile>& flow_file_to_append) const;
     bool empty() const { return buffered_flow_file_ == nullptr; }
 
-    void store(core::ProcessSession* session);
-
    private:
+    void store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
+    bool canBeAppended(const std::shared_ptr<core::FlowFile>& flow_file_to_append) const;
+
     std::shared_ptr<core::FlowFile> buffered_flow_file_;
     std::chrono::time_point<std::chrono::system_clock> creation_time_;
     std::optional<std::chrono::milliseconds> max_age_;
