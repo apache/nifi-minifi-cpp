@@ -144,7 +144,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
 
   // Set Processor Maximum Concurrent Tasks
-  void setMaxConcurrentTasks(const uint8_t tasks) override;
+  void setMaxConcurrentTasks(uint8_t tasks) override;
 
   // Overriding to yield true can be used to indicate that the Processor is not safe for concurrent execution
   // of its onTrigger() method. By default, Processors are assumed to be safe for concurrent execution.
