@@ -59,7 +59,8 @@ class DefragmentText : public core::Processor {
  protected:
   class Buffer {
    public:
-    bool append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append);
+    bool isCompatible(const std::shared_ptr<core::FlowFile>& flow_file_to_append) const;
+    void append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append);
     bool maxSizeReached() const;
     bool maxAgeReached() const;
     void setMaxAge(uint64_t max_age);
@@ -71,7 +72,6 @@ class DefragmentText : public core::Processor {
 
    private:
     void store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
-    bool canBeAppended(const std::shared_ptr<core::FlowFile>& flow_file_to_append) const;
 
     std::shared_ptr<core::FlowFile> buffered_flow_file_;
     std::chrono::time_point<std::chrono::system_clock> creation_time_;

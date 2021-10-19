@@ -19,7 +19,9 @@
 #include "TestBase.h"
 #include "WriteToFlowFileTestProcessor.h"
 #include "ReadFromFlowFileTestProcessor.h"
+#include "UpdateAttribute.h"
 #include "DefragmentText.h"
+#include "TextFragmentUtils.h"
 #include "utils/TestUtils.h"
 #include "serialization/PayloadSerializer.h"
 #include "serialization/FlowFileSerializer.h"
@@ -27,6 +29,7 @@
 
 using WriteToFlowFileTestProcessor = org::apache::nifi::minifi::processors::WriteToFlowFileTestProcessor;
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;
+using UpdateAttribute = org::apache::nifi::minifi::processors::UpdateAttribute;
 using DefragmentText = org::apache::nifi::minifi::processors::DefragmentText;
 
 TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragmenttextnomultilinepatternatstarttest]") {
@@ -43,15 +46,15 @@ TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragmenttextno
 
   write_to_flow_file->setContent("<1> Foo");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "");
+  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
   write_to_flow_file->setContent("<2> Bar");
   plan->reset();
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "<1> Foo");
+  CHECK(read_from_flow_file->readFlowFileWithContent("<1> Foo"));
   write_to_flow_file->setContent("<3> Baz");
   plan->reset();
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "<2> Bar");
+  CHECK(read_from_flow_file->readFlowFileWithContent("<2> Bar"));
 }
 
 TEST_CASE("DefragmentTextEmptyPattern", "[defragmenttextemptypattern]") {
@@ -83,15 +86,15 @@ TEST_CASE("DefragmentTextNoMultilinePatternAtEndTest", "[defragmenttextnomultili
 
   write_to_flow_file->setContent("Foo <1>");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "Foo <1>");
+  CHECK(read_from_flow_file->readFlowFileWithContent("Foo <1>"));
   write_to_flow_file->setContent("Bar <2>");
   plan->reset();
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "Bar <2>");
+  CHECK(read_from_flow_file->readFlowFileWithContent("Bar <2>"));
   write_to_flow_file->setContent("Baz <3>");
   plan->reset();
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "Baz <3>");
+  CHECK(read_from_flow_file->readFlowFileWithContent("Baz <3>"));
 }
 
 TEST_CASE("DefragmentTextMultilinePatternAtStartTest", "[defragmenttextmultilinepatternatstarttest]") {
@@ -108,12 +111,12 @@ TEST_CASE("DefragmentTextMultilinePatternAtStartTest", "[defragmenttextmultiline
 
   write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "apple<1> banana<2> cherry");
+  CHECK(read_from_flow_file->readFlowFileWithContent("apple<1> banana<2> cherry"));
 
   write_to_flow_file->setContent("fruit<4> elderberry<5> fig<6> grapefruit");
   plan->reset();
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "<3> dragon fruit<4> elderberry<5> fig");
+  CHECK(read_from_flow_file->readFlowFileWithContent("<3> dragon fruit<4> elderberry<5> fig"));
 }
 
 TEST_CASE("DefragmentTextMultilinePatternAtEndTest", "[defragmenttextmultilinepatternatendtest]") {
@@ -130,12 +133,12 @@ TEST_CASE("DefragmentTextMultilinePatternAtEndTest", "[defragmenttextmultilinepa
 
   write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "apple<1> banana<2> cherry<3>");
+  CHECK(read_from_flow_file->readFlowFileWithContent("apple<1> banana<2> cherry<3>"));
 
   write_to_flow_file->setContent("fruit<4> elderberry<5> fig<6> grapefruit");
   plan->reset();
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == " dragon fruit<4> elderberry<5> fig<6>");
+  CHECK(read_from_flow_file->readFlowFileWithContent(" dragon fruit<4> elderberry<5> fig<6>"));
 }
 
 
@@ -154,13 +157,13 @@ TEST_CASE("DefragmentTextTimeoutTest", "[defragmenttexttimeottest]") {
 
   write_to_flow_file->setContent("Message");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "");
+  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
 
   plan->reset();
   write_to_flow_file->setContent("");
   std::this_thread::sleep_for(std::chrono::milliseconds(300));
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "Message");
+  CHECK(read_from_flow_file->readFlowFileWithContent("Message"));
 }
 
 TEST_CASE("DefragmentTextNoTimeoutTest", "[defragmenttextnotimeottest]") {
@@ -178,13 +181,13 @@ TEST_CASE("DefragmentTextNoTimeoutTest", "[defragmenttextnotimeottest]") {
 
   write_to_flow_file->setContent("Message");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "");
+  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
 
   plan->reset();
   write_to_flow_file->setContent("");
   std::this_thread::sleep_for(std::chrono::milliseconds(300));
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "");
+  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
 }
 
 TEST_CASE("DefragmentTextMaxBufferTest", "[defragmenttextmaxbuffertest]") {
@@ -201,12 +204,12 @@ TEST_CASE("DefragmentTextMaxBufferTest", "[defragmenttextmaxbuffertest]") {
 
   write_to_flow_file->setContent("Message");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "");
+  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
 
   plan->reset();
   write_to_flow_file->setContent(std::string(150, '*'));
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == std::string("Message").append(std::string(150, '*')));
+  CHECK(read_from_flow_file->readFlowFileWithContent(std::string("Message").append(std::string(150, '*'))));
 }
 
 TEST_CASE("DefragmentTextNoMaxBufferTest", "[defragmenttextnomaxbuffertest]") {
@@ -223,12 +226,12 @@ TEST_CASE("DefragmentTextNoMaxBufferTest", "[defragmenttextnomaxbuffertest]") {
 
   write_to_flow_file->setContent("Message");
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "");
+  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
 
   plan->reset();
   write_to_flow_file->setContent(std::string(150, '*'));
   testController.runSession(plan);
-  CHECK(read_from_flow_file->getContent() == "");
+  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
 }
 
 TEST_CASE("DefragmentTextInvalidRegexTest", "[defragmenttextinvalidregextest]") {
@@ -242,3 +245,28 @@ TEST_CASE("DefragmentTextInvalidRegexTest", "[defragmenttextinvalidregextest]") 
   REQUIRE_THROWS(testController.runSession(plan));
 }
 
+TEST_CASE("DefragmentTextInvalidSources", "[defragmenttextinvalidsources]") {
+  TestController testController;
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
+      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  std::shared_ptr<UpdateAttribute> update_ff = std::dynamic_pointer_cast<UpdateAttribute>(
+      plan->addProcessor("UpdateAttribute", "update_attribute", core::Relationship("success", "description"), true));
+  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
+      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
+  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
+      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship", DefragmentText::Failure, true));
+  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+  plan->setProperty(update_ff, org::apache::nifi::minifi::processors::textfragmentutils::BASE_NAME_ATTRIBUTE, "${UUID()}", true);
+  defrag_text_flow_files->setAutoTerminatedRelationships({DefragmentText::Success});
+
+  write_to_flow_file->setContent("Foo <1> Foo");
+  testController.runSession(plan);
+  CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+  write_to_flow_file->setContent("Bar <2> Bar");
+  plan->reset();
+  testController.runSession(plan);
+  CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 2);
+  CHECK(read_from_failure_relationship->readFlowFileWithContent("<1> Foo"));
+  CHECK(read_from_failure_relationship->readFlowFileWithContent("Bar <2> Bar"));
+}

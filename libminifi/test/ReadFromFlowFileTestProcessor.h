@@ -17,6 +17,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -48,13 +49,17 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
   void initialize() override;
   void onUnSchedule() override;
 
-  const std::string& getContent() {
-    return content_;
+  bool readFlowFileWithContent(const std::string& content) const {
+    return std::find(flow_file_contents_.begin(), flow_file_contents_.end(), content) != flow_file_contents_.end();
+  }
+
+  size_t numberOfFlowFilesRead() const {
+    return flow_file_contents_.size();
   }
 
  private:
   std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger();
-  std::string content_;
+  std::vector<std::string> flow_file_contents_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -105,14 +105,16 @@ void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* sess
 void DefragmentText::processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& next_fragment) {
   if (!next_fragment)
     return;
+  if (!buffer_.isCompatible(next_fragment)) {
+    buffer_.flushAndReplace(session, Failure, nullptr);
+    session->transfer(next_fragment, Failure);
+    return;
+  }
   std::shared_ptr<core::FlowFile> split_before_last_pattern;
   std::shared_ptr<core::FlowFile> split_after_last_pattern;
   bool found_pattern = splitFlowFileAtLastPattern(session, next_fragment, split_before_last_pattern,
                                                   split_after_last_pattern);
-  if (!buffer_.append(session, split_before_last_pattern)) {
-    buffer_.flushAndReplace(session, Failure, nullptr);
-    session->transfer(split_before_last_pattern, Failure);
-  }
+  buffer_.append(session, split_before_last_pattern);
   if (found_pattern) {
     buffer_.flushAndReplace(session, Success, split_after_last_pattern);
   }
@@ -250,9 +252,7 @@ std::set<std::shared_ptr<core::Connectable>> DefragmentText::getOutGoingConnecti
   return result;
 }
 
-bool DefragmentText::Buffer::append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append) {
-  if (!canBeAppended(flow_file_to_append))
-    return false;
+void DefragmentText::Buffer::append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append) {
   if (!empty()) {
     if (flow_file_to_append) {
       auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
@@ -268,7 +268,6 @@ bool DefragmentText::Buffer::append(core::ProcessSession* session, const std::sh
   } else {
     store(session, flow_file_to_append);
   }
-  return true;
 }
 
 bool DefragmentText::Buffer::maxSizeReached() const {
@@ -307,7 +306,7 @@ void DefragmentText::Buffer::store(core::ProcessSession* session, const std::sha
     session->transfer(buffered_flow_file_, Self);
 }
 
-bool DefragmentText::Buffer::canBeAppended(const std::shared_ptr<core::FlowFile> &flow_file_to_append) const {
+bool DefragmentText::Buffer::isCompatible(const std::shared_ptr<core::FlowFile> &flow_file_to_append) const {
   if (empty() || flow_file_to_append == nullptr)
     return true;
   if (buffered_flow_file_->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE)
