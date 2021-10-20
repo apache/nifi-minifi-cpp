@@ -48,7 +48,11 @@ std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const PutAzureBlobS
     auto response = blob_storage_client_->uploadBlob(params, buffer);
 
     UploadBlobResult result;
-    result.primary_uri = blob_storage_client_->getUrl(params);
+    auto upload_url = blob_storage_client_->getUrl(params);
+    if (auto query_string_pos = upload_url.find('?'); query_string_pos != std::string::npos) {
+      upload_url = upload_url.substr(0, query_string_pos);
+    }
+    result.primary_uri = upload_url;
     if (response.ETag.HasValue()) {
       result.etag = response.ETag.ToString();
     }
