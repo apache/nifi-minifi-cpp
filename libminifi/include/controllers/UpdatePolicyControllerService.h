@@ -76,7 +76,7 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
 
  private:
   bool persist_updates_ = false;
-  std::unique_ptr<state::UpdatePolicy> policy_ = std::make_unique<state::UpdatePolicy(false);
+  std::unique_ptr<state::UpdatePolicy> policy_ = std::make_unique<state::UpdatePolicy>(false);
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdatePolicyControllerService>::getLogger();
 };
 
