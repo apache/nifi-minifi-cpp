@@ -32,6 +32,8 @@ namespace org::apache::nifi::minifi::azure::storage {
 
 class AzureDataLakeStorageClient : public DataLakeStorageClient {
  public:
+  AzureDataLakeStorageClient();
+
   /**
    * Creates a file on Azure Data Lake Storage
    * @param params Parameters required for connecting and file creation on Azure
