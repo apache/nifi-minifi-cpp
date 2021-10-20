@@ -28,6 +28,7 @@
 #include "azure/storage/blobs.hpp"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/AzureSdkLogger.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -40,6 +41,7 @@ class AzureBlobStorageClient : public BlobStorageClient {
  private:
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string &container_name);
 
+  const utils::AzureSdkLogger& azure_logger_ = utils::AzureSdkLogger::get();
   AzureStorageCredentials credentials_;
   std::string container_name_;
   std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> container_client_;

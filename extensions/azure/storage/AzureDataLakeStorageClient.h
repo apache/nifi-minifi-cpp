@@ -27,6 +27,7 @@
 #include "DataLakeStorageClient.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/AzureSdkLogger.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -51,6 +52,7 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name);
   Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const PutAzureDataLakeStorageParameters& params);
 
+  const utils::AzureSdkLogger& azure_logger_ = utils::AzureSdkLogger::get();
   AzureStorageCredentials credentials_;
   std::string file_system_name_;
   std::unique_ptr<Azure::Storage::Files::DataLake::DataLakeFileSystemClient> client_;
