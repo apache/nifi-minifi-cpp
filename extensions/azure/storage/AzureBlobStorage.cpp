@@ -34,6 +34,7 @@ AzureBlobStorage::AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_stora
 
 std::optional<bool> AzureBlobStorage::createContainerIfNotExists(const PutAzureBlobStorageParameters& params) {
   try {
+    logger_->log_debug("Trying to create Azure blob container %s", params.container_name);
     return blob_storage_client_->createContainerIfNotExists(params);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while creating container: %s", ex.what());
@@ -43,6 +44,7 @@ std::optional<bool> AzureBlobStorage::createContainerIfNotExists(const PutAzureB
 
 std::optional<UploadBlobResult> AzureBlobStorage::uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) {
   try {
+    logger_->log_debug("Uploading Azure blob %s to container %s", params.blob_name, params.container_name);
     auto response = blob_storage_client_->uploadBlob(params, buffer);
 
     UploadBlobResult result;

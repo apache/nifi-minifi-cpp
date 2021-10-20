@@ -28,12 +28,12 @@
 #include "azure/storage/blobs.hpp"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/AzureSdkLogger.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
 class AzureBlobStorageClient : public BlobStorageClient {
  public:
+  AzureBlobStorageClient();
   bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) override;
   Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) override;
   std::string getUrl(const PutAzureBlobStorageParameters& params) override;
@@ -41,7 +41,6 @@ class AzureBlobStorageClient : public BlobStorageClient {
  private:
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string &container_name);
 
-  const utils::AzureSdkLogger& azure_logger_ = utils::AzureSdkLogger::get();
   AzureStorageCredentials credentials_;
   std::string container_name_;
   std::unique_ptr<Azure::Storage::Blobs::BlobContainerClient> container_client_;

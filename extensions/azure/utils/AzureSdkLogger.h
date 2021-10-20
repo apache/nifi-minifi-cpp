@@ -19,6 +19,8 @@
  */
 #pragma once
 
+#include <memory>
+
 #include "azure/core/diagnostics/logger.hpp"
 
 #include "core/logging/Logger.h"
@@ -28,7 +30,7 @@ namespace org::apache::nifi::minifi::azure::utils {
 
 class AzureSdkLogger {
  public:
-  static AzureSdkLogger& get();
+  static void initialize();
 
  private:
   AzureSdkLogger();

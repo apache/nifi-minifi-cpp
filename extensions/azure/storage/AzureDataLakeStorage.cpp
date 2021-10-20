@@ -30,6 +30,7 @@ AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient
 
 UploadDataLakeStorageResult AzureDataLakeStorage::uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) {
   UploadDataLakeStorageResult result;
+  logger_->log_debug("Uploading file '%s/%s' to Azure Data Lake Storage filesystem '%s'", params.directory_name, params.filename, params.file_system_name);
   try {
     auto file_created = data_lake_storage_client_->createFile(params);
     if (!file_created && !params.replace_file) {

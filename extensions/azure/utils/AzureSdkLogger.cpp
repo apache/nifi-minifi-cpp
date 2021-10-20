@@ -20,24 +20,26 @@
 
 #include "AzureSdkLogger.h"
 
+#include <string>
+
 #include "azure/core/diagnostics/logger.hpp"
 
 namespace org::apache::nifi::minifi::azure::utils {
 
-AzureSdkLogger& AzureSdkLogger::get() {
+void AzureSdkLogger::initialize() {
   static AzureSdkLogger instance;
-  return instance;
 }
 
 void AzureSdkLogger::setLogLevel() {
-  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::trace) || logger_->should_log(minifi::core::logging::LOG_LEVEL::debug))
+  if (logger_->should_log(minifi::core::logging::LOG_LEVEL::trace) || logger_->should_log(minifi::core::logging::LOG_LEVEL::debug)) {
     Azure::Core::Diagnostics::Logger::SetLevel(Azure::Core::Diagnostics::Logger::Level::Verbose);
-  else if (logger_->should_log(minifi::core::logging::LOG_LEVEL::info))
+  } else if (logger_->should_log(minifi::core::logging::LOG_LEVEL::info)) {
     Azure::Core::Diagnostics::Logger::SetLevel(Azure::Core::Diagnostics::Logger::Level::Informational);
-  else if (logger_->should_log(minifi::core::logging::LOG_LEVEL::warn))
+  } else if (logger_->should_log(minifi::core::logging::LOG_LEVEL::warn)) {
     Azure::Core::Diagnostics::Logger::SetLevel(Azure::Core::Diagnostics::Logger::Level::Warning);
-  else if (logger_->should_log(minifi::core::logging::LOG_LEVEL::err) || logger_->should_log(minifi::core::logging::LOG_LEVEL::critical))
+  } else if (logger_->should_log(minifi::core::logging::LOG_LEVEL::err) || logger_->should_log(minifi::core::logging::LOG_LEVEL::critical)) {
     Azure::Core::Diagnostics::Logger::SetLevel(Azure::Core::Diagnostics::Logger::Level::Error);
+  }
 }
 
 AzureSdkLogger::AzureSdkLogger() {

@@ -22,7 +22,13 @@
 
 #include "azure/identity.hpp"
 
+#include "utils/AzureSdkLogger.h"
+
 namespace org::apache::nifi::minifi::azure::storage {
+
+AzureBlobStorageClient::AzureBlobStorageClient() {
+  utils::AzureSdkLogger::initialize();
+}
 
 void AzureBlobStorageClient::resetClientIfNeeded(const AzureStorageCredentials &credentials, const std::string &container_name) {
   if (container_client_ && credentials == credentials_ && container_name == container_name_) {

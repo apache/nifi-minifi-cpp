@@ -22,7 +22,13 @@
 
 #include "azure/identity.hpp"
 
+#include "utils/AzureSdkLogger.h"
+
 namespace org::apache::nifi::minifi::azure::storage {
+
+AzureDataLakeStorageClient::AzureDataLakeStorageClient() {
+  utils::AzureSdkLogger::initialize();
+}
 
 void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name) {
   if (client_ && credentials_ == credentials && file_system_name_ == file_system_name) {
