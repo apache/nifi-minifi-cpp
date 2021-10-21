@@ -26,7 +26,6 @@ add_library(minifi-http-curl SHARED ${SOURCES})
 
 target_link_libraries(minifi-http-curl ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-http-curl CURL::libcurl RapidJSON)
-target_link_libraries(minifi-http-curl minifi-civet-extensions)
 
 SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)
 register_extension(minifi-http-curl)
