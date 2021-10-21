@@ -223,6 +223,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list non-readable dir", "[ListS
   REQUIRE(false == LogTestController::getInstance().contains("from ListSFTP to relationship success"));
   REQUIRE(LogTestController::getInstance().contains("Failed to open remote directory \"nifi_test\", error: LIBSSH2_FX_PERMISSION_DENIED"));
   REQUIRE(LogTestController::getInstance().contains("There are no files to list. Yielding."));
+  REQUIRE(0 == chmod((src_dir + "/vfs/nifi_test").c_str(), 0755));
 }
 #endif
 
