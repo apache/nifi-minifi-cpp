@@ -326,6 +326,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
   REQUIRE(LogTestController::getInstance().contains("key:sftp.remote.port value:" + std::to_string(sftp_server->getPort())));
   REQUIRE(LogTestController::getInstance().contains("key:path value:nifi_test/"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:tstFile.ext"));
+  REQUIRE(0 == chmod((src_dir + "/vfs/nifi_test").c_str(), 0755));
 }
 #endif
 
