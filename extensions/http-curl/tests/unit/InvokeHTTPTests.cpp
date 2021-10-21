@@ -181,6 +181,12 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   std::shared_ptr<core::FlowFile> record;
 
+  CallBack callback;
+
+  auto flow = std::make_shared<minifi::FlowFileRecord>();
+  flow->setAttribute("testy", "test");
+  session2->write(flow, &callback);
+
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
   std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
