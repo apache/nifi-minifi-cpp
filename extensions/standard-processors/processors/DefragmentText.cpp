@@ -36,7 +36,7 @@ const core::Property DefragmentText::Pattern(
         ->isRequired(true)->build());
 
 const core::Property DefragmentText::PatternLoc(
-    core::PropertyBuilder::createProperty("Pattern Location")->withDescription("Where to look for the pattern.")
+    core::PropertyBuilder::createProperty("Pattern Location")->withDescription("Whether the pattern is located at the start or at the end of the messages.")
         ->withAllowableValues(PatternLocation::values())
         ->withDefaultValue(toString(PatternLocation::START_OF_MESSAGE))->build());
 
@@ -217,9 +217,9 @@ class LastPatternFinder : public InputStreamCallback {
 }  // namespace
 
 bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
-                                                     const std::shared_ptr<core::FlowFile> &original_flow_file,
-                                                     std::shared_ptr<core::FlowFile> &split_before_last_pattern,
-                                                     std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
+                                                const std::shared_ptr<core::FlowFile> &original_flow_file,
+                                                std::shared_ptr<core::FlowFile> &split_before_last_pattern,
+                                                std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
   LastPatternFinder find_last_pattern(pattern_, pattern_location_);
   session->read(original_flow_file, &find_last_pattern);
   if (auto split_position = find_last_pattern.getLastPatternPosition()) {
@@ -253,22 +253,23 @@ std::set<std::shared_ptr<core::Connectable>> DefragmentText::getOutGoingConnecti
 }
 
 void DefragmentText::Buffer::append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append) {
-  if (!empty()) {
-    if (flow_file_to_append) {
-      auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
-        return session->read(ff, cb);
-      };
-      PayloadSerializer serializer(flowFileReader);
-      AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, serializer);
-      session->add(buffered_flow_file_);
-      session->append(buffered_flow_file_, &append_flow_file_to_flow_file);
-      updateAppendedAttributes(buffered_flow_file_);
-      session->transfer(buffered_flow_file_, Self);
-      session->remove(flow_file_to_append);
-    }
-  } else {
+  if (!flow_file_to_append)
+    return;
+  if (empty()) {
     store(session, flow_file_to_append);
+    return;
   }
+  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
+    return session->read(ff, cb);
+  };
+  PayloadSerializer serializer(flowFileReader);
+  AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, serializer);
+  session->add(buffered_flow_file_);
+  session->append(buffered_flow_file_, &append_flow_file_to_flow_file);
+  updateAppendedAttributes(buffered_flow_file_);
+  session->transfer(buffered_flow_file_, Self);
+
+  session->remove(flow_file_to_append);
 }
 
 bool DefragmentText::Buffer::maxSizeReached() const {
@@ -292,7 +293,7 @@ void DefragmentText::Buffer::setMaxSize(size_t max_size) {
 }
 
 void DefragmentText::Buffer::flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
-                     const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
+                                             const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
   if (!empty()) {
     session->add(buffered_flow_file_);
     session->transfer(buffered_flow_file_, relationship);

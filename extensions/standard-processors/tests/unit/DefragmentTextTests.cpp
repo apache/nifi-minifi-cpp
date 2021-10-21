@@ -259,6 +259,7 @@ TEST_CASE("DefragmentTextInvalidSources", "[defragmenttextinvalidsources]") {
   plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
   plan->setProperty(update_ff, org::apache::nifi::minifi::processors::textfragmentutils::BASE_NAME_ATTRIBUTE, "${UUID()}", true);
   defrag_text_flow_files->setAutoTerminatedRelationships({DefragmentText::Success});
+  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
 
   write_to_flow_file->setContent("Foo <1> Foo");
   testController.runSession(plan);

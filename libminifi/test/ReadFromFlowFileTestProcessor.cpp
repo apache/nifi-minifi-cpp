@@ -50,13 +50,11 @@ void ReadFromFlowFileTestProcessor::onTrigger(core::ProcessContext* context, cor
   logger_->log_info("%s", ON_TRIGGER_LOG_STR);
   flow_file_contents_.clear();
 
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
-  while (flow_file) {
+  while (std::shared_ptr<core::FlowFile> flow_file = session->get()) {
     ReadFlowFileIntoBuffer callback;
     session->read(flow_file, &callback);
     flow_file_contents_.push_back(std::string(callback.buffer_.begin(), callback.buffer_.end()));
     session->transfer(flow_file, Success);
-    flow_file = session->get();
   }
 }
 
