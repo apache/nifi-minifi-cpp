@@ -60,8 +60,6 @@ FlowConfiguration::FlowConfiguration(
     }
     checksum_calculator_.setFileLocation(*config_path_);
   }
-
-  extension::ExtensionManager::get().initialize(configuration_);
 }
 
 static_initializers &get_static_functions() {
