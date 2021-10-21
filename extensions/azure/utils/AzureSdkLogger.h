@@ -21,8 +21,6 @@
 
 #include <memory>
 
-#include "azure/core/diagnostics/logger.hpp"
-
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
