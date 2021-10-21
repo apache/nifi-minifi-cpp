@@ -809,25 +809,28 @@ else()
 endif()
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "ApacheNiFiMiNiFi")
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+
+
+# !WARNING! we need to manually add to CPACK_COMPONENTS_ALL otherwise
+# all components specified in "install" directives are added
+# (including thirdparties like range-v3)
+
+list(APPEND CPACK_COMPONENTS_ALL bin)
+cpack_add_component(bin REQUIRED)
 if(WIN32)
-	list(APPEND CPACK_COMPONENTS_ALL bin minifijni tzdata)
+	list(APPEND CPACK_COMPONENTS_ALL tzdata)
+	cpack_add_component(tzdata)
 else()
-	list(APPEND CPACK_COMPONENTS_ALL bin conf minifijni)
+	list(APPEND CPACK_COMPONENTS_ALL conf)
+	cpack_add_component(conf REQUIRED)
 endif()
-set(CPACK_COMPONENT_BIN_REQUIRED ON)
-set(CPACK_COMPONENT_CONF_REQUIRED ON)
-set(CPACK_COMPONENT_MINIFIJNI_REQUIRED ON)
+
 cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
 foreach(extension ${selected_extensions})
-	string(REPLACE "-" "_" component_name ${extension})
-	string(REPLACE "minifi_" "" component_name ${component_name})
-	cpack_add_component("${component_name}" GROUP extensions DEPENDS bin)
-	list(APPEND CPACK_COMPONENTS_ALL ${component_name})
-	string(TOUPPER "${component_name}" component_name)
-	set("CPACK_COMPONENT_${component_name}_DISPLAY_NAME" ${extension})
-	set("CPACK_COMPONENT_${component_name}_GROUP" "extensions")
+	get_component_name(${extension} component-name)
+	list(APPEND CPACK_COMPONENTS_ALL ${component-name})
+	cpack_add_component(${component-name} DISPLAY_NAME ${extension} GROUP extensions DEPENDS bin)
 endforeach()
-
 
 include(CPack)
 ### include modules
