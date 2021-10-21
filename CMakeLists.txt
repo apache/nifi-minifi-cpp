@@ -781,6 +781,7 @@ install(FILES LICENSE README.md NOTICE
 		DESTINATION .
 		COMPONENT bin)
 
+include(CPackComponent)
 
 if (WIN32)
 	set(CPACK_GENERATOR "WIX")
@@ -813,9 +814,14 @@ if(WIN32)
 else()
 	list(APPEND CPACK_COMPONENTS_ALL bin conf minifijni)
 endif()
+set(CPACK_COMPONENT_BIN_REQUIRED ON)
+set(CPACK_COMPONENT_CONF_REQUIRED ON)
+set(CPACK_COMPONENT_MINIFIJNI_REQUIRED ON)
+cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
 foreach(extension ${selected_extensions})
 	string(REPLACE "-" "_" component_name ${extension})
-  string(REPLACE "minifi_" "" component_name ${component_name})
+	string(REPLACE "minifi_" "" component_name ${component_name})
+	cpack_add_component("${component_name}" GROUP extensions DEPENDS bin)
 	list(APPEND CPACK_COMPONENTS_ALL ${component_name})
 	string(TOUPPER "${component_name}" component_name)
 	set("CPACK_COMPONENT_${component_name}_DISPLAY_NAME" ${extension})
