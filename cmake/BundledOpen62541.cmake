@@ -40,8 +40,8 @@ function(use_bundled_open62541 SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             open62541-external
-            URL "https://github.com/open62541/open62541/archive/v1.0.tar.gz"
-            URL_HASH "SHA256=9be66efefe2cdb07a7638aad91c301b5c6163f99c66995bc41cce31ec0ea207e"
+            URL "https://github.com/open62541/open62541/archive/v1.2.2.tar.gz"
+            URL_HASH "SHA256=9b5bfd811ee523be601f11abc514a93c67fe5c6e957cd6c36fe6ea4f28e009bb"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/open62541-src"
             PATCH_COMMAND ${PC}
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists

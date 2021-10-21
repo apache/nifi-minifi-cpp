@@ -177,7 +177,10 @@ Client::~Client() {
   if (client_ == nullptr) {
     return;
   }
-  if (UA_Client_getState(client_) != UA_CLIENTSTATE_DISCONNECTED) {
+
+  UA_SecureChannelState channel_state;
+  UA_Client_getState(client_, &channel_state, nullptr, nullptr);
+  if (channel_state != UA_SECURECHANNELSTATE_CLOSED) {
     auto sc = UA_Client_disconnect(client_);
     if (sc != UA_STATUSCODE_GOOD) {
       logger_->log_warn("Failed to disconnect OPC client: %s", UA_StatusCode_name(sc));
@@ -190,14 +193,17 @@ bool Client::isConnected() {
   if (!client_) {
     return false;
   }
-  return UA_Client_getState(client_) != UA_CLIENTSTATE_DISCONNECTED;
+
+  UA_SessionState session_state;
+  UA_Client_getState(client_, nullptr, &session_state, nullptr);
+  return session_state == UA_SESSIONSTATE_ACTIVATED;
 }
 
 UA_StatusCode Client::connect(const std::string& url, const std::string& username, const std::string& password) {
   if (username.empty()) {
     return UA_Client_connect(client_, url.c_str());
   } else {
-    return UA_Client_connect_username(client_, url.c_str(), username.c_str(), password.c_str());
+    return UA_Client_connectUsername(client_, url.c_str(), username.c_str(), password.c_str());
   }
 }
 
@@ -241,7 +247,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       auto server_timestamp = OPCDateTime2String(dv->serverTimestamp);
       auto source_timestamp = OPCDateTime2String(dv->sourceTimestamp);
       nodedata.attributes["Sourcetimestamp"] = source_timestamp;
-      UA_ReadResponse_deleteMembers(&response);
+      UA_ReadResponse_clear(&response);
 
       nodedata.dataTypeID = var->type->typeIndex;
       nodedata.addVariant(var);
@@ -303,10 +309,10 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
   UA_BrowseResponse bResp = UA_Client_Service_browse(client_, bReq);
 
   const auto guard = gsl::finally([&bResp]() {
-    UA_BrowseResponse_deleteMembers(&bResp);
+    UA_BrowseResponse_clear(&bResp);
   });
 
-  UA_BrowseRequest_deleteMembers(&bReq);
+  UA_BrowseRequest_clear(&bReq);
 
   for (size_t i = 0; i < bResp.resultsSize; ++i) {
     for (size_t j = 0; j < bResp.results[i].referencesSize; ++j) {
@@ -364,7 +370,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client_, request);
 
   const auto guard = gsl::finally([&browsePath]() {
-    UA_BrowsePath_deleteMembers(&browsePath);
+    UA_BrowsePath_clear(&browsePath);
   });
 
   if (response.resultsSize < 1) {
@@ -385,7 +391,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
     }
   }
 
-  UA_TranslateBrowsePathsToNodeIdsResponse_deleteMembers(&response);
+  UA_TranslateBrowsePathsToNodeIdsResponse_clear(&response);
 
   if (foundData) {
     logger->log_debug("Found %lu nodes for path %s", foundNodeIDs.size(), path.c_str());
