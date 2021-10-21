@@ -108,6 +108,7 @@ class Fixture {
 
   void appendToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content_to_append) {
     WriteStringToFlowFile callback(content_to_append);
+    process_session_->add(flow_file);
     process_session_->append(flow_file, &callback);
   }
 

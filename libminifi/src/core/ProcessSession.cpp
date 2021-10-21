@@ -212,6 +212,7 @@ void ProcessSession::transfer(const std::shared_ptr<core::FlowFile> &flow, Relat
 }
 
 void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
+  gsl_Expects(_updatedFlowFiles.contains(flow->getUUID()) || _addedFlowFiles.contains(flow->getUUID()));
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
 
   try {
@@ -255,6 +256,7 @@ void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_fil
 }
 
 void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback) {
+  gsl_Expects(_updatedFlowFiles.contains(flow->getUUID()) || _addedFlowFiles.contains(flow->getUUID()));
   std::shared_ptr<ResourceClaim> claim = flow->getResourceClaim();
   if (!claim) {
     // No existed claim for append, we need to create new claim

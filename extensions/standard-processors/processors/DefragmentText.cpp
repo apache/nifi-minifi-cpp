@@ -260,6 +260,7 @@ void DefragmentText::Buffer::append(core::ProcessSession* session, const std::sh
       };
       PayloadSerializer serializer(flowFileReader);
       AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, serializer);
+      session->add(buffered_flow_file_);
       session->append(buffered_flow_file_, &append_flow_file_to_flow_file);
       updateAppendedAttributes(buffered_flow_file_);
       session->transfer(buffered_flow_file_, Self);
@@ -302,8 +303,10 @@ void DefragmentText::Buffer::flushAndReplace(core::ProcessSession* session, cons
 void DefragmentText::Buffer::store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
   buffered_flow_file_ = new_buffered_flow_file;
   creation_time_ = std::chrono::system_clock::now();
-  if (!empty())
+  if (!empty()) {
+    session->add(buffered_flow_file_);
     session->transfer(buffered_flow_file_, Self);
+  }
 }
 
 bool DefragmentText::Buffer::isCompatible(const std::shared_ptr<core::FlowFile> &flow_file_to_append) const {
