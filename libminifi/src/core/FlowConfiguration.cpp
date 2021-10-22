@@ -17,13 +17,14 @@
  */
 
 #include "core/FlowConfiguration.h"
+
 #include <memory>
 #include <vector>
 #include <string>
+
 #include "core/ClassLoader.h"
 #include "utils/StringUtils.h"
 #include "processors/ProcessorUtils.h"
-#include "core/extension/ExtensionManager.h"
 
 namespace org {
 namespace apache {
