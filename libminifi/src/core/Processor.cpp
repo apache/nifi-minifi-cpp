@@ -413,7 +413,7 @@ std::string Processor::getInputRequirementAsString() const {
 void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
   if (isSingleThreaded() && tasks > 1) {
     logger_->log_warn("Processor %s can not be run in parallel, its \"max concurrent tasks\" value is too high. "
-                      "It was set to 1 from %d.", name_, tasks);
+                      "It was set to 1 from %" PRIu8 ".", name_, tasks);
     max_concurrent_tasks_ = 1;
     return;
   }
