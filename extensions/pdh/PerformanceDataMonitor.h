@@ -73,6 +73,14 @@ class PerformanceDataMonitor : public core::Processor {
     JSON, OPENTELEMETRY
   };
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
 
   void setupMembersFromProperties(const std::shared_ptr<core::ProcessContext>& context);

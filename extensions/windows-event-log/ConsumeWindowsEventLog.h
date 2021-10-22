@@ -137,6 +137,10 @@ class ConsumeWindowsEventLog : public core::Processor {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessSession> &session);
   std::tuple<size_t, std::wstring> processEventLogs(const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::ProcessSession> &session, const EVT_HANDLE& event_query_results);
@@ -156,7 +160,6 @@ class ConsumeWindowsEventLog : public core::Processor {
   std::string computerName_;
   uint64_t maxBufferSize_{};
   DWORD lastActivityTimestamp_{};
-  std::mutex cache_mutex_;
   std::map<std::string, wel::WindowsEventLogHandler > providers_;
   uint64_t batch_commit_size_{};
 

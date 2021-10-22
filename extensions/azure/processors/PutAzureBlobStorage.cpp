@@ -240,23 +240,16 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
     return;
   }
 
-  std::optional<storage::UploadBlobResult> upload_result;
-  {
-    // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
-    // When used in multithreaded environment make sure to use the azure_storage_mutex_ to lock the wrapper so the
-    // client is not reset with different configuration while another thread is using it.
-    std::lock_guard<std::mutex> lock(azure_storage_mutex_);
-    if (create_container_) {
-      auto result = azure_blob_storage_.createContainerIfNotExists(*params);
-      if (!result) {
-        session->transfer(flow_file, Failure);
-        return;
-      }
+  if (create_container_) {
+    auto result = azure_blob_storage_.createContainerIfNotExists(*params);
+    if (!result) {
+      session->transfer(flow_file, Failure);
+      return;
     }
-    PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), azure_blob_storage_, *params);
-    session->read(flow_file, &callback);
-    upload_result = callback.getResult();
   }
+  PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), azure_blob_storage_, *params);
+  session->read(flow_file, &callback);
+  const std::optional<storage::UploadBlobResult> upload_result = callback.getResult();
 
   if (!upload_result) {
     logger_->log_error("Failed to upload blob '%s' to Azure Storage container '%s'", params->blob_name, params->container_name);

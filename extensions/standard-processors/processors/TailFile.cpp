@@ -33,7 +33,6 @@
 #include <regex>
 
 #include "range/v3/action/sort.hpp"
-#include "range/v3/algorithm/transform.hpp"
 
 #include "io/CRCStream.h"
 #include "utils/file/FileUtils.h"
@@ -335,8 +334,6 @@ void TailFile::initialize() {
 }
 
 void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
-
   tail_states_.clear();
 
   state_manager_ = context->getStateManager();
@@ -671,8 +668,6 @@ std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &stat
 }
 
 void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession> &session) {
-  std::lock_guard<std::mutex> tail_lock(tail_file_mutex_);
-
   if (tail_mode_ == Mode::MULTIPLE) {
     if (last_multifile_lookup_ + lookup_frequency_ < std::chrono::steady_clock::now()) {
       logger_->log_debug("Lookup frequency %" PRId64 " ms have elapsed, doing new multifile lookup", int64_t{lookup_frequency_.count()});

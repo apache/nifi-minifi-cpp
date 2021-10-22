@@ -124,6 +124,10 @@ class PutS3Object : public S3Processor {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   friend class ::S3TestsFixture<PutS3Object>;
 
   explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)

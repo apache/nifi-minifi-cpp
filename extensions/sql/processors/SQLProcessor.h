@@ -42,6 +42,10 @@ class SQLProcessor: public core::Processor {
     : core::Processor(name, uuid), logger_(std::move(logger)) {
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);
 
   virtual void processOnSchedule(core::ProcessContext& context) = 0;
@@ -55,11 +59,9 @@ class SQLProcessor: public core::Processor {
     connection_.reset();
   }
 
- protected:
-   std::shared_ptr<logging::Logger> logger_;
-   std::shared_ptr<sql::controllers::DatabaseService> db_service_;
-   std::unique_ptr<sql::Connection> connection_;
-   std::mutex on_trigger_mutex_;
+  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<sql::controllers::DatabaseService> db_service_;
+  std::unique_ptr<sql::Connection> connection_;
 };
 
 }  // namespace processors

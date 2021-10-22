@@ -54,6 +54,10 @@ class BaseOPCProcessor : public core::Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
 
  protected:
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   virtual bool reconnect();
 
   std::shared_ptr<logging::Logger> logger_;

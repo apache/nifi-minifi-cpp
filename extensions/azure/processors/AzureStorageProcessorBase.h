@@ -51,7 +51,6 @@ class AzureStorageProcessorBase : public core::Processor {
 
   std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
 
-  std::mutex azure_storage_mutex_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

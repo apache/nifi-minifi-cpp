@@ -254,6 +254,10 @@ class ComponentManifest : public DeviceInformation {
           inputReq.name = "inputRequirement";
           inputReq.value = group.inputRequirement_;
 
+          SerializedResponseNode isSingleThreaded;
+          isSingleThreaded.name = "isSingleThreaded";
+          isSingleThreaded.value = group.isSingleThreaded_;
+
           SerializedResponseNode relationships;
           relationships.name = "supportedRelationships";
           relationships.array = true;
@@ -275,6 +279,7 @@ class ComponentManifest : public DeviceInformation {
             relationships.children.push_back(child);
           }
           desc.children.push_back(inputReq);
+          desc.children.push_back(isSingleThreaded);
           desc.children.push_back(relationships);
         }
 

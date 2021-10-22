@@ -88,6 +88,10 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
     : AzureStorageProcessorBase(name, uuid, logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()),
       azure_data_lake_storage_(std::move(data_lake_storage_client)) {

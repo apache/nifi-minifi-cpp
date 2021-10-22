@@ -385,15 +385,14 @@ void Processor::validateAnnotations() const {
       if (!hasIncomingConnections()) {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_REQUIRED was specified for the processor, but no incoming connections were found");
       }
-      return;
+      break;
     }
     case annotation::Input::INPUT_ALLOWED:
-      return;
+      break;
     case annotation::Input::INPUT_FORBIDDEN: {
       if (hasIncomingConnections()) {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, "INPUT_FORBIDDEN was specified for the processor, but there are incoming connections");
       }
-      return;
     }
   }
 }
@@ -409,6 +408,17 @@ std::string Processor::getInputRequirementAsString() const {
   }
 
   return "ERROR_no_such_input_requirement";
+}
+
+void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
+  if (isSingleThreaded() && tasks > 1) {
+    logger_->log_warn("Processor %s can not be run in parallel, its \"max concurrent tasks\" value is too high. "
+                      "It was set to 1 from %" PRIu8 ".", name_, tasks);
+    max_concurrent_tasks_ = 1;
+    return;
+  }
+
+  max_concurrent_tasks_ = tasks;
 }
 
 }  // namespace core
