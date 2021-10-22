@@ -109,20 +109,6 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   REQUIRE(LogTestController::getInstance().contains("Exiting because method is POST"));
 }
 
-class CallBack : public minifi::OutputStreamCallback {
- public:
-  CallBack() {
-  }
-  virtual ~CallBack() {
-  }
-  virtual int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
-    // leaving the typo for posterity sake
-    std::string st = "we're gnna write some test stuff";
-    const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(st.c_str()), st.length());
-    return minifi::io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-  }
-};
-
 TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   TestController testController;
 
@@ -180,12 +166,6 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
 
   std::shared_ptr<core::FlowFile> record;
-
-  CallBack callback;
-
-  auto flow = std::make_shared<minifi::FlowFileRecord>();
-  flow->setAttribute("testy", "test");
-  session2->write(flow, &callback);
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
