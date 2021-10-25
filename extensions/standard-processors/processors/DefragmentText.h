@@ -55,6 +55,7 @@ class DefragmentText : public core::Processor {
              (END_OF_MESSAGE, "End of Message"),
              (START_OF_MESSAGE, "Start of Message")
   )
+
  private:
   bool isSingleThreaded() const override {
     return true;
