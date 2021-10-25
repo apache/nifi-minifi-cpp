@@ -309,8 +309,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - | - | - |
 |**Pattern**|||A regular expression to match at the start or end of messages.|
 |Pattern Location|Start of Message|Start of Message<br>End of Message|Whether the pattern is located at the start or at the end of the messages.|
-|MaxBufferAge|||The maximum age of a buffer after which the buffer will be transferred to failure.|
-|MaxBufferSize|||The maximum buffer size, if the buffer exceed this, it will be transferred to failure.|
+|MaxBufferAge||&lt;duration&gt; &lt;time unit&gt;|The maximum age of a buffer after which the buffer will be transferred to failure.|
+|MaxBufferSize||&lt;size&gt; &lt;size unit&gt;|The maximum buffer size, if the buffer exceed this, it will be transferred to failure.|
 
 ### Relationships
 

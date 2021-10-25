@@ -63,7 +63,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
     core::TimeUnit unit;
     uint64_t max_buffer_age;
     if (core::Property::StringToTime(max_buffer_age_str, max_buffer_age, unit) && core::Property::ConvertTimeUnitToMS(max_buffer_age, unit, max_buffer_age)) {
-      buffer_.setMaxAge(max_buffer_age);
+      buffer_.setMaxAge(std::chrono::milliseconds(max_buffer_age));
       logger_->log_trace("The Buffer maximum age is configured to be %" PRIu64 " ms", max_buffer_age);
     }
   }
@@ -80,7 +80,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
   context->getProperty(PatternLoc.getName(), pattern_location_);
 
   std::string pattern_str;
-  if (context->getProperty(Pattern.getName(), pattern_str) && pattern_str != "") {
+  if (context->getProperty(Pattern.getName(), pattern_str) && !pattern_str.empty()) {
     pattern_ = std::regex(pattern_str);
     logger_->log_trace("The Pattern is configured to be %s", pattern_str);
   } else {
@@ -90,7 +90,6 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
 
 void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
   gsl_Expects(session);
-  std::lock_guard<std::mutex> defrag_lock(defrag_mutex_);
   auto flowFiles = flow_file_store_.getNewFlowFiles();
   for (auto& file : flowFiles) {
     processNextFragment(session, file);
@@ -281,10 +280,10 @@ bool DefragmentText::Buffer::maxSizeReached() const {
 bool DefragmentText::Buffer::maxAgeReached() const {
   return !empty()
       && max_age_.has_value()
-      && (creation_time_ + max_age_.value() < std::chrono::system_clock::now());
+      && (creation_time_ + max_age_.value() < std::chrono::steady_clock::now());
 }
 
-void DefragmentText::Buffer::setMaxAge(uint64_t max_age) {
+void DefragmentText::Buffer::setMaxAge(std::chrono::milliseconds max_age) {
   max_age_ = std::chrono::milliseconds(max_age);
 }
 
@@ -303,7 +302,7 @@ void DefragmentText::Buffer::flushAndReplace(core::ProcessSession* session, cons
 
 void DefragmentText::Buffer::store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file) {
   buffered_flow_file_ = new_buffered_flow_file;
-  creation_time_ = std::chrono::system_clock::now();
+  creation_time_ = std::chrono::steady_clock::now();
   if (!empty()) {
     session->add(buffered_flow_file_);
     session->transfer(buffered_flow_file_, Self);
@@ -326,7 +325,7 @@ bool DefragmentText::Buffer::isCompatible(const std::shared_ptr<core::FlowFile> 
       != flow_file_to_append->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, append_offset_str)) {
     return false;
   }
-  if (current_offset_str != "" && append_offset_str != "") {
+  if (!current_offset_str.empty() && !append_offset_str.empty()) {
     size_t current_offset = std::stoi(current_offset_str);
     size_t append_offset = std::stoi(append_offset_str);
     if (current_offset + buffered_flow_file_->getSize() != append_offset)

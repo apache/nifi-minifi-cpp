@@ -55,6 +55,10 @@ class DefragmentText : public core::Processor {
              (END_OF_MESSAGE, "End of Message"),
              (START_OF_MESSAGE, "Start of Message")
   )
+ private:
+  bool isSingleThreaded() const override {
+    return true;
+  }
 
  protected:
   class Buffer {
@@ -63,7 +67,7 @@ class DefragmentText : public core::Processor {
     void append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append);
     bool maxSizeReached() const;
     bool maxAgeReached() const;
-    void setMaxAge(uint64_t max_age);
+    void setMaxAge(std::chrono::milliseconds max_age);
     void setMaxSize(size_t max_size);
     void flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
                          const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
@@ -74,12 +78,11 @@ class DefragmentText : public core::Processor {
     void store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
 
     std::shared_ptr<core::FlowFile> buffered_flow_file_;
-    std::chrono::time_point<std::chrono::system_clock> creation_time_;
+    std::chrono::time_point<std::chrono::steady_clock> creation_time_;
     std::optional<std::chrono::milliseconds> max_age_;
     std::optional<size_t> max_size_;
   };
 
-  std::mutex defrag_mutex_;
   std::regex pattern_;
   PatternLocation pattern_location_;
 
