@@ -284,7 +284,7 @@ bool DefragmentText::Buffer::maxAgeReached() const {
 }
 
 void DefragmentText::Buffer::setMaxAge(std::chrono::milliseconds max_age) {
-  max_age_ = std::chrono::milliseconds(max_age);
+  max_age_ = max_age;
 }
 
 void DefragmentText::Buffer::setMaxSize(size_t max_size) {
