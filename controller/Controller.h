@@ -20,6 +20,7 @@
 
 #include "core/RepositoryFactory.h"
 #include "core/ConfigurationFactory.h"
+#include "core/extension/ExtensionManager.h"
 #include "io/ClientSocket.h"
 #include "c2/ControllerSocketProtocol.h"
 #include "utils/gsl.h"
@@ -237,6 +238,8 @@ std::shared_ptr<core::controller::ControllerService> getControllerService(const 
   std::string flow_repo_class = "flowfilerepository";
   std::string nifi_configuration_class_name = "yamlconfiguration";
   std::string content_repo_class = "filesystemrepository";
+
+  minifi::core::extension::ExtensionManager::get().initialize(configuration);
 
   configuration->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance

@@ -22,3 +22,10 @@ Feature: Core flow functionalities
 
     Then at least one flowfile with the content "first_custom_text" is placed in the monitored directory in less than 20 seconds
     And at least one flowfile with the content "second_custom_text" is placed in the monitored directory in less than 20 seconds
+
+
+  Scenario: The default configuration uses RocksDB for both the flow file and content repositories
+    Given a GenerateFlowFile processor with the "Data Format" property set to "Text"
+    When the MiNiFi instance starts up
+    Then the Minifi logs contain the following message: "Using plaintext FlowFileRepository" in less than 5 seconds
+    And the Minifi logs contain the following message: "Using plaintext DatabaseContentRepository" in less than 1 second

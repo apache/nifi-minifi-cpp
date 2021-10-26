@@ -218,13 +218,13 @@ int main(int argc, char **argv) {
   configure->setHome(minifiHome);
   configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
+  minifi::core::extension::ExtensionManager::get().initialize(configure);
+
   if (argc >= 3 && std::string("docs") == argv[1]) {
     if (utils::file::FileUtils::create_dir(argv[2]) != 0) {
       std::cerr << "Working directory doesn't exist and cannot be created: " << argv[2] << std::endl;
       exit(1);
     }
-
-    minifi::core::extension::ExtensionManager::get().initialize(configure);
 
     std::cerr << "Dumping docs to " << argv[2] << std::endl;
     if (argc == 4) {
