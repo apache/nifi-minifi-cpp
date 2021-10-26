@@ -23,10 +23,11 @@
 #include "serialization/PayloadSerializer.h"
 #include "TextFragmentUtils.h"
 #include "utils/gsl.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-const core::Relationship DefragmentText::Success("success", "Flowfiles that have no fragmented messages in them");
+const core::Relationship DefragmentText::Success("success", "Flowfiles that have been successfully defragmented");
 const core::Relationship DefragmentText::Failure("failure", "Flowfiles that failed the defragmentation process");
 const core::Relationship DefragmentText::Self("__self__", "Marks the FlowFile to be owned by this processor");
 
@@ -174,67 +175,49 @@ void updateAppendedAttributes(const std::shared_ptr<core::FlowFile>& buffered_ff
   buffered_ff->setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
 }
 
-class LastPatternFinder : public InputStreamCallback {
- public:
-  LastPatternFinder(const std::regex &pattern, DefragmentText::PatternLocation pattern_location) : pattern_(pattern), pattern_location_(pattern_location) {}
-
-  ~LastPatternFinder() override = default;
+struct ReadFlowFileContent : public InputStreamCallback {
+  std::string content;
 
   int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
-    if (nullptr == stream)
-      return 0;
-    std::string content;
     content.resize(stream->size());
     const auto ret = stream->read(reinterpret_cast<uint8_t *>(content.data()), stream->size());
     if (io::isError(ret))
       return -1;
-    searchContent(content);
-
     return 0;
   }
-
-  const std::optional<size_t> &getLastPatternPosition() const { return last_pattern_location; }
-
- protected:
-  void searchContent(const std::string &content) {
-    auto matches_begin = std::sregex_iterator(content.begin(), content.end(), pattern_);
-    auto number_of_matches = std::distance(matches_begin, std::sregex_iterator());
-    if (number_of_matches > 0) {
-      auto last_match = std::next(matches_begin, number_of_matches - 1);
-      last_pattern_location = last_match->position(0);
-      if (pattern_location_ == DefragmentText::PatternLocation::END_OF_MESSAGE)
-        last_pattern_location.value() += last_match->length(0);
-    } else {
-      last_pattern_location = std::nullopt;
-    }
-  }
-
-  const std::regex &pattern_;
-  DefragmentText::PatternLocation pattern_location_;
-  std::optional<size_t> last_pattern_location;
 };
+
+size_t getSplitPosition(const std::smatch& last_match, DefragmentText::PatternLocation pattern_location) {
+  size_t split_position = last_match.position(0);
+  if (pattern_location == DefragmentText::PatternLocation::END_OF_MESSAGE) {
+    split_position += last_match.length(0);
+  }
+  return split_position;
+}
+
 }  // namespace
 
 bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
                                                 const std::shared_ptr<core::FlowFile> &original_flow_file,
                                                 std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                                 std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
-  LastPatternFinder find_last_pattern(pattern_, pattern_location_);
-  session->read(original_flow_file, &find_last_pattern);
-  if (auto split_position = find_last_pattern.getLastPatternPosition()) {
-    if (*split_position != 0) {
-      split_before_last_pattern = session->clone(original_flow_file, 0, *split_position);
-    }
-    if (*split_position != original_flow_file->getSize()) {
-      split_after_last_pattern = session->clone(original_flow_file, *split_position, original_flow_file->getSize() - *split_position);
-    }
-    updateAttributesForSplitFiles(original_flow_file, split_before_last_pattern, split_after_last_pattern, *split_position);
-    return true;
-  } else {
+  ReadFlowFileContent read_flow_file_content;
+  gsl_Expects(session->read(original_flow_file, &read_flow_file_content) == 0);
+  auto last_regex_match = utils::StringUtils::getLastRegexMatch(read_flow_file_content.content, pattern_);
+  if (!last_regex_match.ready()) {
     split_before_last_pattern = session->clone(original_flow_file);
     split_after_last_pattern = nullptr;
     return false;
   }
+  auto split_position = getSplitPosition(last_regex_match, pattern_location_);
+  if (split_position != 0) {
+    split_before_last_pattern = session->clone(original_flow_file, 0, split_position);
+  }
+  if (split_position != original_flow_file->getSize()) {
+    split_after_last_pattern = session->clone(original_flow_file, split_position, original_flow_file->getSize() - split_position);
+  }
+  updateAttributesForSplitFiles(original_flow_file, split_before_last_pattern, split_after_last_pattern, split_position);
+  return true;
 }
 
 void DefragmentText::restore(const std::shared_ptr<core::FlowFile>& flowFile) {

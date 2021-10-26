@@ -390,6 +390,16 @@ std::string StringUtils::to_base64(const uint8_t* data, size_t length, bool url 
   return std::string(buf.data(), base64_length);
 }
 
+std::smatch StringUtils::getLastRegexMatch(const std::string& str, const std::regex& pattern) {
+  auto matches = std::sregex_iterator(str.begin(), str.end(), pattern);
+  std::smatch last_match;
+  while (matches != std::sregex_iterator()) {
+    last_match = *matches;
+    matches = std::next(matches);
+  }
+  return last_match;
+}
+
 constexpr uint8_t StringUtils::SKIP;
 constexpr uint8_t StringUtils::hex_lut[128];
 constexpr const char StringUtils::base64_enc_lut[];
