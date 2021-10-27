@@ -20,22 +20,28 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     set(PC ${Bash_EXECUTABLE} -c "set -x && \
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE}\")")
     # Define byproducts
+    set(INSTALL_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-install")
+    if (WIN32)
+        set(CMAKE_INSTALL_LIBDIR "lib")
+    else()
+        include(GNUInstallDirs)
+    endif()
     if (WIN32)
         set(SUFFIX "lib")
         set(PREFIX "")
-        set(AZURE_CORE_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/core/azure-core/${CMAKE_BUILD_TYPE}/${PREFIX}azure-core.${SUFFIX}")
-        set(AZURE_STORAGE_COMMON_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-common/${CMAKE_BUILD_TYPE}/${PREFIX}azure-storage-common.${SUFFIX}")
-        set(AZURE_STORAGE_BLOBS_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/${CMAKE_BUILD_TYPE}/${PREFIX}azure-storage-blobs.${SUFFIX}")
-        set(AZURE_IDENTITY_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/${CMAKE_BUILD_TYPE}/${PREFIX}azure-identity.${SUFFIX}")
-        set(AZURE_STORAGE_FILES_DATALAKE_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-files-datalake/${CMAKE_BUILD_TYPE}/${PREFIX}azure-storage-files-datalake.${SUFFIX}")
+        set(AZURE_CORE_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-core.${SUFFIX}")
+        set(AZURE_STORAGE_COMMON_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-storage-common.${SUFFIX}")
+        set(AZURE_STORAGE_BLOBS_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-storage-blobs.${SUFFIX}")
+        set(AZURE_IDENTITY_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-identity.${SUFFIX}")
+        set(AZURE_STORAGE_FILES_DATALAKE_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-storage-files-datalake.${SUFFIX}")
     else()
         set(SUFFIX "a")
         set(PREFIX "lib")
-        set(AZURE_CORE_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/core/azure-core/${PREFIX}azure-core.${SUFFIX}")
-        set(AZURE_STORAGE_COMMON_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-common/${PREFIX}azure-storage-common.${SUFFIX}")
-        set(AZURE_STORAGE_BLOBS_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/${PREFIX}azure-storage-blobs.${SUFFIX}")
-        set(AZURE_IDENTITY_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/${PREFIX}azure-identity.${SUFFIX}")
-        set(AZURE_STORAGE_FILES_DATALAKE_LIB "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-files-datalake/${PREFIX}azure-storage-files-datalake.${SUFFIX}")
+        set(AZURE_CORE_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-core.${SUFFIX}")
+        set(AZURE_STORAGE_COMMON_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-storage-common.${SUFFIX}")
+        set(AZURE_STORAGE_BLOBS_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-storage-blobs.${SUFFIX}")
+        set(AZURE_IDENTITY_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-identity.${SUFFIX}")
+        set(AZURE_STORAGE_FILES_DATALAKE_LIB "${INSTALL_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}azure-storage-files-datalake.${SUFFIX}")
     endif()
 
     set(AZURESDK_LIBRARIES_LIST
@@ -46,7 +52,8 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             "${AZURE_STORAGE_FILES_DATALAKE_LIB}")
 
     set(AZURE_SDK_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-        -DWARNINGS_AS_ERRORS=OFF)
+        -DWARNINGS_AS_ERRORS=OFF
+        -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR})
     append_third_party_passthrough_args(AZURE_SDK_CMAKE_ARGS "${AZURE_SDK_CMAKE_ARGS}")
 
     # Build project
@@ -56,6 +63,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             URL_HASH "SHA256=d4e80ea5e786dc689ddd04825d97ab91f5e1ef2787fa88a3d5ee00f0b820433f"
             BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
+            INSTALL_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-install"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
             STEP_TARGETS build
@@ -65,17 +73,11 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     )
 
     # Set dependencies
-    add_dependencies(azure-sdk-cpp-external-build CURL::libcurl LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL)
+    add_dependencies(azure-sdk-cpp-external CURL::libcurl LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL)
 
     # Set variables
     set(LIBAZURE_FOUND "YES" CACHE STRING "" FORCE)
-    set(LIBAZURE_INCLUDE_DIRS
-            "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/core/azure-core/inc/"
-            "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-blobs/inc/"
-            "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-common/inc/"
-            "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/identity/azure-identity/inc/"
-            "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src/sdk/storage/azure-storage-files-datalake/inc/"
-            CACHE STRING "" FORCE)
+    set(LIBAZURE_INCLUDE_DIRS "${INSTALL_DIR}/include" CACHE STRING "" FORCE)
     set(LIBAZURE_LIBRARIES ${AZURESDK_LIBRARIES_LIST} CACHE STRING "" FORCE)
 
     # Create imported targets
@@ -85,7 +87,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
 
     add_library(AZURE::azure-core STATIC IMPORTED)
     set_target_properties(AZURE::azure-core PROPERTIES IMPORTED_LOCATION "${AZURE_CORE_LIB}")
-    add_dependencies(AZURE::azure-core azure-sdk-cpp-external-build)
+    add_dependencies(AZURE::azure-core azure-sdk-cpp-external)
     target_include_directories(AZURE::azure-core INTERFACE ${LIBAZURE_INCLUDE_DIRS})
     target_link_libraries(AZURE::azure-core INTERFACE CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
     if (WIN32)
@@ -94,22 +96,22 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
 
     add_library(AZURE::azure-identity STATIC IMPORTED)
     set_target_properties(AZURE::azure-identity PROPERTIES IMPORTED_LOCATION "${AZURE_IDENTITY_LIB}")
-    add_dependencies(AZURE::azure-identity azure-sdk-cpp-external-build)
+    add_dependencies(AZURE::azure-identity azure-sdk-cpp-external)
     target_include_directories(AZURE::azure-identity INTERFACE ${LIBAZURE_INCLUDE_DIRS})
 
     add_library(AZURE::azure-storage-common STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-common PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_COMMON_LIB}")
-    add_dependencies(AZURE::azure-storage-common azure-sdk-cpp-external-build)
+    add_dependencies(AZURE::azure-storage-common azure-sdk-cpp-external)
     target_include_directories(AZURE::azure-storage-common INTERFACE ${LIBAZURE_INCLUDE_DIRS})
     target_link_libraries(AZURE::azure-storage-common INTERFACE LibXml2::LibXml2)
 
     add_library(AZURE::azure-storage-blobs STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-blobs PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_BLOBS_LIB}")
-    add_dependencies(AZURE::azure-storage-blobs azure-sdk-cpp-external-build)
+    add_dependencies(AZURE::azure-storage-blobs azure-sdk-cpp-external)
     target_include_directories(AZURE::azure-storage-blobs INTERFACE ${LIBAZURE_INCLUDE_DIRS})
 
     add_library(AZURE::azure-storage-files-datalake STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-files-datalake PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_FILES_DATALAKE_LIB}")
-    add_dependencies(AZURE::azure-storage-files-datalake azure-sdk-cpp-external-build)
+    add_dependencies(AZURE::azure-storage-files-datalake azure-sdk-cpp-external)
     target_include_directories(AZURE::azure-storage-files-datalake INTERFACE ${LIBAZURE_INCLUDE_DIRS})
 endfunction(use_bundled_libazure)
