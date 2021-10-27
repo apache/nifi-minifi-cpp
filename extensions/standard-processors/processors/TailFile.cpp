@@ -507,7 +507,7 @@ bool TailFile::getStateFromStateManager(std::map<std::string, TailState> &new_ta
         const std::string& current = state_map.at("file." + std::to_string(i) + ".current");
         uint64_t position = std::stoull(state_map.at("file." + std::to_string(i) + ".position"));
         uint64_t checksum = readOptionalUint64(state_map, "file." + std::to_string(i) + ".checksum");
-        std::chrono::system_clock::time_point last_read_time{std::chrono::milliseconds{
+        std::chrono::file_clock::time_point last_read_time{std::chrono::milliseconds{
             readOptionalInt64(state_map, "file." + std::to_string(i) + ".last_read_time")
         }};
 
@@ -691,7 +691,7 @@ void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const st
 
 bool TailFile::isOldFileInitiallyRead(TailState &state) const {
   // This is our initial processing and no stored state was found
-  return first_trigger_ && state.last_read_time_ == std::chrono::system_clock::time_point{};
+  return first_trigger_ && state.last_read_time_ == std::chrono::file_clock::time_point{};
 }
 
 void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
@@ -702,7 +702,7 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
       processAllRotatedFiles(session, state);
     } else if (initial_start_position_ == InitialStartPositions::CURRENT_TIME) {
       state.position_ = utils::file::FileUtils::file_size(full_file_name);
-      state.last_read_time_ = std::chrono::system_clock::now();
+      state.last_read_time_ = std::chrono::file_clock::now();
       state.checksum_ = utils::file::FileUtils::computeChecksum(full_file_name, state.position_);
       storeState();
       return;
@@ -808,7 +808,7 @@ void TailFile::updateFlowFileAttributes(const std::string &full_file_name, const
 
 void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const {
   state.position_ += size;
-  state.last_read_time_ = std::chrono::system_clock::now();
+  state.last_read_time_ = std::chrono::file_clock::now();
   state.checksum_ = checksum;
 }
 

@@ -138,7 +138,7 @@ TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
 
   test_controller.runSession();
 
-  REQUIRE_FALSE(utils::file::FileUtils::exists(test_controller.getInputFilePath()));
+  REQUIRE_FALSE(utils::file::exists(test_controller.getInputFilePath()));
 }
 
 TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
@@ -147,7 +147,7 @@ TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
 
   test_controller.runSession();
 
-  REQUIRE(utils::file::FileUtils::exists(test_controller.getInputFilePath()));
+  REQUIRE(utils::file::exists(test_controller.getInputFilePath()));
 }
 
 TEST_CASE("Hidden files are read when IgnoreHiddenFile property is false", "[getFileProperty]") {

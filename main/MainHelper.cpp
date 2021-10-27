@@ -83,7 +83,7 @@ namespace logging = minifi::core::logging;
 
 bool validHome(const std::string &home_path) {
   const std::string properties_file_path = utils::file::FileUtils::concat_path(home_path, DEFAULT_NIFI_PROPERTIES_FILE);
-  return utils::file::exists(properties_file_path);
+  return std::filesystem::exists(properties_file_path);
 }
 
 void setSyslogLogger() {

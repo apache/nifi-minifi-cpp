@@ -43,12 +43,12 @@ namespace processors {
 
 struct TailState {
   TailState(std::string path, std::string file_name, uint64_t position,
-            std::chrono::system_clock::time_point last_read_time,
+            std::chrono::file_clock::time_point last_read_time,
             uint64_t checksum)
       : path_(std::move(path)), file_name_(std::move(file_name)), position_(position), last_read_time_(last_read_time), checksum_(checksum) {}
 
   TailState(std::string path, std::string file_name)
-      : TailState{std::move(path), std::move(file_name), 0, std::chrono::system_clock::time_point{}, 0} {}
+      : TailState{std::move(path), std::move(file_name), 0, std::chrono::file_clock::time_point{}, 0} {}
 
   TailState() = default;
 
@@ -63,7 +63,7 @@ struct TailState {
   std::string path_;
   std::string file_name_;
   uint64_t position_ = 0;
-  std::chrono::system_clock::time_point last_read_time_;
+  std::chrono::file_clock::time_point last_read_time_;
   uint64_t checksum_ = 0;
 };
 
@@ -126,7 +126,7 @@ class TailFile : public core::Processor {
 
  private:
   struct TailStateWithMtime {
-    using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>;
+    using TimePoint = std::chrono::time_point<std::chrono::file_clock, std::chrono::seconds>;
 
     TailStateWithMtime(TailState tail_state, TimePoint mtime)
       : tail_state_(std::move(tail_state)), mtime_(mtime) {}

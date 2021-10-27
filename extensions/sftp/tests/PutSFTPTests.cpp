@@ -58,6 +58,7 @@
 #include "tools/SFTPTestServer.h"
 
 constexpr const char* PUBLIC_KEY_AUTH_ERROR_MESSAGE = "Failed to authenticate with publickey, error: Unable to extract public key from private key file: Wrong passphrase or invalid/unrecognized private key file format";  // NOLINT(whitespace/line_length)
+using namespace std::chrono_literals;  // NOLINT(build/namespaces)
 
 class PutSFTPTestsFixture {
  public:
@@ -156,11 +157,10 @@ class PutSFTPTestsFixture {
     REQUIRE(false == file.good());
   }
 
-  void testModificationTime(const std::string& relative_path, int64_t mtime) {
-    gsl_Expects(mtime >= 0);
+  void testModificationTime(const std::string& relative_path, std::filesystem::file_time_type mtime) {
     std::stringstream resultFile;
     resultFile << dst_dir << "/vfs/" << relative_path;
-    REQUIRE(gsl::narrow<uint64_t>(mtime) == utils::file::FileUtils::last_write_time(resultFile.str()));
+    REQUIRE(mtime == std::filesystem::last_write_time(resultFile.str()));
   }
 
   void testPermissions(const std::string& relative_path, uint32_t expected_permissions) {
@@ -504,7 +504,9 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP set mtime", "[PutSFTP]") {
   testController.runSession(plan, true);
 
   testFile("nifi_test/tstFile1.ext", "content 1");
-  testModificationTime("nifi_test/tstFile1.ext", 3000000000LL);
+  using namespace std::chrono;  // NOLINT(build/namespaces)
+  time_point<system_clock> modification_time = sys_days(January / 24 / 2065) + 5h + 20min;
+  testModificationTime("nifi_test/tstFile1.ext", file_clock::from_sys(modification_time));
 }
 
 #ifndef WIN32

@@ -44,6 +44,17 @@ C2Payload FileUpdateTrigger::getAction() {
   return response_payload;
 }
 
+std::optional<std::filesystem::file_time_type> FileUpdateTrigger::getLastUpdate() const {
+  std::lock_guard<std::mutex> lock(last_update_lock);
+  std::optional<std::filesystem::file_time_type> last_update = last_update_;
+  return last_update;
+}
+
+void FileUpdateTrigger::setLastUpdate(const std::optional<std::filesystem::file_time_type> &last_update) {
+  std::lock_guard<std::mutex> lock(last_update_lock);
+  last_update_ = last_update;
+}
+
 REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the last write time of a file has been changed.");
 
 } /* namespace c2 */
