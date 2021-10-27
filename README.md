@@ -405,7 +405,7 @@ advanced features.
   [100%] Built target run-tests
   ```
 
-- Create a binary assembly located in your build directory with suffix -bin.tar.gz
+- Create a binary assembly located in your build directory with suffix .tar.gz
   ```
   ~/Development/code/apache/nifi-minifi-cpp/build
   $ make package
@@ -414,7 +414,7 @@ advanced features.
   CPack: Install projects
   CPack: - Install directory: ~/Development/code/apache/nifi-minifi-cpp
   CPack: Create package
-  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.11.0-bin.tar.gz generated.
+  CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.11.0.tar.gz generated.
   ```
 
 - Create a source assembly located in your build directory with suffix -source.tar.gz
@@ -436,8 +436,8 @@ $ make docker
 NiFi-MiNiFi-CPP Version: 0.11.0
 Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
 CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.11.0-bin.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.11.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.11.0-bin.tar.gz -t apacheminificpp:0.11.0 .'
+MiNiFi Package: nifi-minifi-cpp-0.11.0.tar.gz
+Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.11.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.11.0.tar.gz -t apacheminificpp:0.11.0 .'
 Sending build context to Docker daemon 777.2 kB
 Step 1 : FROM alpine:3.5
  ---> 88e169ea8f46
@@ -465,11 +465,11 @@ provides the command to build your distro and the output file in your build dire
 
 | Distro                 | command           | Output File  |
 | ---------------------- | :---------------- | :----------- |
-| CentOS 7               | make centos       | nifi-minifi-cpp-centos-$VERSION-bin.tar.gz
-| Debian 10 (buster)     | make debian       | nifi-minifi-cpp-debian-$VERSION-bin.tar.gz
-| Fedora 34              | make fedora       | nifi-minifi-cpp-fedora-$VERSION-bin.tar.gz
-| Ubuntu 18.04 (bionic)  | make u18          | nifi-minifi-cpp-bionic-$VERSION-bin.tar.gz
-| Ubuntu 20.04 (focal)   | make u20          | nifi-minifi-cpp-focal-$VERSION-bin.tar.gz
+| CentOS 7               | make centos       | nifi-minifi-cpp-centos-$VERSION.tar.gz
+| Debian 10 (buster)     | make debian       | nifi-minifi-cpp-debian-$VERSION.tar.gz
+| Fedora 34              | make fedora       | nifi-minifi-cpp-fedora-$VERSION.tar.gz
+| Ubuntu 18.04 (bionic)  | make u18          | nifi-minifi-cpp-bionic-$VERSION.tar.gz
+| Ubuntu 20.04 (focal)   | make u20          | nifi-minifi-cpp-focal-$VERSION.tar.gz
 
 You can avoid the requirement of an up-to-date compiler when generating the build system by adding `-DDOCKER_BUILD_ONLY=ON` to the cmake command line. This disables all cmake targets except the docker build and test ones.
 
@@ -484,9 +484,9 @@ $ snapcraft
 from the project directory. Further instructions are available in the [Snapcraft documentation](https://docs.snapcraft.io/build-snaps/).
 
 ### Installation
-After [building](#building) MiNiFi C++, extract the generated binary package 'nifi-minifi-cpp-$VERSION-bin.tar.gz' at your desired installation path.
+After [building](#building) MiNiFi C++, extract the generated binary package 'nifi-minifi-cpp-$VERSION.tar.gz' at your desired installation path.
 ```shell
-$ MINIFI_PACKAGE="$(pwd)"/build/nifi-minifi-cpp-*-bin.tar.gz
+$ MINIFI_PACKAGE="$(pwd)"/build/nifi-minifi-cpp-*.tar.gz
 $ pushd /opt
 $ sudo tar xvzf "$MINIFI_PACKAGE"
 $ cd nifi-minifi-cpp-*

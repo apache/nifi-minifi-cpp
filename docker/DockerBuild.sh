@@ -166,5 +166,5 @@ echo "Docker Command: 'DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}'"
 DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
 
 if [ -n "${DUMP_LOCATION}" ]; then
-  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}-bin.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
+  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
 fi
