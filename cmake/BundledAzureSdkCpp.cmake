@@ -61,12 +61,10 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
             azure-sdk-cpp-external
             URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-storage-files-datalake_12.2.0.tar.gz
             URL_HASH "SHA256=d4e80ea5e786dc689ddd04825d97ab91f5e1ef2787fa88a3d5ee00f0b820433f"
-            BUILD_IN_SOURCE true
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
             INSTALL_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-install"
             BUILD_BYPRODUCTS "${AZURESDK_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
-            STEP_TARGETS build
             CMAKE_ARGS ${AZURE_SDK_CMAKE_ARGS}
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             PATCH_COMMAND ${PC}
