@@ -58,7 +58,7 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
   }
 
  private:
-  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger();
   std::vector<std::string> flow_file_contents_;
 };
 

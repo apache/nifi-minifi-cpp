@@ -54,7 +54,7 @@ class WriteToFlowFileTestProcessor : public core::Processor {
   }
 
  private:
-  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger();
   std::string content_;
 };
 

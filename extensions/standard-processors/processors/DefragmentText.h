@@ -87,7 +87,7 @@ class DefragmentText : public core::Processor {
   std::regex pattern_;
   PatternLocation pattern_location_;
 
-  std::shared_ptr<logging::Logger> logger_ = logging::LoggerFactory<DefragmentText>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DefragmentText>::getLogger();
   core::FlowFileStore flow_file_store_;
   Buffer buffer_;
 
