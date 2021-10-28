@@ -21,6 +21,8 @@
 #include <fstream>
 #include <string>
 
+#include "utils/gsl.h"
+
 namespace org::apache::nifi::minifi::utils::file {
 
 class FileIterator {
@@ -78,7 +80,7 @@ class FileView {
       throw std::ios_base::failure("Couldn't open file '" + file.string() + "'");
     }
     file_.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    file_.seekg(0, std::ifstream::seekdir::end);
+    file_.seekg(0, std::ios_base::end);
     file_size_ = file_.tellg();
   }
 
