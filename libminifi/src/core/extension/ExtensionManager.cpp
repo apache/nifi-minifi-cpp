@@ -16,11 +16,16 @@
  */
 
 #include "core/extension/ExtensionManager.h"
+
+#include <algorithm>
+
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
 #include "core/extension/Executable.h"
 #include "utils/file/FilePattern.h"
 #include "core/extension/DynamicLibrary.h"
+#include "utils/file/FileView.h"
+#include "agent/agent_version.h"
 
 namespace org {
 namespace apache {
@@ -36,8 +41,33 @@ struct LibraryDescriptor {
   std::filesystem::path dir;
   std::string filename;
 
-  bool verify(const std::shared_ptr<logging::Logger>& /*logger*/) const {
-    // TODO(adebreceni): check signature
+  [[nodiscard]]
+  bool verify(const std::shared_ptr<logging::Logger>& logger) const {
+    auto path = getFullPath();
+    try {
+      utils::file::FileView file(path);
+      const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
+      const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";
+      auto build_id_begin = std::search(file.begin(), file.end(), begin_marker.begin(), begin_marker.end());
+      if (build_id_begin == file.end()) {
+        logger->log_error("Couldn't find start of build identifier in '%s'", path.string());
+        return false;
+      }
+      std::advance(build_id_begin, begin_marker.length());
+      auto build_id_end = std::search(build_id_begin, file.end(), end_marker.begin(), end_marker.end());
+      if (build_id_end == file.end()) {
+        logger->log_error("Couldn't find end of build identifier in '%s'", path.string());
+        return false;
+      }
+      std::string build_id(build_id_begin, build_id_end);
+      if (build_id != AgentBuild::BUILD_IDENTIFIER) {
+        logger->log_error("Build identifier does not match in '%s', expected '%s', got '%s'", path.string(), AgentBuild::BUILD_IDENTIFIER, build_id);
+        return false;
+      }
+    } catch (const std::ios_base::failure& file_error) {
+      logger->log_error("Error while verifying library '%s': %s", path.string(), file_error.what());
+      return false;
+    }
     return true;
   }
 

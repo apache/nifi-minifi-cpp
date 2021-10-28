@@ -22,10 +22,29 @@ define_property(GLOBAL PROPERTY EXTENSION-OPTIONS
 
 set_property(GLOBAL PROPERTY EXTENSION-OPTIONS "")
 
+set(extension-build-info-file "${CMAKE_CURRENT_BINARY_DIR}/ExtensionBuildInfo.cpp")
+file(GENERATE OUTPUT ${extension-build-info-file}
+    CONTENT "\
+    #ifdef BUILD_ID_VARIABLE_NAME\n\
+    extern const char* const BUILD_ID_VARIABLE_NAME = \"__EXTENSION_BUILD_IDENTIFIER_BEGIN__${BUILD_IDENTIFIER}__EXTENSION_BUILD_IDENTIFIER_END__\";\n\
+    #else\n\
+    static_assert(false, \"BUILD_ID_VARIABLE_NAME is not defined\");\n\
+    #endif\n")
+
+function(get_build_id_variable_name extension-name output)
+  string(REPLACE "-" "_" result ${extension-name})
+  string(APPEND result "_build_identifier")
+  set("${output}" "${result}" PARENT_SCOPE)
+endfunction()
+
 macro(register_extension extension-name)
   get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
   set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
-  target_compile_definitions(${extension-name} PRIVATE "MODULE_NAME=${extension-name}")
+  get_build_id_variable_name(${extension-name} build-id-variable-name)
+  target_sources(${extension-name} PRIVATE ${extension-build-info-file})
+  target_compile_definitions(${extension-name}
+      PRIVATE "MODULE_NAME=${extension-name}"
+      PRIVATE "BUILD_ID_VARIABLE_NAME=${build-id-variable-name}")
   set_target_properties(${extension-name} PROPERTIES
           ENABLE_EXPORTS True
           POSITION_INDEPENDENT_CODE ON)
