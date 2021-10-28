@@ -41,6 +41,7 @@ macro(register_extension extension-name)
   get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
   set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
   get_build_id_variable_name(${extension-name} build-id-variable-name)
+  set_source_files_properties(${extension-build-info-file} PROPERTIES GENERATED TRUE)
   target_sources(${extension-name} PRIVATE ${extension-build-info-file})
   target_compile_definitions(${extension-name}
       PRIVATE "MODULE_NAME=${extension-name}"
