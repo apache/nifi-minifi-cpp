@@ -58,7 +58,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
 
     # Build project
     ExternalProject_Add(
-            azure-sdk-cpp-external
+            asdkext  # short for azure-sdk-cpp-external due to windows MAX_PATH limitations
             URL https://github.com/Azure/azure-sdk-for-cpp/archive/refs/tags/azure-storage-files-datalake_12.2.0.tar.gz
             URL_HASH "SHA256=d4e80ea5e786dc689ddd04825d97ab91f5e1ef2787fa88a3d5ee00f0b820433f"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/azure-sdk-cpp-src"
@@ -71,7 +71,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
     )
 
     # Set dependencies
-    add_dependencies(azure-sdk-cpp-external CURL::libcurl LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL)
+    add_dependencies(asdkext CURL::libcurl LibXml2::LibXml2 OpenSSL::Crypto OpenSSL::SSL)
 
     # Set variables
     set(LIBAZURE_FOUND "YES" CACHE STRING "" FORCE)
@@ -85,7 +85,7 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
 
     add_library(AZURE::azure-core STATIC IMPORTED)
     set_target_properties(AZURE::azure-core PROPERTIES IMPORTED_LOCATION "${AZURE_CORE_LIB}")
-    add_dependencies(AZURE::azure-core azure-sdk-cpp-external)
+    add_dependencies(AZURE::azure-core asdkext)
     target_include_directories(AZURE::azure-core INTERFACE ${LIBAZURE_INCLUDE_DIRS})
     target_link_libraries(AZURE::azure-core INTERFACE CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
     if (WIN32)
@@ -94,22 +94,22 @@ function(use_bundled_libazure SOURCE_DIR BINARY_DIR)
 
     add_library(AZURE::azure-identity STATIC IMPORTED)
     set_target_properties(AZURE::azure-identity PROPERTIES IMPORTED_LOCATION "${AZURE_IDENTITY_LIB}")
-    add_dependencies(AZURE::azure-identity azure-sdk-cpp-external)
+    add_dependencies(AZURE::azure-identity asdkext)
     target_include_directories(AZURE::azure-identity INTERFACE ${LIBAZURE_INCLUDE_DIRS})
 
     add_library(AZURE::azure-storage-common STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-common PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_COMMON_LIB}")
-    add_dependencies(AZURE::azure-storage-common azure-sdk-cpp-external)
+    add_dependencies(AZURE::azure-storage-common asdkext)
     target_include_directories(AZURE::azure-storage-common INTERFACE ${LIBAZURE_INCLUDE_DIRS})
     target_link_libraries(AZURE::azure-storage-common INTERFACE LibXml2::LibXml2)
 
     add_library(AZURE::azure-storage-blobs STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-blobs PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_BLOBS_LIB}")
-    add_dependencies(AZURE::azure-storage-blobs azure-sdk-cpp-external)
+    add_dependencies(AZURE::azure-storage-blobs asdkext)
     target_include_directories(AZURE::azure-storage-blobs INTERFACE ${LIBAZURE_INCLUDE_DIRS})
 
     add_library(AZURE::azure-storage-files-datalake STATIC IMPORTED)
     set_target_properties(AZURE::azure-storage-files-datalake PROPERTIES IMPORTED_LOCATION "${AZURE_STORAGE_FILES_DATALAKE_LIB}")
-    add_dependencies(AZURE::azure-storage-files-datalake azure-sdk-cpp-external)
+    add_dependencies(AZURE::azure-storage-files-datalake asdkext)
     target_include_directories(AZURE::azure-storage-files-datalake INTERFACE ${LIBAZURE_INCLUDE_DIRS})
 endfunction(use_bundled_libazure)
