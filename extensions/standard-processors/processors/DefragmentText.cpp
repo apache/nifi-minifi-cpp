@@ -183,7 +183,7 @@ struct ReadFlowFileContent : public InputStreamCallback {
     const auto ret = stream->read(reinterpret_cast<uint8_t *>(content.data()), stream->size());
     if (io::isError(ret))
       return -1;
-    return 0;
+    return gsl::narrow<int64_t>(ret);
   }
 };
 
