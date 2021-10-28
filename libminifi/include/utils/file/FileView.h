@@ -19,6 +19,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <string>
 
 namespace org::apache::nifi::minifi::utils::file {
 
@@ -26,6 +27,7 @@ class FileIterator {
   friend class FileView;
   FileIterator(std::ifstream* file, std::ifstream::off_type offset)
     : file_(file), offset_(offset) {}
+
  public:
   using difference_type = std::ifstream::off_type;
   using iterator_category = std::forward_iterator_tag;
@@ -39,7 +41,7 @@ class FileIterator {
   }
 
   FileIterator operator++(int) {
-    FileIterator copy(*this);
+    FileIterator copy = *this;
     ++offset_;
     return copy;
   }
