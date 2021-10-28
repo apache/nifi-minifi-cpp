@@ -353,28 +353,28 @@ namespace processors {
         switch (nodeDataType_) {
           case opc::OPCNodeDataType::Int64: {
             int64_t value = std::stoll(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::UInt64: {
             uint64_t value = std::stoull(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::Int32: {
             int32_t value = std::stoi(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::UInt32: {
             uint32_t value = std::stoul(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::Boolean: {
             const auto contentstr_parsed = utils::StringUtils::toBool(contentstr);
             if (contentstr_parsed) {
-              sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr_parsed.value(), nodeDataType_, &resultnode);
+              sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr_parsed.value(), &resultnode);
             } else {
               throw opc::OPCException(GENERAL_EXCEPTION, "Content cannot be converted to bool");
             }
@@ -382,16 +382,16 @@ namespace processors {
           }
           case opc::OPCNodeDataType::Float: {
             float value = std::stof(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::Double: {
             double value = std::stod(contentstr);
-            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, value, &resultnode);
             break;
           }
           case opc::OPCNodeDataType::String: {
-            sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr, nodeDataType_, &resultnode);
+            sc = connection_->add_node(parentNodeID_, targetnode, browsename, contentstr, &resultnode);
             break;
           }
           default:

@@ -66,7 +66,7 @@ class Client {
   UA_StatusCode update_node(const UA_NodeId nodeId, T value);
 
   template<typename T>
-  UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
+  UA_StatusCode add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, UA_NodeId *receivedNodeId);
 
   static std::unique_ptr<Client> createClient(std::shared_ptr<core::logging::Logger> logger, const std::string& applicationURI,
                                               const std::vector<char>& certBuffer, const std::vector<char>& keyBuffer,
@@ -124,8 +124,6 @@ struct NodeData {
 static std::map<std::string, OPCNodeDataType>  StringToOPCDataTypeMap = {{"Int64", OPCNodeDataType::Int64}, {"UInt64", OPCNodeDataType::UInt64 }, {"Int32", OPCNodeDataType::Int32},
                                                                          {"UInt32", OPCNodeDataType::UInt32}, {"Boolean", OPCNodeDataType::Boolean}, {"Float", OPCNodeDataType::Float},
                                                                          {"Double", OPCNodeDataType::Double}, {"String", OPCNodeDataType::String}};
-
-int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt);
 
 std::string nodeValue2String(const NodeData& nd);
 
