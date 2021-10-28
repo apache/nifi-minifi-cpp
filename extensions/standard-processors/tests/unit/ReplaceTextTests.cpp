@@ -66,9 +66,9 @@ TEST_CASE("ReplaceText can parse its properties", "[onSchedule]") {
 }
 
 TEST_CASE("Prepend works correctly in ReplaceText", "[applyReplacements][Prepend]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::PREPEND);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::PREPEND);
   replace_text.setReplacementValue("orange");
 
   CHECK(replace_text.applyReplacements("") == "orange");
@@ -76,9 +76,9 @@ TEST_CASE("Prepend works correctly in ReplaceText", "[applyReplacements][Prepend
 }
 
 TEST_CASE("Append works correctly in ReplaceText", "[applyReplacements][Append]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::APPEND);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::APPEND);
   replace_text.setReplacementValue("orange");
 
   CHECK(replace_text.applyReplacements("") == "orange");
@@ -86,9 +86,9 @@ TEST_CASE("Append works correctly in ReplaceText", "[applyReplacements][Append]"
 }
 
 TEST_CASE("Regex Replace works correctly in ReplaceText", "[applyReplacements][Regex Replace]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::REGEX_REPLACE);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::REGEX_REPLACE);
   replace_text.setSearchRegex("a\\w+e");
   replace_text.setReplacementValue("orange");
 
@@ -98,9 +98,9 @@ TEST_CASE("Regex Replace works correctly in ReplaceText", "[applyReplacements][R
 }
 
 TEST_CASE("Regex Replace works with back references in ReplaceText", "[applyReplacements][Regex Replace]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::REGEX_REPLACE);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::REGEX_REPLACE);
   replace_text.setSearchRegex("a(b+)c");
   replace_text.setReplacementValue("$& [found $1]");
 
@@ -111,9 +111,9 @@ TEST_CASE("Regex Replace works with back references in ReplaceText", "[applyRepl
 }
 
 TEST_CASE("Regex Replace treats non-existent back references as blank in ReplaceText", "[applyReplacements][Regex Replace]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::REGEX_REPLACE);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::REGEX_REPLACE);
   replace_text.setSearchRegex("a(b+)c");
   replace_text.setReplacementValue("_$1_ '$2'");
 
@@ -124,9 +124,9 @@ TEST_CASE("Regex Replace treats non-existent back references as blank in Replace
 }
 
 TEST_CASE("Back references can be escaped when using Regex Replace in ReplaceText", "[applyReplacements][Regex Replace]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::REGEX_REPLACE);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::REGEX_REPLACE);
   replace_text.setSearchRegex("a(b+)c");
   replace_text.setReplacementValue("$1 costs $$2");
 
@@ -137,9 +137,9 @@ TEST_CASE("Back references can be escaped when using Regex Replace in ReplaceTex
 }
 
 TEST_CASE("Literal replace works correctly in ReplaceText", "[applyReplacements][Literal Replace]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::LITERAL_REPLACE);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::LITERAL_REPLACE);
   replace_text.setSearchValue("apple");
   replace_text.setReplacementValue("orange");
 
@@ -149,9 +149,9 @@ TEST_CASE("Literal replace works correctly in ReplaceText", "[applyReplacements]
 }
 
 TEST_CASE("Always Replace works correctly in ReplaceText", "[applyReplacements][Always Replace]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::ALWAYS_REPLACE);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE);
   replace_text.setReplacementValue("orange");
 
   CHECK(replace_text.applyReplacements("") == "orange");
@@ -160,9 +160,9 @@ TEST_CASE("Always Replace works correctly in ReplaceText", "[applyReplacements][
 }
 
 TEST_CASE("Substitute Variables works correctly in ReplaceText", "[applyReplacements][Substitute Variables]") {
-  processors::ReplaceTextTestAccessor replace_text;
-  replace_text.setEvaluationMode(processors::EvaluationModeType::ENTIRE_TEXT);
-  replace_text.setReplacementStrategy(processors::ReplacementStrategyType::SUBSTITUTE_VARIABLES);
+  minifi::processors::ReplaceTextTestAccessor replace_text;
+  replace_text.setEvaluationMode(minifi::processors::EvaluationModeType::ENTIRE_TEXT);
+  replace_text.setReplacementStrategy(minifi::processors::ReplacementStrategyType::SUBSTITUTE_VARIABLES);
 
   const auto flow_file = std::make_shared<minifi::FlowFileRecord>();
   flow_file->setAttribute("color", "green");
@@ -181,7 +181,7 @@ TEST_CASE("Substitute Variables works correctly in ReplaceText", "[applyReplacem
 TEST_CASE("Regex Replace works correctly in ReplaceText in line by line mode", "[Line-by-Line][Regex Replace]") {
   TestController testController;
   std::shared_ptr<TestPlan> plan = testController.createPlan();
-  LogTestController::getInstance().setDebug<processors::LogAttribute>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
   std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
   plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana\n");
@@ -290,7 +290,7 @@ class HandleEmptyIncomingFlowFile {
   void setExpectedOutput(const std::string& expected_output) { expected_output_ = expected_output; }
 
   void run() {
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
     std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
     plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::FileSize.getName(), "0 B");
@@ -352,7 +352,7 @@ class UseExpressionLanguage {
   void setExpectedOutput(const std::string& expected_output) { expected_output_ = expected_output; }
 
   void run() {
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
 
     std::shared_ptr<core::Processor> generate_flow_file = plan->addProcessor("GenerateFlowFile", "generate_flow_file");
     plan->setProperty(generate_flow_file, minifi::processors::GenerateFlowFile::CustomText.getName(), "apple\n pear\n orange\n banana\n");

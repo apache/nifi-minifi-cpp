@@ -93,7 +93,7 @@ class ReplaceText : public core::Processor {
   EvaluationModeType evaluation_mode_ = EvaluationModeType::LINE_BY_LINE;
   LineByLineEvaluationModeType line_by_line_evaluation_mode_ = LineByLineEvaluationModeType::ALL;
   ReplacementStrategyType replacement_strategy_ = ReplacementStrategyType::REGEX_REPLACE;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

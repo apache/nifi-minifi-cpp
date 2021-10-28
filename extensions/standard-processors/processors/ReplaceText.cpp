@@ -76,7 +76,7 @@ const core::Relationship ReplaceText::Failure("failure", "FlowFiles that could n
 
 ReplaceText::ReplaceText(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid),
-    logger_(logging::LoggerFactory<ReplaceText>::getLogger()) {
+    logger_(core::logging::LoggerFactory<ReplaceText>::getLogger()) {
 }
 
 void ReplaceText::initialize() {
