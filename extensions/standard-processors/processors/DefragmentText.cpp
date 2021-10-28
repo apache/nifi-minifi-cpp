@@ -202,7 +202,7 @@ bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
                                                 std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                                 std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
   ReadFlowFileContent read_flow_file_content;
-  gsl_Expects(session->read(original_flow_file, &read_flow_file_content) == 0);
+  session->read(original_flow_file, &read_flow_file_content);
   auto last_regex_match = utils::StringUtils::getLastRegexMatch(read_flow_file_content.content, pattern_);
   if (!last_regex_match.ready()) {
     split_before_last_pattern = session->clone(original_flow_file);
