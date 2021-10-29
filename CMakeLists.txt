@@ -781,6 +781,7 @@ install(FILES LICENSE README.md NOTICE
 		DESTINATION .
 		COMPONENT bin)
 
+include(CPackComponent)
 
 if (WIN32)
 	set(CPACK_GENERATOR "WIX")
@@ -808,14 +809,29 @@ else()
 endif()
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "ApacheNiFiMiNiFi")
 set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
-set(CPACK_RDKAFKA_COMPONENT_INSTALL ON)
-set(CPACK_MQTT_COMPONENT_INSTALL ON)
+set(CPACK_COMPONENTS_GROUPING "ALL_COMPONENTS_IN_ONE")
+
+
+# !WARNING! we need to manually add to CPACK_COMPONENTS_ALL otherwise
+# all components specified in "install" directives are added
+# (including thirdparties like range-v3)
+
+list(APPEND CPACK_COMPONENTS_ALL bin)
+cpack_add_component(bin DISPLAY_NAME "MiNiFi C++ executables" REQUIRED)
 if(WIN32)
-	set(CPACK_COMPONENTS_ALL bin conf minifijni tzdata)
+	list(APPEND CPACK_COMPONENTS_ALL tzdata)
+	cpack_add_component(tzdata DISPLAY_NAME "Timezone database for Expression Language")
 else()
-	set(CPACK_COMPONENTS_ALL bin conf minifijni)
+	list(APPEND CPACK_COMPONENTS_ALL conf)
+	cpack_add_component(conf DISPLAY_NAME "Default configuration files" REQUIRED)
 endif()
 
+cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
+foreach(extension ${selected_extensions})
+	get_component_name(${extension} component-name)
+	list(APPEND CPACK_COMPONENTS_ALL ${component-name})
+	cpack_add_component(${component-name} DISPLAY_NAME ${extension} GROUP extensions DEPENDS bin)
+endforeach()
 
 include(CPack)
 ### include modules
