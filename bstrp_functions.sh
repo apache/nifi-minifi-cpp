@@ -391,6 +391,7 @@ show_supported_features() {
   echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
   echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
   echo "Z. NanoFi Support ..............$(print_feature_status NANOFI_ENABLED)"
+  echo "AA. Splunk Support .............$(print_feature_status SPLUNK_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -445,6 +446,7 @@ read_feature_options(){
     x) ToggleFeature AZURE_ENABLED ;;
     y) ToggleFeature SYSTEMD_ENABLED ;;
     z) ToggleFeature NANOFI_ENABLED ;;
+    aa) ToggleFeature SPLUNK_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;

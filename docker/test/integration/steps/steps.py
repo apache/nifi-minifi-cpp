@@ -94,6 +94,7 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
 @given("a {processor_type} processor set up to communicate with a kafka broker instance")
 @given("a {processor_type} processor set up to communicate with an MQTT broker instance")
+@given("a {processor_type} processor set up to communicate with the Splunk HEC instance")
 def step_impl(context, processor_type):
     context.execute_steps("given a {processor_type} processor in the \"{minifi_container_name}\" flow".format(processor_type=processor_type, minifi_container_name="minifi-cpp-flow"))
 
@@ -142,6 +143,13 @@ def step_impl(context, property_name, processor_name, property_value):
         processor.unset_property(property_name)
     else:
         processor.set_property(property_name, property_value)
+
+
+@given("the \"{property_name}\" properties of the {processor_name_one} and {processor_name_two} processors are set to the same random guid")
+def step_impl(context, property_name, processor_name_one, processor_name_two):
+    uuid_str = str(uuid.uuid4())
+    context.test.get_node_by_name(processor_name_one).set_property(property_name, uuid_str)
+    context.test.get_node_by_name(processor_name_two).set_property(property_name, uuid_str)
 
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to match {key_attribute_encoding} encoded kafka message key \"{message_key}\"")
@@ -321,6 +329,12 @@ def step_impl(context):
 @given("an Azure storage server is set up in correspondence with the PutAzureBlobStorage")
 def step_impl(context):
     context.test.acquire_container("azure-storage-server", "azure-storage-server")
+
+
+# splunk hec setup
+@given("a Splunk HEC is set up and running")
+def step_impl(context):
+    context.test.start_splunk()
 
 
 @given("the kafka broker is started")
@@ -599,3 +613,15 @@ def step_impl(context, log_pattern):
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")
     context.test.start()
+
+
+# Splunk
+@then('an event is registered in Splunk HEC with the content \"{content}\"')
+def step_imp(context, content):
+    context.test.check_splunk_event("splunk", content)
+
+
+@then('an event is registered in Splunk HEC with the content \"{content}\" with \"{source}\" set as source and \"{source_type}\" set as sourcetype and \"{host}\" set as host')
+def step_imp(context, content, source, source_type, host):
+    attr = {"source": source, "sourcetype": source_type, "host": host}
+    context.test.check_splunk_event_with_attributes("splunk", content, attr)

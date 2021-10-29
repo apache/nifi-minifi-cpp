@@ -60,6 +60,12 @@ class MiNiFi_integration_test():
         self.cluster.deploy('kafka-broker')
         assert self.wait_for_container_startup_to_finish('kafka-broker')
 
+    def start_splunk(self):
+        self.cluster.acquire_container('splunk', 'splunk')
+        self.cluster.deploy('splunk')
+        assert self.wait_for_container_startup_to_finish('splunk')
+        assert self.cluster.enable_hec_indexer('splunk', 'splunk_hec_token')
+
     def start(self):
         logging.info("MiNiFi_integration_test start")
         self.cluster.deploy_flow()
@@ -190,6 +196,12 @@ class MiNiFi_integration_test():
 
     def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
         assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name)
+
+    def check_splunk_event(self, splunk_container_name, query):
+        assert self.cluster.check_splunk_event(splunk_container_name, query)
+
+    def check_splunk_event_with_attributes(self, splunk_container_name, query, attributes):
+        assert self.cluster.check_splunk_event_with_attributes(splunk_container_name, query, attributes)
 
     def check_minifi_log_contents(self, line, timeout_seconds=60):
         self.check_container_log_contents("minifi-cpp", line, timeout_seconds)

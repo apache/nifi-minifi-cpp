@@ -38,6 +38,24 @@ namespace utils {
 namespace timeutils {
 
 /**
+ * Converts the time point to the elapsed time since epoch
+ * @returns TimeUnit since epoch
+ */
+template<typename TimeUnit, typename TimePoint>
+uint64_t getTimeStamp(const TimePoint& time_point) {
+  return std::chrono::duration_cast<TimeUnit>(time_point.time_since_epoch()).count();
+}
+
+/**
+ * Converts the time since epoch into a time point
+ * @returns the time point matching the input timestamp
+ */
+template<typename TimeUnit, typename ClockType>
+std::chrono::time_point<ClockType> getTimePoint(uint64_t timestamp) {
+  return std::chrono::time_point<ClockType>() + TimeUnit(timestamp);
+}
+
+/**
  * Gets the current time in milliseconds
  * @returns milliseconds since epoch
  */
