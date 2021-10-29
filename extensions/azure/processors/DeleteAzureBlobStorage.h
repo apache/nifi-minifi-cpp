@@ -59,8 +59,12 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageProcessorBase {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   explicit DeleteAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageProcessorBase(name, uuid, logging::LoggerFactory<DeleteAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+    : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
   std::optional<storage::DeleteAzureBlobStorageParameters> buildDeleteAzureBlobStorageParameters(

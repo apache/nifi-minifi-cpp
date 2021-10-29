@@ -88,15 +88,7 @@ void DeleteAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContex
     return;
   }
 
-  bool result = false;
-  {
-    // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
-    // When used in multithreaded environment make sure to use the azure_storage_mutex_ to lock the wrapper so the
-    // client is not reset with different configuration while another thread is using it.
-    std::lock_guard<std::mutex> lock(azure_storage_mutex_);
-    result = azure_blob_storage_.deleteBlob(*params);
-  }
-
+  auto result = azure_blob_storage_.deleteBlob(*params);
   if (result) {
     logger_->log_debug("Successfully deleted blob '%s' from Azure Storage container '%s'", params->blob_name, params->container_name);
     session->transfer(flow_file, Success);
