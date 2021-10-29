@@ -58,11 +58,6 @@ struct string_traits<wchar_t>{
   }
 };
 
-enum class Case {
-  SENSITIVE,
-  INSENSITIVE
-};
-
 /**
  * Stateless String utility class.
  *
