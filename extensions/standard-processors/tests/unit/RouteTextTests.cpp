@@ -19,6 +19,8 @@
 #include "TestBase.h"
 #include "processors/RouteText.h"
 
+namespace processors = minifi::processors;
+
 struct RouteTextController : public TestController {
   struct FlowFilePattern {
     FlowFilePattern& attr(const std::string& name, const std::optional<std::string>& value) {
