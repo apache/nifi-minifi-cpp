@@ -212,7 +212,10 @@ void HTTPClient::setContentType(std::string content_type) {
 }
 
 std::string HTTPClient::escape(std::string string_to_escape) {
-  return curl_easy_escape(http_session_, string_to_escape.c_str(), gsl::narrow<int>(string_to_escape.length()));
+  struct curl_deleter { void operator()(void* p) noexcept { curl_free(p); } };
+  std::unique_ptr<char, curl_deleter> escaped_chars{curl_easy_escape(http_session_, string_to_escape.c_str(), gsl::narrow<int>(string_to_escape.length()))};
+  std::string escaped_string(escaped_chars.get());
+  return escaped_string;
 }
 
 void HTTPClient::setPostFields(const std::string& input) {

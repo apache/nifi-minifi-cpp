@@ -115,6 +115,7 @@ option(ENABLE_SFTP "Enables SFTP support." OFF)
 option(ENABLE_OPENWSMAN "Enables the Openwsman extensions." OFF)
 option(ENABLE_AZURE "Enables Azure support." OFF)
 option(ENABLE_ENCRYPT_CONFIG "Enables build of encrypt-config binary." ON)
+option(ENABLE_SPLUNK "Enable Splunk support" OFF)
 option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Ideal for systems without an up-to-date compiler." OFF)
 
 ## Keep all option definitions above this line
@@ -596,6 +597,11 @@ endif()
 ## Add the systemd extension
 if (ENABLE_SYSTEMD)
 	createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "extensions/systemd/tests")
+endif()
+
+## Add the splunk extension
+if (ENABLE_ALL OR ENABLE_SPLUNK)
+	createExtension(SPLUNK-EXTENSIONS "SPLUNK EXTENSIONS" "This enables Splunk support" "extensions/splunk" "extensions/splunk/tests")
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN

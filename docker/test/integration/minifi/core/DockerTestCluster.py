@@ -5,6 +5,9 @@ import sys
 import time
 import os
 import re
+import tarfile
+import io
+import tempfile
 
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
@@ -135,6 +138,63 @@ class DockerTestCluster(SingleNodeDockerCluster):
         ls_result = output.decode(self.get_stdout_encoding())
         return code == 0 and not ls_result
 
+    @retry_check()
+    def check_splunk_event(self, container_name, query):
+        (code, output) = self.client.containers.get(container_name).exec_run(["sudo", "/opt/splunk/bin/splunk", "search", query, "-auth", "admin:splunkadmin"])
+        if code != 0:
+            return False
+        return query in output.decode("utf-8")
+
+    @retry_check()
+    def check_splunk_event_with_attributes(self, container_name, query, attributes):
+        (code, output) = self.client.containers.get(container_name).exec_run(["sudo", "/opt/splunk/bin/splunk", "search", query, "-output", "json", "-auth", "admin:splunkadmin"])
+        if code != 0:
+            return False
+        result_str = output.decode("utf-8")
+        result_lines = result_str.splitlines()
+        for result_line in result_lines:
+            result_line_json = json.loads(result_line)
+            if "result" not in result_line_json:
+                continue
+            if "host" in attributes:
+                if result_line_json["result"]["host"] != attributes["host"]:
+                    continue
+            if "source" in attributes:
+                if result_line_json["result"]["source"] != attributes["source"]:
+                    continue
+            if "sourcetype" in attributes:
+                if result_line_json["result"]["sourcetype"] != attributes["sourcetype"]:
+                    continue
+            if "index" in attributes:
+                if result_line_json["result"]["index"] != attributes["index"]:
+                    continue
+            return True
+        return False
+
+    def enable_splunk_hec_indexer(self, container_name, hec_name):
+        (code, output) = self.client.containers.get(container_name).exec_run(["sudo",
+                                                                              "/opt/splunk/bin/splunk", "http-event-collector",
+                                                                              "update", hec_name,
+                                                                              "-uri", "https://localhost:8089",
+                                                                              "-use-ack", "1",
+                                                                              "-disabled", "0",
+                                                                              "-auth", "admin:splunkadmin"])
+        return code == 0
+
+    def enable_splunk_hec_ssl(self, container_name, splunk_cert_pem, splunk_key_pem, root_ca_cert_pem):
+        assert self.write_content_to_container(splunk_cert_pem.decode() + splunk_key_pem.decode() + root_ca_cert_pem.decode(), dst=container_name + ':/opt/splunk/etc/auth/splunk_cert.pem')
+        assert self.write_content_to_container(root_ca_cert_pem.decode(), dst=container_name + ':/opt/splunk/etc/auth/root_ca.pem')
+        (code, output) = self.client.containers.get(container_name).exec_run(["sudo",
+                                                                              "/opt/splunk/bin/splunk", "http-event-collector",
+                                                                              "update",
+                                                                              "-uri", "https://localhost:8089",
+                                                                              "-enable-ssl", "1",
+                                                                              "-server-cert", "/opt/splunk/etc/auth/splunk_cert.pem",
+                                                                              "-ca-cert-file", "/opt/splunk/etc/auth/root_ca.pem",
+                                                                              "-require-client-cert", "1",
+                                                                              "-auth", "admin:splunkadmin"])
+        return code == 0
+
     def query_postgres_server(self, postgresql_container_name, query, number_of_rows):
         (code, output) = self.client.containers.get(postgresql_container_name).exec_run(["psql", "-U", "postgres", "-c", query])
         output = output.decode(self.get_stdout_encoding())
@@ -153,3 +213,14 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
         return self.wait_for_app_logs(kafka_container_name, "Assignment received from leader for group docker_test_group", 60)
+
+    def write_content_to_container(self, content, dst):
+        container_name, dst_path = dst.split(':')
+        container = self.client.containers.get(container_name)
+        with tempfile.TemporaryDirectory() as td:
+            with tarfile.open(os.path.join(td, 'content.tar'), mode='w') as tar:
+                info = tarfile.TarInfo(name=os.path.basename(dst_path))
+                info.size = len(content)
+                tar.addfile(info, io.BytesIO(content.encode('utf-8')))
+            with open(os.path.join(td, 'content.tar'), 'rb') as data:
+                return container.put_archive(os.path.dirname(dst_path), data.read())

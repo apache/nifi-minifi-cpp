@@ -18,6 +18,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
 
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -49,17 +50,22 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
   void initialize() override;
   void onUnSchedule() override;
 
-  bool readFlowFileWithContent(const std::string& content) const {
-    return std::find(flow_file_contents_.begin(), flow_file_contents_.end(), content) != flow_file_contents_.end();
-  }
+  bool readFlowFileWithContent(const std::string& content) const;
+  bool readFlowFileWithAttribute(const std::string& key) const;
+  bool readFlowFileWithAttribute(const std::string& key, const std::string& value) const;
 
   size_t numberOfFlowFilesRead() const {
-    return flow_file_contents_.size();
+    return flow_files_read_.size();
   }
 
  private:
+  struct FlowFileData {
+    FlowFileData(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file);
+    std::string content_;
+    std::map<std::string, std::string> attributes_;
+  };
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger();
-  std::vector<std::string> flow_file_contents_;
+  std::vector<FlowFileData> flow_files_read_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

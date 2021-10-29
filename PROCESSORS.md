@@ -50,9 +50,11 @@
 - [PutOPCProcessor](#putopcprocessor)
 - [PutS3Object](#puts3object)
 - [PutSFTP](#putsftp)
+- [PutSplunkHTTP](#putsplunkhttp)
 - [PutSQL](#putsql)
 - [PutUDP](#putudp)
 - [QueryDatabaseTable](#querydatabasetable)
+- [QuerySplunkIndexingStatus](#querysplunkindexingstatus)
 - [ReplaceText](#replacetext)
 - [RetryFlowFile](#retryflowfile)
 - [RouteOnAttribute](#routeonattribute)
@@ -1503,6 +1505,54 @@ In the list below, the names of required properties appear in bold. Any other pr
 |success|FlowFiles that are successfully sent will be routed to success|
 
 
+## PutSplunkHTTP
+
+### Description
+Sends the flow file contents to the specified [Splunk HTTP Event Collector](https://docs.splunk.com/Documentation/SplunkCloud/latest/Data/UsetheHTTPEventCollector) over HTTP or HTTPS.
+
+#### Event parameters
+The "Source", "Source Type", "Host" and "Index" properties are optional and will be set by Splunk if unspecified. If set,
+the default values will be overwritten with the user specified ones. For more details about the Splunk API, please visit
+[this documentation](https://docs.splunk.com/Documentation/Splunk/LATEST/RESTREF/RESTinput#services.2Fcollector.2Fraw)
+
+#### Acknowledgment
+HTTP Event Collector (HEC) in Splunk provides the possibility of index acknowledgement, which can be used to monitor
+the indexing status of the individual events. PutSplunkHTTP supports this feature by enriching the outgoing flow file
+with the necessary information, making it possible for a later processor to poll the status based on. The necessary
+information for this is stored within flow file attributes "splunk.acknowledgement.id" and "splunk.responded.at".
+
+#### Error information
+For more refined processing, flow files are enriched with additional information if possible. The information is stored
+in the flow file attribute "splunk.status.code" or "splunk.response.code", depending on the success of the processing.
+The attribute "splunk.status.code" is always filled when the Splunk API call is executed and contains the HTTP status code
+of the response. In case the flow file transferred into "failure" relationship, the "splunk.response.code" might be
+also filled, based on the Splunk response code.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                        | Default Value | Allowable Values                   | Description                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------  | ------------- | ---------------------------------  | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hostname**                |               |                                    | The ip address or hostname of the Splunk server.                                                                                                                                                                                                                                                                                                                                              |
+| **Port**                    | 8088          |                                    | The HTTP Event Collector HTTP Port Number.                                                                                                                                                                                                                                                                                                                                                    |
+| **Token**                   |               | Splunk &lt;guid&gt;                | HTTP Event Collector token starting with the string Splunk. For example `Splunk 1234578-abcd-1234-abcd-1234abcd`                                                                                                                                                                                                                                                                              |
+| **Splunk Request Channel**  |               | &lt;guid&gt;                       | Identifier of the used request channel.                                                                                                                                                                                                                                                                                                                                                       |
+| SSL Context Service         |               |                                    | The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.                                                                                                                                                                                                                                                                                       |
+| Source                      |               |                                    | Basic field describing the source of the event. If unspecified, the event will use the default defined in splunk.                                                                                                                                                                                                                                                                             |
+| SourceType                  |               |                                    | Basic field describing the source type of the event. If unspecified, the event will use the default defined in splunk.                                                                                                                                                                                                                                                                        |
+| Host                        |               |                                    | Basic field describing the host of the event. If unspecified, the event will use the default defined in splunk.                                                                                                                                                                                                                                                                               |
+| Index                       |               |                                    | Identifies the index where to send the event. If unspecified, the event will use the default defined in splunk.                                                                                                                                                                                                                                                                               |
+| Content Type                |               |                                    | The media type of the event sent to Splunk. If not set, "mime.type" flow file attribute will be used. In case of neither of them is specified, this information will not be sent to the server.                                                                                                                                                                                               |
+
+### Relationships
+
+| Name     | Description                                                                            |
+| -------- | -------------------------------------------------------------------------------------- |
+| success  | FlowFiles that are sent successfully to the destination are sent to this relationship. |
+| failure  | FlowFiles that failed to be sent to the destination are sent to this relationship.     |
+
+
 ## PutSQL
 
 ### Description
@@ -1521,6 +1571,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|After a successful SQL update operation, the incoming FlowFile sent here|
+
 
 ## PutUDP
 
@@ -1572,6 +1623,60 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Value | Description |
 | - | - | - |
 |initial.maxvalue.<max_value_column>|Initial maximum value for the specified column|Specifies an initial max value for max value column(s). Properties should be added in the format `initial.maxvalue.<max_value_column>`. This value is only used the first time the table is accessed (when a Maximum Value Column is specified).<br/>**Supports Expression Language: true**|
+
+
+## QuerySplunkIndexingStatus
+
+### Description
+
+This processor is responsible for polling Splunk server and determine if a Splunk event is acknowledged at the time of
+execution. For more details about the HEC Index Acknowledgement please see
+[this documentation.](https://docs.splunk.com/Documentation/Splunk/LATEST/Data/AboutHECIDXAck)
+
+#### Input requirements
+In order to work properly, the incoming flow files need to have the attributes "splunk.acknowledgement.id" and
+"splunk.responded.at" filled properly. The flow file attribute "splunk.acknowledgement.id" should contain the "ackId"
+which can be extracted from the response to the original Splunk put call. The flow file attribute "splunk.responded.at"
+should contain the timestamp describing when the put call was answered by Splunk.
+These required attributes are set by PutSplunkHTTP processor.
+
+#### Undetermined relationship
+Undetermined cases are normal in healthy environment as it is possible that minifi asks for indexing status before Splunk
+finishes and acknowledges it. These cases are safe to retry, and it is suggested to loop "undetermined" relationship
+back to the processor for later try. Flow files transferred into the "Undetermined" relationship are penalized.
+
+#### Performance
+Please keep Splunk channel limitations in mind: there are multiple configuration parameters in Splunk which might have direct
+effect on the performance and behaviour of the QuerySplunkIndexingStatus processor. For example "max_number_of_acked_requests_pending_query"
+and "max_number_of_acked_requests_pending_query_per_ack_channel" might limit the amount of ackIDs Splunk stores.
+
+Also, it is suggested to execute the query in batches. The "Maximum Query Size" property might be used for fine tune
+the maximum number of events the processor will query about in one API request. This serves as an upper limit for the
+batch but the processor might execute the query with smaller number of undetermined events.
+
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                        | Default Value | Allowable Values                   | Description                                                                                                                                                                                                                                                                                                                                                                                   |
+| --------------------------  | ------------- | ---------------------------------  | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Maximum Waiting Time**    | 1 hour        | &lt;duration&gt; &lt;time unit&gt; | The maximum time the processor tries to acquire acknowledgement confirmation for an index, from the point of registration.<br> After the given amount of time, the processor considers the index as not acknowledged and transfers the FlowFile to the _unacknowledged_ relationship.                                                                                                         |
+| **Maximum Query Size**      | 1000          | integers                           | The maximum number of acknowledgement identifiers the outgoing query contains in one batch.  It is recommended not to set it too low in order to reduce network communication.                                                                                                                                                                                                                |
+| **Hostname**                |               |                                    | The ip address or hostname of the Splunk server.                                                                                                                                                                                                                                                                                                                                              |
+| **Port**                    | 8088          |                                    | The HTTP Event Collector HTTP Port Number.                                                                                                                                                                                                                                                                                                                                                    |
+| **Token**                   |               | Splunk &lt;guid&gt;                | HTTP Event Collector token starting with the string Splunk. For example `Splunk 1234578-abcd-1234-abcd-1234abcd`                                                                                                                                                                                                                                                                              |
+| **Splunk Request Channel**  |               | &lt;guid&gt;                       | Identifier of the used request channel.                                                                                                                                                                                                                                                                                                                                                       |
+| SSL Context Service         |               |                                    | The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.                                                                                                                                                                                                                                                                                       |
+
+### Relationships
+
+| Name           | Description                                                                                                                                                                                                                                                                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| acknowledged   | A FlowFile is transferred to this relationship when the acknowledgement was successful.                                                                                                                                                                                                                                                                              |
+| unacknowledged | A FlowFile is transferred to this relationship when the acknowledgement was not successful.<br>This can happen when the acknowledgement did not happened within the time period set for Maximum Waiting Time.<br>FlowFiles with acknowledgement id unknown for the Splunk server will be transferred to this relationship after the Maximum Waiting Time is reached. |
+| undetermined   | A FlowFile is transferred to this relationship when the acknowledgement state is not determined.<br> This can happens when Splunk returns with HTTP 200 but with false response for the acknowledgement id in the flow file attribute.<br>FlowFiles transferred to this relationship might be penalized.<br>                                                                  |
+| failure        | A FlowFile is transferred to this relationship when the acknowledgement was not successful due to errors during the communication, or if the flowfile was missing the acknowledgement id                                                                                                                                                                             |
 
 
 ## ReplaceText

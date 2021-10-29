@@ -171,13 +171,6 @@ void InvokeHTTP::initialize() {
   setSupportedRelationships({Success, RelResponse, RelFailure, RelRetry, RelNoRetry});
 }
 
-bool getTimeMSFromString(const std::string& propertyName, uint64_t& valInt) {
-  core::TimeUnit unit;
-  return !propertyName.empty()
-      && core::Property::StringToTime(propertyName, valInt, unit)
-      && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt);
-}
-
 void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   if (!context->getProperty(Method.getName(), method_)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", Method.getName(), Method.getValue());

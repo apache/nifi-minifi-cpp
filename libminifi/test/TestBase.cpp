@@ -491,6 +491,10 @@ bool TestPlan::runCurrentProcessorUntilFlowfileIsProduced(const std::chrono::sec
 
 std::size_t TestPlan::getNumFlowFileProducedByCurrentProcessor() {
   const auto& processor = processor_queue_.at(gsl::narrow<size_t>(location));
+  return getNumFlowFileProducedByProcessor(processor);
+}
+
+std::size_t TestPlan::getNumFlowFileProducedByProcessor(const std::shared_ptr<minifi::core::Processor>& processor) {
   std::vector<minifi::Connection*> connections = getProcessorOutboundConnections(processor);
   std::size_t num_flow_files = 0;
   for (auto connection : connections) {

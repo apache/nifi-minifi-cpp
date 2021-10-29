@@ -1,7 +1,9 @@
 import time
 import logging
+import random
 
 from M2Crypto import X509, EVP, RSA, ASN1
+from OpenSSL import crypto
 
 
 def gen_cert():
@@ -55,3 +57,80 @@ def gen_req():
     req.sign(key, 'sha256')
 
     return req, key
+
+
+def make_ca(common_name):
+    ca_key = crypto.PKey()
+    ca_key.generate_key(crypto.TYPE_RSA, 2048)
+
+    ca_cert = crypto.X509()
+    ca_cert.set_version(2)
+    ca_cert.set_serial_number(random.randint(50000000, 100000000))
+
+    ca_subj = ca_cert.get_subject()
+    ca_subj.commonName = common_name
+
+    ca_cert.add_extensions([
+        crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash", subject=ca_cert),
+    ])
+
+    ca_cert.add_extensions([
+        crypto.X509Extension(b"authorityKeyIdentifier", False, b"keyid:always", issuer=ca_cert),
+    ])
+
+    ca_cert.add_extensions([
+        crypto.X509Extension(b"basicConstraints", False, b"CA:TRUE"),
+        crypto.X509Extension(b"keyUsage", False, b"keyCertSign, cRLSign"),
+    ])
+
+    ca_cert.set_issuer(ca_subj)
+    ca_cert.set_pubkey(ca_key)
+
+    ca_cert.gmtime_adj_notBefore(0)
+    ca_cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
+
+    ca_cert.sign(ca_key, 'sha256')
+
+    return ca_cert, ca_key
+
+
+def make_cert(common_name, ca_cert, ca_key):
+    key = crypto.PKey()
+    key.generate_key(crypto.TYPE_RSA, 2048)
+
+    cert = crypto.X509()
+    cert.set_version(2)
+    cert.set_serial_number(random.randint(50000000, 100000000))
+
+    client_subj = cert.get_subject()
+    client_subj.commonName = common_name
+
+    cert.add_extensions([
+        crypto.X509Extension(b"basicConstraints", False, b"CA:FALSE"),
+        crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash", subject=cert),
+    ])
+
+    cert.add_extensions([
+        crypto.X509Extension(b"authorityKeyIdentifier", False, b"keyid:always", issuer=ca_cert),
+        crypto.X509Extension(b"extendedKeyUsage", False, b"clientAuth"),
+        crypto.X509Extension(b"extendedKeyUsage", False, b"serverAuth"),
+        crypto.X509Extension(b"keyUsage", False, b"digitalSignature"),
+    ])
+
+    cert.set_issuer(ca_cert.get_subject())
+    cert.set_pubkey(key)
+
+    cert.gmtime_adj_notBefore(0)
+    cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
+
+    cert.sign(ca_key, 'sha256')
+
+    return cert, key
+
+
+def dump_certificate(cert):
+    return crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+
+
+def dump_privatekey(key):
+    return crypto.dump_privatekey(crypto.FILETYPE_PEM, key)

@@ -218,6 +218,7 @@ class TestPlan {
 
   std::shared_ptr<minifi::core::FlowFile> getCurrentFlowFile();
   std::vector<minifi::Connection*> getProcessorOutboundConnections(const std::shared_ptr<minifi::core::Processor>& processor);
+  std::size_t getNumFlowFileProducedByProcessor(const std::shared_ptr<minifi::core::Processor>& processor);
   std::size_t getNumFlowFileProducedByCurrentProcessor();
   std::shared_ptr<minifi::core::FlowFile> getFlowFileProducedByCurrentProcessor();
 

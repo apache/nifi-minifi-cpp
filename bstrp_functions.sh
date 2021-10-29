@@ -391,6 +391,7 @@ show_supported_features() {
   echo "X. Azure Support ...............$(print_feature_status AZURE_ENABLED)"
   echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
   echo "Z. NanoFi Support ..............$(print_feature_status NANOFI_ENABLED)"
+  echo "AA. Splunk Support .............$(print_feature_status SPLUNK_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -413,7 +414,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  echo -n "Enter choice [ A - Z or 1-7 ] "
+  echo -n "Enter choice [ A - Z or AA or 1-7] "
   read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
@@ -445,6 +446,7 @@ read_feature_options(){
     x) ToggleFeature AZURE_ENABLED ;;
     y) ToggleFeature SYSTEMD_ENABLED ;;
     z) ToggleFeature NANOFI_ENABLED ;;
+    aa) ToggleFeature SPLUNK_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
@@ -463,7 +465,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-Z or 1-7...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-Z or AA or 1-7...${NO_COLOR}" && sleep 2
   esac
 }
 

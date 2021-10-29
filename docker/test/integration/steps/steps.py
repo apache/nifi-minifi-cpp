@@ -1,6 +1,6 @@
 from minifi.core.FileSystemObserver import FileSystemObserver
 from minifi.core.RemoteProcessGroup import RemoteProcessGroup
-from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback
+from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback, make_ca, make_cert, dump_certificate, dump_privatekey
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
@@ -94,6 +94,7 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with an Azure blob storage")
 @given("a {processor_type} processor set up to communicate with a kafka broker instance")
 @given("a {processor_type} processor set up to communicate with an MQTT broker instance")
+@given("a {processor_type} processor set up to communicate with the Splunk HEC instance")
 def step_impl(context, processor_type):
     context.execute_steps("given a {processor_type} processor in the \"{minifi_container_name}\" flow".format(processor_type=processor_type, minifi_container_name="minifi-cpp-flow"))
 
@@ -142,6 +143,13 @@ def step_impl(context, property_name, processor_name, property_value):
         processor.unset_property(property_name)
     else:
         processor.set_property(property_name, property_value)
+
+
+@given("the \"{property_name}\" properties of the {processor_name_one} and {processor_name_two} processors are set to the same random guid")
+def step_impl(context, property_name, processor_name_one, processor_name_two):
+    uuid_str = str(uuid.uuid4())
+    context.test.get_node_by_name(processor_name_one).set_property(property_name, uuid_str)
+    context.test.get_node_by_name(processor_name_two).set_property(property_name, uuid_str)
 
 
 @given("the \"{property_name}\" property of the {processor_name} processor is set to match {key_attribute_encoding} encoded kafka message key \"{message_key}\"")
@@ -321,6 +329,34 @@ def step_impl(context):
 @given("an Azure storage server is set up in correspondence with the PutAzureBlobStorage")
 def step_impl(context):
     context.test.acquire_container("azure-storage-server", "azure-storage-server")
+
+
+# splunk hec
+@given("a Splunk HEC is set up and running")
+def step_impl(context):
+    context.test.start_splunk()
+
+
+@given("SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus")
+def step_impl(context):
+    root_ca_cert, root_ca_key = make_ca("root CA")
+    minifi_cert, minifi_key = make_cert("minifi-cpp-flow", root_ca_cert, root_ca_key)
+    splunk_cert, splunk_key = make_cert("splunk", root_ca_cert, root_ca_key)
+    minifi_crt_file = '/tmp/resources/minifi-cpp-flow.pem'
+    minifi_key_file = '/tmp/resources/minifi-cpp-flow.key'
+    root_ca_crt_file = '/tmp/resources/root_ca.pem'
+    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
+    context.test.put_test_resource('minifi-cpp-flow.pem', dump_certificate(minifi_cert))
+    context.test.put_test_resource('minifi-cpp-flow.key', dump_privatekey(minifi_key))
+    context.test.put_test_resource('root_ca.pem', dump_certificate(root_ca_cert))
+
+    put_splunk_http = context.test.get_node_by_name("PutSplunkHTTP")
+    put_splunk_http.controller_services.append(ssl_context_service)
+    put_splunk_http.set_property("SSL Context Service", ssl_context_service.name)
+    query_splunk_indexing_status = context.test.get_node_by_name("QuerySplunkIndexingStatus")
+    query_splunk_indexing_status.controller_services.append(ssl_context_service)
+    query_splunk_indexing_status.set_property("SSL Context Service", ssl_context_service.name)
+    context.test.cluster.enable_splunk_hec_ssl('splunk', dump_certificate(splunk_cert), dump_privatekey(splunk_key), dump_certificate(root_ca_cert))
 
 
 @given("the kafka broker is started")
@@ -599,3 +635,15 @@ def step_impl(context, log_pattern):
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")
     context.test.start()
+
+
+# Splunk
+@then('an event is registered in Splunk HEC with the content \"{content}\"')
+def step_imp(context, content):
+    context.test.check_splunk_event("splunk", content)
+
+
+@then('an event is registered in Splunk HEC with the content \"{content}\" with \"{source}\" set as source and \"{source_type}\" set as sourcetype and \"{host}\" set as host')
+def step_imp(context, content, source, source_type, host):
+    attr = {"source": source, "sourcetype": source_type, "host": host}
+    context.test.check_splunk_event_with_attributes("splunk", content, attr)
