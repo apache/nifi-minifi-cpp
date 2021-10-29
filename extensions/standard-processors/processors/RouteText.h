@@ -117,7 +117,7 @@ class RouteText : public core::Processor {
   std::map<std::string, core::Property> dynamic_properties_;
   std::map<std::string, core::Relationship> dynamic_relationships_;
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
