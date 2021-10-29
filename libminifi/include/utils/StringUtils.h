@@ -58,6 +58,11 @@ struct string_traits<wchar_t>{
   }
 };
 
+enum class Case {
+  SENSITIVE,
+  INSENSITIVE
+};
+
 /**
  * Stateless String utility class.
  *
@@ -179,10 +184,6 @@ class StringUtils {
       return std::equal(end.rbegin(), end.rend(), value.rbegin());
     }
     return std::equal(end.rbegin(), end.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
-  }
-
-  inline static bool endsWithIgnoreCase(const std::string_view& value, const std::string_view& endString) {
-    return endsWith(value, endString, false);
   }
 
   inline static std::string hex_ascii(const std::string& in) {
