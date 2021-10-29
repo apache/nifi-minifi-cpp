@@ -64,7 +64,7 @@ class DefragmentText : public core::Processor {
  protected:
   class Buffer {
    public:
-    bool isCompatible(const std::shared_ptr<core::FlowFile>& flow_file_to_append) const;
+    bool isCompatible(const core::FlowFile& fragment) const;
     void append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append);
     bool maxSizeReached() const;
     bool maxAgeReached() const;
@@ -91,14 +91,14 @@ class DefragmentText : public core::Processor {
   core::FlowFileStore flow_file_store_;
   Buffer buffer_;
 
-  void processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile> &original_flow_file);
+  void processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile> &next_fragment);
 
   bool splitFlowFileAtLastPattern(core::ProcessSession *session,
                                   const std::shared_ptr<core::FlowFile> &original_flow_file,
                                   std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                   std::shared_ptr<core::FlowFile> &split_after_last_pattern) const;
 
-  void updateAttributesForSplitFiles(const std::shared_ptr<const core::FlowFile> &original_flow_file,
+  void updateAttributesForSplitFiles(const core::FlowFile &original_flow_file,
                                      const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                      const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
                                      const size_t split_position) const;

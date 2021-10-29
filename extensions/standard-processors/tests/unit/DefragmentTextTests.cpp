@@ -32,234 +32,209 @@ using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::Rea
 using UpdateAttribute = org::apache::nifi::minifi::processors::UpdateAttribute;
 using DefragmentText = org::apache::nifi::minifi::processors::DefragmentText;
 
-TEST_CASE("DefragTextFlowFilesNoMultilinePatternAtStartTest", "[defragmenttextnomultilinepatternatstarttest]") {
+TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") {
   TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", DefragmentText::Success, true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+  auto plan = testController.createPlan();
+  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  auto defrag_text_flow_files = std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
+  auto read_from_success_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
+  auto read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+
+  plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, defrag_text_flow_files);
+
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Success, read_from_success_relationship);
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Failure, read_from_failure_relationship);
+
+  read_from_success_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
 
 
-  write_to_flow_file->setContent("<1> Foo");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
-  write_to_flow_file->setContent("<2> Bar");
-  plan->reset();
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("<1> Foo"));
-  write_to_flow_file->setContent("<3> Baz");
-  plan->reset();
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("<2> Bar"));
-}
+  SECTION("Throws on empty pattern") {
+    REQUIRE_THROWS(testController.runSession(plan));
+  }
 
-TEST_CASE("DefragmentTextEmptyPattern", "[defragmenttextemptypattern]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", DefragmentText::Success, true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "");
-  plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
+  SECTION("Throws on invalid pattern") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "\"[a-b][a\"");
 
-  REQUIRE_THROWS_WITH(testController.runSession(plan), "Process Schedule Operation: Pattern property missing or invalid");
-}
+    REQUIRE_THROWS(testController.runSession(plan));
+  }
 
-TEST_CASE("DefragmentTextNoMultilinePatternAtEndTest", "[defragmenttextnomultilinepatternatendtest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", DefragmentText::Success, true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-  plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
+  SECTION("Single line messages starting with pattern") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::START_OF_MESSAGE));
 
-  write_to_flow_file->setContent("Foo <1>");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("Foo <1>"));
-  write_to_flow_file->setContent("Bar <2>");
-  plan->reset();
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("Bar <2>"));
-  write_to_flow_file->setContent("Baz <3>");
-  plan->reset();
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("Baz <3>"));
-}
+    write_to_flow_file->setContent("<1> Foo");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
+    write_to_flow_file->setContent("<2> Bar");
+    plan->reset();
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("<1> Foo"));
+    write_to_flow_file->setContent("<3> Baz");
+    plan->reset();
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("<2> Bar"));
+  }
 
-TEST_CASE("DefragmentTextMultilinePatternAtStartTest", "[defragmenttextmultilinepatternatstarttest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", core::Relationship("success", "description"), true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+  SECTION("Single line messages ending with pattern") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
 
+    write_to_flow_file->setContent("Foo <1>");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("Foo <1>"));
+    write_to_flow_file->setContent("Bar <2>");
+    plan->reset();
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("Bar <2>"));
+    write_to_flow_file->setContent("Baz <3>");
+    plan->reset();
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("Baz <3>"));
+  }
 
-  write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("apple<1> banana<2> cherry"));
+  SECTION("Multiline matching start of messages") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::START_OF_MESSAGE));
 
-  write_to_flow_file->setContent("fruit<4> elderberry<5> fig<6> grapefruit");
-  plan->reset();
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("<3> dragon fruit<4> elderberry<5> fig"));
-}
+    write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("apple<1> banana<2> cherry"));
 
-TEST_CASE("DefragmentTextMultilinePatternAtEndTest", "[defragmenttextmultilinepatternatendtest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", core::Relationship("success", "description"), true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-  plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
+    write_to_flow_file->setContent("fruit<4> elderberry<5> fig<6> grapefruit");
+    plan->reset();
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("<3> dragon fruit<4> elderberry<5> fig"));
+  }
 
-  write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("apple<1> banana<2> cherry<3>"));
+  SECTION("Multiline matching end of messages") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
 
-  write_to_flow_file->setContent("fruit<4> elderberry<5> fig<6> grapefruit");
-  plan->reset();
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent(" dragon fruit<4> elderberry<5> fig<6>"));
-}
+    write_to_flow_file->setContent("apple<1> banana<2> cherry<3> dragon ");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("apple<1> banana<2> cherry<3>"));
 
+    write_to_flow_file->setContent("fruit<4> elderberry<5> fig<6> grapefruit");
+    plan->reset();
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent(" dragon fruit<4> elderberry<5> fig<6>"));
+  }
 
-TEST_CASE("DefragmentTextTimeoutTest", "[defragmenttexttimeottest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragmentText::Success, DefragmentText::Failure}, true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "100 ms");
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+  SECTION("Timeout test Start of Line") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "100 ms");
 
+    write_to_flow_file->setContent("Message");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
 
-  write_to_flow_file->setContent("Message");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
+    plan->reset();
+    write_to_flow_file->setContent("");
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("Message"));
+  }
 
-  plan->reset();
-  write_to_flow_file->setContent("");
-  std::this_thread::sleep_for(std::chrono::milliseconds(300));
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent("Message"));
-}
+  SECTION("Timeout test Start of Line") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::START_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "100 ms");
 
-TEST_CASE("DefragmentTextNoTimeoutTest", "[defragmenttextnotimeottest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragmentText::Success, DefragmentText::Failure}, true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "1 h");
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    write_to_flow_file->setContent("Message");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
 
+    plan->reset();
+    write_to_flow_file->setContent("");
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("Message"));
+  }
 
-  write_to_flow_file->setContent("Message");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
+  SECTION("Timeout test Start of Line") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::PatternLoc.getName(), toString(DefragmentText::PatternLocation::END_OF_MESSAGE));
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "100 ms");
 
-  plan->reset();
-  write_to_flow_file->setContent("");
-  std::this_thread::sleep_for(std::chrono::milliseconds(300));
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
-}
+    write_to_flow_file->setContent("Message");
+    testController.runSession(plan);
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
 
-TEST_CASE("DefragmentTextMaxBufferTest", "[defragmenttextmaxbuffertest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragmentText::Success, DefragmentText::Failure}, true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize.getName(), "100 B");
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->reset();
+    write_to_flow_file->setContent("");
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    testController.runSession(plan);
+    CHECK(read_from_failure_relationship->readFlowFileWithContent("Message"));
+  }
 
-  write_to_flow_file->setContent("Message");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
+  SECTION("Timeout test without enough time") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferAge.getName(), "1 h");
 
-  plan->reset();
-  write_to_flow_file->setContent(std::string(150, '*'));
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->readFlowFileWithContent(std::string("Message").append(std::string(150, '*'))));
-}
+    write_to_flow_file->setContent("Message");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
 
-TEST_CASE("DefragmentTextNoMaxBufferTest", "[defragmenttextnomaxbuffertest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_flow_file = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_flow_file", {DefragmentText::Success, DefragmentText::Failure}, true));
-  plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize.getName(), "100 MB");
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+    plan->reset();
+    write_to_flow_file->setContent("");
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+  }
 
-  write_to_flow_file->setContent("Message");
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
+  SECTION("Max Buffer test") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize.getName(), "100 B");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
 
-  plan->reset();
-  write_to_flow_file->setContent(std::string(150, '*'));
-  testController.runSession(plan);
-  CHECK(read_from_flow_file->numberOfFlowFilesRead() == 0);
-}
+    write_to_flow_file->setContent("Message");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
 
-TEST_CASE("DefragmentTextInvalidRegexTest", "[defragmenttextinvalidregextest]") {
-  TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description")));
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragmentText::Success, DefragmentText::Failure});
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "\"[a-b][a\"");
+    plan->reset();
+    write_to_flow_file->setContent(std::string(150, '*'));
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure_relationship->readFlowFileWithContent(std::string("Message").append(std::string(150, '*'))));
+  }
 
-  REQUIRE_THROWS(testController.runSession(plan));
+  SECTION("Max Buffer test without overflow") {
+    plan->setProperty(defrag_text_flow_files, DefragmentText::MaxBufferSize.getName(), "100 MB");
+    plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
+
+    write_to_flow_file->setContent("Message");
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
+
+    plan->reset();
+    write_to_flow_file->setContent(std::string(150, '*'));
+    testController.runSession(plan);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+  }
 }
 
 TEST_CASE("DefragmentTextInvalidSources", "[defragmenttextinvalidsources]") {
   TestController testController;
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<WriteToFlowFileTestProcessor> write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(
-      plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  std::shared_ptr<UpdateAttribute> update_ff = std::dynamic_pointer_cast<UpdateAttribute>(
-      plan->addProcessor("UpdateAttribute", "update_attribute", core::Relationship("success", "description"), true));
-  std::shared_ptr<DefragmentText> defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(
-      plan->addProcessor("DefragmentText", "defrag_text_flow_files", core::Relationship("success", "description"), true));
-  std::shared_ptr<ReadFromFlowFileTestProcessor> read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(
-      plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship", DefragmentText::Failure, true));
+  auto plan = testController.createPlan();
+  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  auto update_ff = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute"));
+  auto defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
+  auto read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+
+  plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_ff);
+  plan->addConnection(update_ff, UpdateAttribute ::Success, defrag_text_flow_files);
+
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Failure, read_from_failure_relationship);
+  defrag_text_flow_files->setAutoTerminatedRelationships({DefragmentText::Success});
+
+  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+
   plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
   plan->setProperty(update_ff, org::apache::nifi::minifi::processors::textfragmentutils::BASE_NAME_ATTRIBUTE, "${UUID()}", true);
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragmentText::Success});
-  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
 
   write_to_flow_file->setContent("Foo <1> Foo");
   testController.runSession(plan);

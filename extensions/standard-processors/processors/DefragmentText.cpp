@@ -49,7 +49,10 @@ const core::Property DefragmentText::MaxBufferSize(
 
 const core::Property DefragmentText::MaxBufferAge(
     core::PropertyBuilder::createProperty("Max Buffer Age")->
-        withDescription("The maximum age of a buffer after which the buffer will be transferred to failure. Expected format is <duration> <time unit>")->build());
+        withDescription("The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns. "
+                        "Expected format is <duration> <time unit>")
+        ->withDefaultValue("10 min")
+        ->build());
 
 void DefragmentText::initialize() {
   setSupportedRelationships({Success, Failure});
@@ -97,15 +100,22 @@ void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* sess
   }
   std::shared_ptr<core::FlowFile> original_flow_file = session->get();
   processNextFragment(session, original_flow_file);
-  if (buffer_.maxAgeReached() || buffer_.maxSizeReached()) {
+  if (buffer_.maxSizeReached()) {
     buffer_.flushAndReplace(session, Failure, nullptr);
+    return;
+  }
+  if (buffer_.maxAgeReached()) {
+    if (pattern_location_ == PatternLocation::START_OF_MESSAGE)
+      buffer_.flushAndReplace(session, Success, nullptr);
+    else
+      buffer_.flushAndReplace(session, Failure, nullptr);
   }
 }
 
 void DefragmentText::processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& next_fragment) {
   if (!next_fragment)
     return;
-  if (!buffer_.isCompatible(next_fragment)) {
+  if (!buffer_.isCompatible(*next_fragment)) {
     buffer_.flushAndReplace(session, Failure, nullptr);
     session->transfer(next_fragment, Failure);
     return;
@@ -122,16 +132,16 @@ void DefragmentText::processNextFragment(core::ProcessSession *session, const st
 }
 
 
-void DefragmentText::updateAttributesForSplitFiles(const std::shared_ptr<const core::FlowFile> &original_flow_file,
-                                                   const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
-                                                   const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
+void DefragmentText::updateAttributesForSplitFiles(const core::FlowFile& original_flow_file,
+                                                   const std::shared_ptr<core::FlowFile>& split_before_last_pattern,
+                                                   const std::shared_ptr<core::FlowFile>& split_after_last_pattern,
                                                    const size_t split_position) const {
   std::string base_name, post_name, offset_str;
-  if (!original_flow_file->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
+  if (!original_flow_file.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
     return;
-  if (!original_flow_file->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
+  if (!original_flow_file.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
     return;
-  if (!original_flow_file->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
+  if (!original_flow_file.getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
     return;
 
   size_t fragment_offset = std::stoi(offset_str);
@@ -161,18 +171,18 @@ class AppendFlowFileToFlowFile : public OutputStreamCallback {
   PayloadSerializer& serializer_;
 };
 
-void updateAppendedAttributes(const std::shared_ptr<core::FlowFile>& buffered_ff) {
+void updateAppendedAttributes(core::FlowFile& buffered_ff) {
   std::string base_name, post_name, offset_str;
-  if (!buffered_ff->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
+  if (!buffered_ff.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
     return;
-  if (!buffered_ff->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
+  if (!buffered_ff.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
     return;
-  if (!buffered_ff->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
+  if (!buffered_ff.getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, offset_str))
     return;
   size_t fragment_offset = std::stoi(offset_str);
 
-  std::string buffer_new_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset, buffered_ff->getSize());
-  buffered_ff->setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
+  std::string buffer_new_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset, buffered_ff.getSize());
+  buffered_ff.setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
 }
 
 struct ReadFlowFileContent : public InputStreamCallback {
@@ -216,7 +226,7 @@ bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
   if (split_position != original_flow_file->getSize()) {
     split_after_last_pattern = session->clone(original_flow_file, split_position, original_flow_file->getSize() - split_position);
   }
-  updateAttributesForSplitFiles(original_flow_file, split_before_last_pattern, split_after_last_pattern, split_position);
+  updateAttributesForSplitFiles(*original_flow_file, split_before_last_pattern, split_after_last_pattern, split_position);
   return true;
 }
 
@@ -248,7 +258,7 @@ void DefragmentText::Buffer::append(core::ProcessSession* session, const std::sh
   AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, serializer);
   session->add(buffered_flow_file_);
   session->append(buffered_flow_file_, &append_flow_file_to_flow_file);
-  updateAppendedAttributes(buffered_flow_file_);
+  updateAppendedAttributes(*buffered_flow_file_);
   session->transfer(buffered_flow_file_, Self);
 
   session->remove(flow_file_to_append);
@@ -292,20 +302,20 @@ void DefragmentText::Buffer::store(core::ProcessSession* session, const std::sha
   }
 }
 
-bool DefragmentText::Buffer::isCompatible(const std::shared_ptr<core::FlowFile> &flow_file_to_append) const {
-  if (empty() || flow_file_to_append == nullptr)
+bool DefragmentText::Buffer::isCompatible(const core::FlowFile& fragment) const {
+  if (empty())
     return true;
   if (buffered_flow_file_->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE)
-      != flow_file_to_append->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE)) {
+      != fragment.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE)) {
     return false;
   }
   if (buffered_flow_file_->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE)
-      != flow_file_to_append->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE)) {
+      != fragment.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE)) {
     return false;
   }
   std::string current_offset_str, append_offset_str;
   if (buffered_flow_file_->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, current_offset_str)
-      != flow_file_to_append->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, append_offset_str)) {
+      != fragment.getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, append_offset_str)) {
     return false;
   }
   if (!current_offset_str.empty() && !append_offset_str.empty()) {
