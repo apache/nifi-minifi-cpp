@@ -16,7 +16,17 @@
  */
 
 #include "utils/net/Socket.h"
+#include "Exception.h"
+#include <cstring>
 #include <system_error>
+#ifdef WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif /* WIN32_LEAN_AND_MEAN */
+#include <ws2tcpip.h>
+#else
+#include <arpa/inet.h>
+#endif /* WIN32 */
 
 namespace org::apache::nifi::minifi::utils::net {
 std::string get_last_socket_error_message() {
@@ -27,4 +37,29 @@ std::string get_last_socket_error_message() {
 #endif /* WIN32 */
   return std::system_category().message(error_code);
 }
+
+
+std::string sockaddr_ntop(const sockaddr* const sa) {
+  std::string result;
+  if (sa->sa_family == AF_INET) {
+    sockaddr_in sa_in{};
+    std::memcpy(reinterpret_cast<void*>(&sa_in), sa, sizeof(sockaddr_in));
+    result.resize(INET_ADDRSTRLEN);
+    if (inet_ntop(AF_INET, &sa_in.sin_addr, &result[0], INET_ADDRSTRLEN) == nullptr) {
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error_message() };
+    }
+  } else if (sa->sa_family == AF_INET6) {
+    sockaddr_in6 sa_in6{};
+    std::memcpy(reinterpret_cast<void*>(&sa_in6), sa, sizeof(sockaddr_in6));
+    result.resize(INET6_ADDRSTRLEN);
+    if (inet_ntop(AF_INET6, &sa_in6.sin6_addr, &result[0], INET6_ADDRSTRLEN) == nullptr) {
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error_message() };
+    }
+  } else {
+    throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, "sockaddr_ntop: unknown address family" };
+  }
+  result.resize(strlen(result.c_str()));  // discard remaining null bytes at the end
+  return result;
+}
+
 }  // namespace org::apache::nifi::minifi::utils::net

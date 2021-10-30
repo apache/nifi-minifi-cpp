@@ -19,8 +19,11 @@
 #include "Processor.h"
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
+
+namespace org::apache::nifi::minifi::core::logging { class Logger; }
 
 namespace org::apache::nifi::minifi::processors {
 class PutUDP final : public core::Processor {
@@ -46,5 +49,6 @@ class PutUDP final : public core::Processor {
  private:
   std::string hostname_;
   std::string port_;  // Can be a service name, like http or ssh
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 }  // namespace org::apache::nifi::minifi::processors

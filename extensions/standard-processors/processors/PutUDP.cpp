@@ -22,6 +22,9 @@
 #include "utils/StringUtils.h"
 #include "utils/net/Socket.h"
 #include "core/Resource.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "range/v3/view/join.hpp"
+#include "range/v3/range/conversion.hpp"
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -50,7 +53,7 @@ const core::Relationship PutUDP::Success{"success", "FlowFiles that are sent suc
 const core::Relationship PutUDP::Failure{"failure", "FlowFiles that failed to send to the destination are sent out this relationship."};
 
 PutUDP::PutUDP(const std::string& name, const utils::Identifier& uuid)
-  :Processor(name, uuid)
+  :Processor(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger()}
 { }
 
 PutUDP::~PutUDP() = default;
@@ -85,6 +88,15 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
   }
 
   const auto names = utils::net::resolveHost(hostname_.c_str(), port_.c_str(), utils::net::IpProtocol::Udp);
+  if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
+    std::vector<std::string> names_vector;
+    for(const addrinfo* it = names.get(); it; it = it->ai_next) {
+      names_vector.push_back(utils::net::sockaddr_ntop(it->ai_addr));
+    }
+    logger_->log_debug("resolved \'%s\' to: %s",
+        hostname_,
+        names_vector | ranges::views::join(',') | ranges::to<std::string>());
+  }
   const auto [ sockfd, selected_name ] = [&names]() -> std::tuple<utils::net::SocketDescriptor, addrinfo*> {
     for(addrinfo* it = names.get(); it; it = it->ai_next) {
       const auto fd = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
@@ -99,6 +111,8 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
     utils::net::close_socket(sockfd);
   });
 
+  logger_->log_debug("connected to %s", utils::net::sockaddr_ntop(selected_name->ai_addr));
+
   const auto data = session->readBuffer(flow_file);
   if (data.status < 0) {
     session->transfer(flow_file, Failure);
@@ -109,6 +123,8 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
   if (send_result == utils::net::SocketError) {
     throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("sendto: ", utils::net::get_last_socket_error_message())};
   }
+
+  logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));
 
   session->transfer(flow_file, Success);
 }

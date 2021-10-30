@@ -235,7 +235,7 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
         continue;
       }
 
-      logger_->log_info("Listening on %s:%" PRIu16 " with backlog %" PRIu16, utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_, listeners_);
+      logger_->log_info("Listening on %s:%" PRIu16 " with backlog %" PRIu16, utils::net::sockaddr_ntop(current_addr->ai_addr), port_, listeners_);
     } else {
       // client socket
 #ifndef WIN32
@@ -248,12 +248,12 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
 
       const auto connect_result = connect(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (connect_result == SocketError) {
-        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_, utils::net::get_last_socket_error_message());
+        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", utils::net::sockaddr_ntop(current_addr->ai_addr), port_, utils::net::get_last_socket_error_message());
         close();
         continue;
       }
 
-      logger_->log_info("Connected to %s:%" PRIu16, utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_);
+      logger_->log_info("Connected to %s:%" PRIu16, utils::net::sockaddr_ntop(current_addr->ai_addr), port_);
     }
 
     FD_SET(socket_file_descriptor_, &total_list_);

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "utils/NetworkInterfaceInfo.h"
-#include "utils/OsUtils.h"
+#include "utils/net/Socket.h"
 #include "core/logging/LoggerConfiguration.h"
 #ifdef WIN32
 #include <Windows.h>
@@ -56,9 +56,9 @@ NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter) 
   name_ = utf8_encode(adapter->FriendlyName);
   for (auto unicast_address = adapter->FirstUnicastAddress; unicast_address != nullptr; unicast_address = unicast_address->Next) {
     if (unicast_address->Address.lpSockaddr->sa_family == AF_INET) {
-      ip_v4_addresses_.push_back(OsUtils::sockaddr_ntop(unicast_address->Address.lpSockaddr));
+      ip_v4_addresses_.push_back(net::sockaddr_ntop(unicast_address->Address.lpSockaddr));
     } else if (unicast_address->Address.lpSockaddr->sa_family == AF_INET6) {
-      ip_v6_addresses_.push_back(OsUtils::sockaddr_ntop(unicast_address->Address.lpSockaddr));
+      ip_v6_addresses_.push_back(net::sockaddr_ntop(unicast_address->Address.lpSockaddr));
     }
   }
   running_ = adapter->OperStatus == IfOperStatusUp;
@@ -68,9 +68,9 @@ NetworkInterfaceInfo::NetworkInterfaceInfo(const IP_ADAPTER_ADDRESSES* adapter) 
 NetworkInterfaceInfo::NetworkInterfaceInfo(const struct ifaddrs* ifa) {
   name_ = ifa->ifa_name;
   if (ifa->ifa_addr->sa_family == AF_INET) {
-    ip_v4_addresses_.push_back(OsUtils::sockaddr_ntop(ifa->ifa_addr));
+    ip_v4_addresses_.push_back(net::sockaddr_ntop(ifa->ifa_addr));
   } else if (ifa->ifa_addr->sa_family == AF_INET6) {
-    ip_v6_addresses_.push_back(OsUtils::sockaddr_ntop(ifa->ifa_addr));
+    ip_v6_addresses_.push_back(net::sockaddr_ntop(ifa->ifa_addr));
   }
   running_ = (ifa->ifa_flags & IFF_RUNNING);
   loopback_ = (ifa->ifa_flags & IFF_LOOPBACK);

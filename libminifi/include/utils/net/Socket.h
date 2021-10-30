@@ -55,4 +55,7 @@ inline void close_socket(SocketDescriptor sockfd) {
   ::close(sockfd);
 #endif
 }
+
+std::string sockaddr_ntop(const sockaddr* sa);
+
 }  // namespace org::apache::nifi::minifi::utils::net
