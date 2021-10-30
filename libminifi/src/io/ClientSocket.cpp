@@ -98,7 +98,7 @@ std::error_code set_non_blocking(const mio::SocketDescriptor fd) noexcept {
   }
 #else
   u_long iMode = 1;
-  if (ioctlsocket(fd, FIONBIO, &iMode) == SocketError) {
+  if (ioctlsocket(fd, FIONBIO, &iMode) == mio::SocketError) {
     return { WSAGetLastError(), std::system_category() };
   }
 #endif /* !WIN32 */

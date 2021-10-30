@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 #pragma once
-#include "utils/Export.h"
-#include "Processor.h"
-
 #include <cstddef>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "Processor.h"
+#include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::core::logging { class Logger; }
 

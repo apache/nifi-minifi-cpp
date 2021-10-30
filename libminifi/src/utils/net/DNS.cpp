@@ -23,6 +23,8 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <winsock2.h>
+#include <ws2tcpip.h>
+#include "utils/net/Socket.h"
 #else
 #include <netdb.h>
 #include <cstring>
@@ -34,7 +36,7 @@ namespace {
 std::string get_last_getaddrinfo_err_str(int getaddrinfo_result) {
 #ifdef WIN32
   (void)getaddrinfo_result;  // against unused warnings on windows
-  return mio::get_last_socket_error_message();
+  return utils::net::get_last_socket_error_message();
 #else
   return gai_strerror(getaddrinfo_result);
 #endif /* WIN32 */
@@ -70,4 +72,5 @@ std::unique_ptr<addrinfo, addrinfo_deleter> resolveHost(const char* const hostna
   }
   return addr_info;
 }
+
 }  // namespace org::apache::nifi::minifi::utils::net

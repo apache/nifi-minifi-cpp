@@ -38,7 +38,6 @@ std::string get_last_socket_error_message() {
   return std::system_category().message(error_code);
 }
 
-
 std::string sockaddr_ntop(const sockaddr* const sa) {
   std::string result;
   if (sa->sa_family == AF_INET) {

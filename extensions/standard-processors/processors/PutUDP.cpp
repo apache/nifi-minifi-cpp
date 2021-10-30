@@ -16,16 +16,6 @@
  */
 #include "PutUDP.h"
 
-#include "utils/gsl.h"
-#include "utils/OptionalUtils.h"
-#include "utils/net/DNS.h"
-#include "utils/StringUtils.h"
-#include "utils/net/Socket.h"
-#include "core/Resource.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "range/v3/view/join.hpp"
-#include "range/v3/range/conversion.hpp"
-
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -35,6 +25,17 @@
 #include <netdb.h>
 #endif /* WIN32 */
 #include <tuple>
+
+#include "range/v3/view/join.hpp"
+#include "range/v3/range/conversion.hpp"
+
+#include "utils/gsl.h"
+#include "utils/OptionalUtils.h"
+#include "utils/net/DNS.h"
+#include "utils/StringUtils.h"
+#include "utils/net/Socket.h"
+#include "core/Resource.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -90,7 +91,7 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
   const auto names = utils::net::resolveHost(hostname_.c_str(), port_.c_str(), utils::net::IpProtocol::Udp);
   if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
     std::vector<std::string> names_vector;
-    for(const addrinfo* it = names.get(); it; it = it->ai_next) {
+    for (const addrinfo* it = names.get(); it; it = it->ai_next) {
       names_vector.push_back(utils::net::sockaddr_ntop(it->ai_addr));
     }
     logger_->log_debug("resolved \'%s\' to: %s",
@@ -98,7 +99,7 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
         names_vector | ranges::views::join(',') | ranges::to<std::string>());
   }
   const auto [ sockfd, selected_name ] = [&names]() -> std::tuple<utils::net::SocketDescriptor, addrinfo*> {
-    for(addrinfo* it = names.get(); it; it = it->ai_next) {
+    for (addrinfo* it = names.get(); it; it = it->ai_next) {
       const auto fd = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
       if (fd != utils::net::InvalidSocket) return std::make_tuple(fd, it);
     }
@@ -124,12 +125,15 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
     throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("sendto: ", utils::net::get_last_socket_error_message())};
   }
 
-  logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));
+  logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));  // NOLINT: sendto
 
   session->transfer(flow_file, Success);
 }
 
-REGISTER_RESOURCE(PutUDP, "The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet which is then transmitted to the configured UDP server. The user must ensure that the FlowFile content being fed to this processor is not larger than the maximum size for the underlying UDP transport. The maximum transport size will vary based on the platform setup but is generally just under 64KB. FlowFiles will be marked as failed if their content is larger than the maximum transport size.");
+REGISTER_RESOURCE(PutUDP, "The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet which is then transmitted to the configured UDP server. "
+                          "The user must ensure that the FlowFile content being fed to this processor is not larger than the maximum size for the underlying UDP transport. "
+                          "The maximum transport size will vary based on the platform setup but is generally just under 64KB. "
+                          "FlowFiles will be marked as failed if their content is larger than the maximum transport size.");
 
 }  // namespace org::apache::nifi::minifi::processors
 
