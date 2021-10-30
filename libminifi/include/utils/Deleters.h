@@ -21,12 +21,10 @@
 #ifdef WIN32
 #include <WS2tcpip.h>
 #else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <ifaddrs.h>
 #endif /* WIN32 */
 #include <utility>
+#include "utils/net/DNS.h"
 
 namespace org {
 namespace apache {
@@ -66,11 +64,7 @@ struct StackAwareDeleter {
   D impl_;
 };
 
-struct addrinfo_deleter {
-  void operator()(addrinfo* const p) const noexcept {
-    freeaddrinfo(p);
-  }
-};
+using net::addrinfo_deleter;
 
 #ifndef WIN32
 struct ifaddrs_deleter {

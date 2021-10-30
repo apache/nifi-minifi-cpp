@@ -60,6 +60,10 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
+std::string detail::to_string(const detail::ReadBufferResult& read_buffer_result) {
+  return std::string(reinterpret_cast<const char*>(read_buffer_result.buffer.data()), read_buffer_result.buffer.size());
+}
+
 std::shared_ptr<utils::IdGenerator> ProcessSession::id_generator_ = utils::IdGenerator::getIdGenerator();
 
 ProcessSession::ProcessSession(std::shared_ptr<ProcessContext> processContext)
@@ -400,6 +404,30 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, I
     logger_->log_debug("Caught unknown exception during process session readWrite");
     throw;
   }
+}
+
+detail::ReadBufferResult ProcessSession::readBuffer(const std::shared_ptr<core::FlowFile>& flow) {
+  detail::ReadBufferResult result;
+  struct Callback : InputStreamCallback {
+    detail::ReadBufferResult& result;
+    ProcessSession& session;
+    Callback(detail::ReadBufferResult& result, ProcessSession& session)
+      :result{result}, session{session}
+    {}
+    int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) final {
+      gsl_Expects(inputStream);
+      result.buffer.resize(inputStream->size());
+      const auto read_status = inputStream->read(reinterpret_cast<uint8_t*>(result.buffer.data()), result.buffer.size());
+      if (read_status != result.buffer.size()) {
+        session.logger_->log_error("readBuffer: %zu bytes were requested from the stream but %zu bytes were read. Rolling back.", result.buffer.size(), read_status);
+        throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
+      }
+      return gsl::narrow<int64_t>(read_status);
+    }
+  };
+  Callback cb{result, *this};
+  result.status = read(flow, &cb);
+  return result;
 }
 
 void ProcessSession::importFrom(io::InputStream&& stream, const std::shared_ptr<core::FlowFile> &flow) {

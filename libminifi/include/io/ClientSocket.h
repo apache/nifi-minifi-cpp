@@ -20,17 +20,6 @@
 
 #include <utility>
 #include <cstdint>
-#ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif /* WIN32_LEAN_AND_MEAN */
-#include <WinSock2.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#endif /* WIN32 */
 #include <mutex>
 #include <atomic>
 #include <string>
@@ -43,6 +32,7 @@
 #include "io/validation.h"
 #include "properties/Configure.h"
 #include "io/NetworkPrioritizer.h"
+#include "utils/net/Socket.h"
 
 namespace org {
 namespace apache {
@@ -50,22 +40,10 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-#ifdef WIN32
-using SocketDescriptor = SOCKET;
-using ip4addr = in_addr;
-#else
-using SocketDescriptor = int;
-using ip4addr = in_addr_t;
-#undef INVALID_SOCKET
-static constexpr SocketDescriptor INVALID_SOCKET = -1;
-#undef SOCKET_ERROR
-static constexpr int SOCKET_ERROR = -1;
-#endif /* WIN32 */
-
-/**
- * Return the last socket error message, based on errno on posix and WSAGetLastError() on windows
- */
-std::string get_last_socket_error_message();
+using utils::net::SocketDescriptor;
+using utils::net::ip4addr;
+using utils::net::InvalidSocket;
+using utils::net::SocketError;
 
 /**
  * @return >= 0 on posix, != INVALID_SOCKET on windows
@@ -221,7 +199,7 @@ class Socket : public BaseStream {
   io::NetworkInterface local_network_interface_;
 
   // connection information
-  SocketDescriptor socket_file_descriptor_{ INVALID_SOCKET };  // -1 on posix
+  SocketDescriptor socket_file_descriptor_{ InvalidSocket };  // -1 on posix
 
   fd_set total_list_{};
   fd_set read_fds_{};

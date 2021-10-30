@@ -44,6 +44,14 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace core {
+namespace detail {
+struct ReadBufferResult {
+  int64_t status;
+  std::vector<std::byte> buffer;
+};
+
+std::string to_string(const ReadBufferResult& read_buffer_result);
+}  // namespace detail
 
 // ProcessSession Class
 class ProcessSession : public ReferenceContainer {
@@ -88,10 +96,11 @@ class ProcessSession : public ReferenceContainer {
   void remove(const std::shared_ptr<core::FlowFile> &flow);
   // Execute the given read callback against the content
   int64_t read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback);
-
   int64_t read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback&& callback) {
     return read(flow, &callback);
   }
+  // Read content into buffer
+  detail::ReadBufferResult readBuffer(const std::shared_ptr<core::FlowFile>& flow);
   // Execute the given write callback against the content
   void write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
 

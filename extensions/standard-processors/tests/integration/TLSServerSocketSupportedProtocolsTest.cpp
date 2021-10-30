@@ -37,6 +37,7 @@
 #include "properties/Configure.h"
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSServerSocket.h"
+#include "utils/net/Socket.h"
 
 namespace minifi = org::apache::nifi::minifi;
 
@@ -86,7 +87,7 @@ std::string str_addr(const sockaddr* const sa) {
       const auto addr_str = inet_ntop(AF_INET, &sin.sin_addr, buf, sizeof(buf));
 #endif
       if (!addr_str) {
-        throw std::runtime_error{minifi::io::get_last_socket_error_message()};
+        throw std::runtime_error{minifi::utils::net::get_last_socket_error_message()};
       }
       return std::string{addr_str};
     }
@@ -99,7 +100,7 @@ std::string str_addr(const sockaddr* const sa) {
       const auto addr_str = inet_ntop(AF_INET, &sin6.sin6_addr, buf, sizeof(buf));
 #endif
       if (!addr_str) {
-        throw std::runtime_error{minifi::io::get_last_socket_error_message()};
+        throw std::runtime_error{minifi::utils::net::get_last_socket_error_message()};
       }
       return std::string{addr_str};
     }
@@ -167,14 +168,14 @@ class SimpleSSLTestClient  {
       log_addrinfo(addr, logger);
       sfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
       if (sfd == INVALID_SOCKET) {
-        logger.log_error("socket: %s\n", minifi::io::get_last_socket_error_message());
+        logger.log_error("socket: %s\n", minifi::utils::net::get_last_socket_error_message());
         continue;
       }
       const auto connect_result = connect(sfd, addr->ai_addr, addr->ai_addrlen);
       if (connect_result == 0) {
         break;
       } else {
-        logger.log_error("connect to %s: %s\n", str_addr(addr->ai_addr), minifi::io::get_last_socket_error_message());
+        logger.log_error("connect to %s: %s\n", str_addr(addr->ai_addr), minifi::utils::net::get_last_socket_error_message());
       }
       sfd = INVALID_SOCKET;
 #ifdef WIN32
