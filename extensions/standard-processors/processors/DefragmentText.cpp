@@ -18,6 +18,7 @@
 #include "DefragmentText.h"
 
 #include <vector>
+#include <utility>
 
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
@@ -96,10 +97,14 @@ void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* sess
   gsl_Expects(session);
   auto flowFiles = flow_file_store_.getNewFlowFiles();
   for (auto& file : flowFiles) {
-    processNextFragment(session, file);
+    if (file)
+      processNextFragment(session, gsl::not_null(std::move(file)));
   }
-  std::shared_ptr<core::FlowFile> original_flow_file = session->get();
-  processNextFragment(session, original_flow_file);
+  {
+    std::shared_ptr<core::FlowFile> original_flow_file = session->get();
+    if (original_flow_file)
+      processNextFragment(session, gsl::not_null(std::move(original_flow_file)));
+  }
   if (buffer_.maxSizeReached()) {
     buffer_.flushAndReplace(session, Failure, nullptr);
     return;
@@ -112,9 +117,7 @@ void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* sess
   }
 }
 
-void DefragmentText::processNextFragment(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& next_fragment) {
-  if (!next_fragment)
-    return;
+void DefragmentText::processNextFragment(core::ProcessSession *session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment) {
   if (!buffer_.isCompatible(*next_fragment)) {
     buffer_.flushAndReplace(session, Failure, nullptr);
     session->transfer(next_fragment, Failure);
@@ -124,7 +127,8 @@ void DefragmentText::processNextFragment(core::ProcessSession *session, const st
   std::shared_ptr<core::FlowFile> split_after_last_pattern;
   bool found_pattern = splitFlowFileAtLastPattern(session, next_fragment, split_before_last_pattern,
                                                   split_after_last_pattern);
-  buffer_.append(session, split_before_last_pattern);
+  if (split_before_last_pattern)
+    buffer_.append(session, gsl::not_null(std::move(split_before_last_pattern)));
   if (found_pattern) {
     buffer_.flushAndReplace(session, Success, split_after_last_pattern);
   }
@@ -160,14 +164,14 @@ void DefragmentText::updateAttributesForSplitFiles(const core::FlowFile& origina
 namespace {
 class AppendFlowFileToFlowFile : public OutputStreamCallback {
  public:
-  explicit AppendFlowFileToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file_to_append, PayloadSerializer& serializer)
+  explicit AppendFlowFileToFlowFile(const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append, PayloadSerializer& serializer)
       : flow_file_to_append_(flow_file_to_append), serializer_(serializer) {}
 
   int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
     return serializer_.serialize(flow_file_to_append_, stream);
   }
  private:
-  const std::shared_ptr<core::FlowFile>& flow_file_to_append_;
+  const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append_;
   PayloadSerializer& serializer_;
 };
 
@@ -208,7 +212,7 @@ size_t getSplitPosition(const std::smatch& last_match, DefragmentText::PatternLo
 }  // namespace
 
 bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
-                                                const std::shared_ptr<core::FlowFile> &original_flow_file,
+                                                const gsl::not_null<std::shared_ptr<core::FlowFile>> &original_flow_file,
                                                 std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                                 std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
   ReadFlowFileContent read_flow_file_content;
@@ -244,9 +248,7 @@ std::set<std::shared_ptr<core::Connectable>> DefragmentText::getOutGoingConnecti
   return result;
 }
 
-void DefragmentText::Buffer::append(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& flow_file_to_append) {
-  if (!flow_file_to_append)
-    return;
+void DefragmentText::Buffer::append(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append) {
   if (empty()) {
     store(session, flow_file_to_append);
     return;
