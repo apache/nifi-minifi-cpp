@@ -294,7 +294,9 @@ struct Route {
   core::Relationship relationship_;
   std::optional<std::string> group_name_;
 
-  std::strong_ordering operator<=>(const Route&) const = default;
+  bool operator<(const Route& other) const {
+    return std::tie(relationship_, group_name_) < std::tie(other.relationship_, other.group_name_);
+  }
 };
 }  // namespace
 

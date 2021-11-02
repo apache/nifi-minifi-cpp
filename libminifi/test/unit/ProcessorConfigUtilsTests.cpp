@@ -27,16 +27,12 @@ class TestProcessor : public Processor {
   using Processor::Processor;
 };
 
+#pragma GCC diagnostic warning "-Wunused-function"
+
 SMART_ENUM(TestEnum,
   (A, "A"),
   (B, "B")
 )
-
-TEST_CASE("Dummy test to use all methods of TestEnum") {
-  void(toString(TestEnum::A));
-  void(TestEnum(TestEnum::A) != TestEnum(TestEnum::B));
-  void(TestEnum(TestEnum::A) < TestEnum(TestEnum::B));
-}
 
 TEST_CASE("Parse enum property") {
   auto prop = PropertyBuilder::createProperty("prop")
