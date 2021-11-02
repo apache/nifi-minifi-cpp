@@ -27,7 +27,7 @@ file(GENERATE OUTPUT ${extension-build-info-file}
     CONTENT "\
     #include \"utils/Export.h\"\n\
     #ifdef BUILD_ID_VARIABLE_NAME\n\
-    EXTENSIONAPI const char* const BUILD_ID_VARIABLE_NAME = \"__EXTENSION_BUILD_IDENTIFIER_BEGIN__${BUILD_IDENTIFIER}__EXTENSION_BUILD_IDENTIFIER_END__\";\n\
+    EXTENSIONAPI extern const char* const BUILD_ID_VARIABLE_NAME = \"__EXTENSION_BUILD_IDENTIFIER_BEGIN__${BUILD_IDENTIFIER}__EXTENSION_BUILD_IDENTIFIER_END__\";\n\
     #else\n\
     static_assert(false, \"BUILD_ID_VARIABLE_NAME is not defined\");\n\
     #endif\n")
