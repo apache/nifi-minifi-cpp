@@ -59,7 +59,7 @@ std::string_view StringUtils::trim(std::string_view sv) {
   // return std::string_view(begin, end);
   // but for now
   // on windows std::string_view::const_iterator is not a const char*
-  return std::string_view(sv.data() + std::distance(sv.begin(), begin), std::distance(begin, end));
+  return sv.substr(std::distance(sv.begin(), begin), std::distance(begin, end));
 }
 
 std::string_view StringUtils::trim(const char* str) {
