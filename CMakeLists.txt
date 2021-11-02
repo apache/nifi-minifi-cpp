@@ -124,6 +124,14 @@ if (DOCKER_BUILD_ONLY)
     return()
 endif()
 
+# Generate the build identifier if one is not provided
+if (NOT BUILD_IDENTIFIER)
+	string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
+	set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier" FORCE)
+endif()
+
+message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")
+
 if (${FORCE_COLORED_OUTPUT})
 	message("CMAKE_CXX_COMPILER_ID is ${CMAKE_CXX_COMPILER_ID}")
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -612,14 +620,6 @@ if (NOT DISABLE_CURL AND ENABLE_PYTHON AND NOT WIN32)
 endif()
 
 get_property(selected_extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
-
-# Generate the build identifier if one is not provided
-if (NOT BUILD_IDENTIFIER)
-	 string(RANDOM LENGTH 24 BUILD_IDENTIFIER)
-	 set(BUILD_IDENTIFIER "${BUILD_IDENTIFIER}" CACHE STRING "Build identifier" FORCE)
-endif()
-
-message("BUILD_IDENTIFIER is ${BUILD_IDENTIFIER}")
 
 if (WIN32)
 	# Get the latest abbreviated commit hash of the working branch
