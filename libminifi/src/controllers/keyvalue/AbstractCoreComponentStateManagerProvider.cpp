@@ -28,7 +28,9 @@
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
 namespace {
-std::string serialize(const core::CoreComponentState &kvs) {
+using org::apache::nifi::minifi::core::CoreComponentState;
+
+std::string serialize(const CoreComponentState &kvs) {
   rapidjson::Document doc(rapidjson::kObjectType);
   rapidjson::Document::AllocatorType &alloc = doc.GetAllocator();
   for (const auto &kv : kvs) {
@@ -43,7 +45,7 @@ std::string serialize(const core::CoreComponentState &kvs) {
   return buffer.GetString();
 }
 
-core::CoreComponentState deserialize(const std::string &serialized) {
+CoreComponentState deserialize(const std::string &serialized) {
   rapidjson::StringStream stream(serialized.c_str());
   rapidjson::Document doc;
   rapidjson::ParseResult res = doc.ParseStream(stream);
@@ -53,7 +55,7 @@ core::CoreComponentState deserialize(const std::string &serialized) {
     throw Exception(FILE_OPERATION_EXCEPTION, "Could not deserialize saved state, error during JSON parsing.");
   }
 
-  core::CoreComponentState retState;
+  CoreComponentState retState;
   for (const auto &kv : doc.GetObject()) {
     retState[kv.name.GetString()] = kv.value.GetString();
   }
