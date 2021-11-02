@@ -32,6 +32,12 @@ SMART_ENUM(TestEnum,
   (B, "B")
 )
 
+TEST_CASE("Dummy test to use all methods of TestEnum") {
+  void(toString(TestEnum::A));
+  void(TestEnum(TestEnum::A) != TestEnum(TestEnum::B));
+  void(TestEnum(TestEnum::A) < TestEnum(TestEnum::B));
+}
+
 TEST_CASE("Parse enum property") {
   auto prop = PropertyBuilder::createProperty("prop")
       ->withAllowableValues(TestEnum::values())

@@ -128,6 +128,7 @@ void RouteText::initialize() {
 }
 
 void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
+  gsl_Expects(context);
   routing_ = utils::parseEnumProperty<Routing>(*context, RoutingStrategy);
   matching_ = utils::parseEnumProperty<Matching>(*context, MatchingStrategy);
   context->getProperty(TrimWhitespace.getName(), trim_);
@@ -298,6 +299,7 @@ struct Route {
 }  // namespace
 
 void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
+  gsl_Expects(context && session);
   auto flow_file = session->get();
   if (!flow_file) {
     context->yield();
