@@ -46,8 +46,8 @@ class UpdateAttribute : public core::Processor {
    * Relationships
    */
 
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
 
   /**
    * NiFi API implementation
