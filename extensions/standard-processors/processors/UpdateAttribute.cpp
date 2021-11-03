@@ -32,8 +32,8 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship UpdateAttribute::Success("success", "All files are routed to success");
-core::Relationship UpdateAttribute::Failure("failure", "Failed files are transferred to failure");
+const core::Relationship UpdateAttribute::Success("success", "All files are routed to success");
+const core::Relationship UpdateAttribute::Failure("failure", "Failed files are transferred to failure");
 
 void UpdateAttribute::initialize() {
   std::set<core::Property> properties;

@@ -13,6 +13,7 @@
 - [ConsumeJournald](#consumejournald)
 - [ConsumeKafka](#consumekafka)
 - [ConsumeMQTT](#consumemqtt)
+- [DefragmentText](#defragmenttext)
 - [DeleteS3Object](#deletes3object)
 - [ExecuteProcess](#executeprocess)
 - [ExecutePythonProcessor](#executepythonprocessor)
@@ -294,6 +295,29 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|FlowFiles that are sent successfully to the destination are transferred to this relationship|
+
+## DefragmentText
+
+### Description
+
+DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Pattern**|||A regular expression to match at the start or end of messages.|
+|Pattern Location|Start of Message|Start of Message<br>End of Message|Whether the pattern is located at the start or at the end of the messages.|
+|Max Buffer Age|10 min|&lt;duration&gt; &lt;time unit&gt;|The maximum age of the buffer after which it will be transferred to success when matching Start of Message patterns or to failure when matching End of Message patterns.|
+|Max Buffer Size||&lt;size&gt; &lt;size unit&gt;|The maximum buffer size, if the buffer exceed this, it will be transferred to failure.|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|Flowfiles that have been successfully defragmented|
+|failure|Flowfiles that failed the defragmentation process|
 
 
 ## DeleteS3Object

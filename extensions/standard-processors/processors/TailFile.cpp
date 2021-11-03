@@ -40,10 +40,12 @@
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "TextFragmentUtils.h"
 #include "TailFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
+
 
 namespace org {
 namespace apache {
@@ -795,11 +797,13 @@ void TailFile::updateFlowFileAttributes(const std::string &full_file_name, const
                                         const std::string &extension,
                                         std::shared_ptr<core::FlowFile> &flow_file) const {
   logger_->log_info("TailFile %s for %" PRIu64 " bytes", fileName, flow_file->getSize());
-  std::string logName = baseName + "." + std::to_string(state.position_) + "-" +
-                        std::to_string(state.position_ + flow_file->getSize() - 1) + "." + extension;
+  std::string logName = textfragmentutils::createFileName(baseName, extension, state.position_, flow_file->getSize());
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, state.path_);
   flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, full_file_name);
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, logName);
+  flow_file->setAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, baseName);
+  flow_file->setAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, extension);
+  flow_file->setAttribute(textfragmentutils::OFFSET_ATTRIBUTE, std::to_string(state.position_));
 }
 
 void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const {
