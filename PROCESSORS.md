@@ -52,6 +52,7 @@
 - [QueryDatabaseTable](#querydatabasetable)
 - [RetryFlowFile](#retryflowfile)
 - [RouteOnAttribute](#routeonattribute)
+- [RouteText](#routetext)
 - [TailFile](#tailfile)
 - [UnfocusArchiveEntry](#unfocusarchiveentry)
 - [UpdateAttribute](#updateattribute)
@@ -1540,6 +1541,41 @@ In the list below, the names of required properties appear in bold. Any other pr
 |failure|Failed files are transferred to failure|
 |unmatched|Files which do not match any expression are routed here|
 
+## RouteText
+
+### Description
+Routes textual data based on a set of user-defined rules. Each segment in an incoming FlowFile is compared against the values specified by user-defined Properties. The mechanism by which the text is compared to these user-defined properties is defined by the 'Matching Strategy'. The data is then routed according to these rules, routing each segment of the text individually.
+
+### Properties
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+| Grouping Fallback Value |empty string ("")|| If the 'Grouping Regular Expression' is specified and the matching fails, this value will be considered the group of the segment. |
+| Grouping Regular Expression ||| Specifies a Regular Expression to evaluate against each segment to determine which Group it should be placed in. The Regular Expression must have at least one Capturing Group that defines the segment's Group. If multiple Capturing Groups exist in the Regular Expression, the values from all Capturing Groups will be concatenated together. Two segments will not be placed into the same FlowFile unless they both have the same value for the Group (or neither matches the Regular Expression). For example, to group together all lines in a CSV File by the first column, we can set this value to `(.*?),.*` (and use \"Per Line\" segmentation). Two segments that have the same Group but different Relationships will never be placed into the same FlowFile. |
+| Ignore Case | false || If true, capitalization will not be taken into account when comparing values. E.g., matching against 'HELLO' or 'hello' will have the same result. This property is ignored if the 'Matching Strategy' is set to 'Satisfies Expression'. |
+| Ignore Leading/Trailing Whitespace | true || Indicates whether or not the whitespace at the beginning and end should be ignored when evaluating a segment. |
+| Matching Strategy | Starts With<br>Ends With<br>Contains<br>Equals<br>Matches Regex<br>Contains Regex<br>Satisfies Expression || Specifies how to evaluate each segment of incoming text against the user-defined properties. |
+| Routing Strategy | Dynamic Routing | Dynamic Routing<br>Route On All<br>Route On Any | Specifies how to determine which Relationship(s) to use when evaluating the segments of incoming text against the 'Matching Strategy' and user-defined properties. 'Dynamic Routing' routes to all the matching dynamic relationships (or 'unmatched' if none matches). 'Route On All' routes to 'matched' iff all dynamic relationships match. 'Route On Any' routes to 'matched' iff any of the dynamic relationships match. |
+| Segmentation Strategy | Per Line | Per Line<br>Full Text | Specifies what portions of the FlowFile content constitutes a single segment to be processed. |
+
+### Dynamic Properties
+
+| Name | Value | Description |
+| - | - | - |
+|Relationship Name|value to match against|Routes data that matches the value specified in the Dynamic Property Value to the Relationship specified in the Dynamic Property Key.<br>**Supports Expression Language: true**|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|matched|Segments that satisfy the required user-defined rules will be routed to this Relationship|
+|unmatched|Segments that do not satisfy the required user-defined rules will be routed to this Relationship|
+|original|The original input file will be routed to this destination|
+
+### Writes Attributes
+
+| Name | Description |
+| - | - |
+|RouteText.Group|The value captured by all capturing groups in the 'Grouping Regular Expression' property. If this property is not set, this attribute will not be added.|
 
 ## TailFile
 

@@ -52,6 +52,20 @@ std::string StringUtils::trim(const std::string& s) {
   return trimRight(trimLeft(s));
 }
 
+std::string_view StringUtils::trim(std::string_view sv) {
+  auto begin = std::find_if(sv.begin(), sv.end(), [](unsigned char c) -> bool { return !isspace(c); });
+  auto end = std::find_if(sv.rbegin(), std::reverse_iterator(begin), [](unsigned char c) -> bool { return !isspace(c); }).base();
+  // c++20 iterator constructor
+  // return std::string_view(begin, end);
+  // but for now
+  // on windows std::string_view::const_iterator is not a const char*
+  return sv.substr(std::distance(sv.begin(), begin), std::distance(begin, end));
+}
+
+std::string_view StringUtils::trim(const char* str) {
+  return trim(std::string_view(str));
+}
+
 template<typename Fun>
 std::vector<std::string> split_transformed(std::string str, const std::string& delimiter, Fun transformation) {
   std::vector<std::string> result;
@@ -87,7 +101,7 @@ std::vector<std::string> StringUtils::splitRemovingEmpty(const std::string& str,
 }
 
 std::vector<std::string> StringUtils::splitAndTrim(const std::string& str, const std::string& delimiter) {
-  return split_transformed(str, delimiter, trim);
+  return split_transformed(str, delimiter, static_cast<std::string(*)(const std::string&)>(trim));
 }
 
 std::vector<std::string> StringUtils::splitAndTrimRemovingEmpty(const std::string& str, const std::string& delimiter) {

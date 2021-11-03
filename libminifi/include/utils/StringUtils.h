@@ -106,6 +106,10 @@ class StringUtils {
     return s;
   }
 
+  static std::string_view trim(std::string_view sv);
+
+  static std::string_view trim(const char* str);
+
   /**
    * Compares strings by lower casing them.
    */
@@ -128,6 +132,16 @@ class StringUtils {
     return std::equal(right, right + right_len, left, [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
   }
 
+  static inline bool equals(const std::string_view& left, const std::string_view& right, bool case_sensitive = true) {
+    if (case_sensitive) {
+      return left == right;
+    }
+    if (left.length() != right.length()) {
+      return false;
+    }
+    return std::equal(left.begin(), left.end(), right.begin(), [](unsigned char lc, unsigned char rc) { return std::tolower(lc) == std::tolower(rc); });
+  }
+
   static std::vector<std::string> split(const std::string &str, const std::string &delimiter);
   static std::vector<std::string> splitRemovingEmpty(const std::string& str, const std::string& delimiter);
   static std::vector<std::string> splitAndTrim(const std::string &str, const std::string &delimiter);
@@ -147,22 +161,24 @@ class StringUtils {
 
   static std::string& replaceAll(std::string& source_string, const std::string &from_string, const std::string &to_string);
 
-  inline static bool endsWithIgnoreCase(const std::string &value, const std::string & endString) {
-    if (endString.size() > value.size())
+  inline static bool startsWith(const std::string_view& value, const std::string_view& start, bool case_sensitive = true) {
+    if (start.length() > value.length()) {
       return false;
-    return std::equal(endString.rbegin(), endString.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
+    }
+    if (case_sensitive) {
+      return std::equal(start.begin(), start.end(), value.begin());
+    }
+    return std::equal(start.begin(), start.end(), value.begin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
-  inline static bool startsWith(const std::string& value, const std::string& start_string) {
-    if (start_string.size() > value.size())
+  inline static bool endsWith(const std::string_view& value, const std::string_view& end, bool case_sensitive = true) {
+    if (end.length() > value.length()) {
       return false;
-    return std::equal(start_string.begin(), start_string.end(), value.begin());
-  }
-
-  inline static bool endsWith(const std::string& value, const std::string& end_string) {
-    if (end_string.size() > value.size())
-      return false;
-    return std::equal(end_string.rbegin(), end_string.rend(), value.rbegin());
+    }
+    if (case_sensitive) {
+      return std::equal(end.rbegin(), end.rend(), value.rbegin());
+    }
+    return std::equal(end.rbegin(), end.rend(), value.rbegin(), [](unsigned char lc, unsigned char rc) {return tolower(lc) == tolower(rc);});
   }
 
   inline static std::string hex_ascii(const std::string& in) {

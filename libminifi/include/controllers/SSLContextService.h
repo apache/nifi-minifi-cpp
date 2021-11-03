@@ -218,7 +218,7 @@ class SSLContextService : public core::controller::ControllerService {
 #endif
 
   static bool isFileTypeP12(const std::string& filename) {
-    return utils::StringUtils::endsWithIgnoreCase(filename, "p12");
+    return utils::StringUtils::endsWith(filename, "p12", false);
   }
 
  private:

@@ -53,6 +53,7 @@ class Stream {
   virtual const uint8_t* getBuffer() const {
     throw std::runtime_error("Not a buffered stream");
   }
+
   virtual ~Stream() = default;
 };
 

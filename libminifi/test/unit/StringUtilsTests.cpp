@@ -162,6 +162,7 @@ TEST_CASE("TestStringUtils::testJoin", "[test string join]") {
 }
 
 TEST_CASE("TestStringUtils::trim", "[test trim]") {
+  REQUIRE("" == StringUtils::trim(""));
   REQUIRE("" == StringUtils::trim(" \n\t"));
   REQUIRE("foobar" == StringUtils::trim("foobar"));
   REQUIRE("foo bar" == StringUtils::trim("foo bar"));
@@ -193,9 +194,11 @@ TEST_CASE("TestStringUtils::trim", "[test trim]") {
   REQUIRE("foobar\n\t " == StringUtils::trimLeft(" \n\tfoobar\n\t "));
 }
 
-TEST_CASE("TestStringUtils::startsWith", "[test startsWith]") {
+TEST_CASE("TestStringUtils::startsWith - case sensitive", "[test startsWith]") {
   REQUIRE(StringUtils::startsWith("abcd", ""));
   REQUIRE(StringUtils::startsWith("abcd", "a"));
+  REQUIRE(!StringUtils::startsWith("Abcd", "a"));
+  REQUIRE(!StringUtils::startsWith("abcd", "A"));
   REQUIRE(StringUtils::startsWith("abcd", "abcd"));
   REQUIRE(StringUtils::startsWith("abcd", "abc"));
   REQUIRE(!StringUtils::startsWith("abcd", "abcde"));
@@ -206,9 +209,11 @@ TEST_CASE("TestStringUtils::startsWith", "[test startsWith]") {
   REQUIRE(!StringUtils::startsWith("abcd", "d"));
 }
 
-TEST_CASE("TestStringUtils::endsWith", "[test endsWith]") {
+TEST_CASE("TestStringUtils::endsWith - case sensitive", "[test endsWith]") {
   REQUIRE(StringUtils::endsWith("abcd", ""));
   REQUIRE(StringUtils::endsWith("abcd", "d"));
+  REQUIRE(!StringUtils::endsWith("abcD", "d"));
+  REQUIRE(!StringUtils::endsWith("abcd", "D"));
   REQUIRE(StringUtils::endsWith("abcd", "abcd"));
   REQUIRE(StringUtils::endsWith("abcd", "bcd"));
   REQUIRE(!StringUtils::endsWith("abcd", "1abcd"));
@@ -217,6 +222,36 @@ TEST_CASE("TestStringUtils::endsWith", "[test endsWith]") {
   REQUIRE(!StringUtils::endsWith("", "abcd"));
   REQUIRE(!StringUtils::endsWith("abcd", "c"));
   REQUIRE(!StringUtils::endsWith("abcd", "a"));
+}
+
+TEST_CASE("TestStringUtils::startsWith - case insensitive", "[test startsWith case insensitive]") {
+  REQUIRE(StringUtils::startsWith("abcd", "", false));
+  REQUIRE(StringUtils::startsWith("abcd", "a", false));
+  REQUIRE(StringUtils::startsWith("Abcd", "a", false));
+  REQUIRE(StringUtils::startsWith("abcd", "A", false));
+  REQUIRE(StringUtils::startsWith("aBcd", "abCd", false));
+  REQUIRE(StringUtils::startsWith("abcd", "abc", false));
+  REQUIRE(!StringUtils::startsWith("abcd", "abcde", false));
+
+  REQUIRE(StringUtils::startsWith("", "", false));
+  REQUIRE(!StringUtils::startsWith("", "abcd", false));
+  REQUIRE(!StringUtils::startsWith("abcd", "b", false));
+  REQUIRE(!StringUtils::startsWith("abcd", "d", false));
+}
+
+TEST_CASE("TestStringUtils::endsWith - case insensitive", "[test endsWith case insensitive]") {
+  REQUIRE(StringUtils::endsWith("abcd", "", false));
+  REQUIRE(StringUtils::endsWith("abcd", "d", false));
+  REQUIRE(StringUtils::endsWith("abcd", "D", false));
+  REQUIRE(StringUtils::endsWith("abcD", "d", false));
+  REQUIRE(StringUtils::endsWith("abcd", "abcd", false));
+  REQUIRE(StringUtils::endsWith("aBcd", "bcD", false));
+  REQUIRE(!StringUtils::endsWith("abCd", "1aBcd", false));
+
+  REQUIRE(StringUtils::endsWith("", "", false));
+  REQUIRE(!StringUtils::endsWith("", "abcd", false));
+  REQUIRE(!StringUtils::endsWith("abcd", "c", false));
+  REQUIRE(!StringUtils::endsWith("abcd", "a", false));
 }
 
 TEST_CASE("TestStringUtils::toBool", "[test toBool]") {
