@@ -69,6 +69,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
     uint64_t max_buffer_age;
     if (core::Property::StringToTime(max_buffer_age_str, max_buffer_age, unit) && core::Property::ConvertTimeUnitToMS(max_buffer_age, unit, max_buffer_age)) {
       buffer_.setMaxAge(std::chrono::milliseconds(max_buffer_age));
+      setTriggerWhenEmpty(true);
       logger_->log_trace("The Buffer maximum age is configured to be %" PRIu64 " ms", max_buffer_age);
     }
   }
