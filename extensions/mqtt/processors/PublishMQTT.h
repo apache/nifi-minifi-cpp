@@ -68,10 +68,10 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   class ReadCallback {
    public:
-    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, const std::string &key, MQTTClient client, int qos, bool retain, MQTTClient_deliveryToken &token)
+    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, std::string key, MQTTClient client, int qos, bool retain, MQTTClient_deliveryToken &token)
         : flow_size_(flow_size),
           max_seg_size_(max_seg_size),
-          key_(key),
+          key_(std::move(key)),
           client_(client),
           qos_(qos),
           retain_(retain),
@@ -133,4 +133,4 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();
 };
 
-}  // namespace org::apache::nifi::minifi::processors
+} // namespace org::apache::nifi::minifi::processors

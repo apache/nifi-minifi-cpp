@@ -16,21 +16,23 @@
  */
 #include "ConsumeMQTT.h"
 
-#include <cstdio>
-#include <algorithm>
 #include <memory>
 #include <string>
-#include <map>
+#include <set>
 #include <cinttypes>
 #include <vector>
 
-#include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
+
+core::Property ConsumeMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
+core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "");
+
+core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
 
 void ConsumeMQTT::initialize() {
   setSupportedProperties(properties());
@@ -43,7 +45,7 @@ bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
     return false;
   } else {
     if (gsl::narrow<uint64_t>(message->payloadlen) > maxSegSize_)
-      message->payloadlen = maxSegSize_;
+      message->payloadlen = gsl::narrow<int>(maxSegSize_);
     queue_.enqueue(message);
     logger_->log_debug("enqueue MQTT message length %d", message->payloadlen);
     return true;
@@ -104,4 +106,6 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 }
 
-}  // namespace org::apache::nifi::minifi::processors
+REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
+
+} // namespace org::apache::nifi::minifi::processors

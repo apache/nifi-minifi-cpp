@@ -41,7 +41,7 @@ class Property {
    * as they will get coerced to the bool true and false, causing
    * further overwrites to inherit the bool validator.
    */
-  Property(std::string name, std::string description, std::string value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
+  Property(std::string name, std::string description, const std::string& value, bool is_required, std::string valid_regex, std::vector<std::string> dependent_properties,
            std::vector<std::pair<std::string, std::string>> exclusive_of_properties)
       : name_(std::move(name)),
         description_(std::move(description)),
@@ -55,9 +55,9 @@ class Property {
     default_value_ = coerceDefaultValue(value);
   }
 
-  Property(const std::string name, const std::string description, std::string value)
-      : name_(name),
-        description_(description),
+  Property(std::string name, std::string description, const std::string& value)
+      : name_(std::move(name)),
+        description_(std::move(description)),
         is_required_(false),
         is_collection_(false),
         supports_el_(false),
@@ -65,9 +65,9 @@ class Property {
     default_value_ = coerceDefaultValue(value);
   }
 
-  Property(const std::string name, const std::string description)
-      : name_(name),
-        description_(description),
+  Property(std::string name, std::string description)
+      : name_(std::move(name)),
+        description_(std::move(description)),
         is_required_(false),
         is_collection_(true),
         supports_el_(false),
@@ -78,9 +78,7 @@ class Property {
   Property(const Property &other) = default;
 
   Property()
-      : name_(""),
-        description_(""),
-        is_required_(false),
+      : is_required_(false),
         is_collection_(false),
         supports_el_(false),
         is_transient_(false) {}

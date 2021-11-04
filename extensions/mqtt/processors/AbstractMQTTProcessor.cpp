@@ -21,23 +21,35 @@
 #include <cinttypes>
 #include <vector>
 
-#include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
 
 namespace org::apache::nifi::minifi::processors {
 
+core::Property AbstractMQTTProcessor::BrokerURI("Broker URI", "The URI to use to connect to the MQTT broker", "");
+core::Property AbstractMQTTProcessor::CleanSession("Clean Session", "Whether to start afresh or resume previous flows. See the allowable value descriptions for more details", "true");
+core::Property AbstractMQTTProcessor::ClientID("Client ID", "MQTT client ID to use", "");
+core::Property AbstractMQTTProcessor::Username("Username", "Username to use when connecting to the broker", "");
+core::Property AbstractMQTTProcessor::Password("Password", "Password to use when connecting to the broker", "");
+core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
+core::Property AbstractMQTTProcessor::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
+core::Property AbstractMQTTProcessor::QOS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", "MQTT_QOS_0");
+core::Property AbstractMQTTProcessor::Topic("Topic", "The topic to publish the message to", "");
+core::Property AbstractMQTTProcessor::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
+core::Property AbstractMQTTProcessor::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
+core::Property AbstractMQTTProcessor::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
+core::Property AbstractMQTTProcessor::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
+core::Property AbstractMQTTProcessor::SecurityPrivateKeyPassword("Security Pass Phrase", "Private key passphrase", "");
+
 void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   sslEnabled_ = false;
-  sslopts_ = MQTTClient_SSLOptions_initializer;
 
   std::string value;
   int64_t valInt;
   value = "";
-  if (context->getProperty(BrokerURL.getName(), value) && !value.empty()) {
+  if (context->getProperty(BrokerURI.getName(), value) && !value.empty()) {
     uri_ = value;
-    logger_->log_debug("AbstractMQTTProcessor: BrokerURL [%s]", uri_);
+    logger_->log_debug("AbstractMQTTProcessor: BrokerURI [%s]", uri_);
   }
   value = "";
   if (context->getProperty(ClientID.getName(), value) && !value.empty()) {
@@ -50,23 +62,19 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: Topic [%s]", topic_);
   }
   value = "";
-  if (context->getProperty(UserName.getName(), value) && !value.empty()) {
-    userName_ = value;
-    logger_->log_debug("AbstractMQTTProcessor: UserName [%s]", userName_);
+  if (context->getProperty(Username.getName(), value) && !value.empty()) {
+    username_ = value;
+    logger_->log_debug("AbstractMQTTProcessor: UserName [%s]", username_);
   }
   value = "";
-  if (context->getProperty(PassWord.getName(), value) && !value.empty()) {
-    passWord_ = value;
-    logger_->log_debug("AbstractMQTTProcessor: PassWord [%s]", passWord_);
+  if (context->getProperty(Password.getName(), value) && !value.empty()) {
+    password_ = value;
+    logger_->log_debug("AbstractMQTTProcessor: Password [%s]", password_);
   }
 
-  const auto cleanSession_parsed = [&] () -> std::optional<bool> {
-    std::string property_value;
-    if (!context->getProperty(CleanSession.getName(), property_value)) return std::nullopt;
-    return utils::StringUtils::toBool(property_value);
-  }();
-  if ( cleanSession_parsed ) {
-    cleanSession_ = *cleanSession_parsed;
+  value = "";
+  if (context->getProperty(CleanSession.getName(), value)) {
+    cleanSession_ = utils::StringUtils::toBool(value).value_or(cleanSession_);
     logger_->log_debug("AbstractMQTTProcessor: CleanSession [%d]", cleanSession_);
   }
 
@@ -95,25 +103,25 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
       if (context->getProperty(SecurityCA.getName(), value) && !value.empty()) {
         logger_->log_debug("AbstractMQTTProcessor: trustStore [%s]", value);
         securityCA_ = value;
-        sslopts_.trustStore = securityCA_.c_str();
+        sslOpts_.trustStore = securityCA_.c_str();
       }
       value = "";
       if (context->getProperty(SecurityCert.getName(), value) && !value.empty()) {
         logger_->log_debug("AbstractMQTTProcessor: keyStore [%s]", value);
         securityCert_ = value;
-        sslopts_.keyStore = securityCert_.c_str();
+        sslOpts_.keyStore = securityCert_.c_str();
       }
       value = "";
       if (context->getProperty(SecurityPrivateKey.getName(), value) && !value.empty()) {
         logger_->log_debug("AbstractMQTTProcessor: privateKey [%s]", value);
         securityPrivateKey_ = value;
-        sslopts_.privateKey = securityPrivateKey_.c_str();
+        sslOpts_.privateKey = securityPrivateKey_.c_str();
       }
       value = "";
-      if (context->getProperty(SecurityPrivateKeyPassWord.getName(), value) && !value.empty()) {
+      if (context->getProperty(SecurityPrivateKeyPassword.getName(), value) && !value.empty()) {
         logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [%s]", value);
-        securityPrivateKeyPassWord_ = value;
-        sslopts_.privateKeyPassword = securityPrivateKeyPassWord_.c_str();
+        securityPrivateKeyPassword_ = value;
+        sslOpts_.privateKeyPassword = securityPrivateKeyPassword_.c_str();
       }
     }
   }
@@ -135,12 +143,12 @@ bool AbstractMQTTProcessor::reconnect() {
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
   conn_opts.keepAliveInterval = std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count();
   conn_opts.cleansession = cleanSession_;
-  if (!userName_.empty()) {
-    conn_opts.username = userName_.c_str();
-    conn_opts.password = passWord_.c_str();
+  if (!username_.empty()) {
+    conn_opts.username = username_.c_str();
+    conn_opts.password = password_.c_str();
   }
   if (sslEnabled_) {
-    conn_opts.ssl = &sslopts_;
+    conn_opts.ssl = &sslOpts_;
   }
   int ret = MQTTClient_connect(client_, &conn_opts);
   if (ret != MQTTCLIENT_SUCCESS) {
@@ -148,7 +156,7 @@ bool AbstractMQTTProcessor::reconnect() {
     return false;
   }
   if (isSubscriber_) {
-    ret = MQTTClient_subscribe(client_, topic_.c_str(), qos_);
+    ret = MQTTClient_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_));
     if (ret != MQTTCLIENT_SUCCESS) {
       logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
       return false;

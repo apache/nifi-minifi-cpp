@@ -16,22 +16,24 @@
  */
 #include "PublishMQTT.h"
 
-#include <algorithm>
 #include <cinttypes>
-#include <cstdio>
-#include <map>
 #include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
-#include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
+
+core::Property PublishMQTT::Retain("Retain", "Retain MQTT published record in broker", "false");
+core::Property PublishMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
+
+core::Relationship PublishMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
+core::Relationship PublishMQTT::Failure("failure", "FlowFiles that failed to send to the destination are transferred to this relationship");
 
 void PublishMQTT::initialize() {
   setSupportedProperties(properties());
@@ -71,7 +73,7 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
     return;
   }
 
-  PublishMQTT::ReadCallback callback(flowFile->getSize(), max_seg_size_, topic_, client_, qos_, retain_, delivered_token_);
+  PublishMQTT::ReadCallback callback(flowFile->getSize(), max_seg_size_, topic_, client_, gsl::narrow<int>(qos_), retain_, delivered_token_);
   session->read(flowFile, std::ref(callback));
   if (callback.status_ < 0) {
     logger_->log_error("Failed to send flow to MQTT topic %s", topic_);
@@ -82,4 +84,6 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 }
 
-}  // namespace org::apache::nifi::minifi::processors
+REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.");
+
+} // namespace org::apache::nifi::minifi::processors
