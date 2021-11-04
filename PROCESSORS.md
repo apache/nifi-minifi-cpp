@@ -336,19 +336,30 @@ This Processor gets the contents of a FlowFile from a MQTT broker for a specifie
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                  | Default Value | Allowable Values | Description                                                                                             |
-|-----------------------|---------------|------------------|---------------------------------------------------------------------------------------------------------|
-| Broker URI            |               |                  | The URI to use to connect to the MQTT broker                                                            |
-| Client ID             |               |                  | MQTT client ID to use                                                                                   |
-| Connection Timeout    | 30 sec        |                  | Maximum time interval the client will wait for the network connection to the MQTT server                |
-| Keep Alive Interval   | 60 sec        |                  | Defines the maximum time interval between messages sent or received                                     |
-| Max Flow Segment Size |               |                  | Maximum flow content payload segment size for the MQTT record                                           |
-| Password              |               |                  | Password to use when connecting to the broker                                                           |
-| Quality of Service    | MQTT_QOS_0    |                  | The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'             |
-| Queue Max Message     |               |                  | Maximum number of messages allowed on the received MQTT queue                                           |
-| Session state         | true          |                  | Whether to start afresh or resume previous flows. See the allowable value descriptions for more details |
-| Topic                 |               |                  | The topic to publish the message to                                                                     |
-| Username              |               |                  | Username to use when connecting to the broker                                                           |
+| Name                  | Default Value | Allowable Values | Description                                                                                                                 |
+|-----------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **Broker URI**        |               |                  | The URI to use to connect to the MQTT broker                                                                                |
+| **Topic**             |               |                  | The topic to subscribe to                                                                                                   |
+| Client ID             |               |                  | MQTT client ID to use                                                                                                       |
+| Quality of Service    | 0             |                  | The Quality of Service (QoS) to receive the message with. Accepts three values '0', '1' and '2'                             |
+| Connection Timeout    | 30 sec        |                  | Maximum time interval the client will wait for the network connection to the MQTT broker                                    |
+| Keep Alive Interval   | 60 sec        |                  | Defines the maximum time interval between messages being sent to the broker                                                 |
+| Max Flow Segment Size |               |                  | Maximum flow content payload segment size for the MQTT record                                                               |
+| Last Will Topic       |               |                  | The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent            |
+| Last Will Message     |               |                  | The message to send as the client's Last Will. If the Last Will Message is empty, Last Will will be deleted from the broker |
+| Last Will QoS         | 0             |                  | The Quality of Service (QoS) to send the last will with. Accepts three values '0', '1' and '2'                              |
+| Last Will Retain      | false         |                  | Whether to retain the client's Last Will                                                                                    |
+| Security Protocol     |               |                  | Protocol used to communicate with brokers                                                                                   |
+| Security CA           |               |                  | File or directory path to CA certificate(s) for verifying the broker's key                                                  |
+| Security Cert         |               |                  | Path to client's public key (PEM) used for authentication                                                                   |
+| Security Private Key  |               |                  | Path to client's private key (PEM) used for authentication                                                                  |
+| Security Pass Phrase  |               |                  | Private key passphrase                                                                                                      |
+| Username              |               |                  | Username to use when connecting to the broker                                                                               |
+| Password              |               |                  | Password to use when connecting to the broker                                                                               |
+| Clean Session         | true          |                  | Whether to start afresh rather than remembering previous subscriptions                                                      |
+| Queue Max Message     | 1000          |                  | Maximum number of messages allowed on the received MQTT queue                                                               |
+
+
 ### Relationships
 
 | Name    | Description                                                                                  |
@@ -1770,19 +1781,29 @@ PublishMQTT serializes FlowFile content as an MQTT payload, sending the message 
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                  | Default Value | Allowable Values | Description                                                                                             |
-|-----------------------|---------------|------------------|---------------------------------------------------------------------------------------------------------|
-| Broker URI            |               |                  | The URI to use to connect to the MQTT broker                                                            |
-| Client ID             |               |                  | MQTT client ID to use                                                                                   |
-| Connection Timeout    | 30 sec        |                  | Maximum time interval the client will wait for the network connection to the MQTT server                |
-| Keep Alive Interval   | 60 sec        |                  | Defines the maximum time interval between messages sent or received                                     |
-| Max Flow Segment Size |               |                  | Maximum flow content payload segment size for the MQTT record                                           |
-| Password              |               |                  | Password to use when connecting to the broker                                                           |
-| Quality of Service    | MQTT_QOS_0    |                  | The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'             |
-| Retain                | false         |                  | Retain MQTT published record in broker                                                                  |
-| Session state         | true          |                  | Whether to start afresh or resume previous flows. See the allowable value descriptions for more details |
-| Topic                 |               |                  | The topic to publish the message to                                                                     |
-| Username              |               |                  | Username to use when connecting to the broker                                                           |
+| Name                  | Default Value | Allowable Values | Description                                                                                                                 |
+|-----------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| **Broker URI**        |               |                  | The URI to use to connect to the MQTT broker                                                                                |
+| **Topic**             |               |                  | The topic to publish to                                                                                                     |
+| Client ID             |               |                  | MQTT client ID to use                                                                                                       |
+| Quality of Service    | 0             |                  | The Quality of Service (QoS) to send the message with. Accepts three values '0', '1' and '2'                                |
+| Connection Timeout    | 30 sec        |                  | Maximum time interval the client will wait for the network connection to the MQTT broker                                    |
+| Keep Alive Interval   | 60 sec        |                  | Defines the maximum time interval between messages being sent to the broker                                                 |
+| Max Flow Segment Size |               |                  | Maximum flow content payload segment size for the MQTT record                                                               |
+| Last Will Topic       |               |                  | The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent            |
+| Last Will Message     |               |                  | The message to send as the client's Last Will. If the Last Will Message is empty, Last Will will be deleted from the broker |
+| Last Will QoS         | 0             |                  | The Quality of Service (QoS) to send the last will with. Accepts three values '0', '1' and '2'                              |
+| Last Will Retain      | false         |                  | Whether to retain the client's Last Will                                                                                    |
+| Security Protocol     |               |                  | Protocol used to communicate with brokers                                                                                   |
+| Security CA           |               |                  | File or directory path to CA certificate(s) for verifying the broker's key                                                  |
+| Security Cert         |               |                  | Path to client's public key (PEM) used for authentication                                                                   |
+| Security Private Key  |               |                  | Path to client's private key (PEM) used for authentication                                                                  |
+| Security Pass Phrase  |               |                  | Private key passphrase                                                                                                      |
+| Username              |               |                  | Username to use when connecting to the broker                                                                               |
+| Password              |               |                  | Password to use when connecting to the broker                                                                               |
+| Retain                | false         |                  | Retain published message in broker                                                                                          |
+
+
 ### Relationships
 
 | Name    | Description                                                                                  |

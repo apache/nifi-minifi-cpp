@@ -16,130 +16,196 @@
  */
 #pragma once
 
-#include <string>
+#include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "MQTTClient.h"
+#include "MQTTAsync.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-static constexpr const char* const MQTT_QOS_0 = "0";
-static constexpr const char* const MQTT_QOS_1 = "1";
-static constexpr const char* const MQTT_QOS_2 = "2";
+static constexpr uint8_t MQTT_QOS_0 = 0;
+static constexpr uint8_t MQTT_QOS_1 = 1;
+static constexpr uint8_t MQTT_QOS_2 = 2;
 
-static constexpr const char* const MQTT_SECURITY_PROTOCOL_PLAINTEXT = "plaintext";
 static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
 class AbstractMQTTProcessor : public core::Processor {
  public:
   explicit AbstractMQTTProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
-    client_ = nullptr;
-    cleanSession_ = false;
-    qos_ = 0;
-    isSubscriber_ = false;
   }
 
   ~AbstractMQTTProcessor() override {
-    if (isSubscriber_) {
-      MQTTClient_unsubscribe(client_, topic_.c_str());
-    }
-    if (client_ && MQTTClient_isConnected(client_)) {
-      MQTTClient_disconnect(client_, std::chrono::milliseconds{connectionTimeout_}.count());
-    }
-    if (client_)
-      MQTTClient_destroy(&client_);
+    freeResources();
   }
 
-  EXTENSIONAPI static const core::Property BrokerURL;
+  EXTENSIONAPI static const core::Property BrokerURI;
   EXTENSIONAPI static const core::Property ClientID;
-  EXTENSIONAPI static const core::Property UserName;
-  EXTENSIONAPI static const core::Property PassWord;
-  EXTENSIONAPI static const core::Property CleanSession;
-  EXTENSIONAPI static const core::Property KeepLiveInterval;
+  EXTENSIONAPI static const core::Property Username;
+  EXTENSIONAPI static const core::Property Password;
+  EXTENSIONAPI static const core::Property KeepAliveInterval;
+  EXTENSIONAPI static const core::Property MaxFlowSegSize;
   EXTENSIONAPI static const core::Property ConnectionTimeout;
   EXTENSIONAPI static const core::Property Topic;
-  EXTENSIONAPI static const core::Property QOS;
+  EXTENSIONAPI static const core::Property QoS;
   EXTENSIONAPI static const core::Property SecurityProtocol;
   EXTENSIONAPI static const core::Property SecurityCA;
   EXTENSIONAPI static const core::Property SecurityCert;
   EXTENSIONAPI static const core::Property SecurityPrivateKey;
-  EXTENSIONAPI static const core::Property SecurityPrivateKeyPassWord;
-  static auto properties() {
+  EXTENSIONAPI static const core::Property SecurityPrivateKeyPassword;
+  EXTENSIONAPI static const core::Property LastWillTopic;
+  EXTENSIONAPI static const core::Property LastWillMessage;
+  EXTENSIONAPI static const core::Property LastWillQoS;
+  EXTENSIONAPI static const core::Property LastWillRetain;
+
+  EXTENSIONAPI static auto properties() {
     return std::array{
-      BrokerURL,
-      ClientID,
-      UserName,
-      PassWord,
-      CleanSession,
-      KeepLiveInterval,
-      ConnectionTimeout,
-      Topic,
-      QOS,
-      SecurityProtocol,
-      SecurityCA,
-      SecurityCert,
-      SecurityPrivateKey,
-      SecurityPrivateKeyPassWord
+            BrokerURI,
+            Topic,
+            ClientID,
+            QoS,
+            ConnectionTimeout,
+            KeepAliveInterval,
+            MaxFlowSegSize,
+            LastWillTopic,
+            LastWillMessage,
+            LastWillQoS,
+            LastWillRetain,
+            Username,
+            Password,
+            SecurityProtocol,
+            SecurityCA,
+            SecurityCert,
+            SecurityPrivateKey,
+            SecurityPrivateKeyPassword
     };
   }
 
- public:
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& factory) override;
 
-  // MQTT async callbacks
-  static void msgDelivered(void *context, MQTTClient_deliveryToken dt) {
-    AbstractMQTTProcessor *processor = reinterpret_cast<AbstractMQTTProcessor *>(context);
-    processor->delivered_token_ = dt;
-  }
-  static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTClient_message *message) {
-    AbstractMQTTProcessor *processor = reinterpret_cast<AbstractMQTTProcessor *>(context);
-    if (processor->isSubscriber_) {
-      if (!processor->enqueueReceiveMQTTMsg(message))
-        MQTTClient_freeMessage(&message);
-    } else {
-      MQTTClient_freeMessage(&message);
-    }
-    MQTTClient_free(topicName);
-    return 1;
-  }
-  static void connectionLost(void *context, char* /*cause*/) {
-    AbstractMQTTProcessor *processor = reinterpret_cast<AbstractMQTTProcessor *>(context);
-    processor->reconnect();
-  }
-  bool reconnect();
-  virtual bool enqueueReceiveMQTTMsg(MQTTClient_message* /*message*/) {
-    return false;
+  void notifyStop() override {
+    freeResources();
   }
 
  protected:
-  MQTTClient client_;
-  MQTTClient_deliveryToken delivered_token_;
+  void reconnect();
+
+  MQTTAsync client_ = nullptr;
   std::string uri_;
   std::string topic_;
-  std::chrono::milliseconds keepAliveInterval_ = std::chrono::seconds(60);
-  std::chrono::milliseconds connectionTimeout_ = std::chrono::seconds(30);
-  int64_t qos_;
-  bool cleanSession_;
+  std::chrono::seconds keep_alive_interval_{60};
+  uint64_t max_seg_size_ = std::numeric_limits<uint64_t>::max();
+  std::chrono::seconds connection_timeout_{30};
+  uint32_t qos_ = MQTT_QOS_1;
   std::string clientID_;
-  std::string userName_;
-  std::string passWord_;
-  bool isSubscriber_;
+  std::string username_;
+  std::string password_;
 
  private:
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
-  MQTTClient_SSLOptions sslopts_;
-  bool sslEnabled_;
+  // MQTT async callback
+  static int msgReceived(void *context, char* topic_name, int topic_len, MQTTAsync_message* message) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onMessageReceived(topic_name, topic_len, message);
+    return 1;
+  }
+
+  // MQTT async callback
+  static void connectionLost(void *context, char* cause) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionLost(cause);
+  }
+
+  // MQTT async callback
+  static void connectionSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionSuccess(response);
+  }
+
+  // MQTT async callback
+  static void connectionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionFailure(response);
+  }
+
+  // MQTT async callback
+  static void disconnectionSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onDisconnectionSuccess(response);
+  }
+
+  // MQTT async callback
+  static void disconnectionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onDisconnectionFailure(response);
+  }
+
+  virtual void onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) {
+    MQTTAsync_freeMessage(&message);
+    MQTTAsync_free(topic_name);
+  }
+
+  void onConnectionLost(char* cause) {
+    logger_->log_error("Connection lost to MQTT broker %s", uri_);
+    if (cause != nullptr) {
+      logger_->log_error("Cause for connection loss: %s", cause);
+    }
+  }
+
+  void onConnectionSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_info("Successfully connected to MQTT broker %s", uri_);
+    startupClient();
+  }
+
+  void onConnectionFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Connection failed to MQTT broker %s (%d)", uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for connection failure: %s", response->message);
+    }
+  }
+
+  void onDisconnectionSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_info("Successfully disconnected from MQTT broker %s", uri_);
+  }
+
+  void onDisconnectionFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Disconnection failed from MQTT broker %s (%d)", uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for disconnection failure: %s", response->message);
+    }
+  }
+
+  virtual bool getCleanSession() const = 0;
+  virtual bool startupClient() = 0;
+
+  void freeResources();
+
+  /**
+   * Checks property consistency before connecting to broker
+   */
+  virtual void checkProperties() {
+  }
+
+  // SSL
+  std::optional<MQTTAsync_SSLOptions> sslOpts_;
   std::string securityCA_;
   std::string securityCert_;
   std::string securityPrivateKey_;
-  std::string securityPrivateKeyPassWord_;
+  std::string securityPrivateKeyPassword_;
+
+  // Last Will
+  std::optional<MQTTAsync_willOptions> last_will_;
+  std::string last_will_topic_;
+  std::string last_will_message_;
+  uint32_t last_will_qos_ = MQTT_QOS_1;
+  bool last_will_retain_ = false;
+
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::processors

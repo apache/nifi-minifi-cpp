@@ -22,9 +22,9 @@ if(NOT (ENABLE_ALL OR ENABLE_MQTT))
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core)
+include_directories(./processors ../../libminifi/include  ../../libminifi/include/core)
 
-file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
+file(GLOB SOURCES "processors/*.cpp")
 
 add_library(minifi-mqtt-extensions SHARED ${SOURCES})
 
@@ -33,5 +33,5 @@ target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
 include(PahoMqttC)
 target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 
-register_extension(minifi-mqtt-extensions "MQTT EXTENSIONS" MQTT-EXTENSIONS "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "${TEST_DIR}/mqtt-tests")
+register_extension(minifi-mqtt-extensions "MQTT EXTENSIONS" MQTT-EXTENSIONS "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "${CMAKE_CURRENT_SOURCE_DIR}/tests")
 register_extension_linter(minifi-mqtt-extensions-linter)

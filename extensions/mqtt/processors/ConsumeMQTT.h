@@ -16,11 +16,12 @@
  */
 #pragma once
 
-#include <limits>
-#include <string>
-#include <memory>
-
 #include <deque>
+#include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -28,7 +29,6 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "concurrentqueue.h"
-#include "MQTTClient.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
@@ -42,25 +42,18 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
   explicit ConsumeMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
-    isSubscriber_ = true;
     maxQueueSize_ = 100;
-    maxSegSize_ = ULLONG_MAX;
-  }
-  ~ConsumeMQTT() override {
-    MQTTClient_message *message;
-    while (queue_.try_dequeue(message)) {
-      MQTTClient_freeMessage(&message);
-    }
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
       "The the payload of the MQTT message becomes content of a FlowFile";
 
-  EXTENSIONAPI static const core::Property MaxFlowSegSize;
+  EXTENSIONAPI static const core::Property CleanSession;
   EXTENSIONAPI static const core::Property QueueBufferMaxMessage;
+
   static auto properties() {
     return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
-      MaxFlowSegSize,
+      CleanSession,
       QueueBufferMaxMessage
     });
   }
@@ -78,22 +71,60 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
-  bool enqueueReceiveMQTTMsg(MQTTClient_message *message) override;
 
- protected:
-  void getReceivedMQTTMsg(std::deque<MQTTClient_message *> &msg_queue) {
-    MQTTClient_message *message;
+ private:
+  struct MQTTMessageDeleter {
+    void operator()(MQTTAsync_message* message) {
+      MQTTAsync_freeMessage(&message);
+    }
+  };
+
+  void getReceivedMQTTMsg(std::deque<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>>& msg_queue) {
+    std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message;
     while (queue_.try_dequeue(message)) {
-      msg_queue.push_back(message);
+      msg_queue.push_back(std::move(message));
     }
   }
 
- private:
+  // MQTT async callback
+  static void subscriptionSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<ConsumeMQTT*>(context);
+    processor->onSubscriptionSuccess(response);
+  }
+
+  // MQTT async callback
+  static void subscriptionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<ConsumeMQTT*>(context);
+    processor->onSubscriptionFailure(response);
+  }
+
+  void onSubscriptionSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_info("Successfully subscribed to MQTT topic %s on broker %s", topic_, uri_);
+  }
+
+  void onSubscriptionFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Subscription failed on topic %s to MQTT broker %s (%d)", topic_, uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for subscription failure: %s", response->message);
+    }
+  }
+
+  bool getCleanSession() const override {
+    return cleanSession_;
+  }
+
+  void onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) override;
+
+  void enqueueReceivedMQTTMsg(std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message);
+
+  bool startupClient() override;
+
+  void checkProperties() override;
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
-  std::mutex mutex_;
+  bool cleanSession_ = true;
   uint64_t maxQueueSize_;
-  uint64_t maxSegSize_;
-  moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
+  moodycamel::ConcurrentQueue<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>> queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

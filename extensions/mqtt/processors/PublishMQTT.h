@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <utility>
 
 #include <limits>
 
@@ -28,7 +29,6 @@
 #include "core/Core.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "MQTTClient.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
@@ -39,19 +39,15 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
   explicit PublishMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
-    retain_ = false;
-    max_seg_size_ = ULLONG_MAX;
   }
-  ~PublishMQTT() override = default;
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
 
   EXTENSIONAPI static const core::Property Retain;
-  EXTENSIONAPI static const core::Property MaxFlowSegSize;
+
   static auto properties() {
     return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
-      Retain,
-      MaxFlowSegSize
+      Retain
     });
   }
 
@@ -68,68 +64,70 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   class ReadCallback {
    public:
-    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, const std::string &key, MQTTClient client, int qos, bool retain, MQTTClient_deliveryToken &token)
-        : flow_size_(flow_size),
+    ReadCallback(PublishMQTT* processor, uint64_t flow_size, uint64_t max_seg_size, std::string topic, MQTTAsync client, int qos, bool retain)
+        : processor_(processor),
+          flow_size_(flow_size),
           max_seg_size_(max_seg_size),
-          key_(key),
+          topic_(std::move(topic)),
           client_(client),
           qos_(qos),
-          retain_(retain),
-          token_(token) {
-      status_ = 0;
-      read_size_ = 0;
+          retain_(retain) {
     }
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
-      if (flow_size_ < max_seg_size_)
-        max_seg_size_ = flow_size_;
-      gsl_Expects(max_seg_size_ < gsl::narrow<uint64_t>(std::numeric_limits<int>::max()));
-      std::vector<std::byte> buffer(max_seg_size_);
-      read_size_ = 0;
-      status_ = 0;
-      while (read_size_ < flow_size_) {
-        // MQTTClient_message::payloadlen is int, so we can't handle 2GB+
-        const auto readRet = stream->read(buffer);
-        if (io::isError(readRet)) {
-          status_ = -1;
-          return gsl::narrow<int64_t>(read_size_);
-        }
-        if (readRet > 0) {
-          MQTTClient_message pubmsg = MQTTClient_message_initializer;
-          pubmsg.payload = buffer.data();
-          pubmsg.payloadlen = gsl::narrow<int>(readRet);
-          pubmsg.qos = qos_;
-          pubmsg.retained = retain_;
-          if (MQTTClient_publishMessage(client_, key_.c_str(), &pubmsg, &token_) != MQTTCLIENT_SUCCESS) {
-            status_ = -1;
-            return -1;
-          }
-          read_size_ += gsl::narrow<size_t>(readRet);
-        } else {
-          break;
-        }
-      }
-      return gsl::narrow<int64_t>(read_size_);
-    }
+
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
+
+    size_t read_size_ = 0;
+    int status_ = 0;
+
+   private:
+    PublishMQTT* processor_;
     uint64_t flow_size_;
     uint64_t max_seg_size_;
-    std::string key_;
-    MQTTClient client_;
+    std::string topic_;
+    MQTTAsync client_;
 
-    int status_;
-    size_t read_size_;
     int qos_;
-    int retain_;
-    MQTTClient_deliveryToken &token_;
+    bool retain_;
   };
 
- public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
 
  private:
-  uint64_t max_seg_size_;
-  bool retain_;
+  // MQTT async callback
+  static void sendSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<PublishMQTT*>(context);
+    processor->onSendSuccess(response);
+  }
+
+  // MQTT async callback
+  static void sendFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<PublishMQTT*>(context);
+    processor->onSendFailure(response);
+  }
+
+  void onSendSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_debug("Successfully sent message to MQTT topic %s on broker %s", topic_, uri_);
+  }
+
+  void onSendFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Sending message failed on topic %s to MQTT broker %s (%d)", topic_, uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for sending failure: %s", response->message);
+    }
+  }
+
+  bool getCleanSession() const override {
+    return true;
+  }
+
+  bool startupClient() override {
+    // there is no need to do anything like subscribe on the beginning
+    return true;
+  }
+
+  bool retain_ = false;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();
 };
 

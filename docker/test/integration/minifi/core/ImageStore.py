@@ -169,7 +169,7 @@ class ImageStore:
             FROM {base_image}
             RUN echo 'log_dest stderr' >> /mosquitto-no-auth.conf
             CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto-no-auth.conf"]
-            """.format(base_image='eclipse-mosquitto:2.0.12'))
+            """.format(base_image='eclipse-mosquitto:2.0.14'))
 
         return self.__build_image(dockerfile)
 

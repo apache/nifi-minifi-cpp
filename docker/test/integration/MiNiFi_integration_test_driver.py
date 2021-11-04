@@ -87,11 +87,28 @@ class MiNiFi_integration_test:
         self.cluster.deploy('opensearch')
         assert self.wait_for_container_startup_to_finish('opensearch')
 
-    def start(self):
+    def start(self, container_name=None):
+        if container_name is not None:
+            logging.info("Starting container %s", container_name)
+            self.cluster.deploy_flow(container_name)
+            assert self.wait_for_container_startup_to_finish(container_name)
+            return
         logging.info("MiNiFi_integration_test start")
         self.cluster.deploy_flow()
         for container_name in self.cluster.containers:
             assert self.wait_for_container_startup_to_finish(container_name)
+
+    def stop(self, container_name):
+        logging.info("Stopping container %s", container_name)
+        self.cluster.stop_flow(container_name)
+
+    def kill(self, container_name):
+        logging.info("Killing container %s", container_name)
+        self.cluster.kill_flow(container_name)
+
+    def restart(self, container_name):
+        logging.info("Restarting container %s", container_name)
+        self.cluster.restart_flow(container_name)
 
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):

@@ -142,6 +142,30 @@ class SingleNodeDockerCluster(Cluster):
 
         self.containers[name].deploy()
 
-    def deploy_flow(self):
+    def deploy_flow(self, container_name=None):
+        if container_name is not None:
+            if container_name not in self.containers:
+                logging.error('Could not start container because it is not found: \'%s\'', container_name)
+                return
+            self.containers[container_name].deploy()
+            return
         for container in self.containers.values():
             container.deploy()
+
+    def stop_flow(self, container_name):
+        if container_name not in self.containers:
+            logging.error('Could not stop container because it is not found: \'%s\'', container_name)
+            return
+        self.containers[container_name].stop()
+
+    def kill_flow(self, container_name):
+        if container_name not in self.containers:
+            logging.error('Could not kill container because it is not found: \'%s\'', container_name)
+            return
+        self.containers[container_name].kill()
+
+    def restart_flow(self, container_name):
+        if container_name not in self.containers:
+            logging.error('Could not restart container because it is not found: \'%s\'', container_name)
+            return
+        self.containers[container_name].restart()

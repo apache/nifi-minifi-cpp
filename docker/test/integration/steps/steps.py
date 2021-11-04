@@ -267,6 +267,7 @@ def step_impl(context):
 
 
 @given("a file with the content \"{content}\" is present in \"{path}\"")
+@then("a file with the content \"{content}\" is placed in \"{path}\"")
 def step_impl(context, content, path):
     context.test.add_test_data(path, content)
 
@@ -378,6 +379,7 @@ def step_impl(context):
 
 # MQTT setup
 @given("an MQTT broker is set up in correspondence with the PublishMQTT")
+@given("an MQTT broker is set up in correspondence with the ConsumeMQTT")
 @given("an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT")
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")
@@ -570,6 +572,27 @@ def step_impl(context):
 @when("all other processes start up")
 def step_impl(context):
     context.test.start()
+
+
+@then("\"{container_name}\" flow is stopped")
+def step_impl(context, container_name):
+    context.test.stop(container_name)
+
+
+@then("\"{container_name}\" flow is killed")
+def step_impl(context, container_name):
+    context.test.kill(container_name)
+
+
+@then("\"{container_name}\" flow is restarted")
+def step_impl(context, container_name):
+    context.test.restart(container_name)
+
+
+@when("\"{container_name}\" flow is started")
+@then("\"{container_name}\" flow is started")
+def step_impl(context, container_name):
+    context.test.start(container_name)
 
 
 @when("content \"{content}\" is added to file \"{file_name}\" present in directory \"{path}\" {seconds:d} seconds later")
@@ -841,7 +864,12 @@ def step_impl(context, log_message, duration):
 # MQTT
 @then("the MQTT broker has a log line matching \"{log_pattern}\"")
 def step_impl(context, log_pattern):
-    context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 30, count=1)
+    context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 10, count=1)
+
+
+@then("the MQTT broker has {log_count} log lines matching \"{log_pattern}\"")
+def step_impl(context, log_count, log_pattern):
+    context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 10, count=int(log_count))
 
 
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")
@@ -853,6 +881,11 @@ def step_impl(context, minifi_container_name, log_pattern, duration):
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")
     context.test.start()
+
+
+@when("the MQTT broker is started")
+def step_impl(context):
+    context.test.start('mqtt-broker')
 
 
 # Google Cloud Storage
