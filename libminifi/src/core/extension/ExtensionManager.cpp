@@ -36,6 +36,17 @@ namespace extension {
 
 namespace {
 
+struct Timer {
+  explicit Timer(std::function<void(int)> cb): cb_(std::move(cb)) {}
+  ~Timer() {
+    auto end = std::chrono::steady_clock::now();
+    int elapsed = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start_).count());
+    cb_(elapsed);
+  }
+  std::chrono::steady_clock::time_point start_{std::chrono::steady_clock::now()};
+  std::function<void(int)> cb_;
+};
+
 struct LibraryDescriptor {
   std::string name;
   std::filesystem::path dir;
@@ -44,6 +55,9 @@ struct LibraryDescriptor {
   [[nodiscard]]
   bool verify(const std::shared_ptr<logging::Logger>& logger) const {
     auto path = getFullPath();
+    Timer timer{[&] (int ms) {
+      logger->log_error("Verification for '%s' took %d ms", path.string(), ms);
+    }};
     try {
       utils::file::FileView file(path);
       const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
