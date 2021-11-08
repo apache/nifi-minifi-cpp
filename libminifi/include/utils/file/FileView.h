@@ -52,6 +52,7 @@ class FileView {
         throw Failure("Open failed: " + getLastError());
       }
     }
+    [[nodiscard]]
     size_t getFileSize() const {
       LARGE_INTEGER size;
       if (!GetFileSizeEx(handle_, &size)) {
@@ -82,6 +83,7 @@ class FileView {
       }
     }
 
+    [[nodiscard]]
     const char* data() const {
       return reinterpret_cast<const char*>(data_);
     }
@@ -107,6 +109,7 @@ class FileView {
         throw Failure("Open failed: " + getLastError());
       }
     }
+    [[nodiscard]]
     size_t getFileSize() const {
       return lseek(fd_, 0L, SEEK_END);
     }
@@ -129,9 +132,11 @@ class FileView {
         logger_->log_error("Failed to unmap file %d: %s", file_.fd_, getLastError());
       }
     }
+    [[nodiscard]]
     const char* data() const {
       return static_cast<const char*>(data_);
     }
+
     const FileHandle& file_;
     void* data_;
     size_t size_;
@@ -147,14 +152,24 @@ class FileView {
     if (file_size_ == static_cast<size_t>(-1)) {
       throw Failure("Couldn't determine file size: " + getLastError());
     }
-    mapping_.emplace(file_, file_size_);
+    if (file_size_ != 0) {
+      mapping_.emplace(file_, file_size_);
+    }
   }
 
+  [[nodiscard]]
   const char* begin() const {
+    if (!mapping_) {
+      return nullptr;
+    }
     return mapping_->data();
   }
 
+  [[nodiscard]]
   const char* end() const {
+    if (!mapping_) {
+      return nullptr;
+    }
     return mapping_->data() + file_size_;
   }
 
