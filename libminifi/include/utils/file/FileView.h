@@ -20,6 +20,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <memory>
 
 #include "utils/gsl.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -136,6 +137,7 @@ class FileView {
     size_t size_;
   };
 #endif
+
  public:
   class Failure : public std::runtime_error {
     using runtime_error::runtime_error;
