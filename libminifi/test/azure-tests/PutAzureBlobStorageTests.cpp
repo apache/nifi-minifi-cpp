@@ -43,7 +43,7 @@ const std::string GET_FILE_NAME = "input_data.log";
 class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
  public:
   const std::string ETAG = "test-etag";
-  const std::string PRIMARY_URI = "test-uri";
+  const std::string PRIMARY_URI = "http://test-uri/file";
   const std::string TEST_TIMESTAMP = "Sun, 21 Oct 2018 12:16:24 GMT";
 
   bool createContainerIfNotExists(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
@@ -68,7 +68,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
 
   std::string getUrl(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
     params_ = params;
-    return PRIMARY_URI;
+    return RETURNED_PRIMARY_URI;
   }
 
   minifi::azure::storage::PutAzureBlobStorageParameters getPassedParams() const {
@@ -88,6 +88,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   }
 
  private:
+  const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
   minifi::azure::storage::PutAzureBlobStorageParameters params_;
   bool container_created_ = false;
   bool upload_fails_ = false;
@@ -372,7 +373,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload", "[az
   test_controller.runSession(plan, true);
   CHECK(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
   CHECK(LogTestController::getInstance().contains("key:azure.blobname value:" + GET_FILE_NAME));
-  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI));
+  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI + "\n"));
   CHECK(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
   CHECK(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
   CHECK(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
@@ -393,7 +394,7 @@ TEST_CASE_METHOD(PutAzureBlobStorageTestsFixture, "Test Azure blob upload with c
   test_controller.runSession(plan, true);
   CHECK(LogTestController::getInstance().contains("key:azure.container value:" + CONTAINER_NAME));
   CHECK(LogTestController::getInstance().contains("key:azure.blobname value:" + BLOB_NAME));
-  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI));
+  CHECK(LogTestController::getInstance().contains("key:azure.primaryUri value:" + mock_blob_storage_ptr->PRIMARY_URI + "\n"));
   CHECK(LogTestController::getInstance().contains("key:azure.etag value:" + mock_blob_storage_ptr->ETAG));
   CHECK(LogTestController::getInstance().contains("key:azure.length value:" + std::to_string(TEST_DATA.size())));
   CHECK(LogTestController::getInstance().contains("key:azure.timestamp value:" + mock_blob_storage_ptr->TEST_TIMESTAMP));
