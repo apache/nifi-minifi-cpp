@@ -46,27 +46,27 @@ class FileView {
 #ifdef WIN32
   struct FileHandle {
     explicit FileHandle(const std::filesystem::path& file) {
-      file_ = CreateFile(lpFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-      if (file_ == INVALID_HANDLE_VALUE) {
+      handle_ = CreateFile(file.string().c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+      if (handle_ == INVALID_HANDLE_VALUE) {
         throw Failure("Open failed: " + getLastError());
       }
     }
     size_t getFileSize() const {
       LARGE_INTEGER size;
-      if (!GetFileSizeEx(file_, &size)) {
+      if (!GetFileSizeEx(handle_, &size)) {
         return static_cast<size_t>(-1);
       }
       return size.QuadPart;
     }
     ~FileHandle() {
-      CloseHandle(file_);
+      CloseHandle(handle_);
     }
-    HANDLE file_;
+    HANDLE handle_;
   };
 
   struct FileMapping {
     FileMapping(const FileHandle& file, size_t /*size*/): file_(file) {
-      mapping_ = CreateFileMapping(file_, NULL, PAGE_READONLY, 0, 0, NULL);
+      mapping_ = CreateFileMapping(file_.handle_, NULL, PAGE_READONLY, 0, 0, NULL);
       if (mapping_ == NULL) {
         throw Failure("CreateFileMapping failed: " + getLastError());
       }
@@ -75,7 +75,7 @@ class FileView {
       if (data_ == NULL) {
         std::string view_error = getLastError();
         if (!CloseHandle(mapping_)) {
-          logger_->log_error("CloseHandle failed: " + getLastError());
+          logger_->log_error("CloseHandle failed: %s", getLastError());
         }
         throw Failure("MapViewOfFile failed: " + view_error);
       }
@@ -87,10 +87,10 @@ class FileView {
 
     ~FileMapping() {
       if (!UnmapViewOfFile(data_)) {
-        logger_->log_error("UnmapViewOfFile failed: " + getLastError());
+        logger_->log_error("UnmapViewOfFile failed: %s", getLastError());
       }
       if (!CloseHandle(mapping_)) {
-        logger_->log_error("CloseHandle failed: " + getLastError());
+        logger_->log_error("CloseHandle failed: %s", getLastError());
       }
     }
 
