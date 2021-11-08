@@ -20,6 +20,10 @@
 #include <optional>
 #include <functional>
 #include <chrono>
+#include <utility>
+#include <memory>
+#include <string>
+
 #include "utils/gsl.h"
 #include "utils/file/FileView.h"
 #include "utils/StringUtils.h"
@@ -106,4 +110,4 @@ std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& p
   };
 }
 
-}  // org::apache::nifi::minifi::core::extension::internal
+}  // namespace org::apache::nifi::minifi::core::extension::internal
