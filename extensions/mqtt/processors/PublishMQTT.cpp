@@ -41,7 +41,6 @@ void PublishMQTT::initialize() {
 }
 
 void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
-  AbstractMQTTProcessor::onSchedule(context, factory);
   std::string value;
   int64_t valInt;
   value = "";
@@ -50,15 +49,11 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
 
-  const auto retain_parsed = [&] () -> std::optional<bool> {
-    std::string property_value;
-    if (!context->getProperty(CleanSession.getName(), property_value)) return std::nullopt;
-    return utils::StringUtils::toBool(property_value);
-  }();
-  if ( retain_parsed ) {
-    retain_ = *retain_parsed;
-    logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
-  }
+  //TODO(amarkovics) implement retained messages
+  retain_ = false;
+  logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
+
+  AbstractMQTTProcessor::onSchedule(context, factory);
 }
 
 void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {

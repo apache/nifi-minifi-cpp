@@ -29,6 +29,7 @@
 
 namespace org::apache::nifi::minifi::processors {
 
+core::Property ConsumeMQTT::CleanSession("Clean Session", "Whether to start afresh rather than remembering previous subscriptions.", "true");
 core::Property ConsumeMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
 core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "");
 
@@ -53,9 +54,13 @@ bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
 }
 
 void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
-  AbstractMQTTProcessor::onSchedule(context, factory);
   std::string value;
   int64_t valInt;
+  value = "";
+  if (context->getProperty(CleanSession.getName(), value)) {
+    cleanSession_ = utils::StringUtils::toBool(value).value_or(cleanSession_);
+    logger_->log_debug("ConsumeMQTT: CleanSession [%d]", cleanSession_);
+  }
   value = "";
   if (context->getProperty(QueueBufferMaxMessage.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     maxQueueSize_ = valInt;
@@ -66,6 +71,8 @@ void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     maxSegSize_ = valInt;
     logger_->log_debug("ConsumeMQTT: Max Flow Segment Size [%" PRIu64 "]", maxSegSize_);
   }
+
+  AbstractMQTTProcessor::onSchedule(context, factory);
 }
 
 void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {

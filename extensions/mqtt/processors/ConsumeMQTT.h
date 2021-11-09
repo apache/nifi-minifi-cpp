@@ -52,6 +52,9 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       MQTTClient_freeMessage(&message);
     }
   }
+  static core::Property CleanSession;
+  static core::Property MaxFlowSegSize;
+  static core::Property QueueBufferMaxMessage;
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
       "The the payload of the MQTT message becomes content of a FlowFile";
@@ -89,8 +92,17 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   }
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
+  bool getCleanSession() const override {
+    return cleanSession_;
+  }
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
   std::mutex mutex_;
+  bool cleanSession_ = true;
   uint64_t maxQueueSize_;
   uint64_t maxSegSize_;
   moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;

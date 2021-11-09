@@ -55,11 +55,10 @@ class AbstractMQTTProcessor : public core::Processor {
   EXTENSIONAPI static const core::Property ClientID;
   EXTENSIONAPI static const core::Property Username;
   EXTENSIONAPI static const core::Property Password;
-  EXTENSIONAPI static const core::Property CleanSession;
   EXTENSIONAPI static const core::Property KeepLiveInterval;
   EXTENSIONAPI static const core::Property ConnectionTimeout;
   EXTENSIONAPI static const core::Property Topic;
-  EXTENSIONAPI static const core::Property QOS;
+  EXTENSIONAPI static const core::Property QoS;
   EXTENSIONAPI static const core::Property SecurityProtocol;
   EXTENSIONAPI static const core::Property SecurityCA;
   EXTENSIONAPI static const core::Property SecurityCert;
@@ -72,11 +71,10 @@ class AbstractMQTTProcessor : public core::Processor {
       ClientID,
       Username,
       Password,
-      CleanSession,
       KeepLiveInterval,
       ConnectionTimeout,
       Topic,
-      QOS,
+      QoS,
       SecurityProtocol,
       SecurityCA,
       SecurityCert,
@@ -121,13 +119,14 @@ class AbstractMQTTProcessor : public core::Processor {
   std::chrono::milliseconds keepAliveInterval_ = std::chrono::seconds(60);
   std::chrono::milliseconds connectionTimeout_ = std::chrono::seconds(30);
   int64_t qos_ = 0;
-  bool cleanSession_ = true;
   std::string clientID_;
   std::string username_;
   std::string password_;
   bool isSubscriber_ = false;
 
  private:
+  virtual bool getCleanSession() const = 0;
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
   MQTTClient_SSLOptions sslOpts_ = MQTTClient_SSLOptions_initializer;
   bool sslEnabled_ = false;

@@ -128,6 +128,14 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   void initialize() override;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
+  bool getCleanSession() const override {
+    return true;
+  }
+
   uint64_t max_seg_size_;
   bool retain_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();

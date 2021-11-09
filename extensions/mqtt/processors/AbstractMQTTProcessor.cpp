@@ -27,13 +27,12 @@
 namespace org::apache::nifi::minifi::processors {
 
 core::Property AbstractMQTTProcessor::BrokerURI("Broker URI", "The URI to use to connect to the MQTT broker", "");
-core::Property AbstractMQTTProcessor::CleanSession("Clean Session", "Whether to start afresh or resume previous flows. See the allowable value descriptions for more details", "true");
 core::Property AbstractMQTTProcessor::ClientID("Client ID", "MQTT client ID to use", "");
 core::Property AbstractMQTTProcessor::Username("Username", "Username to use when connecting to the broker", "");
 core::Property AbstractMQTTProcessor::Password("Password", "Password to use when connecting to the broker", "");
 core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
 core::Property AbstractMQTTProcessor::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
-core::Property AbstractMQTTProcessor::QOS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", "MQTT_QOS_0");
+core::Property AbstractMQTTProcessor::QoS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", MQTT_QOS_0);
 core::Property AbstractMQTTProcessor::Topic("Topic", "The topic to publish the message to", "");
 core::Property AbstractMQTTProcessor::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
 core::Property AbstractMQTTProcessor::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
@@ -72,12 +71,6 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: Password [%s]", password_);
   }
 
-  value = "";
-  if (context->getProperty(CleanSession.getName(), value)) {
-    cleanSession_ = utils::StringUtils::toBool(value).value_or(cleanSession_);
-    logger_->log_debug("AbstractMQTTProcessor: CleanSession [%d]", cleanSession_);
-  }
-
   if (auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
     keepAliveInterval_ = keep_alive_interval->getMilliseconds();
     logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keepAliveInterval_.count()});
@@ -89,7 +82,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 
   value = "";
-  if (context->getProperty(QOS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) &&
+  if (context->getProperty(QoS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) &&
       core::Property::StringToInt(value, valInt)) {
     qos_ = valInt;
     logger_->log_debug("AbstractMQTTProcessor: QOS [%" PRId64 "]", qos_);
@@ -142,7 +135,7 @@ bool AbstractMQTTProcessor::reconnect() {
     return true;
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
   conn_opts.keepAliveInterval = std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count();
-  conn_opts.cleansession = cleanSession_;
+  conn_opts.cleansession = getCleanSession();
   if (!username_.empty()) {
     conn_opts.username = username_.c_str();
     conn_opts.password = password_.c_str();
