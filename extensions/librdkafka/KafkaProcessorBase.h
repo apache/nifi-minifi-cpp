@@ -20,6 +20,8 @@
 #pragma once
 
 #include <optional>
+#include <memory>
+#include <string>
 
 #include "core/Processor.h"
 #include "rdkafka_utils.h"
