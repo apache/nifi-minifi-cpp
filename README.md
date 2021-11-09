@@ -429,30 +429,26 @@ advanced features.
   CPack: - package: ~/Development/code/apache/nifi-minifi-cpp/build/nifi-minifi-cpp-0.11.0-source.tar.gz generated.
   ```
 
-- (Optional) Create a Docker image from the resulting binary assembly output from "make package".
+### Building a docker image
+
+#### Building your own custom image
+You can create a custom docker image using the cmake configuration to specify which extensions should be included in the final image. Use `-DDOCKER_BUILD_ONLY=ON` to skip local environment checks of cmake.
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
+$ cmake -DENABLE_JNI=OFF -DENABLE_AWS=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_MQTT=ON -DENABLE_AZURE=ON -DENABLE_SQL=ON -DDOCKER_BUILD_ONLY=ON ..
 $ make docker
-NiFi-MiNiFi-CPP Version: 0.11.0
-Current Working Directory: /Users/jdyer/Development/github/nifi-minifi-cpp/docker
-CMake Source Directory: /Users/jdyer/Development/github/nifi-minifi-cpp
-MiNiFi Package: nifi-minifi-cpp-0.11.0.tar.gz
-Docker Command: 'docker build --build-arg UID=1000 --build-arg GID=1000 --build-arg MINIFI_VERSION=0.11.0 --build-arg MINIFI_PACKAGE=nifi-minifi-cpp-0.11.0.tar.gz -t apacheminificpp:0.11.0 .'
-Sending build context to Docker daemon 777.2 kB
-Step 1 : FROM alpine:3.5
- ---> 88e169ea8f46
-Step 2 : MAINTAINER Apache NiFi <dev@nifi.apache.org>
-
-...
-
-Step 15 : CMD $MINIFI_HOME/bin/minifi.sh run
- ---> Using cache
- ---> c390063d9bd1
-Successfully built c390063d9bd1
-Built target docker
 ```
 
-- (Optional) Execute system integration tests using the docker image built locally on a docker daemon running locally.
+#### Building the minimal/cloud image
+There is also on option to build the minimal image which only contains the most common extensions used in cloud environments. That image includes the standard MiNiFi processors and the AWS, Azure and Kafka extensions. This is also the image which is released to the [apache/nifi-minifi-cpp](https://hub.docker.com/r/apache/nifi-minifi-cpp) repository on dockerhub.
+```
+~/Development/code/apache/nifi-minifi-cpp/build
+$ cmake -DDOCKER_BUILD_ONLY=ON ..
+$ make docker-minimal
+```
+
+#### Executing integration tests with your docker image
+You can execute system integration tests using the docker image built locally on a docker daemon running locally. The image shall contain every extension tested in the test suite for all scenarios to be executed (currently that includes AWS, Azure, Kafka, MQTT, SQL extensions).
 ```
 ~/Development/code/apache/nifi-minifi-cpp/build
 $ make docker-verify
@@ -513,6 +509,13 @@ MiNiFi can then be stopped by issuing:
 MiNiFi can also be installed as a system service using minifi.sh with an optional "service name" (default: minifi)
 
     $ ./bin/minifi.sh install [service name]
+
+### Running as a docker container
+You can use the officially released image pulled from the [apache/nifi-minifi-cpp](https://hub.docker.com/r/apache/nifi-minifi-cpp) repository on dockerhub or you can use your locally built image.
+The container can be run with a specific configuration by mounting the locally edited configuration files to your docker container.
+```
+$ docker run -v ~/Development/apache/nifi-minifi-cpp/conf/config.yml:/opt/minifi/minifi-current/conf/config.yml -v ~/Development/apache/nifi-minifi-cpp/conf/minifi.properties:/opt/minifi/minifi-current/conf/minifi.properties apache/nifi-minifi-cpp
+```
 
 ### Deploying
 MiNiFi C++ comes with a deployment script. This will build and package minifi. Additionally, a file named build_output will be
