@@ -28,14 +28,6 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-std::string getRequiredPropertyOrThrow(const core::ProcessContext* context, const std::string& property_name) {
-  std::string value;
-  if (!context->getProperty(property_name, value)) {
-    throw std::runtime_error(property_name + " property missing or invalid");
-  }
-  return value;
-}
-
 std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessContext* context, const std::string& property_name) {
   std::string property_string;
   context->getProperty(property_name, property_string);

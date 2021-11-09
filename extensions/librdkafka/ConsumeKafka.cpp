@@ -197,7 +197,6 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
   gsl_Expects(context);
   // Required properties
   kafka_brokers_                = utils::getRequiredPropertyOrThrow(context, KafkaBrokers.getName());
-  security_protocol_            = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
   topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.getName());
   topic_name_format_            = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.getName());
   honor_transactions_           = utils::parseBooleanPropertyOrThrow(context, HonorTransactions.getName());

@@ -23,6 +23,7 @@
 
 #include "core/Processor.h"
 #include "rdkafka_utils.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -38,12 +39,17 @@ class KafkaProcessorBase : public core::Processor {
   EXTENSIONAPI static const core::Property Username;
   EXTENSIONAPI static const core::Property Password;
 
-  static const std::string SECURITY_PROTOCOL_PLAINTEXT;
-  static const std::string SECURITY_PROTOCOL_SSL;
-  static const std::string SECURITY_PROTOCOL_SASL_PLAIN;
-  static const std::string SECURITY_PROTOCOL_SASL_SSL;
-  static const std::string SASL_MECHANISM_GSSAPI;
-  static const std::string SASL_MECHANISM_PLAIN;
+  SMART_ENUM(SecurityProtocolOption,
+    (PLAINTEXT, "plaintext"),
+    (SSL, "ssl"),
+    (SASL_PLAIN, "sasl_plaintext"),
+    (SASL_SSL, "sasl_ssl")
+  )
+
+  SMART_ENUM(SASLMechanismOption,
+    (GSSAPI, "GSSAPI"),
+    (PLAIN, "PLAIN")
+  )
 
   KafkaProcessorBase(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
       : core::Processor(name, uuid),
@@ -54,7 +60,7 @@ class KafkaProcessorBase : public core::Processor {
   virtual std::optional<utils::SSL_data> getSslData(core::ProcessContext* context) const;
   void setKafkaAuthenticationParameters(core::ProcessContext* context, rd_kafka_conf_t* config);
 
-  std::string security_protocol_;
+  SecurityProtocolOption security_protocol_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 

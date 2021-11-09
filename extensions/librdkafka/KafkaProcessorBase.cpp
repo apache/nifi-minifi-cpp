@@ -24,18 +24,11 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-const std::string KafkaProcessorBase::SECURITY_PROTOCOL_PLAINTEXT = "plaintext";
-const std::string KafkaProcessorBase::SECURITY_PROTOCOL_SSL = "ssl";
-const std::string KafkaProcessorBase::SECURITY_PROTOCOL_SASL_PLAIN = "sasl_plaintext";
-const std::string KafkaProcessorBase::SECURITY_PROTOCOL_SASL_SSL = "sasl_ssl";
-const std::string KafkaProcessorBase::SASL_MECHANISM_GSSAPI = "GSSAPI";
-const std::string KafkaProcessorBase::SASL_MECHANISM_PLAIN = "PLAIN";
-
 const core::Property KafkaProcessorBase::SecurityProtocol(
         core::PropertyBuilder::createProperty("Security Protocol")
         ->withDescription("Protocol used to communicate with brokers")
-        ->withDefaultValue<std::string>(SECURITY_PROTOCOL_PLAINTEXT)
-        ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL, SECURITY_PROTOCOL_SASL_PLAIN, SECURITY_PROTOCOL_SASL_SSL})
+        ->withDefaultValue<std::string>(toString(SecurityProtocolOption::PLAINTEXT))
+        ->withAllowableValues<std::string>(SecurityProtocolOption::values())
         ->isRequired(true)
         ->build());
 const core::Property KafkaProcessorBase::SSLContextService(
@@ -50,8 +43,8 @@ const core::Property KafkaProcessorBase::KerberosKeytabPath("Kerberos Keytab Pat
 const core::Property KafkaProcessorBase::SASLMechanism(
         core::PropertyBuilder::createProperty("SASL Mechanism")
         ->withDescription("The SASL mechanism to use for authentication. Corresponds to Kafka's 'sasl.mechanism' property.")
-        ->withDefaultValue<std::string>(SASL_MECHANISM_GSSAPI)
-        ->withAllowableValues<std::string>({SASL_MECHANISM_GSSAPI, SASL_MECHANISM_PLAIN})
+        ->withDefaultValue<std::string>(toString(SASLMechanismOption::GSSAPI))
+        ->withAllowableValues<std::string>(SASLMechanismOption::values())
         ->isRequired(true)
         ->build());
 const core::Property KafkaProcessorBase::Username(
@@ -79,8 +72,8 @@ std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessConte
       logger_->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", ssl_service_name);
       return std::nullopt;
     }
-  } else if (security_protocol_ == SECURITY_PROTOCOL_SSL || security_protocol_ == SECURITY_PROTOCOL_SASL_SSL) {
-    logger_->log_warn("Security protocol is set to %s, but no valid SSL Context Service property is set.", security_protocol_);
+  } else if (security_protocol_ == SecurityProtocolOption::SSL || security_protocol_ == SecurityProtocolOption::SASL_SSL) {
+    logger_->log_warn("Security protocol is set to %s, but no valid SSL Context Service property is set.", security_protocol_.toString());
     return std::nullopt;
   }
 
@@ -88,10 +81,10 @@ std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessConte
 }
 
 void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext* context, rd_kafka_conf_t* config) {
-  security_protocol_ = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
-  utils::setKafkaConfigurationField(*config, "security.protocol", security_protocol_);
-  logger_->log_debug("Kafka security.protocol [%s]", security_protocol_);
-  if (security_protocol_ == SECURITY_PROTOCOL_SSL || security_protocol_ == SECURITY_PROTOCOL_SASL_SSL) {
+  security_protocol_ = utils::getRequiredPropertyOrThrow<SecurityProtocolOption>(context, SecurityProtocol.getName());
+  utils::setKafkaConfigurationField(*config, "security.protocol", security_protocol_.toString());
+  logger_->log_debug("Kafka security.protocol [%s]", security_protocol_.toString());
+  if (security_protocol_ == SecurityProtocolOption::SSL || security_protocol_ == SecurityProtocolOption::SASL_SSL) {
     auto ssl_data = getSslData(context);
     if (ssl_data) {
       utils::setKafkaConfigurationField(*config, "ssl.ca.location", ssl_data->ca_loc);
@@ -104,14 +97,14 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext* 
       logger_->log_debug("Kafka ssl.key.password was set");
 
       if (ssl_data->ca_loc.empty() && ssl_data->cert_loc.empty() && ssl_data->key_loc.empty() && ssl_data->key_pw.empty()) {
-        logger_->log_warn("Security protocol is set to %s, but no valid security parameters are set in the properties or in the SSL Context Service.", security_protocol_);
+        logger_->log_warn("Security protocol is set to %s, but no valid security parameters are set in the properties or in the SSL Context Service.", security_protocol_.toString());
       }
     }
   }
 
-  auto sasl_mechanism = utils::getRequiredPropertyOrThrow(context, SASLMechanism.getName());
-  utils::setKafkaConfigurationField(*config, "sasl.mechanism", sasl_mechanism);
-  logger_->log_debug("Kafka sasl.mechanism [%s]", sasl_mechanism);
+  auto sasl_mechanism = utils::getRequiredPropertyOrThrow<SASLMechanismOption>(context, SASLMechanism.getName());
+  utils::setKafkaConfigurationField(*config, "sasl.mechanism", sasl_mechanism.toString());
+  logger_->log_debug("Kafka sasl.mechanism [%s]", sasl_mechanism.toString());
 
   std::string value;
   if (context->getProperty(KerberosServiceName.getName(), value) && !value.empty()) {
