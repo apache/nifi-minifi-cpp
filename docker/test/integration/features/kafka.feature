@@ -410,3 +410,43 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a message with content "Lewis Carroll" is published to the "ConsumeKafkaTest" topic using an ssl connection
 
     Then two flowfiles with the contents "Alice's Adventures in Wonderland" and "Lewis Carroll" are placed in the monitored directory in less than 60 seconds
+
+  Scenario: ConsumeKafka receives data via SASL SSL
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And these processor properties are set:
+      | processor name | property name        | property value                             |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9095                          |
+      | ConsumeKafka   | Security Protocol    | sasl_ssl                                   |
+      | ConsumeKafka   | SASL Mechanism       | PLAIN                                      |
+      | ConsumeKafka   | Username             | alice                                      |
+      | ConsumeKafka   | Password             | alice-secret                               |
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And an ssl context service set up for ConsumeKafka
+    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+
+    And a kafka broker is set up in correspondence with the publisher flow
+
+    When all instances start up
+    And a message with content "Alice's Adventures in Wonderland" is published to the "ConsumeKafkaTest" topic using an ssl connection
+    And a message with content "Lewis Carroll" is published to the "ConsumeKafkaTest" topic using an ssl connection
+
+    Then two flowfiles with the contents "Alice's Adventures in Wonderland" and "Lewis Carroll" are placed in the monitored directory in less than 60 seconds
+
+  Scenario: MiNiFi consumes data from a kafka topic via SASL PLAIN connection
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+    And these processor properties are set:
+      | processor name | property name        | property value                             |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9094                          |
+      | ConsumeKafka   | Security Protocol    | sasl_plaintext                             |
+      | ConsumeKafka   | SASL Mechanism       | PLAIN                                      |
+      | ConsumeKafka   | Username             | alice                                      |
+      | ConsumeKafka   | Password             | alice-secret                               |
+
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
+
+    When all instances start up
+    And a message with content "some test message" is published to the "ConsumeKafkaTest" topic
+
+    Then at least one flowfile with the content "some test message" is placed in the monitored directory in less than 60 seconds

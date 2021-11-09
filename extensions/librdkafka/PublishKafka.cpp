@@ -664,7 +664,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
 
-  setKafkaAuthenticationParameters(context, conf_.get());
+  setKafkaAuthenticationParameters(context.get(), conf_.get());
 
   // Add all of the dynamic properties as librdkafka configurations
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
@@ -784,7 +784,7 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   return true;
 }
 
-std::optional<utils::SSL_data> PublishKafka::getSslData(const std::shared_ptr<core::ProcessContext> &context) const {
+std::optional<utils::SSL_data> PublishKafka::getSslData(core::ProcessContext* context) const {
   if (auto result = KafkaProcessorBase::getSslData(context); result) {
     return result;
   }

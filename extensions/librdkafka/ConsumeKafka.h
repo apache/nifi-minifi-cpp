@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/Processor.h"
+#include "KafkaProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "rdkafka.h"
 #include "rdkafka_utils.h"
@@ -35,13 +35,12 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-class ConsumeKafka : public core::Processor {
+class ConsumeKafka : public KafkaProcessorBase {
  public:
   EXTENSIONAPI static constexpr char const* ProcessorName = "ConsumeKafka";
 
   // Supported Properties
   EXTENSIONAPI static core::Property KafkaBrokers;
-  EXTENSIONAPI static core::Property SecurityProtocol;
   EXTENSIONAPI static core::Property TopicNames;
   EXTENSIONAPI static core::Property TopicNameFormat;
   EXTENSIONAPI static core::Property HonorTransactions;
@@ -55,7 +54,6 @@ class ConsumeKafka : public core::Processor {
   EXTENSIONAPI static core::Property MaxPollRecords;
   EXTENSIONAPI static core::Property MaxPollTime;
   EXTENSIONAPI static core::Property SessionTimeout;
-  EXTENSIONAPI static core::Property SSLContextService;
 
   // Supported Relationships
   EXTENSIONAPI static const core::Relationship Success;
@@ -98,7 +96,7 @@ class ConsumeKafka : public core::Processor {
   static constexpr const std::size_t METADATA_COMMUNICATIONS_TIMEOUT_MS{ 60000 };
 
   explicit ConsumeKafka(const std::string& name, const utils::Identifier& uuid = utils::Identifier()) :
-      Processor(name, uuid) {}
+      KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<ConsumeKafka>::getLogger()) {}
 
   ~ConsumeKafka() override = default;
 
@@ -126,7 +124,7 @@ class ConsumeKafka : public core::Processor {
  private:
   void create_topic_partition_list();
   void extend_config_from_dynamic_properties(const core::ProcessContext& context);
-  void configure_new_connection(const core::ProcessContext& context);
+  void configure_new_connection(core::ProcessContext* context);
   std::string extract_message(const rd_kafka_message_t& rkmessage) const;
   std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> poll_kafka_messages();
   utils::KafkaEncoding key_attr_encoding_attr_to_enum() const;
@@ -155,7 +153,6 @@ class ConsumeKafka : public core::Processor {
   }
 
   std::string kafka_brokers_;
-  std::string security_protocol_;
   std::vector<std::string> topic_names_;
   std::string topic_name_format_;
   bool honor_transactions_;
@@ -170,8 +167,6 @@ class ConsumeKafka : public core::Processor {
   std::chrono::milliseconds max_poll_time_milliseconds_;
   std::chrono::milliseconds session_timeout_milliseconds_;
 
-  utils::SSL_data ssl_data_;
-
   std::unique_ptr<rd_kafka_t, utils::rd_kafka_consumer_deleter> consumer_;
   std::unique_ptr<rd_kafka_conf_t, utils::rd_kafka_conf_deleter> conf_;
   std::unique_ptr<rd_kafka_topic_partition_list_t, utils::rd_kafka_topic_partition_list_deleter> kf_topic_partition_list_;
@@ -181,8 +176,6 @@ class ConsumeKafka : public core::Processor {
   std::vector<std::unique_ptr<rd_kafka_message_t, utils::rd_kafka_message_deleter>> pending_messages_;
 
   std::mutex do_not_call_on_trigger_concurrently_;
-
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ConsumeKafka>::getLogger()};
 };
 
 }  // namespace processors

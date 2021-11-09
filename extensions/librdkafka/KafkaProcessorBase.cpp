@@ -63,7 +63,7 @@ const core::Property KafkaProcessorBase::Password(
         ->withDescription("The password for the given username when the SASL Mechanism is sasl_plaintext")
         ->build());
 
-std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(const std::shared_ptr<core::ProcessContext> &context) const {
+std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessContext* context) const {
   utils::SSL_data ssl_data;
 
   std::string ssl_service_name;
@@ -87,8 +87,8 @@ std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(const std::shared_
   return ssl_data;
 }
 
-void KafkaProcessorBase::setKafkaAuthenticationParameters(const std::shared_ptr<core::ProcessContext> &context, rd_kafka_conf_t* config) {
-  security_protocol_ = utils::getRequiredPropertyOrThrow(context.get(), SecurityProtocol.getName());
+void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext* context, rd_kafka_conf_t* config) {
+  security_protocol_ = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
   utils::setKafkaConfigurationField(*config, "security.protocol", security_protocol_);
   logger_->log_debug("Kafka security.protocol [%s]", security_protocol_);
   if (security_protocol_ == SECURITY_PROTOCOL_SSL || security_protocol_ == SECURITY_PROTOCOL_SASL_SSL) {
@@ -109,7 +109,7 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(const std::shared_ptr<
     }
   }
 
-  auto sasl_mechanism = utils::getRequiredPropertyOrThrow(context.get(), SASLMechanism.getName());
+  auto sasl_mechanism = utils::getRequiredPropertyOrThrow(context, SASLMechanism.getName());
   utils::setKafkaConfigurationField(*config, "sasl.mechanism", sasl_mechanism);
   logger_->log_debug("Kafka sasl.mechanism [%s]", sasl_mechanism);
 
