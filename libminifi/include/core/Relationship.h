@@ -54,6 +54,10 @@ class Relationship {
     return name_ == other.name_;
   }
 
+  bool operator!=(const Relationship& other) const {
+    return !(*this == other);
+  }
+
  protected:
   std::string name_ = "undefined";
   std::string description_;
