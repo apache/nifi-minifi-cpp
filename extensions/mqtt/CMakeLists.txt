@@ -22,9 +22,9 @@ if(NOT (ENABLE_ALL OR ENABLE_MQTT))
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
-include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core)
+include_directories(./processors ../../libminifi/include  ../../libminifi/include/core)
 
-file(GLOB SOURCES "*.cpp" "protocol/*.cpp" "processors/*.cpp" "controllerservice/*.cpp")
+file(GLOB SOURCES "processors/*.cpp")
 
 add_library(minifi-mqtt-extensions SHARED ${SOURCES})
 
