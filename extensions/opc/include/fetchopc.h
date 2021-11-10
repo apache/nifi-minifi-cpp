@@ -91,6 +91,10 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   bool lazy_mode_;
 
  private:
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_FORBIDDEN;
+  }
+
   std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once
   std::unordered_map<std::string, std::string> node_timestamp_;  // Key = Full path, Value = Timestamp
 };

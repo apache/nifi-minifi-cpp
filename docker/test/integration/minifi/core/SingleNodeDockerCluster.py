@@ -12,6 +12,7 @@ from .AzureStorageServerContainer import AzureStorageServerContainer
 from .HttpProxyContainer import HttpProxyContainer
 from .PostgreSQLServerContainer import PostgreSQLServerContainer
 from .MqttBrokerContainer import MqttBrokerContainer
+from .OPCUAServerContainer import OPCUAServerContainer
 
 
 class SingleNodeDockerCluster(Cluster):
@@ -80,6 +81,8 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network, self.image_store))
         elif engine == 'mqtt-broker':
             return self.containers.setdefault(name, MqttBrokerContainer(name, self.vols, self.network, self.image_store))
+        elif engine == 'opcua-server':
+            return self.containers.setdefault(name, OPCUAServerContainer(name, self.vols, self.network, self.image_store))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 
