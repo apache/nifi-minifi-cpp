@@ -49,7 +49,7 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
 
-  //TODO(amarkovics) implement retained messages
+  // TODO(amarkovics) implement retained messages
   retain_ = false;
   logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
 
@@ -81,4 +81,4 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
 
 REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.");
 
-} // namespace org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors

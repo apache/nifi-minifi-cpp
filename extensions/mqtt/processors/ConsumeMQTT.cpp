@@ -115,4 +115,4 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
 
 REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
 
-} // namespace org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors

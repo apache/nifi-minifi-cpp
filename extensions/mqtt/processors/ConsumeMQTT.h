@@ -108,4 +108,4 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
 };
 
-} // namespace org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors

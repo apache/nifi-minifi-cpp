@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <utility>
 
 #include <limits>
 
@@ -141,4 +142,4 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();
 };
 
-} // namespace org::apache::nifi::minifi::processors
+}  // namespace org::apache::nifi::minifi::processors
