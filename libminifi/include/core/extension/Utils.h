@@ -29,6 +29,16 @@
 
 namespace org::apache::nifi::minifi::core::extension::internal {
 
+template<typename Callback>
+struct Timer {
+  explicit Timer(Callback cb): cb_(std::move(cb)) {}
+  ~Timer() {
+    cb_(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_));
+  }
+  std::chrono::steady_clock::time_point start_{std::chrono::steady_clock::now()};
+  Callback cb_;
+};
+
 struct LibraryDescriptor {
   std::string name;
   std::filesystem::path dir;
@@ -37,6 +47,9 @@ struct LibraryDescriptor {
   [[nodiscard]]
   bool verify(const std::shared_ptr<logging::Logger>& logger) const {
     auto path = getFullPath();
+    const Timer timer{[&](const std::chrono::milliseconds elapsed) {
+      core::logging::LOG_DEBUG(logger) << "Verification for '" << path << "' took " << elapsed.count() << " ms";
+    }};
     try {
       utils::file::FileView file(path);
       const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
