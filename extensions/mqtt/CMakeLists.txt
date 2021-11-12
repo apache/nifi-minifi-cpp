@@ -33,5 +33,5 @@ target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
 include(PahoMqttC)
 target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 
-register_extension(minifi-mqtt-extensions "MQTT EXTENSIONS" MQTT-EXTENSIONS "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "${TEST_DIR}/mqtt-tests")
+register_extension(minifi-mqtt-extensions "MQTT EXTENSIONS" MQTT-EXTENSIONS "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "${TEST_DIR}/mqtt/tests")
 register_extension_linter(minifi-mqtt-extensions-linter)
