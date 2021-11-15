@@ -19,28 +19,32 @@
 #include "TestBase.h"
 #include "../processors/PublishMQTT.h"
 
-TEST_CASE("PublishMQTTTest_EmptyTopic", "[publishMQTTTest]") {
-  TestController testController;
+namespace {
+struct Fixture {
+  Fixture() {
+    LogTestController::getInstance().setDebug<minifi::processors::PublishMQTT>();
+    plan_ = testController_.createPlan();
+    publishMqttProcessor_ = plan_->addProcessor("PublishMQTT", "publishMqttProcessor");
+  }
 
-  LogTestController::getInstance().setDebug<minifi::processors::PublishMQTT>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  ~Fixture() {
+    LogTestController::getInstance().reset();
+  }
 
-  auto publishMqttProcessor = plan->addProcessor("PublishMQTT", "publishMqttProcessor");
-  publishMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  TestController testController_;
+  std::shared_ptr<TestPlan> plan_;
+  std::shared_ptr<core::Processor> publishMqttProcessor_;
+};
+}  // namespace
 
-  REQUIRE_THROWS_WITH(plan->scheduleProcessor(publishMqttProcessor), Catch::EndsWith("Required property is empty: Topic"));
+TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyTopic", "[publishMQTTTest]") {
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("Required property is empty: Topic"));
   LogTestController::getInstance().reset();
 }
 
-TEST_CASE("PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]") {
-  TestController testController;
-
-  LogTestController::getInstance().setDebug<minifi::processors::PublishMQTT>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-
-  auto publishMqttProcessor = plan->addProcessor("PublishMQTT", "publishMqttProcessor");
-  publishMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
-
-  REQUIRE_THROWS_WITH(plan->scheduleProcessor(publishMqttProcessor), Catch::EndsWith("Required property is empty: Broker URI"));
+TEST_CASE_METHOD(Fixture, "PublishMQTTTest_EmptyBrokerURI", "[publishMQTTTest]") {
+  publishMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(publishMqttProcessor_), Catch::EndsWith("Required property is empty: Broker URI"));
   LogTestController::getInstance().reset();
 }

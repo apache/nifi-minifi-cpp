@@ -19,83 +19,65 @@
 #include "TestBase.h"
 #include "../processors/ConsumeMQTT.h"
 
-TEST_CASE("ConsumeMQTTTest_EmptyTopic", "[consumeMQTTTest]") {
-  TestController testController;
+namespace {
+struct Fixture {
+  Fixture() {
+    LogTestController::getInstance().setDebug<minifi::processors::ConsumeMQTT>();
+    plan_ = testController_.createPlan();
+    consumeMqttProcessor_ = plan_->addProcessor("ConsumeMQTT", "consumeMqttProcessor");
+  }
 
-  LogTestController::getInstance().setDebug<minifi::processors::ConsumeMQTT>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  ~Fixture() {
+    LogTestController::getInstance().reset();
+  }
 
-  auto consumeMqttProcessor = plan->addProcessor("ConsumeMQTT", "consumeMqttProcessor");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  TestController testController_;
+  std::shared_ptr<TestPlan> plan_;
+  std::shared_ptr<core::Processor> consumeMqttProcessor_;
+};
+}  // namespace
 
-  REQUIRE_THROWS_WITH(plan->scheduleProcessor(consumeMqttProcessor), Catch::EndsWith("Required property is empty: Topic"));
-  LogTestController::getInstance().reset();
+TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_EmptyTopic", "[consumeMQTTTest]") {
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_), Catch::EndsWith("Required property is empty: Topic"));
 }
 
-TEST_CASE("ConsumeMQTTTest_EmptyBrokerURI", "[consumeMQTTTest]") {
-  TestController testController;
-
-  LogTestController::getInstance().setDebug<minifi::processors::ConsumeMQTT>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-
-  auto consumeMqttProcessor = plan->addProcessor("ConsumeMQTT", "consumeMqttProcessor");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
-
-  REQUIRE_THROWS_WITH(plan->scheduleProcessor(consumeMqttProcessor), Catch::EndsWith("Required property is empty: Broker URI"));
-  LogTestController::getInstance().reset();
+TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_EmptyBrokerURI", "[consumeMQTTTest]") {
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_), Catch::EndsWith("Required property is empty: Broker URI"));
 }
 
-TEST_CASE("ConsumeMQTTTest_DurableSessionWithoutID", "[consumeMQTTTest]") {
-  TestController testController;
+TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithoutID", "[consumeMQTTTest]") {
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "1");
+  consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession, "false");
 
-  LogTestController::getInstance().setDebug<minifi::processors::ConsumeMQTT>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-
-  auto consumeMqttProcessor = plan->addProcessor("ConsumeMQTT", "consumeMqttProcessor");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "1");
-  consumeMqttProcessor->setProperty(minifi::processors::ConsumeMQTT::CleanSession, "false");
-
-  REQUIRE_THROWS_WITH(plan->scheduleProcessor(consumeMqttProcessor), Catch::EndsWith("Processor must have a Client ID for durable (non-clean) sessions"));
-  LogTestController::getInstance().reset();
+  REQUIRE_THROWS_WITH(plan_->scheduleProcessor(consumeMqttProcessor_),
+    Catch::EndsWith("Processor must have a Client ID for durable (non-clean) sessions"));
 }
 
-TEST_CASE("ConsumeMQTTTest_DurableSessionWithID", "[consumeMQTTTest]") {
-  TestController testController;
+TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithID", "[consumeMQTTTest]") {
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID, "subscriber");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "1");
+  consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession, "false");
 
-  LogTestController::getInstance().setDebug<minifi::processors::ConsumeMQTT>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-
-  auto consumeMqttProcessor = plan->addProcessor("ConsumeMQTT", "consumeMqttProcessor");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID, "subscriber");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "1");
-  consumeMqttProcessor->setProperty(minifi::processors::ConsumeMQTT::CleanSession, "false");
-
-  REQUIRE_NOTHROW(plan->scheduleProcessor(consumeMqttProcessor));
-  REQUIRE(!LogTestController::getInstance().contains("[warning] Messages are not preserved during client disconnection "
+  REQUIRE_NOTHROW(plan_->scheduleProcessor(consumeMqttProcessor_));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("[warning] Messages are not preserved during client disconnection "
     "by the broker when QoS is less than 1 for durable (non-clean) sessions. Only subscriptions are preserved."));
-  LogTestController::getInstance().reset();
 }
 
-TEST_CASE("ConsumeMQTTTest_DurableSessionWithQoS0", "[consumeMQTTTest]") {
-  TestController testController;
+TEST_CASE_METHOD(Fixture, "ConsumeMQTTTest_DurableSessionWithQoS0", "[consumeMQTTTest]") {
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID, "subscriber");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
+  consumeMqttProcessor_->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "0");
+  consumeMqttProcessor_->setProperty(minifi::processors::ConsumeMQTT::CleanSession, "false");
 
-  LogTestController::getInstance().setDebug<minifi::processors::ConsumeMQTT>();
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-
-  auto consumeMqttProcessor = plan->addProcessor("ConsumeMQTT", "consumeMqttProcessor");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::BrokerURI, "127.0.0.1:1883");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::ClientID, "subscriber");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::Topic, "mytopic");
-  consumeMqttProcessor->setProperty(minifi::processors::AbstractMQTTProcessor::QoS, "0");
-  consumeMqttProcessor->setProperty(minifi::processors::ConsumeMQTT::CleanSession, "false");
-
-  REQUIRE_NOTHROW(plan->scheduleProcessor(consumeMqttProcessor));
+  REQUIRE_NOTHROW(plan_->scheduleProcessor(consumeMqttProcessor_));
 
   REQUIRE(LogTestController::getInstance().contains("[warning] Messages are not preserved during client disconnection "
     "by the broker when QoS is less than 1 for durable (non-clean) sessions. Only subscriptions are preserved."));
-  LogTestController::getInstance().reset();
 }

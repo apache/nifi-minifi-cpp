@@ -104,3 +104,16 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     | topic wildcard pattern |
     | test/#                 |
     | test/+/topic           |
+
+    Scenario: Subscription and publishing with disconnecting clients in durable sessions
+      #GetFile->PublishMQTT
+      #ConsumeMQTT->PutFile
+      #startup both clients in the same MiNiFi instance
+      #ConsumeMQTT: SUBSCRIBE to testtopic
+      #ConsumeMQTT: DISCONNECT
+      #TODO how to do this?
+      #check disconnection in broker
+      #place file in GetFile's watched dir
+      #wait for publishing in broker
+      #ConsumeMQTT: reCONNECT
+      #wait for file appearing in PutFile's output dir
