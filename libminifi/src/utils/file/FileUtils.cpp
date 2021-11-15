@@ -48,8 +48,8 @@ uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) 
   return checksum;
 }
 
-bool contains(const std::filesystem::path& file_path, std::string_view string) {
-  gsl_Expects(string.size() <= 8192);
+bool contains(const std::filesystem::path& file_path, std::string_view text_to_search) {
+  gsl_Expects(text_to_search.size() <= 8192);
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
   std::array<char, 8192> buf1{};
   std::array<char, 8192> buf2{};
@@ -68,10 +68,10 @@ bool contains(const std::filesystem::path& file_path, std::string_view string) {
   const auto check_range = [&](size_t start, size_t end) -> size_t {
     for (size_t i = start; i < end; ++i) {
       size_t j{};
-      for (j = 0; j < string.size(); ++j) {
-        if (charat(i + j) != string[j]) break;
+      for (j = 0; j < text_to_search.size(); ++j) {
+        if (charat(i + j) != text_to_search[j]) break;
       }
-      if (j == string.size()) return true;
+      if (j == text_to_search.size()) return true;
     }
     return false;
   };

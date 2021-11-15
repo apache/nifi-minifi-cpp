@@ -822,7 +822,7 @@ inline std::string get_file_content(const std::string &file_name) {
   return content;
 }
 
-bool contains(const std::filesystem::path& file_path, std::string_view string);
+bool contains(const std::filesystem::path& file_path, std::string_view text_to_search);
 
 }  // namespace file
 }  // namespace utils

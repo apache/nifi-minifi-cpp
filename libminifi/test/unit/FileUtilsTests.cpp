@@ -454,9 +454,9 @@ TEST_CASE("FileUtils::contains", "[utils][file][contains]") {
     constexpr auto apple_len = 6;
     REQUIRE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
     std::shift_left(std::begin(buf), std::end(buf), apple_len);
-    strncpy(&buf[8192 - apple_len], " apple", apple_len);
+    memcpy(&buf[8192 - apple_len], " apple", apple_len);
     REQUIRE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
-    strncpy(&buf[8192 - 6], "banana", 6);
+    memcpy(&buf[8192 - 6], "banana", 6);
     REQUIRE_FALSE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
 
     REQUIRE(utils::file::contains(file_path, "apple"));
