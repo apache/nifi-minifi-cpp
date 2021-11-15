@@ -156,6 +156,10 @@ class FileView {
       mapping_.emplace(file_, file_size_);
     }
   }
+  FileView(const FileView&) = delete;
+  FileView(FileView&&) = delete;
+  FileView& operator=(const FileView&) = delete;
+  FileView& operator=(FileView&&) = delete;
 
   [[nodiscard]]
   const char* begin() const {
