@@ -421,14 +421,15 @@ TEST_CASE("FileUtils::contains", "[utils][file][contains]") {
   SECTION("< 16k") {
     const auto file_path = temp_dir / "test_mid.txt";
     {
-      std::array<char, 10240> contents{};
+      std::string contents;
+      contents.resize(10240);
       for (size_t i = 0; i < contents.size(); ++i) {
         contents[i] = gsl::narrow<char>('a' + gsl::narrow<int>(i % size_t{'z' - 'a' + 1}));
       }
       const std::string_view src = "12 34 56 Test String";
-      std::strncpy(&contents[8190], src.data(), src.size());
+      contents.replace(8190, src.size(), src);
       std::ofstream ofs{file_path};
-      ofs.write(contents.data(), contents.size());
+      ofs.write(contents.data(), gsl::narrow<std::streamsize>(contents.size()));
     }
 
     REQUIRE(utils::file::contains(file_path, "xyz"));
@@ -440,23 +441,23 @@ TEST_CASE("FileUtils::contains", "[utils][file][contains]") {
   }
   SECTION("> 16k") {
     const auto file_path = temp_dir / "test_long.txt";
-    std::array<char, 8192> buf{};
+    std::string buf;
+    buf.resize(8192);
     {
       for (size_t i = 0; i < buf.size(); ++i) {
         buf[i] = gsl::narrow<char>('A' + gsl::narrow<int>(i % size_t{'Z' - 'A' + 1}));
       }
       std::ofstream ofs{file_path};
-      ofs.write(buf.data(), buf.size());
+      ofs.write(buf.data(), gsl::narrow<std::streamsize>(buf.size()));
       ofs << " apple banana orange 1234 ";
-      ofs.write(buf.data(), buf.size());
+      ofs.write(buf.data(), gsl::narrow<std::streamsize>(buf.size()));
     }
 
-    constexpr auto apple_len = 6;
     REQUIRE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
-    std::shift_left(std::begin(buf), std::end(buf), apple_len);
-    memcpy(&buf[8192 - apple_len], " apple", apple_len);
+    std::rotate(std::begin(buf), std::next(std::begin(buf), 6), std::end(buf));
+    buf.replace(8192 - 6, 6, " apple", 6);
     REQUIRE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
-    memcpy(&buf[8192 - 6], "banana", 6);
+    buf.replace(8192 - 6, 6, "banana", 6);
     REQUIRE_FALSE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
 
     REQUIRE(utils::file::contains(file_path, "apple"));
