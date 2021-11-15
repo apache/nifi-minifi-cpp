@@ -71,14 +71,14 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
       if (!library || !library->verify(logger_)) {
         continue;
       }
-      auto module = std::make_unique<DynamicLibrary>(library->name_, library->getFullPath());
+      auto module = std::make_unique<DynamicLibrary>(library->name, library->getFullPath());
       active_module_ = module.get();
       if (!module->load()) {
         // error already logged by method
         continue;
       }
       if (!module->initialize(config)) {
-        logger_->log_error("Failed to initialize module '%s' at '%s'", library->name_, library->getFullPath().string());
+        logger_->log_error("Failed to initialize module '%s' at '%s'", library->name, library->getFullPath().string());
       } else {
         modules_.push_back(std::move(module));
       }

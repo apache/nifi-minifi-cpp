@@ -43,9 +43,9 @@ struct Timer {
 };
 
 struct LibraryDescriptor {
-  std::string name_;
-  std::filesystem::path dir_;
-  std::string filename_;
+  std::string name;
+  std::filesystem::path dir;
+  std::string filename;
 
   [[nodiscard]]
   bool verify(const std::shared_ptr<logging::Logger>& logger) const {
@@ -64,7 +64,7 @@ struct LibraryDescriptor {
 
   [[nodiscard]]
   std::filesystem::path getFullPath() const {
-    return dir_ / filename_;
+    return dir / filename;
   }
 };
 
