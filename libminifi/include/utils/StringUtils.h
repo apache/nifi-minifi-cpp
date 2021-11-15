@@ -209,6 +209,9 @@ class StringUtils {
   template<typename CharT>
   static size_t size(const CharT* str) noexcept { return std::char_traits<CharT>::length(str); }
 
+  template<typename CharT>
+  static size_t size(const std::basic_string_view<CharT>& str) noexcept { return str.size(); }
+
   struct detail {
     // partial detection idiom impl, from cppreference.com
     struct nonesuch{};
@@ -264,6 +267,12 @@ class StringUtils {
   template<typename CharT, typename... Strs>
   static detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
   join_pack(const CharT* head, const Strs&... tail) {
+    return detail::join_pack<CharT>(head, tail...);
+  }
+
+  template<typename CharT, typename... Strs>
+  static detail::valid_string_pack_t<std::basic_string<CharT>, CharT, Strs...>
+  join_pack(const std::basic_string_view<CharT>& head, const Strs&... tail) {
     return detail::join_pack<CharT>(head, tail...);
   }
 

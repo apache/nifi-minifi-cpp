@@ -17,15 +17,18 @@
 
 #pragma once
 
-#include <optional>
+#include <algorithm>
+#include <fstream>
 #include <functional>
-#include <utility>
+#include <iterator>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 
 #include "utils/gsl.h"
-#include "utils/file/FileView.h"
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 
 namespace org::apache::nifi::minifi::core::extension::internal {
 
@@ -46,35 +49,17 @@ struct LibraryDescriptor {
 
   [[nodiscard]]
   bool verify(const std::shared_ptr<logging::Logger>& logger) const {
-    auto path = getFullPath();
+    const auto path = getFullPath();
+    if (!std::filesystem::exists(path)) {
+      throw std::runtime_error{"File not found: " + path.string()};
+    }
     const Timer timer{[&](const std::chrono::milliseconds elapsed) {
       core::logging::LOG_DEBUG(logger) << "Verification for '" << path << "' took " << elapsed.count() << " ms";
     }};
-    try {
-      utils::file::FileView file(path);
-      const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
-      const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";
-      auto build_id_begin = std::search(file.begin(), file.end(), begin_marker.begin(), begin_marker.end());
-      if (build_id_begin == file.end()) {
-        logger->log_error("Couldn't find start of build identifier in '%s'", path.string());
-        return false;
-      }
-      std::advance(build_id_begin, begin_marker.length());
-      auto build_id_end = std::search(build_id_begin, file.end(), end_marker.begin(), end_marker.end());
-      if (build_id_end == file.end()) {
-        logger->log_error("Couldn't find end of build identifier in '%s'", path.string());
-        return false;
-      }
-      std::string build_id(build_id_begin, build_id_end);
-      if (build_id != AgentBuild::BUILD_IDENTIFIER) {
-        logger->log_error("Build identifier does not match in '%s', expected '%s', got '%s'", path.string(), AgentBuild::BUILD_IDENTIFIER, build_id);
-        return false;
-      }
-    } catch (const utils::file::FileView::Failure& file_error) {
-      logger->log_error("Error while verifying library '%s': %s", path.string(), file_error.what());
-      return false;
-    }
-    return true;
+    const std::string_view begin_marker = "__EXTENSION_BUILD_IDENTIFIER_BEGIN__";
+    const std::string_view end_marker = "__EXTENSION_BUILD_IDENTIFIER_END__";
+    const std::string magic_constant = utils::StringUtils::join_pack(begin_marker, AgentBuild::BUILD_IDENTIFIER, end_marker);
+    return utils::file::contains(path, magic_constant);
   }
 
   [[nodiscard]]

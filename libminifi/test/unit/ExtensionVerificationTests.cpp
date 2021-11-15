@@ -64,7 +64,6 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the build id begin marker is 
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
   REQUIRE_FALSE(lib->verify(logger));
-  assert(utils::verifyLogLinePresenceInPollTime(1s, "Couldn't find start of build identifier"));
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the build id end marker is missing") {
@@ -74,7 +73,6 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the build id end marker is mi
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
   REQUIRE_FALSE(lib->verify(logger));
-  assert(utils::verifyLogLinePresenceInPollTime(1s, "Couldn't find end of build identifier"));
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the build id does not match") {
@@ -84,14 +82,12 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the build id does not match")
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
   REQUIRE_FALSE(lib->verify(logger));
-  assert(utils::verifyLogLinePresenceInPollTime(1s, "Build identifier does not match"));
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the file does not exist") {
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
-  REQUIRE_FALSE(lib->verify(logger));
-  assert(utils::verifyLogLinePresenceInPollTime(1s, "Error while verifying library", "Open failed"));
+  REQUIRE_THROWS_AS(lib->verify(logger), std::runtime_error);
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the file has zero length") {
@@ -100,5 +96,4 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the file has zero length") {
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);
   REQUIRE_FALSE(lib->verify(logger));
-  assert(utils::verifyLogLinePresenceInPollTime(1s, "Couldn't find start of build identifier"));
 }
