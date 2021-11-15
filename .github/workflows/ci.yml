@@ -151,31 +151,10 @@ jobs:
           cd build
           export CC=clang
           export CXX=clang++
-          cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_NANOFI=ON -DENABLE_JNI=ON -DENABLE_SENSORS=ON -DENABLE_OPENWSMAN=ON -DENABLE_OPENCV=ON -DENABLE_MQTT=ON -DENABLE_GPS=ON -DENABLE_USB_CAMERA=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_OPC=ON -DENABLE_SFTP=ON -DENABLE_COAP=ON -DENABLE_PYTHON=ON -DENABLE_SQL=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON ..
+          cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DFAIL_ON_WARNINGS=ON ..
           cmake --build . --parallel $(nproc)
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
-  debian:
-    name: "debian"
-    runs-on: ubuntu-20.04
-    timeout-minutes: 60
-    steps:
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.ccache
-          key: debian-ccache-${{github.ref}}
-          restore-keys: |
-            debian-ccache-
-      - id: install_deps
-        run: |
-          sudo apt update
-          sudo apt install -y ccache
-          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
-      - id: build
-        run: mkdir build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make debian
   centos:
     name: "centos"
     runs-on: ubuntu-20.04
@@ -197,55 +176,6 @@ jobs:
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
         run: mkdir build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make centos
-  fedora:
-    name: "fedora"
-    runs-on: ubuntu-20.04
-    timeout-minutes: 60
-    steps:
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.ccache
-          key: fedora-ccache-${{github.ref}}
-          restore-keys: |
-            fedora-ccache-
-      - id: install_deps
-        run: |
-          sudo apt update
-          sudo apt install -y ccache
-          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
-      - id: build
-        run: mkdir build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make fedora
-  ubuntu_18_04:
-    name: "ubuntu-18.04"
-    runs-on: ubuntu-18.04
-    timeout-minutes: 60
-    steps:
-      - id: checkout
-        uses: actions/checkout@v2
-      - id: cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.ccache
-          key: ubuntu-18.04-ccache-${{github.ref}}
-          restore-keys: |
-            ubuntu-18.04-ccache-
-      - id: install_deps
-        run: |
-          sudo apt update
-          sudo apt install -y ccache
-          echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
-          echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-      - id: build
-        run: |
-          ./bootstrap.sh -e -t
-          cd build
-          export CC=gcc-11
-          export CXX=g++-11
-          cmake -DSTRICT_GSL_CHECKS=AUDIT ..
-          make u18
   docker_integration_tests:
     name: "Docker integration tests"
     runs-on: ubuntu-20.04
