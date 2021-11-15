@@ -43,9 +43,9 @@ struct Timer {
 };
 
 struct LibraryDescriptor {
-  std::string name;
-  std::filesystem::path dir;
-  std::string filename;
+  std::string name_;
+  std::filesystem::path dir_;
+  std::string filename_;
 
   [[nodiscard]]
   bool verify(const std::shared_ptr<logging::Logger>& logger) const {
@@ -64,25 +64,25 @@ struct LibraryDescriptor {
 
   [[nodiscard]]
   std::filesystem::path getFullPath() const {
-    return dir / filename;
+    return dir_ / filename_;
   }
 };
 
 std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
 #if defined(WIN32)
-  const std::string extension = ".dll";
+  static const std::string_view extension = ".dll";
 #elif defined(__APPLE__)
-  const std::string extension = ".dylib";
+  static const std::string_view extension = ".dylib";
 #else
-  const std::string extension = ".so";
+  static const std::string_view extension = ".so";
 #endif
 
 #ifdef WIN32
-  const std::string prefix = "";
+  static const std::string_view prefix = "";
 #else
-  const std::string prefix = "lib";
+  static const std::string_view prefix = "lib";
 #endif
-  std::string filename = path.filename().string();
+  const std::string filename = path.filename().string();
   if (!utils::StringUtils::startsWith(filename, prefix) || !utils::StringUtils::endsWith(filename, extension)) {
     return {};
   }
