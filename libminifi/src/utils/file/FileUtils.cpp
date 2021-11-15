@@ -57,14 +57,18 @@ bool contains(const std::filesystem::path& file_path, std::string_view string) {
   gsl::span<char> right = buf2;
 
   const auto charat = [&](size_t idx) {
-    if (idx < left.size()) return left[idx];
-    else if (idx < left.size() + right.size()) return right[idx - left.size()];
-    else return '\0';
+    if (idx < left.size()) {
+      return left[idx];
+    } else if (idx < left.size() + right.size()) {
+      return right[idx - left.size()];
+    } else {
+      return '\0';
+    }
   };
   const auto check_range = [&](size_t start, size_t end) -> size_t {
-    for(size_t i = start; i < end; ++i) {
+    for (size_t i = start; i < end; ++i) {
       size_t j{};
-      for(j = 0; j < string.size(); ++j) {
+      for (j = 0; j < string.size(); ++j) {
         if (charat(i + j) != string[j]) break;
       }
       if (j == string.size()) return true;
@@ -78,7 +82,7 @@ bool contains(const std::filesystem::path& file_path, std::string_view string) {
     std::swap(left, right);
     ifs.read(right.data(), gsl::narrow<std::streamsize>(right.size()));
     if (check_range(0, left.size())) return true;
-  } while(ifs);
+  } while (ifs);
   return check_range(left.size(), left.size() + right.size());
 }
 
