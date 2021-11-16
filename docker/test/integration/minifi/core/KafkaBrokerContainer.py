@@ -3,8 +3,8 @@ from .Container import Container
 
 
 class KafkaBrokerContainer(Container):
-    def __init__(self, name, vols, network, image_store):
-        super().__init__(name, 'kafka-broker', vols, network, image_store)
+    def __init__(self, name, vols, network, image_store, command=None):
+        super().__init__(name, 'kafka-broker', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Kafka startTimeMs"
@@ -30,5 +30,6 @@ class KafkaBrokerContainer(Container):
                 "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka-broker:9092,PLAINTEXT_HOST://localhost:29092,SSL://kafka-broker:9093,SSL_HOST://localhost:29093",
                 "KAFKA_HEAP_OPTS=-Xms512m -Xmx1g",
                 "KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181",
-                "SSL_CLIENT_AUTH=none"])
+                "SSL_CLIENT_AUTH=none"],
+            entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)

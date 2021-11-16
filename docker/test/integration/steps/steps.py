@@ -362,6 +362,11 @@ def step_impl(context):
     context.test.acquire_container("opcua-server", "opcua-server")
 
 
+@given("an OPC UA server is set up with access control")
+def step_impl(context):
+    context.test.acquire_container("opcua-server", "opcua-server", ["/opt/open62541/examples/access_control_server"])
+
+
 @when("the MiNiFi instance starts up")
 @when("both instances start up")
 @when("all instances start up")
@@ -579,7 +584,7 @@ def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, timeparse(duration))
 
 
-@then("the OPC-UA server logs contain the following message: \"{log_message}\" in less than {duration}")
+@then("the OPC UA server logs contain the following message: \"{log_message}\" in less than {duration}")
 def step_impl(context, log_message, duration):
     context.test.check_container_log_contents("opcua-server", log_message, timeparse(duration))
 

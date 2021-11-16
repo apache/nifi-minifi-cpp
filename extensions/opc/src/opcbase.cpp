@@ -44,7 +44,6 @@ namespace processors {
           ->withDescription("Application URI of the client in the format 'urn:unconfigured:application'. "
                             "Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.")->build());
 
-
   core::Property BaseOPCProcessor::Username(
       core::PropertyBuilder::createProperty("Username")
           ->withDescription("Username to log in with.")->build());
@@ -89,41 +88,38 @@ namespace processors {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "All or none of Certificate path and Key path should be provided!");
     }
 
-    if (!password_.empty() && (certpath_.empty() || keypath_.empty() || applicationURI_.empty())) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Certificate path, Key path and Application URI must be provided in case Password is provided!");
+    if (certpath_.empty()) {
+      return;
+    }
+    if (applicationURI_.empty()) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Application URI must be provided if Certificate path is provided!");
     }
 
-    if (!certpath_.empty()) {
-      if (applicationURI_.empty()) {
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Application URI must be provided if Certificate path is provided!");
-      }
+    std::ifstream input_cert(certpath_, std::ios::binary);
+    if (input_cert.good()) {
+      certBuffer_ = std::vector<char>(std::istreambuf_iterator<char>(input_cert), {});
+    }
+    std::ifstream input_key(keypath_, std::ios::binary);
+    if (input_key.good()) {
+      keyBuffer_ = std::vector<char>(std::istreambuf_iterator<char>(input_key), {});
+    }
 
-      std::ifstream input_cert(certpath_, std::ios::binary);
-      if (input_cert.good()) {
-        certBuffer_ = std::vector<char>(std::istreambuf_iterator<char>(input_cert), {});
-      }
-      std::ifstream input_key(keypath_, std::ios::binary);
-      if (input_key.good()) {
-        keyBuffer_ = std::vector<char>(std::istreambuf_iterator<char>(input_key), {});
-      }
+    if (certBuffer_.empty()) {
+      auto error_msg = utils::StringUtils::join_pack("Failed to load cert from path: ", certpath_);
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+    }
+    if (keyBuffer_.empty()) {
+      auto error_msg = utils::StringUtils::join_pack("Failed to load key from path: ", keypath_);
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+    }
 
-      if (certBuffer_.empty()) {
-        auto error_msg = utils::StringUtils::join_pack("Failed to load cert from path: ", certpath_);
+    if (!trustpath_.empty()) {
+      std::ifstream input_trust(trustpath_, std::ios::binary);
+      if (input_trust.good()) {
+        trustBuffers_.push_back(std::vector<char>(std::istreambuf_iterator<char>(input_trust), {}));
+      } else {
+        auto error_msg = utils::StringUtils::join_pack("Failed to load trusted server certs from path: ", trustpath_);
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-      }
-      if (keyBuffer_.empty()) {
-        auto error_msg = utils::StringUtils::join_pack("Failed to load key from path: ", keypath_);
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-      }
-
-      if (!trustpath_.empty()) {
-        std::ifstream input_trust(trustpath_, std::ios::binary);
-        if (input_trust.good()) {
-          trustBuffers_.push_back(std::vector<char>(std::istreambuf_iterator<char>(input_trust), {}));
-        } else {
-          auto error_msg = utils::StringUtils::join_pack("Failed to load trusted server certs from path: ", trustpath_);
-          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-        }
       }
     }
   }

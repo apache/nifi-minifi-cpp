@@ -55,7 +55,7 @@ class SingleNodeDockerCluster(Cluster):
         logging.debug('Creating network: %s', net_name)
         return docker.from_env().networks.create(net_name)
 
-    def acquire_container(self, name, engine='minifi-cpp'):
+    def acquire_container(self, name, engine='minifi-cpp', command=None):
         if name is not None and name in self.containers:
             return self.containers[name]
 
@@ -64,25 +64,25 @@ class SingleNodeDockerCluster(Cluster):
             logging.info('Container name was not provided; using generated name \'%s\'', name)
 
         if engine == 'nifi':
-            return self.containers.setdefault(name, NifiContainer(self.data_directories["nifi_config_dir"], name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, NifiContainer(self.data_directories["nifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'minifi-cpp':
-            return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'kafka-broker':
             if 'zookeeper' not in self.containers:
-                self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store))
-            return self.containers.setdefault(name, KafkaBrokerContainer(name, self.vols, self.network, self.image_store))
+                self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(name, KafkaBrokerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'http-proxy':
-            return self.containers.setdefault(name, HttpProxyContainer(name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, HttpProxyContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 's3-server':
-            return self.containers.setdefault(name, S3ServerContainer(name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, S3ServerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'azure-storage-server':
-            return self.containers.setdefault(name, AzureStorageServerContainer(name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, AzureStorageServerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'postgresql-server':
-            return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'mqtt-broker':
-            return self.containers.setdefault(name, MqttBrokerContainer(name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, MqttBrokerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'opcua-server':
-            return self.containers.setdefault(name, OPCUAServerContainer(name, self.vols, self.network, self.image_store))
+            return self.containers.setdefault(name, OPCUAServerContainer(name, self.vols, self.network, self.image_store, command))
         else:
             raise Exception('invalid flow engine: \'%s\'' % engine)
 

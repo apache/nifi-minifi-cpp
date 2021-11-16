@@ -41,7 +41,7 @@ Feature: Putting and fetching data to OPC UA server
     | String       | Test    |
     | UInt32       | 42      |
     | Double       | 123.321 |
-    | Boolean      | false   |
+    | Boolean      | False   |
 
   Scenario Outline: Update and fetch data from an OPC UA node
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "update-opc-ua-node" flow
@@ -116,4 +116,38 @@ Feature: Putting and fetching data to OPC UA server
 
     When all instances start up
     Then at least one flowfile with the content "Test" is placed in the monitored directory in less than 60 seconds
-    And the OPC-UA server logs contain the following message: "SecureChannel opened with SecurityPolicy http://opcfoundation.org/UA/SecurityPolicy#Aes128_Sha256_RsaOaep" in less than 5 seconds
+    And the OPC UA server logs contain the following message: "SecureChannel opened with SecurityPolicy http://opcfoundation.org/UA/SecurityPolicy#Aes128_Sha256_RsaOaep" in less than 5 seconds
+
+  Scenario: Create and fetch data from an OPC UA node through username and password authenticated connection
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "create-opc-ua-node" flow
+    And a file with the content "Test" is present in "/tmp/input"
+    And a PutOPCProcessor processor in the "create-opc-ua-node" flow
+    And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
+    And these processor properties are set:
+      | processor name    | property name               | property value                |
+      | PutOPCProcessor   | Parent node ID              | 85                            |
+      | PutOPCProcessor   | Parent node ID type         | Int                           |
+      | PutOPCProcessor   | Target node ID              | 9999                          |
+      | PutOPCProcessor   | Target node ID type         | Int                           |
+      | PutOPCProcessor   | Target node namespace index | 1                             |
+      | PutOPCProcessor   | Value type                  | String                        |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server:4840/  |
+      | PutOPCProcessor   | Target node browse name     | testnodename                  |
+      | PutOPCProcessor   | Username                    | peter                         |
+      | PutOPCProcessor   | Password                    | peter123                      |
+      | FetchOPCProcessor | Node ID                     | 9999                          |
+      | FetchOPCProcessor | Node ID type                | Int                           |
+      | FetchOPCProcessor | Namespace index             | 1                             |
+      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server:4840/  |
+      | FetchOPCProcessor | Max depth                   | 1                             |
+      | FetchOPCProcessor | Username                    | peter                         |
+      | FetchOPCProcessor | Password                    | peter123                      |
+
+    And the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
+    And the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+
+    And an OPC UA server is set up with access control
+
+    When all instances start up
+    Then at least one flowfile with the content "Test" is placed in the monitored directory in less than 60 seconds

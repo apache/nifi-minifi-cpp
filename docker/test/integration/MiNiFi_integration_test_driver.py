@@ -44,8 +44,8 @@ class MiNiFi_integration_test():
     def docker_path_to_local_path(self, docker_path):
         return self.docker_directory_bindings.docker_path_to_local_path(self.test_id, docker_path)
 
-    def acquire_container(self, name, engine='minifi-cpp'):
-        return self.cluster.acquire_container(name, engine)
+    def acquire_container(self, name, engine='minifi-cpp', command=None):
+        return self.cluster.acquire_container(name, engine, command)
 
     def wait_for_container_startup_to_finish(self, container_name):
         startup_success = self.cluster.wait_for_startup_log(container_name, 120)
