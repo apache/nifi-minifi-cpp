@@ -449,7 +449,7 @@ template UA_StatusCode Client::update_node<const char *>(const UA_NodeId nodeId,
 template UA_StatusCode Client::update_node<std::string>(const UA_NodeId nodeId, std::string value);
 
 template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int64_t value, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint64_t value,UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint64_t value, UA_NodeId *receivedNodeId);
 template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int32_t value, UA_NodeId *receivedNodeId);
 template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint32_t value, UA_NodeId *receivedNodeId);
 template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, float value, UA_NodeId *receivedNodeId);
