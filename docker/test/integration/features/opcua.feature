@@ -19,7 +19,7 @@ Feature: Putting and fetching data to OPC UA server
       | PutOPCProcessor   | Target node ID              | 9999                            |
       | PutOPCProcessor   | Target node ID type         | Int                             |
       | PutOPCProcessor   | Target node namespace index | 1                               |
-      | PutOPCProcessor   | Value type                  | String                          |
+      | PutOPCProcessor   | Value type                  | <Value Type>                    |
       | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server:4840/    |
       | PutOPCProcessor   | Target node browse name     | testnodename                    |
       | FetchOPCProcessor | Node ID                     | 9999                            |
@@ -80,3 +80,40 @@ Feature: Putting and fetching data to OPC UA server
     | String       | the.answer  | Int32        | 54          |
     | Int          | 51019       | UInt32       | 123         |
     | Int          | 51031       | Double       | 66.6        |
+
+  Scenario: Create and fetch data from an OPC UA node through secure connection
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "create-opc-ua-node" flow
+    And a file with the content "Test" is present in "/tmp/input"
+    And a PutOPCProcessor processor in the "create-opc-ua-node" flow
+    And a FetchOPCProcessor processor in the "fetch-opc-ua-node" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "fetch-opc-ua-node" flow
+    And these processor properties are set:
+      | processor name    | property name               | property value                             |
+      | PutOPCProcessor   | Parent node ID              | 85                                         |
+      | PutOPCProcessor   | Parent node ID type         | Int                                        |
+      | PutOPCProcessor   | Target node ID              | 9999                                       |
+      | PutOPCProcessor   | Target node ID type         | Int                                        |
+      | PutOPCProcessor   | Target node namespace index | 1                                          |
+      | PutOPCProcessor   | Value type                  | String                                     |
+      | PutOPCProcessor   | OPC server endpoint         | opc.tcp://opcua-server:4840/               |
+      | PutOPCProcessor   | Target node browse name     | testnodename                               |
+      | PutOPCProcessor   | Certificate path            | /tmp/resources/opcua/opcua_client_cert.der |
+      | PutOPCProcessor   | Key path                    | /tmp/resources/opcua/opcua_client_key.der  |
+      | PutOPCProcessor   | Application URI             | urn:open62541.server.application           |
+      | FetchOPCProcessor | Node ID                     | 9999                                       |
+      | FetchOPCProcessor | Node ID type                | Int                                        |
+      | FetchOPCProcessor | Namespace index             | 1                                          |
+      | FetchOPCProcessor | OPC server endpoint         | opc.tcp://opcua-server:4840/               |
+      | FetchOPCProcessor | Max depth                   | 1                                          |
+      | FetchOPCProcessor | Certificate path            | /tmp/resources/opcua/opcua_client_cert.der |
+      | FetchOPCProcessor | Key path                    | /tmp/resources/opcua/opcua_client_key.der  |
+      | FetchOPCProcessor | Application URI             | urn:open62541.server.application           |
+
+    And the "success" relationship of the GetFile processor is connected to the PutOPCProcessor
+    And the "success" relationship of the FetchOPCProcessor processor is connected to the PutFile
+
+    And an OPC UA server is set up
+
+    When all instances start up
+    Then at least one flowfile with the content "Test" is placed in the monitored directory in less than 60 seconds
+    And the OPC-UA server logs contain the following message: "SecureChannel opened with SecurityPolicy http://opcfoundation.org/UA/SecurityPolicy#Aes128_Sha256_RsaOaep" in less than 5 seconds

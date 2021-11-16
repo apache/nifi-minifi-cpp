@@ -579,6 +579,11 @@ def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, timeparse(duration))
 
 
+@then("the OPC-UA server logs contain the following message: \"{log_message}\" in less than {duration}")
+def step_impl(context, log_message, duration):
+    context.test.check_container_log_contents("opcua-server", log_message, timeparse(duration))
+
+
 # MQTT
 @then("the MQTT broker has a log line matching \"{log_pattern}\"")
 def step_impl(context, log_pattern):

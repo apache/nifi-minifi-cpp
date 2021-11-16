@@ -84,13 +84,13 @@ namespace processors {
 
     auto certificatePathRes = context->getProperty(CertificatePath.getName(), certpath_);
     auto keyPathRes = context->getProperty(KeyPath.getName(), keypath_);
-    auto trustedPathRes = context->getProperty(TrustedPath.getName(), trustpath_);
-    if (certificatePathRes != keyPathRes || keyPathRes != trustedPathRes) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "All or none of Certificate path, Key path and Trusted server certificate path should be provided!");
+    context->getProperty(TrustedPath.getName(), trustpath_);
+    if (certificatePathRes != keyPathRes) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "All or none of Certificate path and Key path should be provided!");
     }
 
-    if (!password_.empty() && (certpath_.empty() || keypath_.empty() || trustpath_.empty() || applicationURI_.empty())) {
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Certificate path, Key path, Trusted server certificate path and Application URI must be provided in case Password is provided!");
+    if (!password_.empty() && (certpath_.empty() || keypath_.empty() || applicationURI_.empty())) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Certificate path, Key path and Application URI must be provided in case Password is provided!");
     }
 
     if (!certpath_.empty()) {
@@ -107,12 +107,6 @@ namespace processors {
         keyBuffer_ = std::vector<char>(std::istreambuf_iterator<char>(input_key), {});
       }
 
-      trustBuffers_.emplace_back();
-      std::ifstream input_trust(trustpath_, std::ios::binary);
-      if (input_trust.good()) {
-        trustBuffers_[0] = std::vector<char>(std::istreambuf_iterator<char>(input_trust), {});
-      }
-
       if (certBuffer_.empty()) {
         auto error_msg = utils::StringUtils::join_pack("Failed to load cert from path: ", certpath_);
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
@@ -122,9 +116,14 @@ namespace processors {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
       }
 
-      if (trustBuffers_[0].empty()) {
-        auto error_msg = utils::StringUtils::join_pack("Failed to load trusted server certs from path: ", trustpath_);
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+      if (!trustpath_.empty()) {
+        std::ifstream input_trust(trustpath_, std::ios::binary);
+        if (input_trust.good()) {
+          trustBuffers_.push_back(std::vector<char>(std::istreambuf_iterator<char>(input_trust), {}));
+        } else {
+          auto error_msg = utils::StringUtils::join_pack("Failed to load trusted server certs from path: ", trustpath_);
+          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
+        }
       }
     }
   }

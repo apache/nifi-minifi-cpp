@@ -74,4 +74,5 @@ BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)
 # behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "Get and put operations run in a simple flow"
 cd "${docker_dir}/test/integration"
 exec
-  behave "${BEHAVE_OPTS[@]}"
+  # behave "${BEHAVE_OPTS[@]}"
+  behave "${BEHAVE_OPTS[@]}" "features/opcua.feature" -n "Create and fetch data from an OPC UA node through secure connection"
