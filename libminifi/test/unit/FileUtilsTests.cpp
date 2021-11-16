@@ -403,3 +403,65 @@ TEST_CASE("TestFileUtils::delete_dir should fail with empty path", "[TestEmptyDe
   REQUIRE(FileUtils::delete_dir("") != 0);
   REQUIRE(FileUtils::delete_dir("", false) != 0);
 }
+
+TEST_CASE("FileUtils::contains", "[utils][file][contains]") {
+  TestController test_controller;
+  const auto temp_dir = std::filesystem::path{test_controller.createTempDirectory()};
+
+  SECTION("< 8k") {
+    const auto file_path = temp_dir / "test_short.txt";
+    std::ofstream{file_path} << "This is a test file";
+    REQUIRE(utils::file::contains(file_path, "This"));
+    REQUIRE(utils::file::contains(file_path, "test"));
+    REQUIRE(utils::file::contains(file_path, "file"));
+    REQUIRE_FALSE(utils::file::contains(file_path, "hello"));
+    REQUIRE_FALSE(utils::file::contains(file_path, "Thiss"));
+    REQUIRE_FALSE(utils::file::contains(file_path, "ffile"));
+  }
+  SECTION("< 16k") {
+    const auto file_path = temp_dir / "test_mid.txt";
+    {
+      std::string contents;
+      contents.resize(10240);
+      for (size_t i = 0; i < contents.size(); ++i) {
+        contents[i] = gsl::narrow<char>('a' + gsl::narrow<int>(i % size_t{'z' - 'a' + 1}));
+      }
+      const std::string_view src = "12 34 56 Test String";
+      contents.replace(8190, src.size(), src);
+      std::ofstream ofs{file_path};
+      ofs.write(contents.data(), gsl::narrow<std::streamsize>(contents.size()));
+    }
+
+    REQUIRE(utils::file::contains(file_path, "xyz"));
+    REQUIRE(utils::file::contains(file_path, "12"));
+    REQUIRE(utils::file::contains(file_path, " 34"));
+    REQUIRE(utils::file::contains(file_path, "12 34"));
+    REQUIRE_FALSE(utils::file::contains(file_path, "1234"));
+    REQUIRE(utils::file::contains(file_path, "String"));
+  }
+  SECTION("> 16k") {
+    const auto file_path = temp_dir / "test_long.txt";
+    std::string buf;
+    buf.resize(8192);
+    {
+      for (size_t i = 0; i < buf.size(); ++i) {
+        buf[i] = gsl::narrow<char>('A' + gsl::narrow<int>(i % size_t{'Z' - 'A' + 1}));
+      }
+      std::ofstream ofs{file_path};
+      ofs.write(buf.data(), gsl::narrow<std::streamsize>(buf.size()));
+      ofs << " apple banana orange 1234 ";
+      ofs.write(buf.data(), gsl::narrow<std::streamsize>(buf.size()));
+    }
+
+    REQUIRE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
+    std::rotate(std::begin(buf), std::next(std::begin(buf), 6), std::end(buf));
+    buf.replace(8192 - 6, 6, " apple", 6);
+    REQUIRE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
+    buf.replace(8192 - 6, 6, "banana", 6);
+    REQUIRE_FALSE(utils::file::contains(file_path, std::string_view{buf.data(), buf.size()}));
+
+    REQUIRE(utils::file::contains(file_path, "apple"));
+    REQUIRE(utils::file::contains(file_path, "banana"));
+    REQUIRE(utils::file::contains(file_path, "ABC"));
+  }
+}

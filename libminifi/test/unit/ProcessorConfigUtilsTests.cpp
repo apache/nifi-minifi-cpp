@@ -27,15 +27,10 @@ class TestProcessor : public Processor {
   using Processor::Processor;
 };
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wunused-function"
-
 SMART_ENUM(TestEnum,
   (A, "A"),
   (B, "B")
 )
-
-#pragma GCC diagnostic pop
 
 TEST_CASE("Parse enum property") {
   auto prop = PropertyBuilder::createProperty("prop")

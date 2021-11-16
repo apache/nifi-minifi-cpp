@@ -16,11 +16,15 @@
  */
 
 #include "core/extension/ExtensionManager.h"
+
+#include <algorithm>
+
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/file/FileUtils.h"
 #include "core/extension/Executable.h"
 #include "utils/file/FilePattern.h"
 #include "core/extension/DynamicLibrary.h"
+#include "agent/agent_version.h"
+#include "core/extension/Utils.h"
 
 namespace org {
 namespace apache {
@@ -28,51 +32,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 namespace extension {
-
-namespace {
-
-struct LibraryDescriptor {
-  std::string name;
-  std::filesystem::path dir;
-  std::string filename;
-
-  bool verify(const std::shared_ptr<logging::Logger>& /*logger*/) const {
-    // TODO(adebreceni): check signature
-    return true;
-  }
-
-  [[nodiscard]]
-  std::filesystem::path getFullPath() const {
-    return dir / filename;
-  }
-};
-
-std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& path) {
-#if defined(WIN32)
-  const std::string extension = ".dll";
-#elif defined(__APPLE__)
-  const std::string extension = ".dylib";
-#else
-  const std::string extension = ".so";
-#endif
-
-#ifdef WIN32
-  const std::string prefix = "";
-#else
-  const std::string prefix = "lib";
-#endif
-  std::string filename = path.filename().string();
-  if (!utils::StringUtils::startsWith(filename, prefix) || !utils::StringUtils::endsWith(filename, extension)) {
-    return {};
-  }
-  return LibraryDescriptor{
-    filename.substr(prefix.length(), filename.length() - extension.length() - prefix.length()),
-    path.parent_path(),
-    filename
-  };
-}
-
-}  // namespace
 
 const std::shared_ptr<logging::Logger> ExtensionManager::logger_ = logging::LoggerFactory<ExtensionManager>::getLogger();
 
@@ -108,7 +67,7 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
       logger_->log_error("Error in subpattern '%s': %s", std::string{subpattern}, std::string{error_msg});
     }));
     for (const auto& candidate : candidates) {
-      auto library = asDynamicLibrary(candidate);
+      auto library = internal::asDynamicLibrary(candidate);
       if (!library || !library->verify(logger_)) {
         continue;
       }

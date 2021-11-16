@@ -34,6 +34,7 @@ namespace utils {
 #define INCLUDE_BASE_FIELD(x) \
   x = Base::x
 
+// [[maybe_unused]] on public members to avoid warnings when used inside an anonymous namespace
 #define SMART_ENUM_BODY(Clazz, ...) \
     constexpr Clazz(Type value = static_cast<Type>(-1)) : value_{value} {} \
     explicit Clazz(const std::string& str) : value_{parse(str.c_str()).value_} {} \
@@ -41,7 +42,7 @@ namespace utils {
    private: \
     Type value_; \
    public: \
-    Type value() const { \
+    [[maybe_unused]] Type value() const { \
       return value_; \
     } \
     struct detail : Base::detail { \
@@ -67,35 +68,35 @@ namespace utils {
       } \
     }; \
     static constexpr int length = Base::length + COUNT(__VA_ARGS__); \
-    friend const char* toString(Type a) { \
+    [[maybe_unused]] friend const char* toString(Type a) { \
       return detail::toStringImpl(a, #Clazz); \
     } \
-    const char* toString() const { \
+    [[maybe_unused]] const char* toString() const { \
       return detail::toStringImpl(value_, #Clazz); \
     } \
-    const char* toStringOr(const char* fallback) const { \
+    [[maybe_unused]] const char* toStringOr(const char* fallback) const { \
       if (*this) { \
         return toString(); \
       } \
       return fallback; \
     } \
-    static std::set<std::string> values() { \
+    [[maybe_unused]] static std::set<std::string> values() { \
       return detail::values(); \
     } \
-    friend bool operator==(Clazz lhs, Clazz rhs) { \
+    [[maybe_unused]] friend bool operator==(Clazz lhs, Clazz rhs) { \
       return lhs.value_ == rhs.value_; \
     } \
-    friend bool operator!=(Clazz lhs, Clazz rhs) { \
+    [[maybe_unused]] friend bool operator!=(Clazz lhs, Clazz rhs) { \
       return lhs.value_ != rhs.value_; \
     } \
-    friend bool operator<(Clazz lhs, Clazz rhs) { \
+    [[maybe_unused]] friend bool operator<(Clazz lhs, Clazz rhs) { \
       return lhs.value_ < rhs.value_;\
     } \
-    explicit operator bool() const { \
+    [[maybe_unused]] explicit operator bool() const { \
       int idx = static_cast<int>(value_); \
       return 0 <= idx && idx < length; \
     } \
-    static Clazz parse(const char* str, const ::std::optional<Clazz>& fallback = {}, bool caseSensitive = true) { \
+    [[maybe_unused]] static Clazz parse(const char* str, const ::std::optional<Clazz>& fallback = {}, bool caseSensitive = true) { \
       for (int idx = 0; idx < length; ++idx) { \
         if (::org::apache::nifi::minifi::utils::StringUtils::equals(str, detail::toStringImpl(static_cast<Type>(idx), #Clazz), caseSensitive)) \
           return static_cast<Type>(idx); \
@@ -106,7 +107,7 @@ namespace utils {
       throw std::runtime_error(std::string("Cannot convert \"") + str + "\" to " #Clazz); \
     } \
     template<typename T, typename = typename std::enable_if<std::is_base_of<typename T::detail, detail>::value>::type> \
-    T cast() const { \
+    [[maybe_unused]] T cast() const { \
       if (0 <= value_ && value_ < T::length) { \
         return static_cast<typename T::Type>(value_); \
       } \

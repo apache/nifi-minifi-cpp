@@ -17,6 +17,7 @@
 #ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 #define LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
 
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <sstream>
@@ -820,6 +821,8 @@ inline std::string get_file_content(const std::string &file_name) {
   std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   return content;
 }
+
+bool contains(const std::filesystem::path& file_path, std::string_view text_to_search);
 
 }  // namespace file
 }  // namespace utils
