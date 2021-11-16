@@ -33,11 +33,13 @@
 namespace org::apache::nifi::minifi::core::extension::internal {
 
 template<typename Callback>
-struct Timer {
+class Timer {
+ public:
   explicit Timer(Callback cb): cb_(std::move(cb)) {}
   ~Timer() {
     cb_(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_));
   }
+ private:
   std::chrono::steady_clock::time_point start_{std::chrono::steady_clock::now()};
   Callback cb_;
 };
