@@ -84,16 +84,16 @@ class PublishKafka : public KafkaProcessorBase {
   EXTENSIONAPI static const core::Relationship Failure;
   EXTENSIONAPI static const core::Relationship Success;
 
-  static constexpr const char* const COMPRESSION_CODEC_NONE = "none";
-  static constexpr const char* const COMPRESSION_CODEC_GZIP = "gzip";
-  static constexpr const char* const COMPRESSION_CODEC_SNAPPY = "snappy";
-  static constexpr const char* const ROUND_ROBIN_PARTITIONING = "Round Robin";
-  static constexpr const char* const RANDOM_PARTITIONING = "Random Robin";
-  static constexpr const char* const USER_DEFINED_PARTITIONING = "User-Defined";
-  static constexpr const char* const DELIVERY_REPLICATED = "all";
-  static constexpr const char* const DELIVERY_ONE_NODE = "1";
-  static constexpr const char* const DELIVERY_BEST_EFFORT = "0";
-  static constexpr const char* const KAFKA_KEY_ATTRIBUTE = "kafka.key";
+  static constexpr const char* COMPRESSION_CODEC_NONE = "none";
+  static constexpr const char* COMPRESSION_CODEC_GZIP = "gzip";
+  static constexpr const char* COMPRESSION_CODEC_SNAPPY = "snappy";
+  static constexpr const char* ROUND_ROBIN_PARTITIONING = "Round Robin";
+  static constexpr const char* RANDOM_PARTITIONING = "Random Robin";
+  static constexpr const char* USER_DEFINED_PARTITIONING = "User-Defined";
+  static constexpr const char* DELIVERY_REPLICATED = "all";
+  static constexpr const char* DELIVERY_ONE_NODE = "1";
+  static constexpr const char* DELIVERY_BEST_EFFORT = "0";
+  static constexpr const char* KAFKA_KEY_ATTRIBUTE = "kafka.key";
 
   explicit PublishKafka(const std::string& name, const utils::Identifier& uuid = {})
       : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<PublishKafka>::getLogger()) {
