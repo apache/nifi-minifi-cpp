@@ -60,7 +60,7 @@ class KafkaProcessorBase : public core::Processor {
 
  protected:
   virtual std::optional<utils::SSL_data> getSslData(core::ProcessContext& context) const;
-  void setKafkaAuthenticationParameters(core::ProcessContext& context, rd_kafka_conf_t* config);
+  void setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config);
 
   SecurityProtocolOption security_protocol_;
   std::shared_ptr<core::logging::Logger> logger_;

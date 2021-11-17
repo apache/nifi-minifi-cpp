@@ -317,7 +317,7 @@ void ConsumeKafka::configure_new_connection(core::ProcessContext& context) {
   // logger_->log_info("Enabling all debug logs for kafka consumer.");
   // setKafkaConfigurationField(*conf_, "debug", "all");
 
-  setKafkaAuthenticationParameters(context, conf_.get());
+  setKafkaAuthenticationParameters(context, gsl::make_not_null(conf_.get()));
 
   setKafkaConfigurationField(*conf_, "bootstrap.servers", kafka_brokers_);
   setKafkaConfigurationField(*conf_, "allow.auto.create.topics", "true");

@@ -653,7 +653,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
 
-  setKafkaAuthenticationParameters(*context, conf_.get());
+  setKafkaAuthenticationParameters(*context, gsl::make_not_null(conf_.get()));
 
   // Add all of the dynamic properties as librdkafka configurations
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();

@@ -87,7 +87,7 @@ std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessConte
   return std::nullopt;
 }
 
-void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& context, rd_kafka_conf_t* config) {
+void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config) {
   security_protocol_ = utils::getRequiredPropertyOrThrow<SecurityProtocolOption>(context, SecurityProtocol.getName());
   utils::setKafkaConfigurationField(*config, "security.protocol", security_protocol_.toString());
   logger_->log_debug("Kafka security.protocol [%s]", security_protocol_.toString());
