@@ -84,16 +84,16 @@ class PublishKafka : public KafkaProcessorBase {
   EXTENSIONAPI static const core::Relationship Failure;
   EXTENSIONAPI static const core::Relationship Success;
 
-  static const std::string COMPRESSION_CODEC_NONE;
-  static const std::string COMPRESSION_CODEC_GZIP;
-  static const std::string COMPRESSION_CODEC_SNAPPY;
-  static const std::string ROUND_ROBIN_PARTITIONING;
-  static const std::string RANDOM_PARTITIONING;
-  static const std::string USER_DEFINED_PARTITIONING;
-  static const std::string DELIVERY_REPLICATED;
-  static const std::string DELIVERY_ONE_NODE;
-  static const std::string DELIVERY_BEST_EFFORT;
-  static const std::string KAFKA_KEY_ATTRIBUTE;
+  static constexpr const char* const COMPRESSION_CODEC_NONE = "none";
+  static constexpr const char* const COMPRESSION_CODEC_GZIP = "gzip";
+  static constexpr const char* const COMPRESSION_CODEC_SNAPPY = "snappy";
+  static constexpr const char* const ROUND_ROBIN_PARTITIONING = "Round Robin";
+  static constexpr const char* const RANDOM_PARTITIONING = "Random Robin";
+  static constexpr const char* const USER_DEFINED_PARTITIONING = "User-Defined";
+  static constexpr const char* const DELIVERY_REPLICATED = "all";
+  static constexpr const char* const DELIVERY_ONE_NODE = "1";
+  static constexpr const char* const DELIVERY_BEST_EFFORT = "0";
+  static constexpr const char* const KAFKA_KEY_ATTRIBUTE = "kafka.key";
 
   explicit PublishKafka(const std::string& name, const utils::Identifier& uuid = {})
       : KafkaProcessorBase(name, uuid, core::logging::LoggerFactory<PublishKafka>::getLogger()) {
@@ -119,7 +119,7 @@ class PublishKafka : public KafkaProcessorBase {
  protected:
   bool configureNewConnection(const std::shared_ptr<core::ProcessContext> &context);
   bool createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name, const std::shared_ptr<core::FlowFile>& flow_file);
-  std::optional<utils::SSL_data> getSslData(core::ProcessContext* context) const override;
+  std::optional<utils::SSL_data> getSslData(core::ProcessContext& context) const override;
 
  private:
   core::annotation::Input getInputRequirement() const override {

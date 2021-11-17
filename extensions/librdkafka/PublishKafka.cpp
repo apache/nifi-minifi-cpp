@@ -41,17 +41,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string PublishKafka::COMPRESSION_CODEC_NONE = "none";
-const std::string PublishKafka::COMPRESSION_CODEC_GZIP = "gzip";
-const std::string PublishKafka::COMPRESSION_CODEC_SNAPPY = "snappy";
-const std::string PublishKafka::ROUND_ROBIN_PARTITIONING = "Round Robin";
-const std::string PublishKafka::RANDOM_PARTITIONING = "Random Robin";
-const std::string PublishKafka::USER_DEFINED_PARTITIONING = "User-Defined";
-const std::string PublishKafka::DELIVERY_REPLICATED = "all";
-const std::string PublishKafka::DELIVERY_ONE_NODE = "1";
-const std::string PublishKafka::DELIVERY_BEST_EFFORT = "0";
-const std::string PublishKafka::KAFKA_KEY_ATTRIBUTE = "kafka.key";
-
 const core::Property PublishKafka::SeedBrokers(
     core::PropertyBuilder::createProperty("Known Brokers")->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>")
         ->isRequired(true)->supportsExpressionLanguage(true)->build());
@@ -664,7 +653,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
 
-  setKafkaAuthenticationParameters(context.get(), conf_.get());
+  setKafkaAuthenticationParameters(*context, conf_.get());
 
   // Add all of the dynamic properties as librdkafka configurations
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
@@ -784,16 +773,16 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   return true;
 }
 
-std::optional<utils::SSL_data> PublishKafka::getSslData(core::ProcessContext* context) const {
+std::optional<utils::SSL_data> PublishKafka::getSslData(core::ProcessContext& context) const {
   if (auto result = KafkaProcessorBase::getSslData(context); result) {
     return result;
   }
 
   utils::SSL_data ssl_data;
-  context->getProperty(SecurityCA.getName(), ssl_data.ca_loc);
-  context->getProperty(SecurityCert.getName(), ssl_data.cert_loc);
-  context->getProperty(SecurityPrivateKey.getName(), ssl_data.key_loc);
-  context->getProperty(SecurityPrivateKeyPassWord.getName(), ssl_data.key_pw);
+  context.getProperty(SecurityCA.getName(), ssl_data.ca_loc);
+  context.getProperty(SecurityCert.getName(), ssl_data.cert_loc);
+  context.getProperty(SecurityPrivateKey.getName(), ssl_data.key_loc);
+  context.getProperty(SecurityPrivateKeyPassWord.getName(), ssl_data.key_pw);
   return ssl_data;
 }
 

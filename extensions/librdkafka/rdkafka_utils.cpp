@@ -29,9 +29,6 @@ namespace minifi {
 namespace utils {
 
 void setKafkaConfigurationField(rd_kafka_conf_t& configuration, const std::string& field_name, const std::string& value) {
-  if (value.empty()) {
-    return;
-  }
   static std::array<char, 512U> errstr{};
   rd_kafka_conf_res_t result;
   result = rd_kafka_conf_set(&configuration, field_name.c_str(), value.c_str(), errstr.data(), errstr.size());

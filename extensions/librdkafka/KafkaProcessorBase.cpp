@@ -64,10 +64,10 @@ const core::Property KafkaProcessorBase::Password(
         ->withDescription("The password for the given username when the SASL Mechanism is sasl_plaintext")
         ->build());
 
-std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessContext* context) const {
+std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessContext& context) const {
   std::string ssl_service_name;
-  if (context->getProperty(SSLContextService.getName(), ssl_service_name) && !ssl_service_name.empty()) {
-    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(ssl_service_name);
+  if (context.getProperty(SSLContextService.getName(), ssl_service_name) && !ssl_service_name.empty()) {
+    std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(ssl_service_name);
     if (service) {
       auto ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
       utils::SSL_data ssl_data;
@@ -87,7 +87,7 @@ std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessConte
   return std::nullopt;
 }
 
-void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext* context, rd_kafka_conf_t* config) {
+void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& context, rd_kafka_conf_t* config) {
   security_protocol_ = utils::getRequiredPropertyOrThrow<SecurityProtocolOption>(context, SecurityProtocol.getName());
   utils::setKafkaConfigurationField(*config, "security.protocol", security_protocol_.toString());
   logger_->log_debug("Kafka security.protocol [%s]", security_protocol_.toString());
@@ -113,9 +113,9 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext* 
   utils::setKafkaConfigurationField(*config, "sasl.mechanism", sasl_mechanism.toString());
   logger_->log_debug("Kafka sasl.mechanism [%s]", sasl_mechanism.toString());
 
-  auto setKafkaConfigIfNotEmpty = [this, context, config](const std::string& property_name, const std::string& kafka_config_name, bool log_value = true) {
+  auto setKafkaConfigIfNotEmpty = [this, &context, config](const std::string& property_name, const std::string& kafka_config_name, bool log_value = true) {
     std::string value;
-    if (context->getProperty(property_name, value) && !value.empty()) {
+    if (context.getProperty(property_name, value) && !value.empty()) {
       utils::setKafkaConfigurationField(*config, kafka_config_name, value);
       if (log_value) {
         logger_->log_debug("Kafka %s [%s]", kafka_config_name, value);

@@ -28,17 +28,17 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessContext* context, const std::string& property_name) {
+std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessContext& context, const std::string& property_name) {
   std::string property_string;
-  context->getProperty(property_name, property_string);
+  context.getProperty(property_name, property_string);
   return utils::StringUtils::splitAndTrim(property_string, ",");
 }
 
-std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext* context, const std::string& property_name) {
+std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext& context, const std::string& property_name) {
   return utils::StringUtils::splitAndTrim(getRequiredPropertyOrThrow(context, property_name), ",");
 }
 
-bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::string& property_name) {
+bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, const std::string& property_name) {
   const std::string value_str = getRequiredPropertyOrThrow(context, property_name);
   const auto maybe_value = utils::StringUtils::toBool(value_str);
   if (!maybe_value) {
@@ -47,7 +47,7 @@ bool parseBooleanPropertyOrThrow(core::ProcessContext* context, const std::strin
   return maybe_value.value();
 }
 
-std::chrono::milliseconds parseTimePropertyMSOrThrow(core::ProcessContext* context, const std::string& property_name) {
+std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, const std::string& property_name) {
   core::TimeUnit unit;
   uint64_t time_value_ms;
   const std::string value_str = getRequiredPropertyOrThrow(context, property_name);

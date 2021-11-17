@@ -196,22 +196,22 @@ void ConsumeKafka::initialize() {
 void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) {
   gsl_Expects(context);
   // Required properties
-  kafka_brokers_                = utils::getRequiredPropertyOrThrow(context, KafkaBrokers.getName());
-  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.getName());
-  topic_name_format_            = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.getName());
-  honor_transactions_           = utils::parseBooleanPropertyOrThrow(context, HonorTransactions.getName());
-  group_id_                     = utils::getRequiredPropertyOrThrow(context, GroupID.getName());
-  offset_reset_                 = utils::getRequiredPropertyOrThrow(context, OffsetReset.getName());
-  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(context, KeyAttributeEncoding.getName());
-  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(context, MaxPollTime.getName());
-  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(context, SessionTimeout.getName());
+  kafka_brokers_                = utils::getRequiredPropertyOrThrow(*context, KafkaBrokers.getName());
+  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(*context, TopicNames.getName());
+  topic_name_format_            = utils::getRequiredPropertyOrThrow(*context, TopicNameFormat.getName());
+  honor_transactions_           = utils::parseBooleanPropertyOrThrow(*context, HonorTransactions.getName());
+  group_id_                     = utils::getRequiredPropertyOrThrow(*context, GroupID.getName());
+  offset_reset_                 = utils::getRequiredPropertyOrThrow(*context, OffsetReset.getName());
+  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(*context, KeyAttributeEncoding.getName());
+  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(*context, MaxPollTime.getName());
+  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(*context, SessionTimeout.getName());
 
   // Optional properties
   context->getProperty(MessageDemarcator.getName(), message_demarcator_);
   context->getProperty(MessageHeaderEncoding.getName(), message_header_encoding_);
   context->getProperty(DuplicateHeaderHandling.getName(), duplicate_header_handling_);
 
-  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
+  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(*context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(*context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));
 
   if (!utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
@@ -222,7 +222,7 @@ void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessio
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Unsupported message header encoding: " + key_attribute_encoding_);
   }
 
-  configure_new_connection(context);
+  configure_new_connection(*context);
 }
 
 namespace {
@@ -299,7 +299,7 @@ void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessCont
   }
 }
 
-void ConsumeKafka::configure_new_connection(core::ProcessContext* context) {
+void ConsumeKafka::configure_new_connection(core::ProcessContext& context) {
   using utils::setKafkaConfigurationField;
 
   conf_ = { rd_kafka_conf_new(), utils::rd_kafka_conf_deleter() };
@@ -333,7 +333,7 @@ void ConsumeKafka::configure_new_connection(core::ProcessContext* context) {
   // relevant API calls. Could be redundant, but it probably does not hurt to set this
   setKafkaConfigurationField(*conf_, "metadata.request.timeout.ms", std::to_string(METADATA_COMMUNICATIONS_TIMEOUT_MS));
 
-  extend_config_from_dynamic_properties(*context);
+  extend_config_from_dynamic_properties(context);
 
   std::array<char, 512U> errstr{};
   consumer_ = { rd_kafka_new(RD_KAFKA_CONSUMER, conf_.release(), errstr.data(), errstr.size()), utils::rd_kafka_consumer_deleter() };
