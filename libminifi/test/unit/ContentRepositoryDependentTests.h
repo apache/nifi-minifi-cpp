@@ -42,18 +42,6 @@ struct WriteStringToFlowFile : public minifi::OutputStreamCallback {
   }
 };
 
-struct ReadUntilStreamSize : public minifi::InputStreamCallback {
-  std::string value_;
-
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream> &stream) override {
-    value_.clear();
-    std::vector<uint8_t> buffer;
-    size_t bytes_read = stream->read(buffer, stream->size());
-    value_.assign(buffer.begin(), buffer.end());
-    return minifi::io::isError(bytes_read) ? -1 : gsl::narrow<int64_t>(bytes_read);
-  }
-};
-
 struct ReadUntilItCan : public minifi::InputStreamCallback {
   std::string value_;
 
@@ -132,22 +120,21 @@ void testReadOnSmallerClonedFlowFiles(std::shared_ptr<core::ContentRepository> c
   auto clone_second_half = process_session.clone(original_ff, 3, 3);
   REQUIRE(clone_first_half != nullptr);
   REQUIRE(clone_second_half != nullptr);
-  ReadUntilStreamSize read_until_stream_size_callback;
   ReadUntilItCan read_until_it_can_callback;
-  process_session.read(original_ff, &read_until_stream_size_callback);
+  const auto read_result_original = process_session.readBuffer(original_ff);
   process_session.read(original_ff, &read_until_it_can_callback);
   CHECK(original_ff->getSize() == 6);
-  CHECK(read_until_stream_size_callback.value_ == "foobar");
+  CHECK(to_string(read_result_original) == "foobar");
   CHECK(read_until_it_can_callback.value_ == "foobar");
-  process_session.read(clone_first_half, &read_until_stream_size_callback);
+  const auto read_result_first_half = process_session.readBuffer(clone_first_half);
   process_session.read(clone_first_half, &read_until_it_can_callback);
   CHECK(clone_first_half->getSize() == 3);
-  CHECK(read_until_stream_size_callback.value_ == "foo");
+  CHECK(to_string(read_result_first_half) == "foo");
   CHECK(read_until_it_can_callback.value_ == "foo");
-  process_session.read(clone_second_half, &read_until_stream_size_callback);
+  const auto read_result_second_half = process_session.readBuffer(clone_second_half);
   process_session.read(clone_second_half, &read_until_it_can_callback);
   CHECK(clone_second_half->getSize() == 3);
-  CHECK(read_until_stream_size_callback.value_ == "bar");
+  CHECK(to_string(read_result_second_half) == "bar");
   CHECK(read_until_it_can_callback.value_ == "bar");
 }
 
@@ -163,11 +150,10 @@ void testAppendToUnmanagedFlowFile(std::shared_ptr<core::ContentRepository> cont
   fixture.transferAndCommit(flow_file);
 
   CHECK(flow_file->getSize() == 8);
-  ReadUntilStreamSize read_until_stream_size_callback;
   ReadUntilItCan read_until_it_can_callback;
-  process_session.read(flow_file, &read_until_stream_size_callback);
+  const auto read_result = process_session.readBuffer(flow_file);
   process_session.read(flow_file, &read_until_it_can_callback);
-  CHECK(read_until_stream_size_callback.value_ == "myfoobar");
+  CHECK(to_string(read_result) == "myfoobar");
   CHECK(read_until_it_can_callback.value_ == "myfoobar");
 }
 
@@ -182,11 +168,10 @@ void testAppendToManagedFlowFile(std::shared_ptr<core::ContentRepository> conten
   fixture.transferAndCommit(flow_file);
 
   CHECK(flow_file->getSize() == 8);
-  ReadUntilStreamSize read_until_stream_size_callback;
+  const auto read_result = process_session.readBuffer(flow_file);
   ReadUntilItCan read_until_it_can_callback;
-  process_session.read(flow_file, &read_until_stream_size_callback);
   process_session.read(flow_file, &read_until_it_can_callback);
-  CHECK(read_until_stream_size_callback.value_ == "myfoobar");
+  CHECK(to_string(read_result) == "myfoobar");
   CHECK(read_until_it_can_callback.value_ == "myfoobar");
 }
 }  // namespace ContentRepositoryDependentTests
