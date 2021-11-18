@@ -46,7 +46,7 @@ void DeleteAzureDataLakeStorage::initialize() {
 }
 
 std::optional<storage::DeleteAzureDataLakeStorageParameters> DeleteAzureDataLakeStorage::buildDeleteParameters(
-    const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::DeleteAzureDataLakeStorageParameters params;
   if (!setCommonParameters(params, context, flow_file)) {
     return std::nullopt;
@@ -56,6 +56,7 @@ std::optional<storage::DeleteAzureDataLakeStorageParameters> DeleteAzureDataLake
 }
 
 void DeleteAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context && session);
   logger_->log_trace("DeleteAzureDataLakeStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
@@ -63,7 +64,7 @@ void DeleteAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCo
     return;
   }
 
-  const auto params = buildDeleteParameters(context, flow_file);
+  const auto params = buildDeleteParameters(*context, flow_file);
   if (!params) {
     session->transfer(flow_file, Failure);
     return;

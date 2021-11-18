@@ -49,7 +49,7 @@ class AzureStorageProcessorBase : public core::Processor {
     CONTROLLER_NAME_INVALID
   };
 
-  std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(const std::shared_ptr<core::ProcessContext> &context) const;
+  std::tuple<GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> getCredentialsFromControllerService(core::ProcessContext &context) const;
 
   std::shared_ptr<core::logging::Logger> logger_;
 };

@@ -44,31 +44,32 @@ const core::Property AzureDataLakeStorageProcessorBase::FileName(
       ->build());
 
 void AzureDataLakeStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  gsl_Expects(context);
   std::optional<storage::AzureStorageCredentials> credentials;
-  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(context);
+  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(*context);
   if (!credentials) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
   }
 
   if (!credentials->isValid()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Credentials set in the Azure Storage credentials service are invalid");
   }
 
   credentials_ = *credentials;
 }
 
 bool AzureDataLakeStorageProcessorBase::setCommonParameters(
-    storage::AzureDataLakeStorageParameters& params, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    storage::AzureDataLakeStorageParameters& params, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   params.credentials = credentials_;
 
-  if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
+  if (!context.getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
     logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
     return false;
   }
 
-  context->getProperty(DirectoryName, params.directory_name, flow_file);
+  context.getProperty(DirectoryName, params.directory_name, flow_file);
 
-  context->getProperty(FileName, params.filename, flow_file);
+  context.getProperty(FileName, params.filename, flow_file);
   if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
     logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
     return false;

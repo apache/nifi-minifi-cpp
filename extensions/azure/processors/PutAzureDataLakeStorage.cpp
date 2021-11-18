@@ -56,6 +56,7 @@ void PutAzureDataLakeStorage::initialize() {
 }
 
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+  gsl_Expects(context && sessionFactory);
   AzureDataLakeStorageProcessorBase::onSchedule(context, sessionFactory);
 
   conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(
@@ -63,7 +64,7 @@ void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCont
 }
 
 std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
-    const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::PutAzureDataLakeStorageParameters params;
   if (!setCommonParameters(params, context, flow_file)) {
     return std::nullopt;
@@ -74,6 +75,7 @@ std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorag
 }
 
 void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context && session);
   logger_->log_trace("PutAzureDataLakeStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
@@ -81,7 +83,7 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     return;
   }
 
-  const auto params = buildUploadParameters(context, flow_file);
+  const auto params = buildUploadParameters(*context, flow_file);
   if (!params) {
     session->transfer(flow_file, Failure);
     return;

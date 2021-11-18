@@ -88,8 +88,7 @@ class AzureDataLakeStorageTestsFixture {
 
     auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
       std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
-      std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-      file_contents.push_back(file_content);
+      file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
       return true;
     };
 
