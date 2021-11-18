@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 #include <limits>
 #include "utils/file/FileUtils.h"
 #include "core/Resource.h"
