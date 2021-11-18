@@ -58,6 +58,17 @@ void PutAzureDataLakeStorage::initialize() {
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
   gsl_Expects(context && sessionFactory);
   AzureDataLakeStorageProcessorBase::onSchedule(context, sessionFactory);
+  std::optional<storage::AzureStorageCredentials> credentials;
+  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(*context);
+  if (!credentials) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
+  }
+
+  if (!credentials->isValid()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
+  }
+
+  credentials_ = *credentials;
 
   conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), FileExistsResolutionStrategy::values()).c_str());

@@ -59,12 +59,13 @@ void PutAzureBlobStorage::initialize() {
 
 
 void PutAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
+  gsl_Expects(context && session_factory);
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
   context->getProperty(CreateContainer.getName(), create_container_);
 }
 
 std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::buildPutAzureBlobStorageParameters(
-    const std::shared_ptr<core::ProcessContext> &context,
+    core::ProcessContext &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   storage::PutAzureBlobStorageParameters params;
   if (!setCommonStorageParameters(params, context, flow_file)) {
@@ -75,13 +76,14 @@ std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::build
 }
 
 void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  gsl_Expects(context && session);
   logger_->log_trace("PutAzureBlobStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     return;
   }
 
-  auto params = buildPutAzureBlobStorageParameters(context, flow_file);
+  auto params = buildPutAzureBlobStorageParameters(*context, flow_file);
   if (!params) {
     session->transfer(flow_file, Failure);
     return;

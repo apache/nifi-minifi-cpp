@@ -71,6 +71,7 @@ const core::Property AzureBlobStorageProcessorBase::UseManagedIdentityCredential
     ->build());
 
 void AzureBlobStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  gsl_Expects(context);
   std::string value;
   if (!context->getProperty(ContainerName.getName(), value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Container Name property missing or invalid");
@@ -112,23 +113,22 @@ void AzureBlobStorageProcessorBase::onSchedule(const std::shared_ptr<core::Proce
 }
 
 storage::AzureStorageCredentials AzureBlobStorageProcessorBase::getAzureCredentialsFromProperties(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const {
+    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) const {
   storage::AzureStorageCredentials credentials;
   std::string value;
-  if (context->getProperty(StorageAccountName, value, flow_file)) {
+  if (context.getProperty(StorageAccountName, value, flow_file)) {
     credentials.setStorageAccountName(value);
   }
-  if (context->getProperty(StorageAccountKey, value, flow_file)) {
+  if (context.getProperty(StorageAccountKey, value, flow_file)) {
     credentials.setStorageAccountKey(value);
   }
-  if (context->getProperty(SASToken, value, flow_file)) {
+  if (context.getProperty(SASToken, value, flow_file)) {
     credentials.setSasToken(value);
   }
-  if (context->getProperty(CommonStorageAccountEndpointSuffix, value, flow_file)) {
+  if (context.getProperty(CommonStorageAccountEndpointSuffix, value, flow_file)) {
     credentials.setEndpontSuffix(value);
   }
-  if (context->getProperty(ConnectionString, value, flow_file)) {
+  if (context.getProperty(ConnectionString, value, flow_file)) {
     credentials.setConnectionString(value);
   }
   credentials.setUseManagedIdentityCredentials(use_managed_identity_credentials_);
@@ -137,7 +137,7 @@ storage::AzureStorageCredentials AzureBlobStorageProcessorBase::getAzureCredenti
 
 bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
     storage::AzureBlobStorageParameters& params,
-    const std::shared_ptr<core::ProcessContext> &context,
+    core::ProcessContext &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
   auto credentials = getCredentials(context, flow_file);
   if (!credentials) {
@@ -146,12 +146,12 @@ bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
 
   params.credentials = *credentials;
 
-  if (!context->getProperty(ContainerName, params.container_name, flow_file) || params.container_name.empty()) {
+  if (!context.getProperty(ContainerName, params.container_name, flow_file) || params.container_name.empty()) {
     logger_->log_error("Container Name is invalid or empty!");
     return false;
   }
 
-  context->getProperty(Blob, params.blob_name, flow_file);
+  context.getProperty(Blob, params.blob_name, flow_file);
   if (params.blob_name.empty() && (!flow_file->getAttribute("filename", params.blob_name) || params.blob_name.empty())) {
     logger_->log_error("Blob is not set and default 'filename' attribute could not be found!");
     return false;
@@ -161,9 +161,9 @@ bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
 }
 
 std::optional<storage::AzureStorageCredentials> AzureBlobStorageProcessorBase::getCredentials(
-    const std::shared_ptr<core::ProcessContext> &context,
+    core::ProcessContext &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const {
-  auto [result, controller_service_creds] = getCredentialsFromControllerService(*context);
+  auto [result, controller_service_creds] = getCredentialsFromControllerService(context);
   if (controller_service_creds) {
     if (controller_service_creds->isValid()) {
       logger_->log_debug("Azure credentials read from credentials controller service!");

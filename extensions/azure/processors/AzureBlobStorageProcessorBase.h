@@ -62,14 +62,12 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
   }
 
   storage::AzureStorageCredentials getAzureCredentialsFromProperties(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const;
+    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) const;
   std::optional<storage::AzureStorageCredentials> getCredentials(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const;
+    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) const;
   bool setCommonStorageParameters(
     storage::AzureBlobStorageParameters& params,
-    const std::shared_ptr<core::ProcessContext> &context,
+    core::ProcessContext &context,
     const std::shared_ptr<core::FlowFile> &flow_file);
 
   storage::AzureBlobStorage azure_blob_storage_;

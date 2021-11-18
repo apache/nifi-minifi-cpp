@@ -68,8 +68,7 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   }
 
   std::optional<storage::DeleteAzureBlobStorageParameters> buildDeleteAzureBlobStorageParameters(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file);
+    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
 
   storage::OptionalDeletion optional_deletion_;
 };
