@@ -99,17 +99,6 @@ void ExtensionManager::unregisterExtension(Extension& extension) {
   }
 }
 
-struct DummyLoggingClass {};
-
-static std::thread logger_thread{[] {
-  static auto logger = logging::LoggerFactory<DummyLoggingClass>::getLogger();
-  int counter = 0;
-  while (true) {
-    logger->log_error("Hello %d", counter++);
-    std::this_thread::sleep_for(std::chrono::seconds{1});
-  }
-}};
-
 }  // namespace extension
 }  // namespace core
 }  // namespace minifi
