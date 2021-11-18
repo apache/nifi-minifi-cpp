@@ -153,6 +153,10 @@ class C2Agent : public state::UpdateController {
    */
   bool update_property(const std::string &property_name, const std::string &property_value,  bool persist);
 
+  void handle_transfer(const C2ContentResponse &resp);
+
+  C2Payload bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files);
+
   /**
    * Creates configuration options C2 payload for response
    */
@@ -163,6 +167,10 @@ class C2Agent : public state::UpdateController {
   utils::TaskRescheduleInfo consume();
 
   bool handleConfigurationUpdate(const C2ContentResponse &resp);
+
+  std::optional<std::string> resolveFlowUrl(const std::string& url) const;
+
+  std::optional<std::string> resolveUrl(const std::string& url) const;
 
  protected:
   std::timed_mutex metrics_mutex_;

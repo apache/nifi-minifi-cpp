@@ -29,7 +29,8 @@ namespace internal {
 
 LogCompressorSink::LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger)
   : cached_logs_(cache_size.max_total_size, cache_size.max_segment_size),
-    compressed_logs_(compressed_size.max_total_size, compressed_size.max_segment_size, ActiveCompressor::Allocator{std::move(logger)}) {
+    compressed_logs_(compressed_size.max_total_size, compressed_size.max_segment_size, ActiveCompressor::Allocator{logger}),
+    compressor_logger_(logger) {
   compression_thread_ = std::thread{&LogCompressorSink::run, this};
 }
 
@@ -39,8 +40,10 @@ LogCompressorSink::~LogCompressorSink() {
 }
 
 void LogCompressorSink::sink_it_(const spdlog::details::log_msg &msg) {
+  spdlog::memory_buf_t formatted;
+  base_sink<spdlog::details::null_mutex>::formatter_->format(msg, formatted);
   cached_logs_.modify([&] (LogBuffer& active) {
-    active.buffer_->write(reinterpret_cast<const uint8_t*>(msg.payload.data()), msg.payload.size());
+    active.buffer_->write(reinterpret_cast<const uint8_t*>(formatted.data()), formatted.size());
   });
 }
 
@@ -71,6 +74,11 @@ LogCompressorSink::CompressionResult LogCompressorSink::compress(bool force_rota
 }
 
 void LogCompressorSink::flush_() {}
+
+std::unique_ptr<io::InputStream> LogCompressorSink::createEmptyArchive() {
+  auto compressor = ActiveCompressor::Allocator(compressor_logger_)(0);
+  return std::move(compressor.commit().buffer_);
+}
 
 }  // namespace internal
 }  // namespace logging

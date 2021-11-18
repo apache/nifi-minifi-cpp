@@ -96,3 +96,4 @@ add_test(NAME VerifyInvokeHTTPPostTest COMMAND VerifyInvokeHTTPPostTest "${TEST_
 add_test(NAME AbsoluteTimeoutTest COMMAND AbsoluteTimeoutTest)
 add_test(NAME C2PauseResumeTest COMMAND C2PauseResumeTest "${TEST_RESOURCES}/C2PauseResumeTest.yml"  "${TEST_RESOURCES}/")
 add_test(NAME C2LogHeartbeatTest COMMAND C2LogHeartbeatTest)
+add_test(NAME C2DebugBundleTest COMMAND C2DebugBundleTest)

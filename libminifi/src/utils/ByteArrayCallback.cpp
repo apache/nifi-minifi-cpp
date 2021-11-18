@@ -105,6 +105,9 @@ size_t ByteOutputCallback::readFully(char *buffer, size_t size) {
 }
 
 size_t ByteOutputCallback::read_current_str(char *buffer, size_t size) {
+  if (size == 0) {
+    return 0;
+  }
   size_t amount_to_read = size;
   size_t curr_buf_pos = 0;
   /**

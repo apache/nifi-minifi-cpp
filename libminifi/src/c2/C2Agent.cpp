@@ -42,6 +42,8 @@
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"
+#include "io/ArchiveStream.h"
+#include "io/StreamPipe.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -317,6 +319,18 @@ void C2Agent::extractPayload(const C2Payload &resp) {
   }
 }
 
+namespace {
+
+struct C2TransferError : public std::runtime_error {
+  using runtime_error::runtime_error;
+};
+
+struct C2DebugBundleError : public C2TransferError {
+  using C2TransferError::C2TransferError;
+};
+
+}  // namespace
+
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
   switch (resp.op.value()) {
     case Operation::CLEAR:
@@ -409,6 +423,18 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         logger_->log_warn("Resume functionality is not supported!");
       }
       break;
+    case Operation::TRANSFER: {
+      try {
+        handle_transfer(resp);
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        enqueue_c2_response(std::move(response));
+      } catch (const std::runtime_error& error) {
+        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+        response.setRawData(error.what());
+        enqueue_c2_response(std::move(response));
+      }
+      break;
+    }
     default:
       break;
       // do nothing
@@ -586,6 +612,59 @@ bool C2Agent::update_property(const std::string &property_name, const std::strin
   return configuration_->persistProperties();
 }
 
+C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
+  C2Payload payload(Operation::TRANSFER, false);
+  auto stream_provider = core::ClassLoader::getDefaultClassLoader().instantiate<io::ArchiveStreamProvider>(
+      "ArchiveStreamProvider", "ArchiveStreamProvider");
+  if (!stream_provider) {
+    throw C2DebugBundleError("Couldn't instantiate archiver provider");
+  }
+  auto bundle = std::make_shared<io::BufferStream>();
+  auto archiver = stream_provider->createWriteStream(9, "gzip", bundle, logger_);
+  if (!archiver) {
+    throw C2DebugBundleError("Couldn't instantiate archiver");
+  }
+  for (auto&[filename, stream] : files) {
+    size_t file_size = stream->size();
+    if (!archiver->newEntry({filename, file_size})) {
+      throw C2DebugBundleError("Couldn't initialize archive entry for '" + filename + "'");
+    }
+    if (gsl::narrow<int64_t>(file_size) != internal::pipe(stream.get(), archiver.get())) {
+      // we have touched the input streams, they cannot be reused
+      throw C2DebugBundleError("Error while writing file '" + filename + "' into the debug bundle");
+    }
+  }
+  if (!archiver->finish()) {
+    throw C2DebugBundleError("Failed to complete debug bundle archive");
+  }
+  C2Payload file(Operation::TRANSFER, true);
+  file.setLabel("debug.tar.gz");
+  file.setRawData(bundle->moveBuffer());
+  payload.addPayload(std::move(file));
+  return payload;
+}
+
+void C2Agent::handle_transfer(const C2ContentResponse &resp) {
+  if (resp.name != "debug") {
+    throw C2TransferError("Unknown operand '" + resp.name + "'");
+  }
+  auto target_it = resp.operation_arguments.find("target");
+  if (target_it == resp.operation_arguments.end()) {
+    throw C2DebugBundleError("Missing argument for debug operation: 'target'");
+  }
+  std::optional<std::string> url = resolveUrl(target_it->second.to_string());
+  if (!url) {
+    throw C2DebugBundleError("Invalid url");
+  }
+  std::map<std::string, std::unique_ptr<io::InputStream>> files = update_sink_->getDebugInfo();
+
+  auto bundle = bundleDebugInfo(files);
+  C2Payload &&response = protocol_.load()->consumePayload(url.value(), bundle, TRANSMIT, false);
+  if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
+    throw C2DebugBundleError("Error while uploading");
+  }
+}
+
 void C2Agent::restart_agent() {
   std::string cwd = utils::Environment::getCurrentWorkingDirectory();
   if (cwd.empty()) {
@@ -654,6 +733,46 @@ utils::TaskRescheduleInfo C2Agent::consume() {
   return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
 }
 
+std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const {
+  if (utils::StringUtils::startsWith(url, "http")) {
+    return url;
+  }
+  std::string base;
+  if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+    base = utils::StringUtils::trim(base);
+    if (!utils::StringUtils::endsWith(base, "/")) {
+      base += "/";
+    }
+    base += url;
+    return base;
+  } else if (configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
+    utils::URL base_url{utils::StringUtils::trim(base)};
+    if (base_url.isValid()) {
+      return base_url.hostPort() + "/c2/api/" + url;
+    }
+    logger_->log_error("Could not parse C2 REST URL '%s'", base);
+    return std::nullopt;
+  }
+  return url;
+}
+
+std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
+  if (!utils::StringUtils::startsWith(url, "/")) {
+    return url;
+  }
+  std::string base;
+  if (!configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
+    logger_->log_error("Missing C2 REST URL");
+    return std::nullopt;
+  }
+  utils::URL base_url{utils::StringUtils::trim(base)};
+  if (base_url.isValid()) {
+    return base_url.hostPort() + url;
+  }
+  logger_->log_error("Could not parse C2 REST URL '%s'", base);
+  return std::nullopt;
+}
+
 std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   if (!utils::StringUtils::startsWith(uri, "http") || protocol_.load() == nullptr) {
     // try to open the file
@@ -667,30 +786,13 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     return {};
   }
 
-  std::string resolved_url = uri;
-  if (!utils::StringUtils::startsWith(uri, "http")) {
-    std::stringstream adjusted_url;
-    std::string base;
-    if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
-      base = utils::StringUtils::trim(base);
-      adjusted_url << base;
-      if (!utils::StringUtils::endsWith(base, "/")) {
-        adjusted_url << "/";
-      }
-      adjusted_url << uri;
-      resolved_url = adjusted_url.str();
-    } else if (configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
-      utils::URL base_url{utils::StringUtils::trim(base)};
-      if (!base_url.isValid()) {
-        logger_->log_error("Could not parse C2 REST URL '%s'", base);
-        return std::nullopt;
-      }
-      resolved_url = base_url.hostPort() + "/c2/api/" + uri;
-    }
+  std::optional<std::string> resolved_url = resolveFlowUrl(uri);
+  if (!resolved_url) {
+    return std::nullopt;
   }
 
   C2Payload payload(Operation::TRANSFER, true);
-  C2Payload &&response = protocol_.load()->consumePayload(resolved_url, payload, RECEIVE, false);
+  C2Payload &&response = protocol_.load()->consumePayload(resolved_url.value(), payload, RECEIVE, false);
 
   auto raw_data = response.getRawData();
   return std::string(raw_data.data(), raw_data.size());

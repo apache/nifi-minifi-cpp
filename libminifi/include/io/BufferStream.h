@@ -82,6 +82,10 @@ class BufferStream : public BaseStream {
     return buffer_.data();
   }
 
+  std::vector<uint8_t> moveBuffer() {
+    return std::exchange(buffer_, {});
+  }
+
   /**
    * Retrieve size of data stream
    * @return size of data stream

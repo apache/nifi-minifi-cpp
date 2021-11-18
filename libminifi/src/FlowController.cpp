@@ -51,6 +51,7 @@
 #include "utils/HTTPClient.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/validation.h"
+#include "io/FileStream.h"
 
 namespace org {
 namespace apache {
@@ -504,6 +505,19 @@ std::vector<BackTrace> FlowController::getTraces() {
   auto my_traces = TraceResolver::getResolver().getBackTrace("main");
   traces.emplace_back(std::move(my_traces));
   return traces;
+}
+
+std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebugInfo() {
+  std::map<std::string, std::unique_ptr<io::InputStream>> debug_info;
+  if (auto logs = core::logging::LoggerConfiguration::getCompressedLog(true)) {
+    debug_info["minifi.log.gz"] = std::move(logs);
+  }
+  if (auto opt_flow_path = flow_configuration_->getConfigurationPath()) {
+    debug_info["config.yml"] = std::make_unique<io::FileStream>(opt_flow_path.value(), 0, false);
+  }
+  debug_info["minifi.properties"] = std::make_unique<io::FileStream>(configuration_->getFilePath(), 0, false);
+
+  return debug_info;
 }
 
 }  // namespace minifi

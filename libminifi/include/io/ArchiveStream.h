@@ -36,6 +36,7 @@ struct EntryInfo {
 class WriteArchiveStream : public OutputStream {
  public:
   virtual bool newEntry(const EntryInfo& info) = 0;
+  virtual bool finish() = 0;
 };
 
 class ReadArchiveStream : public InputStream {

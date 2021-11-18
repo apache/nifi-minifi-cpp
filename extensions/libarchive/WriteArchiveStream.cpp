@@ -126,6 +126,24 @@ size_t WriteArchiveStreamImpl::write(const uint8_t* data, size_t len) {
   return result;
 }
 
+bool WriteArchiveStreamImpl::finish() {
+  if (!arch_) {
+    return false;
+  }
+  arch_entry_.reset();
+  // closing the archive is needed to complete the archive
+  bool success = archive_write_close(arch_.get()) == ARCHIVE_OK;
+  if (!success) {
+    logger_->log_error("Archive write close error %s", archive_error_string(arch_.get()));
+  }
+  arch_.reset();
+  return success;
+}
+
+WriteArchiveStreamImpl::~WriteArchiveStreamImpl() {
+  finish();
+}
+
 }  // namespace org::apache::nifi::minifi::io
 
 

@@ -74,6 +74,10 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   HTTPClient(const std::string& name, const utils::Identifier& uuid);
 
+  // class uses raw pointers
+  HTTPClient(const HTTPClient&) = delete;
+  HTTPClient& operator=(const HTTPClient&) = delete;
+
   explicit HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
   ~HTTPClient();
@@ -81,6 +85,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   static int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr);
 
   void setVerbose(bool use_stderr = false) override;
+
+  void addFormPart(const std::string& content_type, const std::string& name, HTTPUploadCallback* read_callback, const std::optional<std::string>& filename = std::nullopt);
 
   void forceClose();
 
@@ -285,7 +291,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   CURLcode res{CURLE_OK};
 
-  CURL *http_session_;
+  CURL* http_session_{nullptr};
+  curl_mime* form_{nullptr};
 
   std::string method_;
 

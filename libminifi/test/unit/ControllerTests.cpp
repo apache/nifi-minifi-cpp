@@ -143,6 +143,10 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     return 0;
   }
 
+  std::map<std::string, std::unique_ptr<minifi::io::InputStream>> getDebugInfo() override {
+    return {};
+  }
+
   /**
    * Clear connection for the agent.
    */

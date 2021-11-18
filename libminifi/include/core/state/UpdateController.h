@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <map>
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
 
@@ -229,6 +230,7 @@ class StateMonitor : public StateController {
    */
   virtual std::vector<BackTrace> getTraces() = 0;
 
+  virtual std::map<std::string, std::unique_ptr<io::InputStream>> getDebugInfo() = 0;
 
  protected:
   std::atomic<bool> controller_running_;
