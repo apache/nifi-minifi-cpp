@@ -28,6 +28,7 @@
 #include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
 #include "utils/Enum.h"
+#include "io/InputStream.h"
 
 namespace org {
 namespace apache {
@@ -128,14 +129,17 @@ class C2Payload : public state::Update {
   ~C2Payload() override = default;
 
   void setIdentifier(std::string ident) { ident_ = std::move(ident); }
+  [[nodiscard]]
   std::string getIdentifier() const { return ident_; }
 
   void setLabel(std::string label) { label_ = std::move(label); }
+  [[nodiscard]]
   std::string getLabel() const { return label_; }
 
   /**
    * Gets the operation for this payload. May be nested or a single operation.
    */
+  [[nodiscard]]
   Operation getOperation() const noexcept { return op_; }
 
   /**
@@ -143,6 +147,7 @@ class C2Payload : public state::Update {
    */
   bool validate() override { return true; }
 
+  [[nodiscard]]
   const std::vector<C2ContentResponse> &getContent() const noexcept { return content_; }
 
   /**
@@ -153,6 +158,7 @@ class C2Payload : public state::Update {
   /**
    * Determines if this object contains raw data.
    */
+  [[nodiscard]]
   bool isRaw() const noexcept { return raw_; }
 
   /**
@@ -165,6 +171,7 @@ class C2Payload : public state::Update {
   /**
    * Returns raw data.
    */
+  [[nodiscard]]
   std::vector<char> getRawData() const { return raw_data_; }
 
   /**
@@ -173,12 +180,15 @@ class C2Payload : public state::Update {
    */
   void addPayload(C2Payload &&payload);
 
+  [[nodiscard]]
   bool isCollapsible() const noexcept { return is_collapsible_; }
   void setCollapsible(bool is_collapsible) noexcept { is_collapsible_ = is_collapsible; }
 
+  [[nodiscard]]
   bool isContainer() const noexcept { return is_container_; }
   void setContainer(bool is_container) noexcept { is_container_ = is_container; }
 
+  [[nodiscard]]
   const std::vector<C2Payload> &getNestedPayloads() const & noexcept { return payloads_; }
 
   std::vector<C2Payload>&& getNestedPayloads() && noexcept {return std::move(payloads_);}

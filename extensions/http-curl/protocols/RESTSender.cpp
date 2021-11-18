@@ -55,12 +55,18 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
 }
 
 C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool /*async*/) {
-  std::string outputConfig;
+  std::string data;
 
   if (direction == Direction::TRANSMIT) {
-    outputConfig = serializeJsonRootPayload(payload);
+    if (payload.getOperation() == Operation::TRANSFER && payload.isRaw()) {
+      auto raw_data = payload.getRawData();
+      data.assign(raw_data.begin(), raw_data.end());
+    } else {
+      // treat payload as json
+      data = serializeJsonRootPayload(payload);
+    }
   }
-  return sendPayload(url, direction, payload, outputConfig);
+  return sendPayload(url, direction, payload, std::move(data));
 }
 
 C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction direction, bool async) {
@@ -83,7 +89,7 @@ void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string
   client.initialize(type, url, generatedService);
 }
 
-const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig) {
+const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string data) {
   if (url.empty()) {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }
@@ -104,15 +110,19 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   if (direction == Direction::TRANSMIT) {
     input = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
     callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback());
-    input->write(outputConfig);
+    input->write(data);
     callback->ptr = input.get();
     callback->pos = 0;
     client.set_request_method("POST");
     if (!ssl_context_service_ && url.find("https://") == 0) {
       setSecurityContext(client, "POST", url);
     }
-    client.setUploadCallback(callback.get());
-    client.setPostSize(outputConfig.size());
+    if (payload.getOperation() == Operation::TRANSFER) {
+      client.addFormPart("application/octet-stream", "file", callback.get(), "debug.gz");
+    } else {
+      client.setUploadCallback(callback.get());
+      client.setPostSize(data.size());
+    }
   } else {
     // we do not need to set the upload callback
     // since we are not uploading anything on a get

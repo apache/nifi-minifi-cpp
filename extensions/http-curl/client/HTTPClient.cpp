@@ -53,6 +53,20 @@ HTTPClient::HTTPClient()
   http_session_ = curl_easy_init();
 }
 
+void HTTPClient::addFormPart(const std::string& content_type, const std::string& name, HTTPUploadCallback* read_callback, const std::optional<std::string>& filename) {
+  if (!form_) {
+    form_ = curl_mime_init(http_session_);
+  }
+  curl_mimepart* part = curl_mime_addpart(form_);
+  curl_mime_type(part, content_type.c_str());
+  if (filename) {
+    curl_mime_filename(part, filename->c_str());
+  }
+  curl_mime_name(part, name.c_str());
+  curl_mime_data_cb(part, read_callback->ptr->getBufferSize(),
+      &utils::HTTPRequestResponse::send_write, nullptr, nullptr, static_cast<void*>(read_callback));
+}
+
 HTTPClient::~HTTPClient() {
   if (nullptr != headers_) {
     curl_slist_free_all(headers_);
@@ -61,6 +75,10 @@ HTTPClient::~HTTPClient() {
   if (http_session_ != nullptr) {
     curl_easy_cleanup(http_session_);
     http_session_ = nullptr;
+  }
+  if (form_ != nullptr) {
+    curl_mime_free(form_);
+    form_ = nullptr;
   }
   // forceClose ended up not being the issue in MINIFICPP-667, but leaving here
   // out of good hygiene.
@@ -286,6 +304,9 @@ bool HTTPClient::submit() {
   } else {
     logger_->log_debug("Not using keep alive");
     curl_easy_setopt(http_session_, CURLOPT_TCP_KEEPALIVE, 0L);
+  }
+  if (form_ != nullptr) {
+    curl_easy_setopt(http_session_, CURLOPT_MIMEPOST, form_);
   }
   res = curl_easy_perform(http_session_);
   if (callback == nullptr) {

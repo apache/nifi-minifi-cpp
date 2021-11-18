@@ -39,8 +39,10 @@ LogCompressorSink::~LogCompressorSink() {
 }
 
 void LogCompressorSink::sink_it_(const spdlog::details::log_msg &msg) {
+  spdlog::memory_buf_t formatted;
+  base_sink<spdlog::details::null_mutex>::formatter_->format(msg, formatted);
   cached_logs_.modify([&] (LogBuffer& active) {
-    active.buffer_->write(reinterpret_cast<const uint8_t*>(msg.payload.data()), msg.payload.size());
+    active.buffer_->write(reinterpret_cast<const uint8_t*>(formatted.data()), formatted.size());
   });
 }
 

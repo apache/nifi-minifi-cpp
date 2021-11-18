@@ -189,6 +189,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   std::vector<BackTrace> getTraces() override;
 
+  std::shared_ptr<io::InputStream> getLogs() override;
+
  private:
   /**
    * Loads the flow as specified in the flow config file or if not present

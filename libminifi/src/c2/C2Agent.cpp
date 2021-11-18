@@ -410,6 +410,20 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         logger_->log_warn("Resume functionality is not supported!");
       }
       break;
+    case Operation::TRANSFER: {
+      std::string error;
+      if (!handle_transfer(resp, error)) {
+        logger_->log_error("%s", error);
+        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+        response.setRawData(error);
+        enqueue_c2_response(std::move(response));
+      } else {
+        logger_->log_error("HERERERKJKJFDKJSD");
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        enqueue_c2_response(std::move(response));
+      }
+      break;
+    }
     default:
       break;
       // do nothing
@@ -585,6 +599,38 @@ bool C2Agent::update_property(const std::string &property_name, const std::strin
     return true;
   }
   return configuration_->persistProperties();
+}
+
+bool C2Agent::handle_transfer(const C2ContentResponse &resp, std::string& error) {
+  if (resp.name != "debug") {
+    error = "Unknown operand '" + resp.name + "'";
+    return false;
+  }
+  auto target_it = resp.operation_arguments.find("target");
+  if (target_it == resp.operation_arguments.end()) {
+    error = "Missing argument for debug operation: 'target'";
+    return false;
+  }
+  auto logs = update_sink_->getLogs();
+  if (!logs) {
+    error = "No logs are available";
+    return false;
+  }
+  C2Payload payload(Operation::TRANSFER, true);
+  std::string data;
+  data.resize(logs->size());
+  size_t res = logs->read(reinterpret_cast<uint8_t*>(data.data()), data.size());
+  if (io::isError(res) || res != data.size()) {
+    error = "Failed to read log stream";
+    return false;
+  }
+  payload.setRawData(std::move(data));
+  C2Payload &&response = protocol_.load()->consumePayload(target_it->second.to_string(), payload, TRANSMIT, false);
+  if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
+    error = "Error while uploading";
+    return false;
+  }
+  return true;
 }
 
 void C2Agent::restart_agent() {

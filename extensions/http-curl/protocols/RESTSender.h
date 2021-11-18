@@ -52,7 +52,7 @@ class RESTSender : public RESTProtocol, public C2Protocol {
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
 
  protected:
-  virtual const C2Payload sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string outputConfig);
+  virtual const C2Payload sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string data);
 
   /**
    * Initializes the SSLContextService onto the HTTP client if one is needed

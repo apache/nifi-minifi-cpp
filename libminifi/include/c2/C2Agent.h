@@ -153,6 +153,8 @@ class C2Agent : public state::UpdateController {
    */
   bool update_property(const std::string &property_name, const std::string &property_value,  bool persist);
 
+  bool handle_transfer(const C2ContentResponse &resp, std::string& error);
+
   /**
    * Creates configuration options C2 payload for response
    */

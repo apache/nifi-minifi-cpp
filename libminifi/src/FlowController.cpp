@@ -506,6 +506,10 @@ std::vector<BackTrace> FlowController::getTraces() {
   return traces;
 }
 
+std::shared_ptr<io::InputStream> FlowController::getLogs() {
+  return core::logging::LoggerConfiguration::getCompressedLog(true);
+}
+
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
