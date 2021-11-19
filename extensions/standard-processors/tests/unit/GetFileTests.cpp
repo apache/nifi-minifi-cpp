@@ -21,7 +21,6 @@
 #include <fstream>
 
 #include "TestBase.h"
-#include "TestUtils.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "utils/file/FileUtils.h"
@@ -37,53 +36,54 @@ namespace {
 class GetFileTestController {
  public:
   GetFileTestController();
+  std::string getFullPath(const std::string filename) const;
+  std::string getInputFilePath() const;
   void setProperty(const core::Property& property, const std::string& value);
   void runSession();
 
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan_;
-  std::shared_ptr<core::Processor> get_file_processor_;
+  std::string temp_dir_;
   std::string input_file_name_;
+  std::string large_input_file_name_;
+  std::string hidden_input_file_name_;
+  std::shared_ptr<core::Processor> get_file_processor_;
 };
 
-GetFileTestController::GetFileTestController() {
+GetFileTestController::GetFileTestController()
+  : test_plan_(test_controller_.createPlan()),
+    temp_dir_(test_controller_.createTempDirectory()),
+    input_file_name_("test.txt"),
+    large_input_file_name_("large_file.txt"),
+    hidden_input_file_name_(".test.txt") {
   LogTestController::getInstance().setTrace<TestPlan>();
   LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
   LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
 
-  test_plan_ = test_controller_.createPlan();
-  auto repo = std::make_shared<TestRepository>();
-
-  auto temp_dir = test_controller_.createTempDirectory();
-  REQUIRE(!temp_dir.empty());
-
-  // Define test input file
-  input_file_name_ = temp_dir + utils::file::FileUtils::get_separator() + "test.txt";
-  std::string large_input_file_name = temp_dir + utils::file::FileUtils::get_separator() + "large_test_file.txt";
-  std::string hidden_input_file_name = temp_dir + utils::file::FileUtils::get_separator() + ".test.txt";
+  REQUIRE(!temp_dir_.empty());
 
   // Build MiNiFi processing graph
   get_file_processor_ = test_plan_->addProcessor("GetFile", "Get");
-  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir);
+  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir_);
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
-  // Write test input.
-  std::ofstream in_file_stream(input_file_name_);
-  in_file_stream << "The quick brown fox jumps over the lazy dog" << std::endl;
-  in_file_stream.close();
+  utils::putFileToDir(temp_dir_, input_file_name_, "The quick brown fox jumps over the lazy dog\n");
+  utils::putFileToDir(temp_dir_, large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
+  utils::putFileToDir(temp_dir_, hidden_input_file_name_, "But noone has ever seen it\n");
 
-  in_file_stream.open(large_input_file_name);
-  in_file_stream << "The quick brown fox jumps over the lazy dog who is 2 legit to quit" << std::endl;
-  in_file_stream.close();
-
-  std::ofstream hidden_in_file_stream(hidden_input_file_name);
-  hidden_in_file_stream << "But noone has ever seen it" << std::endl;
-  hidden_in_file_stream.close();
 #ifdef WIN32
-  const auto hide_file_err = utils::file::FileUtils::hide_file(hidden_input_file_name.c_str());
+  const auto hide_file_err = utils::file::FileUtils::hide_file(getFullPath(hidden_input_file_name_).c_str());
   REQUIRE(!hide_file_err);
 #endif
+}
+
+std::string GetFileTestController::getFullPath(const std::string filename) const {
+  return temp_dir_ + utils::file::FileUtils::get_separator() + filename;
+}
+
+std::string GetFileTestController::getInputFilePath() const {
+  return getFullPath(input_file_name_);
 }
 
 void GetFileTestController::setProperty(const core::Property& property, const std::string& value) {
@@ -105,23 +105,25 @@ TEST_CASE("GetFile ignores hidden files and files larger than MaxSize", "[GetFil
   test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));  // The hidden and the too big files should be ignored
-  // Check log output on windows std::endl; will produce \r\n can write manually but might as well just
-  // account for the size difference here
   REQUIRE(LogTestController::getInstance().contains("key:flow.id"));
-#ifdef WIN32
-  REQUIRE(LogTestController::getInstance().contains("Size:45 Offset:0"));
-#else
   REQUIRE(LogTestController::getInstance().contains("Size:44 Offset:0"));
-#endif
+}
+
+TEST_CASE("GetFile ignores files smaller than MinSize", "[GetFile]") {
+  GetFileTestController test_controller;
+  test_controller.setProperty(minifi::processors::GetFile::MinSize, "50 B");
+
+  test_controller.runSession();
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("key:flow.id"));
+  REQUIRE(LogTestController::getInstance().contains("Size:67 Offset:0"));
 }
 
 TEST_CASE("GetFile onSchedule() throws if the required Directory property is not set", "[GetFile]") {
-  TestController test_controller;
-  LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
-  auto plan = test_controller.createPlan();
-  auto get_file = plan->addProcessor("GetFile", "Get");
-  REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception);
+  GetFileTestController test_controller;
+  test_controller.setProperty(minifi::processors::GetFile::Directory, "");
+  REQUIRE_THROWS_AS(test_controller.test_plan_->runNextProcessor(), minifi::Exception);
 }
 
 TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
@@ -131,7 +133,7 @@ TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
 
   test_controller.runSession();
 
-  REQUIRE_FALSE(utils::file::FileUtils::exists(test_controller.input_file_name_));
+  REQUIRE_FALSE(utils::file::FileUtils::exists(test_controller.getInputFilePath()));
 }
 
 TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
@@ -140,37 +142,103 @@ TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
 
   test_controller.runSession();
 
-  REQUIRE(utils::file::FileUtils::exists(test_controller.input_file_name_));
+  REQUIRE(utils::file::FileUtils::exists(test_controller.getInputFilePath()));
 }
 
-TEST_CASE("GetFileHiddenPropertyCheck", "[getFileProperty]") {
-  TestController testController;
-  LogTestController::getInstance().setTrace<TestPlan>();
-  LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
-  LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
-  auto plan = testController.createPlan();
+TEST_CASE("Hidden files are read when IgnoreHiddenFile property is false", "[getFileProperty]") {
+  GetFileTestController test_controller;
+  test_controller.setProperty(minifi::processors::GetFile::IgnoreHiddenFile, "false");
 
-  auto temp_path = testController.createTempDirectory();
-  std::string in_file(temp_path + utils::file::FileUtils::get_separator() + "testfifo");
-  std::string hidden_in_file(temp_path + utils::file::FileUtils::get_separator() + ".testfifo");
+  test_controller.runSession();
 
-  auto get_file = plan->addProcessor("GetFile", "Get");
-  plan->setProperty(get_file, minifi::processors::GetFile::IgnoreHiddenFile.getName(), "false");
+  REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
+}
 
-  plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), temp_path);
-  auto log_attr = plan->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
-  plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+TEST_CASE("Check if subdirectories are ignored or not if Recurse property is set", "[getFileProperty]") {
+  GetFileTestController test_controller;
 
-  std::ofstream in_file_stream(in_file);
-  in_file_stream << "This file is not hidden" << std::endl;
-  in_file_stream.close();
+  auto subdir_path = test_controller.getFullPath("subdir");
+  utils::file::FileUtils::create_dir(subdir_path);
+  utils::putFileToDir(subdir_path, "subfile.txt", "Some content in a subfile\n");
 
-  std::ofstream hidden_in_file_stream(hidden_in_file);
-  hidden_in_file_stream << "This file is hidden" << std::endl;
-  hidden_in_file_stream.close();
+  SECTION("File in subdirectory is ignored when Recurse property set to false")  {
+    test_controller.setProperty(minifi::processors::GetFile::Recurse, "false");
+    test_controller.runSession();
 
-  plan->runNextProcessor();
-  plan->runNextProcessor();
+    REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+  }
+
+  SECTION("File in subdirectory is logged when Recurse property set to true")  {
+    test_controller.setProperty(minifi::processors::GetFile::Recurse, "true");
+    test_controller.runSession();
+
+    REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
+  }
+}
+
+TEST_CASE("Only older files are read when MinAge property is set", "[getFileProperty]") {
+  GetFileTestController test_controller;
+  test_controller.setProperty(minifi::processors::GetFile::MinAge, "1 hour");
+
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), 936860949);
+
+  test_controller.runSession();
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Size:44 Offset:0"));
+}
+
+TEST_CASE("Only newer files are read when MaxAge property is set", "[getFileProperty]") {
+  GetFileTestController test_controller;
+  test_controller.setProperty(minifi::processors::GetFile::MaxAge, "1 hour");
+
+  // Set last write time to year 1999
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), 936860949);
+
+  test_controller.runSession();
+
+  REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("Size:67 Offset:0"));
+}
+
+TEST_CASE("Test BatchSize property for the maximum number of files read at once", "[getFileProperty]") {
+  GetFileTestController test_controller;
+
+  SECTION("BatchSize is set to 1 so only 1 file should be logged")  {
+    test_controller.setProperty(minifi::processors::GetFile::BatchSize, "1");
+    test_controller.runSession();
+    REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  }
+
+  SECTION("BatchSize is set to 5 so all 2 non-hidden files should be logged")  {
+    test_controller.setProperty(minifi::processors::GetFile::BatchSize, "5");
+    test_controller.runSession();
+    REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+  }
+}
+
+TEST_CASE("Test file filtering of GetFile", "[getFileProperty]") {
+  GetFileTestController test_controller;
+  test_controller.setProperty(minifi::processors::GetFile::FileFilter, ".?test\\.txt$");
+  test_controller.setProperty(minifi::processors::GetFile::IgnoreHiddenFile, "false");
+
+  test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+}
+
+TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple times between intervals", "[getFileProperty]") {
+  GetFileTestController test_controller;
+  test_controller.setProperty(minifi::processors::GetFile::PollInterval, "100 ms");
+  test_controller.setProperty(minifi::processors::GetFile::KeepSourceFile, "true");
+
+  test_controller.runSession();
+  auto start_time = utils::timeutils::getTimeMillis();
+  while (LogTestController::getInstance().countOccurrences("Logged 2 flow files") < 2) {
+    test_controller.test_plan_->reset();
+    test_controller.runSession();
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
+
+  REQUIRE(utils::timeutils::getTimeMillis() - start_time >= 100);
 }
