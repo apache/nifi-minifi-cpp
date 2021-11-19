@@ -90,6 +90,16 @@ void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string
   client.initialize(type, url, generatedService);
 }
 
+static std::string getFileMimeType(const std::string& filename) {
+  if (utils::StringUtils::endsWith(filename, ".gz")) {
+    return "application/gzip";
+  }
+  if (utils::StringUtils::endsWith(filename, ".txt")) {
+    return "text/plain";
+  }
+  return "application/octet-stream";
+}
+
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string data) {
   if (url.empty()) {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
@@ -119,7 +129,12 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
       setSecurityContext(client, "POST", url);
     }
     if (payload.getOperation() == Operation::TRANSFER) {
-      client.addFormPart("application/octet-stream", "file", callback.get(), "debug.gz");
+      // POST content as file
+      std::string filename = payload.getLabel();
+      if (filename.empty()) {
+        throw std::logic_error("Missing filename");
+      }
+      client.addFormPart(getFileMimeType(filename), "file", callback.get(), filename);
     } else {
       client.setUploadCallback(callback.get());
       client.setPostSize(data.size());

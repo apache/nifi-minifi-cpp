@@ -166,6 +166,10 @@ class C2Agent : public state::UpdateController {
 
   bool handleConfigurationUpdate(const C2ContentResponse &resp);
 
+  std::optional<std::string> resolveFlowUrl(const std::string& url) const;
+
+  std::optional<std::string> resolveUrl(const std::string& url) const;
+
  protected:
   std::timed_mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> metrics_map_;

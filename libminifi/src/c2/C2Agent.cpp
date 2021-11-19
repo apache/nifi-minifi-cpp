@@ -611,12 +611,18 @@ bool C2Agent::handle_transfer(const C2ContentResponse &resp, std::string& error)
     error = "Missing argument for debug operation: 'target'";
     return false;
   }
+  std::optional<std::string> url = resolveUrl(target_it->second.to_string());
+  if (!url) {
+    error = "Invalid url";
+    return false;
+  }
   auto logs = update_sink_->getLogs();
   if (!logs) {
     error = "No logs are available";
     return false;
   }
   C2Payload payload(Operation::TRANSFER, true);
+  payload.setLabel("debug.gz");
   std::string data;
   data.resize(logs->size());
   size_t res = logs->read(reinterpret_cast<uint8_t*>(data.data()), data.size());
@@ -625,7 +631,7 @@ bool C2Agent::handle_transfer(const C2ContentResponse &resp, std::string& error)
     return false;
   }
   payload.setRawData(std::move(data));
-  C2Payload &&response = protocol_.load()->consumePayload(target_it->second.to_string(), payload, TRANSMIT, false);
+  C2Payload &&response = protocol_.load()->consumePayload(url.value(), payload, TRANSMIT, false);
   if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
     error = "Error while uploading";
     return false;
@@ -701,6 +707,46 @@ utils::TaskRescheduleInfo C2Agent::consume() {
   return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
 }
 
+std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const {
+  if (utils::StringUtils::startsWith(url, "http")) {
+    return url;
+  }
+  std::string base;
+  if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+    base = utils::StringUtils::trim(base);
+    if (!utils::StringUtils::endsWith(base, "/")) {
+      base += "/";
+    }
+    base += url;
+    return base;
+  } else if (configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
+    utils::URL base_url{utils::StringUtils::trim(base)};
+    if (base_url.isValid()) {
+      return base_url.hostPort() + "/c2/api/" + url;
+    }
+    logger_->log_error("Could not parse C2 REST URL '%s'", base);
+    return std::nullopt;
+  }
+  return url;
+}
+
+std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
+  if (!utils::StringUtils::startsWith(url, "/")) {
+    return url;
+  }
+  std::string base;
+  if (!configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
+    logger_->log_error("Missing C2 REST URL");
+    return std::nullopt;
+  }
+  utils::URL base_url{utils::StringUtils::trim(base)};
+  if (base_url.isValid()) {
+    return base_url.hostPort() + url;
+  }
+  logger_->log_error("Could not parse C2 REST URL '%s'", base);
+  return std::nullopt;
+}
+
 std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   if (!utils::StringUtils::startsWith(uri, "http") || protocol_.load() == nullptr) {
     // try to open the file
@@ -714,30 +760,13 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
     return {};
   }
 
-  std::string resolved_url = uri;
-  if (!utils::StringUtils::startsWith(uri, "http")) {
-    std::stringstream adjusted_url;
-    std::string base;
-    if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
-      base = utils::StringUtils::trim(base);
-      adjusted_url << base;
-      if (!utils::StringUtils::endsWith(base, "/")) {
-        adjusted_url << "/";
-      }
-      adjusted_url << uri;
-      resolved_url = adjusted_url.str();
-    } else if (configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
-      utils::URL base_url{utils::StringUtils::trim(base)};
-      if (!base_url.isValid()) {
-        logger_->log_error("Could not parse C2 REST URL '%s'", base);
-        return std::nullopt;
-      }
-      resolved_url = base_url.hostPort() + "/c2/api/" + uri;
-    }
+  std::optional<std::string> resolved_url = resolveFlowUrl(uri);
+  if (!resolved_url) {
+    return std::nullopt;
   }
 
   C2Payload payload(Operation::TRANSFER, true);
-  C2Payload &&response = protocol_.load()->consumePayload(resolved_url, payload, RECEIVE, false);
+  C2Payload &&response = protocol_.load()->consumePayload(resolved_url.value(), payload, RECEIVE, false);
 
   auto raw_data = response.getRawData();
   return std::string(raw_data.data(), raw_data.size());
