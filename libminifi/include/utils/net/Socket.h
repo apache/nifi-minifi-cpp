@@ -81,10 +81,6 @@ class UniqueSocketHandle {
   explicit operator bool() const noexcept { return owner_sockfd_ != InvalidSocket; }
   bool operator==(UniqueSocketHandle other) const noexcept { return owner_sockfd_ == other.owner_sockfd_; }
 
-#if __cpp_impl_three_way_comparison >= 201907L
-  std::strong_ordering operator<=>(UniqueSocketHandle other) const noexcept { return owner_sockfd_ <=> other.owner_sockfd_; }
-#endif
-
  private:
   SocketDescriptor owner_sockfd_;
 };
