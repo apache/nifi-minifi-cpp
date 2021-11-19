@@ -21,8 +21,6 @@
 #include <random>
 #include <string>
 #include <unordered_map>
-#include "range/v3/view/transform.hpp"
-#include "range/v3/range/conversion.hpp"
 #include "TestBase.h"
 #include "PutUDP.h"
 #include "utils/net/DNS.h"
@@ -40,21 +38,22 @@ class SingleInputTestController : public TestController {
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>
       trigger(const std::string& input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
-    const auto flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
-    input_->put(flow_file);
+    const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
+    input_->put(new_flow_file);
     plan->runProcessor(processor_);
-    return outgoing_connections_ | ranges::views::transform([](const auto& kv) -> std::pair<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> {
-      const std::shared_ptr<Connection>& connection = kv.second;
+    std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
+    for (const auto& [relationship, connection]: outgoing_connections_) {
       std::set<std::shared_ptr<core::FlowFile>> expired_flow_files;
-      std::vector<std::shared_ptr<core::FlowFile>> result;
+      std::vector<std::shared_ptr<core::FlowFile>> output_flow_files;
       while (connection->isWorkAvailable()) {
-        auto flow_file = connection->poll(expired_flow_files);
+        auto output_flow_file = connection->poll(expired_flow_files);
         CHECK(expired_flow_files.empty());
-        if (!flow_file) continue;
-        result.push_back(flow_file);
+        if (!output_flow_file) continue;
+        output_flow_files.push_back(std::move(output_flow_file));
       }
-      return std::make_pair(kv.first, result);
-    }) | ranges::to<std::unordered_map>();
+      result.insert_or_assign(relationship, std::move(output_flow_files));
+    }
+    return result;
   }
 
  private:
