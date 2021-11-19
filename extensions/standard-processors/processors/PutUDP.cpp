@@ -113,7 +113,12 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
     return;
   }
 
-  const auto send_result = ::sendto(socket_handle.get(), data.buffer.data(), data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
+#ifdef WIN32
+  const char* const buffer_ptr = reinterpret_cast<const char*>(data.buffer.data());
+#else
+  const void* const buffer_ptr = data.buffer.data();
+#endif
+  const auto send_result = ::sendto(socket_handle.get(), buffer_ptr, data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
   if (send_result == utils::net::SocketError) {
     throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("sendto: ", utils::net::get_last_socket_error_message())};
   }
