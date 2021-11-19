@@ -27,6 +27,8 @@
 #include <unistd.h>
 #endif /* WIN32 */
 #include <string>
+#include <optional>
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils::net {
 #ifdef WIN32
@@ -55,6 +57,50 @@ inline void close_socket(SocketDescriptor sockfd) {
   ::close(sockfd);
 #endif
 }
+
+class UniqueSocketHandle {
+ public:
+  explicit UniqueSocketHandle(SocketDescriptor owner_sockfd) noexcept
+      :owner_sockfd_(owner_sockfd)
+  {}
+
+  UniqueSocketHandle(const UniqueSocketHandle&) = delete;
+  UniqueSocketHandle(UniqueSocketHandle&& other) noexcept
+    :owner_sockfd_{std::exchange(other.owner_sockfd_, InvalidSocket)}
+  {}
+  UniqueSocketHandle& operator=(const UniqueSocketHandle&) = delete;
+  UniqueSocketHandle& operator=(UniqueSocketHandle&& other) noexcept {
+    if (&other == this) return *this;
+    if (owner_sockfd_ != InvalidSocket) close_socket(owner_sockfd_);
+    owner_sockfd_ = std::exchange(other.owner_sockfd_, InvalidSocket);
+    return *this;
+  }
+
+  [[nodiscard]] SocketDescriptor get() const noexcept { return owner_sockfd_; }
+  [[nodiscard]] SocketDescriptor release() noexcept { return std::exchange(owner_sockfd_, InvalidSocket); }
+  explicit operator bool() const noexcept { return owner_sockfd_ != InvalidSocket; }
+  bool operator==(UniqueSocketHandle other) const noexcept { return owner_sockfd_ == other.owner_sockfd_; }
+
+#if __cpp_impl_three_way_comparison >= 201907L
+  std::strong_ordering operator<=>(UniqueSocketHandle other) const noexcept { return owner_sockfd_ <=> other.owner_sockfd_; }
+#endif
+
+ private:
+  SocketDescriptor owner_sockfd_;
+};
+
+struct OpenSocketResult {
+  UniqueSocketHandle socket_;
+  gsl::not_null<const addrinfo*> selected_name;
+};
+
+/**
+ * Iterate through getaddrinfo_result and try to call socket() until it succeeds
+ * @param getaddrinfo_result
+ * @return The file descriptor and the selected list element on success, or nullopt on error. Use get_last_socket_error_message() to get the error message.
+ */
+std::optional<OpenSocketResult> open_socket(const addrinfo* getaddrinfo_result);
+
 
 std::string sockaddr_ntop(const sockaddr* sa);
 

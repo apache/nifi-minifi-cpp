@@ -123,6 +123,22 @@ auto operator|(std::optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexc
     return std::invoke(std::forward<F>(f.function));
   }
 }
+
+template<typename T>
+struct or_else_get_wrapper {
+  T function;
+};
+
+// orElseGet implementation
+template<typename SourceType, typename F>
+auto operator|(std::optional<SourceType> o, or_else_get_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function))))
+    -> std::common_type_t<SourceType, std::decay_t<decltype(std::invoke(std::forward<F>(f.function)))>> {
+  if (o) {
+    return *std::move(o);
+  } else {
+    return std::invoke(std::forward<F>(f.function));
+  }
+}
 }  // namespace detail
 
 template<typename T>
@@ -133,6 +149,9 @@ detail::flat_map_wrapper<T&&> flatMap(T&& func) noexcept { return {std::forward<
 
 template<typename T>
 detail::or_else_wrapper<T&&> orElse(T&& func) noexcept { return {std::forward<T>(func)}; }
+
+template<typename T>
+detail::or_else_get_wrapper<T&&> orElseGet(T&& func) noexcept { return {std::forward<T>(func)}; }
 
 }  // namespace utils
 }  // namespace minifi

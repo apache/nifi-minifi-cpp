@@ -38,6 +38,14 @@ std::string get_last_socket_error_message() {
   return std::system_category().message(error_code);
 }
 
+std::optional<OpenSocketResult> open_socket(const addrinfo* const getaddrinfo_result) {
+  for (const addrinfo* it = getaddrinfo_result; it; it = it->ai_next) {
+    const auto fd = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
+    if (fd != utils::net::InvalidSocket) return OpenSocketResult{UniqueSocketHandle{fd}, gsl::make_not_null(it)};
+  }
+  return std::nullopt;
+}
+
 std::string sockaddr_ntop(const sockaddr* const sa) {
   std::string result;
   if (sa->sa_family == AF_INET) {

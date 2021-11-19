@@ -25,6 +25,7 @@
 #include <netdb.h>
 #endif /* WIN32 */
 #include <tuple>
+#include <utility>
 
 #include "range/v3/view/join.hpp"
 #include "range/v3/range/conversion.hpp"
@@ -50,8 +51,8 @@ const core::Property PutUDP::Port = core::PropertyBuilder::createProperty("Port"
     ->isRequired(true)
     ->build();
 
-const core::Relationship PutUDP::Success{"success", "FlowFiles that are sent successfully to the destination are sent out this relationship."};
-const core::Relationship PutUDP::Failure{"failure", "FlowFiles that failed to send to the destination are sent out this relationship."};
+const core::Relationship PutUDP::Success{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
+const core::Relationship PutUDP::Failure{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
 
 PutUDP::PutUDP(const std::string& name, const utils::Identifier& uuid)
   :Processor(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger()}
@@ -98,20 +99,12 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
         hostname_,
         names_vector | ranges::views::join(',') | ranges::to<std::string>());
   }
-  const auto [ sockfd, selected_name ] = [&names]() -> std::tuple<utils::net::SocketDescriptor, addrinfo*> {
-    for (addrinfo* it = names.get(); it; it = it->ai_next) {
-      const auto fd = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
-      if (fd != utils::net::InvalidSocket) return std::make_tuple(fd, it);
-    }
-    return std::make_tuple(utils::net::InvalidSocket, nullptr);
-  }();
-  if (sockfd == utils::net::InvalidSocket) {
+
+  auto open_socket_result = utils::net::open_socket(names.get());
+  if (!open_socket_result) {
     throw Exception{ExceptionType::PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("socket: ", utils::net::get_last_socket_error_message())};
   }
-  const auto closer = gsl::finally([sockfd = sockfd] {
-    utils::net::close_socket(sockfd);
-  });
-
+  const auto [socket_handle, selected_name] = *std::move(open_socket_result);
   logger_->log_debug("connected to %s", utils::net::sockaddr_ntop(selected_name->ai_addr));
 
   const auto data = session->readBuffer(flow_file);
@@ -120,20 +113,17 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
     return;
   }
 
-  const auto send_result = ::sendto(sockfd, data.buffer.data(), data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
+  const auto send_result = ::sendto(socket_handle.get(), data.buffer.data(), data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
   if (send_result == utils::net::SocketError) {
     throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("sendto: ", utils::net::get_last_socket_error_message())};
   }
-
   logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));  // NOLINT: sendto
 
   session->transfer(flow_file, Success);
 }
 
 REGISTER_RESOURCE(PutUDP, "The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet which is then transmitted to the configured UDP server. "
-                          "The user must ensure that the FlowFile content being fed to this processor is not larger than the maximum size for the underlying UDP transport. "
-                          "The maximum transport size will vary based on the platform setup but is generally just under 64KB. "
-                          "FlowFiles will be marked as failed if their content is larger than the maximum transport size.");
+                          "The processor doesn't guarantee a successful transfer, even if the flow file is routed to the success relationship.");
 
 }  // namespace org::apache::nifi::minifi::processors
 

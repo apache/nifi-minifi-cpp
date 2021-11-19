@@ -50,6 +50,7 @@
 - [PutS3Object](#puts3object)
 - [PutSFTP](#putsftp)
 - [PutSQL](#putsql)
+- [PutUDP](#putudp)
 - [QueryDatabaseTable](#querydatabasetable)
 - [ReplaceText](#replacetext)
 - [RetryFlowFile](#retryflowfile)
@@ -1492,6 +1493,28 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|After a successful SQL update operation, the incoming FlowFile sent here|
+
+## PutUDP
+
+### Description
+
+The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet which is then transmitted to the configured UDP server.
+The processor doesn't guarantee a successful transfer, even if the flow file is routed to the success relationship.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+|   Name   | Default Value | Allowable Values |                   Description                   |
+| -------- | ------------- | ---------------- | ----------------------------------------------- |
+| **Host** | localhost     |                  | The ip address or hostname of the destination.  |
+| **Port** |               |                  | The port on the destination.                    |
+
+### Relationships
+
+|  Name   |                                 Description                                 |
+| ------- | --------------------------------------------------------------------------- |
+| success | FlowFiles that are sent to the destination are sent out this relationship.  |
+| failure | FlowFiles that encountered IO errors are send out this relationship.        |
 
 ## QueryDatabaseTable
 
