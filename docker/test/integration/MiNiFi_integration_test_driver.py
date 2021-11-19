@@ -22,6 +22,7 @@ from minifi.core.utils import decode_escaped_str
 
 from minifi.validators.SingleFileContentHashValidator import SingleFileContentHashValidator
 
+
 class MiNiFi_integration_test():
     def __init__(self, image_store):
         self.test_id = str(uuid.uuid4())

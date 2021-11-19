@@ -4,6 +4,7 @@ import shutil
 
 from .HashUtils import md5
 
+
 class DockerTestDirectoryBindings:
     def __init__(self):
         self.data_directories = {}
@@ -118,6 +119,7 @@ class DockerTestDirectoryBindings:
                 else:
                     file.write(os.urandom(bytes_to_write))
                     bytes_to_write = 0
+        os.chmod(file_abs_path, 0o0777)
         return md5(file_abs_path)
 
     def get_out_subdir(self, test_id, dir):

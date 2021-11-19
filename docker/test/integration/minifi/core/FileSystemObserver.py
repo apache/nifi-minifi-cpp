@@ -1,9 +1,8 @@
 import logging
 import time
+
 from threading import Event
-
 from watchdog.observers import Observer
-
 from .OutputEventHandler import OutputEventHandler
 
 
