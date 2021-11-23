@@ -45,7 +45,7 @@ Feature: File system operations are handled by the GetFile and PutFile processor
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PutFile
     When the MiNiFi instance starts up
-    Then a flowfile with matching content is placed in the monitored directory in less than 20 seconds
+    Then a flowfile with matching content is placed in the monitored directory in less than 60 seconds
 
   Examples: File size
     | file size |
