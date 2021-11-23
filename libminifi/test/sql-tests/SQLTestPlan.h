@@ -101,6 +101,6 @@ class SQLTestPlan {
  private:
   std::shared_ptr<TestPlan> plan_;
   std::shared_ptr<core::Processor> processor_;
-  std::shared_ptr<minifi::Connection> input_;
-  std::map<core::Relationship, std::shared_ptr<minifi::Connection>> outputs_;
+  minifi::Connection* input_;
+  std::map<core::Relationship, minifi::Connection*> outputs_;
 };

@@ -55,7 +55,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     }
     YAML::Node connection_node = YAML::Load(serialized_yaml);
     YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-    yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(connection);
+    yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(*connection);
     const std::set<core::Relationship>& relationships = connection->getRelationships();
     REQUIRE(expectations == relationships);
   }
@@ -71,8 +71,8 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     const utils::Identifier expected_source_id = utils::generateUUID();
     const utils::Identifier expected_destination_id = utils::generateUUID();
     std::string serialized_yaml;
-    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<minifi::processors::TailFile>("TailFile_1", expected_source_id)));
-    parent.addProcessor(std::static_pointer_cast<core::Processor>(std::make_shared<minifi::processors::TailFile>("TailFile_2", expected_destination_id)));
+    parent.addProcessor(std::make_unique<minifi::processors::TailFile>("TailFile_1", expected_source_id));
+    parent.addProcessor(std::make_unique<minifi::processors::TailFile>("TailFile_2", expected_destination_id));
     SECTION("Directly from configuration") {
       serialized_yaml = std::string {
           "source id: " + expected_source_id.to_string() + "\n"
@@ -118,7 +118,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     SECTION("With empty configuration") {
       YAML::Node connection_node = YAML::Load(std::string(""));
       YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-      CHECK_THROWS(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(connection));
+      CHECK_THROWS(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(*connection));
       CHECK_NOTHROW(yaml_connection_parser.getWorkQueueSizeFromYaml());
       CHECK_NOTHROW(yaml_connection_parser.getWorkQueueDataSizeFromYaml());
       CHECK_THROWS(yaml_connection_parser.getSourceUUIDFromYaml());
@@ -134,14 +134,14 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
             "destination name: \n" });
         YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
         // This seems incorrect, but we do not want to ruin backward compatibility
-        CHECK_NOTHROW(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(connection));
+        CHECK_NOTHROW(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(*connection));
       }
       SECTION("List of relationship names contains empty item") {
         YAML::Node connection_node = YAML::Load(std::string {
             "source relationship names:\n"
             "- \n" });
         YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-        CHECK_NOTHROW(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(connection));
+        CHECK_NOTHROW(yaml_connection_parser.configureConnectionSourceRelationshipsFromYaml(*connection));
       }
       SECTION("Source and destination lookup from via id") {
         YAML::Node connection_node = YAML::Load(std::string {

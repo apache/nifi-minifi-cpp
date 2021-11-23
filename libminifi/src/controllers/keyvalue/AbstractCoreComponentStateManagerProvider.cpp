@@ -71,9 +71,9 @@ namespace minifi {
 namespace controllers {
 
 AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::AbstractCoreComponentStateManager(
-    std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider,
+    AbstractCoreComponentStateManagerProvider* provider,
     const utils::Identifier& id)
-    : provider_(std::move(provider))
+    : provider_(provider)
     , id_(id)
     , state_valid_(false)
     , transaction_in_progress_(false)
@@ -83,10 +83,6 @@ AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::Ab
     state_ = deserialize(serialized);
     state_valid_ = true;
   }
-}
-
-AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::~AbstractCoreComponentStateManager() {
-  provider_->removeFromCache(id_);
 }
 
 bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManager::set(const core::CoreComponentState& kvs) {
@@ -200,28 +196,9 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
   return true;
 }
 
-std::shared_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const utils::Identifier& uuid) {
+std::unique_ptr<core::CoreComponentStateManager> AbstractCoreComponentStateManagerProvider::getCoreComponentStateManager(const utils::Identifier& uuid) {
   std::lock_guard<std::mutex> guard(mutex_);
-
-  const auto iter = state_manager_cache_.find(uuid);
-  if (iter == state_manager_cache_.end()) {
-    auto stateManager = std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
-    state_manager_cache_.emplace(uuid, stateManager);
-    return stateManager;
-  }
-
-  auto cachedStateManager = iter->second.lock();
-  if (!cachedStateManager) {
-    auto stateManager = std::make_shared<AbstractCoreComponentStateManager>(shared_from_this(), uuid);
-    iter->second = stateManager;
-    return stateManager;
-  }
-  return cachedStateManager;
-}
-
-void AbstractCoreComponentStateManagerProvider::removeFromCache(const utils::Identifier id) {
-  std::lock_guard<std::mutex> guard(mutex_);
-  state_manager_cache_.erase(id);
+  return std::make_unique<AbstractCoreComponentStateManager>(this, uuid);
 }
 
 std::map<utils::Identifier, core::CoreComponentState> AbstractCoreComponentStateManagerProvider::getAllCoreComponentStates() {

@@ -114,12 +114,12 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return found;
   }
 
-  void setConnectionMap(std::map<std::string, std::shared_ptr<core::Connectable>> &connectionMap) {
-    this->connectionMap = connectionMap;
+  void setConnectionMap(std::map<std::string, core::Connectable*> connectionMap) {
+    connection_map_ = std::move(connectionMap);
   }
 
-  void setContainers(std::map<std::string, std::shared_ptr<core::Connectable>> &containers) {
-    this->containers = containers;
+  void setContainers(std::map<std::string, core::Connectable*> containers) {
+    containers_ = std::move(containers);
   }
 
   virtual bool Get(const std::string& /*key*/, std::string& /*value*/) {
@@ -141,7 +141,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   // Start the repository monitor thread
   virtual void start();
   // Stop the repository monitor thread
-  virtual void stop();
+  void stop();
   // whether the repo is full
   virtual bool isFull() {
     return repo_full_;
@@ -237,9 +237,9 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   Repository &operator=(const Repository &parent) = delete;
 
  protected:
-  std::map<std::string, std::shared_ptr<core::Connectable>> containers;
+  std::map<std::string, core::Connectable*> containers_;
 
-  std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
+  std::map<std::string, core::Connectable*> connection_map_;
   // Mutex for protection
   std::mutex mutex_;
   // repository directory

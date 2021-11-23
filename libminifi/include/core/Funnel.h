@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 
+#include "logging/LoggerConfiguration.h"
 #include "Processor.h"
 
 namespace org {

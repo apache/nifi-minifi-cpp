@@ -42,7 +42,7 @@ namespace controller {
 
 class StandardControllerServiceProvider : public ControllerServiceProvider, public std::enable_shared_from_this<StandardControllerServiceProvider> {
  public:
-  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration,
+  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, ProcessGroup* root_group, std::shared_ptr<Configure> configuration,
                                              std::shared_ptr<minifi::SchedulingAgent> agent, ClassLoader &loader = ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
         agent_(agent),
@@ -52,7 +52,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
         logger_(logging::LoggerFactory<StandardControllerServiceProvider>::getLogger()) {
   }
 
-  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, std::shared_ptr<ProcessGroup> root_group, std::shared_ptr<Configure> configuration, ClassLoader &loader =
+  explicit StandardControllerServiceProvider(std::shared_ptr<ControllerServiceMap> services, ProcessGroup* root_group, std::shared_ptr<Configure> configuration, ClassLoader &loader =
                                                  ClassLoader::getDefaultClassLoader())
       : ControllerServiceProvider(services),
         agent_(nullptr),
@@ -68,7 +68,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
   StandardControllerServiceProvider& operator=(const StandardControllerServiceProvider &other) = delete;
   StandardControllerServiceProvider& operator=(StandardControllerServiceProvider &&other) = delete;
 
-  void setRootGroup(std::shared_ptr<ProcessGroup> rg) {
+  void setRootGroup(ProcessGroup* rg) {
     root_group_ = rg;
   }
 
@@ -200,7 +200,7 @@ class StandardControllerServiceProvider : public ControllerServiceProvider, publ
 
   ClassLoader &extension_loader_;
 
-  std::shared_ptr<ProcessGroup> root_group_;
+  ProcessGroup* root_group_ = nullptr;
 
   std::shared_ptr<Configure> configuration_;
 

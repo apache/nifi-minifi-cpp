@@ -15,7 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "core/Funnel.h"
+#include "core/ProcessSession.h"
 
 namespace org {
 namespace apache {

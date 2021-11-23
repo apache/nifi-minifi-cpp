@@ -23,6 +23,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include "core/controller/ControllerService.h"
+#include "core/ClassLoader.h"
 #include "core/expect.h"
 #include "core/Property.h"
 #include "core/Relationship.h"
@@ -119,14 +121,14 @@ class ExternalBuildDescription {
 
 class BuildDescription {
  public:
-  static struct Components getClassDescriptions(const std::string group = "minifi-system") {
+  static struct Components getClassDescriptions(const std::string& group = "minifi-system") {
     static std::map<std::string, struct Components> class_mappings;
 #ifndef WIN32
     if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
 #else
       if (class_mappings[group].processors_.empty()) {
 #endif
-      for (auto clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
+      for (const auto& clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
         std::string class_name = clazz;
         auto lastOfIdx = clazz.find_last_of("::");
         if (lastOfIdx != std::string::npos) {
@@ -136,15 +138,17 @@ class BuildDescription {
         }
         auto obj = core::ClassLoader::getDefaultClassLoader().instantiate(class_name, class_name);
 
-        std::shared_ptr<core::ConfigurableComponent> component = std::dynamic_pointer_cast<core::ConfigurableComponent>(obj);
+        std::unique_ptr<core::ConfigurableComponent> component{
+          utils::dynamic_unique_cast<core::ConfigurableComponent>(std::move(obj))
+        };
 
         std::string classDescriptionName = clazz;
         utils::StringUtils::replaceAll(classDescriptionName, "::", ".");
         ClassDescription description(classDescriptionName);
-        if (nullptr != component) {
-          auto processor = std::dynamic_pointer_cast<core::Processor>(obj);
-          bool is_processor = processor != nullptr;
-          bool is_controller_service = LIKELY(is_processor == true) ? false : std::dynamic_pointer_cast<core::controller::ControllerService>(obj) != nullptr;
+        if (component) {
+          auto processor = dynamic_cast<core::Processor*>(component.get());
+          const bool is_processor = processor != nullptr;
+          const bool is_controller_service = LIKELY(is_processor == true) ? false : dynamic_cast<core::controller::ControllerService*>(component.get()) != nullptr;
 
           component->initialize();
           description.class_properties_ = component->getProperties();

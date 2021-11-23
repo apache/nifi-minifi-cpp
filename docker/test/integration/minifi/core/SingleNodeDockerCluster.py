@@ -20,6 +20,7 @@ import uuid
 
 from .Cluster import Cluster
 from .MinifiContainer import MinifiContainer
+from .TransientMinifiContainer import TransientMinifiContainer
 from .NifiContainer import NifiContainer
 from .ZookeeperContainer import ZookeeperContainer
 from .KafkaBrokerContainer import KafkaBrokerContainer
@@ -87,6 +88,8 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'kubernetes':
             return self.containers.setdefault(name, MinifiAsPodInKubernetesCluster(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+        elif engine == 'transient-minifi':
+            return self.containers.setdefault(name, TransientMinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'kafka-broker':
             if 'zookeeper' not in self.containers:
                 self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store, command))

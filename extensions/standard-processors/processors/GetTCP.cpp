@@ -31,11 +31,13 @@
 #include <string>
 
 #include "io/ClientSocket.h"
+#include "io/StreamFactory.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/ProcessSessionFactory.h"
 #include "core/Resource.h"
 
 namespace org {

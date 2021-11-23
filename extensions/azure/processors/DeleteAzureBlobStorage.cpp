@@ -20,6 +20,7 @@
 
 #include "DeleteAzureBlobStorage.h"
 
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 

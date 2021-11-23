@@ -137,7 +137,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   initialized_ = false;
   bool started = false;
   try {
-    load(this->root_, true);
+    load(std::move(root_), true);
     flow_update_ = true;
     started = start() == 0;
 
@@ -155,7 +155,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     }
   } catch (...) {
     this->root_ = std::move(prevRoot);
-    load(this->root_, true);
+    load(std::move(this->root_), true);
     flow_update_ = true;
     updating_ = false;
   }
@@ -170,7 +170,7 @@ int16_t FlowController::stop() {
     logger_->log_info("Stop Flow Controller");
     if (this->root_) {
       // stop source processors first
-      this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_, [] (const std::shared_ptr<core::Processor>& proc) -> bool {
+      this->root_->stopProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_, [] (const core::Processor* proc) -> bool {
         return !proc->hasIncomingConnections();
       });
       // we enable C2 to progressively increase the timeout
@@ -255,7 +255,7 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   // since we don't have access to the flow definition, the C2 communication
   // won't be able to use the services defined there, e.g. SSLContextService
   controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-  C2Client::initialize(this, this, shared_from_this());
+  C2Client::initialize(this, this, this);
   auto opt_source = fetchFlow(*opt_flow_url);
   if (!opt_source) {
     logger_->log_error("Couldn't fetch flow configuration from C2 server");
@@ -271,7 +271,7 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   return root;
 }
 
-void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool reload) {
+void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop();
@@ -283,10 +283,10 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
 
     if (root) {
       logger_->log_info("Load Flow Controller from provided root");
-      this->root_ = root;
+      this->root_ = std::move(root);
     } else {
       logger_->log_info("Instantiating new flow");
-      this->root_ = std::shared_ptr<core::ProcessGroup>(loadInitialFlow());
+      this->root_ = loadInitialFlow();
     }
 
     if (root_) {
@@ -296,12 +296,11 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
     controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-    auto base_shared_ptr = std::dynamic_pointer_cast<core::controller::ControllerServiceProvider>(shared_from_this());
 
     if (!thread_pool_.isRunning() || reload) {
       thread_pool_.shutdown();
       thread_pool_.setMaxConcurrentTasks(configuration_->getInt(Configure::nifi_flow_engine_threads, 2));
-      thread_pool_.setControllerServiceProvider(base_shared_ptr);
+      thread_pool_.setControllerServiceProvider(this);
       thread_pool_.start();
     }
 
@@ -309,7 +308,7 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
     conditionalReloadScheduler<EventDrivenSchedulingAgent>(event_scheduler_, !event_scheduler_ || reload);
     conditionalReloadScheduler<CronDrivenSchedulingAgent>(cron_scheduler_, !cron_scheduler_ || reload);
 
-    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_impl_)->setRootGroup(root_);
+    std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_impl_)->setRootGroup(root_.get());
     std::static_pointer_cast<core::controller::StandardControllerServiceProvider>(controller_service_provider_impl_)->setSchedulingAgent(
         std::static_pointer_cast<minifi::SchedulingAgent>(event_scheduler_));
 
@@ -337,8 +336,8 @@ void FlowController::load(const std::shared_ptr<core::ProcessGroup> &root, bool 
 void FlowController::loadFlowRepo() {
   if (this->flow_file_repo_ != nullptr) {
     logger_->log_debug("Getting connection map");
-    std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap;
-    std::map<std::string, std::shared_ptr<core::Connectable>> containers;
+    std::map<std::string, core::Connectable*> connectionMap;
+    std::map<std::string, core::Connectable*> containers;
     if (this->root_ != nullptr) {
       this->root_->getConnections(connectionMap);
       this->root_->getFlowFileContainers(containers);
@@ -370,7 +369,7 @@ int16_t FlowController::start() {
         // as the thread_pool_ is started in load()
         this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
       }
-      C2Client::initialize(this, this, shared_from_this());
+      C2Client::initialize(this, this, this);
       running_ = true;
       this->protocol_->start();
       this->provenance_repo_->start();
@@ -420,7 +419,7 @@ int16_t FlowController::applyUpdate(const std::string &source, const std::string
 int16_t FlowController::clearConnection(const std::string &connection) {
   if (root_ != nullptr) {
     logger_->log_info("Attempting to clear connection %s", connection);
-    std::map<std::string, std::shared_ptr<Connection>> connections;
+    std::map<std::string, Connection*> connections;
     root_->getConnections(connections);
     auto conn = connections.find(connection);
     if (conn != connections.end()) {
@@ -438,56 +437,42 @@ std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest(
   return agentInfo;
 }
 
-std::vector<std::shared_ptr<state::StateController>> FlowController::getAllComponents() {
-  std::vector<std::shared_ptr<state::StateController>> vec;
-  vec.push_back(shared_from_this());
-  std::vector<std::shared_ptr<core::Processor>> processors;
-  if (root_ != nullptr) {
-    root_->getAllProcessors(processors);
-    for (auto &processor : processors) {
-      switch (processor->getSchedulingStrategy()) {
-        case core::SchedulingStrategy::TIMER_DRIVEN:
-          vec.push_back(std::make_shared<state::ProcessorController>(processor, timer_scheduler_));
-          break;
-        case core::SchedulingStrategy::EVENT_DRIVEN:
-          vec.push_back(std::make_shared<state::ProcessorController>(processor, event_scheduler_));
-          break;
-        case core::SchedulingStrategy::CRON_DRIVEN:
-          vec.push_back(std::make_shared<state::ProcessorController>(processor, cron_scheduler_));
-          break;
-        default:
-          break;
-      }
-    }
+std::vector<state::StateController*> FlowController::getAllComponents() {
+  std::vector<state::StateController*> vec{this};
+  if (root_) {
+    auto controllerFactory = [this] (core::Processor& p) {
+      return createController(p);
+    };
+    getAllProcessorControllers(vec, controllerFactory);
   }
   return vec;
 }
-std::vector<std::shared_ptr<state::StateController>> FlowController::getComponents(const std::string &name) {
-  std::vector<std::shared_ptr<state::StateController>> vec;
+
+std::vector<state::StateController*> FlowController::getComponents(const std::string& name) {
+  std::vector<state::StateController*> vec;
 
   if (name == "FlowController") {
-    vec.push_back(shared_from_this());
+    vec.push_back(this);
   } else if (root_) {
-    // check processors
-    std::shared_ptr<core::Processor> processor = root_->findProcessorByName(name);
-    if (processor != nullptr) {
-      switch (processor->getSchedulingStrategy()) {
-        case core::SchedulingStrategy::TIMER_DRIVEN:
-          vec.push_back(std::make_shared<state::ProcessorController>(processor, timer_scheduler_));
-          break;
-        case core::SchedulingStrategy::EVENT_DRIVEN:
-          vec.push_back(std::make_shared<state::ProcessorController>(processor, event_scheduler_));
-          break;
-        case core::SchedulingStrategy::CRON_DRIVEN:
-          vec.push_back(std::make_shared<state::ProcessorController>(processor, cron_scheduler_));
-          break;
-        default:
-          break;
-      }
-    }
+    auto controllerFactory = [this] (core::Processor& p) {
+      return createController(p);
+    };
+    getProcessorController(name, vec, controllerFactory);
   }
 
   return vec;
+}
+
+std::unique_ptr<state::ProcessorController> FlowController::createController(core::Processor& processor) {
+  switch (processor.getSchedulingStrategy()) {
+    case core::SchedulingStrategy::TIMER_DRIVEN:
+      return std::make_unique<state::ProcessorController>(&processor, timer_scheduler_);
+    case core::SchedulingStrategy::EVENT_DRIVEN:
+      return std::make_unique<state::ProcessorController>(&processor, event_scheduler_);
+    case core::SchedulingStrategy::CRON_DRIVEN:
+      return std::make_unique<state::ProcessorController>(&processor, cron_scheduler_);
+  }
+  return {};
 }
 
 uint64_t FlowController::getUptime() {
@@ -518,6 +503,33 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
   debug_info["minifi.properties"] = std::make_unique<io::FileStream>(configuration_->getFilePath(), 0, false);
 
   return debug_info;
+}
+
+void FlowController::getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
+                                              const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  std::vector<core::Processor*> processorVec;
+  root_->getAllProcessors(processorVec);
+
+  for (const auto& processor : processorVec) {
+    // find controller for processor, if it doesn't exist, create one
+    auto& controller = processor_to_controller_[processor->getUUID()];
+    if (!controller) {
+      controller = controllerFactory(*processor);
+    }
+    controllerVec.push_back(controller.get());
+  }
+}
+
+void FlowController::getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
+                                          const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+  auto* processor = root_->findProcessorByName(name);
+  auto& controller = processor_to_controller_[processor->getUUID()];
+  if (!controller) {
+    controller = controllerFactory(*processor);
+  }
+  controllerVec.push_back(controller.get());
 }
 
 }  // namespace minifi

@@ -49,14 +49,14 @@ class ControllerSocketProtocol : public HeartbeatReporter {
    * @param updateSink update mechanism that will be used to stop/clear elements
    * @param configuration configuration class.
    */
-  virtual void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
-                          const std::shared_ptr<Configure> &configuration);
+  void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
+                          const std::shared_ptr<Configure> &configuration) override;
 
   /**
    * Handles the heartbeat
    * @param payload incoming payload. From this function we only care about queue metrics.
    */
-  virtual int16_t heartbeat(const C2Payload &payload);
+  int16_t heartbeat(const C2Payload &payload) override;
 
  protected:
   /**

@@ -27,6 +27,7 @@
 #include <atomic>
 #include <algorithm>
 #include <set>
+#include <utility>
 
 #include "Processor.h"
 #include "Funnel.h"
@@ -47,6 +48,12 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
+namespace state {
+class StateController;
+class ProcessorController;
+}  // namespace state
+
 namespace core {
 
 // Process Group Type
@@ -54,7 +61,6 @@ enum ProcessGroupType {
   ROOT_PROCESS_GROUP = 0,
   SIMPLE_PROCESS_GROUP,
   REMOTE_PROCESS_GROUP,
-  MAX_PROCESS_GROUP_TYPE
 };
 
 #define ONSCHEDULE_RETRY_INTERVAL 30000  // millisecs
@@ -77,24 +83,19 @@ class ProcessGroup : public CoreComponent {
   ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid);
   ProcessGroup(ProcessGroupType type, const std::string& name, const utils::Identifier& uuid, int version);
   // Destructor
-  virtual ~ProcessGroup();
+  ~ProcessGroup() override;
   // Set URL
   void setURL(std::string url) {
-    url_ = url;
+    url_ = std::move(url);
   }
   // Get URL
-  std::string getURL(void) {
+  std::string getURL() {
     return (url_);
   }
   // SetTransmitting
   void setTransmitting(bool val) {
     transmitting_ = val;
   }
-  // Get Transmitting
-  bool getTransmitting() {
-    return transmitting_;
-  }
-  // setTimeout
   void setTimeout(uint64_t time) {
     timeout_ = time;
   }
@@ -117,26 +118,17 @@ class ProcessGroup : public CoreComponent {
   void setHttpProxyHost(std::string &host) {
     proxy_.host = host;
   }
-  std::string getHttpProxyHost() {
+  std::string getHttpProxyHost() const {
     return proxy_.host;
   }
   void setHttpProxyUserName(std::string &username) {
     proxy_.username = username;
   }
-  std::string getHttpProxyUserName() {
-    return proxy_.username;
-  }
   void setHttpProxyPassWord(std::string &password) {
     proxy_.password = password;
   }
-  std::string getHttpProxyPassWord() {
-    return proxy_.password;
-  }
   void setHttpProxyPort(int port) {
     proxy_.port = port;
-  }
-  int getHttpProxyPort() {
-    return proxy_.port;
   }
   utils::HTTPProxy getHTTPProxy() {
     return proxy_;
@@ -146,7 +138,7 @@ class ProcessGroup : public CoreComponent {
     yield_period_msec_ = period;
   }
   // Get Processor yield period in MilliSecond
-  std::chrono::milliseconds getYieldPeriodMsec(void) {
+  std::chrono::milliseconds getYieldPeriodMsec() {
     return (yield_period_msec_);
   }
 
@@ -158,16 +150,18 @@ class ProcessGroup : public CoreComponent {
     return onschedule_retry_msec_;
   }
 
-  // getVersion
-  int getVersion() {
+  int getVersion() const {
     return config_version_;
   }
-  // Start Processing
-  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler); // NOLINT
-  // Stop Processing
-  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler, const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler, const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler, const std::function<bool(const std::shared_ptr<Processor>&)>& filter = [] (const std::shared_ptr<Processor>&) {return true;}); // NOLINT
-  // Whether it is root process group
-  bool isRootProcessGroup();
+
+  void startProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler,
+                       const std::shared_ptr<EventDrivenSchedulingAgent> &eventScheduler,
+                       const std::shared_ptr<CronDrivenSchedulingAgent> &cronScheduler);
+
+  void stopProcessing(const std::shared_ptr<TimerDrivenSchedulingAgent>& timeScheduler,
+                      const std::shared_ptr<EventDrivenSchedulingAgent>& eventScheduler,
+                      const std::shared_ptr<CronDrivenSchedulingAgent>& cronScheduler,
+                      const std::function<bool(const Processor*)>& filter = nullptr);
 
   bool isRemoteProcessGroup();
   // set parent process group
@@ -176,29 +170,27 @@ class ProcessGroup : public CoreComponent {
     parent_process_group_ = parent;
   }
   // get parent process group
-  ProcessGroup *getParent(void) {
+  ProcessGroup *getParent() {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     return parent_process_group_;
   }
   // Add processor
-  void addProcessor(const std::shared_ptr<Processor>& processor);
-  // Remove processor
-  void removeProcessor(const std::shared_ptr<Processor>& processor);
+  void addProcessor(std::unique_ptr<Processor> processor);
   // Add child processor group
   void addProcessGroup(std::unique_ptr<ProcessGroup> child);
   // ! Add connections
-  void addConnection(const std::shared_ptr<Connection>& connection);
+  void addConnection(std::unique_ptr<Connection> connection);
   // Generic find
   template <typename Fun>
-  std::shared_ptr<Processor> findProcessor(Fun condition, Traverse traverse) const {
+  Processor* findProcessor(Fun condition, Traverse traverse) const {
     std::lock_guard<std::recursive_mutex> lock(mutex_);
     const auto found = std::find_if(processors_.cbegin(), processors_.cend(), condition);
     if (found != processors_.cend()) {
-      return *found;
+      return found->get();
     }
     for (const auto& processGroup : child_process_groups_) {
       if (processGroup->isRemoteProcessGroup() || traverse == Traverse::IncludeChildren) {
-        std::shared_ptr<Processor> processor = processGroup->findProcessor(condition, traverse);
+        const auto processor = processGroup->findProcessor(condition, traverse);
         if (processor) {
           return processor;
         }
@@ -207,11 +199,12 @@ class ProcessGroup : public CoreComponent {
     return nullptr;
   }
   // findProcessor based on UUID
-  std::shared_ptr<Processor> findProcessorById(const utils::Identifier& uuid, Traverse traverse = Traverse::IncludeChildren) const;
+  Processor* findProcessorById(const utils::Identifier& uuid, Traverse traverse = Traverse::IncludeChildren) const;
   // findProcessor based on name
-  std::shared_ptr<Processor> findProcessorByName(const std::string &processorName, Traverse traverse = Traverse::IncludeChildren) const;
+  Processor* findProcessorByName(const std::string &processorName, Traverse traverse = Traverse::IncludeChildren) const;
 
-  void getAllProcessors(std::vector<std::shared_ptr<Processor>> &processor_vec);
+  void getAllProcessors(std::vector<Processor*>& processor_vec) const;
+
   /**
    * Add controller service
    * @param nodeId node identifier
@@ -226,16 +219,14 @@ class ProcessGroup : public CoreComponent {
    */
   std::shared_ptr<core::controller::ControllerServiceNode> findControllerService(const std::string &nodeId);
 
-  // removeConnection
-  void removeConnection(const std::shared_ptr<Connection>& connection);
   // update property value
-  void updatePropertyValue(std::string processorName, std::string propertyName, std::string propertyValue);
+  void updatePropertyValue(const std::string& processorName, const std::string& propertyName, const std::string& propertyValue);
 
-  void getConnections(std::map<std::string, std::shared_ptr<Connection>> &connectionMap);
+  void getConnections(std::map<std::string, Connection*>& connectionMap);
 
-  void getConnections(std::map<std::string, std::shared_ptr<Connectable>> &connectionMap);
+  void getConnections(std::map<std::string, Connectable*>& connectionMap);
 
-  void getFlowFileContainers(std::map<std::string, std::shared_ptr<Connectable>> &containers) const;
+  void getFlowFileContainers(std::map<std::string, Connectable*>& containers) const;
 
   void drainConnections();
 
@@ -251,11 +242,11 @@ class ProcessGroup : public CoreComponent {
   // Process Group Type
   const ProcessGroupType type_;
   // Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
-  std::set<std::shared_ptr<Processor>> processors_;
-  std::set<std::shared_ptr<Processor>> failed_processors_;
+  std::set<std::unique_ptr<Processor>> processors_;
+  std::set<Processor*> failed_processors_;
   std::set<std::unique_ptr<ProcessGroup>> child_process_groups_;
   // Connections between the processor inside the group;
-  std::set<std::shared_ptr<Connection>> connections_;
+  std::set<std::unique_ptr<Connection>> connections_;
   // Parent Process Group
   ProcessGroup* parent_process_group_;
   // Yield Period in Milliseconds

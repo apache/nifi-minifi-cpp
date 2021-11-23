@@ -29,6 +29,10 @@ namespace nifi {
 namespace minifi {
 namespace python {
 
+namespace processors {
+class ExecutePythonProcessor;
+}
+
 namespace py = pybind11;
 
 /**
@@ -36,25 +40,16 @@ namespace py = pybind11;
  */
 class PythonProcessor {
  public:
-  explicit PythonProcessor(std::shared_ptr<core::Processor> proc);
+  explicit PythonProcessor(core::Processor* proc);
 
   void setSupportsDynamicProperties();
 
   void setDecription(const std::string &desc);
 
   void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el);
-  /**
-   * Sometimes we want to release shared pointers to core resources when
-   * we know they are no longer in need. This method is for those times.
-   *
-   * For example, we do not want to hold on to shared pointers to FlowFiles
-   * after an onTrigger call, because doing so can be very expensive in terms
-   * of repository resources.
-   */
-  void releaseCoreResources();
 
  private:
-  std::shared_ptr<core::Processor> processor_;
+  python::processors::ExecutePythonProcessor* processor_;
 };
 
 } /* namespace python */

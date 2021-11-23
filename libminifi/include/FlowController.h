@@ -62,6 +62,10 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+namespace state {
+class ProcessorController;
+}  // namespace state
+
 // Default NiFi Root Group Name
 #define DEFAULT_ROOT_GROUP_NAME ""
 
@@ -69,7 +73,7 @@ namespace minifi {
  * Flow Controller class. Generally used by FlowController factory
  * as a singleton.
  */
-class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor, public c2::C2Client, public std::enable_shared_from_this<FlowController> {
+class FlowController : public core::controller::ForwardingControllerServiceProvider,  public state::StateMonitor, public c2::C2Client {
  public:
   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
@@ -87,13 +91,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return this->provenance_repo_;
   }
 
-  // Get the flowfile repository
-  virtual std::shared_ptr<core::Repository> getFlowFileRepository() {
-    return this->flow_file_repo_;
-  }
-
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-  virtual void load(const std::shared_ptr<core::ProcessGroup> &root = nullptr, bool reload = false);
+  virtual void load(std::unique_ptr<core::ProcessGroup> root = nullptr, bool reload = false);
 
   // Whether the Flow Controller is start running
   bool isRunning() override {
@@ -115,9 +114,9 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return -1;
   }
 
-  std::vector<std::shared_ptr<state::StateController>> getComponents(const std::string &name) override;
+  std::vector<state::StateController*> getComponents(const std::string &name) override;
 
-  std::vector<std::shared_ptr<state::StateController>> getAllComponents() override;
+  std::vector<state::StateController*> getAllComponents() override;
 
   int16_t clearConnection(const std::string &connection) override;
 
@@ -223,8 +222,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   // Whether it has already been initialized (load the flow XML already)
   std::atomic<bool> initialized_;
-  // Thread pool for schedulers
-  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
   // Flow Timer Scheduler
   std::shared_ptr<TimerDrivenSchedulingAgent> timer_scheduler_;
   // Flow Event Scheduler
@@ -237,9 +234,21 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::chrono::steady_clock::time_point start_time_;
 
  private:
+  void getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
+                              const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+
+  void getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
+                                  const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+
+  std::unique_ptr<state::ProcessorController> createController(core::Processor& processor);
+
   std::chrono::milliseconds shutdown_check_interval_{1000};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
   std::string serial_number_;
+
+  // Thread pool for schedulers
+  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
+  std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
 };
 
 }  // namespace minifi

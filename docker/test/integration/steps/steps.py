@@ -65,10 +65,21 @@ def step_impl(context, processor_type, processor_name, property_name, property_v
     __create_processor(context, processor_type, processor_name, property_name, property_value, minifi_container_name)
 
 
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+def step_impl(context, processor_type, processor_name, property_name, property_value, minifi_container_name, engine_name):
+    __create_processor(context, processor_type, processor_name, property_name, property_value, minifi_container_name, engine_name)
+
+
 @given("a {processor_type} processor with the \"{property_name}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
 @given("a {processor_type} processor with the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
 def step_impl(context, processor_type, property_name, property_value, minifi_container_name):
     __create_processor(context, processor_type, processor_type, property_name, property_value, minifi_container_name)
+
+
+@given("a {processor_type} processor the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+def step_impl(context, processor_type, property_name, property_value, minifi_container_name, engine_name):
+    __create_processor(context, processor_type, processor_type, property_name, property_value, minifi_container_name, engine_name)
 
 
 @given("a {processor_type} processor with the \"{property_name}\" property set to \"{property_value}\"")
@@ -84,6 +95,11 @@ def step_impl(context, processor_type, property_name, property_value, processor_
 @given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow")
 def step_impl(context, processor_type, processor_name, minifi_container_name):
     __create_processor(context, processor_type, processor_name, None, None, minifi_container_name)
+
+
+@given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+def step_impl(context, processor_type, processor_name, minifi_container_name, engine_name):
+    __create_processor(context, processor_type, processor_name, None, None, minifi_container_name, engine_name)
 
 
 @given("a {processor_type} processor with the name \"{processor_name}\"")

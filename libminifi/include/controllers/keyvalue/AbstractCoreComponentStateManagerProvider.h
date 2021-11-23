@@ -31,17 +31,15 @@ namespace nifi {
 namespace minifi {
 namespace controllers {
 
-class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from_this<AbstractCoreComponentStateManagerProvider>,
-                                                   public core::CoreComponentStateManagerProvider {
+class AbstractCoreComponentStateManagerProvider : public core::CoreComponentStateManagerProvider {
  public:
-  std::shared_ptr<core::CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) override;
+  std::unique_ptr<core::CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) override;
+
   std::map<utils::Identifier, std::unordered_map<std::string, std::string>> getAllCoreComponentStates() override;
 
-  class AbstractCoreComponentStateManager : public core::CoreComponentStateManager{
+  class AbstractCoreComponentStateManager : public core::CoreComponentStateManager {
    public:
-    AbstractCoreComponentStateManager(std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider, const utils::Identifier& id);
-
-    ~AbstractCoreComponentStateManager() override;
+    AbstractCoreComponentStateManager(AbstractCoreComponentStateManagerProvider* provider, const utils::Identifier& id);
 
     bool set(const core::CoreComponentState& kvs) override;
     bool get(core::CoreComponentState& kvs) override;
@@ -60,7 +58,7 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
       CLEAR
     };
 
-    std::shared_ptr<AbstractCoreComponentStateManagerProvider> provider_;
+    AbstractCoreComponentStateManagerProvider* provider_;
     utils::Identifier id_;
     bool state_valid_;
     core::CoreComponentState state_;
@@ -77,10 +75,7 @@ class AbstractCoreComponentStateManagerProvider : public std::enable_shared_from
   virtual bool persistImpl() = 0;
 
  private:
-  void removeFromCache(utils::Identifier id);
-
   std::mutex mutex_;
-  std::map<utils::Identifier, std::weak_ptr<core::CoreComponentStateManager>> state_manager_cache_;
 };
 
 }  // namespace controllers

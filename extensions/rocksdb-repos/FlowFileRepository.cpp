@@ -175,12 +175,12 @@ void FlowFileRepository::prune_stored_flowfiles() {
       auto claim = eventRead->getResourceClaim();
       if (claim) claim->increaseFlowFileRecordOwnedCount();
       bool found = false;
-      auto search = containers.find(containerId.to_string());
-      found = (search != containers.end());
+      auto search = containers_.find(containerId.to_string());
+      found = (search != containers_.end());
       if (!found) {
         // for backward compatibility
-        search = connectionMap.find(containerId.to_string());
-        found = (search != connectionMap.end());
+        search = connection_map_.find(containerId.to_string());
+        found = (search != connection_map_.end());
       }
       if (found) {
         logger_->log_debug("Found connection for %s, path %s ", containerId.to_string(), eventRead->getContentFullPath());

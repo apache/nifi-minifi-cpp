@@ -41,7 +41,7 @@ class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
   /**
    * Initialize agent printer.
    */
-  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+  void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
                           const std::shared_ptr<Configure> &configure) override;
 
   /**

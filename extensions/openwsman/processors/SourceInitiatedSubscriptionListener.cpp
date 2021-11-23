@@ -47,6 +47,7 @@ extern "C" {
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
+#include "core/ProcessSessionFactory.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"

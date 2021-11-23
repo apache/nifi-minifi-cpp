@@ -74,8 +74,8 @@ class FlowConfiguration : public CoreComponent {
   ~FlowConfiguration() override;
 
   // Create Processor (Node/Input/Output Port) based on the name
-  std::shared_ptr<core::Processor> createProcessor(const std::string &name, const utils::Identifier &uuid);
-  std::shared_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid);
+  std::unique_ptr<core::Processor> createProcessor(const std::string &name, const utils::Identifier &uuid);
+  std::unique_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid);
   // Create Root Processor Group
 
   std::unique_ptr<core::ProcessGroup> createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version);
@@ -86,9 +86,9 @@ class FlowConfiguration : public CoreComponent {
       const utils::Identifier &uuid);
 
   // Create Connection
-  std::shared_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
+  std::unique_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
   // Create Provenance Report Task
-  std::shared_ptr<core::Processor> createProvenanceReportTask(void);
+  std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> createProvenanceReportTask();
 
   std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
     return flow_version_;

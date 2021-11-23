@@ -31,7 +31,7 @@
 
 #include "core/CoreComponentState.h"
 #include "core/Processor.h"
-#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
@@ -95,7 +95,7 @@ class ConsumeJournald final : public core::Processor {
 
   std::atomic<bool> running_{false};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
+  core::CoreComponentStateManager* state_manager_;
   std::unique_ptr<libwrapper::LibWrapper> libwrapper_;
   std::unique_ptr<Worker> worker_;
   std::unique_ptr<libwrapper::Journal> journal_;

@@ -27,6 +27,7 @@
 #include "utils/Id.h"
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/Processor.h"
 #include "repository/VolatileContentRepository.h"
@@ -76,11 +77,11 @@ TEST_CASE("Import null data") {
 
   auto processor = std::make_shared<core::Processor>("dummy");
   utils::Identifier uuid = processor->getUUID();
-  auto output = std::make_shared<minifi::Connection>(ff_repository, content_repo, "output");
+  auto output = std::make_unique<minifi::Connection>(ff_repository, content_repo, "output");
   output->addRelationship({"out", ""});
   output->setSourceUUID(uuid);
-  processor->addConnection(output);
-  auto node = std::make_shared<core::ProcessorNode>(processor);
+  processor->addConnection(output.get());
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo, ff_repository, content_repo);
   core::ProcessSession session(context);
 

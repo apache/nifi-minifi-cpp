@@ -39,7 +39,7 @@ namespace core {
  * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
  * @param repo_name name of the repository
  */
-std::shared_ptr<core::Repository> createRepository(const std::string configuration_class_name, bool fail_safe = false, const std::string repo_name = "");
+std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, bool fail_safe = false, const std::string& repo_name = "");
 
 /**
  * Create a context repository
@@ -47,7 +47,7 @@ std::shared_ptr<core::Repository> createRepository(const std::string configurati
  * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
  * @param repo_name name of the repository
  */
-std::shared_ptr<core::ContentRepository> createContentRepository(const std::string configuration_class_name, bool fail_safe = false, const std::string repo_name = "");
+std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name, bool fail_safe = false, const std::string& repo_name = "");
 
 }  // namespace core
 }  // namespace minifi

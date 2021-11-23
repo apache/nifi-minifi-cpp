@@ -88,11 +88,7 @@ class SchedulingAgent {
   }
 
   // onTrigger, return whether the yield is need
-  bool onTrigger(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
-  // Whether agent has work to do
-  bool hasWorkToDo(const std::shared_ptr<core::Processor>& processor);
-  // Whether the outgoing need to be backpressure
-  bool hasTooMuchOutGoing(const std::shared_ptr<core::Processor>& processor);
+  bool onTrigger(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
   // start
   void start() {
     running_ = true;
@@ -108,9 +104,9 @@ class SchedulingAgent {
   virtual std::future<utils::TaskRescheduleInfo> enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   virtual std::future<utils::TaskRescheduleInfo> disableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode);
   // schedule, overwritten by different DrivenSchedulingAgent
-  virtual void schedule(std::shared_ptr<core::Processor> processor) = 0;
+  virtual void schedule(core::Processor* processor) = 0;
   // unschedule, overwritten by different DrivenSchedulingAgent
-  virtual void unschedule(std::shared_ptr<core::Processor> processor) = 0;
+  virtual void unschedule(core::Processor* processor) = 0;
 
   SchedulingAgent(const SchedulingAgent &parent) = delete;
   SchedulingAgent &operator=(const SchedulingAgent &parent) = delete;
@@ -145,7 +141,7 @@ class SchedulingAgent {
     std::string name_;
     std::string uuid_;
 
-    explicit SchedulingInfo(const std::shared_ptr<core::Processor> &processor) :
+    explicit SchedulingInfo(const core::Processor* processor) :
       name_(processor->getName()),
       uuid_(processor->getUUIDStr()) {}
 

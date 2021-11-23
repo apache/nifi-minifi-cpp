@@ -29,6 +29,7 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "AzureBlobStorageProcessorBase.h"
+#include "io/StreamPipe.h"
 
 template<typename T>
 class AzureBlobStorageTestsFixture;

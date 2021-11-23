@@ -58,6 +58,10 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     db_ = nullptr;
   }
 
+  ~ProvenanceRepository() override {
+    stop();
+  }
+
   void printStats();
 
   bool isNoop() override {

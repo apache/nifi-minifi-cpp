@@ -26,6 +26,8 @@
 #include "utils/StringUtils.h"
 #include "utils/JsonCallback.h"
 #include "utils/OpenTelemetryLogDataModelUtils.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org {

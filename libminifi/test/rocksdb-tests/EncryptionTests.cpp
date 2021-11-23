@@ -38,7 +38,7 @@ class FFRepoFixture : public TestController {
     checkpoint_dir_ = home_ / "checkpoint_dir";
     config_ = std::make_shared<minifi::Configure>();
     config_->setHome(home_.str());
-    container_ = std::make_shared<minifi::Connection>(nullptr, nullptr, "container");
+    container_ = std::make_unique<minifi::Connection>(nullptr, nullptr, "container");
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo_->initialize(config_);
   }
@@ -54,8 +54,8 @@ class FFRepoFixture : public TestController {
   void runWithNewRepository(Fn&& fn) {
     auto repository = std::make_shared<FlowFileRepository>("ff", checkpoint_dir_.str(), repo_dir_.str());
     repository->initialize(config_);
-    std::map<std::string, std::shared_ptr<core::Connectable>> container_map;
-    container_map[container_->getUUIDStr()] = container_;
+    std::map<std::string, core::Connectable*> container_map;
+    container_map[container_->getUUIDStr()] = container_.get();
     repository->setContainers(container_map);
     repository->loadComponent(content_repo_);
     repository->start();
@@ -64,7 +64,7 @@ class FFRepoFixture : public TestController {
   }
 
  protected:
-  std::shared_ptr<minifi::Connection> container_;
+  std::unique_ptr<minifi::Connection> container_;
   Path home_;
   Path repo_dir_;
   Path checkpoint_dir_;
@@ -88,7 +88,7 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
   runWithNewRepository([&] (const std::shared_ptr<core::repository::FlowFileRepository>& repo) {
     auto flowfile = std::make_shared<minifi::FlowFileRecord>();
     flowfile->setAttribute("my little pony", "my horse is amazing");
-    flowfile->setConnection(container_);
+    flowfile->setConnection(container_.get());
     putFlowFile(flowfile, repo);
   });
 

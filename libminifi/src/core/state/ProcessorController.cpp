@@ -25,7 +25,7 @@ namespace nifi {
 namespace minifi {
 namespace state {
 
-ProcessorController::ProcessorController(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<SchedulingAgent> &scheduler)
+ProcessorController::ProcessorController(core::Processor* processor, const std::shared_ptr<SchedulingAgent> &scheduler)
     : processor_(processor),
       scheduler_(scheduler) {
 }

@@ -172,13 +172,13 @@ class __attribute__((visibility("default"))) PythonScriptEngine : public script:
     std::shared_ptr<script::ScriptProcessContext> script_context_;
   };
 
-  void onInitialize(const std::shared_ptr<core::Processor> &proc) {
+  void onInitialize(core::Processor* proc) {
     TriggerInit trigger_session;
     auto newproc = convertProcessor(proc);
     call("onInitialize", newproc);
   }
 
-  void describe(const std::shared_ptr<core::Processor> &proc) {
+  void describe(core::Processor* proc) {
     TriggerInit trigger_session;
     auto newproc = convertProcessor(proc);
     callRequiredFunction("describe", newproc);
@@ -223,7 +223,7 @@ class __attribute__((visibility("default"))) PythonScriptEngine : public script:
     return std::make_shared<script::ScriptProcessContext>(context);
   }
 
-  std::shared_ptr<python::PythonProcessor> convertProcessor(const std::shared_ptr<core::Processor> &proc) {
+  std::shared_ptr<python::PythonProcessor> convertProcessor(core::Processor* proc) {
     return std::make_shared<python::PythonProcessor>(proc);
   }
 

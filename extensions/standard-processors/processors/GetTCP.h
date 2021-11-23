@@ -31,6 +31,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "concurrentqueue.h"
+#include "io/ClientSocket.h"
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/SSLContextService.h"
@@ -169,10 +170,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
 // GetTCP Class
 class GetTCP : public core::Processor, public state::response::MetricsNodeSource {
  public:
-// Constructor
-  /*!
-   * Create a new processor
-   */
   explicit GetTCP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         running_(false),
@@ -184,8 +181,12 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
         ssl_service_(nullptr) {
     metrics_ = std::make_shared<GetTCPMetrics>();
   }
-// Destructor
-  ~GetTCP() override = default;
+
+  ~GetTCP() override {
+    // thread pool must be shut down first before members it is using are destructed, otherwise segfault is possible
+    client_thread_pool_.shutdown();
+  }
+
 // Processor Name
   EXTENSIONAPI static constexpr char const* ProcessorName = "GetTCP";
 
@@ -245,8 +246,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   std::map<std::string, std::future<int>*> live_clients_;
 
-  utils::ThreadPool<int> client_thread_pool_;
-
   moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
 
   bool stay_connected_;
@@ -269,10 +268,9 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
 
-  // last listing time for root directory ( if recursive, we will consider the root
-  // as the top level time.
-
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger();
+
+  utils::ThreadPool<int> client_thread_pool_;
 };
 
 }  // namespace processors

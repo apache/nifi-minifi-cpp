@@ -24,6 +24,7 @@
 #include <utility>
 #include <memory>
 
+#include "io/StreamPipe.h"
 #include "AzureDataLakeStorageFileProcessorBase.h"
 
 template<typename AzureDataLakeStorageProcessor>

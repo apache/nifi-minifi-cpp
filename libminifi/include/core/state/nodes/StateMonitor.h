@@ -53,11 +53,11 @@ class StateMonitorNode : public DeviceInformation {
         monitor_(nullptr) {
   }
 
-  void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
+  void setStateMonitor(state::StateMonitor* monitor) {
     monitor_ = monitor;
   }
  protected:
-  std::shared_ptr<state::StateMonitor> monitor_;
+  state::StateMonitor* monitor_;
 };
 
 }  // namespace response

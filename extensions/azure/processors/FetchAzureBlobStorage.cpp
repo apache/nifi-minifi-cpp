@@ -20,7 +20,9 @@
 
 #include "FetchAzureBlobStorage.h"
 
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
+#include "io/StreamPipe.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {

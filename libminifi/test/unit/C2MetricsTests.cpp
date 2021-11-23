@@ -75,12 +75,12 @@ TEST_CASE("QueueMetricsTestConnections", "[c2m3]") {
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "testconnection");
-
-  metrics.addConnection(connection);
+  auto connection = std::make_unique<minifi::Connection>(repo, content_repo, "testconnection");
 
   connection->setMaxQueueDataSize(1024);
   connection->setMaxQueueSize(1024);
+
+  metrics.addConnection(std::move(connection));
 
   REQUIRE(1 == metrics.serialize().size());
 

@@ -79,12 +79,12 @@ class IntegrationBase {
   virtual void configureFullHeartbeat() {
   }
 
-  virtual void updateProperties(std::shared_ptr<minifi::FlowController> /*fc*/) {
+  virtual void updateProperties(minifi::FlowController& /*fc*/) {
   }
 
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
-  std::shared_ptr<minifi::FlowController> flowController_;
+  std::unique_ptr<minifi::FlowController> flowController_;
   std::chrono::milliseconds wait_time_;
   std::string port, scheme;
   std::string key_dir;
@@ -152,9 +152,9 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
 
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  flowController_ = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME);
+  flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME);
   flowController_->load();
-  updateProperties(flowController_);
+  updateProperties(*flowController_);
   flowController_->start();
 
   runAssertions();

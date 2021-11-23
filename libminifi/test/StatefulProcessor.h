@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 #include "core/Processor.h"
+#include "core/CoreComponentState.h"
 
 namespace org {
 namespace apache {
@@ -45,7 +46,7 @@ class StatefulProcessor : public core::Processor {
 
  private:
   mutable std::mutex mutex_;
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
+  core::CoreComponentStateManager* state_manager_;
   HookType on_schedule_hook_;
   std::vector<HookType> on_trigger_hooks_;
   size_t on_trigger_hook_index_ = 0;

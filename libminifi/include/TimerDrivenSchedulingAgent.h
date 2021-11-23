@@ -48,7 +48,7 @@ class TimerDrivenSchedulingAgent : public ThreadedSchedulingAgent {
   /**
    * Run function that accepts the processor, context and session factory.
    */
-  utils::TaskRescheduleInfo run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+  utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
       const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:

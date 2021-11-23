@@ -84,7 +84,7 @@ endfunction()
 enable_testing(test)
 
 SET(TEST_BASE_LIB test_base)
-set(TEST_BASE_SOURCES "TestBase.cpp" "RandomServerSocket.cpp" "KamikazeProcessor.cpp" "StatefulProcessor.cpp" "WriteToFlowFileTestProcessor.cpp" "ReadFromFlowFileTestProcessor.cpp")
+set(TEST_BASE_SOURCES "TestBase.cpp" "RandomServerSocket.cpp" "StatefulProcessor.cpp" "WriteToFlowFileTestProcessor.cpp" "ReadFromFlowFileTestProcessor.cpp")
 list(TRANSFORM TEST_BASE_SOURCES PREPEND "${TEST_DIR}/")
 add_library(${TEST_BASE_LIB} STATIC "${TEST_BASE_SOURCES}")
 target_link_libraries(${TEST_BASE_LIB} core-minifi)
@@ -166,6 +166,7 @@ FOREACH(testfile ${INTEGRATION_TESTS})
   MATH(EXPR INT_TEST_COUNT "${INT_TEST_COUNT}+1")
 ENDFOREACH()
 
+target_link_libraries(OnScheduleErrorHandlingTests minifi-test-processors)
 target_wholearchive_library(StateTransactionalityTests minifi-standard-processors)
 
 add_test(NAME OnScheduleErrorHandlingTests COMMAND OnScheduleErrorHandlingTests "${TEST_RESOURCES}/TestOnScheduleRetry.yml"  "${TEST_RESOURCES}/")

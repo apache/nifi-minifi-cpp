@@ -27,6 +27,7 @@
 #include <utility>
 #include <vector>
 
+#include "io/StreamPipe.h"
 #include "S3Processor.h"
 #include "utils/GeneralUtils.h"
 

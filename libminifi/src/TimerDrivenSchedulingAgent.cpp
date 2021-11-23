@@ -31,7 +31,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                          const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (this->running_ && processor->isRunning()) {
     bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);

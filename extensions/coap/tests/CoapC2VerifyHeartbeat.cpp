@@ -93,10 +93,10 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
-    std::shared_ptr<core::Processor> proc = pg->findProcessorByName("invoke");
+    auto proc = pg->findProcessorByName("invoke");
     assert(proc != nullptr);
 
-    std::shared_ptr<minifi::processors::InvokeHTTP> inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
+    const auto* const inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
 
     assert(inv != nullptr);
     std::string url = "";

@@ -25,6 +25,7 @@
 #include <memory>
 #include <utility>
 
+#include "core/ProcessContext.h"
 #include "S3Wrapper.h"
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"

@@ -17,6 +17,8 @@
 #include <set>
 
 #include "CaptureRTSPFrame.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org {

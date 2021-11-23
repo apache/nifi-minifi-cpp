@@ -23,6 +23,7 @@
 #include "SingleInputTestController.h"
 #include "Catch.h"
 #include "PutUDP.h"
+#include "core/ProcessContext.h"
 #include "utils/net/DNS.h"
 #include "utils/net/Socket.h"
 #include "utils/expected.h"

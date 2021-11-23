@@ -586,13 +586,13 @@ class AgentMonitor {
     }
   }
 
-  void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
+  void setStateMonitor(state::StateMonitor* &monitor) {
     monitor_ = monitor;
   }
 
  protected:
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
-  std::shared_ptr<state::StateMonitor> monitor_;
+  state::StateMonitor* monitor_;
 };
 
 /**

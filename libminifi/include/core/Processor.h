@@ -25,28 +25,17 @@
 #include <chrono>
 #include <condition_variable>
 #include <functional>
-#include <map>
 #include <memory>
 #include <mutex>
-#include <queue>
-#include <set>
-#include <stack>
 #include <string>
-#include <vector>
 #include <unordered_set>
 #include <unordered_map>
+#include <utility>
 
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
-#include "Connection.h"
 #include "Core.h"
 #include "core/Annotation.h"
-#include "io/StreamFactory.h"
-#include "ProcessContext.h"
-#include "ProcessSession.h"
-#include "ProcessSessionFactory.h"
-#include "Property.h"
-#include "Relationship.h"
 #include "Scheduling.h"
 #include "utils/TimeUtil.h"
 
@@ -54,7 +43,18 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
+class Connection;
+
+namespace io {
+class StreamFactory;
+}
+
 namespace core {
+
+class ProcessContext;
+class ProcessSession;
+class ProcessSessionFactory;
 
 // Minimum scheduling period in Nano Second
 constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
@@ -63,13 +63,10 @@ constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
 
 #define BUILDING_DLL 1
 // Processor Class
-class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
+class Processor : public Connectable, public ConfigurableComponent {
  public:
   Processor(const std::string& name, const utils::Identifier& uuid);
   explicit Processor(const std::string& name);
-  virtual ~Processor() {
-    notifyStop();
-  }
 
   bool isRunning() override;
   // Set Processor Scheduled State
@@ -85,14 +82,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Get Processor Scheduling Strategy
   SchedulingStrategy getSchedulingStrategy() const {
     return strategy_;
-  }
-  // Set Processor Loss Tolerant
-  void setlossTolerant(bool lossTolerant) {
-    loss_tolerant_ = lossTolerant;
-  }
-  // Get Processor Loss Tolerant
-  bool getlossTolerant() const {
-    return loss_tolerant_;
   }
   // Set Processor Scheduling Period in Nano Second
   void setSchedulingPeriodNano(std::chrono::nanoseconds period) {
@@ -115,7 +104,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
    * Returns the cron period
    * @return cron period
    */
-  const std::string getCronPeriod() const {
+  std::string getCronPeriod() const {
     return cron_period_;
   }
 
@@ -185,8 +174,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Whether flow file queue full in any of the outgoing connection
   bool flowFilesOutGoingFull() const;
 
-  bool addConnection(std::shared_ptr<Connectable> connection);
-  void removeConnection(std::shared_ptr<Connectable> connection);
+  bool addConnection(Connectable* connection);
 
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory);
   void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);
@@ -221,7 +209,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   bool isWorkAvailable() override;
 
   void setStreamFactory(std::shared_ptr<minifi::io::StreamFactory> stream_factory) {
-    stream_factory_ = stream_factory;
+    stream_factory_ = std::move(stream_factory);
   }
 
   bool supportsDynamicProperties() override {
@@ -230,7 +218,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
 
   bool isThrottledByBackpressure() const;
 
-  std::shared_ptr<Connectable> pickIncomingConnection() override;
+  Connectable* pickIncomingConnection() override;
 
   void validateAnnotations() const;
 
@@ -245,8 +233,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Processor state
   std::atomic<ScheduledState> state_;
 
-  // lossTolerant
-  std::atomic<bool> loss_tolerant_;
   // SchedulePeriod in Nano Seconds
   std::atomic<std::chrono::nanoseconds> scheduling_period_nano_;
   // Run Duration in Nano Seconds
@@ -281,7 +267,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // must hold the graphMutex
   void updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force = false);
 
-  static bool partOfCycle(const std::shared_ptr<Connection>& conn);
+  static bool partOfCycle(Connection* conn);
 
   virtual annotation::Input getInputRequirement() const {
       // default input requirement
@@ -289,13 +275,12 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
 
   // an outgoing connection allows us to reach these nodes
-  std::unordered_map<std::shared_ptr<Connection>, std::unordered_set<std::shared_ptr<const Processor>>> reachable_processors_;
+  std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
 
   std::shared_ptr<logging::Logger> logger_;
 };
 
 }  // namespace core
-/* namespace core */
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache

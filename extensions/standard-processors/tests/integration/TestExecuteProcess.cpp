@@ -60,17 +60,17 @@ int main(int /*argc*/, char ** /*argv*/) {
 
   utils::Identifier processoruuid = processor->getUUID();
   assert(processoruuid);
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "executeProcessConnection");
+  auto connection = std::make_unique<minifi::Connection>(test_repo, content_repo, "executeProcessConnection");
   connection->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(processor);
-  connection->setDestination(processor);
+  connection->setSource(processor.get());
+  connection->setDestination(processor.get());
 
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(processoruuid);
 
-  processor->addConnection(connection);
+  processor->addConnection(connection.get());
   assert(processor->getName() == "executeProcess");
 
   std::shared_ptr<core::FlowFile> record;
@@ -82,17 +82,17 @@ int main(int /*argc*/, char ** /*argv*/) {
 
   std::vector<std::thread> processor_workers;
 
-  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(processor);
-  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<core::ProcessContext>(node2, nullptr, test_repo, test_repo);
+  auto node2 = std::make_shared<core::ProcessorNode>(processor.get());
+  auto contextset = std::make_shared<core::ProcessContext>(node2, nullptr, test_repo, test_repo);
   core::ProcessSessionFactory factory(contextset);
   processor->onSchedule(contextset.get(), &factory);
 
   for (int i = 0; i < 1; i++) {
     processor_workers.push_back(std::thread([processor, test_repo, &is_ready]() {
-      std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-      std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, test_repo, test_repo);
+      auto node = std::make_shared<core::ProcessorNode>(processor.get());
+      auto context = std::make_shared<core::ProcessContext>(node, nullptr, test_repo, test_repo);
       context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
-      std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context);
+      auto session = std::make_shared<core::ProcessSession>(context);
       while (!is_ready.load(std::memory_order_relaxed)) {
       }
       processor->onTrigger(context.get(), session.get());
@@ -105,6 +105,6 @@ int main(int /*argc*/, char ** /*argv*/) {
     t.join();
   });
 
-  std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp = std::static_pointer_cast<org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
+  auto execp = std::static_pointer_cast<org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
 #endif
 }

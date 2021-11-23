@@ -38,10 +38,12 @@ namespace core {
  */
 class ProcessorNode : public ConfigurableComponent, public Connectable {
  public:
-  explicit ProcessorNode(const std::shared_ptr<Connectable> &processor);
+  explicit ProcessorNode(Connectable* processor);
 
   ProcessorNode(const ProcessorNode &other) = delete;
   ProcessorNode(ProcessorNode &&other) = delete;
+
+  ~ProcessorNode() override;
 
   ProcessorNode& operator=(const ProcessorNode &other) = delete;
   ProcessorNode& operator=(ProcessorNode &&other) = delete;
@@ -52,7 +54,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value value passed in by reference
    * @return result of getting property.
    */
-  std::shared_ptr<Connectable> getProcessor() const {
+  Connectable* getProcessor() const {
     return processor_;
   }
 
@@ -68,7 +70,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    */
   template<typename T>
   bool getProperty(const std::string &name, T &value) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     if (nullptr != processor_cast) {
       return processor_cast->getProperty<T>(name, value);
     } else {
@@ -81,8 +83,8 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return result of setting property.
    */
-  bool setProperty(const std::string &name, std::string value) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+  bool setProperty(const std::string &name, const std::string& value) {
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     bool ret = ConfigurableComponent::setProperty(name, value);
     if (nullptr != processor_cast)
       ret = processor_cast->setProperty(name, value);
@@ -97,7 +99,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @return result of getting property.
    */
   bool getDynamicProperty(const std::string name, std::string &value) const {
-    const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     if (processor_cast) {
       return processor_cast->getDynamicProperty(name, value);
     } else {
@@ -123,8 +125,8 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return result of setting property.
    */
-  bool setDynamicProperty(const std::string name, std::string value) {
-    const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+  bool setDynamicProperty(const std::string& name, const std::string& value) {
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     auto ret = ConfigurableComponent::setDynamicProperty(name, value);
 
     if (processor_cast) {
@@ -141,7 +143,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @return result of getting property.
    */
   std::vector<std::string> getDynamicPropertyKeys() const {
-    const auto &processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     if (processor_cast) {
       return processor_cast->getDynamicPropertyKeys();
     } else {
@@ -155,8 +157,8 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param value property value.
    * @return whether property was set or not
    */
-  bool setProperty(const Property &prop, std::string value) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+  bool setProperty(const Property &prop, const std::string& value) {
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     bool ret = ConfigurableComponent::setProperty(prop, value);
     if (nullptr != processor_cast)
       ret = processor_cast->setProperty(prop, value);
@@ -169,8 +171,8 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * @param supported properties
    * @return result of set operation.
    */
-  bool setSupportedProperties(std::set<Property> properties) {
-    const std::shared_ptr<ConfigurableComponent> processor_cast = std::dynamic_pointer_cast<ConfigurableComponent>(processor_);
+  bool setSupportedProperties(const std::set<Property>& properties) {
+    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
     bool ret = ConfigurableComponent::setSupportedProperties(properties);
     if (nullptr != processor_cast)
       ret = processor_cast->setSupportedProperties(properties);
@@ -225,7 +227,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string& relationship) const override {
+  std::set<Connectable*> getOutGoingConnections(const std::string& relationship) override {
     return processor_->getOutGoingConnections(relationship);
   }
 
@@ -233,11 +235,11 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Get next incoming connection
    * @return next incoming connection
    */
-  std::shared_ptr<Connectable> getNextIncomingConnection() {
+  Connectable* getNextIncomingConnection() {
     return processor_->getNextIncomingConnection();
   }
 
-  std::shared_ptr<Connectable> pickIncomingConnection() override {
+  Connectable* pickIncomingConnection() override {
     return processor_->pickIncomingConnection();
   }
 
@@ -286,8 +288,6 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
 
   bool isWorkAvailable() override;
 
-  virtual ~ProcessorNode();
-
  protected:
   bool canEdit() override {
     return !processor_->isRunning();
@@ -296,7 +296,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
   /**
    * internal connectable.
    */
-  std::shared_ptr<Connectable> processor_;
+  Connectable* processor_;
 };
 
 }  // namespace core

@@ -49,8 +49,8 @@ struct ListingState {
 
 class ListingStateManager {
  public:
-  explicit ListingStateManager(std::shared_ptr<core::CoreComponentStateManager> state_manager)
-    : state_manager_(std::move(state_manager)) {
+  explicit ListingStateManager(core::CoreComponentStateManager* state_manager)
+    : state_manager_(state_manager) {
   }
 
   [[nodiscard]] ListingState getCurrentState() const;
@@ -63,9 +63,7 @@ class ListingStateManager {
   [[nodiscard]] static uint64_t getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state);
   [[nodiscard]] static std::unordered_set<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
 
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
-  const std::string timestamp_key_;
-  const std::string listed_object_prefix_;
+  core::CoreComponentStateManager* state_manager_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ListingStateManager>::getLogger()};
 };
 

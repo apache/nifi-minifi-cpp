@@ -51,7 +51,6 @@ Processor::Processor(const std::string& name)
   // Setup the default values
   state_ = DISABLED;
   strategy_ = TIMER_DRIVEN;
-  loss_tolerant_ = false;
   _triggerWhenEmpty = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
@@ -59,7 +58,7 @@ Processor::Processor(const std::string& name)
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
-  incoming_connections_Iter = this->_incomingConnections.begin();
+  incoming_connections_Iter = this->incoming_connections_.begin();
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
 
@@ -71,7 +70,6 @@ Processor::Processor(const std::string& name, const utils::Identifier& uuid)
   // Setup the default values
   state_ = DISABLED;
   strategy_ = TIMER_DRIVEN;
-  loss_tolerant_ = false;
   _triggerWhenEmpty = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
@@ -79,7 +77,7 @@ Processor::Processor(const std::string& name, const utils::Identifier& uuid)
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
-  incoming_connections_Iter = this->_incomingConnections.begin();
+  incoming_connections_Iter = this->incoming_connections_.begin();
   logger_->log_debug("Processor %s created with uuid %s", name_, getUUIDStr());
 }
 
@@ -94,7 +92,7 @@ void Processor::setScheduledState(ScheduledState state) {
   }
 }
 
-bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
+bool Processor::addConnection(Connectable* conn) {
   enum class SetAs{
     NONE,
     OUTPUT,
@@ -106,7 +104,11 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
     logger_->log_warn("Can not add connection while the process %s is running", name_);
     return false;
   }
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+  const auto connection = dynamic_cast<Connection*>(conn);
+  if (!connection) {
+    return false;
+  }
+
   std::lock_guard<std::mutex> lock(getGraphMutex());
 
   auto updateGraph = gsl::finally([&] {
@@ -122,37 +124,36 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
 
   if (uuid_ == destUUID) {
     // Connection is destination to the current processor
-    if (_incomingConnections.find(connection) == _incomingConnections.end()) {
-      _incomingConnections.insert(connection);
-      connection->setDestination(shared_from_this());
+    if (incoming_connections_.find(connection) == incoming_connections_.end()) {
+      incoming_connections_.insert(connection);
+      connection->setDestination(this);
       logger_->log_debug("Add connection %s into Processor %s incoming connection", connection->getName(), name_);
-      incoming_connections_Iter = this->_incomingConnections.begin();
+      incoming_connections_Iter = this->incoming_connections_.begin();
       result = SetAs::OUTPUT;
     }
   }
   if (uuid_ == srcUUID) {
-    const auto &rels = connection->getRelationships();
-    for (auto i = rels.begin(); i != rels.end(); i++) {
-      const auto relationship = (*i).getName();
+    for (const auto& rel : connection->getRelationships()) {
+      const auto relationship = rel.getName();
       // Connection is source from the current processor
-      auto &&it = out_going_connections_.find(relationship);
-      if (it != out_going_connections_.end()) {
+      auto &&it = outgoing_connections_.find(relationship);
+      if (it != outgoing_connections_.end()) {
         // We already has connection for this relationship
-        std::set<std::shared_ptr<Connectable>> existedConnection = it->second;
+        std::set<Connectable*> existedConnection = it->second;
         if (existedConnection.find(connection) == existedConnection.end()) {
           // We do not have the same connection for this relationship yet
           existedConnection.insert(connection);
-          connection->setSource(shared_from_this());
-          out_going_connections_[relationship] = existedConnection;
+          connection->setSource(this);
+          outgoing_connections_[relationship] = existedConnection;
           logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
           result = SetAs::INPUT;
         }
       } else {
         // We do not have any outgoing connection for this relationship yet
-        std::set<std::shared_ptr<Connectable>> newConnection;
+        std::set<Connectable*> newConnection;
         newConnection.insert(connection);
-        connection->setSource(shared_from_this());
-        out_going_connections_[relationship] = newConnection;
+        connection->setSource(this);
+        outgoing_connections_[relationship] = newConnection;
         logger_->log_debug("Add connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
         result = SetAs::INPUT;
       }
@@ -161,54 +162,14 @@ bool Processor::addConnection(std::shared_ptr<Connectable> conn) {
   return result != SetAs::NONE;
 }
 
-void Processor::removeConnection(std::shared_ptr<Connectable> conn) {
-  if (isRunning()) {
-    logger_->log_warn("Can not remove connection while the process %s is running", name_);
-    return;
-  }
-
-  std::lock_guard<std::mutex> lock(getGraphMutex());
-
-  std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
-
-  utils::Identifier srcUUID = connection->getSourceUUID();
-  utils::Identifier destUUID = connection->getDestinationUUID();
-
-  if (uuid_ == destUUID) {
-    // Connection is destination to the current processor
-    if (_incomingConnections.find(connection) != _incomingConnections.end()) {
-      _incomingConnections.erase(connection);
-      connection->setDestination(NULL);
-      logger_->log_debug("Remove connection %s into Processor %s incoming connection", connection->getName(), name_);
-      incoming_connections_Iter = this->_incomingConnections.begin();
-    }
-  }
-
-  if (uuid_ == srcUUID) {
-    const auto &rels = connection->getRelationships();
-    for (auto i = rels.begin(); i != rels.end(); i++) {
-      const auto relationship = (*i).getName();
-      // Connection is source from the current processor
-      auto &&it = out_going_connections_.find(relationship);
-      if (it != out_going_connections_.end()) {
-        if (out_going_connections_[relationship].find(connection) != out_going_connections_[relationship].end()) {
-          out_going_connections_[relationship].erase(connection);
-          connection->setSource(NULL);
-          logger_->log_debug("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
-        }
-      }
-    }
-  }
-}
-
 bool Processor::flowFilesOutGoingFull() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  for (const auto& connection_pair : out_going_connections_) {
+  for (const auto& connection_pair : outgoing_connections_) {
     // We already has connection for this relationship
-    std::set<std::shared_ptr<Connectable>> existedConnection = connection_pair.second;
-    const bool has_full_connection = std::any_of(begin(existedConnection), end(existedConnection), [](const std::shared_ptr<Connectable>& conn) {
-      auto connection = std::dynamic_pointer_cast<Connection>(conn);
+    std::set<Connectable*> existedConnection = connection_pair.second;
+    const bool has_full_connection = std::any_of(begin(existedConnection), end(existedConnection), [](const Connectable* conn) {
+      auto connection = dynamic_cast<const Connection*>(conn);
       return connection && connection->isFull();
     });
     if (has_full_connection) { return true; }
@@ -261,8 +222,11 @@ bool Processor::isWorkAvailable() {
   bool hasWork = false;
 
   try {
-    for (const auto &conn : _incomingConnections) {
-      std::shared_ptr<Connection> connection = std::static_pointer_cast<Connection>(conn);
+    for (const auto &conn : incoming_connections_) {
+      auto connection = dynamic_cast<Connection*>(conn);
+      if (!connection) {
+        continue;
+      }
       if (connection->isWorkAvailable()) {
         hasWork = true;
         break;
@@ -279,13 +243,13 @@ bool Processor::isWorkAvailable() {
 // must hold the graphMutex
 void Processor::updateReachability(const std::lock_guard<std::mutex>& graph_lock, bool force) {
   bool didChange = force;
-  for (auto& outIt : out_going_connections_) {
+  for (auto& outIt : outgoing_connections_) {
     for (auto& outConn : outIt.second) {
-      auto connection = std::dynamic_pointer_cast<Connection>(outConn);
+      auto connection = dynamic_cast<Connection*>(outConn);
       if (!connection) {
         continue;
       }
-      auto dest = std::dynamic_pointer_cast<const Processor>(connection->getDestination());
+      auto dest = dynamic_cast<Processor*>(connection->getDestination());
       if (!dest) {
         continue;
       }
@@ -303,12 +267,12 @@ void Processor::updateReachability(const std::lock_guard<std::mutex>& graph_lock
   }
   if (didChange) {
     // propagate the change to sources
-    for (auto& inConn : _incomingConnections) {
-      auto connection = std::dynamic_pointer_cast<Connection>(inConn);
+    for (auto& inConn : incoming_connections_) {
+      auto connection = dynamic_cast<Connection*>(inConn);
       if (!connection) {
         continue;
       }
-      auto source = std::dynamic_pointer_cast<Processor>(connection->getSource());
+      auto source = dynamic_cast<Processor*>(connection->getSource());
       if (!source) {
         continue;
       }
@@ -317,8 +281,8 @@ void Processor::updateReachability(const std::lock_guard<std::mutex>& graph_lock
   }
 }
 
-bool Processor::partOfCycle(const std::shared_ptr<Connection>& conn) {
-  auto source = std::dynamic_pointer_cast<Processor>(conn->getSource());
+bool Processor::partOfCycle(Connection* conn) {
+  auto source = dynamic_cast<Processor*>(conn->getSource());
   if (!source) {
     return false;
   }
@@ -331,9 +295,9 @@ bool Processor::partOfCycle(const std::shared_ptr<Connection>& conn) {
 
 bool Processor::isThrottledByBackpressure() const {
   bool isThrottledByOutgoing = ([&] {
-    for (auto &outIt : out_going_connections_) {
+    for (auto &outIt : outgoing_connections_) {
       for (auto &out : outIt.second) {
-        auto connection = std::dynamic_pointer_cast<Connection>(out);
+        auto connection = dynamic_cast<Connection*>(out);
         if (!connection) {
           continue;
         }
@@ -345,8 +309,8 @@ bool Processor::isThrottledByBackpressure() const {
     return false;
   })();
   bool isForcedByIncomingCycle = ([&] {
-    for (auto &inConn : _incomingConnections) {
-      auto connection = std::dynamic_pointer_cast<Connection>(inConn);
+    for (auto &inConn : incoming_connections_) {
+      auto connection = dynamic_cast<Connection*>(inConn);
       if (!connection) {
         continue;
       }
@@ -359,14 +323,14 @@ bool Processor::isThrottledByBackpressure() const {
   return isThrottledByOutgoing && !isForcedByIncomingCycle;
 }
 
-std::shared_ptr<Connectable> Processor::pickIncomingConnection() {
+Connectable* Processor::pickIncomingConnection() {
   std::lock_guard<std::mutex> rel_guard(relationship_mutex_);
 
   auto beginIt = incoming_connections_Iter;
-  std::shared_ptr<Connectable> inConn;
+  Connectable* inConn;
   do {
     inConn = getNextIncomingConnectionImpl(rel_guard);
-    auto connection = std::dynamic_pointer_cast<Connection>(inConn);
+    auto connection = dynamic_cast<Connection*>(inConn);
     if (!connection) {
       continue;
     }

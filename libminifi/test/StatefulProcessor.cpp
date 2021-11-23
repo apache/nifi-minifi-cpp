@@ -21,6 +21,7 @@
 #include "StatefulProcessor.h"
 #include "Exception.h"
 #include "core/Resource.h"
+#include "core/ProcessContext.h"
 
 namespace org {
 namespace apache {

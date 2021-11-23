@@ -29,3 +29,9 @@ Feature: Core flow functionalities
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "Using plaintext FlowFileRepository" in less than 5 seconds
     And the Minifi logs contain the following message: "Using plaintext DatabaseContentRepository" in less than 1 second
+
+
+  Scenario: Processors are destructed when agent is stopped
+    Given a LogOnDestructionProcessor processor with the name "logOnDestruction" in the "transient-minifi" flow with engine "transient-minifi"
+    When the MiNiFi instance starts up
+    Then the Minifi logs contain the following message: "LogOnDestructionProcessor is being destructed" in less than 100 seconds

@@ -22,11 +22,7 @@
 #include "Exception.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const std::string KamikazeProcessor::OnScheduleExceptionStr = "This processor was configured to throw exception during onSchedule";
 const std::string KamikazeProcessor::OnTriggerExceptionStr = "This processor was configured to throw exception during onTrigger";
@@ -76,8 +72,4 @@ void KamikazeProcessor::onUnSchedule() {
 
 REGISTER_RESOURCE(KamikazeProcessor, "This processor can throw exceptions in onTrigger and onSchedule calls based on configration. Only for testing purposes.");
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

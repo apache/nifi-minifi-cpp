@@ -126,21 +126,21 @@ class CompressDecompressionTestController : public TestController{
     // connection from compress processor to log attribute
     output = std::make_shared<minifi::Connection>(repo, content_repo, "Output");
     output->addRelationship(core::Relationship("success", "compress successful output"));
-    output->setSource(processor);
+    output->setSource(processor.get());
     output->setSourceUUID(processoruuid);
-    processor->addConnection(output);
+    processor->addConnection(output.get());
     // connection to compress processor
     input = std::make_shared<minifi::Connection>(repo, content_repo, "Input");
-    input->setDestination(processor);
+    input->setDestination(processor.get());
     input->setDestinationUUID(processoruuid);
-    processor->addConnection(input);
+    processor->addConnection(input.get());
 
     processor->setAutoTerminatedRelationships({{"failure", ""}});
 
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
 
-    context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor), nullptr, repo, repo, content_repo);
+    context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor.get()), nullptr, repo, repo, content_repo);
   }
 
  public:

@@ -46,7 +46,7 @@ RESTReceiver::RESTReceiver(const std::string& name, const utils::Identifier& uui
     : HeartbeatReporter(name, uuid) {
 }
 
-void RESTReceiver::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) {
+void RESTReceiver::initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink, const std::shared_ptr<Configure> &configure) {
   HeartbeatReporter::initialize(controller, updateSink, configure);
   logger_->log_trace("Initializing rest receiver");
   if (nullptr != configuration_) {
@@ -54,7 +54,7 @@ void RESTReceiver::initialize(core::controller::ControllerServiceProvider* contr
     configuration_->get("nifi.c2.rest.listener.port", "c2.rest.listener.port", listeningPort);
     configuration_->get("nifi.c2.rest.listener.cacert", "c2.rest.listener.cacert", caCert);
     if (!listeningPort.empty() && !rootUri.empty()) {
-      handler = std::unique_ptr<ListeningProtocol>(new ListeningProtocol());
+      handler = std::make_unique<ListeningProtocol>();
       if (!caCert.empty()) {
         listener = start_webserver(listeningPort, rootUri, dynamic_cast<CivetHandler*>(handler.get()), caCert);
       } else {

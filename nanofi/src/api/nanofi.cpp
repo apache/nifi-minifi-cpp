@@ -179,7 +179,7 @@ void get_proc_uuid_from_processor(standalone_processor * proc, char * uuid_targe
 }
 
 void get_proc_uuid_from_context(const processor_context * ctx, char * uuid_target) {
-    standalone_processor * proc = static_cast<standalone_processor*>(ctx->getProcessorNode()->getProcessor().get());
+    standalone_processor * proc = static_cast<standalone_processor*>(ctx->getProcessorNode()->getProcessor());
     get_proc_uuid_from_processor(proc, uuid_target);
 }
 

@@ -80,7 +80,7 @@ bool Connection::isEmpty() const {
   return queue_.empty();
 }
 
-bool Connection::isFull() {
+bool Connection::isFull() const {
   std::lock_guard<std::mutex> lock(mutex_);
 
   if (max_queue_size_ <= 0 && max_data_queue_size_ <= 0)
@@ -155,20 +155,18 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
         expiredFlowRecords.insert(item);
         logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);
       } else {
-        std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
-        item->setConnection(connectable);
+        item->setConnection(this);
         logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
         return item;
       }
     } else {
-      std::shared_ptr<Connectable> connectable = std::static_pointer_cast<Connectable>(shared_from_this());
-      item->setConnection(connectable);
+      item->setConnection(this);
       logger_->log_debug("Dequeue flow file UUID %s from connection %s", item->getUUIDStr(), name_);
       return item;
     }
   }
 
-  return NULL;
+  return nullptr;
 }
 
 void Connection::drain(bool delete_permanently) {

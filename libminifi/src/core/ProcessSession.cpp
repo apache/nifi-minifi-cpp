@@ -759,7 +759,7 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
   }
   Relationship relationship = itRelationship->second;
   // Find the relationship, we need to find the connections for that relationship
-  std::set<std::shared_ptr<Connectable>> connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship.getName());
+  const auto connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship.getName());
   if (connections.empty()) {
     // No connection
     if (!process_context_->getProcessorNode()->isAutoTerminated(relationship)) {
@@ -773,7 +773,7 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
   } else {
     // We connections, clone the flow and assign the connection accordingly
     for (auto itConnection = connections.begin(); itConnection != connections.end(); ++itConnection) {
-      std::shared_ptr<Connectable> connection = *itConnection;
+      auto connection = *itConnection;
       if (itConnection == connections.begin()) {
         // First connection which the flow need be routed to
         record->setConnection(connection);
@@ -810,9 +810,9 @@ void ProcessSession::commit() {
       }
     }
 
-    std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
+    std::map<Connectable*, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
 
-    std::shared_ptr<Connectable> connection = nullptr;
+    Connectable* connection = nullptr;
     // Complete process the added and update flow files for the session, send the flow file to its queue
     for (const auto &it : _updatedFlowFiles) {
       auto record = it.second.modified;
@@ -870,7 +870,7 @@ void ProcessSession::commit() {
     persistFlowFilesBeforeTransfer(connectionQueues, _updatedFlowFiles);
 
     for (auto& cq : connectionQueues) {
-      auto connection = std::dynamic_pointer_cast<Connection>(cq.first);
+      auto connection = dynamic_cast<Connection*>(cq.first);
       if (connection) {
         connection->multiPut(cq.second);
       } else {
@@ -902,7 +902,7 @@ void ProcessSession::commit() {
 void ProcessSession::rollback() {
   // new FlowFiles are only persisted during commit
   // no need to delete them here
-  std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
+  std::map<Connectable*, std::vector<std::shared_ptr<FlowFile>>> connectionQueues;
 
   try {
     // Requeue the snapshot of the flowfile back
@@ -924,7 +924,7 @@ void ProcessSession::rollback() {
 
     // put everything back where it came from
     for (auto& cq : connectionQueues) {
-      auto connection = std::dynamic_pointer_cast<Connection>(cq.first);
+      auto connection = dynamic_cast<Connection*>(cq.first);
       if (connection) {
         connection->multiPut(cq.second);
       } else {
@@ -955,7 +955,7 @@ void ProcessSession::rollback() {
 }
 
 void ProcessSession::persistFlowFilesBeforeTransfer(
-    std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
+    std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile> > >& transactionMap,
     const std::map<utils::Identifier, FlowFileUpdate>& modifiedFlowFiles) {
 
   std::vector<std::pair<std::string, std::unique_ptr<io::BufferStream>>> flowData;
@@ -963,11 +963,9 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
   auto flowFileRepo = process_context_->getFlowFileRepository();
   auto contentRepo = process_context_->getContentRepository();
 
-  for (auto& transaction : transactionMap) {
-    const std::shared_ptr<Connectable>& target = transaction.first;
-    std::shared_ptr<Connection> connection = std::dynamic_pointer_cast<Connection>(target);
-    const bool shouldDropEmptyFiles = connection ? connection->getDropEmptyFlowFiles() : false;
-    auto& flows = transaction.second;
+  for (auto& [target, flows] : transactionMap) {
+    const auto connection = dynamic_cast<Connection*>(target);
+    const bool shouldDropEmptyFiles = connection && connection->getDropEmptyFlowFiles();
     for (auto &ff : flows) {
       if (shouldDropEmptyFiles && ff->getSize() == 0) {
         // the receiver will drop this FF
@@ -986,11 +984,9 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
     throw Exception(PROCESS_SESSION_EXCEPTION, "Failed to put flowfiles to repository");
   }
 
-  for (auto& transaction : transactionMap) {
-    const std::shared_ptr<Connectable>& target = transaction.first;
-    std::shared_ptr<Connection> connection = std::dynamic_pointer_cast<Connection>(target);
-    const bool shouldDropEmptyFiles = connection ? connection->getDropEmptyFlowFiles() : false;
-    auto& flows = transaction.second;
+  for (auto& [target, flows] : transactionMap) {
+    const auto connection = dynamic_cast<Connection*>(target);
+    const bool shouldDropEmptyFiles = connection && connection->getDropEmptyFlowFiles();
     for (auto &ff : flows) {
       utils::Identifier uuid = ff->getUUID();
       auto snapshotIt = modifiedFlowFiles.find(uuid);
@@ -1018,7 +1014,7 @@ void ProcessSession::persistFlowFilesBeforeTransfer(
 }
 
 void ProcessSession::ensureNonNullResourceClaim(
-    const std::map<std::shared_ptr<Connectable>, std::vector<std::shared_ptr<core::FlowFile>>> &transactionMap) {
+    const std::map<Connectable*, std::vector<std::shared_ptr<core::FlowFile>>> &transactionMap) {
   for (auto& transaction : transactionMap) {
     for (auto& flowFile : transaction.second) {
       auto claim = flowFile->getResourceClaim();
@@ -1034,14 +1030,19 @@ void ProcessSession::ensureNonNullResourceClaim(
 }
 
 std::shared_ptr<core::FlowFile> ProcessSession::get() {
-  std::shared_ptr<Connectable> first = process_context_->getProcessorNode()->pickIncomingConnection();
+  const auto first = process_context_->getProcessorNode()->pickIncomingConnection();
 
   if (first == nullptr) {
     logger_->log_trace("Get is null for %s", process_context_->getProcessorNode()->getName());
     return nullptr;
   }
 
-  std::shared_ptr<Connection> current = std::static_pointer_cast<Connection>(first);
+  auto current = dynamic_cast<Connection*>(first);
+  if (!current) {
+    logger_->log_error("The incoming connection [%s] of the processor [%s] \"%s\" is not actually a Connection.",
+                       first->getUUIDStr(), process_context_->getProcessorNode()->getUUIDStr(), process_context_->getProcessorNode()->getName());
+    return {};
+  }
 
   do {
     std::set<std::shared_ptr<core::FlowFile> > expired;
@@ -1072,7 +1073,7 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
       }
       return ret;
     }
-    current = std::static_pointer_cast<Connection>(process_context_->getProcessorNode()->pickIncomingConnection());
+    current = dynamic_cast<Connection*>(process_context_->getProcessorNode()->pickIncomingConnection());
   } while (current != nullptr && current != first);
 
   return nullptr;
@@ -1083,10 +1084,10 @@ void ProcessSession::flushContent() {
 }
 
 bool ProcessSession::outgoingConnectionsFull(const std::string& relationship) {
-  std::set<std::shared_ptr<Connectable>> connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship);
+  std::set<Connectable*> connections = process_context_->getProcessorNode()->getOutGoingConnections(relationship);
   Connection * connection = nullptr;
-  for (const auto& conn : connections) {
-    connection = dynamic_cast<Connection*>(conn.get());
+  for (const auto conn : connections) {
+    connection = dynamic_cast<Connection*>(conn);
     if (connection && connection->isFull()) {
       return true;
     }

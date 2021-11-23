@@ -54,6 +54,10 @@ class TestRepository : public org::apache::nifi::minifi::core::Repository {
         Repository("repo_name", "./dir", 1s, 100, 0ms) {
   }
 
+  ~TestRepository() override {
+    stop();
+  }
+
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
     return true;
   }
@@ -62,15 +66,9 @@ class TestRepository : public org::apache::nifi::minifi::core::Repository {
     running_ = true;
   }
 
-  void stop() override {
-    running_ = false;
-  }
-
   void setFull() {
     repo_full_ = true;
   }
-
-  ~TestRepository() override = default;
 
   bool isNoop() override {
     return false;
@@ -180,11 +178,13 @@ class TestFlowRepository : public org::apache::nifi::minifi::core::Repository {
         org::apache::nifi::minifi::core::Repository("ff", "./dir", 1s, 100, 0ms) {
   }
 
+  ~TestFlowRepository() override {
+    stop();
+  }
+
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
     return true;
   }
-
-  ~TestFlowRepository() override = default;
 
   bool Put(std::string key, const uint8_t *buf, size_t bufLen) override {
     std::lock_guard<std::mutex> lock{repository_results_mutex_};
@@ -249,7 +249,7 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
 
   ~TestFlowController() override = default;
 
-  void load(const std::shared_ptr<org::apache::nifi::minifi::core::ProcessGroup>& /*root*/ = nullptr, bool /*reload*/ = false) override {
+  void load(std::unique_ptr<org::apache::nifi::minifi::core::ProcessGroup> /*root*/ = nullptr, bool /*reload*/ = false) override {
   }
 
   int16_t start() override {

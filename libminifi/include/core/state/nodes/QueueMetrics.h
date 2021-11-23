@@ -57,16 +57,15 @@ class QueueMetrics : public ResponseNode {
     return "QueueMetrics";
   }
 
-  void addConnection(const std::shared_ptr<minifi::Connection> &connection) {
+  void addConnection(std::unique_ptr<minifi::Connection> connection) {
     if (nullptr != connection) {
-      connections.insert(std::make_pair(connection->getName(), connection));
+      connections.insert(std::make_pair(connection->getName(), std::move(connection)));
     }
   }
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
-    for (auto conn : connections) {
-      auto connection = conn.second;
+    for (const auto& [_, connection] : connections) {
       SerializedResponseNode parent;
       parent.name = connection->getName();
       SerializedResponseNode datasize;
@@ -96,7 +95,7 @@ class QueueMetrics : public ResponseNode {
   }
 
  protected:
-  std::map<std::string, std::shared_ptr<minifi::Connection>> connections;
+  std::map<std::string, std::unique_ptr<minifi::Connection>> connections;
 };
 
 }  // namespace response

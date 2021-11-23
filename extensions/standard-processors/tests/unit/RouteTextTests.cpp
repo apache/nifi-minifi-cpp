@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "FlowFileRecord.h"
 #include "TestBase.h"
 #include "Catch.h"
 #include "processors/RouteText.h"
@@ -124,8 +125,8 @@ struct RouteTextController : public TestController {
 
   std::shared_ptr<TestPlan> plan_ = createPlan();
   std::shared_ptr<core::Processor> proc_ = std::make_shared<processors::RouteText>("RouteText");
-  std::map<std::string, std::shared_ptr<minifi::Connection>> outputs_;
-  std::shared_ptr<minifi::Connection> input_;
+  std::map<std::string, minifi::Connection*> outputs_;
+  minifi::Connection* input_;
 };
 
 TEST_CASE_METHOD(RouteTextController, "RouteText correctly handles Matching Strategies") {

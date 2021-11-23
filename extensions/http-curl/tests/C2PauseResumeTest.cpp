@@ -133,10 +133,11 @@ int main(int argc, char **argv) {
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 
-  std::shared_ptr<core::Processor> proc = yaml_config.getRoot()->findProcessorByName("invoke");
+  auto root = yaml_config.getRoot();
+  const auto proc = root->findProcessorByName("invoke");
   assert(proc != nullptr);
 
-  const auto inv = std::dynamic_pointer_cast<minifi::processors::InvokeHTTP>(proc);
+  const auto inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
   assert(inv != nullptr);
   std::string url;
   inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);

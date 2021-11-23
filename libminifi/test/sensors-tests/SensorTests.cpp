@@ -70,10 +70,10 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
-    std::shared_ptr<core::Processor> proc = pg->findProcessorByName("pcap");
+    const auto proc = pg->findProcessorByName("pcap");
     assert(proc != nullptr);
 
-    auto inv = std::dynamic_pointer_cast<minifi::processors::GetEnvironmentalSensors>(proc);
+    auto inv = dynamic_cast<minifi::processors::GetEnvironmentalSensors*>(proc);
     assert(inv != nullptr);
 
     configuration->set("nifi.c2.enable", "false");

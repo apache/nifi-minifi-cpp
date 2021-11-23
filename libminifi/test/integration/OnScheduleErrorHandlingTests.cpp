@@ -21,11 +21,10 @@
 #include "IntegrationBase.h"
 #include "core/logging/Logger.h"
 #include "core/Scheduling.h"
-#include "core/state/UpdateController.h"
 #include "core/state/ProcessorController.h"
 #include "../TestBase.h"
 #include "../Catch.h"
-#include "../KamikazeProcessor.h"
+#include "../../../extensions/test-processors/KamikazeProcessor.h"
 #include "utils/StringUtils.h"
 #include "utils/IntegrationTestUtils.h"
 
@@ -76,8 +75,8 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
 /*Verify that event driven processors without incoming connections are not scheduled*/
 class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
  public:
-  void updateProperties(std::shared_ptr<minifi::FlowController> fc) override {
-    auto controller_vec = fc->getAllComponents();
+  void updateProperties(minifi::FlowController& fc) override {
+    auto controller_vec = fc.getAllComponents();
     /* This tests depends on a configuration that contains only one KamikazeProcessor named kamikaze
      * (See testOnScheduleRetry.yml)
      * In this case there are two components in the flowcontroller: first is the controller itself,
@@ -88,7 +87,7 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
     assert(controller_vec[0]->getComponentName() == "FlowController");
     assert(controller_vec[1]->getComponentName() == "kamikaze");
 
-    auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(controller_vec[1].get());
+    auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(controller_vec[1]);
     assert(process_controller != nullptr);
 
     process_controller->getProcessor()->setSchedulingStrategy(org::apache::nifi::minifi::core::SchedulingStrategy::EVENT_DRIVEN);

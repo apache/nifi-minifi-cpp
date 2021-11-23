@@ -25,19 +25,15 @@
 
 #pragma once
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class KamikazeProcessor : public core::Processor {
  public:
-  static const std::string OnScheduleExceptionStr;
-  static const std::string OnTriggerExceptionStr;
-  static const std::string OnScheduleLogStr;
-  static const std::string OnTriggerLogStr;
-  static const std::string OnUnScheduleLogStr;
+  EXTENSIONAPI static const std::string OnScheduleExceptionStr;
+  EXTENSIONAPI static const std::string OnTriggerExceptionStr;
+  EXTENSIONAPI static const std::string OnScheduleLogStr;
+  EXTENSIONAPI static const std::string OnTriggerLogStr;
+  EXTENSIONAPI static const std::string OnUnScheduleLogStr;
 
   explicit KamikazeProcessor(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
       : Processor(name, uuid) {
@@ -46,8 +42,8 @@ class KamikazeProcessor : public core::Processor {
   // Processor Name
   static constexpr char const* ProcessorName = "KamikazeProcessor";
   // Supported Properties
-  static core::Property ThrowInOnSchedule;
-  static core::Property ThrowInOnTrigger;
+  EXTENSIONAPI static core::Property ThrowInOnSchedule;
+  EXTENSIONAPI static core::Property ThrowInOnTrigger;
 
  public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
@@ -60,8 +56,4 @@ class KamikazeProcessor : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<KamikazeProcessor>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -55,8 +55,8 @@ class StatefulIntegrationTest : public IntegrationBase {
     logger_->log_info("Running test case \"%s\"", test_case_);
   }
 
-  void updateProperties(std::shared_ptr<minifi::FlowController> fc) override {
-    const auto controllerVec = fc->getAllComponents();
+  void updateProperties(minifi::FlowController& fc) override {
+    const auto controllerVec = fc.getAllComponents();
     /* This tests depends on a configuration that contains only one StatefulProcessor named statefulProcessor
      * (See TestStateTransactionality.yml)
      * In this case there are two components in the flowcontroller: first is the controller itself,
@@ -68,9 +68,9 @@ class StatefulIntegrationTest : public IntegrationBase {
     assert(controllerVec[1]->getComponentName() == "statefulProcessor");
 
     // set hooks
-    const auto processController = std::dynamic_pointer_cast<ProcessorController>(controllerVec[1]);
+    const auto processController = dynamic_cast<ProcessorController*>(controllerVec[1]);
     assert(processController != nullptr);
-    stateful_processor_ = std::dynamic_pointer_cast<StatefulProcessor>(processController->getProcessor());
+    stateful_processor_ = dynamic_cast<StatefulProcessor*>(processController->getProcessor());
     assert(stateful_processor_ != nullptr);
     stateful_processor_->setHooks(on_schedule_hook_, on_trigger_hooks_);
   }
@@ -87,7 +87,7 @@ class StatefulIntegrationTest : public IntegrationBase {
   const std::vector<StatefulProcessor::HookType> on_trigger_hooks_;
   const LogChecker log_checker_;
   const std::string test_case_;
-  std::shared_ptr<StatefulProcessor> stateful_processor_;
+  StatefulProcessor* stateful_processor_;
   std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<StatefulIntegrationTest>::getLogger()};
 };
 

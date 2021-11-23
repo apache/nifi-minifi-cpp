@@ -254,14 +254,14 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   static constexpr char const* DefaultStateManagerProviderName = "defaultstatemanagerprovider";
 
-  std::shared_ptr<CoreComponentStateManager> getStateManager() {
+  CoreComponentStateManager* getStateManager() {
     if (state_manager_provider_ == nullptr) {
       return nullptr;
     }
     if (!state_manager_) {
       state_manager_ = state_manager_provider_->getCoreComponentStateManager(*processor_node_);
     }
-    return state_manager_;
+    return state_manager_.get();
   }
 
   bool hasStateManager() const {
@@ -388,7 +388,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
 
   controller::ControllerServiceProvider* controller_service_provider_;
   std::shared_ptr<core::CoreComponentStateManagerProvider> state_manager_provider_;
-  std::shared_ptr<CoreComponentStateManager> state_manager_;
+  std::unique_ptr<CoreComponentStateManager> state_manager_;
   std::shared_ptr<core::Repository> repo_;
   std::shared_ptr<core::Repository> flow_repo_;
   std::shared_ptr<core::ContentRepository> content_repo_;

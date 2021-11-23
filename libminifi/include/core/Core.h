@@ -96,11 +96,11 @@ static inline std::string getClassName() {
 }
 
 template<typename T>
-std::shared_ptr<T> instantiate(const std::string name = {}) {
+std::unique_ptr<T> instantiate(const std::string name = {}) {
   if (name.empty()) {
-    return std::make_shared<T>();
+    return std::make_unique<T>();
   } else {
-    return std::make_shared<T>(name);
+    return std::make_unique<T>(name);
   }
 }
 
@@ -157,7 +157,7 @@ class CoreComponent {
   // A global unique identifier
   utils::Identifier uuid_;
 
-  // Connectable's name
+  // CoreComponent's name
   std::string name_;
 };
 

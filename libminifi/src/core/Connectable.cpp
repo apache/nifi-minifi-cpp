@@ -141,39 +141,37 @@ void Connectable::notifyWork() {
   }
 }
 
-std::set<std::shared_ptr<Connectable>> Connectable::getOutGoingConnections(const std::string &relationship) const {
-  std::set<std::shared_ptr<Connectable>> empty;
-
-  const auto &&it = out_going_connections_.find(relationship);
-  if (it != out_going_connections_.end()) {
+std::set<Connectable*> Connectable::getOutGoingConnections(const std::string &relationship) {
+  const auto it = outgoing_connections_.find(relationship);
+  if (it != outgoing_connections_.end()) {
     return it->second;
   } else {
-    return empty;
+    return {};
   }
 }
 
-std::shared_ptr<Connectable> Connectable::getNextIncomingConnection() {
+Connectable* Connectable::getNextIncomingConnection() {
   std::lock_guard<std::mutex> lock(relationship_mutex_);
   return getNextIncomingConnectionImpl(lock);
 }
 
-std::shared_ptr<Connectable> Connectable::getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& /*relatioship_mutex_lock*/) {
-  if (_incomingConnections.size() == 0)
+Connectable* Connectable::getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& /*relatioship_mutex_lock*/) {
+  if (incoming_connections_.empty())
     return nullptr;
 
-  if (incoming_connections_Iter == _incomingConnections.end())
-    incoming_connections_Iter = _incomingConnections.begin();
+  if (incoming_connections_Iter == incoming_connections_.end())
+    incoming_connections_Iter = incoming_connections_.begin();
 
-  std::shared_ptr<Connectable> ret = *incoming_connections_Iter;
+  auto ret = *incoming_connections_Iter;
   incoming_connections_Iter++;
 
-  if (incoming_connections_Iter == _incomingConnections.end())
-    incoming_connections_Iter = _incomingConnections.begin();
+  if (incoming_connections_Iter == incoming_connections_.end())
+    incoming_connections_Iter = incoming_connections_.begin();
 
   return ret;
 }
 
-std::shared_ptr<Connectable> Connectable::pickIncomingConnection() {
+Connectable* Connectable::pickIncomingConnection() {
   return getNextIncomingConnection();
 }
 

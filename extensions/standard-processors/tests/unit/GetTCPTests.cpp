@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 #include <set>
-#include <fstream>
 #include "unit/ProvenanceTestHelper.h"
 #include "TestBase.h"
 #include "Catch.h"
@@ -35,7 +34,6 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/reporting/SiteToSiteProvenanceReportingTask.h"
-#include "utils/gsl.h"
 
 TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   TestController testController;
@@ -56,9 +54,9 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
 
   std::shared_ptr<core::Repository> repo = std::make_shared<TestRepository>();
 
-  std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::GetTCP>("gettcpexample");
+  auto processor = std::make_unique<org::apache::nifi::minifi::processors::GetTCP>("gettcpexample");
 
-  std::shared_ptr<core::Processor> logAttribute = std::make_shared<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
+  auto logAttribute = std::make_unique<org::apache::nifi::minifi::processors::LogAttribute>("logattribute");
 
   processor->setStreamFactory(stream_factory);
   processor->initialize();
@@ -71,37 +69,37 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
 
   REQUIRE(processoruuid.to_string() != logattribute_uuid.to_string());
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
+  auto connection = std::make_unique<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
   connection->addRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
+  auto connection2 = std::make_unique<minifi::Connection>(repo, content_repo, "logattribute");
   connection2->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(processor);
+  connection->setSource(processor.get());
 
   // link the connections so that we can test results at the end for this
-  connection->setDestination(logAttribute);
+  connection->setDestination(logAttribute.get());
 
-  connection2->setSource(logAttribute);
+  connection2->setSource(logAttribute.get());
 
   connection2->setSourceUUID(logattribute_uuid);
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(logattribute_uuid);
 
-  processor->addConnection(connection);
-  logAttribute->addConnection(connection);
-  logAttribute->addConnection(connection2);
+  processor->addConnection(connection.get());
+  logAttribute->addConnection(connection.get());
+  logAttribute->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute);
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
   auto session = std::make_shared<core::ProcessSession>(context);
-    auto session2 = std::make_shared<core::ProcessSession>(context2);
+  auto session2 = std::make_shared<core::ProcessSession>(context2);
 
   REQUIRE(processor->getName() == "gettcpexample");
 
@@ -125,21 +123,18 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(context, session);
   reporter = session->getProvenanceReporter();
 
-  records = reporter->getEvents();
   session->commit();
 
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   logAttribute->onTrigger(context2, session2);
-
-  records = reporter->getEvents();
 
   REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:45 Offset:0"));
@@ -183,32 +178,32 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   utils::Identifier logattribute_uuid = logAttribute->getUUID();
   REQUIRE(logattribute_uuid);
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
+  auto connection = std::make_unique<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
   connection->addRelationship(core::Relationship("partial", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
+  auto connection2 = std::make_unique<minifi::Connection>(repo, content_repo, "logattribute");
   connection2->addRelationship(core::Relationship("partial", "description"));
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(processor);
+  connection->setSource(processor.get());
 
   // link the connections so that we can test results at the end for this
-  connection->setDestination(logAttribute);
+  connection->setDestination(logAttribute.get());
 
-  connection2->setSource(logAttribute);
+  connection2->setSource(logAttribute.get());
 
   connection2->setSourceUUID(logattribute_uuid);
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(logattribute_uuid);
 
-  processor->addConnection(connection);
-  logAttribute->addConnection(connection);
-  logAttribute->addConnection(connection2);
+  processor->addConnection(connection.get());
+  logAttribute->addConnection(connection.get());
+  logAttribute->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute);
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
@@ -240,27 +235,22 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(context, session);
   reporter = session->getProvenanceReporter();
 
-  records = reporter->getEvents();
   session->commit();
 
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   logAttribute->onTrigger(context2, session2);
 
-  records = reporter->getEvents();
-
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   logAttribute->onTrigger(context2, session2);
-
-  records = reporter->getEvents();
 
   REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:11 Offset:0"));
@@ -307,39 +297,39 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   utils::Identifier logattribute_uuid = logAttribute->getUUID();
   REQUIRE(logattribute_uuid);
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
+  auto connection = std::make_unique<minifi::Connection>(repo, content_repo, "gettcpexampleConnection");
   connection->addRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "logattribute");
+  auto connection2 = std::make_unique<minifi::Connection>(repo, content_repo, "logattribute");
   connection2->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(processor);
+  connection->setSource(processor.get());
 
   // link the connections so that we can test results at the end for this
-  connection->setDestination(logAttribute);
+  connection->setDestination(logAttribute.get());
 
-  connection2->setSource(logAttribute);
+  connection2->setSource(logAttribute.get());
 
   connection2->setSourceUUID(logattribute_uuid);
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(logattribute_uuid);
 
-  processor->addConnection(connection);
-  logAttribute->addConnection(connection);
-  logAttribute->addConnection(connection2);
+  processor->addConnection(connection.get());
+  logAttribute->addConnection(connection.get());
+  logAttribute->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
-    std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute);
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
   auto session = std::make_shared<core::ProcessSession>(context);
-    auto session2 = std::make_shared<core::ProcessSession>(context2);
+  auto session2 = std::make_shared<core::ProcessSession>(context2);
 
 
   REQUIRE(processor->getName() == "gettcpexample");
@@ -364,27 +354,22 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(context, session);
   reporter = session->getProvenanceReporter();
 
-  records = reporter->getEvents();
   session->commit();
 
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   logAttribute->onTrigger(context2, session2);
 
-  records = reporter->getEvents();
-
   logAttribute->incrementActiveTasks();
   logAttribute->setScheduledState(core::ScheduledState::RUNNING);
   logAttribute->onTrigger(context2, session2);
-
-  records = reporter->getEvents();
 
   REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Size:2 Offset:0"));
@@ -408,11 +393,11 @@ TEST_CASE("GetTCPEmptyNoConnect", "[GetTCP3]") {
   // we're using new lines above
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte.getName(), "10");
 
-  testController.runSession(plan, false);
+  TestController::runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   REQUIRE(true == LogTestController::getInstance().contains("Reconnect interval is 200 ms"));
   REQUIRE(true == LogTestController::getInstance().contains("Could not create socket during initialization for " + org::apache::nifi::minifi::io::Socket::getMyHostName()  + ":9182"));

@@ -74,18 +74,17 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
     purge_required_ = false;
   }
 
-  // Destructor
-  virtual ~VolatileRepository();
+  ~VolatileRepository() override;
 
   /**
    * Initialize thevolatile repsitory
    **/
 
-  virtual bool initialize(const std::shared_ptr<Configure> &configure);
+  bool initialize(const std::shared_ptr<Configure> &configure) override;
 
-  virtual void run() = 0;
+  void run() override = 0;
 
-  virtual bool isNoop() {
+  bool isNoop() override {
     return false;
   }
 
@@ -94,32 +93,32 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
    * @param key key to add to the repository
    * @param buf buffer
    **/
-  virtual bool Put(T key, const uint8_t *buf, size_t bufLen);
+  bool Put(T key, const uint8_t *buf, size_t bufLen) override;
 
   /**
    * Places new objects into the volatile memory area
    * @param data the key-value pairs to add to the repository
    **/
-  virtual bool MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data);
+  bool MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data) override;
 
   /**
    * Deletes the key
    * @return status of the delete operation
    */
-  virtual bool Delete(T key);
+  bool Delete(T key) override;
 
   /**
    * Sets the value from the provided key. Once the item is retrieved
    * it may not be retrieved again.
    * @return status of the get operation.
    */
-  virtual bool Get(const T &key, std::string &value);
+  bool Get(const T &key, std::string &value) override;
   /**
    * Deserializes objects into store
    * @param store vector in which we will store newly created objects.
    * @param max_size size of objects deserialized
    */
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda);
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) override;
 
   /**
    * Deserializes objects into a store that contains a fixed number of objects in which
@@ -127,22 +126,16 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
    * @param store precreated object vector
    * @param max_size size of objects deserialized
    */
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size);
-
-  /**
-   * Set the connection map
-   * @param connectionMap map of all connections through this repo.
-   */
-  void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap);
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override;
 
   /**
    * Function to load this component.
    */
-  virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
+  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
 
-  virtual void start();
+  void start() override;
 
-  virtual uint64_t getRepoSize() {
+  uint64_t getRepoSize() override {
     return current_size_;
   }
 
@@ -164,7 +157,6 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
       return false;
   }
 
-  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   // current size of the volatile repo.
   std::atomic<size_t> current_size_;
   // current index.
@@ -203,6 +195,8 @@ VolatileRepository<T>::~VolatileRepository() {
   for (auto ent : value_vector_) {
     delete ent;
   }
+
+  stop();
 }
 
 /**
@@ -394,11 +388,6 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
   } else {
     return false;
   }
-}
-
-template<typename T>
-void VolatileRepository<T>::setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap) {
-  this->connectionMap = connectionMap;
 }
 
 template<typename T>

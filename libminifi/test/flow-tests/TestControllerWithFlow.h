@@ -55,15 +55,16 @@ class TestControllerWithFlow: public TestController{
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration_);
 
     auto flow = std::make_unique<core::YamlConfiguration>(prov_repo, ff_repo, content_repo, stream_factory, configuration_, yamlPath);
-    root_ = flow->getRoot();
+    auto root = flow->getRoot();
+    root_ = root.get();
     controller_ = std::make_shared<minifi::FlowController>(
         prov_repo, ff_repo, configuration_,
         std::move(flow),
         content_repo, DEFAULT_ROOT_GROUP_NAME);
+    controller_->load(std::move(root));
   }
 
   void startFlow() {
-    controller_->load(root_);
     controller_->start();
   }
 
@@ -75,5 +76,5 @@ class TestControllerWithFlow: public TestController{
 
   std::shared_ptr<minifi::Configure> configuration_;
   std::shared_ptr<minifi::FlowController> controller_;
-  std::shared_ptr<core::ProcessGroup> root_;
+  core::ProcessGroup* root_;
 };

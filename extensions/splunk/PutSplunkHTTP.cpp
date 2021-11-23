@@ -23,6 +23,8 @@
 
 #include "SplunkAttributes.h"
 
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "client/HTTPClient.h"

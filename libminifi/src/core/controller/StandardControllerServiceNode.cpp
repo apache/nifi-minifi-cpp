@@ -26,15 +26,6 @@ namespace nifi {
 namespace minifi {
 namespace core {
 namespace controller {
-std::shared_ptr<core::ProcessGroup> &StandardControllerServiceNode::getProcessGroup() {
-  std::lock_guard<std::mutex> lock(mutex_);
-  return process_group_;
-}
-
-void StandardControllerServiceNode::setProcessGroup(std::shared_ptr<ProcessGroup> &processGroup) {
-  std::lock_guard<std::mutex> lock(mutex_);
-  process_group_ = processGroup;
-}
 
 bool StandardControllerServiceNode::enable() {
   Property property("Linked Services", "Referenced Controller Services");

@@ -49,7 +49,7 @@ class C2CallbackAgent : public c2::C2Agent {
   explicit C2CallbackAgent(
       core::controller::ControllerServiceProvider* controller,
       state::Pausable* pause_handler,
-      const std::shared_ptr<state::StateMonitor> &updateSink,
+      state::StateMonitor* updateSink,
       const std::shared_ptr<Configure> &configure);
 
   ~C2CallbackAgent() override = default;

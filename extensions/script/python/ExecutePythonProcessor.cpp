@@ -92,9 +92,8 @@ void ExecutePythonProcessor::initialize() {
 void ExecutePythonProcessor::initalizeThroughScriptEngine() {
   appendPathForImportModules();
   python_script_engine_->eval(script_to_exec_);
-  auto shared_this = shared_from_this();
-  python_script_engine_->describe(shared_this);
-  python_script_engine_->onInitialize(shared_this);
+  python_script_engine_->describe(this);
+  python_script_engine_->onInitialize(this);
   processor_initialized_ = true;
 }
 
