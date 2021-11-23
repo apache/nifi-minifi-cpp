@@ -34,7 +34,7 @@ class HeartbeatLogger : public RESTProtocol, public HeartbeatReporter {
  public:
   explicit HeartbeatLogger(const std::string& name, const utils::Identifier& id = {});
   int16_t heartbeat(const C2Payload &heartbeat) override;
-  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) override;
+  void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink, const std::shared_ptr<Configure> &configure) override;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HeartbeatLogger>::getLogger();

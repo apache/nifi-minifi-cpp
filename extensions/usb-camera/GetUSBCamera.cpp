@@ -28,6 +28,7 @@
 #include <algorithm>
 
 #include "utils/gsl.h"
+#include "core/ProcessSessionFactory.h"
 #include "core/Resource.h"
 
 namespace org {

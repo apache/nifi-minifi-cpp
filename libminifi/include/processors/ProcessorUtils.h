@@ -23,14 +23,12 @@
 #include <string>
 #include <vector>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class ProcessorUtils {
  public:
+  ProcessorUtils() = delete;
+
   /**
    * Instantiates and configures a processor
    * @param class_short_name short name of the class
@@ -38,7 +36,7 @@ class ProcessorUtils {
    * @param uuid uuid object for the processor
    * @param stream_factory stream factory to be set onto the processor
    */
-  static inline std::shared_ptr<core::Processor> createProcessor(const std::string &class_short_name, const std::string &canonicalName, const utils::Identifier &uuid,
+  static inline std::unique_ptr<core::Processor> createProcessor(const std::string &class_short_name, const std::string &canonicalName, const utils::Identifier &uuid,
                                                                  const std::shared_ptr<minifi::io::StreamFactory> &stream_factory) {
     auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(class_short_name, uuid);
     // fallback to the canonical name if the short name does not work, then attempt JNI bindings if they exist
@@ -47,10 +45,10 @@ class ProcessorUtils {
       if (ptr == nullptr) {
         ptr = core::ClassLoader::getDefaultClassLoader().instantiate("ExecuteJavaClass", uuid);
         if (ptr != nullptr) {
-          std::shared_ptr<core::Processor> processor = std::dynamic_pointer_cast<core::Processor>(ptr);
-          if (processor == nullptr) {
+          if (dynamic_cast<core::Processor*>(ptr.get()) == nullptr) {
             throw std::runtime_error("Invalid return from the classloader");
           }
+          auto processor = std::unique_ptr<core::Processor>{dynamic_cast<core::Processor*>(ptr.release())};
           processor->initialize();
           processor->setProperty("NiFi Processor", canonicalName);
           processor->setStreamFactory(stream_factory);
@@ -61,25 +59,15 @@ class ProcessorUtils {
     if (ptr == nullptr) {
       return nullptr;
     }
-    auto returnPtr = std::dynamic_pointer_cast<core::Processor>(ptr);
-
-    if (returnPtr == nullptr) {
+    if (dynamic_cast<core::Processor*>(ptr.get()) == nullptr) {
       throw std::runtime_error("Invalid return from the classloader");
     }
 
+    auto returnPtr = std::unique_ptr<core::Processor>{dynamic_cast<core::Processor*>(ptr.release())};
     returnPtr->initialize();
-
     returnPtr->setStreamFactory(stream_factory);
-
     return returnPtr;
   }
-
- private:
-  ProcessorUtils();
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

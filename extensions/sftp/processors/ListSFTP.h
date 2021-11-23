@@ -106,7 +106,7 @@ class ListSFTP : public SFTPProcessorBase {
     return true;
   }
 
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
+  core::CoreComponentStateManager* state_manager_;
   std::string listing_strategy_;
   bool search_recursively_;
   bool follow_symlink_;

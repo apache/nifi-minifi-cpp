@@ -207,7 +207,7 @@ void FlowFile::setLineageStartDate(const std::chrono::system_clock::time_point d
  * Sets the original connection with a shared pointer.
  * @param connection shared connection.
  */
-void FlowFile::setConnection(const std::shared_ptr<core::Connectable>& connection) {
+void FlowFile::setConnection(core::Connectable* connection) {
   connection_ = connection;
 }
 
@@ -215,7 +215,7 @@ void FlowFile::setConnection(const std::shared_ptr<core::Connectable>& connectio
  * Returns the original connection referenced by this record.
  * @return shared original connection pointer.
  */
-std::shared_ptr<core::Connectable> FlowFile::getConnection() const {
+core::Connectable* FlowFile::getConnection() const {
   return connection_;
 }
 

@@ -39,7 +39,7 @@ TEST_CASE("Parse enum property") {
       ->build();
   auto proc = std::make_shared<TestProcessor>("test-proc");
   proc->setSupportedProperties({prop});
-  ProcessContext context(std::make_shared<ProcessorNode>(proc), nullptr, nullptr, nullptr, nullptr, nullptr);
+  ProcessContext context(std::make_shared<ProcessorNode>(proc.get()), nullptr, nullptr, nullptr, nullptr, nullptr);
   SECTION("Valid") {
     proc->setProperty(prop, "B");
     TestEnum val = utils::parseEnumProperty<TestEnum>(context, prop);

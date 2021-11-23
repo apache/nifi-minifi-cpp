@@ -40,14 +40,9 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-// Connection Class
 
 class Connection : public core::Connectable, public std::enable_shared_from_this<Connection> {
  public:
-  // Constructor
-  /*
-   * Create a new processor
-   */
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name);
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid);
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
@@ -55,7 +50,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID, const utils::Identifier &destUUID);
   // Destructor
-  virtual ~Connection() = default;
+  ~Connection() override = default;
 
   // Set Source Processor UUID
   void setSourceUUID(const utils::Identifier &uuid) {
@@ -75,19 +70,19 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   }
 
   // Set Connection Source Processor
-  void setSource(std::shared_ptr<core::Connectable> source) {
+  void setSource(core::Connectable* source) {
     source_connectable_ = source;
   }
   // ! Get Connection Source Processor
-  std::shared_ptr<core::Connectable> getSource() {
+  core::Connectable* getSource() const {
     return source_connectable_;
   }
   // Set Connection Destination Processor
-  void setDestination(std::shared_ptr<core::Connectable> dest) {
+  void setDestination(core::Connectable* dest) {
     dest_connectable_ = dest;
   }
   // ! Get Connection Destination Processor
-  std::shared_ptr<core::Connectable> getDestination() {
+  core::Connectable* getDestination() {
     return dest_connectable_;
   }
 
@@ -143,7 +138,7 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Check whether the queue is empty
   bool isEmpty() const;
   // Check whether the queue is full to apply back pressure
-  bool isFull();
+  bool isFull() const;
   // Get queue size
   uint64_t getQueueSize() {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -183,9 +178,9 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Relationship for this connection
   std::set<core::Relationship> relationships_;
   // Source Processor (ProcessNode/Port)
-  std::shared_ptr<core::Connectable> source_connectable_ = nullptr;
+  core::Connectable* source_connectable_ = nullptr;
   // Destination Processor (ProcessNode/Port)
-  std::shared_ptr<core::Connectable> dest_connectable_ = nullptr;
+  core::Connectable* dest_connectable_ = nullptr;
   // Max queue size to apply back pressure
   std::atomic<uint64_t> max_queue_size_ = 0;
   // Max queue data size to apply back pressure

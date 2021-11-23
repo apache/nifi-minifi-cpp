@@ -25,6 +25,7 @@
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "range/v3/algorithm/find.hpp"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org {

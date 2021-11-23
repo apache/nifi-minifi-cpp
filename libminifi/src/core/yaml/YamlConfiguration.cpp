@@ -144,7 +144,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(const YAML::N
 void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode, core::ProcessGroup* parentGroup) {
   int64_t runDurationNanos = -1;
   utils::Identifier uuid;
-  std::shared_ptr<core::Processor> processor = nullptr;
+  std::unique_ptr<core::Processor> processor;
 
   if (!parentGroup) {
     logger_->log_error("parseProcessNodeYaml: no parent group exists");
@@ -161,7 +161,7 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
   // Evaluate sequence of processors
   for (YAML::const_iterator iter = processorsNode.begin(); iter != processorsNode.end(); ++iter) {
     core::ProcessorConfig procCfg;
-    YAML::Node procNode = iter->as<YAML::Node>();
+    const auto procNode = iter->as<YAML::Node>();
 
     yaml::checkRequiredField(procNode, "name", CONFIG_YAML_PROCESSORS_KEY);
     procCfg.name = procNode["name"].as<std::string>();
@@ -174,7 +174,7 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
     logger_->log_debug("parseProcessorNode: class => [%s]", procCfg.javaClass);
 
     // Determine the processor name only from the Java class
-    auto lastOfIdx = procCfg.javaClass.find_last_of(".");
+    auto lastOfIdx = procCfg.javaClass.find_last_of('.');
     if (lastOfIdx != std::string::npos) {
       lastOfIdx++;  // if a value is found, increment to move beyond the .
       std::string processorName = procCfg.javaClass.substr(lastOfIdx);
@@ -240,7 +240,7 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
     // handle processor properties
     if (procNode["Properties"]) {
       YAML::Node propertiesNode = procNode["Properties"];
-      parsePropertiesNodeYaml(propertiesNode, processor, procCfg.name, CONFIG_YAML_PROCESSORS_KEY);
+      parsePropertiesNodeYaml(propertiesNode, *processor, procCfg.name, CONFIG_YAML_PROCESSORS_KEY);
     }
 
     // Take care of scheduling
@@ -298,7 +298,7 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
 
     processor->setAutoTerminatedRelationships(autoTerminatedRelationships);
 
-    parentGroup->addProcessor(processor);
+    parentGroup->addProcessor(std::move(processor));
   }
 }
 
@@ -437,11 +437,9 @@ void YamlConfiguration::parseProvenanceReportingYaml(const YAML::Node& reportNod
     return;
   }
 
-  std::shared_ptr<core::Processor> processor = nullptr;
-  processor = createProvenanceReportTask();
-  std::shared_ptr<core::reporting::SiteToSiteProvenanceReportingTask> reportTask = std::static_pointer_cast<core::reporting::SiteToSiteProvenanceReportingTask>(processor);
+  auto reportTask = createProvenanceReportTask();
 
-  YAML::Node node = reportNode.as<YAML::Node>();
+  const auto node = reportNode.as<YAML::Node>();
 
   yaml::checkRequiredField(node, "scheduling strategy", CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto schedulingStrategyStr = node["scheduling strategy"].as<std::string>();
@@ -454,7 +452,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(const YAML::Node& reportNod
   }
 
   if (schedulingStrategyStr == "TIMER_DRIVEN") {
-    processor->setSchedulingStrategy(core::TIMER_DRIVEN);
+    reportTask->setSchedulingStrategy(core::TIMER_DRIVEN);
     logger_->log_debug("ProvenanceReportingTask scheduling strategy %s", schedulingStrategyStr);
   } else {
     throw std::invalid_argument("Invalid scheduling strategy " + schedulingStrategyStr);
@@ -495,8 +493,8 @@ void YamlConfiguration::parseProvenanceReportingYaml(const YAML::Node& reportNod
   reportTask->initialize();
 
   // add processor to parent
-  parentGroup->addProcessor(processor);
-  processor->setScheduledState(core::RUNNING);
+  reportTask->setScheduledState(core::RUNNING);
+  parentGroup->addProcessor(std::move(reportTask));
 }
 
 void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServicesNode) {
@@ -504,7 +502,7 @@ void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServ
     return;
   }
   for (const auto& iter : controllerServicesNode) {
-    YAML::Node controllerServiceNode = iter.as<YAML::Node>();
+    const auto controllerServiceNode = iter.as<YAML::Node>();
     try {
       yaml::checkRequiredField(controllerServiceNode, "name", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
       yaml::checkRequiredField(controllerServiceNode, "id", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
@@ -513,7 +511,7 @@ void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServ
       logger_->log_debug("Using type %s for controller service node", type);
 
       std::string fullType = type;
-      auto lastOfIdx = type.find_last_of(".");
+      auto lastOfIdx = type.find_last_of('.');
       if (lastOfIdx != std::string::npos) {
         lastOfIdx++;  // if a value is found, increment to move beyond the .
         type = type.substr(lastOfIdx);
@@ -524,17 +522,15 @@ void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServ
 
       utils::Identifier uuid;
       uuid = id;
-      auto controller_service_node = createControllerService(type, fullType, name, uuid);
+      std::shared_ptr<core::controller::ControllerServiceNode> controller_service_node = createControllerService(type, fullType, name, uuid);
       if (nullptr != controller_service_node) {
         logger_->log_debug("Created Controller Service with UUID %s and name %s", id, name);
         controller_service_node->initialize();
         YAML::Node propertiesNode = controllerServiceNode["Properties"];
         // we should propagate properties to the node and to the implementation
-        parsePropertiesNodeYaml(propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node), name,
-        CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-        if (controller_service_node->getControllerServiceImplementation() != nullptr) {
-          parsePropertiesNodeYaml(propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(controller_service_node->getControllerServiceImplementation()), name,
-          CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+        parsePropertiesNodeYaml(propertiesNode, *controller_service_node, name, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+        if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
+          parsePropertiesNodeYaml(propertiesNode, *controllerServiceImpl, name, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
         }
       } else {
         logger_->log_debug("Could not locate %s", type);
@@ -557,25 +553,24 @@ void YamlConfiguration::parseConnectionYaml(const YAML::Node& connectionsNode, c
   }
 
   for (YAML::const_iterator iter = connectionsNode.begin(); iter != connectionsNode.end(); ++iter) {
-    YAML::Node connectionNode = iter->as<YAML::Node>();
-    std::shared_ptr<minifi::Connection> connection = nullptr;
+    const auto connectionNode = iter->as<YAML::Node>();
 
     // Configure basic connection
-    std::string id = getOrGenerateId(connectionNode);
+    const std::string id = getOrGenerateId(connectionNode);
 
     // Default name to be same as ID
     // If name is specified in configuration, use the value
-    std::string name = connectionNode["name"].as<std::string>(id);
+    const auto name = connectionNode["name"].as<std::string>(id);
 
     const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect connection UUID format.");
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect connection UUID format.");
     });
 
-    connection = createConnection(name, uuid.value());
+    auto connection = createConnection(name, uuid.value());
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
     const yaml::YamlConnectionParser connectionParser(connectionNode, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_);
-    connectionParser.configureConnectionSourceRelationshipsFromYaml(connection);
+    connectionParser.configureConnectionSourceRelationshipsFromYaml(*connection);
     connection->setMaxQueueSize(connectionParser.getWorkQueueSizeFromYaml());
     connection->setMaxQueueDataSize(connectionParser.getWorkQueueDataSizeFromYaml());
     connection->setSourceUUID(connectionParser.getSourceUUIDFromYaml());
@@ -583,21 +578,19 @@ void YamlConfiguration::parseConnectionYaml(const YAML::Node& connectionsNode, c
     connection->setFlowExpirationDuration(connectionParser.getFlowFileExpirationFromYaml());
     connection->setDropEmptyFlowFiles(connectionParser.getDropEmptyFromYaml());
 
-    parent->addConnection(connection);
+    parent->addConnection(std::move(connection));
   }
 }
 
 void YamlConfiguration::parsePortYaml(const YAML::Node& portNode, core::ProcessGroup* parent, sitetosite::TransferDirection direction) {
   utils::Identifier uuid;
-  std::shared_ptr<core::Processor> processor = NULL;
-  std::shared_ptr<minifi::RemoteProcessorGroupPort> port = NULL;
 
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group existed");
     return;
   }
 
-  YAML::Node inputPortsObj = portNode.as<YAML::Node>();
+  const auto inputPortsObj = portNode.as<YAML::Node>();
 
   // Check for required fields
   yaml::checkRequiredField(inputPortsObj, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
@@ -611,14 +604,13 @@ void YamlConfiguration::parsePortYaml(const YAML::Node& portNode, core::ProcessG
   auto portId = inputPortsObj["id"].as<std::string>();
   uuid = portId;
 
-  port = std::make_shared<minifi::RemoteProcessorGroupPort>(stream_factory_, nameStr, parent->getURL(), this->configuration_, uuid);
-
-  processor = std::static_pointer_cast<core::Processor>(port);
+  auto port = std::make_unique<minifi::RemoteProcessorGroupPort>(
+          stream_factory_, nameStr, parent->getURL(), this->configuration_, uuid);
   port->setDirection(direction);
   port->setTimeout(parent->getTimeout());
   port->setTransmitting(true);
-  processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
-  processor->initialize();
+  port->setYieldPeriodMsec(parent->getYieldPeriodMsec());
+  port->initialize();
   if (!parent->getInterface().empty())
     port->setInterface(parent->getInterface());
   if (parent->getTransportProtocol() == "HTTP") {
@@ -629,39 +621,39 @@ void YamlConfiguration::parsePortYaml(const YAML::Node& portNode, core::ProcessG
   // else defaults to RAW
 
   // handle port properties
-  YAML::Node nodeVal = portNode.as<YAML::Node>();
+  const auto nodeVal = portNode.as<YAML::Node>();
   YAML::Node propertiesNode = nodeVal["Properties"];
-  parsePropertiesNodeYaml(propertiesNode, std::static_pointer_cast<core::ConfigurableComponent>(processor), nameStr,
-  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  parsePropertiesNodeYaml(propertiesNode, *port, nameStr, CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
 
   // add processor to parent
-  parent->addProcessor(processor);
-  processor->setScheduledState(core::RUNNING);
+  auto& processor = *port;
+  parent->addProcessor(std::move(port));
+  processor.setScheduledState(core::RUNNING);
 
   if (inputPortsObj["max concurrent tasks"]) {
     auto rawMaxConcurrentTasks = inputPortsObj["max concurrent tasks"].as<std::string>();
     int32_t maxConcurrentTasks;
     if (core::Property::StringToInt(rawMaxConcurrentTasks, maxConcurrentTasks)) {
-      processor->setMaxConcurrentTasks(maxConcurrentTasks);
+      processor.setMaxConcurrentTasks(maxConcurrentTasks);
     }
     logger_->log_debug("parseProcessorNode: maxConcurrentTasks => [%d]", maxConcurrentTasks);
-    processor->setMaxConcurrentTasks(maxConcurrentTasks);
+    processor.setMaxConcurrentTasks(maxConcurrentTasks);
   }
 }
 
-void YamlConfiguration::parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor) {
+void YamlConfiguration::parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& component) {
   for (const auto& iter : propertyValueNode) {
     if (iter.IsDefined()) {
-      YAML::Node nodeVal = iter.as<YAML::Node>();
+      const auto nodeVal = iter.as<YAML::Node>();
       YAML::Node propertiesNode = nodeVal["value"];
       // must insert the sequence in differently.
-      std::string rawValueString = propertiesNode.as<std::string>();
+      const auto rawValueString = propertiesNode.as<std::string>();
       logger_->log_debug("Found %s=%s", propertyName, rawValueString);
-      if (!processor->updateProperty(propertyName, rawValueString)) {
-        std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
+      if (!component.updateProperty(propertyName, rawValueString)) {
+        auto proc = dynamic_cast<core::Connectable*>(&component);
         if (proc) {
           logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
-          if (!processor->setDynamicProperty(propertyName, rawValueString)) {
+          if (!component.setDynamicProperty(propertyName, rawValueString)) {
             logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
           } else {
             logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
@@ -697,10 +689,21 @@ PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo
     if (defaultType == typeid(int64_t)) {
       coercedValue = propertyValueNode.as<int64_t>();
     } else if (defaultType == typeid(uint64_t)) {
-      try {
-        coercedValue = propertyValueNode.as<uint64_t>();
-      } catch (...) {
-        coercedValue = propertyValueNode.as<std::string>();
+      const auto uValue = propertyValueNode.as<uint64_t>(0);
+
+      // parsing uint64_t may have failed
+      if (uValue == 0) {
+        const auto sValue = propertyValueNode.as<std::string>();
+
+        // parsing uint64_t did not fail, the node was a 0
+        if (sValue == "0") {
+          coercedValue = uValue;
+        } else {
+          // parsing uint64_t really failed
+          coercedValue = sValue;
+        }
+      } else {
+        coercedValue = uValue;
       }
     } else if (defaultType == typeid(int)) {
       coercedValue = propertyValueNode.as<int>();
@@ -719,24 +722,25 @@ PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo
   return defaultValue;
 }
 
-void YamlConfiguration::parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor) {
+void YamlConfiguration::parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor) {
   core::Property myProp(propertyName, "", "");
-  processor->getProperty(propertyName, myProp);
+  processor.getProperty(propertyName, myProp);
   const PropertyValue coercedValue = getValidatedProcessorPropertyForDefaultTypeInfo(myProp, propertyValueNode);
   bool property_set = false;
   try {
-    property_set = processor->setProperty(myProp, coercedValue);
+    property_set = processor.setProperty(myProp, coercedValue);
   } catch(const utils::internal::InvalidValueException&) {
-    auto component = std::dynamic_pointer_cast<core::CoreComponent>(processor);
-    logger_->log_error("Invalid value was set for property '%s' creating component '%s'", propertyName, component->getName());
+    auto component = dynamic_cast<core::CoreComponent&>(processor);
+    // TODO(amarkovics) if cast fails?
+    logger_->log_error("Invalid value was set for property '%s' creating component '%s'", propertyName, component.getName());
     throw;
   }
-  const std::string rawValueString = propertyValueNode.as<std::string>();
+  const auto rawValueString = propertyValueNode.as<std::string>();
   if (!property_set) {
-    std::shared_ptr<core::Connectable> proc = std::dynamic_pointer_cast<core::Connectable>(processor);
+    auto proc = dynamic_cast<core::Connectable*>(&processor);
     if (proc) {
       logger_->log_warn("Received property %s with value %s but is not one of the properties for %s. Attempting to add as dynamic property.", propertyName, rawValueString, proc->getName());
-      if (!processor->setDynamicProperty(propertyName, rawValueString)) {
+      if (!processor.setDynamicProperty(propertyName, rawValueString)) {
         logger_->log_warn("Unable to set the dynamic property %s with value %s", propertyName, rawValueString);
       } else {
         logger_->log_warn("Dynamic property %s with value %s set", propertyName, rawValueString);
@@ -747,7 +751,7 @@ void YamlConfiguration::parseSingleProperty(const std::string& propertyName, con
   }
 }
 
-void YamlConfiguration::parsePropertyNodeElement(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor) {
+void YamlConfiguration::parsePropertyNodeElement(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor) {
   logger_->log_trace("Encountered %s", propertyName);
   if (propertyValueNode.IsNull() || !propertyValueNode.IsDefined()) {
     return;
@@ -759,17 +763,17 @@ void YamlConfiguration::parsePropertyNodeElement(const std::string& propertyName
   }
 }
 
-void YamlConfiguration::parsePropertiesNodeYaml(const YAML::Node& propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string& component_name,
+void YamlConfiguration::parsePropertiesNodeYaml(const YAML::Node& propertiesNode, core::ConfigurableComponent& component, const std::string& component_name,
     const std::string& yaml_section) {
   // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
   logger_->log_trace("Entered %s", component_name);
   for (const auto& propertyElem : propertiesNode) {
-    const std::string propertyName = propertyElem.first.as<std::string>();
+    const auto propertyName = propertyElem.first.as<std::string>();
     const YAML::Node propertyValueNode = propertyElem.second;
-    parsePropertyNodeElement(propertyName, propertyValueNode, processor);
+    parsePropertyNodeElement(propertyName, propertyValueNode, component);
   }
 
-  validateComponentProperties(processor, component_name, yaml_section);
+  validateComponentProperties(component, component_name, yaml_section);
 }
 
 void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGroup* parent) {
@@ -782,28 +786,28 @@ void YamlConfiguration::parseFunnelsYaml(const YAML::Node& node, core::ProcessGr
   }
 
   for (const auto& element : node) {
-    YAML::Node funnel_node = element.as<YAML::Node>();
+    const auto funnel_node = element.as<YAML::Node>();
 
     std::string id = getOrGenerateId(funnel_node);
 
     // Default name to be same as ID
-    std::string name = funnel_node["name"].as<std::string>(id);
+    const auto name = funnel_node["name"].as<std::string>(id);
 
     const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect funnel UUID format.");
       throw Exception(ExceptionType::GENERAL_EXCEPTION, "Incorrect funnel UUID format.");
     });
 
-    std::shared_ptr<core::Processor> funnel = std::make_shared<core::Funnel>(name, uuid.value());
+    auto funnel = std::make_unique<core::Funnel>(name, uuid.value());
     logger_->log_debug("Created funnel with UUID %s and name %s", id, name);
     funnel->setScheduledState(core::RUNNING);
     funnel->setSchedulingStrategy(core::EVENT_DRIVEN);
-    parent->addProcessor(funnel);
+    parent->addProcessor(std::move(funnel));
   }
 }
 
-void YamlConfiguration::validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component, const std::string &component_name, const std::string &yaml_section) const {
-  const auto &component_properties = component->getProperties();
+void YamlConfiguration::validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &yaml_section) const {
+  const auto &component_properties = component.getProperties();
 
   // Validate required properties
   for (const auto &prop_pair : component_properties) {

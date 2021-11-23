@@ -64,9 +64,9 @@ class CoreComponentStateManagerProvider {
  public:
   virtual ~CoreComponentStateManagerProvider() = default;
 
-  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) = 0;
+  virtual std::unique_ptr<CoreComponentStateManager> getCoreComponentStateManager(const utils::Identifier& uuid) = 0;
 
-  virtual std::shared_ptr<CoreComponentStateManager> getCoreComponentStateManager(const CoreComponent& component) {
+  virtual std::unique_ptr<CoreComponentStateManager> getCoreComponentStateManager(const CoreComponent& component) {
     return getCoreComponentStateManager(component.getUUID());
   }
 

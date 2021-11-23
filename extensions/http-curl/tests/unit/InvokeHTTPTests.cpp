@@ -71,7 +71,7 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(invokehttp);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(invokehttp.get());
   std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
@@ -141,17 +141,17 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   connection2->addRelationship(core::Relationship("No Retry", "description"));
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(listenhttp);
+  connection->setSource(listenhttp.get());
   connection->setSourceUUID(invokehttp_uuid);
   connection->setDestinationUUID(processoruuid);
   connection2->setSourceUUID(processoruuid);
 
-  listenhttp->addConnection(connection);
-  invokehttp->addConnection(connection);
-  invokehttp->addConnection(connection2);
+  listenhttp->addConnection(connection.get());
+  invokehttp->addConnection(connection.get());
+  invokehttp->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp);
-  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(invokehttp);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp.get());
+  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(invokehttp.get());
   std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8680");

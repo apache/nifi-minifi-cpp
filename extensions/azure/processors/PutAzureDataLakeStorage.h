@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "AzureDataLakeStorageFileProcessorBase.h"
+#include "io/StreamPipe.h"
 
 #include "utils/Enum.h"
 #include "utils/Export.h"

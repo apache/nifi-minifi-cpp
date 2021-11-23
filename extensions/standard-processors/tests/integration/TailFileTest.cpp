@@ -71,8 +71,8 @@ class TailFileTestHarness : public IntegrationBase {
 
  protected:
   void updateProperties(std::shared_ptr<minifi::FlowController> fc) override {
-    for (auto &comp : fc->getComponents("tf")) {
-      std::shared_ptr<minifi::state::ProcessorController> proc = std::dynamic_pointer_cast<minifi::state::ProcessorController>(comp);
+    for (auto comp : fc->getComponents("tf")) {
+      auto proc = dynamic_cast<minifi::state::ProcessorController*>(comp);
       if (nullptr != proc) {
         proc->getProcessor()->setProperty(minifi::processors::TailFile::FileName, ss.str());
         proc->getProcessor()->setProperty(minifi::processors::TailFile::StateFile, statefile);

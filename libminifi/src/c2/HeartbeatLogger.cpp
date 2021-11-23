@@ -35,7 +35,7 @@ int16_t HeartbeatLogger::heartbeat(const C2Payload &heartbeat) {
   return 0;
 }
 
-void HeartbeatLogger::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink, const std::shared_ptr<Configure> &configure) {
+void HeartbeatLogger::initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink, const std::shared_ptr<Configure> &configure) {
   HeartbeatReporter::initialize(controller, updateSink, configure);
   RESTProtocol::initialize(controller, configure);
 }

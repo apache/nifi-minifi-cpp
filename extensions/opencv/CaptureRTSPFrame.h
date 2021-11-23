@@ -26,7 +26,9 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
+#include "io/StreamPipe.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
 

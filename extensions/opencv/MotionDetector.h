@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "opencv2/opencv.hpp"
 #include "opencv2/imgproc.hpp"

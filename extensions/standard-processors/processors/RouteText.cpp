@@ -33,15 +33,17 @@ template<typename It, typename Hash, typename Eq>
 using boyer_moore_searcher = std::boyer_moore_searcher<It, Hash, Eq>;
 #endif
 
+#include "core/ProcessSession.h"
+#include "core/Resource.h"
+#include "io/StreamPipe.h"
 #include "logging/LoggerConfiguration.h"
-#include "utils/ProcessorConfigUtils.h"
-#include "utils/OptionalUtils.h"
 #include "range/v3/view/transform.hpp"
 #include "range/v3/range/conversion.hpp"
 #include "range/v3/view/tail.hpp"
 #include "range/v3/view/join.hpp"
 #include "range/v3/view/cache1.hpp"
-#include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
+#include "utils/OptionalUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 

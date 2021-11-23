@@ -74,21 +74,21 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   utils::Identifier processoruuid = processor->getUUID();
   REQUIRE(processoruuid);
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
+  auto connection = std::make_unique<minifi::Connection>(test_repo, content_repo, "getfileCreate2Connection");
 
   connection->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(processor);
-  connection->setDestination(processor);
+  connection->setSource(processor.get());
+  connection->setDestination(processor.get());
 
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(processoruuid);
 
-  processor->addConnection(connection);
+  processor->addConnection(connection.get());
   REQUIRE(!dir.empty());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
@@ -163,16 +163,16 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   connection->addRelationship(core::Relationship("success", "description"));
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(processor);
-  connection->setDestination(processor);
+  connection->setSource(processor.get());
+  connection->setDestination(processor.get());
 
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(processoruuid);
 
-  processor->addConnection(connection);
+  processor->addConnection(connection.get());
   REQUIRE(!dir.empty());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
@@ -258,16 +258,16 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   utils::Identifier processoruuid = processor->getUUID();
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(processor);
-  connection->setDestination(processor);
+  connection->setSource(processor.get());
+  connection->setDestination(processor.get());
 
   connection->setSourceUUID(processoruuid);
   connection->setDestinationUUID(processoruuid);
 
-  processor->addConnection(connection);
+  processor->addConnection(connection.get());
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -571,7 +571,7 @@ void testRPGBypass(const std::string &host, const std::string &port, const std::
   rpg->initialize();
   REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName, host));
   rpg->setProperty(minifi::RemoteProcessorGroupPort::port, port);
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(rpg);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(rpg.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactory>(context);
   if (hasException) {
@@ -639,10 +639,10 @@ ProcessorWithIncomingConnectionTest::ProcessorWithIncomingConnectionTest() {
   incoming_connection_ = std::make_shared<minifi::Connection>(repo, content_repo, "incoming_connection");
   incoming_connection_->addRelationship(core::Relationship{"success", ""});
   incoming_connection_->setDestinationUUID(processor_->getUUID());
-  processor_->addConnection(incoming_connection_);
+  processor_->addConnection(incoming_connection_.get());
   processor_->initialize();
 
-  const auto processor_node = std::make_shared<core::ProcessorNode>(processor_);
+  const auto processor_node = std::make_shared<core::ProcessorNode>(processor_.get());
   const auto context = std::make_shared<core::ProcessContext>(processor_node, nullptr, repo, repo, content_repo);
   const auto session_factory = std::make_shared<core::ProcessSessionFactory>(context);
   session_ = session_factory->createSession();

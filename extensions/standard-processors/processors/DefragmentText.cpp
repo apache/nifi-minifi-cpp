@@ -20,6 +20,8 @@
 #include <vector>
 #include <utility>
 
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
 #include "TextFragmentUtils.h"
@@ -241,10 +243,10 @@ void DefragmentText::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   flow_file_store_.put(flowFile);
 }
 
-std::set<std::shared_ptr<core::Connectable>> DefragmentText::getOutGoingConnections(const std::string &relationship) const {
+std::set<core::Connectable*> DefragmentText::getOutGoingConnections(const std::string &relationship) const {
   auto result = core::Connectable::getOutGoingConnections(relationship);
   if (relationship == Self.getName()) {
-    result.insert(std::static_pointer_cast<core::Connectable>(std::const_pointer_cast<core::Processor>(shared_from_this())));
+    result.insert(const_cast<DefragmentText*>(this));
   }
   return result;
 }

@@ -28,9 +28,11 @@
 #include <regex>
 
 #include "rapidjson/document.h"
+#include "core/FlowFile.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 #include "core/Property.h"
-#include "core/logging/Logger.h"
+#include "io/StreamPipe.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
 

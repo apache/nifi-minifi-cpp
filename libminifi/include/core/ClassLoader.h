@@ -116,7 +116,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  std::shared_ptr<T> instantiate(const std::string &class_name, const std::string &name);
+  std::unique_ptr<T> instantiate(const std::string &class_name, const std::string &name);
 
   /**
    * Instantiate object based on class_name
@@ -125,7 +125,7 @@ class ClassLoader {
    * @return nullptr or object created from class_name definition.
    */
   template<class T = CoreComponent>
-  std::shared_ptr<T> instantiate(const std::string &class_name, const utils::Identifier &uuid);
+  std::unique_ptr<T> instantiate(const std::string &class_name, const utils::Identifier &uuid);
 
   /**
    * Instantiate object based on class_name
@@ -149,7 +149,7 @@ class ClassLoader {
 };
 
 template<class T>
-std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const std::string &name) {
+std::unique_ptr<T> ClassLoader::instantiate(const std::string &class_name, const std::string &name) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   // allow subsequent classes to override functionality (like ProcessContextBuilder)
   for (auto& child_loader : class_loaders_) {
@@ -160,13 +160,13 @@ std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(name);
-    return std::dynamic_pointer_cast<T>(obj);
+    return std::unique_ptr<T>{dynamic_cast<T*>(obj.get()) ? dynamic_cast<T*>(obj.release()) : nullptr};
   }
   return nullptr;
 }
 
 template<class T>
-std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const utils::Identifier &uuid) {
+std::unique_ptr<T> ClassLoader::instantiate(const std::string &class_name, const utils::Identifier &uuid) {
   std::lock_guard<std::mutex> lock(internal_mutex_);
   // allow subsequent classes to override functionality (like ProcessContextBuilder)
   for (auto& child_loader : class_loaders_) {
@@ -177,7 +177,7 @@ std::shared_ptr<T> ClassLoader::instantiate(const std::string &class_name, const
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(class_name, uuid);
-    return std::dynamic_pointer_cast<T>(obj);
+    return std::unique_ptr<T>{dynamic_cast<T*>(obj.get()) ? dynamic_cast<T*>(obj.release()) : nullptr};
   }
   return nullptr;
 }

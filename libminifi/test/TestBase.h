@@ -213,7 +213,7 @@ class TestPlan {
   std::shared_ptr<minifi::core::Processor> addProcessor(const std::string &processor_name, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
   std::shared_ptr<minifi::core::Processor> addProcessor(const std::string &processor_name, const minifi::utils::Identifier& uuid, const std::string &name, const std::initializer_list<minifi::core::Relationship>& relationships, bool linkToPrevious = false); // NOLINT
 
-  std::shared_ptr<minifi::Connection> addConnection(const std::shared_ptr<minifi::core::Processor>& source_proc, const minifi::core::Relationship& source_relationship, const std::shared_ptr<minifi::core::Processor>& destination_proc); // NOLINT
+  minifi::Connection* addConnection(const std::shared_ptr<minifi::core::Processor>& source_proc, const minifi::core::Relationship& source_relationship, const std::shared_ptr<minifi::core::Processor>& destination_proc); // NOLINT
 
   std::shared_ptr<minifi::core::controller::ControllerServiceNode> addController(const std::string &controller_name, const std::string &name);
 
@@ -286,7 +286,7 @@ class TestPlan {
  protected:
   std::unique_ptr<TempDirectory> state_dir_;
 
-  std::shared_ptr<minifi::Connection> buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest = false);
+  std::unique_ptr<minifi::Connection> buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest = false);
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory;
 
@@ -319,7 +319,7 @@ class TestPlan {
   std::vector<std::shared_ptr<minifi::core::ProcessContext>> processor_contexts_;
   std::vector<std::shared_ptr<minifi::core::ProcessSession>> process_sessions_;
   std::vector<std::shared_ptr<minifi::core::ProcessSessionFactory>> factories_;  // Do not assume ordering
-  std::vector<std::shared_ptr<minifi::Connection>> relationships_;
+  std::vector<std::unique_ptr<minifi::Connection>> relationships_;
   minifi::core::Relationship termination_;
 
  private:

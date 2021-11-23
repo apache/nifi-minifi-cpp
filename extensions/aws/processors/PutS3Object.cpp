@@ -29,6 +29,8 @@
 #include "properties/Properties.h"
 #include "utils/StringUtils.h"
 #include "utils/MapUtils.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org {

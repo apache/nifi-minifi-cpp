@@ -18,6 +18,7 @@
 
 #include "cxx/Plan.h"
 #include "cxx/CallbackProcessor.h"
+#include "core/ProcessSessionFactory.h"
 #include <memory>
 #include <vector>
 #include <set>
@@ -107,7 +108,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     relationships_.push_back(connectProcessors(last, processor, relationship, true));
   }
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
 
   processor_nodes_.push_back(node);
 
@@ -221,7 +222,7 @@ void ExecutionPlan::finalize() {
       }
     }
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(failure_proc);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(failure_proc.get());
 
     processor_nodes_.push_back(node);
 
@@ -266,7 +267,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::createProcessor(const std::strin
   }
 
 
-  auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
+  std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(processor_name, uuid);
   if (nullptr == ptr) {
     return nullptr;
   }
@@ -289,25 +290,25 @@ std::shared_ptr<core::Processor> ExecutionPlan::createCallback(void *obj,
   return ptr;
 }
 
-std::shared_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared_ptr<core::Processor> src_proc, std::shared_ptr<core::Processor> dst_proc, core::Relationship relationship,
+std::unique_ptr<minifi::Connection> ExecutionPlan::connectProcessors(std::shared_ptr<core::Processor> src_proc, std::shared_ptr<core::Processor> dst_proc, core::Relationship relationship,
                                                                      bool set_dst) {
   std::stringstream connection_name;
   connection_name << src_proc->getUUIDStr() << "-to-" << dst_proc->getUUIDStr();
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
+  auto connection = std::make_unique<minifi::Connection>(flow_repo_, content_repo_, connection_name.str());
   connection->addRelationship(relationship);
 
   // link the connections so that we can test results at the end for this
-  connection->setSource(src_proc);
+  connection->setSource(src_proc.get());
 
   connection->setSourceUUID(src_proc->getUUID());
   if (set_dst) {
-    connection->setDestination(dst_proc);
+    connection->setDestination(dst_proc.get());
     connection->setDestinationUUID(dst_proc->getUUID());
     if (src_proc != dst_proc) {
-      dst_proc->addConnection(connection);
+      dst_proc->addConnection(connection.get());
     }
   }
-  src_proc->addConnection(connection);
+  src_proc->addConnection(connection.get());
 
   return connection;
 }

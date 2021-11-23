@@ -246,18 +246,18 @@ std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> 
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
-  const auto prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, true, "provenance");
+  const std::shared_ptr<org::apache::nifi::minifi::core::Repository> prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, true, "provenance");
   prov_repo->initialize(configuration);
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
 
-  const auto flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, true, "flowfile");
+  const std::shared_ptr<org::apache::nifi::minifi::core::Repository> flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, true, "flowfile");
 
   flow_repo->initialize(configuration);
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
-  const auto content_repo = org::apache::nifi::minifi::core::createContentRepository(content_repo_class, true, "content");
+  const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository> content_repo = org::apache::nifi::minifi::core::createContentRepository(content_repo_class, true, "content");
 
   content_repo->initialize(configuration);
 
@@ -295,18 +295,18 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
   // Create repos for flow record and provenance
-  const auto prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, true, "provenance");
+  const std::shared_ptr<org::apache::nifi::minifi::core::Repository> prov_repo = org::apache::nifi::minifi::core::createRepository(prov_repo_class, true, "provenance");
   prov_repo->initialize(configuration);
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
 
-  const auto flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, true, "flowfile");
+  const std::shared_ptr<org::apache::nifi::minifi::core::Repository> flow_repo = org::apache::nifi::minifi::core::createRepository(flow_repo_class, true, "flowfile");
 
   flow_repo->initialize(configuration);
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_content_repository_class_name, content_repo_class);
 
-  const auto content_repo = org::apache::nifi::minifi::core::createContentRepository(content_repo_class, true, "content");
+  const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository> content_repo = org::apache::nifi::minifi::core::createContentRepository(content_repo_class, true, "content");
 
   content_repo->initialize(configuration);
 

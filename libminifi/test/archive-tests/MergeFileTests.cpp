@@ -166,16 +166,16 @@ class MergeTestController : public TestController {
     // output from merge processor to log attribute
     output = std::make_shared<minifi::Connection>(repo, content_repo, "logattributeconnection");
     output->addRelationship(minifi::processors::MergeContent::Merge);
-    output->setSource(processor);
-    output->setDestination(logAttributeProcessor);
+    output->setSource(processor.get());
+    output->setDestination(logAttributeProcessor.get());
     output->setSourceUUID(processoruuid);
     output->setDestinationUUID(logAttributeuuid);
-    processor->addConnection(output);
+    processor->addConnection(output.get());
     // input to merge processor
     input = std::make_shared<minifi::Connection>(repo, content_repo, "mergeinput");
-    input->setDestination(processor);
+    input->setDestination(processor.get());
     input->setDestinationUUID(processoruuid);
-    processor->addConnection(input);
+    processor->addConnection(input.get());
 
     processor->setAutoTerminatedRelationships({minifi::processors::MergeContent::Original, minifi::processors::MergeContent::Failure});
 
@@ -184,7 +184,7 @@ class MergeTestController : public TestController {
     logAttributeProcessor->incrementActiveTasks();
     logAttributeProcessor->setScheduledState(core::ScheduledState::RUNNING);
 
-    context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor), nullptr, repo, repo, content_repo);
+    context = std::make_shared<core::ProcessContext>(std::make_shared<core::ProcessorNode>(processor.get()), nullptr, repo, repo, content_repo);
 
     for (size_t i = 0; i < 6; ++i) {
       flowFileContents[i] = utils::StringUtils::repeat(std::to_string(i), 32);

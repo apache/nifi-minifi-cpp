@@ -141,7 +141,7 @@ class FlowMonitor : public StateMonitorNode {
       : StateMonitorNode(name) {
   }
 
-  void addConnection(const std::shared_ptr<minifi::Connection> &connection) {
+  void addConnection(minifi::Connection* connection) {
     if (nullptr != connection) {
       connections_.insert(std::make_pair(connection->getUUIDStr(), connection));
     }
@@ -152,7 +152,7 @@ class FlowMonitor : public StateMonitorNode {
   }
  protected:
   std::shared_ptr<state::response::FlowVersion> flow_version_;
-  std::map<std::string, std::shared_ptr<minifi::Connection>> connections_;
+  std::map<std::string, minifi::Connection*> connections_;
 };
 
 /**

@@ -46,7 +46,7 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
  public:
   explicit RESTReceiver(const std::string& name, const utils::Identifier& uuid = {});
 
-  void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+  void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
                           const std::shared_ptr<Configure> &configure) override;
   int16_t heartbeat(const C2Payload &heartbeat) override;
 

@@ -80,7 +80,7 @@ class PcapTestHarness : public IntegrationBase {
   void updateProperties(std::shared_ptr<minifi::FlowController> fc) override {
     auto components = fc->getComponents("pcap");
     for (const auto& component : components) {
-      auto proccontroller = std::dynamic_pointer_cast<minifi::state::ProcessorController>(component);
+      auto proccontroller = dynamic_cast<minifi::state::ProcessorController*>(component);
       if (proccontroller) {
         auto processor = proccontroller->getProcessor();
         processor->setProperty(minifi::processors::CapturePacket::BaseDir.getName(), dir);

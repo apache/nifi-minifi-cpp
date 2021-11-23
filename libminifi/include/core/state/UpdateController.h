@@ -187,9 +187,9 @@ class StateMonitor : public StateController {
     return controller_running_;
   }
 
-  virtual std::vector<std::shared_ptr<StateController>> getComponents(const std::string &name) = 0;
+  virtual std::vector<StateController*> getComponents(const std::string &name) = 0;
 
-  virtual std::vector<std::shared_ptr<StateController>> getAllComponents() = 0;
+  virtual std::vector<StateController*> getAllComponents() = 0;
   /**
    * Operational controllers
    */

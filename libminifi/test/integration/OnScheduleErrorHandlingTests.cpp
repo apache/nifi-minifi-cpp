@@ -88,7 +88,7 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
     assert(controller_vec[0]->getComponentName() == "FlowController");
     assert(controller_vec[1]->getComponentName() == "kamikaze");
 
-    auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(controller_vec[1].get());
+    auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(controller_vec[1]);
     assert(process_controller != nullptr);
 
     process_controller->getProcessor()->setSchedulingStrategy(org::apache::nifi::minifi::core::SchedulingStrategy::EVENT_DRIVEN);

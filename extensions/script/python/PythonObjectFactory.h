@@ -21,6 +21,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <utility>
 
 #include "core/ClassLoader.h"
 #include "ExecutePythonProcessor.h"
@@ -30,23 +31,25 @@
 
 class PythonObjectFactory : public org::apache::nifi::minifi::core::DefautObjectFactory<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor> {
  public:
-  explicit PythonObjectFactory(const std::string &file, const std::string &name)
-      : file_(file),
-        name_(name) {
+  explicit PythonObjectFactory(std::string file, std::string name)
+      : file_(std::move(file)),
+        name_(std::move(name)) {
   }
 
-  std::shared_ptr<org::apache::nifi::minifi::core::CoreComponent> create(const std::string &name) override {
-    auto ptr = std::static_pointer_cast<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name));
+  std::unique_ptr<org::apache::nifi::minifi::core::CoreComponent> create(const std::string &name) override {
+    std::unique_ptr<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor> ptr{
+      static_cast<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::create(name).release())};
     ptr->initialize();
     ptr->setProperty(org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);
-    return std::static_pointer_cast<org::apache::nifi::minifi::core::CoreComponent>(ptr);
+    return ptr;
   }
 
-  std::shared_ptr<org::apache::nifi::minifi::core::CoreComponent> create(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid) override {
-    auto ptr = std::static_pointer_cast<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor>(DefautObjectFactory::create(name, uuid));
+  std::unique_ptr<org::apache::nifi::minifi::core::CoreComponent> create(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid) override {
+    std::unique_ptr<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor> ptr{
+      static_cast<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor*>(DefautObjectFactory::create(name, uuid).release())};
     ptr->initialize();
     ptr->setProperty(org::apache::nifi::minifi::python::processors::ExecutePythonProcessor::ScriptFile, file_);
-    return std::static_pointer_cast<org::apache::nifi::minifi::core::CoreComponent>(ptr);
+    return ptr;
   }
 
   org::apache::nifi::minifi::core::CoreComponent* createRaw(const std::string &name) override {

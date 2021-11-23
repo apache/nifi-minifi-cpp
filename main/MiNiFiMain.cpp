@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
       prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name,
       configure->get(minifi::Configure::nifi_flow_configuration_file), filesystem);
 
-  const auto controller = std::make_shared<minifi::FlowController>(
+  const auto controller = std::make_unique<minifi::FlowController>(
       prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, filesystem);
 
   const bool disk_space_watchdog_enable = (configure->get(minifi::Configure::minifi_disk_space_watchdog_enable) | utils::map([](const std::string& v){ return v == "true"; })).value_or(true);

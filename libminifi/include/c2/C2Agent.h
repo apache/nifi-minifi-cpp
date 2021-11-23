@@ -67,7 +67,7 @@ class C2Agent : public state::UpdateController {
 
   C2Agent(core::controller::ControllerServiceProvider *controller,
           state::Pausable *pause_handler,
-          const std::shared_ptr<state::StateMonitor> &updateSink,
+          state::StateMonitor* updateSink,
           const std::shared_ptr<Configure> &configure,
           const std::shared_ptr<utils::file::FileSystem> &filesystem = std::make_shared<utils::file::FileSystem>());
 
@@ -207,7 +207,7 @@ class C2Agent : public state::UpdateController {
   std::function<utils::TaskRescheduleInfo()> c2_producer_;
 
   // reference to the update sink, against which we will execute updates.
-  std::shared_ptr<state::StateMonitor> update_sink_;
+  state::StateMonitor* update_sink_;
 
   // functions that will be used for the udpate controller.
   std::vector<std::function<utils::TaskRescheduleInfo()>> functions_;
@@ -229,9 +229,9 @@ class C2Agent : public state::UpdateController {
 
   std::mutex heartbeat_mutex;
 
-  std::vector<std::shared_ptr<HeartbeatReporter>> heartbeat_protocols_;
+  std::vector<std::unique_ptr<HeartbeatReporter>> heartbeat_protocols_;
 
-  std::vector<std::shared_ptr<C2Trigger>> triggers_;
+  std::vector<std::unique_ptr<C2Trigger>> triggers_;
 
   std::atomic<C2Protocol*> protocol_;
 

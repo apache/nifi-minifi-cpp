@@ -237,12 +237,12 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Sets the original connection with a shared pointer.
    * @param connection shared connection.
    */
-  void setConnection(const std::shared_ptr<core::Connectable>& connection);
+  void setConnection(core::Connectable* connection);
   /**
    * Returns the original connection referenced by this record.
    * @return shared original connection pointer.
    */
-  [[nodiscard]] std::shared_ptr<core::Connectable> getConnection() const;
+  [[nodiscard]] Connectable* getConnection() const;
 
   void setStoredToRepository(bool storedInRepository) {
     stored = storedInRepository;
@@ -285,7 +285,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   std::vector<utils::Identifier> lineage_Identifiers_;
 
   // Orginal connection queue that this flow file was dequeued from
-  std::shared_ptr<core::Connectable> connection_;
+  core::Connectable* connection_ = nullptr;
 
   static std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;

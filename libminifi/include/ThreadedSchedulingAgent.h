@@ -55,14 +55,14 @@ class ThreadedSchedulingAgent : public SchedulingAgent {
   ~ThreadedSchedulingAgent() override = default;
 
   // Run function for the thread
-  virtual utils::TaskRescheduleInfo run(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+  virtual utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                        const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) = 0;
 
  public:
   // schedule, overwritten by different DrivenTimerDrivenSchedulingAgent
-  void schedule(std::shared_ptr<core::Processor> processor) override;
+  void schedule(core::Processor* processor) override;
   // unschedule, overwritten by different DrivenTimerDrivenSchedulingAgent
-  void unschedule(std::shared_ptr<core::Processor> processor) override;
+  void unschedule(core::Processor* processor) override;
 
   void stop() override;
 

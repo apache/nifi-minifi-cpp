@@ -59,7 +59,7 @@ bool C2Client::isC2Enabled() const {
   return utils::StringUtils::toBool(c2_enable_str).value_or(false);
 }
 
-void C2Client::initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, const std::shared_ptr<state::StateMonitor> &update_sink) {
+void C2Client::initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink) {
   if (!isC2Enabled()) {
     return;
   }
@@ -79,7 +79,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
 
   // root_response_nodes_ was not cleared before, it is unclear if that was intentional
 
-  std::map<std::string, std::shared_ptr<Connection>> connections;
+  std::map<std::string, Connection*> connections;
   if (root_ != nullptr) {
     root_->getConnections(connections);
   }
@@ -89,27 +89,28 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
-      auto response_node = std::dynamic_pointer_cast<state::response::ResponseNode>(core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz));
+      auto instance = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+      auto response_node = dynamic_cast<state::response::ResponseNode*>(instance.get());
       if (nullptr == response_node) {
         logger_->log_error("No metric defined for %s", clazz);
         continue;
       }
-      auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(response_node);
+      auto identifier = dynamic_cast<state::response::AgentIdentifier*>(response_node);
       if (identifier != nullptr) {
         identifier->setAgentIdentificationProvider(configuration_);
       }
-      auto monitor = std::dynamic_pointer_cast<state::response::AgentMonitor>(response_node);
+      auto monitor = dynamic_cast<state::response::AgentMonitor*>(response_node);
       if (monitor != nullptr) {
         monitor->addRepository(provenance_repo_);
         monitor->addRepository(flow_file_repo_);
         monitor->setStateMonitor(update_sink);
       }
-      auto configuration_checksums = std::dynamic_pointer_cast<state::response::ConfigurationChecksums>(response_node);
+      auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node);
       if (configuration_checksums) {
         configuration_checksums->addChecksumCalculator(configuration_->getChecksumCalculator());
         configuration_checksums->addChecksumCalculator(flow_configuration_->getChecksumCalculator());
       }
-      auto flowMonitor = std::dynamic_pointer_cast<state::response::FlowMonitor>(response_node);
+      auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node);
       if (flowMonitor != nullptr) {
         for (auto &con : connections) {
           flowMonitor->addConnection(con.second);
@@ -118,7 +119,8 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
       }
       std::lock_guard<std::mutex> guard(metrics_mutex_);
-      root_response_nodes_[response_node->getName()] = response_node;
+      std::unique_ptr<state::response::ResponseNode> responseNodeToStore{dynamic_cast<state::response::ResponseNode*>(instance.release())};
+      root_response_nodes_[responseNodeToStore->getName()] = std::move(responseNodeToStore);
     }
   }
 
@@ -130,7 +132,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   if (!initialized_) {
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart
-    c2_agent_ = std::unique_ptr<c2::C2Agent>(new c2::C2Agent(controller, pause_handler, update_sink, configuration_, filesystem_));
+    c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_);
     c2_agent_->start();
     initialized_ = true;
   }
@@ -152,10 +154,10 @@ void C2Client::initializeComponentMetrics() {
   if (root_ == nullptr) {
     return;
   }
-  std::vector<std::shared_ptr<core::Processor>> processors;
+  std::vector<core::Processor*> processors;
   root_->getAllProcessors(processors);
-  for (const auto &processor : processors) {
-    auto rep = std::dynamic_pointer_cast<state::response::ResponseNodeSource>(processor);
+  for (const auto processor : processors) {
+    auto rep = dynamic_cast<state::response::ResponseNodeSource*>(processor);
     if (rep == nullptr) {
       continue;
     }
@@ -192,7 +194,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
         std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
         for (const std::string& clazz : classes) {
           // instantiate the object
-          auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+          std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
           if (nullptr == ptr) {
             const bool found_metric = [&] {
               std::lock_guard<std::mutex> guard{metrics_mutex_};
@@ -255,7 +257,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
           std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
           for (const std::string& clazz : classes) {
             // instantiate the object
-            auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
+            std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
             if (nullptr == ptr) {
               const bool found_metric = [&] {
                 std::lock_guard<std::mutex> guard{metrics_mutex_};

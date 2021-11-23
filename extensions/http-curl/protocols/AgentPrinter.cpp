@@ -35,7 +35,7 @@ AgentPrinter::AgentPrinter(const std::string& name, const utils::Identifier& uui
     : HeartbeatReporter(name, uuid) {
 }
 
-void AgentPrinter::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+void AgentPrinter::initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
                               const std::shared_ptr<Configure> &configure) {
   HeartbeatReporter::initialize(controller, updateSink, configure);
 }

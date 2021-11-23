@@ -45,7 +45,7 @@ class HeartbeatReporter : public core::Connectable {
         configuration_(nullptr) {
   }
 
-  virtual void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<state::StateMonitor> &updateSink,
+  virtual void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
                           const std::shared_ptr<Configure> &configure) {
     controller_ = controller;
     update_sink_ = updateSink;
@@ -91,7 +91,7 @@ class HeartbeatReporter : public core::Connectable {
  protected:
   core::controller::ControllerServiceProvider* controller_;
 
-  std::shared_ptr<state::StateMonitor> update_sink_;
+  state::StateMonitor* update_sink_;
 
   std::shared_ptr<Configure> configuration_;
 };

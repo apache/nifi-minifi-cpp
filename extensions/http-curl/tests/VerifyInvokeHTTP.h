@@ -69,7 +69,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
 
     const auto stateController = components[0];
     assert(stateController);
-    const auto processorController = std::dynamic_pointer_cast<minifi::state::ProcessorController>(stateController);
+    const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(stateController);
     assert(processorController);
     auto proc = processorController->getProcessor();
     proc->setProperty(property, value);

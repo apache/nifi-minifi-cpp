@@ -167,15 +167,15 @@ class WorkerThread {
 template<typename T>
 class ThreadPool {
  public:
-  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, const std::shared_ptr<core::controller::ControllerServiceProvider> &controller_service_provider = nullptr,
-             const std::string &name = "NamelessPool")
+  ThreadPool(int max_worker_threads = 2, bool daemon_threads = false, core::controller::ControllerServiceProvider* controller_service_provider = nullptr,
+             std::string name = "NamelessPool")
       : daemon_threads_(daemon_threads),
         thread_reduction_count_(0),
         max_worker_threads_(max_worker_threads),
         adjust_threads_(false),
         running_(false),
         controller_service_provider_(controller_service_provider),
-        name_(name) {
+        name_(std::move(name)) {
     current_workers_ = 0;
     task_count_ = 0;
     thread_manager_ = nullptr;
@@ -273,7 +273,7 @@ class ThreadPool {
       start();
   }
 
-  void setControllerServiceProvider(std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider) {
+  void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller_service_provider) {
     std::lock_guard<std::recursive_mutex> lock(manager_mutex_);
     bool was_running = running_;
     if (was_running) {
@@ -322,7 +322,7 @@ class ThreadPool {
 // atomic running boolean
   std::atomic<bool> running_;
 // controller service provider
-  std::shared_ptr<core::controller::ControllerServiceProvider> controller_service_provider_;
+  core::controller::ControllerServiceProvider* controller_service_provider_;
 // integrated power manager
   std::shared_ptr<controllers::ThreadManagementService> thread_manager_;
   // thread queue for the recently deceased threads.

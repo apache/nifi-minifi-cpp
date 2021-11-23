@@ -55,7 +55,7 @@ namespace c2 {
 
 C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
                  state::Pausable *pause_handler,
-                 const std::shared_ptr<state::StateMonitor> &updateSink,
+                 state::StateMonitor* updateSink,
                  const std::shared_ptr<Configure> &configuration,
                  const std::shared_ptr<utils::file::FileSystem> &filesystem)
     : heart_beat_period_(3s),
@@ -190,7 +190,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
         logger_->log_error("Could not instantiate %s", reporter);
       } else {
         heartbeat_reporter_obj->initialize(controller_, update_sink_, configuration_);
-        heartbeat_protocols_.push_back(heartbeat_reporter_obj);
+        heartbeat_protocols_.push_back(std::move(heartbeat_reporter_obj));
       }
     }
   }
@@ -205,7 +205,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
         logger_->log_error("Could not instantiate %s", trigger);
       } else {
         trigger_obj->initialize(configuration_);
-        triggers_.push_back(trigger_obj);
+        triggers_.push_back(std::move(trigger_obj));
       }
     }
   }
@@ -216,14 +216,14 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     logger_->log_error("Could not instantiate %s", base_reporter);
   } else {
     heartbeat_reporter_obj->initialize(controller_, update_sink_, configuration_);
-    heartbeat_protocols_.push_back(heartbeat_reporter_obj);
+    heartbeat_protocols_.push_back(std::move(heartbeat_reporter_obj));
   }
 }
 
 void C2Agent::performHeartBeat() {
   C2Payload payload(Operation::HEARTBEAT);
   logger_->log_trace("Performing heartbeat");
-  std::shared_ptr<state::response::NodeReporter> reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_);
+  auto reporter = dynamic_cast<state::response::NodeReporter*>(update_sink_);
   std::vector<std::shared_ptr<state::response::ResponseNode>> metrics;
   if (reporter) {
     if (!manifest_sent_) {
@@ -249,7 +249,7 @@ void C2Agent::performHeartBeat() {
 
   std::lock_guard<std::mutex> lock(heartbeat_mutex);
 
-  for (auto reporter : heartbeat_protocols_) {
+  for (auto& reporter : heartbeat_protocols_) {
     reporter->heartbeat(payload);
   }
 }
@@ -355,7 +355,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         raise(SIGTERM);
       }
 
-      std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(resp.name);
+      const auto components = update_sink_->getComponents(resp.name);
       // stop all referenced components.
       for (auto &component : components) {
         logger_->log_debug("Stopping component %s", component->getComponentName());
@@ -431,7 +431,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
  * to be put into the acknowledgement
  */
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
-  auto reporter = std::dynamic_pointer_cast<state::response::NodeReporter>(update_sink_);
+  auto reporter = dynamic_cast<state::response::NodeReporter*>(update_sink_);
   if (resp.name == "metrics") {
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
     if (reporter != nullptr) {

@@ -25,18 +25,17 @@
 #include "core/Processor.h"
 #include "utils/gsl.h"
 
+namespace {
+bool hasWorkToDo(org::apache::nifi::minifi::core::Processor* processor) {
+  // Whether it has work to do
+  return processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() || processor->isWorkAvailable();
+}
+}  // namespace
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-
-bool SchedulingAgent::hasWorkToDo(const std::shared_ptr<core::Processor>& processor) {
-  // Whether it has work to do
-  if (processor->getTriggerWhenEmpty() || !processor->hasIncomingConnections() || processor->isWorkAvailable())
-    return true;
-  else
-    return false;
-}
 
 std::future<utils::TaskRescheduleInfo> SchedulingAgent::enableControllerService(std::shared_ptr<core::controller::ControllerServiceNode> &serviceNode) {
   logger_->log_info("Enabling CSN in SchedulingAgent %s", serviceNode->getName());
@@ -79,11 +78,7 @@ std::future<utils::TaskRescheduleInfo> SchedulingAgent::disableControllerService
   return future;
 }
 
-bool SchedulingAgent::hasTooMuchOutGoing(const std::shared_ptr<core::Processor>& processor) {
-  return processor->flowFilesOutGoingFull();
-}
-
-bool SchedulingAgent::onTrigger(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<core::ProcessContext> &processContext,
+bool SchedulingAgent::onTrigger(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
                                 const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   if (processor->isYield()) {
     logger_->log_debug("Not running %s since it must yield", processor->getName());

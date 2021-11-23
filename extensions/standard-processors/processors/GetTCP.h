@@ -31,6 +31,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "concurrentqueue.h"
+#include "io/ClientSocket.h"
 #include "utils/ThreadPool.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/SSLContextService.h"
@@ -245,8 +246,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   std::map<std::string, std::future<int>*> live_clients_;
 
-  utils::ThreadPool<int> client_thread_pool_;
-
   moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
 
   bool stay_connected_;
@@ -269,10 +268,10 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
 
-  // last listing time for root directory ( if recursive, we will consider the root
-  // as the top level time.
-
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger();
+
+  // thread pool must be the last, as it is first to be destructed before other members, otherwise segfault is possible
+  utils::ThreadPool<int> client_thread_pool_;
 };
 
 }  // namespace processors

@@ -46,28 +46,28 @@ class ObjectFactory {
   virtual ~ObjectFactory() = default;
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a unique pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string& /*name*/) {
+  virtual std::unique_ptr<CoreComponent> create(const std::string& /*name*/) {
     return nullptr;
   }
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a raw pointer to a new processor.
    */
   virtual CoreComponent *createRaw(const std::string& /*name*/) {
     return nullptr;
   }
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a unique pointer to a new processor.
    */
-  virtual std::shared_ptr<CoreComponent> create(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
+  virtual std::unique_ptr<CoreComponent> create(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return nullptr;
   }
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a raw pointer to a new processor.
    */
   virtual CoreComponent* createRaw(const std::string& /*name*/, const utils::Identifier& /*uuid*/) {
     return nullptr;
@@ -99,23 +99,21 @@ class DefautObjectFactory : public ObjectFactory {
   }
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a unique pointer to a new processor.
    */
-  std::shared_ptr<CoreComponent> create(const std::string &name) override {
-    std::shared_ptr<T> ptr = std::make_shared<T>(name);
-    return std::static_pointer_cast<CoreComponent>(ptr);
+  std::unique_ptr<CoreComponent> create(const std::string &name) override {
+    return std::make_unique<T>(name);
   }
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a unique pointer to a new processor.
    */
-  std::shared_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
-    std::shared_ptr<T> ptr = std::make_shared<T>(name, uuid);
-    return std::static_pointer_cast<CoreComponent>(ptr);
+  std::unique_ptr<CoreComponent> create(const std::string &name, const utils::Identifier &uuid) override {
+    return std::make_unique<T>(name, uuid);
   }
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a raw pointer to a new processor.
    */
   CoreComponent* createRaw(const std::string &name) override {
     T *ptr = new T(name);
@@ -123,7 +121,7 @@ class DefautObjectFactory : public ObjectFactory {
   }
 
   /**
-   * Create a shared pointer to a new processor.
+   * Create a raw pointer to a new processor.
    */
   CoreComponent* createRaw(const std::string &name, const utils::Identifier &uuid) override {
     T *ptr = new T(name, uuid);

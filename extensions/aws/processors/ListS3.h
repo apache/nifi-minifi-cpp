@@ -33,6 +33,11 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
+namespace core {
+class CoreComponentStateManager;
+}
+
 namespace aws {
 namespace processors {
 
@@ -86,7 +91,7 @@ class ListS3 : public S3Processor {
   bool write_object_tags_ = false;
   bool write_user_metadata_ = false;
   bool requester_pays_ = false;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
+  core::CoreComponentStateManager* state_manager_ = nullptr;
 };
 
 }  // namespace processors

@@ -119,7 +119,7 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SourceInitiatedSubscriptionListener>::getLogger();
 
-  std::shared_ptr<core::CoreComponentStateManager> state_manager_;
+  core::CoreComponentStateManager* state_manager_;
 
   std::shared_ptr<core::ProcessSessionFactory> session_factory_;
 

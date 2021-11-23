@@ -25,6 +25,7 @@
 
 #include "KafkaProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "io/StreamPipe.h"
 #include "rdkafka.h"
 #include "rdkafka_utils.h"
 #include "KafkaConnection.h"
@@ -33,6 +34,9 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
+class FlowFileRecord;
+
 namespace processors {
 
 class ConsumeKafka : public KafkaProcessorBase {

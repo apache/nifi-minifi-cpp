@@ -38,9 +38,9 @@ namespace state {
  */
 class ProcessorController : public StateController {
  public:
-  ProcessorController(const std::shared_ptr<core::Processor> &processor, const std::shared_ptr<SchedulingAgent> &scheduler);
+  ProcessorController(core::Processor* processor, const std::shared_ptr<SchedulingAgent> &scheduler);
 
-  virtual ~ProcessorController();
+  ~ProcessorController() override;
 
   std::string getComponentName() const override {
     return processor_->getName();
@@ -50,7 +50,7 @@ class ProcessorController : public StateController {
     return processor_->getUUID();
   }
 
-  std::shared_ptr<core::Processor> getProcessor() {
+  core::Processor* getProcessor() {
     return processor_;
   }
   /**
@@ -69,7 +69,7 @@ class ProcessorController : public StateController {
   int16_t resume() override;
 
  protected:
-  std::shared_ptr<core::Processor> processor_;
+  core::Processor* processor_;
   std::shared_ptr<SchedulingAgent> scheduler_;
 };
 

@@ -281,13 +281,14 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   content_repo->initialize(config);
 
   core::Relationship inputRel{"Input", "dummy"};
-  std::shared_ptr<minifi::Connection> input = std::make_shared<minifi::Connection>(ff_repository, content_repo, "Input");
+  auto input = std::make_unique<minifi::Connection>(ff_repository, content_repo, "Input");
   input->setRelationship(inputRel);
 
-  auto root = std::make_shared<core::ProcessGroup>(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
-  root->addConnection(input);
+  auto root = std::make_unique<core::ProcessGroup>(core::ProcessGroupType::ROOT_PROCESS_GROUP, "root");
+  auto inputPtr = input.get();
+  root->addConnection(std::move(input));
 
-  auto flowConfig = std::unique_ptr<core::FlowConfiguration>{new core::FlowConfiguration(prov_repo, ff_repository, content_repo, nullptr, config, "")};
+  auto flowConfig = std::make_unique<core::FlowConfiguration>(prov_repo, ff_repository, content_repo, nullptr, config, "");
   auto flowController = std::make_shared<minifi::FlowController>(
       prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "");
 
@@ -305,9 +306,9 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
     std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
     utils::Identifier uuid = processor->getUUID();
     REQUIRE(uuid);
-    input->setSourceUUID(uuid);
-    processor->addConnection(input);
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor);
+    inputPtr->setSourceUUID(uuid);
+    processor->addConnection(inputPtr);
+    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
     auto context = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo, ff_repository, content_repo);
     core::ProcessSession sessionGenFlowFile(context);
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(sessionGenFlowFile.create());
@@ -319,14 +320,14 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   // remove flow from the connection but it is still present in the
   // flowFileRepo
   std::set<std::shared_ptr<core::FlowFile>> expiredFiles;
-  auto oldFlow = input->poll(expiredFiles);
+  auto oldFlow = inputPtr->poll(expiredFiles);
   REQUIRE(oldFlow);
   REQUIRE(expiredFiles.empty());
 
   // this notifies the FlowFileRepository of the flow structure
   // i.e. what Connections are present (more precisely what Connectables
   // are present)
-  flowController->load(root);
+  flowController->load(std::move(root));
   // this will first check the persisted repo and restore all FlowFiles
   // that still has an owner Connectable
   ff_repository->start();
@@ -336,8 +337,8 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   // upon the FlowFileRepository's startup
   std::shared_ptr<org::apache::nifi::minifi::core::FlowFile> newFlow = nullptr;
   using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-  const auto flowFileArrivedInOutput = [&newFlow, &expiredFiles, &input] {
-    newFlow = input->poll(expiredFiles);
+  const auto flowFileArrivedInOutput = [&newFlow, &expiredFiles, inputPtr] {
+    newFlow = inputPtr->poll(expiredFiles);
     return newFlow != nullptr;
   };
   assert(verifyEventHappenedInPollTime(std::chrono::seconds(10), flowFileArrivedInOutput, std::chrono::milliseconds(50)));
@@ -371,7 +372,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   auto connection = std::make_shared<minifi::Connection>(nullptr, nullptr, "Connection");
-  std::map<std::string, std::shared_ptr<core::Connectable>> connectionMap{{connection->getUUIDStr(), connection}};
+  std::map<std::string, core::Connectable*> connectionMap{{connection->getUUIDStr(), connection.get()}};
   // initialize repository
   {
     std::shared_ptr<TestFlowFileRepository> ff_repository = std::make_shared<TestFlowFileRepository>("flowFileRepository");
@@ -393,7 +394,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
 
       for (int keyIdx = 0; keyIdx < 100; ++keyIdx) {
         auto file = std::make_shared<minifi::FlowFileRecord>();
-        file->setConnection(connection);
+        file->setConnection(connection.get());
         // Serialize is sync
         REQUIRE(file->Persist(ff_repository));
         if (keyIdx % 2 == 0) {

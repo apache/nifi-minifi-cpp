@@ -74,8 +74,7 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
     purge_required_ = false;
   }
 
-  // Destructor
-  virtual ~VolatileRepository();
+  ~VolatileRepository() override;
 
   /**
    * Initialize thevolatile repsitory
@@ -203,6 +202,8 @@ VolatileRepository<T>::~VolatileRepository() {
   for (auto ent : value_vector_) {
     delete ent;
   }
+
+  stop();
 }
 
 /**

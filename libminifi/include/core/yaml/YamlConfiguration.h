@@ -143,7 +143,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param component_name
    * @param yaml_section
    */
-  void validateComponentProperties(const std::shared_ptr<ConfigurableComponent> &component, const std::string &component_name, const std::string &yaml_section) const;
+  void validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &yaml_section) const;
 
  protected:
   /**
@@ -247,7 +247,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param propertiesNode the YAML::Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNodeYaml(const YAML::Node& propertiesNode, std::shared_ptr<core::ConfigurableComponent> processor, const std::string& component_name, const std::string& yaml_section);
+  void parsePropertiesNodeYaml(const YAML::Node& propertiesNode, core::ConfigurableComponent& processor, const std::string& component_name, const std::string& yaml_section);
 
   /**
    * Parses the Funnels section of a configuration YAML.
@@ -299,9 +299,9 @@ class YamlConfiguration : public FlowConfiguration {
 
  private:
   PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode);
-  void parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor);
-  void parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor);
-  void parsePropertyNodeElement(const std::string& propertyName, const YAML::Node& propertyValueNode, std::shared_ptr<core::ConfigurableComponent> processor);
+  void parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
+  void parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
+  void parsePropertyNodeElement(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
 
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;

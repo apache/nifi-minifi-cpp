@@ -82,7 +82,7 @@ class Connectable : public CoreComponent {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  virtual std::set<std::shared_ptr<Connectable>> getOutGoingConnections(const std::string &relationship) const;
+  virtual std::set<Connectable*> getOutGoingConnections(const std::string &relationship) const;
 
   virtual void put(const std::shared_ptr<FlowFile>& /*flow*/) {
   }
@@ -95,15 +95,15 @@ class Connectable : public CoreComponent {
    * Gets and sets next incoming connection
    * @return next incoming connection
    */
-  std::shared_ptr<Connectable> getNextIncomingConnection();
+  Connectable* getNextIncomingConnection();
 
-  virtual std::shared_ptr<Connectable> pickIncomingConnection();
+  virtual Connectable* pickIncomingConnection();
 
   /**
    * @return true if incoming connections > 0
    */
   bool hasIncomingConnections() const {
-    return !_incomingConnections.empty();
+    return !incoming_connections_.empty();
   }
 
   uint8_t getMaxConcurrentTasks() const {
@@ -159,7 +159,7 @@ class Connectable : public CoreComponent {
 
  protected:
   // must hold the relationship_mutex_ before calling this
-  std::shared_ptr<Connectable> getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& relationship_mutex_lock);
+  Connectable* getNextIncomingConnectionImpl(const std::lock_guard<std::mutex>& relationship_mutex_lock);
   // Penalization Period in MilliSecond
   std::atomic<std::chrono::milliseconds> penalization_period_;
 
@@ -170,12 +170,12 @@ class Connectable : public CoreComponent {
   // Autoterminated relationships
   std::map<std::string, core::Relationship> auto_terminated_relationships_;
 
-  // Incoming connection Iterator
-  std::set<std::shared_ptr<Connectable>>::iterator incoming_connections_Iter;
   // Incoming connections
-  std::set<std::shared_ptr<Connectable>> _incomingConnections;
+  std::set<Connectable*> incoming_connections_;
+  // Incoming connection Iterator
+  decltype(incoming_connections_)::iterator incoming_connections_Iter;
   // Outgoing connections map based on Relationship name
-  std::map<std::string, std::set<std::shared_ptr<Connectable>>> out_going_connections_;
+  std::map<std::string, std::set<Connectable*>> outgoing_connections_;
 
   // Mutex for protection
   mutable std::mutex relationship_mutex_;

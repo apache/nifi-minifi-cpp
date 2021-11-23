@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 
+#include "io/StreamPipe.h"
 #include "utils/gsl.h"
 
 namespace org {

@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
 
 #include "rapidjson/stream.h"

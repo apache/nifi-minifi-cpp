@@ -44,7 +44,7 @@ class YamlConnectionParser {
       parent_(parent),
       logger_(logger) {}
 
-  void configureConnectionSourceRelationshipsFromYaml(const std::shared_ptr<minifi::Connection>& connection) const;
+  void configureConnectionSourceRelationshipsFromYaml(minifi::Connection& connection) const;
   [[nodiscard]] uint64_t getWorkQueueSizeFromYaml() const;
   [[nodiscard]] uint64_t getWorkQueueDataSizeFromYaml() const;
   [[nodiscard]] utils::Identifier getSourceUUIDFromYaml() const;
@@ -53,8 +53,8 @@ class YamlConnectionParser {
   [[nodiscard]] bool getDropEmptyFromYaml() const;
 
  private:
-  void addNewRelationshipToConnection(const std::string& relationship_name, const std::shared_ptr<minifi::Connection>& connection) const;
-  void addFunnelRelationshipToConnection(const std::shared_ptr<minifi::Connection>& connection) const;
+  void addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const;
+  void addFunnelRelationshipToConnection(minifi::Connection& connection) const;
 
   const YAML::Node& connectionNode_;
   const std::string& name_;

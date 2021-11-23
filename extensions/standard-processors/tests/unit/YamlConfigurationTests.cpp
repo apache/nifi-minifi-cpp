@@ -159,7 +159,7 @@ Provenance Reporting:
     REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
     REQUIRE(0s == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
-    std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
+    std::map<std::string, minifi::Connection*> connectionMap;
     rootFlowConfig->getConnections(connectionMap);
     REQUIRE(2 == connectionMap.size());
     // This is a map of UUID->Connection, and we don't know UUID, so just going to loop over it
@@ -484,7 +484,7 @@ NiFi Properties Overrides: {}
   REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
   REQUIRE(0s == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
-  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
+  std::map<std::string, minifi::Connection*> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
   REQUIRE(2 == connectionMap.size());
 
@@ -641,7 +641,7 @@ TEST_CASE("Test Dependent Property", "[YamlConfigurationDependentProperty]") {
   props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
   props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { "Prop A" }, { }));
   component->setSupportedProperties(std::move(props));
-  yamlConfig.validateComponentProperties(component, "component A", "section A");
+  yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
 }
 
@@ -665,7 +665,7 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   component->setSupportedProperties(std::move(props));
   bool config_failed = false;
   try {
-    yamlConfig.validateComponentProperties(component, "component A", "section A");
+    yamlConfig.validateComponentProperties(*component, "component A", "section A");
   } catch (const std::exception &e) {
     config_failed = true;
     REQUIRE("Unable to parse configuration file for component named 'component A' because property "
@@ -693,7 +693,7 @@ TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
   props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
   props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^abcd.*$" } }));
   component->setSupportedProperties(std::move(props));
-  yamlConfig.validateComponentProperties(component, "component A", "section A");
+  yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
 }
 
@@ -713,7 +713,7 @@ TEST_CASE("Test Regex Property", "[YamlConfigurationRegexProperty]") {
   props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
   props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "^val.*$", { }, { }));
   component->setSupportedProperties(std::move(props));
-  yamlConfig.validateComponentProperties(component, "component A", "section A");
+  yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
 }
 
@@ -736,7 +736,7 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") 
   component->setSupportedProperties(std::move(props));
   bool config_failed = false;
   try {
-    yamlConfig.validateComponentProperties(component, "component A", "section A");
+    yamlConfig.validateComponentProperties(*component, "component A", "section A");
   } catch (const std::exception &e) {
     config_failed = true;
     REQUIRE("Unable to parse configuration file for component named 'component A' because "
@@ -764,7 +764,7 @@ TEST_CASE("Test Regex Property 2", "[YamlConfigurationRegexProperty2]") {
   component->setSupportedProperties(std::move(props));
   bool config_failed = false;
   try {
-    yamlConfig.validateComponentProperties(component, "component A", "section A");
+    yamlConfig.validateComponentProperties(*component, "component A", "section A");
   } catch (const std::exception &e) {
     config_failed = true;
     REQUIRE("Unable to parse configuration file for component named 'component A' because "
@@ -857,7 +857,7 @@ Remote Process Groups: []
   REQUIRE(rootFlowConfig->findProcessorByName("GenerateFlowFile2"));
   REQUIRE(rootFlowConfig->findProcessorById(utils::Identifier::parse("01a2f910-7050-41c1-8528-942764e7591d").value()));
 
-  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
+  std::map<std::string, minifi::Connection*> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
   REQUIRE(6 == connectionMap.size());
   for (auto it : connectionMap) {

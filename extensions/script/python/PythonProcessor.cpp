@@ -32,8 +32,8 @@ namespace python {
 namespace py = pybind11;
 namespace core = org::apache::nifi::minifi::core;
 
-PythonProcessor::PythonProcessor(std::shared_ptr<core::Processor> proc) {
-  processor_ = std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(proc);
+PythonProcessor::PythonProcessor(core::Processor* proc) {
+  processor_ = dynamic_cast<python::processors::ExecutePythonProcessor*>(proc);
 }
 
 void PythonProcessor::setSupportsDynamicProperties() {
@@ -41,7 +41,7 @@ void PythonProcessor::setSupportsDynamicProperties() {
     throw std::runtime_error("Access of Processor after it has been released");
   }
 
-  std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(processor_)->setSupportsDynamicProperties();
+  dynamic_cast<python::processors::ExecutePythonProcessor*>(processor_)->setSupportsDynamicProperties();
 }
 
 void PythonProcessor::setDecription(const std::string &desc) {
@@ -49,16 +49,13 @@ void PythonProcessor::setDecription(const std::string &desc) {
     throw std::runtime_error("Access of Processor after it has been released");
   }
 
-  std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(processor_)->setDescription(desc);
+  dynamic_cast<python::processors::ExecutePythonProcessor*>(processor_)->setDescription(desc);
 }
 
 void PythonProcessor::addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el) {
-  std::dynamic_pointer_cast<python::processors::ExecutePythonProcessor>(processor_)->addProperty(name, description, defaultvalue, required, el);
+  dynamic_cast<python::processors::ExecutePythonProcessor*>(processor_)->addProperty(name, description, defaultvalue, required, el);
 }
 
-void PythonProcessor::releaseCoreResources() {
-  processor_.reset();
-}
 } /* namespace python */
 } /* namespace minifi */
 } /* namespace nifi */
