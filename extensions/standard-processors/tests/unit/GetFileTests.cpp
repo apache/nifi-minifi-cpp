@@ -31,6 +31,8 @@
 #include <fileapi.h>
 #endif
 
+using namespace std::chrono_literals;
+
 namespace {
 
 class GetFileTestController {
@@ -105,6 +107,7 @@ TEST_CASE("GetFile ignores hidden files and files larger than MaxSize", "[GetFil
   test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));  // The hidden and the too big files should be ignored
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:test.txt"));
   REQUIRE(LogTestController::getInstance().contains("key:flow.id"));
   REQUIRE(LogTestController::getInstance().contains("Size:44 Offset:0"));
 }
@@ -116,6 +119,7 @@ TEST_CASE("GetFile ignores files smaller than MinSize", "[GetFile]") {
   test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:large_file.txt"));
   REQUIRE(LogTestController::getInstance().contains("key:flow.id"));
   REQUIRE(LogTestController::getInstance().contains("Size:67 Offset:0"));
 }
@@ -152,6 +156,9 @@ TEST_CASE("Hidden files are read when IgnoreHiddenFile property is false", "[get
   test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:large_file.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:test.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:.test.txt"));
 }
 
 TEST_CASE("Check if subdirectories are ignored or not if Recurse property is set", "[getFileProperty]") {
@@ -166,6 +173,8 @@ TEST_CASE("Check if subdirectories are ignored or not if Recurse property is set
     test_controller.runSession();
 
     REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:test.txt"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:large_file.txt"));
   }
 
   SECTION("File in subdirectory is logged when Recurse property set to true")  {
@@ -173,6 +182,9 @@ TEST_CASE("Check if subdirectories are ignored or not if Recurse property is set
     test_controller.runSession();
 
     REQUIRE(LogTestController::getInstance().contains("Logged 3 flow files"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:test.txt"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:large_file.txt"));
+    REQUIRE(LogTestController::getInstance().contains("key:filename value:subfile.txt"));
   }
 }
 
@@ -180,11 +192,14 @@ TEST_CASE("Only older files are read when MinAge property is set", "[getFileProp
   GetFileTestController test_controller;
   test_controller.setProperty(minifi::processors::GetFile::MinAge, "1 hour");
 
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), 936860949);
+  const auto more_than_an_hour_ago = std::chrono::system_clock::now() - 65min;
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(),
+    std::chrono::duration_cast<std::chrono::seconds>(more_than_an_hour_ago.time_since_epoch()).count());
 
   test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:test.txt"));
   REQUIRE(LogTestController::getInstance().contains("Size:44 Offset:0"));
 }
 
@@ -192,12 +207,14 @@ TEST_CASE("Only newer files are read when MaxAge property is set", "[getFileProp
   GetFileTestController test_controller;
   test_controller.setProperty(minifi::processors::GetFile::MaxAge, "1 hour");
 
-  // Set last write time to year 1999
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), 936860949);
+  const auto more_than_an_hour_ago = std::chrono::system_clock::now() - 65min;
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(),
+    std::chrono::duration_cast<std::chrono::seconds>(more_than_an_hour_ago.time_since_epoch()).count());
 
   test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 1 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:large_file.txt"));
   REQUIRE(LogTestController::getInstance().contains("Size:67 Offset:0"));
 }
 
@@ -225,6 +242,8 @@ TEST_CASE("Test file filtering of GetFile", "[getFileProperty]") {
   test_controller.runSession();
 
   REQUIRE(LogTestController::getInstance().contains("Logged 2 flow files"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:test.txt"));
+  REQUIRE(LogTestController::getInstance().contains("key:filename value:.test.txt"));
 }
 
 TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple times between intervals", "[getFileProperty]") {
