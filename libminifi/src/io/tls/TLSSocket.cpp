@@ -436,7 +436,7 @@ size_t TLSSocket::read(uint8_t *buf, size_t buflen) {
       sslStatus = SSL_get_error(fd_ssl, status);
     } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
 
-    if (status < 0)
+    if (status <= 0)
       break;
 
     buflen -= gsl::narrow<size_t>(status);
