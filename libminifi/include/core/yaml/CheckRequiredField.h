@@ -30,6 +30,8 @@ namespace minifi {
 namespace core {
 namespace yaml {
 
+bool isFieldPresent(const YAML::Node *yamlNode, const std::string &fieldName);
+
 /**
  * This is a helper function for verifying the existence of a required
  * field in a YAML::Node object. If the field is not present, an error

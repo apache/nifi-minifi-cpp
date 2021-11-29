@@ -529,14 +529,20 @@ void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServ
       CONFIG_YAML_CONTROLLER_SERVICES_KEY);
       std::string type = "";
 
-      try {
-        yaml::checkRequiredField(&controllerServiceNode, "class", logger_, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+      if (yaml::isFieldPresent(&controllerServiceNode, "class")) {
         type = controllerServiceNode["class"].as<std::string>();
-      } catch (const std::invalid_argument &) {
-        yaml::checkRequiredField(&controllerServiceNode, "type", logger_, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+      } else {
+        const YAML::Node name_node = controllerServiceNode.as<YAML::Node>()["name"];
+        std::string err_msg =
+          name_node ?
+            "Unable to parse configuration file for component named '" + name_node.as<std::string>() + "' as required field 'class' or 'type' is missing" :
+            "Unable to parse configuration file as required field 'class' or 'type' is missing";
+        err_msg += " [in '" + std::string(CONFIG_YAML_CONTROLLER_SERVICES_KEY) + "' section of configuration file]";
+        yaml::checkRequiredField(&controllerServiceNode, "type", logger_, CONFIG_YAML_CONTROLLER_SERVICES_KEY, err_msg);
         type = controllerServiceNode["type"].as<std::string>();
-        logger_->log_debug("Using type %s for controller service node", type);
       }
+      logger_->log_debug("Using type %s for controller service node", type);
+
       std::string fullType = type;
       auto lastOfIdx = type.find_last_of(".");
       if (lastOfIdx != std::string::npos) {

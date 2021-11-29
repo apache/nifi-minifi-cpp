@@ -27,9 +27,13 @@ namespace minifi {
 namespace core {
 namespace yaml {
 
+bool isFieldPresent(const YAML::Node *yamlNode, const std::string &fieldName) {
+  return bool{yamlNode->as<YAML::Node>()[fieldName]};
+}
+
 void checkRequiredField(const YAML::Node *yamlNode, const std::string &fieldName, const std::shared_ptr<logging::Logger>& logger, const std::string &yamlSection, const std::string &errorMessage) {
   std::string errMsg = errorMessage;
-  if (!yamlNode->as<YAML::Node>()[fieldName]) {
+  if (!isFieldPresent(yamlNode, fieldName)) {
     if (errMsg.empty()) {
       const YAML::Node name_node = yamlNode->as<YAML::Node>()["name"];
       // Build a helpful error message for the user so they can fix the
