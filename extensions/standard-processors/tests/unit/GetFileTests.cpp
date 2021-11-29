@@ -31,7 +31,7 @@
 #include <fileapi.h>
 #endif
 
-using namespace std::chrono_literals;
+using namespace std::chrono_literals;  // NOLINT using namespace directive is required for literals
 
 namespace {
 
