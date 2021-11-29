@@ -77,7 +77,7 @@ def step_impl(context, processor_type, processor_name, minifi_container_name):
 @given("a {processor_type} processor with the name \"{processor_name}\"")
 def step_impl(context, processor_type, processor_name):
     context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow".
-                          format(processor_type=processor_type, minifi_container_name="minifi-cpp-flow", processor_name=processor_name))
+                          format(processor_type=processor_type, processor_name=processor_name, minifi_container_name="minifi-cpp-flow"))
 
 
 @given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
@@ -85,7 +85,7 @@ def step_impl(context, processor_type, processor_name):
 @given("a {processor_type} processor set up in a \"{minifi_container_name}\" flow")
 def step_impl(context, processor_type, minifi_container_name):
     context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow".
-                          format(processor_type=processor_type, minifi_container_name=minifi_container_name, processor_name=processor_type))
+                          format(processor_type=processor_type, processor_name=processor_type, minifi_container_name=minifi_container_name))
 
 
 @given("a {processor_type} processor")

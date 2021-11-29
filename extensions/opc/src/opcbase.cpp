@@ -50,7 +50,7 @@ namespace processors {
 
   core::Property BaseOPCProcessor::Password(
       core::PropertyBuilder::createProperty("Password")
-          ->withDescription("Password to log in with. Providing this requires cert and key to be provided as well, credentials are always sent encrypted.")->build());
+          ->withDescription("Password to log in with.")->build());
 
   core::Property BaseOPCProcessor::CertificatePath(
       core::PropertyBuilder::createProperty("Certificate path")
