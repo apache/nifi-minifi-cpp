@@ -130,7 +130,7 @@ struct DatagramListener {
 // some weird IO error with the content repo.
 TEST_CASE("PutUDP", "[putudp]") {
   const auto putudp = std::make_shared<PutUDP>("PutUDP");
-  auto random_engine = std::mt19937{std::random_device{}()};
+  auto random_engine = std::mt19937{std::random_device{}()};  // NOLINT: "Missing space before {  [whitespace/braces] [5]"
   // most systems use ports 32768 - 65535 as ephemeral ports, so avoid binding to those
   const auto port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine);
   const auto port_str = std::to_string(port);

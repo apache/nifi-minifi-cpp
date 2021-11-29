@@ -586,7 +586,7 @@ TEST_CASE("TailFile can handle input files getting removed", "[multiple_file]") 
 TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
   std::string line1("012\n");
   std::string line2(8050, 0);
-  std::mt19937 gen(std::random_device{}());  // NOLINT (linter wants a space before '{')
+  std::mt19937 gen(std::random_device{}());  // NOLINT (linter wants a space before '{') [whitespace/braces]
   std::generate_n(line2.begin(), line2.size() - 1, [&]() -> char {
     // Make sure to only generate from characters that don't intersect with line1 and 3-4
     // Starting generation from 64 ensures that no numeric digit characters are added
