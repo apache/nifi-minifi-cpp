@@ -37,9 +37,21 @@ static constexpr SocketDescriptor INVALID_SOCKET = -1;
 namespace minifi = org::apache::nifi::minifi;
 
 class SimpleSSLTestServer  {
+  struct SocketInitializer {
+    SocketInitializer() {
+#ifdef WIN32
+      static WSADATA s_wsaData;
+      const int iWinSockInitResult = WSAStartup(MAKEWORD(2, 2), &s_wsaData);
+      if (0 != iWinSockInitResult) {
+        throw std::runtime_error("Cannot initialize socket");
+      }
+#endif
+    }
+  };
  public:
   SimpleSSLTestServer(const SSL_METHOD* method, int port, const std::filesystem::path& key_dir)
       : port_(port), had_connection_(false) {
+    static SocketInitializer socket_initializer{};
     minifi::io::OpenSSLInitializer::getInstance();
     ctx_ = SSL_CTX_new(method);
     configureContext(key_dir);
