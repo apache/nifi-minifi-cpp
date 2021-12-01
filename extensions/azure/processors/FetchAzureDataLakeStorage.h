@@ -43,7 +43,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase
   static const core::Relationship Success;
 
   explicit FetchAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageProcessorBase(name, uuid, logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger()) {
+    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger()) {
   }
 
   ~FetchAzureDataLakeStorage() override = default;
@@ -56,7 +56,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase
 
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::FetchAzureDataLakeStorageParameters& params, std::shared_ptr<logging::Logger> logger)
+    WriteCallback(storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::FetchAzureDataLakeStorageParameters& params, std::shared_ptr<core::logging::Logger> logger)
       : azure_data_lake_storage_(azure_data_lake_storage),
         params_(params),
         logger_(std::move(logger)) {
@@ -79,15 +79,19 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase
     storage::AzureDataLakeStorage& azure_data_lake_storage_;
     const storage::FetchAzureDataLakeStorageParameters& params_;
     std::optional<uint64_t> result_size_ = std::nullopt;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_;
   };
 
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
   explicit FetchAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(name, uuid, logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
   std::optional<storage::FetchAzureDataLakeStorageParameters> buildFetchParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);

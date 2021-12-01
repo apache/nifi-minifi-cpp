@@ -68,7 +68,7 @@ void FetchAzureDataLakeStorage::initialize() {
 std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeStorage::buildFetchParameters(
     const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::FetchAzureDataLakeStorageParameters params;
-  if (!setCommonParameters(params, context, flow_file)) {
+  if (!setCommonParameters(params, *context, flow_file)) {
     return std::nullopt;
   }
 
@@ -105,16 +105,10 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
     return;
   }
 
-  std::optional<uint64_t> result_size;
-  {
-    // TODO(lordgamez): This can be removed after maximum allowed threads are implemented. See https://issues.apache.org/jira/browse/MINIFICPP-1566
-    std::lock_guard<std::mutex> lock(azure_storage_mutex_);
-    WriteCallback callback(azure_data_lake_storage_, *params, logger_);
-    session->write(flow_file, &callback);
-    result_size = callback.getResult();
-  }
+  WriteCallback callback(azure_data_lake_storage_, *params, logger_);
+  session->write(flow_file, &callback);
 
-  if (result_size == std::nullopt) {
+  if (callback.getResult() == std::nullopt) {
     logger_->log_error("Failed to fetch file '%s' from Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
   } else {
