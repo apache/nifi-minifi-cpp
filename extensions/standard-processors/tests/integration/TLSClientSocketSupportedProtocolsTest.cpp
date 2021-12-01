@@ -68,7 +68,6 @@ class TLSClientSocketSupportedProtocolsTest {
  protected:
   void configureSecurity() {
     host_ = minifi::io::Socket::getMyHostName();
-    port_ = 38777;
     if (!key_dir_.empty()) {
       configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
       configuration_->set(minifi::Configure::nifi_security_client_certificate, (key_dir_ / "cn.crt.pem").string());
@@ -87,11 +86,14 @@ class TLSClientSocketSupportedProtocolsTest {
 
   template <class TLSTestSever>
   void verifyTLSProtocolCompatibility(const bool should_be_compatible) {
-    TLSTestSever server(port_, key_dir_);
+    // bind to random port
+    TLSTestSever server(0, key_dir_);
     server.waitForConnection();
 
+    int port = server.getPort();
+
     const auto socket_context = std::make_shared<minifi::io::TLSContext>(configuration_);
-    client_socket_ = std::make_unique<minifi::io::TLSSocket>(socket_context, host_, port_, 0);
+    client_socket_ = std::make_unique<minifi::io::TLSSocket>(socket_context, host_, port, 0);
     const bool client_initialized_successfully = (client_socket_->initialize() == 0);
     assert(client_initialized_successfully == should_be_compatible);
     server.shutdownServer();
@@ -101,7 +103,6 @@ class TLSClientSocketSupportedProtocolsTest {
  protected:
     std::unique_ptr<minifi::io::TLSSocket> client_socket_;
     std::string host_;
-    int port_;
     std::filesystem::path key_dir_;
     std::shared_ptr<minifi::Configure> configuration_;
 };
