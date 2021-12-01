@@ -434,9 +434,9 @@ size_t TLSSocket::read(uint8_t *buf, size_t buflen) {
       const auto ssl_read_size = gsl::narrow<int>(std::min(buflen, gsl::narrow<size_t>(std::numeric_limits<int>::max())));
       status = SSL_read(fd_ssl, buf, ssl_read_size);
       sslStatus = SSL_get_error(fd_ssl, status);
-    } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);
+    } while (status <= 0 && sslStatus == SSL_ERROR_WANT_READ);
 
-    if (status < 0)
+    if (status <= 0)
       break;
 
     buflen -= gsl::narrow<size_t>(status);

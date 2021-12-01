@@ -101,6 +101,7 @@ target_include_directories(${CATCH_MAIN_LIB} SYSTEM BEFORE PRIVATE "${CMAKE_SOUR
 SET(TEST_RESOURCES ${TEST_DIR}/resources)
 
 GETSOURCEFILES(UNIT_TESTS "${TEST_DIR}/unit/")
+GETSOURCEFILES(TLS_UNIT_TESTS "${TEST_DIR}/unit/tls/")
 GETSOURCEFILES(NANOFI_UNIT_TESTS "${NANOFI_TEST_DIR}")
 GETSOURCEFILES(INTEGRATION_TESTS "${TEST_DIR}/integration/")
 
@@ -114,6 +115,18 @@ FOREACH(testfile ${UNIT_TESTS})
   add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
 message("-- Finished building ${UNIT_TEST_COUNT} unit test file(s)...")
+
+if (NOT OPENSSL_OFF)
+  SET(UNIT_TEST_COUNT 0)
+  FOREACH(testfile ${TLS_UNIT_TESTS})
+    get_filename_component(testfilename "${testfile}" NAME_WE)
+    add_executable("${testfilename}" "${TEST_DIR}/unit/tls/${testfile}")
+    createTests("${testfilename}")
+    MATH(EXPR UNIT_TEST_COUNT "${UNIT_TEST_COUNT}+1")
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}" "${TEST_RESOURCES}/" WORKING_DIRECTORY ${TEST_DIR})
+  ENDFOREACH()
+  message("-- Finished building ${UNIT_TEST_COUNT} TLS unit test file(s)...")
+endif()
 
 if(NOT WIN32 AND ENABLE_NANOFI)
   SET(UNIT_TEST_COUNT 0)
