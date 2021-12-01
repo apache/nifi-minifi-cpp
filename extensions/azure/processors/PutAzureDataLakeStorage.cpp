@@ -20,30 +20,14 @@
 
 #include "PutAzureDataLakeStorage.h"
 
+#include <vector>
+
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
-#include "controllerservices/AzureStorageCredentialsService.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property PutAzureDataLakeStorage::FilesystemName(
-    core::PropertyBuilder::createProperty("Filesystem Name")
-      ->withDescription("Name of the Azure Storage File System. It is assumed to be already existing.")
-      ->supportsExpressionLanguage(true)
-      ->isRequired(true)
-      ->build());
-const core::Property PutAzureDataLakeStorage::DirectoryName(
-    core::PropertyBuilder::createProperty("Directory Name")
-      ->withDescription("Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. "
-                        "If left empty it designates the root directory. The directory will be created if not already existing.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-const core::Property PutAzureDataLakeStorage::FileName(
-    core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename to be uploaded. If left empty the filename attribute will be used by default.")
-      ->supportsExpressionLanguage(true)
-      ->build());
 const core::Property PutAzureDataLakeStorage::ConflictResolutionStrategy(
     core::PropertyBuilder::createProperty("Conflict Resolution Strategy")
       ->withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
@@ -71,46 +55,27 @@ void PutAzureDataLakeStorage::initialize() {
   });
 }
 
-void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  std::optional<storage::AzureStorageCredentials> credentials;
-  std::tie(std::ignore, credentials) = getCredentialsFromControllerService(context);
-  if (!credentials) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service property missing or invalid");
-  }
-
-  if (!credentials->isValid()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Azure Storage Credentials Service properties are not set or invalid");
-  }
-
-  credentials_ = *credentials;
+void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+  gsl_Expects(context && sessionFactory);
+  AzureDataLakeStorageProcessorBase::onSchedule(context, sessionFactory);
 
   conflict_resolution_strategy_ = FileExistsResolutionStrategy::parse(
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ConflictResolutionStrategy.getName(), FileExistsResolutionStrategy::values()).c_str());
 }
 
 std::optional<storage::PutAzureDataLakeStorageParameters> PutAzureDataLakeStorage::buildUploadParameters(
-    const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::PutAzureDataLakeStorageParameters params;
-  params.credentials = credentials_;
+  if (!setCommonParameters(params, context, flow_file)) {
+    return std::nullopt;
+  }
   params.replace_file = conflict_resolution_strategy_ == FileExistsResolutionStrategy::REPLACE_FILE;
-
-  if (!context->getProperty(FilesystemName, params.file_system_name, flow_file) || params.file_system_name.empty()) {
-    logger_->log_error("Filesystem Name '%s' is invalid or empty!", params.file_system_name);
-    return std::nullopt;
-  }
-
-  context->getProperty(DirectoryName, params.directory_name, flow_file);
-
-  context->getProperty(FileName, params.filename, flow_file);
-  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
-    logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
-    return std::nullopt;
-  }
 
   return params;
 }
 
 void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context && session);
   logger_->log_trace("PutAzureDataLakeStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
@@ -118,7 +83,7 @@ void PutAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessConte
     return;
   }
 
-  const auto params = buildUploadParameters(context, flow_file);
+  const auto params = buildUploadParameters(*context, flow_file);
   if (!params) {
     session->transfer(flow_file, Failure);
     return;

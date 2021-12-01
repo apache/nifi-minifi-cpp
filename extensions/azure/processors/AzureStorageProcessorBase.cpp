@@ -33,13 +33,13 @@ const core::Property AzureStorageProcessorBase::AzureStorageCredentialsService(
     ->build());
 
 std::tuple<AzureStorageProcessorBase::GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> AzureStorageProcessorBase::getCredentialsFromControllerService(
-    const std::shared_ptr<core::ProcessContext> &context) const {
+    core::ProcessContext &context) const {
   std::string service_name;
-  if (!context->getProperty(AzureStorageCredentialsService.getName(), service_name) || service_name.empty()) {
+  if (!context.getProperty(AzureStorageCredentialsService.getName(), service_name) || service_name.empty()) {
     return std::make_tuple(GetCredentialsFromControllerResult::CONTROLLER_NAME_EMPTY, std::nullopt);
   }
 
-  std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(service_name);
+  std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(service_name);
   if (nullptr == service) {
     logger_->log_error("Azure Storage credentials service with name: '%s' could not be found", service_name);
     return std::make_tuple(GetCredentialsFromControllerResult::CONTROLLER_NAME_INVALID, std::nullopt);

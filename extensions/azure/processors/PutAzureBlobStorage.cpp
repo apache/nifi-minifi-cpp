@@ -201,7 +201,7 @@ std::optional<storage::PutAzureBlobStorageParameters> PutAzureBlobStorage::build
 std::optional<storage::AzureStorageCredentials> PutAzureBlobStorage::getCredentials(
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file) const {
-  auto [result, controller_service_creds] = getCredentialsFromControllerService(context);
+  auto [result, controller_service_creds] = getCredentialsFromControllerService(*context);
   if (controller_service_creds) {
     if (controller_service_creds->isValid()) {
       logger_->log_debug("Azure credentials read from credentials controller service!");

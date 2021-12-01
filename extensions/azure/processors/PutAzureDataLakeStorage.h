@@ -20,30 +20,23 @@
 
 #pragma once
 
-#include <utility>
 #include <string>
+#include <utility>
 #include <memory>
-#include <optional>
-#include <vector>
 
-#include "core/Property.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "storage/AzureDataLakeStorage.h"
+#include "AzureDataLakeStorageProcessorBase.h"
+
 #include "utils/Enum.h"
 #include "utils/Export.h"
-#include "AzureStorageProcessorBase.h"
 
-class PutAzureDataLakeStorageTestsFixture;
+template<typename AzureDataLakeStorageProcessor>
+class AzureDataLakeStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
+class PutAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
   // Supported Properties
-  EXTENSIONAPI static const core::Property FilesystemName;
-  EXTENSIONAPI static const core::Property DirectoryName;
-  EXTENSIONAPI static const core::Property FileName;
   EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
 
   // Supported Relationships
@@ -65,7 +58,7 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  friend class ::PutAzureDataLakeStorageTestsFixture;
+  friend class ::AzureDataLakeStorageTestsFixture<PutAzureDataLakeStorage>;
 
   class ReadCallback : public InputStreamCallback {
    public:
@@ -93,15 +86,12 @@ class PutAzureDataLakeStorage final : public AzureStorageProcessorBase {
   }
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureStorageProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger()),
-      azure_data_lake_storage_(std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  std::optional<storage::PutAzureDataLakeStorageParameters> buildUploadParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
 
-  storage::AzureStorageCredentials credentials_;
   FileExistsResolutionStrategy conflict_resolution_strategy_;
-  storage::AzureDataLakeStorage azure_data_lake_storage_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

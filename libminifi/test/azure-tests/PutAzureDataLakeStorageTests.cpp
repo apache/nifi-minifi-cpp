@@ -16,156 +16,18 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "utils/IntegrationTestUtils.h"
-#include "utils/TestUtils.h"
-#include "core/Processor.h"
+#include "AzureDataLakeStorageTestsFixture.h"
 #include "processors/PutAzureDataLakeStorage.h"
-#include "processors/GetFile.h"
-#include "processors/PutFile.h"
-#include "processors/LogAttribute.h"
-#include "processors/UpdateAttribute.h"
-#include "storage/DataLakeStorageClient.h"
-#include "utils/file/FileUtils.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
+
+namespace {
 
 using namespace std::chrono_literals;
 
-const std::string FILESYSTEM_NAME = "testfilesystem";
-const std::string DIRECTORY_NAME = "testdir";
-const std::string FILE_NAME = "testfile.txt";
-const std::string CONNECTION_STRING = "test-connectionstring";
-const std::string TEST_DATA = "data123";
-const std::string GETFILE_FILE_NAME = "input_data.log";
-
-class MockDataLakeStorageClient : public minifi::azure::storage::DataLakeStorageClient {
- public:
-  const std::string PRIMARY_URI = "http://test-uri/file";
-
-  bool createFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& /*params*/) override {
-    if (file_creation_error_) {
-      throw std::runtime_error("error");
-    }
-    return create_file_;
-  }
-
-  std::string uploadFile(const minifi::azure::storage::PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) override {
-    input_data_ = std::string(buffer.begin(), buffer.end());
-    params_ = params;
-
-    if (upload_fails_) {
-      throw std::runtime_error("error");
-    }
-
-    return RETURNED_PRIMARY_URI;
-  }
-
-  void setFileCreation(bool create_file) {
-    create_file_ = create_file;
-  }
-
-  void setFileCreationError(bool file_creation_error) {
-    file_creation_error_ = file_creation_error;
-  }
-
-  void setUploadFailure(bool upload_fails) {
-    upload_fails_ = upload_fails;
-  }
-
-  minifi::azure::storage::PutAzureDataLakeStorageParameters getPassedParams() const {
-    return params_;
-  }
-
- private:
-  const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
-  bool create_file_ = true;
-  bool file_creation_error_ = false;
-  bool upload_fails_ = false;
-  std::string input_data_;
-  minifi::azure::storage::PutAzureDataLakeStorageParameters params_;
-};
-
-class PutAzureDataLakeStorageTestsFixture {
- public:
-  PutAzureDataLakeStorageTestsFixture() {
-    LogTestController::getInstance().setDebug<TestPlan>();
-    LogTestController::getInstance().setDebug<minifi::core::Processor>();
-    LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setTrace<minifi::processors::GetFile>();
-    LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
-    LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
-    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setTrace<minifi::azure::processors::PutAzureDataLakeStorage>();
-
-    // Build MiNiFi processing graph
-    plan_ = test_controller_.createPlan();
-    auto mock_data_lake_storage_client = std::make_unique<MockDataLakeStorageClient>();
-    mock_data_lake_storage_client_ptr_ = mock_data_lake_storage_client.get();
-    put_azure_data_lake_storage_ = std::shared_ptr<minifi::azure::processors::PutAzureDataLakeStorage>(
-      new minifi::azure::processors::PutAzureDataLakeStorage("PutAzureDataLakeStorage", utils::Identifier(), std::move(mock_data_lake_storage_client)));
-    auto input_dir = test_controller_.createTempDirectory();
-    utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
-
-    get_file_ = plan_->addProcessor("GetFile", "GetFile");
-    plan_->setProperty(get_file_, minifi::processors::GetFile::Directory.getName(), input_dir);
-    plan_->setProperty(get_file_, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
-
-    update_attribute_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
-    plan_->addProcessor(put_azure_data_lake_storage_, "PutAzureDataLakeStorage", { {"success", "d"}, {"failure", "d"} }, true);
-    auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
-    logattribute->setAutoTerminatedRelationships({{"success", "d"}});
-
-    putfile_ = plan_->addProcessor("PutFile", "PutFile", { {"success", "d"} }, false);
-    plan_->addConnection(put_azure_data_lake_storage_, {"failure", "d"}, putfile_);
-    putfile_->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
-    output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), output_dir_);
-
-    azure_storage_cred_service_ = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
-    setDefaultProperties();
-  }
-
-  std::vector<std::string> getFailedFlowFileContents() {
-    std::vector<std::string> file_contents;
-
-    auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
-      std::string file_content((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
-      file_contents.push_back(file_content);
-      return true;
-    };
-
-    utils::file::FileUtils::list_dir(output_dir_, lambda, plan_->getLogger(), false);
-    return file_contents;
-  }
-
-  void setDefaultProperties() {
-    plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::AzureStorageCredentialsService.getName(), "AzureStorageCredentialsService");
-    plan_->setProperty(update_attribute_, "test.filesystemname", FILESYSTEM_NAME, true);
-    plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::FilesystemName.getName(), "${test.filesystemname}");
-    plan_->setProperty(update_attribute_, "test.directoryname", DIRECTORY_NAME, true);
-    plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::DirectoryName.getName(), "${test.directoryname}");
-    plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString.getName(), CONNECTION_STRING);
-  }
-
-  virtual ~PutAzureDataLakeStorageTestsFixture() {
-    LogTestController::getInstance().reset();
-  }
-
- protected:
-  TestController test_controller_;
-  std::shared_ptr<TestPlan> plan_;
-  MockDataLakeStorageClient* mock_data_lake_storage_client_ptr_;
-  std::shared_ptr<core::Processor> put_azure_data_lake_storage_;
-  std::shared_ptr<core::Processor> get_file_;
-  std::shared_ptr<core::Processor> update_attribute_;
-  std::shared_ptr<core::Processor> putfile_;
-  std::shared_ptr<core::controller::ControllerServiceNode> azure_storage_cred_service_;
-  std::string output_dir_;
-};
+using PutAzureDataLakeStorageTestsFixture = AzureDataLakeStorageTestsFixture<minifi::azure::processors::PutAzureDataLakeStorage>;
 
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Azure storage credentials service is empty", "[azureDataLakeStorageParameters]") {
-  plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::AzureStorageCredentialsService.getName(), "");
+  plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::AzureStorageCredentialsService.getName(), "");
   REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
   REQUIRE(getFailedFlowFileContents().size() == 0);
 }
@@ -176,7 +38,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure credentials wi
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::StorageAccountName.getName(), "TEST_ACCOUNT");
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::ConnectionString.getName(), "");
   test_controller_.runSession(plan_, true);
-  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
   CHECK(passed_params.credentials.buildConnectionString() == "AccountName=TEST_ACCOUNT;SharedAccessSignature=token");
   REQUIRE(getFailedFlowFileContents().size() == 0);
 }
@@ -187,7 +49,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure credentials wi
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::SASToken.getName(), "token");
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::StorageAccountName.getName(), "TEST_ACCOUNT");
   test_controller_.runSession(plan_, true);
-  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   REQUIRE(getFailedFlowFileContents().size() == 0);
 }
@@ -198,7 +60,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Test Azure credentials wi
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::UseManagedIdentityCredentials.getName(), "true");
   plan_->setProperty(azure_storage_cred_service_, minifi::azure::controllers::AzureStorageCredentialsService::StorageAccountName.getName(), "TEST_ACCOUNT");
   test_controller_.runSession(plan_, true);
-  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
   CHECK(passed_params.credentials.buildConnectionString().empty());
   CHECK(passed_params.credentials.getStorageAccountName() == "TEST_ACCOUNT");
   CHECK(passed_params.credentials.getEndpointSuffix() == "core.windows.net");
@@ -223,7 +85,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Connection String is empt
 
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake Storage with default parameters", "[azureDataLakeStorageUpload]") {
   test_controller_.runSession(plan_, true);
-  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);
   CHECK(passed_params.directory_name == DIRECTORY_NAME);
@@ -263,7 +125,7 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to failure on 'f
 }
 
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to success on 'ignore' resolution strategy if file exists", "[azureDataLakeStorageUpload]") {
-  plan_->setProperty(put_azure_data_lake_storage_,
+  plan_->setProperty(azure_data_lake_storage_,
     minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(),
     toString(minifi::azure::processors::PutAzureDataLakeStorage::FileExistsResolutionStrategy::IGNORE_REQUEST));
   mock_data_lake_storage_client_ptr_->setFileCreation(false);
@@ -275,12 +137,12 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Transfer to success on 'i
 }
 
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Replace old file on 'replace' resolution strategy if file exists", "[azureDataLakeStorageUpload]") {
-  plan_->setProperty(put_azure_data_lake_storage_,
+  plan_->setProperty(azure_data_lake_storage_,
     minifi::azure::processors::PutAzureDataLakeStorage::ConflictResolutionStrategy.getName(),
     toString(minifi::azure::processors::PutAzureDataLakeStorage::FileExistsResolutionStrategy::REPLACE_FILE));
   mock_data_lake_storage_client_ptr_->setFileCreation(false);
   test_controller_.runSession(plan_, true);
-  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
   CHECK(passed_params.credentials.buildConnectionString() == CONNECTION_STRING);
   CHECK(passed_params.file_system_name == FILESYSTEM_NAME);
   CHECK(passed_params.directory_name == DIRECTORY_NAME);
@@ -296,11 +158,13 @@ TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Replace old file on 'repl
 }
 
 TEST_CASE_METHOD(PutAzureDataLakeStorageTestsFixture, "Upload to Azure Data Lake Storage with empty directory is accepted", "[azureDataLakeStorageUpload]") {
-  plan_->setProperty(put_azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::DirectoryName.getName(), "");
+  plan_->setProperty(azure_data_lake_storage_, minifi::azure::processors::PutAzureDataLakeStorage::DirectoryName.getName(), "");
   test_controller_.runSession(plan_, true);
-  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedParams();
+  auto passed_params = mock_data_lake_storage_client_ptr_->getPassedPutParams();
   CHECK(passed_params.directory_name == "");
   REQUIRE(getFailedFlowFileContents().size() == 0);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.directory value:\n"));
 }
+
+}  // namespace
