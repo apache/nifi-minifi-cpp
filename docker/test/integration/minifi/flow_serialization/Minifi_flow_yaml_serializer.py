@@ -73,7 +73,7 @@ class Minifi_flow_yaml_serializer:
             res['Processors'].append({
                 'name': connectable_name,
                 'id': str(connectable.uuid),
-                'class': 'org.apache.nifi.processors.standard.' + connectable.clazz,
+                'class': connectable.class_prefix + connectable.clazz,
                 'scheduling strategy': connectable.schedule['scheduling strategy'],
                 'scheduling period': connectable.schedule['scheduling period'],
                 'penalization period': connectable.schedule['penalization period'],

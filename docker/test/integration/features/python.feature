@@ -11,3 +11,13 @@ Feature: MiNiFi can use python processors in its flows
 
     When all instances start up
     Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
+
+  Scenario: A MiNiFi instance can update attributes through native python processor
+    Given a GenerateFlowFile processor with the "File Size" property set to "0B"
+    And a AddPythonAttribute processor
+    And a LogAttribute processor
+    And the "success" relationship of the GenerateFlowFile processor is connected to the AddPythonAttribute
+    And the "success" relationship of the AddPythonAttribute processor is connected to the LogAttribute
+
+    When all instances start up
+    Then the Minifi logs contain the following message: "key:Python attribute value:attributevalue" in less than 60 seconds
