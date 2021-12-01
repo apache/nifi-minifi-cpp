@@ -48,6 +48,7 @@ class SimpleSSLTestServer  {
 #endif
     }
   };
+
  public:
   SimpleSSLTestServer(const SSL_METHOD* method, int port, const std::filesystem::path& key_dir)
       : port_(port), had_connection_(false) {
