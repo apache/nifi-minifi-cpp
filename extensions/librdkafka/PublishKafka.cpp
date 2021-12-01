@@ -41,23 +41,9 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-#define COMPRESSION_CODEC_NONE "none"
-#define COMPRESSION_CODEC_GZIP "gzip"
-#define COMPRESSION_CODEC_SNAPPY "snappy"
-#define ROUND_ROBIN_PARTITIONING "Round Robin"
-#define RANDOM_PARTITIONING "Random Robin"
-#define USER_DEFINED_PARTITIONING "User-Defined"
-#define DELIVERY_REPLICATED "all"
-#define DELIVERY_ONE_NODE "1"
-#define DELIVERY_BEST_EFFORT "0"
-#define SECURITY_PROTOCOL_PLAINTEXT "plaintext"
-#define SECURITY_PROTOCOL_SSL "ssl"
-#define KAFKA_KEY_ATTRIBUTE "kafka.key"
-
 const core::Property PublishKafka::SeedBrokers(
     core::PropertyBuilder::createProperty("Known Brokers")->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>")
         ->isRequired(true)->supportsExpressionLanguage(true)->build());
-
 const core::Property PublishKafka::Topic(
     core::PropertyBuilder::createProperty("Topic Name")->withDescription("The Kafka Topic of interest")
         ->isRequired(true)->supportsExpressionLanguage(true)->build());
@@ -68,7 +54,6 @@ const core::Property PublishKafka::DeliveryGuarantee(
                                                                                  "-1 or all (block until message is committed by all in sync replicas) "
                                                                                  "or any concrete number of nodes.")
         ->isRequired(false)->supportsExpressionLanguage(true)->withDefaultValue(DELIVERY_ONE_NODE)->build());
-
 const core::Property PublishKafka::MaxMessageSize(
     core::PropertyBuilder::createProperty("Max Request Size")->withDescription("Maximum Kafka protocol request message size")
         ->isRequired(false)->build());
@@ -118,33 +103,14 @@ const core::Property PublishKafka::CompressCodec(
         ->withAllowableValues<std::string>({COMPRESSION_CODEC_NONE, COMPRESSION_CODEC_GZIP, COMPRESSION_CODEC_SNAPPY})
         ->withDescription("compression codec to use for compressing message sets")
         ->build());
-
 const core::Property PublishKafka::MaxFlowSegSize(
     core::PropertyBuilder::createProperty("Max Flow Segment Size")->withDescription("Maximum flow content payload segment size for the kafka record. 0 B means unlimited.")
         ->isRequired(false)->withDefaultValue<core::DataSizeValue>("0 B")->build());
-const core::Property PublishKafka::SecurityProtocol(
-        core::PropertyBuilder::createProperty("Security Protocol")
-        ->withDescription("Protocol used to communicate with brokers")
-        ->withDefaultValue<std::string>(SECURITY_PROTOCOL_PLAINTEXT)
-        ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL})
-        ->isRequired(true)
-        ->build());
-
-const core::Property PublishKafka::SSLContextService(
-    core::PropertyBuilder::createProperty("SSL Context Service")
-        ->withDescription("SSL Context Service Name")
-        ->asType<minifi::controllers::SSLContextService>()
-        ->build());
 
 const core::Property PublishKafka::SecurityCA("Security CA", "DEPRECATED in favor of SSL Context Service. File or directory path to CA certificate(s) for verifying the broker's key", "");
 const core::Property PublishKafka::SecurityCert("Security Cert", "DEPRECATED in favor of SSL Context Service.Path to client's public key (PEM) used for authentication", "");
 const core::Property PublishKafka::SecurityPrivateKey("Security Private Key", "DEPRECATED in favor of SSL Context Service.Path to client's private key (PEM) used for authentication", "");
 const core::Property PublishKafka::SecurityPrivateKeyPassWord("Security Pass Phrase", "DEPRECATED in favor of SSL Context Service.Private key passphrase", "");
-const core::Property PublishKafka::KerberosServiceName("Kerberos Service Name", "Kerberos Service Name", "");
-const core::Property PublishKafka::KerberosPrincipal("Kerberos Principal", "Keberos Principal", "");
-const core::Property PublishKafka::KerberosKeytabPath("Kerberos Keytab Path",
-                                                "The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.", "");
-
 const core::Property PublishKafka::KafkaKey(
     core::PropertyBuilder::createProperty("Kafka Key")
         ->withDescription("The key to use for the message. If not specified, the UUID of the flow file is used as the message key.")
@@ -475,41 +441,44 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
 
 void PublishKafka::initialize() {
   // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(SeedBrokers);
-  properties.insert(Topic);
-  properties.insert(DeliveryGuarantee);
-  properties.insert(MaxMessageSize);
-  properties.insert(RequestTimeOut);
-  properties.insert(MessageTimeOut);
-  properties.insert(ClientName);
-  properties.insert(AttributeNameRegex);
-  properties.insert(BatchSize);
-  properties.insert(TargetBatchPayloadSize);
-  properties.insert(QueueBufferMaxTime);
-  properties.insert(QueueBufferMaxSize);
-  properties.insert(QueueBufferMaxMessage);
-  properties.insert(CompressCodec);
-  properties.insert(MaxFlowSegSize);
-  properties.insert(SecurityProtocol);
-  properties.insert(SSLContextService);
-  properties.insert(SecurityCA);
-  properties.insert(SecurityCert);
-  properties.insert(SecurityPrivateKey);
-  properties.insert(SecurityPrivateKeyPassWord);
-  properties.insert(KerberosServiceName);
-  properties.insert(KerberosPrincipal);
-  properties.insert(KerberosKeytabPath);
-  properties.insert(KafkaKey);
-  properties.insert(MessageKeyField);
-  properties.insert(DebugContexts);
-  properties.insert(FailEmptyFlowFiles);
-  setSupportedProperties(properties);
+  setSupportedProperties({
+    SeedBrokers,
+    Topic,
+    DeliveryGuarantee,
+    MaxMessageSize,
+    RequestTimeOut,
+    MessageTimeOut,
+    ClientName,
+    AttributeNameRegex,
+    BatchSize,
+    TargetBatchPayloadSize,
+    QueueBufferMaxTime,
+    QueueBufferMaxSize,
+    QueueBufferMaxMessage,
+    CompressCodec,
+    MaxFlowSegSize,
+    SecurityProtocol,
+    SSLContextService,
+    SecurityCA,
+    SecurityCert,
+    SecurityPrivateKey,
+    SecurityPrivateKeyPassWord,
+    KerberosServiceName,
+    KerberosPrincipal,
+    KerberosKeytabPath,
+    KafkaKey,
+    MessageKeyField,
+    DebugContexts,
+    FailEmptyFlowFiles,
+    SASLMechanism,
+    Username,
+    Password
+  });
   // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Failure);
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships({
+    Success,
+    Failure
+  });
 }
 
 void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -622,33 +591,7 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
-  value = "";
-  if (context->getProperty(KerberosServiceName.getName(), value) && !value.empty()) {
-    result = rd_kafka_conf_set(conf_.get(), "sasl.kerberos.service.name", value.c_str(), errstr.data(), errstr.size());
-    logger_->log_debug("PublishKafka: sasl.kerberos.service.name [%s]", value);
-    if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-    }
-  }
-  value = "";
-  if (context->getProperty(KerberosPrincipal.getName(), value) && !value.empty()) {
-    result = rd_kafka_conf_set(conf_.get(), "sasl.kerberos.principal", value.c_str(), errstr.data(), errstr.size());
-    logger_->log_debug("PublishKafka: sasl.kerberos.principal [%s]", value);
-    if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-    }
-  }
-  value = "";
-  if (context->getProperty(KerberosKeytabPath.getName(), value) && !value.empty()) {
-    result = rd_kafka_conf_set(conf_.get(), "sasl.kerberos.keytab", value.c_str(), errstr.data(), errstr.size());
-    logger_->log_debug("PublishKafka: sasl.kerberos.keytab [%s]", value);
-    if (result != RD_KAFKA_CONF_OK) {
-      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-    }
-  }
+
   value = "";
   if (context->getProperty(MaxMessageSize.getName(), value) && !value.empty()) {
     result = rd_kafka_conf_set(conf_.get(), "message.max.bytes", value.c_str(), errstr.data(), errstr.size());
@@ -709,97 +652,8 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
-  value = "";
-  if (context->getProperty(SecurityProtocol.getName(), value) && !value.empty()) {
-    if (value == SECURITY_PROTOCOL_SSL) {
-      result = rd_kafka_conf_set(conf_.get(), "security.protocol", value.c_str(), errstr.data(), errstr.size());
-      logger_->log_debug("PublishKafka: security.protocol [%s]", value);
-      if (result != RD_KAFKA_CONF_OK) {
-        auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-      }
 
-      std::shared_ptr<minifi::controllers::SSLContextService> ssl_service;
-      if (context->getProperty(SSLContextService.getName(), value) && !value.empty()) {
-        std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(value);
-        if (service) {
-          ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
-        } else {
-          logger_->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", value);
-        }
-      }
-
-      std::string security_ca;
-      if (ssl_service) {
-        security_ca = ssl_service->getCACertificate();
-      } else {
-        context->getProperty(SecurityCA.getName(), security_ca);
-      }
-
-      std::string security_cert;
-      if (ssl_service) {
-        security_cert = ssl_service->getCertificateFile();
-      } else {
-        context->getProperty(SecurityCert.getName(), security_cert);
-      }
-
-      std::string security_private_key;
-      if (ssl_service) {
-        security_private_key = ssl_service->getPrivateKeyFile();
-      } else {
-        context->getProperty(SecurityPrivateKey.getName(), security_private_key);
-      }
-
-      std::string security_private_key_password;
-      if (ssl_service) {
-        security_private_key_password = ssl_service->getPassphrase();
-      } else {
-        context->getProperty(SecurityPrivateKeyPassWord.getName(), security_private_key_password);
-      }
-
-      if (!security_ca.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.ca.location", security_ca.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.ca.location [%s]", security_ca);
-        if (result != RD_KAFKA_CONF_OK) {
-          auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-        }
-      }
-      if (!security_cert.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.certificate.location", security_cert.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.certificate.location [%s]", security_cert);
-        if (result != RD_KAFKA_CONF_OK) {
-          auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-        }
-      }
-      if (!security_private_key.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.key.location", security_private_key.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.key.location [%s]", security_private_key);
-        if (result != RD_KAFKA_CONF_OK) {
-          auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-        }
-      }
-      if (!security_private_key_password.empty()) {
-        result = rd_kafka_conf_set(conf_.get(), "ssl.key.password", security_private_key_password.c_str(), errstr.data(), errstr.size());
-        logger_->log_debug("PublishKafka: ssl.key.password [%s]", security_private_key_password);
-        if (result != RD_KAFKA_CONF_OK) {
-          auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-          throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-        }
-      }
-
-      if (security_ca.empty() && security_cert.empty() && security_private_key.empty() && security_private_key_password.empty()) {
-        logger_->log_warn("Security protocol is set to %s, but no valid security parameters are set in the properties or in the SSL Context Service.", SECURITY_PROTOCOL_SSL);
-      }
-    } else if (value == SECURITY_PROTOCOL_PLAINTEXT) {
-      // Do nothing
-    } else {
-      auto error_msg = utils::StringUtils::join_pack("PublishKafka: unknown Security Protocol: ", value);
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-    }
-  }
+  setKafkaAuthenticationParameters(*context, gsl::make_not_null(conf_.get()));
 
   // Add all of the dynamic properties as librdkafka configurations
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
@@ -917,6 +771,19 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   conn_->putTopic(topic_name, kafkaTopicref);
 
   return true;
+}
+
+std::optional<utils::SSL_data> PublishKafka::getSslData(core::ProcessContext& context) const {
+  if (auto result = KafkaProcessorBase::getSslData(context); result) {
+    return result;
+  }
+
+  utils::SSL_data ssl_data;
+  context.getProperty(SecurityCA.getName(), ssl_data.ca_loc);
+  context.getProperty(SecurityCert.getName(), ssl_data.cert_loc);
+  context.getProperty(SecurityPrivateKey.getName(), ssl_data.key_loc);
+  context.getProperty(SecurityPrivateKeyPassWord.getName(), ssl_data.key_pw);
+  return ssl_data;
 }
 
 void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

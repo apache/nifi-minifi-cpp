@@ -87,6 +87,89 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     # We fallback to the flowfile's uuid as message key if the Kafka Key property is not set
     And the Minifi logs match the following regex: "PublishKafka: Message Key \[[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}\]" in less than 10 seconds
 
+  Scenario: A MiNiFi instance transfers data to a kafka broker through SASL Plain security protocol
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishKafka processor set up to communicate with a kafka broker instance
+    And these processor properties are set:
+      | processor name | property name          | property value                         |
+      | PublishKafka   | Topic Name             | test                                   |
+      | PublishKafka   | Request Timeout        | 10 sec                                 |
+      | PublishKafka   | Message Timeout        | 12 sec                                 |
+      | PublishKafka   | Known Brokers          | kafka-broker:9094                      |
+      | PublishKafka   | Client Name            | LMN                                    |
+      | PublishKafka   | Security Protocol      | sasl_plaintext                         |
+      | PublishKafka   | SASL Mechanism         | PLAIN                                  |
+      | PublishKafka   | Username               | alice                                  |
+      | PublishKafka   | Password               | alice-secret                           |
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PublishKafka
+    And the "success" relationship of the PublishKafka processor is connected to the PutFile
+
+    And a kafka broker is set up in correspondence with the PublishKafka
+
+    When both instances start up
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
+  Scenario: PublishKafka sends can use SASL SSL connect with security properties
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishKafka processor set up to communicate with a kafka broker instance
+    And these processor properties are set:
+      | processor name | property name          | property value                             |
+      | PublishKafka   | Client Name            | LMN                                        |
+      | PublishKafka   | Known Brokers          | kafka-broker:9095                          |
+      | PublishKafka   | Topic Name             | test                                       |
+      | PublishKafka   | Batch Size             | 10                                         |
+      | PublishKafka   | Compress Codec         | none                                       |
+      | PublishKafka   | Delivery Guarantee     | 1                                          |
+      | PublishKafka   | Request Timeout        | 10 sec                                     |
+      | PublishKafka   | Message Timeout        | 12 sec                                     |
+      | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
+      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_LMN_client.pem |
+      | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
+      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_LMN_client.key |
+      | PublishKafka   | Security Protocol      | sasl_ssl                                   |
+      | PublishKafka   | SASL Mechanism         | PLAIN                                      |
+      | PublishKafka   | Username               | alice                                      |
+      | PublishKafka   | Password               | alice-secret                               |
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the GetFile processor is connected to the PublishKafka
+    And the "success" relationship of the PublishKafka processor is connected to the PutFile
+
+    And a kafka broker is set up in correspondence with the PublishKafka
+
+    When both instances start up
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
+  Scenario: PublishKafka sends can use SASL SSL connect with SSL Context
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishKafka processor set up to communicate with a kafka broker instance
+    And these processor properties are set:
+      | processor name | property name          | property value                             |
+      | PublishKafka   | Client Name            | LMN                                        |
+      | PublishKafka   | Known Brokers          | kafka-broker:9095                          |
+      | PublishKafka   | Topic Name             | test                                       |
+      | PublishKafka   | Batch Size             | 10                                         |
+      | PublishKafka   | Compress Codec         | none                                       |
+      | PublishKafka   | Delivery Guarantee     | 1                                          |
+      | PublishKafka   | Request Timeout        | 10 sec                                     |
+      | PublishKafka   | Message Timeout        | 12 sec                                     |
+      | PublishKafka   | Security Protocol      | sasl_ssl                                   |
+      | PublishKafka   | SASL Mechanism         | PLAIN                                      |
+      | PublishKafka   | Username               | alice                                      |
+      | PublishKafka   | Password               | alice-secret                               |
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And an ssl context service set up for PublishKafka
+    And the "success" relationship of the GetFile processor is connected to the PublishKafka
+    And the "success" relationship of the PublishKafka processor is connected to the PutFile
+
+    And a kafka broker is set up in correspondence with the PublishKafka
+
+    When both instances start up
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
   Scenario: PublishKafka sends can use SSL connect with SSL Context Service
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
@@ -327,3 +410,43 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
     And a message with content "Lewis Carroll" is published to the "ConsumeKafkaTest" topic using an ssl connection
 
     Then two flowfiles with the contents "Alice's Adventures in Wonderland" and "Lewis Carroll" are placed in the monitored directory in less than 60 seconds
+
+  Scenario: ConsumeKafka receives data via SASL SSL
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And these processor properties are set:
+      | processor name | property name        | property value                             |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9095                          |
+      | ConsumeKafka   | Security Protocol    | sasl_ssl                                   |
+      | ConsumeKafka   | SASL Mechanism       | PLAIN                                      |
+      | ConsumeKafka   | Username             | alice                                      |
+      | ConsumeKafka   | Password             | alice-secret                               |
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And an ssl context service set up for ConsumeKafka
+    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+
+    And a kafka broker is set up in correspondence with the publisher flow
+
+    When all instances start up
+    And a message with content "Alice's Adventures in Wonderland" is published to the "ConsumeKafkaTest" topic using an ssl connection
+    And a message with content "Lewis Carroll" is published to the "ConsumeKafkaTest" topic using an ssl connection
+
+    Then two flowfiles with the contents "Alice's Adventures in Wonderland" and "Lewis Carroll" are placed in the monitored directory in less than 60 seconds
+
+  Scenario: MiNiFi consumes data from a kafka topic via SASL PLAIN connection
+    Given a ConsumeKafka processor set up in a "kafka-consumer-flow" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "kafka-consumer-flow" flow
+    And the "success" relationship of the ConsumeKafka processor is connected to the PutFile
+    And these processor properties are set:
+      | processor name | property name        | property value                             |
+      | ConsumeKafka   | Kafka Brokers        | kafka-broker:9094                          |
+      | ConsumeKafka   | Security Protocol    | sasl_plaintext                             |
+      | ConsumeKafka   | SASL Mechanism       | PLAIN                                      |
+      | ConsumeKafka   | Username             | alice                                      |
+      | ConsumeKafka   | Password             | alice-secret                               |
+
+    And a kafka broker is set up in correspondence with the third-party kafka publisher
+
+    When all instances start up
+    And a message with content "some test message" is published to the "ConsumeKafkaTest" topic
+
+    Then at least one flowfile with the content "some test message" is placed in the monitored directory in less than 60 seconds

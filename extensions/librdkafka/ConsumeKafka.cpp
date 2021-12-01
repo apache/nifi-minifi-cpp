@@ -65,13 +65,6 @@ core::Property ConsumeKafka::KafkaBrokers(core::PropertyBuilder::createProperty(
   ->isRequired(true)
   ->build());
 
-core::Property ConsumeKafka::SecurityProtocol(core::PropertyBuilder::createProperty("Security Protocol")
-  ->withDescription("Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
-  ->withAllowableValues<std::string>({SECURITY_PROTOCOL_PLAINTEXT, SECURITY_PROTOCOL_SSL})
-  ->withDefaultValue(SECURITY_PROTOCOL_PLAINTEXT)
-  ->isRequired(true)
-  ->build());
-
 core::Property ConsumeKafka::TopicNames(core::PropertyBuilder::createProperty("Topic Names")
   ->withDescription("The name of the Kafka Topic(s) to pull from. Multiple topic names are supported as a comma separated list.")
   ->supportsExpressionLanguage(true)
@@ -168,18 +161,19 @@ core::Property ConsumeKafka::SessionTimeout(core::PropertyBuilder::createPropert
   ->withDefaultValue<core::TimePeriodValue>("60 seconds")
   ->build());
 
-core::Property ConsumeKafka::SSLContextService(
-    core::PropertyBuilder::createProperty("SSL Context Service")
-        ->withDescription("SSL Context Service Name")
-        ->asType<minifi::controllers::SSLContextService>()
-        ->build());
-
 const core::Relationship ConsumeKafka::Success("success", "Incoming Kafka messages as flowfiles. Depending on the demarcation strategy, this can be one or multiple flowfiles per message.");
 
 void ConsumeKafka::initialize() {
   setSupportedProperties({
-    KafkaBrokers,
     SecurityProtocol,
+    SSLContextService,
+    KerberosServiceName,
+    KerberosPrincipal,
+    KerberosKeytabPath,
+    SASLMechanism,
+    Username,
+    Password,
+    KafkaBrokers,
     TopicNames,
     TopicNameFormat,
     HonorTransactions,
@@ -192,8 +186,7 @@ void ConsumeKafka::initialize() {
     DuplicateHeaderHandling,
     MaxPollRecords,
     MaxPollTime,
-    SessionTimeout,
-    SSLContextService
+    SessionTimeout
   });
   setSupportedRelationships({
     Success,
@@ -203,40 +196,22 @@ void ConsumeKafka::initialize() {
 void ConsumeKafka::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) {
   gsl_Expects(context);
   // Required properties
-  kafka_brokers_                = utils::getRequiredPropertyOrThrow(context, KafkaBrokers.getName());
-  security_protocol_            = utils::getRequiredPropertyOrThrow(context, SecurityProtocol.getName());
-  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(context, TopicNames.getName());
-  topic_name_format_            = utils::getRequiredPropertyOrThrow(context, TopicNameFormat.getName());
-  honor_transactions_           = utils::parseBooleanPropertyOrThrow(context, HonorTransactions.getName());
-  group_id_                     = utils::getRequiredPropertyOrThrow(context, GroupID.getName());
-  offset_reset_                 = utils::getRequiredPropertyOrThrow(context, OffsetReset.getName());
-  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(context, KeyAttributeEncoding.getName());
-  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(context, MaxPollTime.getName());
-  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(context, SessionTimeout.getName());
+  kafka_brokers_                = utils::getRequiredPropertyOrThrow(*context, KafkaBrokers.getName());
+  topic_names_                  = utils::listFromRequiredCommaSeparatedProperty(*context, TopicNames.getName());
+  topic_name_format_            = utils::getRequiredPropertyOrThrow(*context, TopicNameFormat.getName());
+  honor_transactions_           = utils::parseBooleanPropertyOrThrow(*context, HonorTransactions.getName());
+  group_id_                     = utils::getRequiredPropertyOrThrow(*context, GroupID.getName());
+  offset_reset_                 = utils::getRequiredPropertyOrThrow(*context, OffsetReset.getName());
+  key_attribute_encoding_       = utils::getRequiredPropertyOrThrow(*context, KeyAttributeEncoding.getName());
+  max_poll_time_milliseconds_   = utils::parseTimePropertyMSOrThrow(*context, MaxPollTime.getName());
+  session_timeout_milliseconds_ = utils::parseTimePropertyMSOrThrow(*context, SessionTimeout.getName());
 
   // Optional properties
   context->getProperty(MessageDemarcator.getName(), message_demarcator_);
   context->getProperty(MessageHeaderEncoding.getName(), message_header_encoding_);
   context->getProperty(DuplicateHeaderHandling.getName(), duplicate_header_handling_);
 
-  std::string ssl_service_name;
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service;
-  if (context->getProperty(SSLContextService.getName(), ssl_service_name) && !ssl_service_name.empty()) {
-    std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(ssl_service_name);
-    if (service) {
-      ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
-      ssl_data_.ca_loc = ssl_service->getCACertificate();
-      ssl_data_.cert_loc = ssl_service->getCertificateFile();
-      ssl_data_.key_loc = ssl_service->getPrivateKeyFile();
-      ssl_data_.key_pw = ssl_service->getPassphrase();
-    } else {
-      logger_->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", ssl_service_name);
-    }
-  } else if (security_protocol_ == SECURITY_PROTOCOL_SSL) {
-    logger_->log_warn("Security protocol is set to %s, but no valid SSL Context Service property is set.", SECURITY_PROTOCOL_SSL);
-  }
-
-  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(context, HeadersToAddAsAttributes.getName());
+  headers_to_add_as_attributes_ = utils::listFromCommaSeparatedProperty(*context, HeadersToAddAsAttributes.getName());
   max_poll_records_ = gsl::narrow<std::size_t>(utils::getOptionalUintProperty(*context, MaxPollRecords.getName()).value_or(DEFAULT_MAX_POLL_RECORDS));
 
   if (!utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_UTF_8, key_attribute_encoding_) && !utils::StringUtils::equalsIgnoreCase(KEY_ATTR_ENCODING_HEX, key_attribute_encoding_)) {
@@ -324,7 +299,7 @@ void ConsumeKafka::extend_config_from_dynamic_properties(const core::ProcessCont
   }
 }
 
-void ConsumeKafka::configure_new_connection(const core::ProcessContext& context) {
+void ConsumeKafka::configure_new_connection(core::ProcessContext& context) {
   using utils::setKafkaConfigurationField;
 
   conf_ = { rd_kafka_conf_new(), utils::rd_kafka_conf_deleter() };
@@ -342,18 +317,11 @@ void ConsumeKafka::configure_new_connection(const core::ProcessContext& context)
   // logger_->log_info("Enabling all debug logs for kafka consumer.");
   // setKafkaConfigurationField(*conf_, "debug", "all");
 
+  setKafkaAuthenticationParameters(context, gsl::make_not_null(conf_.get()));
+
   setKafkaConfigurationField(*conf_, "bootstrap.servers", kafka_brokers_);
   setKafkaConfigurationField(*conf_, "allow.auto.create.topics", "true");
   setKafkaConfigurationField(*conf_, "auto.offset.reset", offset_reset_);
-
-  if (security_protocol_ == SECURITY_PROTOCOL_SSL) {
-    setKafkaConfigurationField(*conf_, "security.protocol", "ssl");
-    setKafkaConfigurationField(*conf_, "ssl.ca.location", ssl_data_.ca_loc);
-    setKafkaConfigurationField(*conf_, "ssl.certificate.location", ssl_data_.cert_loc);
-    setKafkaConfigurationField(*conf_, "ssl.key.location", ssl_data_.key_loc);
-    setKafkaConfigurationField(*conf_, "ssl.key.password", ssl_data_.key_pw);
-  }
-
   setKafkaConfigurationField(*conf_, "enable.auto.commit", "false");
   setKafkaConfigurationField(*conf_, "enable.auto.offset.store", "false");
   setKafkaConfigurationField(*conf_, "isolation.level", honor_transactions_ ? "read_committed" : "read_uncommitted");
