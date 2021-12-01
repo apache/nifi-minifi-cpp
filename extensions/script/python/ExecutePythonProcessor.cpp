@@ -54,35 +54,62 @@ core::Relationship ExecutePythonProcessor::Success("success", "Script successes"
 core::Relationship ExecutePythonProcessor::Failure("failure", "Script failures");
 
 void ExecutePythonProcessor::initialize() {
-  setSupportedProperties({
-    ScriptFile,
-    ScriptBody,
-    ModuleDirectory
-  });
-  setAcceptAllProperties();
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
-}
+  if (getProperties().empty()) {
+    setSupportedProperties({
+      ScriptFile,
+      ScriptBody,
+      ModuleDirectory
+    });
+    setAcceptAllProperties();
+    setSupportedRelationships({
+      Success,
+      Failure
+    });
+  }
 
-void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  if (processor_initialized_) {
+    return;
+  }
+
   python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
 
   getProperty(ModuleDirectory.getName(), module_directory_);
-
   appendPathForImportModules();
-  loadScript();
 
-  if (script_to_exec_.empty()) {
-    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+  try {
+    loadScript();
+  } catch(const std::runtime_error&) {
+    return;
   }
+
+  initalizeThroughScriptEngine();
+}
+
+void ExecutePythonProcessor::initalizeThroughScriptEngine() {
   std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
   engine->eval(script_to_exec_);
   auto shared_this = shared_from_this();
   engine->describe(shared_this);
   engine->onInitialize(shared_this);
+  handleEngineNoLongerInUse(std::move(engine));
+  processor_initialized_ = true;
+}
+
+void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  if (!processor_initialized_) {
+    loadScript();
+    initalizeThroughScriptEngine();
+  } else {
+    reloadScriptIfUsingScriptFileProperty();
+    if (script_to_exec_.empty()) {
+      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+    }
+  }
+
+  std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
+  engine->eval(script_to_exec_);
   engine->onSchedule(context);
+
   handleEngineNoLongerInUse(std::move(engine));
 }
 
