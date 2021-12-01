@@ -22,6 +22,7 @@
 #include <openssl/err.h>
 #include <filesystem>
 #include <string>
+#include "io/tls/TLSSocket.h"
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -33,10 +34,13 @@ using SocketDescriptor = int;
 static constexpr SocketDescriptor INVALID_SOCKET = -1;
 #endif /* WIN32 */
 
+namespace minifi = org::apache::nifi::minifi;
+
 class SimpleSSLTestServer  {
  public:
   SimpleSSLTestServer(const SSL_METHOD* method, int port, const std::filesystem::path& key_dir)
       : port_(port), had_connection_(false) {
+    minifi::io::OpenSSLInitializer::getInstance();
     ctx_ = SSL_CTX_new(method);
     configureContext(key_dir);
     socket_descriptor_ = createSocket(port_);
