@@ -26,6 +26,7 @@
 #include "ExecutePythonProcessor.h"
 
 #include "utils/StringUtils.h"
+#include "utils/file/FileUtils.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -35,23 +36,29 @@ namespace minifi {
 namespace python {
 namespace processors {
 
-core::Property ExecutePythonProcessor::ScriptFile(core::PropertyBuilder::createProperty("Script File")
+const core::Property ExecutePythonProcessor::ScriptFile(core::PropertyBuilder::createProperty("Script File")
     ->withDescription("Path to script file to execute. Only one of Script File or Script Body may be used")
     ->withDefaultValue("")
     ->build());
 
-core::Property ExecutePythonProcessor::ScriptBody(core::PropertyBuilder::createProperty("Script Body")
+const core::Property ExecutePythonProcessor::ScriptBody(core::PropertyBuilder::createProperty("Script Body")
     ->withDescription("Script to execute. Only one of Script File or Script Body may be used")
     ->withDefaultValue("")
     ->build());
 
-core::Property ExecutePythonProcessor::ModuleDirectory(core::PropertyBuilder::createProperty("Module Directory")
+const core::Property ExecutePythonProcessor::ModuleDirectory(core::PropertyBuilder::createProperty("Module Directory")
   ->withDescription("Comma-separated list of paths to files and/or directories which contain modules required by the script")
   ->withDefaultValue("")
   ->build());
 
-core::Relationship ExecutePythonProcessor::Success("success", "Script succeeds");
-core::Relationship ExecutePythonProcessor::Failure("failure", "Script fails");
+const core::Property ExecutePythonProcessor::ReloadOnScriptChange(core::PropertyBuilder::createProperty("Reload on Script Change")
+  ->withDescription("If true (and Script File property is used) script file will be reloaded if it has changed, otherwise the first loaded version will be used at all times.")
+  ->isRequired(true)
+  ->withDefaultValue<bool>(false)
+  ->build());
+
+const core::Relationship ExecutePythonProcessor::Success("success", "Script succeeds");
+const core::Relationship ExecutePythonProcessor::Failure("failure", "Script fails");
 
 void ExecutePythonProcessor::initialize() {
   if (getProperties().empty()) {
@@ -119,18 +126,18 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
   engine->onSchedule(context);
 
   handleEngineNoLongerInUse(std::move(engine));
+
+  getProperty(ReloadOnScriptChange.getName(), reload_on_script_change_);
 }
 
 void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   try {
-    // TODO(hunyadi): When using "Script File" property, we currently re-read the script file content every time the processor is triggered. This should change to single-read when we release 1.0.0
-    // https://issues.apache.org/jira/browse/MINIFICPP-1223
-    reloadScriptIfUsingScriptFileProperty();
+    auto engine = getScriptEngine();
+    reloadScriptIfUsingScriptFileProperty(*engine);
     if (script_to_exec_.empty()) {
       throw std::runtime_error("Neither Script Body nor Script File is available to execute");
     }
 
-    std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
     engine->onTrigger(context, session);
     handleEngineNoLongerInUse(std::move(engine));
   }
@@ -179,11 +186,11 @@ void ExecutePythonProcessor::appendPathForImportModules() {
   }
 }
 
-void ExecutePythonProcessor::loadScriptFromFile(const std::string& file_path) {
-  std::ifstream file_handle(file_path);
+void ExecutePythonProcessor::loadScriptFromFile() {
+  std::ifstream file_handle(script_file_path_);
   if (!file_handle.is_open()) {
     script_to_exec_ = "";
-    throw std::runtime_error("Failed to read Script File: " + file_path);
+    throw std::runtime_error("Failed to read Script File: " + script_file_path_);
   }
   script_to_exec_ = std::string{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
 }
@@ -196,24 +203,32 @@ void ExecutePythonProcessor::loadScript() {
   if (script_file.empty() && script_body.empty()) {
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
+
   if (script_file.size()) {
     if (script_body.size()) {
       throw std::runtime_error("Only one of Script File or Script Body may be used");
     }
-    loadScriptFromFile(script_file);
+    script_source_ = ScriptSource::SCRIPT_FILE;
+    script_file_path_ = script_file;
+    loadScriptFromFile();
+    last_script_write_time_ = utils::file::FileUtils::last_write_time(script_file_path_);
     return;
   }
+  script_source_ = ScriptSource::SCRIPT_BODY;
   script_to_exec_ = script_body;
   return;
 }
 
-void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
-  std::string script_file;
-  std::string script_body;
-  getProperty(ScriptFile.getName(), script_file);
-  getProperty(ScriptBody.getName(), script_body);
-  if (script_file.size() && script_body.empty()) {
-    loadScriptFromFile(script_file);
+void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty(python::PythonScriptEngine& engine) {
+  if (script_source_ != ScriptSource::SCRIPT_FILE || !reload_on_script_change_) {
+    return;
+  }
+  auto file_write_time = utils::file::FileUtils::last_write_time(script_file_path_);
+  if (file_write_time != last_script_write_time_) {
+    logger_->log_debug("Script file has changed since last time, reloading...");
+    loadScriptFromFile();
+    last_script_write_time_ = file_write_time;
+    engine.eval(script_to_exec_);
   }
 }
 
