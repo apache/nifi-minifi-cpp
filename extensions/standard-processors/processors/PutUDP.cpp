@@ -44,11 +44,13 @@ const core::Property PutUDP::Hostname = core::PropertyBuilder::createProperty("H
     ->withDescription("The ip address or hostname of the destination.")
     ->withDefaultValue("localhost")
     ->isRequired(true)
+    ->supportsExpressionLanguage(true)
     ->build();
 
 const core::Property PutUDP::Port = core::PropertyBuilder::createProperty("Port")
     ->withDescription("The port on the destination.")
     ->isRequired(true)
+    ->supportsExpressionLanguage(true)
     ->build();
 
 const core::Relationship PutUDP::Success{"success", "FlowFiles that are sent to the destination are sent out this relationship."};
@@ -76,12 +78,17 @@ void PutUDP::notifyStop() {}
 void PutUDP::onSchedule(core::ProcessContext* const context, core::ProcessSessionFactory*) {
   gsl_Expects(context);
 
-  hostname_ = context->getProperty(Hostname).value();
-  port_ = (context->getProperty(Port) | utils::orElse([]{ throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"}; })).value();
+  // if the required properties are missing or empty even before evaluating the EL expression, then we can throw in onSchedule, before we waste any flow files
+  if (context->getProperty(Hostname).value_or(std::string{}).empty()) {
+    throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing hostname"};
+  }
+  if (context->getProperty(Port).value_or(std::string{}).empty()) {
+    throw Exception{ExceptionType::PROCESSOR_EXCEPTION, "missing port"};
+  }
 }
 
-void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const session) {
-  gsl_Expects(session);
+void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* const session) {
+  gsl_Expects(context && session);
 
   const auto flow_file = session->get();
   if (!flow_file) {
@@ -89,40 +96,58 @@ void PutUDP::onTrigger(core::ProcessContext*, core::ProcessSession* const sessio
     return;
   }
 
-  const auto names = utils::net::resolveHost(hostname_.c_str(), port_.c_str(), utils::net::IpProtocol::Udp);
-  if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
-    std::vector<std::string> names_vector;
-    for (const addrinfo* it = names.get(); it; it = it->ai_next) {
-      names_vector.push_back(utils::net::sockaddr_ntop(it->ai_addr));
-    }
-    logger_->log_debug("resolved \'%s\' to: %s",
-        hostname_,
-        names_vector | ranges::views::join(',') | ranges::to<std::string>());
-  }
-
-  auto open_socket_result = utils::net::open_socket(names.get());
-  if (!open_socket_result) {
-    throw Exception{ExceptionType::PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("socket: ", utils::net::get_last_socket_error_message())};
-  }
-  const auto [socket_handle, selected_name] = *std::move(open_socket_result);
-  logger_->log_debug("connected to %s", utils::net::sockaddr_ntop(selected_name->ai_addr));
-
-  const auto data = session->readBuffer(flow_file);
-  if (data.status < 0) {
+  const auto hostname = context->getProperty(Hostname, flow_file).value_or(std::string{});
+  const auto port = context->getProperty(Port, flow_file).value_or(std::string{});
+  if (hostname.empty() || port.empty()) {
+    logger_->log_error("[%s] invalid target endpoint: hostname: %s, port: %s", flow_file->getUUIDStr(),
+        hostname.empty() ? "(empty)" : hostname.c_str(),
+        port.empty() ? "(empty)" : port.c_str());
     session->transfer(flow_file, Failure);
     return;
   }
 
+  try {
+    const auto names = utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::Udp);
+    if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
+      std::vector<std::string> names_vector;
+      for (const addrinfo* it = names.get(); it; it = it->ai_next) {
+        names_vector.push_back(utils::net::sockaddr_ntop(it->ai_addr));
+      }
+      logger_->log_debug("resolved \'%s\' to: %s",
+          hostname,
+          names_vector | ranges::views::join(',') | ranges::to<std::string>());
+    }
+
+    auto open_socket_result = utils::net::open_socket(names.get());
+    if (!open_socket_result) {
+      logger_->log_error("socket: %s", utils::net::get_last_socket_error_message());
+      session->transfer(flow_file, Failure);
+      return;
+    }
+    const auto[socket_handle, selected_name] = *std::move(open_socket_result);
+    logger_->log_debug("connected to %s", utils::net::sockaddr_ntop(selected_name->ai_addr));
+
+    const auto data = session->readBuffer(flow_file);
+    if (data.status < 0) {
+      session->transfer(flow_file, Failure);
+      return;
+    }
+
 #ifdef WIN32
-  const char* const buffer_ptr = reinterpret_cast<const char*>(data.buffer.data());
+    const char* const buffer_ptr = reinterpret_cast<const char*>(data.buffer.data());
 #else
-  const void* const buffer_ptr = data.buffer.data();
+    const void* const buffer_ptr = data.buffer.data();
 #endif
-  const auto send_result = ::sendto(socket_handle.get(), buffer_ptr, data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
-  if (send_result == utils::net::SocketError) {
-    throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("sendto: ", utils::net::get_last_socket_error_message())};
+    const auto send_result = ::sendto(socket_handle.get(), buffer_ptr, data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
+    if (send_result == utils::net::SocketError) {
+      throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("sendto: ", utils::net::get_last_socket_error_message())};
+    }
+    logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));  // NOLINT: sendto
+  } catch (const std::exception& ex) {
+    logger_->log_error("[%s] %s", flow_file->getUUIDStr(), ex.what());
+    session->transfer(flow_file, Failure);
+    return;
   }
-  logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));  // NOLINT: sendto
 
   session->transfer(flow_file, Success);
 }

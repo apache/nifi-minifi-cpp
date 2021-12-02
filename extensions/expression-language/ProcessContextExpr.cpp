@@ -37,10 +37,12 @@ bool ProcessContextExpr::getProperty(const Property &property, std::string &valu
     }
     logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
     expressions_.emplace(name, expression::compile(expression_str));
+    expression_strs_.insert_or_assign(name, expression_str);
   }
 
   minifi::expression::Parameters p(shared_from_this(), flow_file);
   value = expressions_[name](p).asString();
+  logger_->log_debug(R"(expression "%s" of property "%s" evaluated to: %s)", expression_strs_[name], name, value);
   return true;
 }
 
@@ -54,9 +56,11 @@ bool ProcessContextExpr::getDynamicProperty(const Property &property, std::strin
     ProcessContext::getDynamicProperty(name, expression_str);
     logger_->log_debug("Compiling expression for %s/%s: %s", getProcessorNode()->getName(), name, expression_str);
     dynamic_property_expressions_.emplace(name, expression::compile(expression_str));
+    expression_strs_.insert_or_assign(name, expression_str);
   }
   minifi::expression::Parameters p(shared_from_this(), flow_file);
   value = dynamic_property_expressions_[name](p).asString();
+  logger_->log_debug(R"(expression "%s" of dynamic property "%s" evaluated to: %s)", expression_strs_[name], name, value);
   return true;
 }
 

@@ -113,9 +113,12 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
 
   template<typename T>
-  bool getProperty(const std::string &name, T &value) const {
+  std::enable_if_t<!std::is_convertible_v<T&, FlowFile&>, bool> getProperty(const std::string &name, T &value) const {
     return getPropertyImp<typename std::common_type<T>::type>(name, value);
   }
+
+  template<typename T = std::string>
+  std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> getProperty(const Property&, const std::shared_ptr<FlowFile>&);
 
   virtual bool getProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& /*flow_file*/) {
     return getProperty(property.getName(), value);
@@ -393,6 +396,26 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   std::shared_ptr<Configure> configure_;
   bool initialized_;
 };
+
+template<typename T>
+inline std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> ProcessContext::getProperty(const Property& property, const std::shared_ptr<FlowFile>& flow_file) {
+  T value;
+  std::string string_value;
+  if (!getProperty(property, string_value, flow_file)) return std::nullopt;
+  try {
+    if (!state::response::Value{string_value}.template convertValue(value)) return std::nullopt;
+  } catch (const utils::internal::ValueException&) {
+    return std::nullopt;
+  }
+  return value;
+}
+
+template<>
+inline std::optional<std::string> ProcessContext::getProperty<std::string>(const Property& property, const std::shared_ptr<FlowFile>& flow_file) {
+  std::string value;
+  if (!getProperty(property, value, flow_file)) return std::nullopt;
+  return value;
+}
 
 }  // namespace core
 }  // namespace minifi

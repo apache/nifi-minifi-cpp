@@ -26,6 +26,7 @@
 #include "utils/net/DNS.h"
 #include "utils/net/Socket.h"
 #include "utils/OptionalUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -135,10 +136,12 @@ TEST_CASE("PutUDP", "[putudp]") {
   const auto port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine);
   const auto port_str = std::to_string(port);
 
-  LogTestController::getInstance().setTrace<PutUDP>();
   SingleInputTestController controller{putudp};
-  putudp->setProperty(PutUDP::Hostname, "localhost");
-  putudp->setProperty(PutUDP::Port, port_str);
+  LogTestController::getInstance().setTrace<PutUDP>();
+  LogTestController::getInstance().setTrace<core::ProcessContext>();
+  LogTestController::getInstance().setLevelByClassName(spdlog::level::trace, "org::apache::nifi::minifi::core::ProcessContextExpr");
+  putudp->setProperty(PutUDP::Hostname, "${literal('localhost')}");
+  putudp->setProperty(PutUDP::Port, utils::StringUtils::join_pack("${literal('", port_str, "')}"));
 
   DatagramListener listener{"localhost", port_str.c_str()};
 

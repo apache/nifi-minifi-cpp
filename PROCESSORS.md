@@ -1504,10 +1504,10 @@ The processor doesn't guarantee a successful transfer, even if the flow file is 
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-|   Name   | Default Value | Allowable Values |                   Description                   |
-| -------- | ------------- | ---------------- | ----------------------------------------------- |
-| **Host** | localhost     |                  | The ip address or hostname of the destination.  |
-| **Port** |               |                  | The port on the destination.                    |
+|   Name   | Default Value | Allowable Values |                                        Description                                        |
+| -------- | ------------- | ---------------- | ----------------------------------------------------------------------------------------- |
+| **Host** | localhost     |                  | The ip address or hostname of the destination.<br/>**Supports Expression Language: true** |
+| **Port** |               |                  | The port on the destination.<br/>**Supports Expression Language: true**                   |
 
 ### Relationships
 
