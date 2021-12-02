@@ -141,7 +141,8 @@ class MiNiFi_integration_test():
     def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleOrMultiFileOutputValidator(decode_escaped_str(content))
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, timeout_seconds)
+        expected_number_of_files = timeout_seconds
+        self.check_output(timeout_seconds, output_validator, expected_number_of_files)
 
     def check_for_num_files_generated(self, num_flowfiles, timeout_seconds):
         output_validator = NoContentCheckFileNumberValidator(num_flowfiles)
