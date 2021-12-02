@@ -73,6 +73,8 @@ Feature: Putting and fetching data to OPC UA server
     When all instances start up
     Then at least one flowfile with the content "<Value>" is placed in the monitored directory in less than 60 seconds
 
+  # Node ids starting from 51000 are pre-defined demo node ids in the test server application (server_ctt) of the open62541 docker image. There is one nodeid defined
+  # for each type supported by OPC UA. These demo nodes can be used for testing purposes. "the.answer" is also a pre-defined string id for the same testing purposes.
   Examples: Topic names and formats to test
     | Node ID Type | Node ID     | Value Type   | Value       |
     | Int          | 51034       | String       | minifi-test |
