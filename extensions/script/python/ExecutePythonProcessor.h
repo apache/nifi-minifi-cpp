@@ -107,7 +107,7 @@ class ExecutePythonProcessor : public core::Processor {
 
   moodycamel::ConcurrentQueue<std::shared_ptr<python::PythonScriptEngine>> script_engine_q_;
 
-  void initalizeThroughScriptEngine();
+  void initalizeThroughScriptEngine(python::PythonScriptEngine& engine);
   std::shared_ptr<python::PythonScriptEngine> getScriptEngine();
   void handleEngineNoLongerInUse(std::shared_ptr<python::PythonScriptEngine>&& engine);
   void appendPathForImportModules();

@@ -50,8 +50,8 @@ core::Property ExecutePythonProcessor::ModuleDirectory(core::PropertyBuilder::cr
   ->withDefaultValue("")
   ->build());
 
-core::Relationship ExecutePythonProcessor::Success("success", "Script successes");
-core::Relationship ExecutePythonProcessor::Failure("failure", "Script failures");
+core::Relationship ExecutePythonProcessor::Success("success", "Script succeeds");
+core::Relationship ExecutePythonProcessor::Failure("failure", "Script fails");
 
 void ExecutePythonProcessor::initialize() {
   if (getProperties().empty()) {
@@ -68,6 +68,7 @@ void ExecutePythonProcessor::initialize() {
   }
 
   if (processor_initialized_) {
+    logger_->log_debug("Processor has already been initialized, returning...");
     return;
   }
 
@@ -79,26 +80,29 @@ void ExecutePythonProcessor::initialize() {
   try {
     loadScript();
   } catch(const std::runtime_error&) {
+    logger_->log_warn("Could not load python script while initializing. In case of non-native python processor this is normal and will be done in the schedule phase.");
     return;
   }
 
-  initalizeThroughScriptEngine();
+  auto engine = getScriptEngine();
+  initalizeThroughScriptEngine(*engine);
+  handleEngineNoLongerInUse(std::move(engine));
 }
 
-void ExecutePythonProcessor::initalizeThroughScriptEngine() {
-  std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
-  engine->eval(script_to_exec_);
+void ExecutePythonProcessor::initalizeThroughScriptEngine(python::PythonScriptEngine& engine) {
+  engine.eval(script_to_exec_);
   auto shared_this = shared_from_this();
-  engine->describe(shared_this);
-  engine->onInitialize(shared_this);
-  handleEngineNoLongerInUse(std::move(engine));
+  engine.describe(shared_this);
+  engine.onInitialize(shared_this);
   processor_initialized_ = true;
 }
 
 void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  std::shared_ptr<python::PythonScriptEngine> engine = nullptr;
   if (!processor_initialized_) {
     loadScript();
-    initalizeThroughScriptEngine();
+    engine = getScriptEngine();
+    initalizeThroughScriptEngine(*engine);
   } else {
     reloadScriptIfUsingScriptFileProperty();
     if (script_to_exec_.empty()) {
@@ -106,7 +110,9 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
     }
   }
 
-  std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
+  if (!engine) {
+    engine = getScriptEngine();
+  }
   engine->eval(script_to_exec_);
   engine->onSchedule(context);
 
