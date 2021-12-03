@@ -208,19 +208,17 @@ void ExecutePythonProcessor::loadScript() {
     if (script_body.size()) {
       throw std::runtime_error("Only one of Script File or Script Body may be used");
     }
-    script_source_ = ScriptSource::SCRIPT_FILE;
     script_file_path_ = script_file;
     loadScriptFromFile();
     last_script_write_time_ = utils::file::FileUtils::last_write_time(script_file_path_);
     return;
   }
-  script_source_ = ScriptSource::SCRIPT_BODY;
   script_to_exec_ = script_body;
   return;
 }
 
 void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty(python::PythonScriptEngine& engine) {
-  if (script_source_ != ScriptSource::SCRIPT_FILE || !reload_on_script_change_) {
+  if (script_file_path_.empty() || !reload_on_script_change_) {
     return;
   }
   auto file_write_time = utils::file::FileUtils::last_write_time(script_file_path_);

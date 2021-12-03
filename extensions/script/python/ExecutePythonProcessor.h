@@ -60,11 +60,6 @@ class ExecutePythonProcessor : public core::Processor {
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
 
-  enum class ScriptSource {
-    SCRIPT_FILE,
-    SCRIPT_BODY
-  };
-
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
@@ -113,7 +108,6 @@ class ExecutePythonProcessor : public core::Processor {
   std::string module_directory_;
   bool reload_on_script_change_;
   uint64_t last_script_write_time_;
-  ScriptSource script_source_;
   std::string script_file_path_;
 
   moodycamel::ConcurrentQueue<std::shared_ptr<python::PythonScriptEngine>> script_engine_q_;
