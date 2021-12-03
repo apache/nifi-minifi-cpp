@@ -421,8 +421,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-|Script File|||Path to script file to execute. Only one of Script File or Script Body may be used|
+|**Reload on Script Change**|false||If true and Script File property is used, then script file will be reloaded if it has changed, otherwise the first loaded version will be used at all times.|
 |Script Body|||Script to execute|
+|Script File|||Path to script file to execute. Only one of Script File or Script Body may be used|
 ### Relationships
 
 | Name | Description |

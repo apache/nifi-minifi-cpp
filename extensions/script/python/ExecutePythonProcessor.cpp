@@ -52,7 +52,7 @@ const core::Property ExecutePythonProcessor::ModuleDirectory(core::PropertyBuild
   ->build());
 
 const core::Property ExecutePythonProcessor::ReloadOnScriptChange(core::PropertyBuilder::createProperty("Reload on Script Change")
-  ->withDescription("If true (and Script File property is used) script file will be reloaded if it has changed, otherwise the first loaded version will be used at all times.")
+  ->withDescription("If true and Script File property is used, then script file will be reloaded if it has changed, otherwise the first loaded version will be used at all times.")
   ->isRequired(true)
   ->withDefaultValue<bool>(false)
   ->build());
