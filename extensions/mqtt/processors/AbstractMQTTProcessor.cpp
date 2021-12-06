@@ -96,22 +96,16 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: CleanSession [%d]", cleanSession_);
   }
 
-  value = "";
-  if (context->getProperty(KeepLiveInterval.getName(), value) && !value.empty()) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      keepAliveInterval_ = valInt/1000;
-      logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "]", keepAliveInterval_);
-    }
+  if (auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
+    keepAliveInterval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
+    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] s", keepAliveInterval_.count());
   }
-  value = "";
-  if (context->getProperty(ConnectionTimeOut.getName(), value) && !value.empty()) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      connectionTimeOut_ = valInt/1000;
-      logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "]", connectionTimeOut_);
-    }
+
+  if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeOut)) {
+    connectionTimeOut_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
+    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "] s", connectionTimeOut_.count());
   }
+
   value = "";
   if (context->getProperty(QOS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) &&
       core::Property::StringToInt(value, valInt)) {
@@ -165,7 +159,7 @@ bool AbstractMQTTProcessor::reconnect() {
   if (MQTTClient_isConnected(client_))
     return true;
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-  conn_opts.keepAliveInterval = keepAliveInterval_;
+  conn_opts.keepAliveInterval = keepAliveInterval_.count();
   conn_opts.cleansession = cleanSession_;
   if (!userName_.empty()) {
     conn_opts.username = userName_.c_str();

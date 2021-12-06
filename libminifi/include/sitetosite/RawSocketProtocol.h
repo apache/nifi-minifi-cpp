@@ -75,9 +75,9 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     peer_ = std::move(peer);
     _batchSize = 0;
     _batchCount = 0;
-    _batchDuration = 0;
-    _batchSendNanos = 5000000000;  // 5 seconds
-    _timeOut = 30000;  // 30 seconds
+    _batchDuration = std::chrono::seconds(0);
+    _batchSendNanos = std::chrono::seconds(5);
+    _timeOut = std::chrono::seconds(30);  // 30 seconds
     _supportedVersion[0] = 5;
     _supportedVersion[1] = 4;
     _supportedVersion[2] = 3;
@@ -104,11 +104,11 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     _batchCount = count;
   }
   // setBatchDuration
-  void setBatchDuration(uint64_t duration) {
+  void setBatchDuration(std::chrono::milliseconds duration) {
     _batchDuration = duration;
   }
   // setTimeOut
-  void setTimeOut(uint64_t time) {
+  void setTimeOut(std::chrono::milliseconds time) {
     _timeOut = time;
     if (peer_)
       peer_->setTimeOut(time);
@@ -118,7 +118,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
    * Provides a reference to the time out
    * @returns timeout
    */
-  uint64_t getTimeOut() const {
+  std::chrono::milliseconds getTimeOut() const {
     return _timeOut;
   }
 
@@ -180,9 +180,9 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // Batch Size
   std::atomic<uint64_t> _batchSize;
   // Batch Duration in msec
-  std::atomic<uint64_t> _batchDuration;
+  std::atomic<std::chrono::milliseconds> _batchDuration;
   // Timeout in msec
-  std::atomic<uint64_t> _timeOut;
+  std::atomic<std::chrono::milliseconds> _timeOut;
 
   // commsIdentifier
   utils::Identifier _commsIdentifier;

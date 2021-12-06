@@ -121,9 +121,9 @@ class SchedulingAgent {
   // Whether it is running
   std::atomic<bool> running_;
   // AdministrativeYieldDuration
-  int64_t admin_yield_duration_;
+  std::chrono::milliseconds admin_yield_duration_;
   // BoredYieldDuration
-  int64_t bored_yield_duration_;
+  std::chrono::milliseconds bored_yield_duration_;
 
   std::shared_ptr<Configure> configure_;
 

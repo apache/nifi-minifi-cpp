@@ -32,6 +32,8 @@
 #include "utils/gsl.h"
 #include "core/Resource.h"
 
+using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -60,7 +62,6 @@ void FlowFileRepository::flush() {
       keys.push_back(keystrings.back());
     }
   }
-
   auto multistatus = opendb->MultiGet(options, keys, &values);
 
   for (size_t i = 0; i < keys.size() && i < values.size() && i < multistatus.size(); ++i) {
@@ -120,7 +121,7 @@ void FlowFileRepository::run() {
     prune_stored_flowfiles();
   }
   while (running_) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
+    std::this_thread::sleep_for(purge_period_);
     flush();
     auto now = std::chrono::steady_clock::now();
     if ((now-last) > std::chrono::seconds(30)) {
@@ -199,7 +200,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
 }
 
 bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> operation) {
-  int waitTime = 0;
+  std::chrono::milliseconds waitTime = 0ms;
   for (int i=0; i < 3; ++i) {
     auto status = operation();
     if (status.ok()) {
@@ -208,7 +209,7 @@ bool FlowFileRepository::ExecuteWithRetry(std::function<rocksdb::Status()> opera
     }
     logger_->log_error("Rocksdb operation failed: %s", status.ToString());
     waitTime += FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS;
-    std::this_thread::sleep_for(std::chrono::milliseconds(waitTime));
+    std::this_thread::sleep_for(waitTime);
   }
   return false;
 }

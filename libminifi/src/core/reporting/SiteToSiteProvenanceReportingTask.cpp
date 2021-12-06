@@ -113,9 +113,9 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core
     rapidjson::Value parentUuidJson(rapidjson::kArrayType);
     rapidjson::Value childUuidJson(rapidjson::kArrayType);
 
-    recordJson.AddMember("timestampMillis", record->getEventTime(), alloc);
-    recordJson.AddMember("durationMillis", record->getEventDuration(), alloc);
-    recordJson.AddMember("lineageStart", record->getlineageStartDate(), alloc);
+    recordJson.AddMember("timestampMillis", utils::timeutils::getMillisecondsSinceUnixEpoch(record->getEventTime()).count(), alloc);
+    recordJson.AddMember("durationMillis", record->getEventDuration().count(), alloc);
+    recordJson.AddMember("lineageStart", utils::timeutils::getMillisecondsSinceUnixEpoch(record->getlineageStartDate()).count(), alloc);
     recordJson.AddMember("entitySize", record->getFileSize(), alloc);
     recordJson.AddMember("entityOffset", record->getFileOffset(), alloc);
 

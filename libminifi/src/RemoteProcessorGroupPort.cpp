@@ -167,17 +167,12 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     }
   }
   {
-    uint64_t idleTimeoutVal = 15000;
-    std::string idleTimeoutStr;
-    if (!context->getProperty(idleTimeout.getName(), idleTimeoutStr)
-        || !core::Property::getTimeMSFromString(idleTimeoutStr, idleTimeoutVal)) {
-      logger_->log_debug("%s attribute is invalid, so default value of %s will be used", idleTimeout.getName(),
-                         idleTimeout.getValue());
-      if (!core::Property::getTimeMSFromString(idleTimeout.getValue(), idleTimeoutVal)) {
-        assert(false);  // Couldn't parse our default value
-      }
+    if (auto idle_timeout = context->getProperty<core::TimePeriodValue>(idleTimeout)) {
+      idle_timeout_ = idle_timeout->getMilliseconds();
+    } else {
+      logger_->log_debug("%s attribute is invalid, so default value of %s will be used", idleTimeout.getName(), idleTimeout.getDefaultValue());
+      idle_timeout_ = static_cast<core::TimePeriodValue>(idleTimeout.getDefaultValue().to_string()).getMilliseconds();
     }
-    idle_timeout_ = std::chrono::milliseconds(idleTimeoutVal);
   }
 
   std::lock_guard<std::mutex> lock(peer_mutex_);

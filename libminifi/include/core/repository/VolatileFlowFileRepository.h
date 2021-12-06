@@ -40,9 +40,11 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
   using utils::EnableSharedFromThis<VolatileFlowFileRepository>::sharedFromThis;
 
  public:
-  explicit VolatileFlowFileRepository(std::string repo_name = "", std::string /*dir*/ = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
-  MAX_REPOSITORY_STORAGE_SIZE,
-                                      uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
+  explicit VolatileFlowFileRepository(std::string repo_name = "",
+                                      std::string /*dir*/ = REPOSITORY_DIRECTORY,
+                                      std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
+                                      int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
+                                      std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         VolatileRepository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod) {
     purge_required_ = true;
@@ -52,7 +54,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
   virtual void run() {
     repo_full_ = false;
     while (running_) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(purge_period_));
+      std::this_thread::sleep_for(purge_period_);
       flush();
     }
     flush();

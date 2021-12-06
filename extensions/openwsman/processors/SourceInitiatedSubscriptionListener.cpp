@@ -248,9 +248,9 @@ bool SourceInitiatedSubscriptionListener::loadState() {
   return true;
 }
 
-std::string SourceInitiatedSubscriptionListener::Handler::millisecondsToXsdDuration(int64_t milliseconds) {
+std::string SourceInitiatedSubscriptionListener::Handler::millisecondsToXsdDuration(std::chrono::milliseconds milliseconds) {
   char buf[1024];
-  snprintf(buf, sizeof(buf), "PT%" PRId64 ".%03" PRId64 "S", milliseconds / 1000, milliseconds % 1000);
+  snprintf(buf, sizeof(buf), "PT%" PRId64 ".%03" PRId64 "S", milliseconds.count() / 1000, milliseconds.count() % 1000);
   return buf;
 }
 
@@ -814,43 +814,30 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   if (!context->getProperty(InitialExistingEventsStrategy.getName(), initial_existing_events_strategy_)) {
     throw Exception(PROCESSOR_EXCEPTION, "Initial Existing Events Strategy attribute is missing or invalid");
   }
-  if (!context->getProperty(SubscriptionExpirationInterval.getName(), value)) {
+  if (auto subscription_expiration_interval = context->getProperty<core::TimePeriodValue>(SubscriptionExpirationInterval)) {
+    subscription_expiration_interval_ = subscription_expiration_interval->getMilliseconds();
+  } else {
     throw Exception(PROCESSOR_EXCEPTION, "Subscription Expiration Interval attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, subscription_expiration_interval_, unit) ||
-        !core::Property::ConvertTimeUnitToMS(subscription_expiration_interval_, unit, subscription_expiration_interval_)) {
-      throw Exception(PROCESSOR_EXCEPTION, "Subscription Expiration Interval attribute is invalid");
-    }
   }
-  if (!context->getProperty(HeartbeatInterval.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION, "Heartbeat Interval attribute is missing or invalid");
+  if (auto heartbeat_interval = context->getProperty<core::TimePeriodValue>(HeartbeatInterval)) {
+    heartbeat_interval_ = heartbeat_interval->getMilliseconds();
   } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, heartbeat_interval_, unit) || !core::Property::ConvertTimeUnitToMS(heartbeat_interval_, unit, heartbeat_interval_)) {
-      throw Exception(PROCESSOR_EXCEPTION, "Heartbeat Interval attribute is invalid");
-    }
+    throw Exception(PROCESSOR_EXCEPTION, "Heartbeat Interval attribute is missing or invalid");
   }
   if (!context->getProperty(MaxElements.getName(), value)) {
     throw Exception(PROCESSOR_EXCEPTION, "Max Elements attribute is missing or invalid");
   } else if (!core::Property::StringToInt(value, max_elements_)) {
     throw Exception(PROCESSOR_EXCEPTION, "Max Elements attribute is invalid");
   }
-  if (!context->getProperty(MaxLatency.getName(), value)) {
+  if (auto max_latency = context->getProperty<core::TimePeriodValue>(MaxLatency)) {
+    max_latency_ = max_latency->getMilliseconds();
+  } else {
     throw Exception(PROCESSOR_EXCEPTION, "Max Latency attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, max_latency_, unit) || !core::Property::ConvertTimeUnitToMS(max_latency_, unit, max_latency_)) {
-      throw Exception(PROCESSOR_EXCEPTION, "Max Latency attribute is invalid");
-    }
   }
-  if (!context->getProperty(ConnectionRetryInterval.getName(), value)) {
-    throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Interval attribute is missing or invalid");
+  if (auto connection_retry_interval = context->getProperty<core::TimePeriodValue>(ConnectionRetryInterval)) {
+    connection_retry_interval_ = connection_retry_interval->getMilliseconds();
   } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, connection_retry_interval_, unit) || !core::Property::ConvertTimeUnitToMS(connection_retry_interval_, unit, connection_retry_interval_)) {
-      throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Interval attribute is invalid");
-    }
+    throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Interval attribute is missing or invalid");
   }
   if (!context->getProperty(ConnectionRetryCount.getName(), value)) {
     throw Exception(PROCESSOR_EXCEPTION, "Connection Retry Count attribute is missing or invalid");

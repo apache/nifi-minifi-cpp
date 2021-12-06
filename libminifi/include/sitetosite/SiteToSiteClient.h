@@ -247,7 +247,7 @@ class SiteToSiteClient : public core::Connectable {
   std::map<utils::Identifier, std::shared_ptr<Transaction>> known_transactions_;
 
   // BATCH_SEND_NANOS
-  uint64_t _batchSendNanos{5000000000};
+  std::chrono::nanoseconds _batchSendNanos = std::chrono::seconds(5);
 
   /***
    * versioning

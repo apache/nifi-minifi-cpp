@@ -41,12 +41,12 @@ namespace processors {
 struct GetFileRequest {
   bool recursive = true;
   bool keepSourceFile = false;
-  uint64_t minAge = 0;
-  uint64_t maxAge = 0;
+  std::chrono::milliseconds minAge{0};
+  std::chrono::milliseconds maxAge{0};
   uint64_t minSize = 0;
   uint64_t maxSize = 0;
   bool ignoreHiddenFile = true;
-  uint64_t pollInterval = 0;
+  std::chrono::milliseconds pollInterval{0};
   uint64_t batchSize = 10;
   std::string fileFilter = "[^\\.].*";
   std::string inputDirectory;
@@ -114,7 +114,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   explicit GetFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         metrics_(std::make_shared<GetFileMetrics>()),
-        last_listing_time_(0) {
+        last_listing_time_() {
   }
   // Destructor
   ~GetFile() override = default;
@@ -176,7 +176,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   GetFileRequest request_;
   std::queue<std::string> directory_listing_;
   mutable std::mutex directory_listing_mutex_;
-  std::atomic<uint64_t> last_listing_time_;
+  std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_listing_time_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger();
 };
 

@@ -33,6 +33,8 @@
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 
+using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -42,14 +44,6 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
     : core::Connectable(name),
       flow_repository_(flow_repository),
       content_repo_(content_repo) {
-  source_connectable_ = nullptr;
-  dest_connectable_ = nullptr;
-  max_queue_size_ = 0;
-  max_data_queue_size_ = 0;
-  expired_duration_ = 0;
-  queued_data_size_ = 0;
-  drop_empty_ = false;
-
   logger_->log_debug("Connection %s created", name_);
 }
 
@@ -57,14 +51,6 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
     : core::Connectable(name, uuid),
       flow_repository_(flow_repository),
       content_repo_(content_repo) {
-  source_connectable_ = nullptr;
-  dest_connectable_ = nullptr;
-  max_queue_size_ = 0;
-  max_data_queue_size_ = 0;
-  expired_duration_ = 0;
-  queued_data_size_ = 0;
-  drop_empty_ = false;
-
   logger_->log_debug("Connection %s created", name_);
 }
 
@@ -74,15 +60,6 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
       flow_repository_(flow_repository),
       content_repo_(content_repo) {
   src_uuid_ = srcUUID;
-
-  source_connectable_ = nullptr;
-  dest_connectable_ = nullptr;
-  max_queue_size_ = 0;
-  max_data_queue_size_ = 0;
-  expired_duration_ = 0;
-  queued_data_size_ = 0;
-  drop_empty_ = false;
-
   logger_->log_debug("Connection %s created", name_);
 }
 
@@ -94,15 +71,6 @@ Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository,
 
   src_uuid_ = srcUUID;
   dest_uuid_ = destUUID;
-
-  source_connectable_ = nullptr;
-  dest_connectable_ = nullptr;
-  max_queue_size_ = 0;
-  max_data_queue_size_ = 0;
-  expired_duration_ = 0;
-  queued_data_size_ = 0;
-  drop_empty_ = false;
-
   logger_->log_debug("Connection %s created", name_);
 }
 
@@ -180,9 +148,9 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
     std::shared_ptr<core::FlowFile> item = queue_.pop();
     queued_data_size_ -= item->getSize();
 
-    if (expired_duration_ > 0) {
+    if (expired_duration_.load() > 0ms) {
       // We need to check for flow expiration
-      if (utils::timeutils::getTimeMillis() > (item->getEntryDate() + expired_duration_)) {
+      if (std::chrono::system_clock::now() > (item->getEntryDate() + expired_duration_.load())) {
         // Flow record expired
         expiredFlowRecords.insert(item);
         logger_->log_debug("Delete flow file UUID %s from connection %s, because it expired", item->getUUIDStr(), name_);

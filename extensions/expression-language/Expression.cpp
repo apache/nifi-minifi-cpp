@@ -686,8 +686,7 @@ Value expr_toDate(const std::vector<Value>&) {
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 Value expr_now(const std::vector<Value>& /*args*/) {
-  int64_t unix_time_ms{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()};
-  return Value(unix_time_ms);
+  return Value(utils::timeutils::getMillisecondsSinceUnixEpoch(std::chrono::system_clock::now()).count());
 }
 
 Value expr_unescapeCsv(const std::vector<Value> &args) {

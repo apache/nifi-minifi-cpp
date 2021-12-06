@@ -59,9 +59,11 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
   static const char *volatile_repo_max_bytes;
   // Constructor
 
-  explicit VolatileRepository(std::string repo_name = "", std::string /*dir*/ = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
-  MAX_REPOSITORY_STORAGE_SIZE,
-                              uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
+  explicit VolatileRepository(std::string repo_name = "",
+                              std::string /*dir*/ = REPOSITORY_DIRECTORY,
+                              std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
+                              int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
+                              std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<VolatileRepository>(), "", maxPartitionMillis, maxPartitionBytes, purgePeriod),
         current_size_(0),
@@ -90,7 +92,7 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
   /**
    * Places a new object into the volatile memory area
    * @param key key to add to the repository
-   * @param buf buffer 
+   * @param buf buffer
    **/
   virtual bool Put(T key, const uint8_t *buf, size_t bufLen);
 
@@ -401,7 +403,7 @@ void VolatileRepository<T>::setConnectionMap(std::map<std::string, std::shared_p
 
 template<typename T>
 void VolatileRepository<T>::start() {
-  if (this->purge_period_ <= 0)
+  if (this->purge_period_ <= std::chrono::milliseconds(0))
     return;
   if (running_)
     return;

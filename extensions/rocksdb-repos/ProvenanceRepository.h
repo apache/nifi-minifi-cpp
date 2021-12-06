@@ -38,8 +38,8 @@ namespace provenance {
 
 #define PROVENANCE_DIRECTORY "./provenance_repository"
 #define MAX_PROVENANCE_STORAGE_SIZE (10*1024*1024)  // 10M
-#define MAX_PROVENANCE_ENTRY_LIFE_TIME (60000)  // 1 minute
-#define PROVENANCE_PURGE_PERIOD (2500)  // 2500 msec
+constexpr std::chrono::milliseconds MAX_PROVENANCE_ENTRY_LIFE_TIME = std::chrono::minutes(1);
+constexpr std::chrono::milliseconds PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
@@ -50,8 +50,8 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   /*!
    * Create a new provenance repository
    */
-  explicit ProvenanceRepository(const std::string& repo_name = "", std::string directory = PROVENANCE_DIRECTORY, int64_t maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
-      int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE, uint64_t purgePeriod = PROVENANCE_PURGE_PERIOD)
+  explicit ProvenanceRepository(const std::string& repo_name = "", std::string directory = PROVENANCE_DIRECTORY, std::chrono::milliseconds maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
+      int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE, std::chrono::milliseconds purgePeriod = PROVENANCE_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod) {
     db_ = nullptr;
@@ -83,12 +83,11 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     }
     logger_->log_debug("MiNiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
     if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
-      core::TimeUnit unit;
-      if (core::Property::StringToTime(value, max_partition_millis_, unit)) {
-        core::Property::ConvertTimeUnitToMS(max_partition_millis_, unit, max_partition_millis_);
-      }
+      auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value);
+      if (max_partition.has_value())
+          max_partition_millis_ = *max_partition;
     }
-    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_);
+    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_.count());
     rocksdb::Options options;
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
@@ -102,8 +101,8 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
 
     options.compaction_style = rocksdb::CompactionStyle::kCompactionStyleFIFO;
     options.compaction_options_fifo = rocksdb::CompactionOptionsFIFO(max_partition_bytes_, false);
-    if (max_partition_millis_ > 0) {
-      options.ttl = max_partition_millis_ / 1000;
+    if (max_partition_millis_ > std::chrono::milliseconds(0)) {
+      options.ttl = std::chrono::duration_cast<std::chrono::seconds>(max_partition_millis_).count();
     }
 
     logger_->log_info("Write buffer: %llu", options.write_buffer_size);

@@ -52,7 +52,7 @@ class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKey
 
  protected:
   bool always_persist_;
-  uint64_t auto_persistence_interval_;
+  std::chrono::milliseconds auto_persistence_interval_;
 
   std::thread persisting_thread_;
   bool running_;

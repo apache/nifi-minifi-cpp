@@ -108,24 +108,24 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Get entry date for this record
    * @return entry date uint64_t
    */
-  [[nodiscard]] uint64_t getEntryDate() const;
+  [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getEntryDate() const;
 
   /**
    * Gets the event time.
    * @return event time.
    */
-  [[nodiscard]] uint64_t getEventTime() const;
+  [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getEventTime() const;
   /**
    * Get lineage start date
    * @return lineage start date uint64_t
    */
-  [[nodiscard]] uint64_t getlineageStartDate() const;
+  [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getlineageStartDate() const;
 
   /**
    * Sets the lineage start date
    * @param date new lineage start date
    */
-  void setLineageStartDate(uint64_t date);
+  void setLineageStartDate(const std::chrono::time_point<std::chrono::system_clock> date);
 
   void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) {
     lineage_Identifiers_ = lineage_Identifiers;
@@ -257,11 +257,11 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // Mark for deletion
   bool marked_delete_;
   // Date at which the flow file entered the flow
-  uint64_t entry_date_;
+  std::chrono::time_point<std::chrono::system_clock> entry_date_;
   // event time
-  uint64_t event_time_;
+  std::chrono::time_point<std::chrono::system_clock> event_time_;
   // Date at which the origin of this flow file entered the flow
-  uint64_t lineage_start_date_;
+  std::chrono::time_point<std::chrono::system_clock> lineage_start_date_;
   // Date at which the flow file was queued
   uint64_t last_queue_date_;
   // Size in bytes of the data corresponding to this flow file

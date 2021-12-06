@@ -146,7 +146,10 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   /*
    * Create a new site2site peer
    */
-  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> injected_socket, const std::string host, uint16_t port, const std::string &ifc)
+  explicit SiteToSitePeer(std::unique_ptr<org::apache::nifi::minifi::io::BaseStream> injected_socket,
+                          const std::string host,
+                          uint16_t port,
+                          const std::string &ifc)
       : SiteToSitePeer(host, port, ifc) {
     stream_ = std::move(injected_socket);
   }
@@ -155,12 +158,12 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
       : stream_(nullptr),
         host_(host),
         port_(port),
-        timeout_(30000),
-        yield_expiration_(0),
+        timeout_(std::chrono::seconds(30)),
+        yield_expiration_(),
         logger_(core::logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
-    yield_expiration_ = 0;
-    timeout_ = 30000;  // 30 seconds
+    yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
+    timeout_ = std::chrono::seconds(30);  // 30 seconds
     local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
 
@@ -180,7 +183,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     Close();
   }
   // Set Processor yield period in MilliSecond
-  void setYieldPeriodMsec(uint64_t period) {
+  void setYieldPeriodMsec(std::chrono::milliseconds period) {
     yield_period_msec_ = period;
   }
   // get URL
@@ -195,12 +198,12 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return local_network_interface_.getInterface();
   }
   // Get Processor yield period in MilliSecond
-  uint64_t getYieldPeriodMsec(void) {
+  std::chrono::milliseconds getYieldPeriodMsec(void) {
     return (yield_period_msec_);
   }
   // Yield based on the yield period
   void yield() {
-    yield_expiration_ = (utils::timeutils::getTimeMillis() + yield_period_msec_);
+    yield_expiration_ = std::chrono::system_clock::now() + yield_period_msec_.load();
   }
   // setHostName
   void setHostName(std::string host_) {
@@ -221,39 +224,33 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return port_;
   }
   // Yield based on the input time
-  void yield(uint64_t time) {
-    yield_expiration_ = (utils::timeutils::getTimeMillis() + time);
+  void yield(std::chrono::milliseconds time) {
+    yield_expiration_ = (std::chrono::system_clock::now() + time);
   }
   // whether need be to yield
   bool isYield() {
-    if (yield_expiration_ > 0)
-      return (yield_expiration_ >= utils::timeutils::getTimeMillis());
-    else
-      return false;
+    return yield_expiration_.load() >= std::chrono::system_clock::now();
   }
   // clear yield expiration
   void clearYield() {
-    yield_expiration_ = 0;
+    yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
   }
   // Yield based on the yield period
   void yield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    uint64_t yieldExpiration = (utils::timeutils::getTimeMillis() + yield_period_msec_);
-    yield_expiration_PortIdMap[portId] = yieldExpiration;
+    yield_expiration_PortIdMap[portId] = std::chrono::system_clock::now() + yield_period_msec_.load();
   }
   // Yield based on the input time
-  void yield(std::string portId, uint64_t time) {
-    std::lock_guard<std::mutex> lock(mutex_);
-    uint64_t yieldExpiration = (utils::timeutils::getTimeMillis() + time);
-    yield_expiration_PortIdMap[portId] = yieldExpiration;
+  void yield(std::string portId, std::chrono::milliseconds time) {
+    yield_expiration_PortIdMap[portId] = std::chrono::system_clock::now() + time;
   }
   // whether need be to yield
   bool isYield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::map<std::string, uint64_t>::iterator it = this->yield_expiration_PortIdMap.find(portId);
+    auto it = this->yield_expiration_PortIdMap.find(portId);
     if (it != yield_expiration_PortIdMap.end()) {
-      uint64_t yieldExpiration = it->second;
-      return (yieldExpiration >= utils::timeutils::getTimeMillis());
+      auto yieldExpiration = it->second;
+      return (yieldExpiration >= std::chrono::system_clock::now());
     } else {
       return false;
     }
@@ -261,17 +258,17 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // clear yield expiration
   void clearYield(std::string portId) {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::map<std::string, uint64_t>::iterator it = this->yield_expiration_PortIdMap.find(portId);
+    auto it = this->yield_expiration_PortIdMap.find(portId);
     if (it != yield_expiration_PortIdMap.end()) {
       yield_expiration_PortIdMap.erase(portId);
     }
   }
   // setTimeOut
-  void setTimeOut(uint64_t time) {
+  void setTimeOut(std::chrono::milliseconds time) {
     timeout_ = time;
   }
   // getTimeOut
-  uint64_t getTimeOut() {
+  std::chrono::milliseconds getTimeOut() {
     return timeout_;
   }
   void setHTTPProxy(const utils::HTTPProxy &proxy) {
@@ -318,8 +315,8 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
     local_network_interface_ = std::move(other.local_network_interface_);
-    yield_expiration_ = 0;
-    timeout_ = 30000;  // 30 seconds
+    yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
+    timeout_ = std::chrono::seconds(30);
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
 
     return *this;
@@ -344,13 +341,13 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // URL
   std::string url_;
   // socket timeout;
-  std::atomic<uint64_t> timeout_;
+  std::atomic<std::chrono::milliseconds> timeout_;
   // Yield Period in Milliseconds
-  std::atomic<uint64_t> yield_period_msec_;
+  std::atomic<std::chrono::milliseconds> yield_period_msec_;
   // Yield Expiration
-  std::atomic<uint64_t> yield_expiration_;
+  std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_;
   // Yield Expiration per destination PortID
-  std::map<std::string, uint64_t> yield_expiration_PortIdMap;
+  std::map<std::string, std::chrono::time_point<std::chrono::system_clock>> yield_expiration_PortIdMap;
   // Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SiteToSitePeer>::getLogger();
 };

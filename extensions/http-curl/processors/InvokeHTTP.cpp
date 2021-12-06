@@ -182,11 +182,9 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  uint64_t valInt;
-  std::string timeoutStr;
-  if (context->getProperty(ConnectTimeout.getName(), timeoutStr)
-      && core::Property::getTimeMSFromString(timeoutStr, valInt)) {
-    connect_timeout_ms_ =  std::chrono::milliseconds(valInt);
+
+  if (auto connect_timeout = context->getProperty<core::TimePeriodValue>(ConnectTimeout)) {
+    connect_timeout_ms_ =  connect_timeout->getMilliseconds();
   } else {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", ConnectTimeout.getName(), ConnectTimeout.getValue());
     return;
@@ -197,10 +195,8 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     content_type_ = contentTypeStr;
   }
 
-  timeoutStr.clear();
-  if (context->getProperty(ReadTimeout.getName(), timeoutStr)
-      && core::Property::getTimeMSFromString(timeoutStr, valInt)) {
-    read_timeout_ms_ =  std::chrono::milliseconds(valInt);
+  if (auto read_timeout = context->getProperty<core::TimePeriodValue>(ReadTimeout)) {
+    read_timeout_ms_ =  read_timeout->getMilliseconds();
   } else {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", ReadTimeout.getName(), ReadTimeout.getValue());
   }

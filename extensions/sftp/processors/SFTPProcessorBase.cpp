@@ -176,22 +176,18 @@ void SFTPProcessorBase::parseCommonPropertiesOnSchedule(const std::shared_ptr<co
     strict_host_checking_ = utils::StringUtils::toBool(value).value_or(false);
   }
   context->getProperty(HostKeyFile.getName(), host_key_file_);
-  if (!context->getProperty(ConnectionTimeout.getName(), value)) {
+  if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
+    connection_timeout_ = connection_timeout->getMilliseconds();
+  } else {
     logger_->log_error("Connection Timeout attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, connection_timeout_, unit) || !core::Property::ConvertTimeUnitToMS(connection_timeout_, unit, connection_timeout_)) {
-      logger_->log_error("Connection Timeout attribute is invalid");
-    }
   }
-  if (!context->getProperty(DataTimeout.getName(), value)) {
+
+  if (auto data_timeout = context->getProperty<core::TimePeriodValue>(DataTimeout)) {
+    data_timeout_ = data_timeout->getMilliseconds();
+  } else {
     logger_->log_error("Data Timeout attribute is missing or invalid");
-  } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, data_timeout_, unit) || !core::Property::ConvertTimeUnitToMS(data_timeout_, unit, data_timeout_)) {
-      logger_->log_error("Data Timeout attribute is invalid");
-    }
   }
+
   if (!context->getProperty(SendKeepaliveOnTimeout.getName(), value)) {
     logger_->log_error("Send Keep Alive On Timeout attribute is missing or invalid");
   } else {

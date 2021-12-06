@@ -82,7 +82,7 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
     return;
   }
 
-  auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
+  auto now = std::chrono::steady_clock::now();
 
   if (now - cb_data->last_frame_time < std::chrono::milliseconds(static_cast<int>(1000.0 / cb_data->target_fps))) {
     return;
@@ -339,7 +339,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
         cb_data_.device_height = height;
         cb_data_.device_fps = fps;
         cb_data_.target_fps = target_fps;
-        cb_data_.last_frame_time = std::chrono::milliseconds(0);
+        cb_data_.last_frame_time = std::chrono::time_point<std::chrono::steady_clock>();
 
         res = uvc_start_streaming(devh_, &ctrl, onFrame, &cb_data_, 0);
 

@@ -28,6 +28,7 @@
 #include "core/FlowFile.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/TimeUtil.h"
 #include "properties/Configure.h"
 #include "JVMLoader.h"
 #include "../JavaException.h"
@@ -53,7 +54,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
-  jlong entryDate = ff->getEntryDate();
+  jlong entryDate = minifi::utils::timeutils::getMillisecondsSinceUnixEpoch(ff->getEntryDate()).count();
   return entryDate;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj) {
@@ -61,7 +62,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageSta
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
-  jlong val = ff->getlineageStartDate();
+  jlong val = minifi::utils::timeutils::getMillisecondsSinceUnixEpoch(ff->getlineageStartDate()).count();
   return val;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj) {
@@ -69,7 +70,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageSta
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
-  jlong val = ff->getlineageStartDate();
+  jlong val = minifi::utils::timeutils::getMillisecondsSinceUnixEpoch(ff->getlineageStartDate()).count();
   return val;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj) {

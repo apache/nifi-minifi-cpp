@@ -54,8 +54,6 @@ class AbstractMQTTProcessor : public core::Processor {
       : core::Processor(name, uuid) {
     client_ = nullptr;
     cleanSession_ = false;
-    keepAliveInterval_ = 60;
-    connectionTimeOut_ = 30;
     qos_ = 0;
     isSubscriber_ = false;
   }
@@ -65,7 +63,7 @@ class AbstractMQTTProcessor : public core::Processor {
       MQTTClient_unsubscribe(client_, topic_.c_str());
     }
     if (client_ && MQTTClient_isConnected(client_)) {
-      MQTTClient_disconnect(client_, connectionTimeOut_);
+      MQTTClient_disconnect(client_, connectionTimeOut_.count());
     }
     if (client_)
       MQTTClient_destroy(&client_);
@@ -130,8 +128,8 @@ class AbstractMQTTProcessor : public core::Processor {
   MQTTClient_deliveryToken delivered_token_;
   std::string uri_;
   std::string topic_;
-  int64_t keepAliveInterval_;
-  int64_t connectionTimeOut_;
+  std::chrono::seconds keepAliveInterval_{60};
+  std::chrono::seconds connectionTimeOut_{30};
   int64_t qos_;
   bool cleanSession_;
   std::string clientID_;

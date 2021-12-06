@@ -35,6 +35,8 @@
 #include "CustomProcessors.h"
 #include "TestControllerWithFlow.h"
 
+using namespace std::chrono_literals;
+
 const char* yamlConfig =
     R"(
 Flow Controller:
@@ -109,7 +111,7 @@ TEST_CASE("Flow shutdown drains connections", "[TestFlow1]") {
 
   auto sinkProc = std::static_pointer_cast<minifi::processors::TestProcessor>(root->findProcessorByName("TestProcessor"));
   // prevent execution of the consumer processor
-  sinkProc->yield(10000);
+  sinkProc->yield(10s);
 
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
 

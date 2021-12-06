@@ -102,9 +102,9 @@ class SFTPClient {
 
   bool setProxy(ProxyType type, const utils::HTTPProxy& proxy);
 
-  bool setConnectionTimeout(int64_t timeout);
+  bool setConnectionTimeout(std::chrono::milliseconds timeout);
 
-  void setDataTimeout(int64_t timeout);
+  void setDataTimeout(std::chrono::milliseconds timeout);
 
   void setSendKeepAlive(bool send_keepalive);
 
@@ -178,8 +178,6 @@ class SFTPClient {
   bool public_key_authentication_enabled_ = false;
   std::string private_key_file_path_;
   std::string private_key_passphrase_;
-
-  int64_t data_timeout_ = 0;
 
   bool send_keepalive_ = false;
 

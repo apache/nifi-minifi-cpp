@@ -31,6 +31,7 @@
 #include "utils/PropertyErrors.h"
 #include "utils/Literals.h"
 #include "utils/Export.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
@@ -55,22 +56,24 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
 
   explicit TimePeriodValue(const std::string &timeString)
       : state::response::UInt64Value(0) {
-    TimeUnit units{};
-    if (!StringToTime(timeString, value, units)) {
+    auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeString);
+    if (!parsed_time) {
       throw utils::internal::ParseException("Couldn't parse TimePeriodValue");
     }
     string_value = timeString;
-    if (!ConvertTimeUnitToMS<uint64_t>(value, units, value)) {
-      throw utils::internal::ConversionException("Couldn't convert TimePeriodValue to milliseconds");
-    }
+    value = parsed_time->count();
   }
 
   explicit TimePeriodValue(uint64_t value)
       : state::response::UInt64Value(value) {
   }
 
-  uint64_t getMilliseconds() const {
-    return getValue();
+  TimePeriodValue()
+      : state::response::UInt64Value(0) {
+  }
+
+  std::chrono::milliseconds getMilliseconds() const {
+    return std::chrono::milliseconds(getValue());
   }
 
   static std::optional<TimePeriodValue> fromString(const std::string& str) {
@@ -79,36 +82,6 @@ class TimePeriodValue : public TransformableValue, public state::response::UInt6
     } catch (const utils::internal::ValueException&) {
       return std::nullopt;
     }
-  }
-
-  // Convert TimeUnit to MilliSecond
-  template<typename T>
-  static bool ConvertTimeUnitToMS(T input, TimeUnit unit, T &out) {
-    if (unit == MILLISECOND) {
-      out = input;
-      return true;
-    } else if (unit == SECOND) {
-      out = input * 1000;
-      return true;
-    } else if (unit == MINUTE) {
-      out = input * 60 * 1000;
-      return true;
-    } else if (unit == HOUR) {
-      out = input * 60 * 60 * 1000;
-      return true;
-    } else if (unit == DAY) {
-      out = 24 * 60 * 60 * 1000;
-      return true;
-    } else if (unit == NANOSECOND) {
-      out = input / 1000 / 1000;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static bool StringToTime(std::string input, uint64_t &output, TimeUnit &timeunit) {
-    return utils::internal::StringToTime(input, output, timeunit);
   }
 };
 
@@ -131,6 +104,10 @@ class DataSizeValue : public TransformableValue, public state::response::UInt64V
 
   explicit DataSizeValue(uint64_t value)
       : state::response::UInt64Value(value) {
+  }
+
+  DataSizeValue()
+      : state::response::UInt64Value(0) {
   }
 
 

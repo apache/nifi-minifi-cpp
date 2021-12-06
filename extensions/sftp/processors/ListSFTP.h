@@ -119,8 +119,8 @@ class ListSFTP : public SFTPProcessorBase {
   bool ignore_dotted_files_;
   std::string target_system_timestamp_precision_;
   std::string entity_tracking_initial_listing_target_;
-  uint64_t minimum_file_age_;
-  uint64_t maximum_file_age_;
+  std::chrono::milliseconds minimum_file_age_;
+  std::chrono::milliseconds maximum_file_age_;
   uint64_t minimum_file_size_;
   uint64_t maximum_file_size_;
 
@@ -192,7 +192,7 @@ class ListSFTP : public SFTPProcessorBase {
       uint16_t port,
       const std::string& username,
       const std::string& remote_path,
-      uint64_t entity_tracking_time_window,
+      std::chrono::milliseconds entity_tracking_time_window,
       std::vector<Child>&& files);
 };
 

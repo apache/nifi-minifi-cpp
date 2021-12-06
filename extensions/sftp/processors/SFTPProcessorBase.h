@@ -73,8 +73,8 @@ class SFTPProcessorBase : public core::Processor {
  protected:
   std::shared_ptr<core::logging::Logger> logger_;
 
-  int64_t connection_timeout_;
-  int64_t data_timeout_;
+  std::chrono::milliseconds connection_timeout_;
+  std::chrono::milliseconds data_timeout_;
   std::string host_key_file_;
   bool strict_host_checking_;
   bool use_keepalive_on_timeout_;

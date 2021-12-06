@@ -34,6 +34,8 @@
 #include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
 
+using namespace std::chrono_literals;
+
 namespace {
 
 #ifdef WIN32
@@ -56,7 +58,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0, 0, 1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -78,7 +80,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0, 0, 1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -101,7 +103,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0, 0, 1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
@@ -151,7 +153,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0, 0, 1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
 
   std::fstream file;
   std::stringstream ss;
@@ -205,7 +207,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0, 0, 1);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
 
   std::fstream file;
   std::stringstream ss;
@@ -349,8 +351,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
    public:
     explicit TestFlowFileRepository(const std::string& name)
         : core::SerializableComponent(name),
-          FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, FLOWFILE_REPOSITORY_DIRECTORY, MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
-                             MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1) {}
+          FlowFileRepository(name, REPOTEST_FLOWFILE_CHECKPOINT_DIR, FLOWFILE_REPOSITORY_DIRECTORY, 10min, MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, 1ms) {}
     void flush() override {
       FlowFileRepository::flush();
       if (onFlush_) {

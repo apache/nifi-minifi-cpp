@@ -23,78 +23,10 @@
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
 namespace {
-enum class ParsingStatus { ParsingFail , ParsingSuccessful , ValuesMatch };
 enum class ConversionTestTarget { MS, NS };
 
 namespace core = minifi::core;
 
-ParsingStatus checkTimeValue(const std::string &input, int64_t t1, core::TimeUnit t2) {
-  int64_t TimeVal = 0;
-  core::TimeUnit unit;
-  bool parsing_succeeded = org::apache::nifi::minifi::core::Property::StringToTime(input, TimeVal, unit);
-  if (parsing_succeeded) {
-    if (TimeVal == t1 && unit == t2) {
-      return ParsingStatus::ValuesMatch;
-    } else {
-      return ParsingStatus::ParsingSuccessful;
-    }
-  } else {
-    return ParsingStatus::ParsingFail;
-  }
-}
-
-bool conversionTest(uint64_t number, core::TimeUnit unit, uint64_t check, ConversionTestTarget conversionUnit) {
-  uint64_t out = 0;
-  bool returnStatus = false;
-  if (conversionUnit == ConversionTestTarget::NS) {
-    returnStatus = org::apache::nifi::minifi::core::Property::ConvertTimeUnitToNS(number, unit, out);
-  } else if (conversionUnit == ConversionTestTarget::MS) {
-    returnStatus = org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(number, unit, out);
-  }
-  return returnStatus && out == check;
-}
-
-TEST_CASE("Test Time Conversion", "[testConversion]") {
-  uint64_t out;
-  REQUIRE(true == conversionTest(2000000, core::TimeUnit::NANOSECOND, 2, ConversionTestTarget::MS));
-  REQUIRE(true == conversionTest(5000, core::TimeUnit::MICROSECOND, 5, ConversionTestTarget::MS));
-  REQUIRE(true == conversionTest(3, core::TimeUnit::MILLISECOND, 3, ConversionTestTarget::MS));
-  REQUIRE(true == conversionTest(5, core::TimeUnit::SECOND, 5000, ConversionTestTarget::MS));
-  REQUIRE(true == conversionTest(2, core::TimeUnit::MINUTE, 120000, ConversionTestTarget::MS));
-  REQUIRE(true == conversionTest(1, core::TimeUnit::HOUR, 3600000, ConversionTestTarget::MS));
-  REQUIRE(true == conversionTest(1, core::TimeUnit::DAY, 86400000, ConversionTestTarget::MS));
-
-  REQUIRE(true == conversionTest(5000, core::TimeUnit::NANOSECOND, 5000, ConversionTestTarget::NS));
-  REQUIRE(true == conversionTest(2, core::TimeUnit::MICROSECOND, 2000, ConversionTestTarget::NS));
-  REQUIRE(true == conversionTest(3, core::TimeUnit::MILLISECOND, 3000000, ConversionTestTarget::NS));
-  REQUIRE(true == conversionTest(7, core::TimeUnit::SECOND, 7000000000, ConversionTestTarget::NS));
-  REQUIRE(true == conversionTest(1, core::TimeUnit::MINUTE, 60000000000, ConversionTestTarget::NS));
-  REQUIRE(true == conversionTest(1, core::TimeUnit::HOUR, 3600000000000, ConversionTestTarget::NS));
-  REQUIRE(true == conversionTest(1, core::TimeUnit::DAY, 86400000000000, ConversionTestTarget::NS));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::ConvertTimeUnitToNS(23, static_cast<core::TimeUnit>(-1), out));
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(23, static_cast<core::TimeUnit>(-1), out));
-}
-
-TEST_CASE("Test Is it Time", "[testTime]") {
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("1 SEC", 1, core::TimeUnit::SECOND));
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("1d", 1, core::TimeUnit::DAY));
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("10 days", 10, core::TimeUnit::DAY));
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("100ms", 100, core::TimeUnit::MILLISECOND));
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("20 us", 20, core::TimeUnit::MICROSECOND));
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("1ns", 1, core::TimeUnit::NANOSECOND));
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("1min", 1, core::TimeUnit::MINUTE));
-  REQUIRE(ParsingStatus::ValuesMatch == checkTimeValue("1 hour", 1, core::TimeUnit::HOUR));
-
-  REQUIRE(ParsingStatus::ParsingSuccessful == checkTimeValue("100 SEC", 100, core::TimeUnit::MICROSECOND));
-  REQUIRE(ParsingStatus::ParsingSuccessful == checkTimeValue("10 ms", 1, core::TimeUnit::HOUR));
-  REQUIRE(ParsingStatus::ParsingSuccessful == checkTimeValue("100us", 100, core::TimeUnit::HOUR));
-  REQUIRE(ParsingStatus::ParsingSuccessful == checkTimeValue("100 ns", 100, core::TimeUnit::MILLISECOND));
-  REQUIRE(ParsingStatus::ParsingSuccessful == checkTimeValue("1 minute", 10, core::TimeUnit::MINUTE));
-
-  REQUIRE(ParsingStatus::ParsingFail == checkTimeValue("5 apples", 1, core::TimeUnit::HOUR));
-  REQUIRE(ParsingStatus::ParsingFail == checkTimeValue("1 year", 1, core::TimeUnit::DAY));
-}
 
 TEST_CASE("Test Trimmer Right", "[testTrims]") {
   std::string test = "a quick brown fox jumped over the road\t\n";

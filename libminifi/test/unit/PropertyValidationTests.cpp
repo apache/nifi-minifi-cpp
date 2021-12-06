@@ -232,6 +232,33 @@ TEST_CASE("Correctly Typed Property With Invalid Validation") {
   REQUIRE(callbackCount == 1);
 }
 
+TEST_CASE("TimePeriodValue Property") {
+  using namespace std::chrono_literals;
+  auto prop = PropertyBuilder::createProperty("prop")
+      ->withDefaultValue<TimePeriodValue>("10 minutes")
+      ->build();
+  TestConfigurableComponent component;
+  component.setSupportedProperties({prop});
+  TimePeriodValue time_period_value;
+  REQUIRE(component.getProperty(prop.getName(), time_period_value));
+  CHECK(time_period_value.getMilliseconds() == 10min);
+  REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "20"), ParseException);
+}
+
+TEST_CASE("TimePeriodValue Property without validator") {
+  using namespace std::chrono_literals;
+  auto prop = PropertyBuilder::createProperty("prop")
+      ->withDefaultValue("60 minutes")
+      ->build();
+  TestConfigurableComponent component;
+  component.setSupportedProperties({prop});
+  TimePeriodValue time_period_value;
+  REQUIRE(component.getProperty(prop.getName(), time_period_value));
+  CHECK(time_period_value.getMilliseconds() == 1h);
+  REQUIRE_NOTHROW(component.setProperty(prop.getName(), "20"));
+  REQUIRE_THROWS_AS(component.getProperty(prop.getName(), time_period_value), ValueException);
+}
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

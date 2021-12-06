@@ -61,13 +61,13 @@ class SchedulingDefaults : public DeviceInformation {
 
     SerializedResponseNode defaultSchedulingPeriod;
     defaultSchedulingPeriod.name = "defaultSchedulingPeriodMillis";
-    defaultSchedulingPeriod.value = DEFAULT_SCHEDULING_PERIOD_MILLIS;
+    defaultSchedulingPeriod.value = core::DEFAULT_SCHEDULING_PERIOD_MILLIS.count();
 
     schedulingDefaults.children.push_back(defaultSchedulingPeriod);
 
     SerializedResponseNode defaultRunDuration;
     defaultRunDuration.name = "defaultRunDurationNanos";
-    defaultRunDuration.value = DEFAULT_RUN_DURATION;
+    defaultRunDuration.value = core::DEFAULT_RUN_DURATION.count();
 
     schedulingDefaults.children.push_back(defaultRunDuration);
 

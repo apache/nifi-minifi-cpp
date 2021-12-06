@@ -142,11 +142,11 @@ class ProcessGroup : public CoreComponent {
     return proxy_;
   }
   // Set Processor yield period in MilliSecond
-  void setYieldPeriodMsec(uint64_t period) {
+  void setYieldPeriodMsec(std::chrono::milliseconds period) {
     yield_period_msec_ = period;
   }
   // Get Processor yield period in MilliSecond
-  uint64_t getYieldPeriodMsec(void) {
+  std::chrono::milliseconds getYieldPeriodMsec(void) {
     return (yield_period_msec_);
   }
 
@@ -259,7 +259,7 @@ class ProcessGroup : public CoreComponent {
   // Parent Process Group
   ProcessGroup* parent_process_group_;
   // Yield Period in Milliseconds
-  std::atomic<uint64_t> yield_period_msec_;
+  std::atomic<std::chrono::milliseconds> yield_period_msec_;
   std::atomic<uint64_t> timeOut_;
   std::atomic<int64_t> onschedule_retry_msec_;
 

@@ -27,6 +27,8 @@
 #include "core/ProcessSessionFactory.h"
 #include "core/Property.h"
 
+using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -66,10 +68,10 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(const std::shared_ptr<c
 
       if (processor->isYield()) {
         // Honor the yield
-        return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
-      } else if (shouldYield && this->bored_yield_duration_ > 0) {
+        return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
+      } else if (shouldYield && this->bored_yield_duration_ > 0ms) {
         // No work to do or need to apply back pressure
-        return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(this->bored_yield_duration_));
+        return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_);
       }
     }
     return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));

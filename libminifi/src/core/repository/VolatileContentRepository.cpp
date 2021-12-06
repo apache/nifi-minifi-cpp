@@ -27,6 +27,8 @@
 #include "io/FileStream.h"
 #include "utils/StringUtils.h"
 
+using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -66,7 +68,7 @@ void VolatileContentRepository::run() {
 }
 
 void VolatileContentRepository::start() {
-  if (this->purge_period_ <= 0)
+  if (this->purge_period_ <= 0ms)
     return;
   if (running_)
     return;

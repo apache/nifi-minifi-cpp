@@ -32,11 +32,11 @@ int main(int argc, char **argv) {
   harness.setUrl(args.url, &handler);
   handler.setC2RestResponse(harness.getC2RestUrl(), "configuration");
 
-  const auto start = std::chrono::system_clock::now();
+  const auto start = std::chrono::steady_clock::now();
 
   harness.run(args.test_file);
 
-  const auto then = std::chrono::system_clock::now();
+  const auto then = std::chrono::steady_clock::now();
   const auto seconds = std::chrono::duration_cast<std::chrono::seconds>(then - start).count();
   assert(handler.getCallCount() <= gsl::narrow<size_t>(seconds + 1));
   return 0;

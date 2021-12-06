@@ -57,7 +57,7 @@ namespace minifi {
 namespace core {
 
 // Minimum scheduling period in Nano Second
-#define MINIMUM_SCHEDULING_NANOS 30000
+constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
 
 // Default penalization period in second
 
@@ -95,14 +95,11 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
     return loss_tolerant_;
   }
   // Set Processor Scheduling Period in Nano Second
-  void setSchedulingPeriodNano(uint64_t period) {
-    uint64_t minPeriod = MINIMUM_SCHEDULING_NANOS;
-    // std::max has some variances on c++11-c++14 and then c++14 onward.
-    // to avoid macro conditional checks we can use this simple conditional expr.
-  scheduling_period_nano_ = period > minPeriod ? period : minPeriod;
+  void setSchedulingPeriodNano(std::chrono::nanoseconds period) {
+    scheduling_period_nano_ = std::max(MINIMUM_SCHEDULING_NANOS, period);
   }
   // Get Processor Scheduling Period in Nano Second
-  uint64_t getSchedulingPeriodNano() const {
+  std::chrono::nanoseconds getSchedulingPeriodNano() const {
     return scheduling_period_nano_;
   }
 
@@ -123,20 +120,20 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   }
 
   // Set Processor Run Duration in Nano Second
-  void setRunDurationNano(uint64_t period) {
+  void setRunDurationNano(std::chrono::nanoseconds period) {
     run_duration_nano_ = period;
   }
   // Get Processor Run Duration in Nano Second
-  uint64_t getRunDurationNano() const {
+  std::chrono::nanoseconds getRunDurationNano() const {
     return (run_duration_nano_);
   }
   // Set Processor yield period in MilliSecond
-  void setYieldPeriodMsec(uint64_t period) {
+  void setYieldPeriodMsec(std::chrono::milliseconds period) {
     yield_period_msec_ = period;
   }
   // Get Processor yield period in MilliSecond
-  uint64_t getYieldPeriodMsec() const {
-    return (yield_period_msec_);
+  std::chrono::milliseconds getYieldPeriodMsec() const {
+    return yield_period_msec_;
   }
 
   void setPenalizationPeriod(std::chrono::milliseconds period) {
@@ -176,33 +173,15 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   void clearActiveTask() {
     active_tasks_ = 0;
   }
-  // Yield based on the yield period
-  void yield() override {
-    yield_expiration_ = (utils::timeutils::getTimeMillis() + yield_period_msec_);
-  }
-  // Yield based on the input time
-  void yield(uint64_t time) {
-    yield_expiration_ = (utils::timeutils::getTimeMillis() + time);
-  }
-  // whether need be to yield
-  virtual bool isYield() {
-    if (yield_expiration_ > 0)
-      return (yield_expiration_ >= utils::timeutils::getTimeMillis());
-    else
-      return false;
-  }
-  // clear yield expiration
-  void clearYield() {
-    yield_expiration_ = 0;
-  }
-  // get yield time
-  uint64_t getYieldTime() const {
-    uint64_t curTime = utils::timeutils::getTimeMillis();
-    if (yield_expiration_ > curTime)
-      return (yield_expiration_ - curTime);
-    else
-      return 0;
-  }
+  void yield() override;
+
+  void yield(std::chrono::milliseconds delta_time);
+
+  virtual bool isYield();
+
+  void clearYield();
+
+  std::chrono::milliseconds getYieldTime() const;
   // Whether flow file queue full in any of the outgoing connection
   bool flowFilesOutGoingFull() const;
 
@@ -269,11 +248,11 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // lossTolerant
   std::atomic<bool> loss_tolerant_;
   // SchedulePeriod in Nano Seconds
-  std::atomic<uint64_t> scheduling_period_nano_;
+  std::atomic<std::chrono::nanoseconds> scheduling_period_nano_;
   // Run Duration in Nano Seconds
-  std::atomic<uint64_t> run_duration_nano_;
+  std::atomic<std::chrono::nanoseconds> run_duration_nano_;
   // Yield Period in Milliseconds
-  std::atomic<uint64_t> yield_period_msec_;
+  std::atomic<std::chrono::milliseconds> yield_period_msec_;
 
   // Active Tasks
   std::atomic<uint8_t> active_tasks_;
@@ -286,7 +265,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Mutex for protection
   mutable std::mutex mutex_;
   // Yield Expiration
-  std::atomic<uint64_t> yield_expiration_;
+  std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_;
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer

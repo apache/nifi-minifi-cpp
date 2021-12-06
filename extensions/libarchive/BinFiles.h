@@ -57,7 +57,7 @@ class Bin {
         fileCount_(fileCount),
         groupId_(groupId) {
     queued_data_size_ = 0;
-    creation_dated_ = utils::timeutils::getTimeMillis();
+    creation_dated_ = std::chrono::system_clock::now();
     uuid_ = utils::IdGenerator::getIdGenerator()->generate();
     logger_->log_debug("Bin %s for group %s created", getUUIDStr(), groupId_);
   }
@@ -73,8 +73,8 @@ class Bin {
     return isFull() || (queued_data_size_ >= minSize_ && queue_.size() >= minEntries_);
   }
   // check whether the bin is older than the time specified in msec
-  [[nodiscard]] bool isOlderThan(const uint64_t &duration) const {
-    return utils::timeutils::getTimeMillis() > (creation_dated_ + duration);
+  [[nodiscard]] bool isOlderThan(const std::chrono::milliseconds duration) const {
+    return std::chrono::system_clock::now() > (creation_dated_ + duration);
   }
   std::deque<std::shared_ptr<core::FlowFile>>& getFlowFile() {
     return queue_;
@@ -104,7 +104,7 @@ class Bin {
     return true;
   }
   // getBinAge
-  [[nodiscard]] uint64_t getBinAge() const {
+  [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getCreationDate() const {
     return creation_dated_;
   }
   [[nodiscard]] int getSize() const {
@@ -128,7 +128,7 @@ class Bin {
   uint64_t queued_data_size_;
   // Queue for the Flow File
   std::deque<std::shared_ptr<core::FlowFile>> queue_;
-  uint64_t creation_dated_;
+  std::chrono::time_point<std::chrono::system_clock> creation_dated_;
   std::string fileCount_;
   std::string groupId_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<Bin>::getLogger();
@@ -154,7 +154,7 @@ class BinManager {
   void setMinEntries(uint32_t entries) {
     minEntries_ = {entries};
   }
-  void setBinAge(uint64_t age) {
+  void setBinAge(std::chrono::milliseconds age) {
     binAge_ = {age};
   }
   [[nodiscard]] int getBinCount() const {
@@ -184,8 +184,7 @@ class BinManager {
   uint32_t maxEntries_{std::numeric_limits<decltype(maxEntries_)>::max()};
   uint32_t minEntries_{1};
   std::string fileCount_;
-  // Bin Age in msec
-  uint64_t binAge_{std::numeric_limits<decltype(binAge_)>::max()};
+  std::chrono::milliseconds binAge_{std::chrono::milliseconds::max()};
   std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>> >groupBinMap_;
   std::deque<std::unique_ptr<Bin>> readyBin_;
   int binCount_{0};
