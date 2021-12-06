@@ -42,6 +42,8 @@
 #include "LogAttribute.h"
 #include "utils/TestUtils.h"
 
+using namespace std::literals::chrono_literals;
+
 static const std::string NEWLINE_FILE = ""  // NOLINT
         "one,two,three\n"
         "four,five,six, seven";
@@ -1157,7 +1159,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
     testController.runSession(plan, true);
 
-    REQUIRE(tail_file->getYieldTime() > 0);
+    REQUIRE(tail_file->getYieldTime() > 0ms);
 
     SECTION("No logging happened between onTrigger calls => yield") {
       plan->reset();
@@ -1165,7 +1167,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
       testController.runSession(plan, true);
 
-      REQUIRE(tail_file->getYieldTime() > 0);
+      REQUIRE(tail_file->getYieldTime() > 0ms);
     }
 
     SECTION("Some logging happened between onTrigger calls => don't yield") {
@@ -1176,7 +1178,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
       testController.runSession(plan, true);
 
-      REQUIRE(tail_file->getYieldTime() == 0);
+      REQUIRE(tail_file->getYieldTime() == 0ms);
     }
   }
 
@@ -1185,7 +1187,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
     testController.runSession(plan, true);
 
-    REQUIRE(tail_file->getYieldTime() == 0);
+    REQUIRE(tail_file->getYieldTime() == 0ms);
 
     SECTION("No logging happened between onTrigger calls => yield") {
       plan->reset();
@@ -1193,7 +1195,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
       testController.runSession(plan, true);
 
-      REQUIRE(tail_file->getYieldTime() > 0);
+      REQUIRE(tail_file->getYieldTime() > 0ms);
     }
 
     SECTION("Some logging happened between onTrigger calls => don't yield") {
@@ -1204,7 +1206,7 @@ TEST_CASE("TailFile yields if no work is done", "[yield]") {
 
       testController.runSession(plan, true);
 
-      REQUIRE(tail_file->getYieldTime() == 0);
+      REQUIRE(tail_file->getYieldTime() == 0ms);
     }
   }
 }
@@ -1236,7 +1238,7 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
   SECTION("No file changed => yield") {
     testController.runSession(plan, true);
 
-    REQUIRE(tail_file->getYieldTime() > 0);
+    REQUIRE(tail_file->getYieldTime() > 0ms);
   }
 
   SECTION("One file changed => don't yield") {
@@ -1246,7 +1248,7 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
 
     testController.runSession(plan, true);
 
-    REQUIRE(tail_file->getYieldTime() == 0);
+    REQUIRE(tail_file->getYieldTime() == 0ms);
   }
 
   SECTION("More than one file changed => don't yield") {
@@ -1262,7 +1264,7 @@ TEST_CASE("TailFile yields if no work is done on any files", "[yield][multiple_f
 
     testController.runSession(plan, true);
 
-    REQUIRE(tail_file->getYieldTime() == 0);
+    REQUIRE(tail_file->getYieldTime() == 0ms);
   }
 }
 
@@ -1300,7 +1302,7 @@ TEST_CASE("TailFile doesn't yield if work was done on rotated files only", "[yie
 
     testController.runSession(plan, true);
 
-    REQUIRE(tail_file->getYieldTime() > 0);
+    REQUIRE(tail_file->getYieldTime() > 0ms);
   }
 
   SECTION("File rotated and new stuff is added => don't yield") {
@@ -1316,7 +1318,7 @@ TEST_CASE("TailFile doesn't yield if work was done on rotated files only", "[yie
 
     testController.runSession(plan, true);
 
-    REQUIRE(tail_file->getYieldTime() == 0);
+    REQUIRE(tail_file->getYieldTime() == 0ms);
   }
 }
 

@@ -21,6 +21,7 @@
 #include "core/logging/Logger.h"
 #include "properties/Configure.h"
 #include "utils/file/PathUtils.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
@@ -29,13 +30,6 @@ namespace minifi {
 
 namespace {
 namespace chr = std::chrono;
-
-std::optional<chr::milliseconds> time_string_to_milliseconds(const std::string& str) {
-  uint64_t millisec_value{};
-  const bool success = core::Property::getTimeMSFromString(str, millisec_value);
-  if (!success) return std::nullopt;
-  return chr::milliseconds{millisec_value};
-}
 
 template<typename T, typename = std::enable_if_t<std::is_integral<T>::value>>
 std::optional<T> data_size_string_to_int(const std::string& str) {
@@ -51,7 +45,7 @@ std::optional<T> data_size_string_to_int(const std::string& str) {
 
 namespace disk_space_watchdog {
 Config read_config(const Configure& conf) {
-  const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval) | utils::flatMap(time_string_to_milliseconds);
+  const auto interval_ms = conf.get(Configure::minifi_disk_space_watchdog_interval) | utils::flatMap(utils::timeutils::StringToDuration<chr::milliseconds>);
   const auto stop_bytes = conf.get(Configure::minifi_disk_space_watchdog_stop_threshold) | utils::flatMap(data_size_string_to_int<std::uintmax_t>);
   const auto restart_bytes = conf.get(Configure::minifi_disk_space_watchdog_restart_threshold) | utils::flatMap(data_size_string_to_int<std::uintmax_t>);
   if (restart_bytes < stop_bytes) { throw std::runtime_error{"disk space watchdog stop threshold must be <= restart threshold"}; }

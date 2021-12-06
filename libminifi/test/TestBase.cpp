@@ -96,13 +96,13 @@ bool LogTestController::contains(const std::ostringstream& stream, const std::st
   if (ending.length() == 0) {
     return false;
   }
-  auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::steady_clock::now();
   bool found = false;
   bool timed_out = false;
   do {
     std::string str = stream.str();
     found = (str.find(ending) != std::string::npos);
-    auto now = std::chrono::system_clock::now();
+    auto now = std::chrono::steady_clock::now();
     timed_out = (now - start > timeout);
     if (!found && !timed_out) {
       std::this_thread::sleep_for(sleep_interval);
@@ -117,7 +117,7 @@ std::optional<std::smatch> LogTestController::matchesRegex(const std::string& re
   if (regex_str.length() == 0) {
     return std::nullopt;
   }
-  auto start = std::chrono::system_clock::now();
+  auto start = std::chrono::steady_clock::now();
   bool found = false;
   bool timed_out = false;
   std::regex matcher_regex(regex_str);
@@ -125,7 +125,7 @@ std::optional<std::smatch> LogTestController::matchesRegex(const std::string& re
   do {
     std::string str = log_output.str();
     found = std::regex_search(str, match, matcher_regex);
-    auto now = std::chrono::system_clock::now();
+    auto now = std::chrono::steady_clock::now();
     timed_out = (now - start > timeout);
     if (!found && !timed_out) {
       std::this_thread::sleep_for(sleep_interval);

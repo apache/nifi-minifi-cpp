@@ -16,6 +16,9 @@
  */
 
 #include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
+#include <cinttypes>
+
+using namespace std::literals::chrono_literals;
 
 namespace org {
 namespace apache {
@@ -72,16 +75,14 @@ void AbstractAutoPersistingKeyValueStoreService::onEnable() {
   } else {
     always_persist_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (!getProperty(AutoPersistenceInterval.getName(), value)) {
+  core::TimePeriodValue auto_persistence_interval;
+  if (!getProperty(AutoPersistenceInterval.getName(), auto_persistence_interval)) {
     logger_->log_error("Auto Persistence Interval attribute is missing or invalid");
   } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, auto_persistence_interval_, unit) || !core::Property::ConvertTimeUnitToMS(auto_persistence_interval_, unit, auto_persistence_interval_)) {
-      logger_->log_error("Auto Persistence Interval attribute is invalid");
-    }
+    auto_persistence_interval_ = auto_persistence_interval.getMilliseconds();
   }
 
-  if (!always_persist_ && auto_persistence_interval_ != 0U) {
+  if (!always_persist_ && auto_persistence_interval_ != 0s) {
     if (!persisting_thread_.joinable()) {
       logger_->log_trace("Starting auto persistence thread");
       running_ = true;
@@ -100,8 +101,8 @@ void AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc() {
   std::unique_lock<std::mutex> lock(persisting_mutex_);
 
   while (true) {
-    logger_->log_trace("Persisting thread is going to sleep for %d ms", auto_persistence_interval_);
-    persisting_cv_.wait_for(lock, std::chrono::milliseconds(auto_persistence_interval_), [this] {
+    logger_->log_trace("Persisting thread is going to sleep for %" PRId64 " ms", int64_t{auto_persistence_interval_.count()});
+    persisting_cv_.wait_for(lock, auto_persistence_interval_, [this] {
       return !running_;
     });
 

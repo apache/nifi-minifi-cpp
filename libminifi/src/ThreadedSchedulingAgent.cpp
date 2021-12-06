@@ -38,6 +38,9 @@
 #include "core/ProcessSessionFactory.h"
 #include "utils/ValueParser.h"
 
+using namespace std::literals::chrono_literals;
+
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -46,23 +49,23 @@ namespace minifi {
 void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processor) {
   std::lock_guard<std::mutex> lock(mutex_);
 
-  admin_yield_duration_ = 100;  // We should prevent burning CPU in case of rollbacks
+  admin_yield_duration_ = 100ms;  // We should prevent burning CPU in case of rollbacks
   std::string yieldValue;
 
   if (configure_->get(Configure::nifi_administrative_yield_duration, yieldValue)) {
     std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       admin_yield_duration_ = value->getMilliseconds();
-      logger_->log_debug("nifi_administrative_yield_duration: [%" PRId64 "] ms", admin_yield_duration_);
+      logger_->log_debug("nifi_administrative_yield_duration: [%" PRId64 "] ms", int64_t{admin_yield_duration_.count()});
     }
   }
 
-  bored_yield_duration_ = 0;
+  bored_yield_duration_ = 0ms;
   if (configure_->get(Configure::nifi_bored_yield_duration, yieldValue)) {
     std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       bored_yield_duration_ = value->getMilliseconds();
-      logger_->log_debug("nifi_bored_yield_duration: [%" PRId64 "] ms", bored_yield_duration_);
+      logger_->log_debug("nifi_bored_yield_duration: [%" PRId64 "] ms", int64_t{bored_yield_duration_.count()});
     }
   }
 

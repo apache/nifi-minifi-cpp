@@ -18,6 +18,8 @@
 #include "utils/TimeUtil.h"
 #include "../TestBase.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace {
   constexpr int ONE_HOUR = 60 * 60;
   constexpr int ONE_DAY = 24 * ONE_HOUR;
@@ -91,4 +93,59 @@ TEST_CASE("parseDateTimeStr() works correctly", "[parseDateTimeStr]") {
 TEST_CASE("Test time conversion", "[testtimeconversion]") {
   using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
   REQUIRE("2017-02-16 20:14:56.196" == getTimeStr(1487276096196, true));
+}
+
+TEST_CASE("Test system_clock epoch", "[systemclockepoch]") {
+  using namespace std::chrono;
+  time_point<system_clock> epoch;
+  time_point<system_clock> unix_epoch_plus_3e9_sec = sys_days(January / 24 / 2065) + 5h + 20min;
+  REQUIRE(epoch.time_since_epoch() == 0s);
+  REQUIRE(unix_epoch_plus_3e9_sec.time_since_epoch() == 3000000000s);
+}
+
+TEST_CASE("Test clock resolutions", "[clockresolutiontests]") {
+  using namespace std::chrono;
+  CHECK(std::is_constructible<system_clock::duration, std::chrono::microseconds>::value);  // The resolution of the system_clock is at least microseconds
+  CHECK(std::is_constructible<steady_clock::duration, std::chrono::microseconds>::value);  // The resolution of the system_clock is at least microseconds
+  CHECK(std::is_constructible<high_resolution_clock::duration, std::chrono::nanoseconds>::value);  // The resolution of the high_resolution_clock is at least nanoseconds
+}
+
+TEST_CASE("Test string to duration conversion", "[timedurationtests]") {
+  using org::apache::nifi::minifi::utils::timeutils::StringToDuration;
+  auto one_hour = StringToDuration<std::chrono::milliseconds>("1h");
+  REQUIRE(one_hour);
+  CHECK(one_hour.value() == 1h);
+  CHECK(one_hour.value() == 3600s);
+
+  REQUIRE(StringToDuration<std::chrono::milliseconds>("1 hour"));
+  REQUIRE(StringToDuration<std::chrono::seconds>("102             hours") == 102h);
+  REQUIRE(StringToDuration<std::chrono::days>("102             hours") == std::chrono::days(4));
+  REQUIRE(StringToDuration<std::chrono::milliseconds>("5 ns") == 0ms);
+
+  REQUIRE(StringToDuration<std::chrono::seconds>("1d") == std::chrono::days(1));
+  REQUIRE(StringToDuration<std::chrono::seconds>("10 days") == std::chrono::days(10));
+  REQUIRE(StringToDuration<std::chrono::seconds>("100ms") == 0ms);
+  REQUIRE(StringToDuration<std::chrono::seconds>("20 us") == 0s);
+  REQUIRE(StringToDuration<std::chrono::seconds>("1ns") == 0ns);
+  REQUIRE(StringToDuration<std::chrono::seconds>("1min") == 1min);
+  REQUIRE(StringToDuration<std::chrono::seconds>("1 hour") == 1h);
+  REQUIRE(StringToDuration<std::chrono::seconds>("100 SEC") == 100s);
+  REQUIRE(StringToDuration<std::chrono::seconds>("10 ms") == 0ms);
+  REQUIRE(StringToDuration<std::chrono::seconds>("100 ns") == 0ns);
+  REQUIRE(StringToDuration<std::chrono::seconds>("1 minute") == 1min);
+
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1d") == std::chrono::days(1));
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("10 days") == std::chrono::days(10));
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("100ms") == 100ms);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("20 us") == 20us);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1ns") == 1ns);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1min") == 1min);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1 hour") == 1h);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("100 SEC") == 100s);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("10 ms") == 10ms);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("100 ns") == 100ns);
+  REQUIRE(StringToDuration<std::chrono::nanoseconds>("1 minute") == 1min);
+
+  REQUIRE_FALSE(StringToDuration<std::chrono::seconds>("5 apples") == 1s);
+  REQUIRE_FALSE(StringToDuration<std::chrono::seconds>("1 year") == 1s);
 }

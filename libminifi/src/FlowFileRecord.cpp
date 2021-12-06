@@ -71,19 +71,22 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
 
 bool FlowFileRecord::Serialize(io::OutputStream &outStream) {
   {
-    const auto ret = outStream.write(event_time_);
+    uint64_t event_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(event_time_.time_since_epoch()).count();
+    const auto ret = outStream.write(event_time_ms);
     if (ret != 8) {
       return false;
     }
   }
   {
-    const auto ret = outStream.write(entry_date_);
+    uint64_t entry_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(entry_date_.time_since_epoch()).count();
+    const auto ret = outStream.write(entry_date_ms);
     if (ret != 8) {
       return false;
     }
   }
   {
-    const auto ret = outStream.write(lineage_start_date_);
+    uint64_t lineage_start_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(lineage_start_date_.time_since_epoch()).count();
+    const auto ret = outStream.write(lineage_start_date_ms);
     if (ret != 8) {
       return false;
     }
@@ -177,24 +180,30 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inS
   auto file = std::make_shared<FlowFileRecord>();
 
   {
-    const auto ret = inStream.read(file->event_time_);
+    uint64_t event_time_in_ms;
+    const auto ret = inStream.read(event_time_in_ms);
     if (ret != 8) {
       return {};
     }
+    file->event_time_ = std::chrono::system_clock::time_point() + std::chrono::milliseconds(event_time_in_ms);
   }
 
   {
-    const auto ret = inStream.read(file->entry_date_);
+    uint64_t entry_date_in_ms;
+    const auto ret = inStream.read(entry_date_in_ms);
     if (ret != 8) {
       return {};
     }
+    file->entry_date_ = std::chrono::system_clock::time_point() + std::chrono::milliseconds(entry_date_in_ms);
   }
 
   {
-    const auto ret = inStream.read(file->lineage_start_date_);
+    uint64_t lineage_start_date_in_ms;
+    const auto ret = inStream.read(lineage_start_date_in_ms);
     if (ret != 8) {
       return {};
     }
+    file->lineage_start_date_ = std::chrono::system_clock::time_point() + std::chrono::milliseconds(lineage_start_date_in_ms);
   }
 
   {

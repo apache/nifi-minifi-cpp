@@ -43,6 +43,8 @@
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -54,7 +56,7 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
                  const std::shared_ptr<state::StateMonitor> &updateSink,
                  const std::shared_ptr<Configure> &configuration,
                  const std::shared_ptr<utils::file::FileSystem> &filesystem)
-    : heart_beat_period_(3000),
+    : heart_beat_period_(3s),
       max_c2_responses(5),
       update_sink_(updateSink),
       update_service_(nullptr),
@@ -161,22 +163,19 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   if (configure->get("nifi.c2.agent.heartbeat.period", "c2.agent.heartbeat.period", heartbeat_period)) {
-    core::TimeUnit unit;
-
     try {
-      int64_t schedulingPeriod = 0;
-      if (core::Property::StringToTime(heartbeat_period, schedulingPeriod, unit) && core::Property::ConvertTimeUnitToMS(schedulingPeriod, unit, schedulingPeriod)) {
-        heart_beat_period_ = schedulingPeriod;
-        logger_->log_debug("Using %u ms as the heartbeat period", heart_beat_period_);
+      if (auto heartbeat_period_ms = utils::timeutils::StringToDuration<std::chrono::milliseconds>(heartbeat_period)) {
+        heart_beat_period_ = *heartbeat_period_ms;
+        logger_->log_debug("Using %u ms as the heartbeat period", heart_beat_period_.count());
       } else {
-        heart_beat_period_ = std::stoi(heartbeat_period);
+        heart_beat_period_ = std::chrono::milliseconds(std::stoi(heartbeat_period));
       }
     } catch (const std::invalid_argument &) {
-      heart_beat_period_ = 3000;
+      heart_beat_period_ = 3s;
     }
   } else {
     if (!reconfigure)
-      heart_beat_period_ = 3000;
+      heart_beat_period_ = 3s;
   }
 
   std::string heartbeat_reporters;
@@ -640,7 +639,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
 
   checkTriggers();
 
-  return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(heart_beat_period_));
+  return utils::TaskRescheduleInfo::RetryIn(heart_beat_period_);
 }
 
 utils::TaskRescheduleInfo C2Agent::consume() {

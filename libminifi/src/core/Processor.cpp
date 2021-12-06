@@ -35,6 +35,8 @@
 #include "io/StreamFactory.h"
 #include "utils/gsl.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -53,11 +55,10 @@ Processor::Processor(const std::string& name)
   _triggerWhenEmpty = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
-  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
+  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
-  yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
@@ -74,11 +75,10 @@ Processor::Processor(const std::string& name, const utils::Identifier& uuid)
   _triggerWhenEmpty = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
-  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS * 1000;
+  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
-  yield_expiration_ = 0;
   incoming_connections_Iter = this->_incomingConnections.begin();
   logger_->log_debug("Processor %s created with uuid %s", name_, getUUIDStr());
 }
@@ -419,6 +419,31 @@ void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
   }
 
   max_concurrent_tasks_ = tasks;
+}
+
+void Processor::yield() {
+  yield_expiration_ = std::chrono::system_clock::now() + yield_period_msec_.load();
+}
+
+void Processor::yield(std::chrono::milliseconds delta_time) {
+  yield_expiration_ = std::chrono::system_clock::now() + delta_time;
+}
+
+bool Processor::isYield() {
+  return yield_expiration_.load() >= std::chrono::system_clock::now();
+}
+
+void Processor::clearYield() {
+  yield_expiration_ = std::chrono::system_clock::time_point();
+}
+
+std::chrono::milliseconds Processor::getYieldTime() const {
+  auto yield_expiration = yield_expiration_.load();
+  auto current_time = std::chrono::system_clock::now();
+  if (yield_expiration > current_time)
+    return std::chrono::duration_cast<std::chrono::milliseconds>(yield_expiration - current_time);
+  else
+    return 0ms;
 }
 
 }  // namespace core

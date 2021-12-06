@@ -621,17 +621,14 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
-  value = "";
-  if (context->getProperty(QueueBufferMaxTime.getName(), value) && !value.empty()) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      valueConf = std::to_string(valInt);
-      result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.ms", valueConf.c_str(), errstr.data(), errstr.size());
-      logger_->log_debug("PublishKafka: queue.buffering.max.ms [%s]", valueConf);
-      if (result != RD_KAFKA_CONF_OK) {
-        auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
-        throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
-      }
+
+  if (auto queue_buffer_max_time = context->getProperty<core::TimePeriodValue>(QueueBufferMaxTime)) {
+    valueConf = std::to_string(queue_buffer_max_time->getMilliseconds().count());
+    result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.ms", valueConf.c_str(), errstr.data(), errstr.size());
+    logger_->log_debug("PublishKafka: queue.buffering.max.ms [%s]", valueConf);
+    if (result != RD_KAFKA_CONF_OK) {
+      auto error_msg = utils::StringUtils::join_pack(PREFIX_ERROR_MSG, errstr.data());
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, error_msg);
     }
   }
   value = "";
@@ -703,7 +700,6 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   rd_kafka_conf_res_t result;
   std::string value;
   std::array<char, 512U> errstr{};
-  int64_t valInt;
   std::string valueConf;
 
   value = "";
@@ -730,32 +726,24 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
       return false;
     }
   }
-  value = "";
-  if (context->getProperty(RequestTimeOut.getName(), value) && !value.empty()) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) &&
-        core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      valueConf = std::to_string(valInt);
-      result = rd_kafka_topic_conf_set(topic_conf_.get(), "request.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
-      logger_->log_debug("PublishKafka: request.timeout.ms [%s]", valueConf);
-      if (result != RD_KAFKA_CONF_OK) {
-        logger_->log_error("PublishKafka: configure request.timeout.ms error result [%s]", errstr.data());
-        return false;
-      }
+
+  if (auto request_timeout = context->getProperty<core::TimePeriodValue>(RequestTimeOut)) {
+    valueConf = std::to_string(request_timeout->getMilliseconds().count());
+    result = rd_kafka_topic_conf_set(topic_conf_.get(), "request.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
+    logger_->log_debug("PublishKafka: request.timeout.ms [%s]", valueConf);
+    if (result != RD_KAFKA_CONF_OK) {
+      logger_->log_error("PublishKafka: configure request.timeout.ms error result [%s]", errstr.data());
+      return false;
     }
   }
-  value = "";
-  if (context->getProperty(MessageTimeOut.getName(), value) && !value.empty()) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) &&
-        core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      valueConf = std::to_string(valInt);
-      result = rd_kafka_topic_conf_set(topic_conf_.get(), "message.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
-      logger_->log_debug("PublishKafka: message.timeout.ms [%s]", valueConf);
-      if (result != RD_KAFKA_CONF_OK) {
-        logger_->log_error("PublishKafka: configure message.timeout.ms error result [%s]", errstr.data());
-        return false;
-      }
+
+  if (auto message_timeout = context->getProperty<core::TimePeriodValue>(MessageTimeOut)) {
+    valueConf = std::to_string(message_timeout->getMilliseconds().count());
+    result = rd_kafka_topic_conf_set(topic_conf_.get(), "message.timeout.ms", valueConf.c_str(), errstr.data(), errstr.size());
+    logger_->log_debug("PublishKafka: message.timeout.ms [%s]", valueConf);
+    if (result != RD_KAFKA_CONF_OK) {
+      logger_->log_error("PublishKafka: configure message.timeout.ms error result [%s]", errstr.data());
+      return false;
     }
   }
 

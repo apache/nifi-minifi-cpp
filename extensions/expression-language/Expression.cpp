@@ -613,7 +613,7 @@ Value expr_escapeCsv(const std::vector<Value> &args) {
 
 Value expr_format(const std::vector<Value> &args) {
   std::chrono::milliseconds dur(args[0].asUnsignedLong());
-  std::chrono::time_point<std::chrono::system_clock> dt(dur);
+  std::chrono::system_clock::time_point dt(dur);
   auto zone = date::current_zone();
   if (args.size() > 2) {
     zone = date::locate_zone(args[2].asString());
@@ -643,7 +643,7 @@ Value expr_toDate(const std::vector<Value> &args) {
 
 Value expr_format(const std::vector<Value>& args) {
   const std::chrono::milliseconds dur(args.at(0).asUnsignedLong());
-  const std::chrono::time_point<std::chrono::system_clock> dt(dur);
+  const std::chrono::system_clock::time_point dt(dur);
   const auto unix_time = std::chrono::system_clock::to_time_t(dt);
   const auto zoned_time = [&args, unix_time] {
     std::tm buf{};
@@ -686,8 +686,7 @@ Value expr_toDate(const std::vector<Value>&) {
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 Value expr_now(const std::vector<Value>& /*args*/) {
-  int64_t unix_time_ms{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()};
-  return Value(unix_time_ms);
+  return Value(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
 }
 
 Value expr_unescapeCsv(const std::vector<Value> &args) {

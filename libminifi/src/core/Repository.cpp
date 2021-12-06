@@ -17,13 +17,12 @@
  */
 #include "core/Repository.h"
 #include <cstdint>
-#include <vector>
 
 #include "io/BufferStream.h"
-#include "core/Relationship.h"
 #include "core/logging/Logger.h"
-#include "FlowController.h"
 #include "provenance/Provenance.h"
+
+using namespace std::literals::chrono_literals;
 
 namespace org {
 namespace apache {
@@ -32,7 +31,7 @@ namespace minifi {
 namespace core {
 
 void Repository::start() {
-  if (this->purge_period_ <= 0)
+  if (this->purge_period_ <= 0ms)
     return;
   if (running_)
     return;

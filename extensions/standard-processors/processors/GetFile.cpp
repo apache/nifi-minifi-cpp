@@ -38,6 +38,8 @@
 #include "core/TypedValues.h"
 #include "utils/FileReaderCallback.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -119,8 +121,10 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     request_.keepSourceFile = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
   }
 
-  context->getProperty(MaxAge.getName(), request_.maxAge);
-  context->getProperty(MinAge.getName(), request_.minAge);
+  if (auto max_age = context->getProperty<core::TimePeriodValue>(MaxAge))
+    request_.maxAge = max_age->getMilliseconds();
+  if (auto min_age = context->getProperty<core::TimePeriodValue>(MinAge))
+    request_.minAge = min_age->getMilliseconds();
 
   if (context->getProperty(MaxSize.getName(), value)) {
     core::Property::StringToInt(value, request_.maxSize);
@@ -154,9 +158,9 @@ void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession*
   const bool is_dir_empty_before_poll = isListingEmpty();
   logger_->log_debug("Listing is %s before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
   if (is_dir_empty_before_poll) {
-    if (request_.pollInterval == 0 || (utils::timeutils::getTimeMillis() - last_listing_time_) > request_.pollInterval) {
+    if (request_.pollInterval == 0ms || (std::chrono::system_clock::now() - last_listing_time_.load()) > request_.pollInterval) {
       performListing(request_);
-      last_listing_time_.store(utils::timeutils::getTimeMillis());
+      last_listing_time_.store(std::chrono::system_clock::now());
     }
   }
 
@@ -242,7 +246,7 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   }
 #endif
   uint64_t file_size = gsl::narrow<uint64_t>(statbuf.st_size);
-  uint64_t modifiedTime = gsl::narrow<uint64_t>(statbuf.st_mtime) * 1000;
+  auto modifiedTime = std::chrono::system_clock::time_point() + std::chrono::seconds(gsl::narrow<uint64_t>(statbuf.st_mtime));
 
   if (request.minSize > 0 && file_size < request.minSize)
     return false;
@@ -250,10 +254,10 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   if (request.maxSize > 0 && file_size > request.maxSize)
     return false;
 
-  uint64_t fileAge = utils::timeutils::getTimeMillis() - modifiedTime;
-  if (request.minAge > 0 && fileAge < request.minAge)
+  auto fileAge = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - modifiedTime);
+  if (request.minAge > 0ms && fileAge < request.minAge)
     return false;
-  if (request.maxAge > 0 && fileAge > request.maxAge)
+  if (request.maxAge > 0ms && fileAge > request.maxAge)
     return false;
 
   if (request.ignoreHiddenFile && utils::file::FileUtils::is_hidden(fullName))

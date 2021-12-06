@@ -156,7 +156,7 @@ static inline void setBatchDuration(struct CRawSiteToSiteClient *client, uint64_
   client->_batch_duration = duration;
 }
 
-static inline uint64_t getTimeOut(const struct CRawSiteToSiteClient *client) {
+static inline uint64_t getTimeout(const struct CRawSiteToSiteClient *client) {
   return client->_timeout;
 }
 

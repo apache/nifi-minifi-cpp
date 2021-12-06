@@ -102,7 +102,7 @@ class PauseResumeHandler: public HeartbeatHandler {
   };
 
   std::atomic<uint32_t> get_invoke_count_{0};
-  std::chrono::time_point<std::chrono::system_clock> pause_start_time_;
+  std::chrono::system_clock::time_point pause_start_time_;
   std::atomic<FlowState> flow_state_{FlowState::STARTED};
   std::atomic_bool& flow_resumed_successfully_;
 };

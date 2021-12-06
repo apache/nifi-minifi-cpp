@@ -131,11 +131,11 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
   utils::Identifier transactionID = transaction->getUUID();
 
   bool continueTransaction = true;
-  uint64_t startSendingNanos = utils::timeutils::getTimeNano();
+  std::chrono::high_resolution_clock::time_point transaction_started_at = std::chrono::high_resolution_clock::now();
 
   try {
     while (continueTransaction) {
-      uint64_t startTime = utils::timeutils::getTimeMillis();
+      auto start_time = std::chrono::steady_clock::now();
       std::string payload;
       DataPacket packet(getLogger(), transaction, flow->getAttributes(), payload);
 
@@ -146,15 +146,15 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
 
       logger_->log_debug("Site2Site transaction %s send flow record %s", transactionID.to_string(), flow->getUUIDStr());
       if (resp == 0) {
-        uint64_t endTime = utils::timeutils::getTimeMillis();
+        auto end_time = std::chrono::steady_clock::now();
         std::string transitUri = peer_->getURL() + "/" + flow->getUUIDStr();
         std::string details = "urn:nifi:" + flow->getUUIDStr() + "Remote Host=" + peer_->getHostName();
-        session->getProvenanceReporter()->send(flow, transitUri, details, endTime - startTime, false);
+        session->getProvenanceReporter()->send(flow, transitUri, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time), false);
       }
       session->remove(flow);
 
-      uint64_t transferNanos = utils::timeutils::getTimeNano() - startSendingNanos;
-      if (transferNanos > _batchSendNanos)
+      std::chrono::nanoseconds transfer_duration = std::chrono::high_resolution_clock::now() - transaction_started_at;
+      if (transfer_duration > _batchSendNanos)
         break;
 
       flow = session->get();
@@ -381,7 +381,6 @@ bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
   } else {
     RespondCode code;
     std::string message;
-    int ret;
 
     ret = readResponse(transaction, code, message);
 
@@ -669,7 +668,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   try {
     while (true) {
       std::map<std::string, std::string> empty;
-      uint64_t startTime = utils::timeutils::getTimeMillis();
+      auto start_time = std::chrono::steady_clock::now();
       std::string payload;
       DataPacket packet(getLogger(), transaction, empty, payload);
       bool eof = false;
@@ -706,10 +705,10 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
         }
       }
       core::Relationship relation;  // undefined relationship
-      uint64_t endTime = utils::timeutils::getTimeMillis();
+      auto end_time = std::chrono::steady_clock::now();
       std::string transitUri = peer_->getURL() + "/" + sourceIdentifier;
       std::string details = "urn:nifi:" + sourceIdentifier + "Remote Host=" + peer_->getHostName();
-      session->getProvenanceReporter()->receive(flowFile, transitUri, sourceIdentifier, details, endTime - startTime);
+      session->getProvenanceReporter()->receive(flowFile, transitUri, sourceIdentifier, details, std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time));
       session->transfer(flowFile, relation);
       // receive the transfer for the flow record
       bytes += packet._size;

@@ -128,7 +128,7 @@ class RemoteProcessorGroupPort : public core::Processor {
       this->setTriggerWhenEmpty(true);
   }
   // Set Timeout
-  void setTimeOut(uint64_t timeout) {
+  void setTimeout(uint64_t timeout) {
     timeout_ = timeout;
   }
   // SetTransmitting
@@ -208,7 +208,7 @@ class RemoteProcessorGroupPort : public core::Processor {
 
   utils::Identifier protocol_uuid_;
 
-  std::chrono::milliseconds idle_timeout_{15000};
+  std::chrono::milliseconds idle_timeout_ = std::chrono::seconds(15);
 
   // rest API end point info
   std::vector<struct RPG> nifi_instances_;

@@ -42,6 +42,8 @@
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
 
+using namespace std::literals::chrono_literals;
+
 /**
  * Test repository
  */
@@ -49,7 +51,7 @@ class TestRepository : public org::apache::nifi::minifi::core::Repository {
  public:
   TestRepository()
       : org::apache::nifi::minifi::core::SerializableComponent("repo_name"),
-        Repository("repo_name", "./dir", 1000, 100, 0) {
+        Repository("repo_name", "./dir", 1s, 100, 0ms) {
   }
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {
@@ -174,7 +176,7 @@ class TestFlowRepository : public org::apache::nifi::minifi::core::Repository {
  public:
   TestFlowRepository()
       : org::apache::nifi::minifi::core::SerializableComponent("ff"),
-        org::apache::nifi::minifi::core::Repository("ff", "./dir", 1000, 100, 0) {
+        org::apache::nifi::minifi::core::Repository("ff", "./dir", 1s, 100, 0ms) {
   }
 
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &) override {

@@ -24,6 +24,8 @@
 #include <iostream>
 #include "core/Property.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -35,13 +37,12 @@ utils::TaskRescheduleInfo TimerDrivenSchedulingAgent::run(const std::shared_ptr<
     bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
     if (processor->isYield()) {
       // Honor the yield
-      return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
-    } else if (shouldYield && this->bored_yield_duration_ > 0) {
+      return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
+    } else if (shouldYield && this->bored_yield_duration_ > 0ms) {
       // No work to do or need to apply back pressure
-      return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(this->bored_yield_duration_));
+      return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_);
     }
-    return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::nanoseconds(processor->getSchedulingPeriodNano())));
+    return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(processor->getSchedulingPeriodNano()));
   }
   return utils::TaskRescheduleInfo::Done();
 }

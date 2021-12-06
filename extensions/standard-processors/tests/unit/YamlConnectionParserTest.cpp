@@ -23,6 +23,8 @@
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace {
 
 using org::apache::nifi::minifi::core::yaml::YamlConnectionParser;
@@ -94,7 +96,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
     YAML::Node connection_node = YAML::Load(std::string {
         "flowfile expiration: 2 min\n" });
     YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
-    REQUIRE(120000 == yaml_connection_parser.getFlowFileExpirationFromYaml());  // 2 * 60 * 1000 ms
+    REQUIRE(2min == yaml_connection_parser.getFlowFileExpirationFromYaml());
   }
   SECTION("Drop empty value is read") {
     SECTION("When config contains true value") {
@@ -165,7 +167,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
         YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
         CHECK(0 == yaml_connection_parser.getWorkQueueSizeFromYaml());
         CHECK(0 == yaml_connection_parser.getWorkQueueDataSizeFromYaml());
-        CHECK(0 == yaml_connection_parser.getFlowFileExpirationFromYaml());
+        CHECK(0s == yaml_connection_parser.getFlowFileExpirationFromYaml());
         CHECK(0 == yaml_connection_parser.getDropEmptyFromYaml());
       }
     }
@@ -189,7 +191,7 @@ TEST_CASE("Connections components are parsed from yaml", "[YamlConfiguration]") 
           "drop empty: NULL\n"});
       YamlConnectionParser yaml_connection_parser(connection_node, "test_node", parent_ptr, logger);
       CHECK(2 == yaml_connection_parser.getWorkQueueDataSizeFromYaml());
-      CHECK(0 == yaml_connection_parser.getFlowFileExpirationFromYaml());
+      CHECK(0s == yaml_connection_parser.getFlowFileExpirationFromYaml());
       CHECK(0 == yaml_connection_parser.getDropEmptyFromYaml());
     }
   }

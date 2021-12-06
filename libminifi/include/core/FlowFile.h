@@ -108,24 +108,24 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Get entry date for this record
    * @return entry date uint64_t
    */
-  [[nodiscard]] uint64_t getEntryDate() const;
+  [[nodiscard]] std::chrono::system_clock::time_point getEntryDate() const;
 
   /**
    * Gets the event time.
    * @return event time.
    */
-  [[nodiscard]] uint64_t getEventTime() const;
+  [[nodiscard]] std::chrono::system_clock::time_point getEventTime() const;
   /**
    * Get lineage start date
    * @return lineage start date uint64_t
    */
-  [[nodiscard]] uint64_t getlineageStartDate() const;
+  [[nodiscard]] std::chrono::system_clock::time_point getlineageStartDate() const;
 
   /**
    * Sets the lineage start date
    * @param date new lineage start date
    */
-  void setLineageStartDate(uint64_t date);
+  void setLineageStartDate(const std::chrono::system_clock::time_point date);
 
   void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) {
     lineage_Identifiers_ = lineage_Identifiers;
@@ -215,7 +215,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     to_be_processed_after_ = std::chrono::steady_clock::now() + duration;
   }
 
-  [[nodiscard]] std::chrono::time_point<std::chrono::steady_clock> getPenaltyExpiration() const {
+  [[nodiscard]] std::chrono::steady_clock::time_point getPenaltyExpiration() const {
     return to_be_processed_after_;
   }
 
@@ -257,11 +257,11 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // Mark for deletion
   bool marked_delete_;
   // Date at which the flow file entered the flow
-  uint64_t entry_date_;
+  std::chrono::system_clock::time_point entry_date_{};
   // event time
-  uint64_t event_time_;
+  std::chrono::system_clock::time_point event_time_{};
   // Date at which the origin of this flow file entered the flow
-  uint64_t lineage_start_date_;
+  std::chrono::system_clock::time_point lineage_start_date_{};
   // Date at which the flow file was queued
   uint64_t last_queue_date_;
   // Size in bytes of the data corresponding to this flow file
@@ -272,7 +272,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
   // Offset to the content
   uint64_t offset_;
   // Penalty expiration
-  std::chrono::time_point<std::chrono::steady_clock> to_be_processed_after_;
+  std::chrono::steady_clock::time_point to_be_processed_after_;
   // Attributes key/values pairs for the flow record
   AttributeMap attributes_;
   // Pointer to the associated content resource claim

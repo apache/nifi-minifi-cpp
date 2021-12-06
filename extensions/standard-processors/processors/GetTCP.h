@@ -179,7 +179,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
         stay_connected_(true),
         concurrent_handlers_(2),
         endOfMessageByte(13),
-        reconnect_interval_(5000),
         receive_buffer_size_(16 * 1024 * 1024),
         connection_attempt_limit_(3),
         ssl_service_(nullptr) {
@@ -256,7 +255,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   int8_t endOfMessageByte;
 
-  uint64_t reconnect_interval_;
+  std::chrono::milliseconds reconnect_interval_{5000};
 
   uint64_t receive_buffer_size_;
 

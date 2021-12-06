@@ -121,9 +121,9 @@ class SchedulingAgent {
   // Whether it is running
   std::atomic<bool> running_;
   // AdministrativeYieldDuration
-  int64_t admin_yield_duration_;
+  std::chrono::milliseconds admin_yield_duration_;
   // BoredYieldDuration
-  int64_t bored_yield_duration_;
+  std::chrono::milliseconds bored_yield_duration_;
 
   std::shared_ptr<Configure> configure_;
 
@@ -139,9 +139,9 @@ class SchedulingAgent {
 
  private:
   struct SchedulingInfo {
-    std::chrono::time_point<std::chrono::steady_clock> start_time_ = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
     // Mutable is required to be able to modify this while leaving in std::set
-    mutable std::chrono::time_point<std::chrono::steady_clock> last_alert_time_ = std::chrono::steady_clock::now();
+    mutable std::chrono::steady_clock::time_point last_alert_time_ = std::chrono::steady_clock::now();
     std::string name_;
     std::string uuid_;
 

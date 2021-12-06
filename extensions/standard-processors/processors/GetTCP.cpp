@@ -149,12 +149,11 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 
   logger_->log_trace("EOM is defined as %i", endOfMessageByte);
 
-  std::string reconnect_interval_str;
-  if (context->getProperty(ReconnectInterval.getName(), reconnect_interval_str) &&
-      core::Property::getTimeMSFromString(reconnect_interval_str, reconnect_interval_)) {
-    logger_->log_debug("Reconnect interval is %llu ms", reconnect_interval_);
+  if (auto reconnect_interval = context->getProperty<core::TimePeriodValue>(ReconnectInterval)) {
+    reconnect_interval_ = reconnect_interval->getMilliseconds();
+    logger_->log_debug("Reconnect interval is %" PRId64 " ms", reconnect_interval_.count());
   } else {
-    logger_->log_debug("Reconnect interval using default value of %llu ms", reconnect_interval_);
+    logger_->log_debug("Reconnect interval using default value of %" PRId64 " ms", reconnect_interval_.count());
   }
 
   handler_ = std::unique_ptr<DataHandler>(new DataHandler(sessionFactory));
@@ -200,17 +199,17 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               socket_ptr->close();
               return -1;
             }
-            logger_->log_info("Sleeping for %" PRIu64 " msec before attempting to reconnect", reconnect_interval_);
-            std::this_thread::sleep_for(std::chrono::milliseconds(reconnect_interval_));
+            logger_->log_info("Sleeping for %" PRId64 " msec before attempting to reconnect", int64_t{reconnect_interval_.count()});
+            std::this_thread::sleep_for(reconnect_interval_);
             socket_ring_buffer_.enqueue(std::move(socket_ptr));
           } else {
             socket_ptr->close();
-            std::this_thread::sleep_for(std::chrono::milliseconds(reconnect_interval_));
+            std::this_thread::sleep_for(reconnect_interval_);
             logger_->log_info("Read response returned a -1 from socket, exiting thread");
             return -1;
           }
         } else {
-          std::this_thread::sleep_for(std::chrono::milliseconds(reconnect_interval_));
+          std::this_thread::sleep_for(reconnect_interval_);
           logger_->log_info("Could not use socket, exiting thread");
           return -1;
         }

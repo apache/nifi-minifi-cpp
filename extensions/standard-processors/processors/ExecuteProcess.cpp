@@ -40,6 +40,8 @@
 #pragma GCC diagnostic ignored "-Wunused-result"
 #endif
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -94,11 +96,9 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
   if (context->getProperty(WorkingDir, value, flow_file)) {
     this->_workingDir = value;
   }
-  if (context->getProperty(BatchDuration.getName(), value)) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, _batchDuration, unit) && core::Property::ConvertTimeUnitToMS(_batchDuration, unit, _batchDuration)) {
-      logger_->log_debug("Setting _batchDuration");
-    }
+  if (auto batch_duration = context->getProperty<core::TimePeriodValue>(BatchDuration)) {
+    _batchDuration = batch_duration->getMilliseconds();
+    logger_->log_debug("Setting _batchDuration");
   }
   if (context->getProperty(RedirectErrorStream.getName(), value)) {
     _redirectErrorStream =  org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(false);
@@ -158,9 +158,9 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
       default:  // this is the code the parent runs
         // the parent isn't going to write to the pipe
         close(_pipefd[1]);
-        if (_batchDuration > 0) {
-          while (1) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(_batchDuration));
+        if (_batchDuration > 0ms) {
+          while (true) {
+            std::this_thread::sleep_for(_batchDuration);
             char buffer[4096];
             const auto  numRead = read(_pipefd[0], buffer, sizeof(buffer));
             if (numRead <= 0)

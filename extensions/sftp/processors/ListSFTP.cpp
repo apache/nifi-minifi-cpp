@@ -54,6 +54,8 @@
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/writer.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -261,20 +263,19 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
   context->getProperty(TargetSystemTimestampPrecision.getName(), target_system_timestamp_precision_);
   context->getProperty(EntityTrackingInitialListingTarget.getName(), entity_tracking_initial_listing_target_);
-  if (!context->getProperty(MinimumFileAge.getName(), value)) {
-    logger_->log_error("Minimum File Age attribute is missing or invalid");
+
+  if (auto minimum_file_age = context->getProperty<core::TimePeriodValue>(MinimumFileAge)) {
+    minimum_file_age_ = minimum_file_age->getMilliseconds();
   } else {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, minimum_file_age_, unit) || !core::Property::ConvertTimeUnitToMS(minimum_file_age_, unit, minimum_file_age_)) {
-      logger_->log_error("Minimum File Age attribute is invalid");
-    }
+    logger_->log_error("Minimum File Age attribute is missing or invalid");
   }
-  if (context->getProperty(MaximumFileAge.getName(), value)) {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, maximum_file_age_, unit) || !core::Property::ConvertTimeUnitToMS(maximum_file_age_, unit, maximum_file_age_)) {
-      logger_->log_error("Maximum File Age attribute is invalid");
-    }
+
+  if (auto maximum_file_age = context->getProperty<core::TimePeriodValue>(MaximumFileAge)) {
+    maximum_file_age_ = maximum_file_age->getMilliseconds();
+  } else {
+    logger_->log_error("Maximum File Age attribute is missing or invalid");
   }
+
   if (!context->getProperty(MinimumFileSize.getName(), minimum_file_size_)) {
     logger_->log_error("Minimum File Size attribute is invalid");
   }
@@ -292,7 +293,7 @@ void ListSFTP::invalidateCache() {
 
   already_loaded_from_cache_ = false;
 
-  last_run_time_ = std::chrono::time_point<std::chrono::steady_clock>();
+  last_run_time_ = std::chrono::steady_clock::time_point();
   last_listed_latest_entry_timestamp_ = 0U;
   last_processed_latest_entry_timestamp_ = 0U;
   latest_identifiers_processed_.clear();
@@ -358,22 +359,21 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   }
 
   /* Age */
-  time_t now = time(nullptr);
-  uint64_t file_age = (now - attrs.mtime) * 1000;
+  auto file_age = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(attrs.mtime));
   if (file_age < minimum_file_age_) {
     logger_->log_debug("Ignoring \"%s/%s\" because it is younger than the Minimum File Age: %ld ms < %lu ms",
         parent_path.c_str(),
         filename.c_str(),
-        file_age,
-        minimum_file_age_);
+        file_age.count(),
+        minimum_file_age_.count());
     return false;
   }
-  if (maximum_file_age_ != 0U && file_age > maximum_file_age_) {
-    logger_->log_debug("Ignoring \"%s/%s\" because it is older than the Maximum File Age: %ld ms > %lu ms",
+  if (maximum_file_age_ != 0ms && file_age > maximum_file_age_) {
+    logger_->log_debug("Ignoring \"%s/%s\" because it is older than the Maximum File Age: %" PRId64 " ms > %" PRId64 " ms",
                        parent_path.c_str(),
                        filename.c_str(),
-                       file_age,
-                       maximum_file_age_);
+                       int64_t{file_age.count()},
+                       int64_t{maximum_file_age_.count()});
     return false;
   }
 
@@ -611,7 +611,7 @@ void ListSFTP::listByTrackingTimestamps(
     already_loaded_from_cache_ = true;
   }
 
-  std::chrono::time_point<std::chrono::steady_clock> current_run_time = std::chrono::steady_clock::now();
+  std::chrono::steady_clock::time_point current_run_time = std::chrono::steady_clock::now();
   time_t now = time(nullptr);
 
   /* Order children by timestamp and try to detect timestamp precision if needed  */
@@ -855,7 +855,7 @@ void ListSFTP::listByTrackingEntities(
     uint16_t port,
     const std::string& username,
     const std::string& remote_path,
-    uint64_t entity_tracking_time_window,
+    std::chrono::milliseconds entity_tracking_time_window,
     std::vector<Child>&& files) {
   /* Load state from cache file if needed */
   if (!already_loaded_from_cache_) {
@@ -870,7 +870,7 @@ void ListSFTP::listByTrackingEntities(
 
   time_t now = time(nullptr);
   uint64_t min_timestamp_to_list = (!initial_listing_complete_ && entity_tracking_initial_listing_target_ == ENTITY_TRACKING_INITIAL_LISTING_TARGET_ALL_AVAILABLE)
-      ? 0U : (now * 1000 - entity_tracking_time_window);
+      ? 0U : (now * 1000 - entity_tracking_time_window.count());
 
   /* Skip files not in the tracking window */
   for (auto it = files.begin(); it != files.end(); ) {
@@ -965,7 +965,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Parse processor-specific properties */
   std::string remote_path;
-  uint64_t entity_tracking_time_window = 0U;
+  std::chrono::milliseconds entity_tracking_time_window = 3h;  /* The default is 3 hours */
 
   std::string value;
   context->getProperty(RemotePath.getName(), remote_path);
@@ -974,16 +974,11 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     remote_path.resize(remote_path.size() - 1);
   }
   if (context->getProperty(EntityTrackingTimeWindow.getName(), value)) {
-    core::TimeUnit unit;
-    if (!core::Property::StringToTime(value, entity_tracking_time_window, unit) ||
-        !core::Property::ConvertTimeUnitToMS(entity_tracking_time_window, unit, entity_tracking_time_window)) {
-      /* The default is 3 hours */
-      entity_tracking_time_window = 3 * 3600 * 1000;
+    if (auto parsed_entity_time_window = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
+      entity_tracking_time_window = parsed_entity_time_window.value();
+    } else {
       logger_->log_error("Entity Tracking Time Window attribute is invalid");
     }
-  } else {
-    /* The default is 3 hours */
-    entity_tracking_time_window = 3 * 3600 * 1000;
   }
 
   /* Check whether we need to invalidate the cache based on the new properties */

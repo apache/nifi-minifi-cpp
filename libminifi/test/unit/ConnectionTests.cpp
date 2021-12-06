@@ -34,14 +34,14 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
 
   SECTION("when called on an empty Connection, poll() returns nullptr") {
     SECTION("without expiration duration") {}
-    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1000); }
+    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1s); }
 
     REQUIRE(nullptr == connection->poll(expired_flow_files));
   }
 
   SECTION("when called on a connection with a single flow file, poll() returns the flow file") {
     SECTION("without expiration duration") {}
-    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1000); }
+    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1s); }
 
     const auto flow_file = std::make_shared<core::FlowFile>();
     connection->put(flow_file);
@@ -51,7 +51,7 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
 
   SECTION("when called on a connection with a single penalized flow file, poll() returns nullptr") {
     SECTION("without expiration duration") {}
-    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1000); }
+    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1s); }
 
     const auto flow_file = std::make_shared<core::FlowFile>();
     flow_file->penalize(std::chrono::seconds{10});
@@ -61,7 +61,7 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
 
   SECTION("when called on a connection with a single expired flow file, poll() returns nullptr and returns the expired flow file in the out parameter") {
     const auto flow_file = std::make_shared<core::FlowFile>();
-    connection->setFlowExpirationDuration(1);  // 1 millisecond
+    connection->setFlowExpirationDuration(1ms);
     connection->put(flow_file);
     std::this_thread::sleep_for(std::chrono::milliseconds{2});
     REQUIRE(nullptr == connection->poll(expired_flow_files));
@@ -70,7 +70,7 @@ TEST_CASE("Connection::poll() works correctly", "[poll]") {
 
   SECTION("when there is a non-penalized flow file followed by a penalized flow file, poll() returns the non-penalized flow file") {
     SECTION("without expiration duration") {}
-    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1000); }
+    SECTION("with expiration duration") { connection->setFlowExpirationDuration(1s); }
 
     const auto penalized_flow_file = std::make_shared<core::FlowFile>();
     penalized_flow_file->penalize(std::chrono::seconds{10});

@@ -321,9 +321,8 @@ class TimePeriodValidator : public PropertyValidator {
   }
 
   ValidationResult validate(const std::string &subject, const std::string &input) const override {
-    uint64_t out;
-    TimeUnit outTimeUnit;
-    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(core::TimePeriodValue::StringToTime(input, out, outTimeUnit)).build();
+    auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(input);
+    return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(parsed_time.has_value()).build();
   }
 };
 

@@ -231,13 +231,12 @@ bool SFTPClient::setProxy(ProxyType type, const utils::HTTPProxy& proxy) {
   return true;
 }
 
-bool SFTPClient::setConnectionTimeout(int64_t timeout) {
-  return curl_easy_setopt(easy_, CURLOPT_CONNECTTIMEOUT_MS, timeout) == CURLE_OK;
+bool SFTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
+  return curl_easy_setopt(easy_, CURLOPT_CONNECTTIMEOUT_MS, timeout.count()) == CURLE_OK;
 }
 
-void SFTPClient::setDataTimeout(int64_t timeout) {
-  data_timeout_ = timeout;
-  libssh2_session_set_timeout(ssh_session_, timeout);
+void SFTPClient::setDataTimeout(std::chrono::milliseconds timeout) {
+  libssh2_session_set_timeout(ssh_session_, timeout.count());
 }
 
 void SFTPClient::setSendKeepAlive(bool send_keepalive) {

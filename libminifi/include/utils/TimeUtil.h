@@ -27,6 +27,9 @@
 #include <limits>
 #include <sstream>
 #include <string>
+#include <optional>
+#include <functional>
+#include <algorithm>
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
@@ -38,18 +41,11 @@ namespace utils {
 namespace timeutils {
 
 /**
- * Gets the current time in milliseconds
- * @returns milliseconds since epoch
- */
-inline uint64_t getTimeMillis() {
-  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-}
-
-/**
  * Gets the current time in nanoseconds
  * @returns nanoseconds since epoch
  */
 inline uint64_t getTimeNano() {
+  // The precision is platform dependent (1 ns on libstdc++, 0.1 us on msvc and 1 us on libc++)
   return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
@@ -197,6 +193,106 @@ inline bool getDateTimeStr(int64_t unix_timestamp, std::string& date_time_str) {
   return true;
 }
 
+namespace details {
+
+template<class Duration>
+bool unit_matches(const std::string&) {
+  return false;
+}
+
+template<>
+inline bool unit_matches<std::chrono::nanoseconds>(const std::string& unit) {
+  return unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds" || unit == "nanosecond";
+}
+
+template<>
+inline bool unit_matches<std::chrono::microseconds>(const std::string& unit) {
+  return unit == "us" || unit == "micro" || unit == "micros" || unit == "microseconds" || unit == "microsecond";
+}
+
+template<>
+inline bool unit_matches<std::chrono::milliseconds>(const std::string& unit) {
+  return unit == "msec" || unit == "ms" || unit == "millisecond" || unit == "milliseconds" || unit == "msecs" || unit == "millis" || unit == "milli";
+}
+
+template<>
+inline bool unit_matches<std::chrono::seconds>(const std::string& unit) {
+  return unit == "sec" || unit == "s" || unit == "second" || unit == "seconds" || unit == "secs";
+}
+
+template<>
+inline bool unit_matches<std::chrono::minutes>(const std::string& unit) {
+  return unit == "min" || unit == "m" || unit == "mins" || unit == "minute" || unit == "minutes";
+}
+
+template<>
+inline bool unit_matches<std::chrono::hours>(const std::string& unit) {
+  return unit == "h" || unit == "hr" || unit == "hour" || unit == "hrs" || unit == "hours";
+}
+
+template<>
+inline bool unit_matches<std::chrono::days>(const std::string& unit) {
+  return unit == "d" || unit == "day" || unit == "days";
+}
+
+
+template<class TargetDuration, class SourceDuration>
+std::optional<TargetDuration> cast_if_unit_matches(const std::string& unit, const int64_t value) {
+  if (unit_matches<SourceDuration>(unit)) {
+    return std::chrono::duration_cast<TargetDuration>(SourceDuration(value));
+  } else {
+    return std::nullopt;
+  }
+}
+
+template<class TargetDuration, typename... T>
+std::optional<TargetDuration> cast_to_matching_unit(std::string& unit, const int64_t value) {
+  std::optional<TargetDuration> result;
+  ((result = cast_if_unit_matches<TargetDuration, T>(unit, value)) || ...);
+  return result;
+}
+
+inline bool get_unit_and_value(const std::string& input, std::string& unit, int64_t& value) {
+  const char* begin = input.c_str();
+  char *end;
+  errno = 0;
+  value = std::strtoll(begin, &end, 0);
+  if (end == begin || errno == ERANGE) {
+    return false;
+  }
+
+  if (end[0] == '\0') {
+    return false;
+  }
+
+  while (*end == ' ') {
+    // Skip the spaces
+    end++;
+  }
+  unit = std::string(end);
+  std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
+  return true;
+}
+
+}  // namespace details
+
+template<class TargetDuration>
+std::optional<TargetDuration> StringToDuration(const std::string& input) {
+  std::string unit;
+  int64_t value;
+  if (!details::get_unit_and_value(input, unit, value))
+    return std::nullopt;
+
+  return details::cast_to_matching_unit<TargetDuration,
+    std::chrono::nanoseconds,
+    std::chrono::microseconds,
+    std::chrono::milliseconds,
+    std::chrono::seconds,
+    std::chrono::minutes,
+    std::chrono::hours,
+    std::chrono::days>(unit, value);
+}
+
 } /* namespace timeutils */
 } /* namespace utils */
 } /* namespace minifi */
@@ -205,7 +301,6 @@ inline bool getDateTimeStr(int64_t unix_timestamp, std::string& date_time_str) {
 } /* namespace org */
 
 // for backwards compatibility, to be removed after 0.8
-using org::apache::nifi::minifi::utils::timeutils::getTimeMillis;
 using org::apache::nifi::minifi::utils::timeutils::getTimeNano;
 using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
 using org::apache::nifi::minifi::utils::timeutils::parseDateTimeStr;

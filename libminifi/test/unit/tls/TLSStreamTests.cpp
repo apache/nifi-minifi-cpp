@@ -27,7 +27,7 @@
 #include "../../SimpleSSLTestServer.h"
 #include "../utils/IntegrationTestUtils.h"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 static std::shared_ptr<minifi::io::TLSContext> createContext(const std::filesystem::path& key_dir) {
   auto configuration = std::make_shared<minifi::Configure>();

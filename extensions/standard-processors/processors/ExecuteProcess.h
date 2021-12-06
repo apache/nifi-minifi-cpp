@@ -60,7 +60,6 @@ class ExecuteProcess : public core::Processor {
   ExecuteProcess(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : Processor(name, uuid) {
     _redirectErrorStream = false;
-    _batchDuration = 0;
     _workingDir = ".";
     _processRunning = false;
     _pid = 0;
@@ -111,7 +110,7 @@ class ExecuteProcess : public core::Processor {
   std::string _command;
   std::string _commandArgument;
   std::string _workingDir;
-  int64_t _batchDuration;
+  std::chrono::milliseconds _batchDuration  = std::chrono::milliseconds(0);
   bool _redirectErrorStream;
   // Full command
   std::string _fullCommand;

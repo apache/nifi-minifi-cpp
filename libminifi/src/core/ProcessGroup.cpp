@@ -30,6 +30,8 @@
 #include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -52,7 +54,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name, const
       type_(type),
       parent_process_group_(parent),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  yield_period_msec_ = 0;
+  yield_period_msec_ = 0ms;
 
   if (parent_process_group_ != 0) {
     onschedule_retry_msec_ = parent_process_group_->getOnScheduleRetryPeriod();
@@ -71,7 +73,7 @@ ProcessGroup::ProcessGroup(ProcessGroupType type, const std::string& name)
       type_(type),
       parent_process_group_(0),
       logger_(logging::LoggerFactory<ProcessGroup>::getLogger()) {
-  yield_period_msec_ = 0;
+  yield_period_msec_ = 0ms;
   onschedule_retry_msec_ = ONSCHEDULE_RETRY_INTERVAL;
   transmitting_ = false;
   transport_protocol_ = "RAW";

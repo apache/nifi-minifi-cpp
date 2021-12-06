@@ -132,9 +132,9 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
   bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile>& flow_file, const std::map<std::string, std::string>& variables) {
     std::map<std::string, std::optional<std::string>> original_attributes;
-    for (const auto& [variable, value] : variables) {
+    for (const auto& [variable, attr_value] : variables) {
       original_attributes[variable] = flow_file->getAttribute(variable);
-      flow_file->setAttribute(variable, value);
+      flow_file->setAttribute(variable, attr_value);
     }
     auto onExit = gsl::finally([&]{
       for (const auto& attr : original_attributes) {

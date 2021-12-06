@@ -200,7 +200,8 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
 TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_write_time][last_write_time_point]") {
   using namespace std::chrono;
 
-  uint64_t time_before_write = utils::timeutils::getTimeMillis() / 1000;
+  // TODO(MINIFICPP-1636) this should use std::chrono::file_clock
+  uint64_t time_before_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   time_point<system_clock, seconds> time_point_before_write = time_point_cast<seconds>(system_clock::now());
 
   TestController testController;
@@ -216,7 +217,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   test_file_stream << "foo\n";
   test_file_stream.flush();
 
-  uint64_t time_after_first_write = utils::timeutils::getTimeMillis() / 1000;
+  uint64_t time_after_first_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   time_point<system_clock, seconds> time_point_after_first_write = time_point_cast<seconds>(system_clock::now());
 
   uint64_t first_mtime = FileUtils::last_write_time(test_file);
@@ -231,7 +232,7 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   test_file_stream << "bar\n";
   test_file_stream.flush();
 
-  uint64_t time_after_second_write = utils::timeutils::getTimeMillis() / 1000;
+  uint64_t time_after_second_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
   time_point<system_clock, seconds> time_point_after_second_write = time_point_cast<seconds>(system_clock::now());
 
   uint64_t second_mtime = FileUtils::last_write_time(test_file);

@@ -118,13 +118,9 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   if (context->getProperty(MaxBinCount.getName(), maxBinCount_)) {
     logger_->log_debug("BinFiles: MaxBinCount [%" PRIu32 "]", maxBinCount_);
   }
-  std::string maxBinAgeStr;
-  if (context->getProperty(MaxBinAge.getName(), maxBinAgeStr)) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(maxBinAgeStr, val64, unit) && core::Property::ConvertTimeUnitToMS(val64, unit, val64)) {
-      this->binManager_.setBinAge(val64);
-      logger_->log_debug("BinFiles: MaxBinAge [%" PRIu64 "]", val64);
-    }
+  if (auto max_bin_age = context->getProperty<core::TimePeriodValue>(MaxBinAge)) {
+    this->binManager_.setBinAge(max_bin_age->getMilliseconds());
+    logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "] ms", int64_t{max_bin_age->getMilliseconds().count()});
   }
   if (context->getProperty(BatchSize.getName(), batchSize_)) {
     logger_->log_debug("BinFiles: BatchSize [%" PRIu32 "]", batchSize_);
@@ -152,7 +148,7 @@ void BinManager::gatherReadyBins() {
     std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
     while (!queue->empty()) {
       std::unique_ptr<Bin> &bin = queue->front();
-      if (bin->isReadyForMerge() || (binAge_ != ULLONG_MAX && bin->isOlderThan(binAge_))) {
+      if (bin->isReadyForMerge() || (binAge_ != std::chrono::milliseconds::max() && bin->isOlderThan(binAge_))) {
         readyBin_.push_back(std::move(bin));
         queue->pop_front();
         binCount_--;
@@ -174,19 +170,19 @@ void BinManager::gatherReadyBins() {
 
 void BinManager::removeOldestBin() {
   std::lock_guard < std::mutex > lock(mutex_);
-  uint64_t olddate = ULLONG_MAX;
+  std::chrono::system_clock::time_point olddate = std::chrono::system_clock::time_point::max();
   std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue;
   for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>>>::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
     std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
     if (!queue->empty()) {
       std::unique_ptr<Bin> &bin = queue->front();
-      if (bin->getBinAge() < olddate) {
-        olddate = bin->getBinAge();
+      if (bin->getCreationDate() < olddate) {
+        olddate = bin->getCreationDate();
         oldqueue = &queue;
       }
     }
   }
-  if (olddate != ULLONG_MAX) {
+  if (olddate != std::chrono::system_clock::time_point::max()) {
     std::unique_ptr<Bin> &remove = (*oldqueue)->front();
     std::string group = remove->getGroupId();
     readyBin_.push_back(std::move(remove));

@@ -41,7 +41,7 @@ core::Property AbstractMQTTProcessor::ClientID("Client ID", "MQTT client ID to u
 core::Property AbstractMQTTProcessor::UserName("Username", "Username to use when connecting to the broker", "");
 core::Property AbstractMQTTProcessor::PassWord("Password", "Password to use when connecting to the broker", "");
 core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
-core::Property AbstractMQTTProcessor::ConnectionTimeOut("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
+core::Property AbstractMQTTProcessor::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
 core::Property AbstractMQTTProcessor::QOS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", "MQTT_QOS_0");
 core::Property AbstractMQTTProcessor::Topic("Topic", "The topic to publish the message to", "");
 core::Property AbstractMQTTProcessor::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
@@ -51,7 +51,7 @@ core::Property AbstractMQTTProcessor::SecurityPrivateKey("Security Private Key",
 core::Property AbstractMQTTProcessor::SecurityPrivateKeyPassWord("Security Pass Phrase", "Private key passphrase", "");
 
 const std::set<core::Property> AbstractMQTTProcessor::getSupportedProperties() {
-  return {BrokerURL, CleanSession, ClientID, UserName, PassWord, KeepLiveInterval, ConnectionTimeOut, QOS, Topic};
+  return {BrokerURL, CleanSession, ClientID, UserName, PassWord, KeepLiveInterval, ConnectionTimeout, QOS, Topic};
 }
 
 void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
@@ -96,22 +96,16 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: CleanSession [%d]", cleanSession_);
   }
 
-  value = "";
-  if (context->getProperty(KeepLiveInterval.getName(), value) && !value.empty()) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      keepAliveInterval_ = valInt/1000;
-      logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "]", keepAliveInterval_);
-    }
+  if (auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
+    keepAliveInterval_ = keep_alive_interval->getMilliseconds();
+    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keepAliveInterval_.count()});
   }
-  value = "";
-  if (context->getProperty(ConnectionTimeOut.getName(), value) && !value.empty()) {
-    core::TimeUnit unit;
-    if (core::Property::StringToTime(value, valInt, unit) && core::Property::ConvertTimeUnitToMS(valInt, unit, valInt)) {
-      connectionTimeOut_ = valInt/1000;
-      logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "]", connectionTimeOut_);
-    }
+
+  if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
+    connectionTimeout_ = connection_timeout->getMilliseconds();
+    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] ms", int64_t{connectionTimeout_.count()});
   }
+
   value = "";
   if (context->getProperty(QOS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) &&
       core::Property::StringToInt(value, valInt)) {
@@ -165,7 +159,7 @@ bool AbstractMQTTProcessor::reconnect() {
   if (MQTTClient_isConnected(client_))
     return true;
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-  conn_opts.keepAliveInterval = keepAliveInterval_;
+  conn_opts.keepAliveInterval = std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count();
   conn_opts.cleansession = cleanSession_;
   if (!userName_.empty()) {
     conn_opts.username = userName_.c_str();

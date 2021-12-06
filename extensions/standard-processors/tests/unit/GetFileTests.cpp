@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <fstream>
+#include <chrono>
 
 #include "TestBase.h"
 #include "LogAttribute.h"
@@ -31,7 +32,7 @@
 #include <fileapi.h>
 #endif
 
-using namespace std::chrono_literals;  // NOLINT using namespace directive is required for literals
+using namespace std::literals::chrono_literals;
 
 namespace {
 
@@ -252,12 +253,12 @@ TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple 
   test_controller.setProperty(minifi::processors::GetFile::KeepSourceFile, "true");
 
   test_controller.runSession();
-  auto start_time = utils::timeutils::getTimeMillis();
+  auto start_time = std::chrono::steady_clock::now();
   while (LogTestController::getInstance().countOccurrences("Logged 2 flow files") < 2) {
     test_controller.test_plan_->reset();
     test_controller.runSession();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 
-  REQUIRE(utils::timeutils::getTimeMillis() - start_time >= 100);
+  REQUIRE(std::chrono::steady_clock::now() - start_time >= 100ms);
 }

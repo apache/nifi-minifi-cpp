@@ -124,11 +124,11 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
     return max_data_queue_size_;
   }
   // Set Flow expiration duration in millisecond
-  void setFlowExpirationDuration(uint64_t duration) {
+  void setFlowExpirationDuration(std::chrono::milliseconds duration) {
     expired_duration_ = duration;
   }
   // Get Flow expiration duration in millisecond
-  uint64_t getFlowExpirationDuration() {
+  std::chrono::milliseconds getFlowExpirationDuration() {
     return expired_duration_;
   }
 
@@ -183,26 +183,26 @@ class Connection : public core::Connectable, public std::enable_shared_from_this
   // Relationship for this connection
   std::set<core::Relationship> relationships_;
   // Source Processor (ProcessNode/Port)
-  std::shared_ptr<core::Connectable> source_connectable_;
+  std::shared_ptr<core::Connectable> source_connectable_ = nullptr;
   // Destination Processor (ProcessNode/Port)
-  std::shared_ptr<core::Connectable> dest_connectable_;
+  std::shared_ptr<core::Connectable> dest_connectable_ = nullptr;
   // Max queue size to apply back pressure
-  std::atomic<uint64_t> max_queue_size_;
+  std::atomic<uint64_t> max_queue_size_ = 0;
   // Max queue data size to apply back pressure
-  std::atomic<uint64_t> max_data_queue_size_;
+  std::atomic<uint64_t> max_data_queue_size_ = 0;
   // Flow File Expiration Duration in= MilliSeconds
-  std::atomic<uint64_t> expired_duration_;
+  std::atomic<std::chrono::milliseconds> expired_duration_ = std::chrono::milliseconds(0);
   // flow file repository
   std::shared_ptr<core::Repository> flow_repository_;
   // content repository reference.
   std::shared_ptr<core::ContentRepository> content_repo_;
 
  private:
-  bool drop_empty_;
+  bool drop_empty_ = false;
   // Mutex for protection
   mutable std::mutex mutex_;
   // Queued data size
-  std::atomic<uint64_t> queued_data_size_;
+  std::atomic<uint64_t> queued_data_size_ = 0;
   // Queue for the Flow File
   utils::FlowFileQueue queue_;
   // flow repository

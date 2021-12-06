@@ -33,6 +33,8 @@
 #include "sitetosite/Peer.h"
 #include "utils/gsl.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -256,14 +258,14 @@ bool RawSiteToSiteClient::handShake() {
   std::map<std::string, std::string> properties;
   properties[HandShakePropertyStr[GZIP]] = "false";
   properties[HandShakePropertyStr[PORT_IDENTIFIER]] = port_id_.to_string();
-  properties[HandShakePropertyStr[REQUEST_EXPIRATION_MILLIS]] = std::to_string(_timeOut);
+  properties[HandShakePropertyStr[REQUEST_EXPIRATION_MILLIS]] = std::to_string(_timeout.load().count());
   if (_currentVersion >= 5) {
     if (_batchCount > 0)
       properties[HandShakePropertyStr[BATCH_COUNT]] = std::to_string(_batchCount);
     if (_batchSize > 0)
       properties[HandShakePropertyStr[BATCH_SIZE]] = std::to_string(_batchSize);
-    if (_batchDuration > 0)
-      properties[HandShakePropertyStr[BATCH_DURATION]] = std::to_string(_batchDuration);
+    if (_batchDuration.load() > 0ms)
+      properties[HandShakePropertyStr[BATCH_DURATION]] = std::to_string(_batchDuration.load().count());
   }
 
   if (_currentVersion >= 3) {

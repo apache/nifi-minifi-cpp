@@ -27,7 +27,7 @@
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 
-using namespace std::chrono_literals;  // NOLINT using namespace directive is required for literals
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   TestController test_controller;
@@ -153,10 +153,10 @@ Provenance Reporting:
     REQUIRE(!rootFlowConfig->findProcessorByName("TailFile")->getUUIDStr().empty());
     REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
     REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
-    REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
+    REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
     REQUIRE(30s == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
-    REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
-    REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
+    REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
+    REQUIRE(0s == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
     std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
     rootFlowConfig->getConnections(connectionMap);
@@ -167,7 +167,7 @@ Provenance Reporting:
       REQUIRE(!it.second->getUUIDStr().empty());
       REQUIRE(it.second->getDestination());
       REQUIRE(it.second->getSource());
-      REQUIRE(60000 == it.second->getFlowExpirationDuration());
+      REQUIRE(60s == it.second->getFlowExpirationDuration());
     }
   }
 
@@ -478,10 +478,10 @@ NiFi Properties Overrides: {}
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
   REQUIRE(core::SchedulingStrategy::TIMER_DRIVEN == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingStrategy());
   REQUIRE(1 == rootFlowConfig->findProcessorByName("TailFile")->getMaxConcurrentTasks());
-  REQUIRE(1 * 1000 * 1000 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
+  REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getSchedulingPeriodNano());
   REQUIRE(30s == rootFlowConfig->findProcessorByName("TailFile")->getPenalizationPeriod());
-  REQUIRE(1 * 1000 == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
-  REQUIRE(0 == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
+  REQUIRE(1s == rootFlowConfig->findProcessorByName("TailFile")->getYieldPeriodMsec());
+  REQUIRE(0s == rootFlowConfig->findProcessorByName("TailFile")->getRunDurationNano());
 
   std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   rootFlowConfig->getConnections(connectionMap);
@@ -492,7 +492,7 @@ NiFi Properties Overrides: {}
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
     REQUIRE(it.second->getSource());
-    REQUIRE(0 == it.second->getFlowExpirationDuration());
+    REQUIRE(0s == it.second->getFlowExpirationDuration());
   }
 }
 

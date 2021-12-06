@@ -24,6 +24,8 @@
 #include "core/ProcessSessionFactory.h"
 #include "core/Property.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -48,8 +50,7 @@ utils::TaskRescheduleInfo EventDrivenSchedulingAgent::run(const std::shared_ptr<
         return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(processor->getYieldTime()));
       } else if (shouldYield) {
         // No work to do or need to apply back pressure
-        return utils::TaskRescheduleInfo::RetryIn(
-            std::chrono::milliseconds((this->bored_yield_duration_ > 0) ? this->bored_yield_duration_ : 10));  // No work left to do, stand by
+        return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_ > 0ms ? this->bored_yield_duration_ : 10ms);  // No work left to do, stand by
       }
     }
     return utils::TaskRescheduleInfo::RetryImmediately();  // Let's continue work as soon as a thread is available

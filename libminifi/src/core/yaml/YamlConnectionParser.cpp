@@ -167,16 +167,15 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   throw std::invalid_argument(error_msg);
 }
 
-uint64_t YamlConnectionParser::getFlowFileExpirationFromYaml() const {
+std::chrono::milliseconds YamlConnectionParser::getFlowFileExpirationFromYaml() const {
+  using namespace std::literals::chrono_literals;
   const YAML::Node expiration_node = connectionNode_["flowfile expiration"];
   if (!expiration_node) {
     logger_->log_debug("parseConnection: flowfile expiration is not set, assuming 0 (never expire)");
-    return 0;
+    return 0ms;
   }
-  uint64_t expirationDuration = 0;
-  TimeUnit unit;
-  const std::string flowfile_expiration_str = expiration_node.as<std::string>();
-  if (!core::Property::StringToTime(flowfile_expiration_str, expirationDuration, unit) || !core::Property::ConvertTimeUnitToMS(expirationDuration, unit, expirationDuration)) {
+  auto expiration_duration = utils::timeutils::StringToDuration<std::chrono::milliseconds>(expiration_node.as<std::string>());
+  if (!expiration_duration.has_value()) {
     // We should throw here, but we do not.
     // The reason is that our parser only accepts time formats that consists of a number and
     // a unit, but users might use this field populated with a "0" (and no units).
@@ -184,9 +183,10 @@ uint64_t YamlConnectionParser::getFlowFileExpirationFromYaml() const {
     // all already-supported configuration files.
     // This has the side-effect of allowing values like "20 minuites" and silently defaulting to 0.
     logger_->log_debug("Parsing failure for flowfile expiration duration");
+    expiration_duration = 0ms;
   }
-  logger_->log_debug("parseConnection: flowfile expiration => [%d]", expirationDuration);
-  return expirationDuration;
+  logger_->log_debug("parseConnection: flowfile expiration => [%d]", expiration_duration->count());
+  return *expiration_duration;
 }
 
 bool YamlConnectionParser::getDropEmptyFromYaml() const {

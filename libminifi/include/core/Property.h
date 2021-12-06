@@ -180,87 +180,6 @@ class Property {
 // Compare
   bool operator <(const Property & right) const;
 
-  template<typename T>
-  static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, T &out) {
-    if (unit == NANOSECOND) {
-      out = input / 1000 / 1000;
-      return true;
-    } else if (unit == MICROSECOND) {
-      out = input / 1000;
-      return true;
-    } else if (unit == MILLISECOND) {
-      out = input;
-      return true;
-    } else if (unit == SECOND) {
-      out = input * 1000;
-      return true;
-    } else if (unit == MINUTE) {
-      out = input * 60 * 1000;
-      return true;
-    } else if (unit == HOUR) {
-      out = input * 60 * 60 * 1000;
-      return true;
-    } else if (unit == DAY) {
-      out = 24 * 60 * 60 * 1000;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, int64_t &out) {
-    return ConvertTimeUnitToMS<int64_t>(input, unit, out);
-  }
-
-  static bool ConvertTimeUnitToMS(int64_t input, TimeUnit unit, uint64_t &out) {
-    return ConvertTimeUnitToMS<uint64_t>(input, unit, out);
-  }
-
-  template<typename T>
-  static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, T &out) {
-    if (unit == NANOSECOND) {
-      out = input;
-      return true;
-    } else if (unit == MICROSECOND) {
-      out = input * 1000;
-      return true;
-    } else if (unit == MILLISECOND) {
-      out = input * 1000 * 1000;
-      return true;
-    } else if (unit == SECOND) {
-      out = input * 1000 * 1000 * 1000;
-      return true;
-    } else if (unit == MINUTE) {
-      out = input * 60 * 1000 * 1000 * 1000;
-      return true;
-    } else if (unit == HOUR) {
-      out = input * 60 * 60 * 1000 * 1000 * 1000;
-      return true;
-    } else if (unit == DAY) {
-      out = input * 24 * 60 * 60 * 1000 * 1000 * 1000;
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, uint64_t &out) {
-    return ConvertTimeUnitToNS<uint64_t>(input, unit, out);
-  }
-
-  static bool ConvertTimeUnitToNS(int64_t input, TimeUnit unit, int64_t &out) {
-    return ConvertTimeUnitToNS<int64_t>(input, unit, out);
-  }
-
-// Convert String
-  static bool StringToTime(std::string input, uint64_t &output, TimeUnit &timeunit) {
-    return utils::internal::StringToTime(input, output, timeunit);
-  }
-
-// Convert String
-  static bool StringToTime(const std::string& input, int64_t &output, TimeUnit &timeunit) {
-    return utils::internal::StringToTime(input, output, timeunit);
-  }
 
   static bool StringToDateTime(const std::string& input, int64_t& output) {
     int64_t temp = utils::timeutils::parseDateTimeStr(input);
@@ -309,18 +228,6 @@ class Property {
     }
     output = temp;
     return true;
-  }
-
-  static bool getTimeMSFromString(const std::string& str, uint64_t& valInt) {
-    core::TimeUnit unit;
-    return !str.empty() && StringToTime(str, valInt, unit)
-        && ConvertTimeUnitToMS(valInt, unit, valInt);
-  }
-
-  static bool getTimeMSFromString(const std::string& str, int64_t& valInt) {
-    core::TimeUnit unit;
-    return !str.empty() && StringToTime(str, valInt, unit)
-        && ConvertTimeUnitToMS(valInt, unit, valInt);
   }
 
   // Convert String to Integer

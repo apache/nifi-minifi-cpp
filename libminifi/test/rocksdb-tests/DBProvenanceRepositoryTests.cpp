@@ -27,7 +27,7 @@
 #define TEST_PROVENANCE_STORAGE_SIZE (1024*100)  // 100 KB
 #define TEST_MAX_PROVENANCE_STORAGE_SIZE (100*1024*1024)  // 100 MB
 
-#define TEST_PROVENANCE_ENTRY_LIFE_TIME (1000)  // 1 sec
+using namespace std::literals::chrono_literals;
 
 void generateData(std::vector<char>& data) {
   std::random_device rd;
@@ -50,7 +50,7 @@ void verifyMaxKeyCount(const minifi::provenance::ProvenanceRepository& repo, uin
   uint64_t k = keyCount;
 
   for (int i = 0; i < 50; ++i) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(100ms);
     k = std::min(k, repo.getKeyCount());
     if (k < keyCount) {
       break;
@@ -66,8 +66,7 @@ TEST_CASE("Test size limit", "[sizeLimitTest]") {
   REQUIRE(!temp_dir.empty());
 
   // 60 sec, 100 KB - going to exceed the size limit
-  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir,
-      MAX_PROVENANCE_ENTRY_LIFE_TIME, TEST_PROVENANCE_STORAGE_SIZE, 1000);
+  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir, 1min, TEST_PROVENANCE_STORAGE_SIZE, 1s);
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir);
@@ -87,8 +86,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
   REQUIRE(!temp_dir.empty());
 
   // 1 sec, 100 MB - going to exceed TTL
-  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir,
-                                                  TEST_PROVENANCE_ENTRY_LIFE_TIME, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1000);
+  minifi::provenance::ProvenanceRepository provdb("TestProvRepo", temp_dir, 1s, TEST_MAX_PROVENANCE_STORAGE_SIZE, 1s);
 
   auto configuration = std::make_shared<org::apache::nifi::minifi::Configure>();
   configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, temp_dir);
@@ -109,7 +107,7 @@ TEST_CASE("Test time limit", "[timeLimitTest]") {
    * When the 2nd 50 MB is written the records of the 1st serialization are dropped -> around 160 of them
    * That's why the final check verifies keyCount to be below 400
    */
-  std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+  std::this_thread::sleep_for(2s);
 
   provisionRepo(provdb, keyCount /2, 102400);
 

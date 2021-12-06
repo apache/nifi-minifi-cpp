@@ -166,7 +166,7 @@ class ProvenanceEventRecord : public core::SerializableComponent {
 
   ProvenanceEventRecord()
       : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()) {
-    _eventTime = utils::timeutils::getTimeMillis();
+    _eventTime = std::chrono::system_clock::now();
   }
 
   // Destructor
@@ -192,23 +192,23 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     return _offset;
   }
   // ! Get Entry Date
-  uint64_t getFlowFileEntryDate() {
+  std::chrono::system_clock::time_point getFlowFileEntryDate() {
     return _entryDate;
   }
   // ! Get Lineage Start Date
-  uint64_t getlineageStartDate() {
+  std::chrono::system_clock::time_point getlineageStartDate() {
     return _lineageStartDate;
   }
   // ! Get Event Time
-  uint64_t getEventTime() {
+  std::chrono::system_clock::time_point getEventTime() {
     return _eventTime;
   }
   // ! Get Event Duration
-  uint64_t getEventDuration() {
+  std::chrono::milliseconds getEventDuration() {
     return _eventDuration;
   }
   // Set Event Duration
-  void setEventDuration(uint64_t duration) {
+  void setEventDuration(std::chrono::milliseconds duration) {
     _eventDuration = duration;
   }
   // ! Get Event Type
@@ -390,13 +390,13 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Event type
   ProvenanceEventType _eventType;
   // Date at which the event was created
-  uint64_t _eventTime;
+  std::chrono::system_clock::time_point _eventTime{};
   // Date at which the flow file entered the flow
-  uint64_t _entryDate;
+  std::chrono::system_clock::time_point _entryDate{};
   // Date at which the origin of this flow file entered the flow
-  uint64_t _lineageStartDate;
+  std::chrono::system_clock::time_point _lineageStartDate{};
   // Event Duration
-  uint64_t _eventDuration;
+  std::chrono::milliseconds _eventDuration{};
   // Component ID
   std::string _componentId;
   // Component Type
@@ -481,27 +481,27 @@ class ProvenanceReporter {
   // create
   void create(std::shared_ptr<core::FlowFile> flow, std::string detail);
   // route
-  void route(std::shared_ptr<core::FlowFile> flow, core::Relationship relation, std::string detail, uint64_t processingDuration);
+  void route(std::shared_ptr<core::FlowFile> flow, core::Relationship relation, std::string detail, std::chrono::milliseconds processingDuration);
   // modifyAttributes
   void modifyAttributes(std::shared_ptr<core::FlowFile> flow, std::string detail);
   // modifyContent
-  void modifyContent(std::shared_ptr<core::FlowFile> flow, std::string detail, uint64_t processingDuration);
+  void modifyContent(std::shared_ptr<core::FlowFile> flow, std::string detail, std::chrono::milliseconds processingDuration);
   // clone
   void clone(std::shared_ptr<core::FlowFile> parent, std::shared_ptr<core::FlowFile> child);
   // join
-  void join(std::vector<std::shared_ptr<core::FlowFile> > parents, std::shared_ptr<core::FlowFile> child, std::string detail, uint64_t processingDuration);
+  void join(std::vector<std::shared_ptr<core::FlowFile> > parents, std::shared_ptr<core::FlowFile> child, std::string detail, std::chrono::milliseconds processingDuration);
   // fork
-  void fork(std::vector<std::shared_ptr<core::FlowFile> > child, std::shared_ptr<core::FlowFile> parent, std::string detail, uint64_t processingDuration);
+  void fork(std::vector<std::shared_ptr<core::FlowFile> > child, std::shared_ptr<core::FlowFile> parent, std::string detail, std::chrono::milliseconds processingDuration);
   // expire
   void expire(std::shared_ptr<core::FlowFile> flow, std::string detail);
   // drop
   void drop(std::shared_ptr<core::FlowFile> flow, std::string reason);
   // send
-  void send(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, uint64_t processingDuration, bool force);
+  void send(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, std::chrono::milliseconds processingDuration, bool force);
   // fetch
-  void fetch(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, uint64_t processingDuration);
+  void fetch(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string detail, std::chrono::milliseconds processingDuration);
   // receive
-  void receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string sourceSystemFlowFileIdentifier, std::string detail, uint64_t processingDuration);
+  void receive(std::shared_ptr<core::FlowFile> flow, std::string transitUri, std::string sourceSystemFlowFileIdentifier, std::string detail, std::chrono::milliseconds processingDuration);
 
  protected:
   // allocate

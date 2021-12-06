@@ -51,9 +51,9 @@ namespace repository {
 #define FLOWFILE_CHECKPOINT_DIRECTORY "./flowfile_checkpoint"
 #endif
 #define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
-#define MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME (600000)  // 10 minute
-#define FLOWFILE_REPOSITORY_PURGE_PERIOD (2000)  // 2000 msec
-#define FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS (500)  // msec
+constexpr auto MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
+constexpr auto FLOWFILE_REPOSITORY_PURGE_PERIOD = std::chrono::seconds(2);
+constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::milliseconds(500);
 
 /**
  * Flow File repository
@@ -68,9 +68,12 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       : FlowFileRepository(name) {
   }
 
-  FlowFileRepository(const std::string repo_name = "", const std::string& checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
-                     std::string directory = FLOWFILE_REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
-                     int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE, uint64_t purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
+  FlowFileRepository(const std::string repo_name = "",
+                     const std::string& checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
+                     std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
+                     std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
+                     int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
+                     std::chrono::milliseconds purgePeriod = FLOWFILE_REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         Repository(repo_name.length() > 0 ? repo_name : core::getClassName<FlowFileRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod),
         checkpoint_dir_(checkpoint_dir),
@@ -102,12 +105,10 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
     }
     logger_->log_debug("NiFi FlowFile Max Partition Bytes %d", max_partition_bytes_);
     if (configure->get(Configure::nifi_flowfile_repository_max_storage_time, value)) {
-      TimeUnit unit;
-      if (Property::StringToTime(value, max_partition_millis_, unit)) {
-        Property::ConvertTimeUnitToMS(max_partition_millis_, unit, max_partition_millis_);
-      }
+      if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
+        max_partition_millis_ = *max_partition;
     }
-    logger_->log_debug("NiFi FlowFile Max Storage Time: [%d] ms", max_partition_millis_);
+    logger_->log_debug("NiFi FlowFile Max Storage Time: [%" PRId64 "] ms", int64_t{max_partition_millis_.count()});
 
     const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
     logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");
@@ -199,7 +200,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
   virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
 
   void start() {
-    if (this->purge_period_ <= 0) {
+    if (this->purge_period_ <= std::chrono::milliseconds(0)) {
       return;
     }
     if (running_) {

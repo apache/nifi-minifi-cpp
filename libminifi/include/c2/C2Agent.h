@@ -85,7 +85,7 @@ class C2Agent : public state::UpdateController {
    */
   void performHeartBeat();
 
-  int64_t getHeartBeatDelay() {
+  std::chrono::milliseconds getHeartBeatDelay() {
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     return heart_beat_period_;
   }
@@ -185,7 +185,7 @@ class C2Agent : public state::UpdateController {
   utils::ConcurrentQueue<C2Payload> requests;
 
   // heart beat period.
-  int64_t heart_beat_period_;
+  std::chrono::milliseconds heart_beat_period_;
 
   // maximum number of queued messages to send to the c2 server
   size_t max_c2_responses;

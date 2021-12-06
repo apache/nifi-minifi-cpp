@@ -31,6 +31,7 @@
 #include "../TestBase.h"
 
 namespace provenance = minifi::provenance;
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah", "blahblah");
@@ -46,7 +47,7 @@ TEST_CASE("Test Provenance record serialization", "[Testprovenance::ProvenanceEv
   std::string smileyface = ":)";
   record1.setDetails(smileyface);
 
-  uint64_t sample = 65555;
+  auto sample = 65555ms;
   std::shared_ptr<core::Repository> testRepository = std::make_shared<TestRepository>();
   record1.setEventDuration(sample);
 
@@ -71,7 +72,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
 
   record1.addChildFlowFile(ffr1);
 
-  uint64_t sample = 65555;
+  auto sample = 65555ms;
   std::shared_ptr<core::Repository> testRepository = std::make_shared<TestRepository>();
   record1.setEventDuration(sample);
 
@@ -95,7 +96,7 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
   std::string smileyface = ":)";
   record1.setDetails(smileyface);
 
-  uint64_t sample = 65555;
+  auto sample = 65555ms;
 
   std::shared_ptr<core::Repository> testRepository = std::make_shared<core::repository::VolatileProvenanceRepository>();
   testRepository->initialize(0);
@@ -122,7 +123,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
 
   record1.addChildFlowFile(ffr1);
 
-  uint64_t sample = 65555;
+  auto sample = 65555ms;
   std::shared_ptr<core::Repository> testRepository = std::make_shared<core::repository::VolatileProvenanceRepository>();
   testRepository->initialize(0);
   record1.setEventDuration(sample);
@@ -147,7 +148,7 @@ TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::Provena
   std::string smileyface = ":)";
   record1.setDetails(smileyface);
 
-  uint64_t sample = 65555;
+  auto sample = 65555ms;
 
   std::shared_ptr<core::Repository> testRepository = std::make_shared<core::Repository>();
   testRepository->initialize(0);

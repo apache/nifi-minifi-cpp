@@ -115,11 +115,12 @@ void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   context->getProperty(UseVersions.getName(), list_request_params_->use_versions);
   logger_->log_debug("ListS3: UseVersions [%s]", list_request_params_->use_versions ? "true" : "false");
 
-  std::string min_obj_age_str;
-  if (!context->getProperty(MinimumObjectAge.getName(), min_obj_age_str) || min_obj_age_str.empty() || !core::Property::getTimeMSFromString(min_obj_age_str, list_request_params_->min_object_age)) {
+  if (auto minimum_object_age = context->getProperty<core::TimePeriodValue>(MinimumObjectAge)) {
+    list_request_params_->min_object_age = minimum_object_age->getMilliseconds().count();
+  } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Minimum Object Age missing or invalid");
   }
-  logger_->log_debug("S3Processor: Minimum Object Age [%llud]", min_obj_age_str, list_request_params_->min_object_age);
+  logger_->log_debug("S3Processor: Minimum Object Age [%llud]", list_request_params_->min_object_age);
 
   context->getProperty(WriteObjectTags.getName(), write_object_tags_);
   logger_->log_debug("ListS3: WriteObjectTags [%s]", write_object_tags_ ? "true" : "false");

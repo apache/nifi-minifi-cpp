@@ -1,5 +1,5 @@
 /**
- * @file Repository 
+ * @file Repository
  * Repository class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -56,17 +56,19 @@ namespace core {
 
 #define REPOSITORY_DIRECTORY "./repo"
 #define MAX_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
-#define MAX_REPOSITORY_ENTRY_LIFE_TIME (600000)  // 10 minute
-#define REPOSITORY_PURGE_PERIOD (2500)  // 2500 msec
+constexpr auto MAX_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
+constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class Repository : public virtual core::SerializableComponent, public core::TraceableResource {
  public:
   /*
    * Constructor for the repository
    */
-  Repository(std::string repo_name = "Repository", std::string directory = REPOSITORY_DIRECTORY, int64_t maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME, int64_t maxPartitionBytes =
-  MAX_REPOSITORY_STORAGE_SIZE,
-             uint64_t purgePeriod = REPOSITORY_PURGE_PERIOD)
+  Repository(std::string repo_name = "Repository",
+             std::string directory = REPOSITORY_DIRECTORY,
+             std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
+             int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
+             std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
         thread_(),
         repo_size_(0),
@@ -247,11 +249,11 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   // repository directory
   std::string directory_;
   // max db entry life time
-  int64_t max_partition_millis_;
+  std::chrono::milliseconds max_partition_millis_;
   // max db size
   int64_t max_partition_bytes_;
   // purge period
-  uint64_t purge_period_;
+  std::chrono::milliseconds purge_period_;
   // thread
   std::thread thread_;
   // whether the monitoring thread is running for the repo while it was enabled

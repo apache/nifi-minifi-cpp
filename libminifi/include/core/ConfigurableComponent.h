@@ -230,8 +230,12 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
       return false;
     }
     logger_->log_debug("Component %s property name %s value %s", name, property.getName(), property.getValue().to_string());
-    // cast throws if the value is invalid
-    value = static_cast<T>(property.getValue());
+
+    if constexpr (std::is_base_of<TransformableValue, T>::value) {
+      value = T(property.getValue().operator std::string());
+    } else {
+      value = static_cast<T>(property.getValue());  // cast throws if the value is invalid
+    }
     return true;
   } else {
     logger_->log_warn("Could not find property %s", name);

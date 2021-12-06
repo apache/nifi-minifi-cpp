@@ -241,7 +241,7 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
 
   try {
-    uint64_t startTime = utils::timeutils::getTimeMillis();
+    auto start_time = std::chrono::steady_clock::now();
     std::shared_ptr<io::BaseStream> stream = content_session_->write(claim);
     // Call the callback to write the content
     if (nullptr == stream) {
@@ -257,8 +257,8 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, OutputSt
 
     stream->close();
     std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flow->getUUIDStr();
-    uint64_t endTime = utils::timeutils::getTimeMillis();
-    provenance_report_->modifyContent(flow, details, endTime - startTime);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+    provenance_report_->modifyContent(flow, details, duration);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
@@ -293,7 +293,7 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
   }
 
   try {
-    uint64_t startTime = utils::timeutils::getTimeMillis();
+    auto start_time = std::chrono::steady_clock::now();
     std::shared_ptr<io::BaseStream> stream = content_session_->write(claim, ContentSession::WriteMode::APPEND);
     if (nullptr == stream) {
       throw Exception(FILE_OPERATION_EXCEPTION, "Failed to open flowfile content for append");
@@ -312,8 +312,8 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, OutputS
 
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-    uint64_t endTime = utils::timeutils::getTimeMillis();
-    provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+    provenance_report_->modifyContent(flow, details.str(), duration);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
@@ -445,7 +445,7 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
   std::vector<uint8_t> charBuffer(max_read);
 
   try {
-    auto startTime = utils::timeutils::getTimeMillis();
+    auto start_time = std::chrono::steady_clock::now();
     std::shared_ptr<io::BaseStream> content_stream = content_session_->write(claim);
 
     if (nullptr == content_stream) {
@@ -472,8 +472,8 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
     content_stream->close();
     std::stringstream details;
     details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-    auto endTime = utils::timeutils::getTimeMillis();
-    provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+    provenance_report_->modifyContent(flow, details.str(), duration);
   } catch (std::exception &exception) {
     logger_->log_debug("Caught Exception %s", exception.what());
     throw;
@@ -489,7 +489,7 @@ void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> 
   std::vector<uint8_t> charBuffer(size);
 
   try {
-    auto startTime = utils::timeutils::getTimeMillis();
+    auto start_time = std::chrono::steady_clock::now();
     std::ifstream input;
     input.open(source.c_str(), std::fstream::in | std::fstream::binary);
     std::shared_ptr<io::BaseStream> stream = content_session_->write(claim);
@@ -536,8 +536,8 @@ void ProcessSession::import(std::string source, const std::shared_ptr<FlowFile> 
           std::remove(source.c_str());
         std::stringstream details;
         details << process_context_->getProcessorNode()->getName() << " modify flow record content " << flow->getUUIDStr();
-        auto endTime = utils::timeutils::getTimeMillis();
-        provenance_report_->modifyContent(flow, details.str(), endTime - startTime);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+        provenance_report_->modifyContent(flow, details.str(), duration);
       } else {
         stream->close();
         input.close();
@@ -574,7 +574,6 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
         throw Exception(FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("File Import Error: Couldn't seek to offset ", std::to_string(offset)));
       }
     }
-    uint64_t startTime = 0U;
     while (input.good()) {
       input.read(reinterpret_cast<char*>(buffer.data()), buffer.size());
       std::streamsize read = input.gcount();
@@ -590,7 +589,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
       uint8_t* begin = buffer.data();
       uint8_t* end = begin + read;
       while (true) {
-        startTime = utils::timeutils::getTimeMillis();
+        auto start_time = std::chrono::steady_clock::now();
         uint8_t* delimiterPos = std::find(begin, end, static_cast<uint8_t>(inputDelimiter));
         const auto len = gsl::narrow<size_t>(delimiterPos - begin);
 
@@ -606,7 +605,7 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
 
         /* Create claim and stream if needed and append data */
         if (claim == nullptr) {
-          startTime = utils::timeutils::getTimeMillis();
+          start_time = std::chrono::steady_clock::now();
           claim = content_session_->create();
         }
         if (stream == nullptr) {
@@ -634,8 +633,8 @@ void ProcessSession::import(const std::string& source, std::vector<std::shared_p
                                     << ", FlowFile UUID " << flowFile->getUUIDStr();
         stream->close();
         std::string details = process_context_->getProcessorNode()->getName() + " modify flow record content " + flowFile->getUUIDStr();
-        uint64_t endTime = utils::timeutils::getTimeMillis();
-        provenance_report_->modifyContent(flowFile, details, endTime - startTime);
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+        provenance_report_->modifyContent(flowFile, details, duration);
         flows.push_back(flowFile);
 
         /* Reset these to start processing the next FlowFile with a clean slate */

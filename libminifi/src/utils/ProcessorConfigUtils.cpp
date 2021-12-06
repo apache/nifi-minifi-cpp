@@ -48,13 +48,8 @@ bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, const std:
 }
 
 std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, const std::string& property_name) {
-  core::TimeUnit unit;
-  uint64_t time_value_ms;
-  const std::string value_str = getRequiredPropertyOrThrow(context, property_name);
-  if (!core::Property::StringToTime(value_str, time_value_ms, unit) || !core::Property::ConvertTimeUnitToMS(time_value_ms, unit, time_value_ms)) {
-    throw std::runtime_error(property_name + " property is invalid: value is " + value_str);
-  }
-  return std::chrono::milliseconds(time_value_ms);
+  const core::TimePeriodValue time_property = getRequiredPropertyOrThrow<core::TimePeriodValue>(context, property_name);
+  return time_property.getMilliseconds();
 }
 
 std::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name) {

@@ -63,24 +63,16 @@ void DefragmentText::initialize() {
 void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
   gsl_Expects(context);
 
-  std::string max_buffer_age_str;
-  if (context->getProperty(MaxBufferAge.getName(), max_buffer_age_str)) {
-    core::TimeUnit unit;
-    uint64_t max_buffer_age;
-    if (core::Property::StringToTime(max_buffer_age_str, max_buffer_age, unit) && core::Property::ConvertTimeUnitToMS(max_buffer_age, unit, max_buffer_age)) {
-      buffer_.setMaxAge(std::chrono::milliseconds(max_buffer_age));
-      setTriggerWhenEmpty(true);
-      logger_->log_trace("The Buffer maximum age is configured to be %" PRIu64 " ms", max_buffer_age);
-    }
+  if (auto max_buffer_age = context->getProperty<core::TimePeriodValue>(MaxBufferAge)) {
+    buffer_.setMaxAge(max_buffer_age->getMilliseconds());
+    setTriggerWhenEmpty(true);
+    logger_->log_trace("The Buffer maximum age is configured to be %" PRId64 " ms", int64_t{max_buffer_age->getMilliseconds().count()});
   }
 
-  std::string max_buffer_size_str;
-  if (context->getProperty(MaxBufferSize.getName(), max_buffer_size_str)) {
-    uint64_t max_buffer_size = core::DataSizeValue(max_buffer_size_str).getValue();
-    if (max_buffer_size > 0) {
-      buffer_.setMaxSize(max_buffer_size);
-      logger_->log_trace("The Buffer maximum size is configured to be %" PRIu64 " B", max_buffer_size);
-    }
+  auto max_buffer_size = context->getProperty<core::DataSizeValue>(MaxBufferSize);
+  if (max_buffer_size.has_value() && max_buffer_size->getValue() > 0) {
+    buffer_.setMaxSize(max_buffer_size->getValue());
+    logger_->log_trace("The Buffer maximum size is configured to be %" PRIu64 " B", max_buffer_size->getValue());
   }
 
   context->getProperty(PatternLoc.getName(), pattern_location_);

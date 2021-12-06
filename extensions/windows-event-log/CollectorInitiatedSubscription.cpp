@@ -39,6 +39,8 @@
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "Wecapi.lib")
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -648,7 +650,7 @@ int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::Pro
       session->write(flowFile, &wc);
     }
     session->putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
-    session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0);
+    session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
     session->transfer(flowFile, s_success);
 
     flowFileCount++;

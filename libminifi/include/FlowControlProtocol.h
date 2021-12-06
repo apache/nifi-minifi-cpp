@@ -172,8 +172,8 @@ class FlowControlProtocol {
       logger_->log_info("NiFi Server Port: [%" PRIu16 "]", _serverPort);
     }
     if (configure->get(Configure::nifi_server_report_interval, value)) {
-      core::TimeUnit unit;
-      if (core::Property::StringToTime(value, _reportInterval, unit) && core::Property::ConvertTimeUnitToMS(_reportInterval, unit, _reportInterval)) {
+      if (auto parsed_time = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
+        _reportInterval = parsed_time->count();
         logger_->log_info("NiFi server report interval: [%" PRId64 "] ms", _reportInterval);
       }
     } else {

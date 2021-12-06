@@ -25,6 +25,8 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/gsl.h"
 
+using namespace std::literals::chrono_literals;
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -40,13 +42,10 @@ class ConsumeKafkaMaxPollTimeValidator : public TimePeriodValidator {
   ~ConsumeKafkaMaxPollTimeValidator() override = default;
 
   ValidationResult validate(const std::string& subject, const std::string& input) const override {
-    uint64_t value;
-    TimeUnit timeUnit;
-    uint64_t value_as_ms;
+    auto parsed_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(input);
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(
-        core::TimePeriodValue::StringToTime(input, value, timeUnit) &&
-        org::apache::nifi::minifi::core::Property::ConvertTimeUnitToMS(value, timeUnit, value_as_ms) &&
-        0 < value_as_ms && value_as_ms <= 4000).build();
+        parsed_value.has_value() &&
+        0ms < *parsed_value && *parsed_value <= 4s).build();
   }
 };
 }  // namespace core
