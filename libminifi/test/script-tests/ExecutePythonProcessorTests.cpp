@@ -263,9 +263,9 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Stateful execution", "[execu
 }
 
 TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test the Reload On Script Change property", "[executePythonProcessorReloadScript]") {
-  SECTION("When Reload On Script Change is not set the script is not reloaded by default") {
+  SECTION("When Reload On Script Change is not set the script is reloaded by default") {
     const uint32_t EXPECTED_SUCCESS_FILE_COUNT = 1;
-    const uint32_t EXPECTED_FAILURE_FILE_COUNT = 0;
+    const uint32_t EXPECTED_FAILURE_FILE_COUNT = 1;
     testReloadOnScriptProperty(std::nullopt, EXPECTED_SUCCESS_FILE_COUNT, EXPECTED_FAILURE_FILE_COUNT);
   }
 

@@ -47,7 +47,7 @@ class ExecutePythonProcessor : public core::Processor {
       : Processor(name, uuid),
         processor_initialized_(false),
         python_dynamic_(false),
-        reload_on_script_change_(false),
+        reload_on_script_change_(true),
         last_script_write_time_(0),
         script_engine_q_() {
   }
