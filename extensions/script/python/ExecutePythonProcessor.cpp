@@ -84,6 +84,8 @@ void ExecutePythonProcessor::initialize() {
     return;
   }
 
+  // In case of native python processors we require initialization before onSchedule
+  // so that we can provide manifest of processor identity on C2
   auto engine = getScriptEngine();
   initalizeThroughScriptEngine(*engine);
   handleEngineNoLongerInUse(std::move(engine));
