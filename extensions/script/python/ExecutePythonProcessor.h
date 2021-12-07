@@ -48,8 +48,7 @@ class ExecutePythonProcessor : public core::Processor {
         processor_initialized_(false),
         python_dynamic_(false),
         reload_on_script_change_(true),
-        last_script_write_time_(0),
-        script_engine_q_() {
+        last_script_write_time_(0) {
   }
 
   EXTENSIONAPI static const core::Property ScriptFile;
@@ -93,6 +92,10 @@ class ExecutePythonProcessor : public core::Processor {
     return false;
   }
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
  private:
   std::vector<core::Property> python_properties_;
 
@@ -102,35 +105,22 @@ class ExecutePythonProcessor : public core::Processor {
   bool python_dynamic_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger();
-  std::shared_ptr<core::logging::Logger> python_logger_;
 
   std::string script_to_exec_;
   std::string module_directory_;
   bool reload_on_script_change_;
   uint64_t last_script_write_time_;
   std::string script_file_path_;
+  std::shared_ptr<core::logging::Logger> python_logger_;
+  std::unique_ptr<PythonScriptEngine> python_script_engine_;
 
-  moodycamel::ConcurrentQueue<std::shared_ptr<python::PythonScriptEngine>> script_engine_q_;
-
-  void initalizeThroughScriptEngine(python::PythonScriptEngine& engine);
-  std::shared_ptr<python::PythonScriptEngine> getScriptEngine();
-  void handleEngineNoLongerInUse(std::shared_ptr<python::PythonScriptEngine>&& engine);
   void appendPathForImportModules();
   void loadScriptFromFile();
   void loadScript();
-  void reloadScriptIfUsingScriptFileProperty(python::PythonScriptEngine& engine);
+  void reloadScriptIfUsingScriptFileProperty();
+  void initalizeThroughScriptEngine();
 
-
-  template<typename T>
-  std::shared_ptr<T> createEngine() const {
-    auto engine = std::make_shared<T>();
-
-    engine->bind("log", python_logger_);
-    engine->bind("REL_SUCCESS", Success);
-    engine->bind("REL_FAILURE", Failure);
-
-    return engine;
-  }
+  std::unique_ptr<PythonScriptEngine> createScriptEngine();
 };
 
 } /* namespace processors */
