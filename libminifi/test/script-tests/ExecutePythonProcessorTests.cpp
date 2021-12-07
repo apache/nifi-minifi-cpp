@@ -60,10 +60,7 @@ class ExecutePythonProcessorTestBase {
   }
 
   std::string getScriptFullPath(const std::string& script_file_name) {
-    if (script_file_name.find('/') != std::string::npos || script_file_name.find("\\") != std::string::npos) {
-      return script_file_name;
-    }
-    return org::apache::nifi::minifi::utils::file::FileUtils::concat_path(SCRIPT_FILES_DIRECTORY, script_file_name);
+    return org::apache::nifi::minifi::utils::file::FileUtils::resolve(SCRIPT_FILES_DIRECTORY, script_file_name);
   }
 
   static const std::string TEST_FILE_NAME;
