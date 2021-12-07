@@ -229,7 +229,7 @@ class StateMonitor : public StateController {
    */
   virtual std::vector<BackTrace> getTraces() = 0;
 
-  virtual std::shared_ptr<io::InputStream> getLogs() = 0;
+  virtual std::map<std::string, std::unique_ptr<io::InputStream>> getDebugInfo() = 0;
 
  protected:
   std::atomic<bool> controller_running_;

@@ -97,6 +97,11 @@ void Properties::loadConfigureFile(const char *fileName) {
   dirty_ = false;
 }
 
+std::string Properties::getFilePath() const {
+  std::lock_guard<std::mutex> lock(mutex_);
+  return properties_file_;
+}
+
 bool Properties::persistProperties() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!dirty_) {

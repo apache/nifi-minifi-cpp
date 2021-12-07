@@ -189,7 +189,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   std::vector<BackTrace> getTraces() override;
 
-  std::shared_ptr<io::InputStream> getLogs() override;
+  std::map<std::string, std::unique_ptr<io::InputStream>> getDebugInfo() override;
 
  private:
   /**

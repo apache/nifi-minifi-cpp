@@ -42,6 +42,8 @@
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"
+#include "io/WriteArchiveStream.h"
+#include "io/StreamPipe.h"
 
 namespace org {
 namespace apache {
@@ -318,6 +320,18 @@ void C2Agent::extractPayload(const C2Payload &resp) {
   }
 }
 
+namespace {
+
+struct C2TransferError : public std::runtime_error {
+  using runtime_error::runtime_error;
+};
+
+struct C2DebugBundleError : public C2TransferError {
+  using C2TransferError::C2TransferError;
+};
+
+}  // namespace
+
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
   switch (resp.op.value()) {
     case Operation::CLEAR:
@@ -411,15 +425,13 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
       break;
     case Operation::TRANSFER: {
-      std::string error;
-      if (!handle_transfer(resp, error)) {
-        logger_->log_error("%s", error);
-        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
-        response.setRawData(error);
-        enqueue_c2_response(std::move(response));
-      } else {
-        logger_->log_error("HERERERKJKJFDKJSD");
+      try {
+        handle_transfer(resp);
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        enqueue_c2_response(std::move(response));
+      } catch (const std::runtime_error& error) {
+        C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+        response.setRawData(error.what());
         enqueue_c2_response(std::move(response));
       }
       break;
@@ -601,42 +613,56 @@ bool C2Agent::update_property(const std::string &property_name, const std::strin
   return configuration_->persistProperties();
 }
 
-bool C2Agent::handle_transfer(const C2ContentResponse &resp, std::string& error) {
+C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
+  C2Payload payload(Operation::TRANSFER, false);
+  auto stream_provider = core::ClassLoader::getDefaultClassLoader().instantiate<io::WriteArchiveStreamProvider>(
+      "WriteArchiveStreamProvider", "WriteArchiveStreamProvider");
+  if (!stream_provider) {
+    throw C2DebugBundleError("Couldn't instantiate archiver provider");
+  }
+  auto bundle = std::make_shared<io::BufferStream>();
+  {
+    auto archiver = stream_provider->createStream(9, "gzip", bundle, logger_);
+    if (!archiver) {
+      throw C2DebugBundleError("Couldn't instantiate archiver");
+    }
+    for (auto&[filename, stream] : files) {
+      int64_t file_size = stream->size();
+      if (!archiver->newEntry(filename, file_size)) {
+        throw C2DebugBundleError("Couldn't initialize archive entry for '" + filename + "'");
+      }
+      if (file_size != internal::pipe(stream.get(), archiver.get())) {
+        // we have touched the input streams, they cannot be reused
+        throw C2DebugBundleError("Error while writing file '" + filename + "' into the debug bundle");
+      }
+    }
+  }
+  C2Payload file(Operation::TRANSFER, true);
+  file.setLabel("debug.tar.gz");
+  file.setRawData(bundle->moveBuffer());
+  payload.addPayload(std::move(file));
+  return payload;
+}
+
+void C2Agent::handle_transfer(const C2ContentResponse &resp) {
   if (resp.name != "debug") {
-    error = "Unknown operand '" + resp.name + "'";
-    return false;
+    throw C2TransferError("Unknown operand '" + resp.name + "'");
   }
   auto target_it = resp.operation_arguments.find("target");
   if (target_it == resp.operation_arguments.end()) {
-    error = "Missing argument for debug operation: 'target'";
-    return false;
+    throw C2DebugBundleError("Missing argument for debug operation: 'target'");
   }
   std::optional<std::string> url = resolveUrl(target_it->second.to_string());
   if (!url) {
-    error = "Invalid url";
-    return false;
+    throw C2DebugBundleError("Invalid url");
   }
-  auto logs = update_sink_->getLogs();
-  if (!logs) {
-    error = "No logs are available";
-    return false;
-  }
-  C2Payload payload(Operation::TRANSFER, true);
-  payload.setLabel("debug.gz");
-  std::string data;
-  data.resize(logs->size());
-  size_t res = logs->read(reinterpret_cast<uint8_t*>(data.data()), data.size());
-  if (io::isError(res) || res != data.size()) {
-    error = "Failed to read log stream";
-    return false;
-  }
-  payload.setRawData(std::move(data));
-  C2Payload &&response = protocol_.load()->consumePayload(url.value(), payload, TRANSMIT, false);
+  std::map<std::string, std::unique_ptr<io::InputStream>> files = update_sink_->getDebugInfo();
+
+  auto bundle = bundleDebugInfo(files);
+  C2Payload &&response = protocol_.load()->consumePayload(url.value(), bundle, TRANSMIT, false);
   if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
-    error = "Error while uploading";
-    return false;
+    throw C2DebugBundleError("Error while uploading");
   }
-  return true;
 }
 
 void C2Agent::restart_agent() {

@@ -56,16 +56,11 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
 }
 
 C2Payload RESTSender::consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool /*async*/) {
-  std::string data;
+  std::optional<std::string> data;
 
-  if (direction == Direction::TRANSMIT) {
-    if (payload.getOperation() == Operation::TRANSFER && payload.isRaw()) {
-      auto raw_data = payload.getRawData();
-      data.assign(raw_data.begin(), raw_data.end());
-    } else {
-      // treat payload as json
-      data = serializeJsonRootPayload(payload);
-    }
+  if (direction == Direction::TRANSMIT && payload.getOperation() != Operation::TRANSFER) {
+    // treat payload as json
+    data = serializeJsonRootPayload(payload);
   }
   return sendPayload(url, direction, payload, std::move(data));
 }
@@ -90,6 +85,7 @@ void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string
   client.initialize(type, url, generatedService);
 }
 
+[[maybe_unused]]
 static std::string getFileMimeType(const std::string& filename) {
   if (utils::StringUtils::endsWith(filename, ".gz")) {
     return "application/gzip";
@@ -100,14 +96,14 @@ static std::string getFileMimeType(const std::string& filename) {
   return "application/octet-stream";
 }
 
-const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, const std::string data) {
+const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, std::optional<std::string> data) {
   if (url.empty()) {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }
 
   // Callback for transmit. Declared in order to destruct in proper order - take care!
-  std::unique_ptr<utils::ByteInputCallBack> input = nullptr;
-  std::unique_ptr<utils::HTTPUploadCallback> callback = nullptr;
+  std::vector<std::unique_ptr<utils::ByteInputCallBack>> inputs;
+  std::vector<std::unique_ptr<utils::HTTPUploadCallback>> callbacks;
 
   // Callback for transfer. Declared in order to destruct in proper order - take care!
   std::unique_ptr<utils::ByteOutputCallback> file_callback = nullptr;
@@ -119,25 +115,35 @@ const C2Payload RESTSender::sendPayload(const std::string url, const Direction d
   client.setKeepAliveIdle(std::chrono::milliseconds(2000));
   client.setConnectionTimeout(std::chrono::milliseconds(2000));
   if (direction == Direction::TRANSMIT) {
-    input = std::unique_ptr<utils::ByteInputCallBack>(new utils::ByteInputCallBack());
-    callback = std::unique_ptr<utils::HTTPUploadCallback>(new utils::HTTPUploadCallback());
-    input->write(data);
-    callback->ptr = input.get();
-    callback->pos = 0;
     client.set_request_method("POST");
     if (!ssl_context_service_ && url.find("https://") == 0) {
       setSecurityContext(client, "POST", url);
     }
     if (payload.getOperation() == Operation::TRANSFER) {
-      // POST content as file
-      std::string filename = payload.getLabel();
-      if (filename.empty()) {
-        throw std::logic_error("Missing filename");
+      // treat nested payloads as files
+      for (auto& file : payload.getNestedPayloads()) {
+        std::string filename = file.getLabel();
+        if (filename.empty()) {
+          throw std::logic_error("Missing filename");
+        }
+        auto file_input = std::make_unique<utils::ByteInputCallBack>();
+        auto file_cb = std::make_unique<utils::HTTPUploadCallback>();
+        auto file_data = file.getRawData();
+        file_input->write(std::string{file_data.begin(), file_data.end()});
+        file_cb->ptr = file_input.get();
+        client.addFormPart("application/octet-stream", "file", file_cb.get(), filename);
+        inputs.push_back(std::move(file_input));
+        callbacks.push_back(std::move(file_cb));
       }
-      client.addFormPart(getFileMimeType(filename), "file", callback.get(), filename);
     } else {
-      client.setUploadCallback(callback.get());
-      client.setPostSize(data.size());
+      auto data_input = std::make_unique<utils::ByteInputCallBack>();
+      auto data_cb = std::make_unique<utils::HTTPUploadCallback>();
+      data_input->write(data.value_or(""));
+      data_cb->ptr = data_input.get();
+      client.setUploadCallback(data_cb.get());
+      client.setPostSize(data ? data->size() : 0);
+      inputs.push_back(std::move(data_input));
+      callbacks.push_back(std::move(data_cb));
     }
   } else {
     // we do not need to set the upload callback

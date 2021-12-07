@@ -116,6 +116,8 @@ class Properties {
 
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
+  std::string getFilePath() const;
+
  protected:
   std::map<std::string, std::string> getProperties() const;
 
