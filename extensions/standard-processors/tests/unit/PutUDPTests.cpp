@@ -25,7 +25,7 @@
 #include "PutUDP.h"
 #include "utils/net/DNS.h"
 #include "utils/net/Socket.h"
-#include "utils/OptionalUtils.h"
+#include "utils/expected.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -93,13 +93,13 @@ class SingleInputTestController : public TestController {
 
 struct DatagramListener {
   DatagramListener(const char* const hostname, const char* const port)
-    :resolved_names_{utils::net::resolveHost(hostname, port, utils::net::IpProtocol::Udp)},
+    :resolved_names_{utils::net::resolveHost(hostname, port, utils::net::IpProtocol::Udp).value()},
      open_socket_{utils::net::open_socket(resolved_names_.get())
-        | utils::orElseGet([=]() -> utils::net::OpenSocketResult { throw std::runtime_error{utils::StringUtils::join_pack("Failed to connect to ", hostname, " on port ", port)}; })}
+        | utils::valueOrElse([=] { throw std::runtime_error{utils::StringUtils::join_pack("Failed to connect to ", hostname, " on port ", port)}; })}
   {
     const auto bind_result = bind(open_socket_.socket_.get(), open_socket_.selected_name->ai_addr, open_socket_.selected_name->ai_addrlen);
     if (bind_result == utils::net::SocketError) {
-      throw std::runtime_error{utils::StringUtils::join_pack("bind: ", utils::net::get_last_socket_error_message())};
+      throw std::runtime_error{utils::StringUtils::join_pack("bind: ", utils::net::get_last_socket_error().message())};
     }
   }
 
@@ -115,7 +115,7 @@ struct DatagramListener {
     socklen_t addrlen = sizeof(remote_address);
     const auto recv_result = recvfrom(open_socket_.socket_.get(), result.message.data(), result.message.size(), 0, std::launder(reinterpret_cast<sockaddr*>(&remote_address)), &addrlen);
     if (recv_result == utils::net::SocketError) {
-      throw std::runtime_error{utils::StringUtils::join_pack("recvfrom: ", utils::net::get_last_socket_error_message())};
+      throw std::runtime_error{utils::StringUtils::join_pack("recvfrom: ", utils::net::get_last_socket_error().message())};
     }
     result.message.resize(gsl::narrow<size_t>(recv_result));
     result.remote_address = utils::net::sockaddr_ntop(std::launder(reinterpret_cast<sockaddr*>(&remote_address)));

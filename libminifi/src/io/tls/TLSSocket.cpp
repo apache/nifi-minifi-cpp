@@ -292,7 +292,7 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
     if (listeners_ > 0) {
       const auto newfd = accept(socket_file_descriptor_, nullptr, nullptr);
       if (!valid_socket(newfd)) {
-        logger_->log_error("accept: %s", utils::net::get_last_socket_error_message());
+        logger_->log_error("accept: %s", utils::net::get_last_socket_error().message());
         return -1;
       }
       FD_SET(newfd, &total_list_);  // add to master set

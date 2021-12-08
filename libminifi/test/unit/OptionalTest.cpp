@@ -61,13 +61,13 @@ TEST_CASE("optional orElse", "[optional or else]") {
   REQUIRE_THROWS_AS(std::optional<bool>{} | utils::orElse([]{ throw ex{}; }), ex);
 }
 
-TEST_CASE("optional orElseGet", "[optional][orElseGet]") {
-  const auto seven = std::make_optional(7) | utils::orElseGet([]() -> int { throw std::exception{}; });
-  const auto test1 = std::make_optional(6) | utils::orElseGet([]{ return 49; });
-  const auto test2 = std::optional<int>{} | utils::orElseGet([]{ return size_t{0}; });
+TEST_CASE("optional valueOrElse", "[optional][valueOrElse]") {
+  const auto seven = std::make_optional(7) | utils::valueOrElse([]() -> int { throw std::exception{}; });
+  const auto test1 = std::make_optional(6) | utils::valueOrElse([] { return 49; });
+  const auto test2 = std::optional<int>{} | utils::valueOrElse([] { return size_t{0}; });
 
   REQUIRE(7 == seven);
   REQUIRE(6 == test1);
   REQUIRE(0 == test2);
-  REQUIRE_THROWS_AS(std::optional<int>{} | utils::orElseGet([]() -> int { throw std::exception{}; }), std::exception);
+  REQUIRE_THROWS_AS(std::optional<int>{} | utils::valueOrElse([]() -> int { throw std::exception{}; }), std::exception);
 }

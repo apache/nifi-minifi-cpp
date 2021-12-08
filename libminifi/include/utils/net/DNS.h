@@ -18,6 +18,8 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <system_error>
+#include "nonstd/expected.hpp"
 
 struct addrinfo;
 
@@ -31,14 +33,14 @@ enum class IpProtocol {
   Udp
 };
 
-std::unique_ptr<addrinfo, addrinfo_deleter> resolveHost(const char* hostname, const char* port, IpProtocol = IpProtocol::Tcp, bool need_canonname = false);
-inline std::unique_ptr<addrinfo, addrinfo_deleter> resolveHost(const char* const port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
+nonstd::expected<std::unique_ptr<addrinfo, addrinfo_deleter>, std::error_code> resolveHost(const char* hostname, const char* port, IpProtocol = IpProtocol::Tcp, bool need_canonname = false);
+inline auto resolveHost(const char* const port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
   return resolveHost(nullptr, port, proto, need_canonname);
 }
-inline std::unique_ptr<addrinfo, addrinfo_deleter> resolveHost(const char* const hostname, const uint16_t port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
+inline auto resolveHost(const char* const hostname, const uint16_t port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
   return resolveHost(hostname, std::to_string(port).c_str(), proto, need_canonname);
 }
-inline std::unique_ptr<addrinfo, addrinfo_deleter> resolveHost(const uint16_t port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
+inline auto resolveHost(const uint16_t port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
   return resolveHost(nullptr, port, proto, need_canonname);
 }
 }  // namespace org::apache::nifi::minifi::utils::net

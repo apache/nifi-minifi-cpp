@@ -31,7 +31,7 @@
 #include "range/v3/range/conversion.hpp"
 
 #include "utils/gsl.h"
-#include "utils/OptionalUtils.h"
+#include "utils/expected.h"
 #include "utils/net/DNS.h"
 #include "utils/StringUtils.h"
 #include "utils/net/Socket.h"
@@ -57,19 +57,19 @@ const core::Relationship PutUDP::Success{"success", "FlowFiles that are sent to 
 const core::Relationship PutUDP::Failure{"failure", "FlowFiles that encountered IO errors are send out this relationship."};
 
 PutUDP::PutUDP(const std::string& name, const utils::Identifier& uuid)
-  :Processor(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger()}
+    :Processor(name, uuid), logger_{core::logging::LoggerFactory<PutUDP>::getLogger()}
 { }
 
 PutUDP::~PutUDP() = default;
 
 void PutUDP::initialize() {
   setSupportedProperties({
-    Hostname,
-    Port
+      Hostname,
+      Port
   });
   setSupportedRelationships({
-    Success,
-    Failure
+      Success,
+      Failure
   });
 }
 
@@ -106,50 +106,51 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
     return;
   }
 
-  try {
-    const auto names = utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::Udp);
-    if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
-      std::vector<std::string> names_vector;
-      for (const addrinfo* it = names.get(); it; it = it->ai_next) {
-        names_vector.push_back(utils::net::sockaddr_ntop(it->ai_addr));
-      }
-      logger_->log_debug("resolved \'%s\' to: %s",
-          hostname,
-          names_vector | ranges::views::join(',') | ranges::to<std::string>());
-    }
-
-    auto open_socket_result = utils::net::open_socket(names.get());
-    if (!open_socket_result) {
-      logger_->log_error("socket: %s", utils::net::get_last_socket_error_message());
-      session->transfer(flow_file, Failure);
-      return;
-    }
-    const auto[socket_handle, selected_name] = *std::move(open_socket_result);
-    logger_->log_debug("connected to %s", utils::net::sockaddr_ntop(selected_name->ai_addr));
-
-    const auto data = session->readBuffer(flow_file);
-    if (data.status < 0) {
-      session->transfer(flow_file, Failure);
-      return;
-    }
-
-#ifdef WIN32
-    const char* const buffer_ptr = reinterpret_cast<const char*>(data.buffer.data());
-#else
-    const void* const buffer_ptr = data.buffer.data();
-#endif
-    const auto send_result = ::sendto(socket_handle.get(), buffer_ptr, data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
-    if (send_result == utils::net::SocketError) {
-      throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, utils::StringUtils::join_pack("sendto: ", utils::net::get_last_socket_error_message())};
-    }
-    logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));  // NOLINT: sendto
-  } catch (const std::exception& ex) {
-    logger_->log_error("[%s] %s", flow_file->getUUIDStr(), ex.what());
+  const auto data = session->readBuffer(flow_file);
+  if (data.status < 0) {
     session->transfer(flow_file, Failure);
     return;
   }
 
-  session->transfer(flow_file, Success);
+  const auto nonthrowing_sockaddr_ntop = [](const sockaddr* const sa) -> std::string {
+    return utils::try_expression([sa] { return utils::net::sockaddr_ntop(sa); }).value_or("(n/a)");
+  };
+
+  utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::Udp)
+      | utils::flatMap([&, this](const auto& names) {
+        if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
+          std::vector<std::string> names_vector;
+          for (const addrinfo* it = names.get(); it; it = it->ai_next) {
+            names_vector.push_back(nonthrowing_sockaddr_ntop(it->ai_addr));
+          }
+          logger_->log_debug("resolved \'%s\' to: %s",
+              hostname,
+              names_vector | ranges::views::join(',') | ranges::to<std::string>());
+        }
+
+        return utils::net::open_socket(names.get());
+      })
+      | utils::flatMap([&, this](utils::net::OpenSocketResult socket_handle_and_selected_name) -> nonstd::expected<void, std::error_code> {
+        const auto& [socket_handle, selected_name] = socket_handle_and_selected_name;
+        logger_->log_debug("connected to %s", nonthrowing_sockaddr_ntop(selected_name->ai_addr));
+#ifdef WIN32
+        const char* const buffer_ptr = reinterpret_cast<const char*>(data.buffer.data());
+#else
+        const void* const buffer_ptr = data.buffer.data();
+#endif
+        const auto send_result = ::sendto(socket_handle.get(), buffer_ptr, data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
+        logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));  // NOLINT: sendto
+        if (send_result == utils::net::SocketError) {
+          return nonstd::make_unexpected(utils::net::get_last_socket_error());
+        }
+        session->transfer(flow_file, Success);
+        return {};
+      })
+      | utils::orElse([&, this](std::error_code ec) {
+        gsl_Expects(ec);
+        logger_->log_error("%s", ec.message());
+        session->transfer(flow_file, Failure);
+      });
 }
 
 REGISTER_RESOURCE(PutUDP, "The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet which is then transmitted to the configured UDP server. "

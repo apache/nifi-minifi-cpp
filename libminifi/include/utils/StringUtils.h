@@ -36,6 +36,7 @@
 #endif
 #include "utils/FailurePolicy.h"
 #include "utils/gsl.h"
+#include "utils/meta/detected.h"
 
 namespace org::apache::nifi::minifi {
 namespace utils {
@@ -213,24 +214,6 @@ class StringUtils {
   static size_t size(const std::basic_string_view<CharT>& str) noexcept { return str.size(); }
 
   struct detail {
-    // partial detection idiom impl, from cppreference.com
-    struct nonesuch{};
-
-    template<typename Default, typename Void, template<class...> class Op, typename... Args>
-    struct detector {
-      using value_t = std::false_type;
-      using type = Default;
-    };
-
-    template<typename Default, template<class...> class Op, typename... Args>
-    struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
-      using value_t = std::true_type;
-      using type = Op<Args...>;
-    };
-
-    template<template<class...> class Op, typename... Args>
-    using is_detected = typename detector<nonesuch, void, Op, Args...>::value_t;
-
     // implementation detail of join_pack
     template<typename CharT>
     struct str_detector {
@@ -239,7 +222,7 @@ class StringUtils {
     };
 
     template<typename ResultT, typename CharT, typename... Strs>
-    using valid_string_pack_t = std::enable_if_t<(is_detected<str_detector<CharT>::template valid_string_t, Strs>::value && ...), ResultT>;
+    using valid_string_pack_t = std::enable_if_t<(meta::is_detected_v<str_detector<CharT>::template valid_string_t, Strs> && ...), ResultT>;
 
     template<typename CharT, typename... Strs, valid_string_pack_t<void, CharT, Strs...>* = nullptr>
     static std::basic_string<CharT> join_pack(const Strs&... strs) {

@@ -25,12 +25,9 @@
 
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
+#include "utils/detail/MonadicOperationWrappers.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
 std::optional<utils::remove_cvref_t<T>> optional_from_ptr(T&& obj) {
@@ -44,11 +41,6 @@ template<typename T>
 struct is_optional<std::optional<T>, void> : std::true_type {};
 
 namespace detail {
-template<typename T>
-struct map_wrapper {
-  T function;
-};
-
 // map implementation
 template<typename SourceType, typename F>
 auto operator|(const std::optional<SourceType>& o, map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *o)))
@@ -69,11 +61,6 @@ auto operator|(std::optional<SourceType>&& o, map_wrapper<F> f) noexcept(noexcep
     return std::nullopt;
   }
 }
-
-template<typename T>
-struct flat_map_wrapper {
-  T function;
-};
 
 // flatMap implementation
 template<typename SourceType, typename F>
@@ -97,11 +84,6 @@ auto operator|(std::optional<SourceType>&& o, flat_map_wrapper<F> f) noexcept(no
   }
 }
 
-template<typename T>
-struct or_else_wrapper {
-  T function;
-};
-
 // orElse implementation
 template<typename SourceType, typename F>
 auto operator|(std::optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function))))
@@ -124,14 +106,9 @@ auto operator|(std::optional<SourceType> o, or_else_wrapper<F> f) noexcept(noexc
   }
 }
 
-template<typename T>
-struct or_else_get_wrapper {
-  T function;
-};
-
-// orElseGet implementation
+// valueOrElse implementation
 template<typename SourceType, typename F>
-auto operator|(std::optional<SourceType> o, or_else_get_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function))))
+auto operator|(std::optional<SourceType> o, value_or_else_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function))))
     -> std::common_type_t<SourceType, std::decay_t<decltype(std::invoke(std::forward<F>(f.function)))>> {
   if (o) {
     return *std::move(o);
@@ -140,24 +117,7 @@ auto operator|(std::optional<SourceType> o, or_else_get_wrapper<F> f) noexcept(n
   }
 }
 }  // namespace detail
-
-template<typename T>
-detail::map_wrapper<T&&> map(T&& func) noexcept { return {std::forward<T>(func)}; }
-
-template<typename T>
-detail::flat_map_wrapper<T&&> flatMap(T&& func) noexcept { return {std::forward<T>(func)}; }
-
-template<typename T>
-detail::or_else_wrapper<T&&> orElse(T&& func) noexcept { return {std::forward<T>(func)}; }
-
-template<typename T>
-detail::or_else_get_wrapper<T&&> orElseGet(T&& func) noexcept { return {std::forward<T>(func)}; }
-
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_OPTIONALUTILS_H_
 

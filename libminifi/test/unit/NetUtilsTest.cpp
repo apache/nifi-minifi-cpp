@@ -29,7 +29,7 @@ namespace utils = org::apache::nifi::minifi::utils;
 namespace net = utils::net;
 
 TEST_CASE("net::resolveHost", "[net][dns][utils][resolveHost]") {
-  REQUIRE(net::sockaddr_ntop(net::resolveHost("127.0.0.1", "10080")->ai_addr) == "127.0.0.1");
-  const auto localhost_address = net::sockaddr_ntop(net::resolveHost("localhost", "10080")->ai_addr);
+  REQUIRE(net::sockaddr_ntop(net::resolveHost("127.0.0.1", "10080").value()->ai_addr) == "127.0.0.1");
+  const auto localhost_address = net::sockaddr_ntop(net::resolveHost("localhost", "10080").value()->ai_addr);
   REQUIRE((utils::StringUtils::startsWith(localhost_address, "127") || localhost_address == "::1"));
 }

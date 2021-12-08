@@ -29,21 +29,21 @@
 #endif /* WIN32 */
 
 namespace org::apache::nifi::minifi::utils::net {
-std::string get_last_socket_error_message() {
+std::error_code get_last_socket_error() {
 #ifdef WIN32
   const auto error_code = WSAGetLastError();
 #else
   const auto error_code = errno;
 #endif /* WIN32 */
-  return std::system_category().message(error_code);
+  return {error_code, std::system_category()};
 }
 
-std::optional<OpenSocketResult> open_socket(const addrinfo* const getaddrinfo_result) {
+nonstd::expected<OpenSocketResult, std::error_code> open_socket(const addrinfo* const getaddrinfo_result) {
   for (const addrinfo* it = getaddrinfo_result; it; it = it->ai_next) {
     const auto fd = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
     if (fd != utils::net::InvalidSocket) return OpenSocketResult{UniqueSocketHandle{fd}, gsl::make_not_null(it)};
   }
-  return std::nullopt;
+  return nonstd::make_unexpected(get_last_socket_error());
 }
 
 std::string sockaddr_ntop(const sockaddr* const sa) {
@@ -53,14 +53,14 @@ std::string sockaddr_ntop(const sockaddr* const sa) {
     std::memcpy(reinterpret_cast<void*>(&sa_in), sa, sizeof(sockaddr_in));
     result.resize(INET_ADDRSTRLEN);
     if (inet_ntop(AF_INET, &sa_in.sin_addr, &result[0], INET_ADDRSTRLEN) == nullptr) {
-      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error_message() };
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error().message() };
     }
   } else if (sa->sa_family == AF_INET6) {
     sockaddr_in6 sa_in6{};
     std::memcpy(reinterpret_cast<void*>(&sa_in6), sa, sizeof(sockaddr_in6));
     result.resize(INET6_ADDRSTRLEN);
     if (inet_ntop(AF_INET6, &sa_in6.sin6_addr, &result[0], INET6_ADDRSTRLEN) == nullptr) {
-      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error_message() };
+      throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error().message() };
     }
   } else {
     throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, "sockaddr_ntop: unknown address family" };

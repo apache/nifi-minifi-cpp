@@ -214,7 +214,7 @@ void Socket::setNonBlocking() {
 int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
   for (const auto *current_addr = destination_addresses; current_addr; current_addr = current_addr->ai_next) {
     if (!valid_socket(socket_file_descriptor_ = socket(current_addr->ai_family, current_addr->ai_socktype, current_addr->ai_protocol))) {
-      logger_->log_warn("socket: %s", utils::net::get_last_socket_error_message());
+      logger_->log_warn("socket: %s", utils::net::get_last_socket_error().message());
       continue;
     }
     setSocketOptions(socket_file_descriptor_);
@@ -223,14 +223,14 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
       // server socket
       const auto bind_result = bind(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (bind_result == SocketError) {
-        logger_->log_warn("bind: %s", utils::net::get_last_socket_error_message());
+        logger_->log_warn("bind: %s", utils::net::get_last_socket_error().message());
         close();
         continue;
       }
 
       const auto listen_result = listen(socket_file_descriptor_, listeners_);
       if (listen_result == SocketError) {
-        logger_->log_warn("listen: %s", utils::net::get_last_socket_error_message());
+        logger_->log_warn("listen: %s", utils::net::get_last_socket_error().message());
         close();
         continue;
       }
@@ -248,7 +248,7 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
 
       const auto connect_result = connect(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
       if (connect_result == SocketError) {
-        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", utils::net::sockaddr_ntop(current_addr->ai_addr), port_, utils::net::get_last_socket_error_message());
+        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", utils::net::sockaddr_ntop(current_addr->ai_addr), port_, utils::net::get_last_socket_error().message());
         close();
         continue;
       }
@@ -279,7 +279,7 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
     sa.sin_port = htons(port_);
     sa.sin_addr.s_addr = htonl(is_loopback_only_ ? INADDR_LOOPBACK : INADDR_ANY);
     if (bind(socket_file_descriptor_, reinterpret_cast<const sockaddr*>(&sa), sizeof(struct sockaddr_in)) == SocketError) {
-      logger_->log_error("Could not bind to socket, reason %s", utils::net::get_last_socket_error_message());
+      logger_->log_error("Could not bind to socket, reason %s", utils::net::get_last_socket_error().message());
       return -1;
     }
 
@@ -334,7 +334,7 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
   return 0;
 }
 
-int Socket::initialize() try {
+int Socket::initialize() {
   const char* const hostname = [this]() -> const char* {
     if (is_loopback_only_) return "localhost";
     if (!is_loopback_only_ && listeners_ > 0) return nullptr;  // all non-localhost server sockets listen on wildcard address
@@ -342,7 +342,12 @@ int Socket::initialize() try {
     return nullptr;
   }();
   const bool is_server = hostname == nullptr;
-  const std::unique_ptr<addrinfo, util::addrinfo_deleter> addr_info = utils::net::resolveHost(hostname, port_, utils::net::IpProtocol::Tcp, !is_server);
+  const auto addr_info_or_error = utils::net::resolveHost(hostname, port_, utils::net::IpProtocol::Tcp, !is_server);
+  if (!addr_info_or_error) {
+    logger_->log_error("getaddrinfo: %s", addr_info_or_error.error().message());
+    return -1;
+  }
+  const auto& addr_info = *addr_info_or_error;
   socket_file_descriptor_ = InvalidSocket;
 
   // AI_CANONNAME always sets ai_canonname of the first addrinfo structure
@@ -356,9 +361,6 @@ int Socket::initialize() try {
     else logger_->log_debug("Successfully applied O_NONBLOCK to fd");
   }
   return conn_result;
-} catch (const Exception& ex) {
-  logger_->log_error(ex.what());
-  return -1;
 }
 
 int16_t Socket::select_descriptor(const uint16_t msec) {
@@ -459,7 +461,7 @@ size_t Socket::write(const uint8_t *value, size_t size) {
     // check for errors
     if (send_ret <= 0) {
       utils::file::FileUtils::close(fd);
-      logger_->log_error("Could not send to %d, error: %s", fd, utils::net::get_last_socket_error_message());
+      logger_->log_error("Could not send to %d, error: %s", fd, utils::net::get_last_socket_error().message());
       return STREAM_ERROR;
     }
     bytes += gsl::narrow<size_t>(send_ret);

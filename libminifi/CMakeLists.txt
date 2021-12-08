@@ -98,7 +98,7 @@ if(NOT EXCLUDE_BOOST)
 endif()
 
 include(RangeV3)
-list(APPEND LIBMINIFI_LIBRARIES yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads gsl-lite libsodium range-v3)
+list(APPEND LIBMINIFI_LIBRARIES yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads gsl-lite libsodium range-v3 expected-lite)
 if(NOT WIN32)
 	list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()

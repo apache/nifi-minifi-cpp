@@ -33,12 +33,29 @@
 namespace org::apache::nifi::minifi::utils::net {
 
 namespace {
-std::string get_last_getaddrinfo_err_str(int getaddrinfo_result) {
+
+#ifndef WIN32
+class addrinfo_category : public std::error_category {
+ public:
+  [[nodiscard]] const char* name() const noexcept override { return "addrinfo"; }
+
+  [[nodiscard]] std::string message(int value) const override {
+    return gai_strerror(value);
+  }
+};
+
+const addrinfo_category& get_addrinfo_category() {
+  static addrinfo_category instance;
+  return instance;
+}
+#endif
+
+std::error_code get_last_getaddrinfo_err_code(int getaddrinfo_result) {
 #ifdef WIN32
   (void)getaddrinfo_result;  // against unused warnings on windows
-  return utils::net::get_last_socket_error_message();
+  return std::error_code{WSAGetLastError(), std::system_category()};
 #else
-  return gai_strerror(getaddrinfo_result);
+  return std::error_code{getaddrinfo_result, get_addrinfo_category()};
 #endif /* WIN32 */
 }
 }  // namespace
@@ -47,7 +64,7 @@ void addrinfo_deleter::operator()(addrinfo* const p) const noexcept {
   freeaddrinfo(p);
 }
 
-std::unique_ptr<addrinfo, addrinfo_deleter> resolveHost(const char* const hostname, const char* const port, const IpProtocol protocol, const bool need_canonname) {
+nonstd::expected<std::unique_ptr<addrinfo, addrinfo_deleter>, std::error_code> resolveHost(const char* const hostname, const char* const port, const IpProtocol protocol, const bool need_canonname) {
   addrinfo hints{};
   memset(&hints, 0, sizeof hints);  // make sure the struct is empty
   hints.ai_family = AF_UNSPEC;
@@ -68,7 +85,7 @@ std::unique_ptr<addrinfo, addrinfo_deleter> resolveHost(const char* const hostna
   std::unique_ptr<addrinfo, addrinfo_deleter> addr_info{ getaddrinfo_result };
   getaddrinfo_result = nullptr;
   if (errcode != 0) {
-    throw Exception{ExceptionType::FILE_OPERATION_EXCEPTION, StringUtils::join_pack("getaddrinfo: ", get_last_getaddrinfo_err_str(errcode))};
+    return nonstd::make_unexpected(get_last_getaddrinfo_err_code(errcode));
   }
   return addr_info;
 }

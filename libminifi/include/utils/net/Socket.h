@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 #pragma once
+#include <string>
+#include <system_error>
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -26,8 +28,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #endif /* WIN32 */
-#include <string>
-#include <optional>
+#include "nonstd/expected.hpp"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils::net {
@@ -46,9 +47,9 @@ inline constexpr int SocketError = -1;
 #endif /* WIN32 */
 
 /**
- * Return the last socket error message, based on errno on posix and WSAGetLastError() on windows
+ * Return the last socket error code, based on errno on posix and WSAGetLastError() on windows.
  */
-std::string get_last_socket_error_message();
+std::error_code get_last_socket_error();
 
 inline void close_socket(SocketDescriptor sockfd) {
 #ifdef WIN32
@@ -95,7 +96,7 @@ struct OpenSocketResult {
  * @param getaddrinfo_result
  * @return The file descriptor and the selected list element on success, or nullopt on error. Use get_last_socket_error_message() to get the error message.
  */
-std::optional<OpenSocketResult> open_socket(const addrinfo* getaddrinfo_result);
+nonstd::expected<OpenSocketResult, std::error_code> open_socket(const addrinfo* getaddrinfo_result);
 
 
 std::string sockaddr_ntop(const sockaddr* sa);
