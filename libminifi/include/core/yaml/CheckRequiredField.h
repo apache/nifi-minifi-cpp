@@ -19,6 +19,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "yaml-cpp/yaml.h"
@@ -31,6 +32,7 @@ namespace core {
 namespace yaml {
 
 bool isFieldPresent(const YAML::Node *yamlNode, const std::string &fieldName);
+std::string buildErrorMessage(const YAML::Node *yamlNode, const std::vector<std::string>& alternateFieldNames, const std::string &yamlSection = "");
 
 /**
  * This is a helper function for verifying the existence of a required
@@ -51,7 +53,23 @@ bool isFieldPresent(const YAML::Node *yamlNode, const std::string &fieldName);
  *                               not present in 'yamlNode'
  */
 void checkRequiredField(
-    const YAML::Node *yamlNode, const std::string &fieldName, const std::shared_ptr<logging::Logger>& logger, const std::string &yamlSection = "", const std::string &errorMessage = "");
+    const YAML::Node *yamlNode, const std::string &fieldName, const std::shared_ptr<logging::Logger>& logger, const std::string &yamlSection = "", std::string errorMessage = "");
+
+template<typename T>
+T parseRequiredField(const YAML::Node* yamlNode,
+    const std::vector<std::string>& alternateNames, const std::shared_ptr<logging::Logger>& logger,
+    const std::string &yamlSection, std::function<T(const YAML::Node&)> parser, std::string errorMessage = "") {
+  for (const auto& name : alternateNames) {
+    if (yaml::isFieldPresent(yamlNode, name)) {
+      return parser((*yamlNode)[name]);
+    }
+  }
+  if (errorMessage.empty()) {
+    errorMessage = buildErrorMessage(yamlNode, alternateNames, yamlSection);
+  }
+  logger->log_error(errorMessage.c_str());
+  throw std::invalid_argument(errorMessage);
+}
 
 }  // namespace yaml
 }  // namespace core
