@@ -108,7 +108,7 @@ struct DatagramListener {
     std::string message;
   };
 
-  [[nodiscard]] ReceiveResult receive(const size_t max_message_size = BUFSIZ) const {
+  [[nodiscard]] ReceiveResult receive(const size_t max_message_size = 8192) const {
     ReceiveResult result;
     result.message.resize(max_message_size);
     sockaddr_storage remote_address{};
