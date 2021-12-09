@@ -22,6 +22,7 @@
 #include <string>
 
 #include "OutputStream.h"
+#include "InputStream.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 
@@ -32,11 +33,17 @@ class WriteArchiveStream : public OutputStream {
   virtual bool newEntry(const std::string& name, size_t size) = 0;
 };
 
-class WriteArchiveStreamProvider : public core::CoreComponent {
+class ReadArchiveStream : public InputStream {
+ public:
+  virtual bool nextEntry() = 0;
+};
+
+class ArchiveStreamProvider : public core::CoreComponent {
  public:
   using CoreComponent::CoreComponent;
-  virtual std::unique_ptr<WriteArchiveStream> createStream(int compress_level, const std::string& compress_format,
-      std::shared_ptr<OutputStream> sink, std::shared_ptr<core::logging::Logger> logger) = 0;
+  virtual std::unique_ptr<WriteArchiveStream> createWriteStream(int compress_level, const std::string& compress_format,
+                                                      std::shared_ptr<OutputStream> sink, std::shared_ptr<core::logging::Logger> logger) = 0;
+  virtual std::unique_ptr<ReadArchiveStream> createReadStream(std::shared_ptr<InputStream> archive_stream) = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::io

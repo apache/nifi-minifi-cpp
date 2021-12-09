@@ -22,7 +22,7 @@
 #include <utility>
 #include <string>
 
-#include "io/WriteArchiveStream.h"
+#include "io/ArchiveStream.h"
 #include "archive_entry.h"
 #include "archive.h"
 #include "utils/Enum.h"

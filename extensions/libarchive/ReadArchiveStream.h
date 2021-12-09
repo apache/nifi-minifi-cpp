@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "io/OutputStream.h"
+#include "io/ArchiveStream.h"
 #include "core/logging/LoggerConfiguration.h"
 
 #include "archive_entry.h"
@@ -29,7 +30,7 @@
 
 namespace org::apache::nifi::minifi::io {
 
-class ReadArchiveStream : public InputStream {
+class ReadArchiveStreamImpl : public ReadArchiveStream {
   struct archive_ptr : public std::unique_ptr<struct archive, int(*)(struct archive*)> {
     using Base = std::unique_ptr<struct archive, int(*)(struct archive*)>;
     archive_ptr(): Base(nullptr, archive_read_free) {}
@@ -56,7 +57,7 @@ class ReadArchiveStream : public InputStream {
   archive_ptr createReadArchive();
 
  public:
-  explicit ReadArchiveStream(std::shared_ptr<InputStream> input) : reader_(std::move(input)) {
+  explicit ReadArchiveStreamImpl(std::shared_ptr<InputStream> input) : reader_(std::move(input)) {
     arch_ = createReadArchive();
   }
 
@@ -76,7 +77,7 @@ class ReadArchiveStream : public InputStream {
     return gsl::narrow<la_ssize_t>(opt_buffer->size());
   }
 
-  bool nextEntry();
+  bool nextEntry() override;
 
   using InputStream::read;
 

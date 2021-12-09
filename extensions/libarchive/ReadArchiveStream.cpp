@@ -20,7 +20,7 @@
 
 namespace org::apache::nifi::minifi::io {
 
-ReadArchiveStream::archive_ptr ReadArchiveStream::createReadArchive() {
+ReadArchiveStreamImpl::archive_ptr ReadArchiveStreamImpl::createReadArchive() {
   archive_ptr arch = archive_read_new();
   if (!arch) {
     logger_->log_error("Failed to create read archive");
@@ -47,7 +47,7 @@ ReadArchiveStream::archive_ptr ReadArchiveStream::createReadArchive() {
   return arch;
 }
 
-bool ReadArchiveStream::nextEntry() {
+bool ReadArchiveStreamImpl::nextEntry() {
   if (!arch_) {
     return false;
   }
@@ -62,7 +62,7 @@ bool ReadArchiveStream::nextEntry() {
   return true;
 }
 
-size_t ReadArchiveStream::read(uint8_t* buf, size_t len) {
+size_t ReadArchiveStreamImpl::read(uint8_t* buf, size_t len) {
   if (!arch_ || !entry_size_) {
     return STREAM_ERROR;
   }

@@ -191,7 +191,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
       };
     } else {
       transformer = [&] (const std::shared_ptr<io::InputStream>& in, const std::shared_ptr<io::OutputStream>& out) -> int64_t {
-        io::ReadArchiveStream decompressor(in);
+        io::ReadArchiveStreamImpl decompressor(in);
         if (!decompressor.nextEntry()) {
           return -1;
         }
@@ -203,6 +203,9 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
         return transformer(in, out);
       }));
     }));
+    // TODO(adebreceni): previous attempt to handle a malformed archive were in vain
+    //    as the session->read threw anyway rolling back the flowfile, we should correctly
+    //    forward a malformed archive to failure
     success = true;
   } else {
     CompressContent::GzipWriteCallback callback(compressMode_, compressLevel_, flowFile, session);

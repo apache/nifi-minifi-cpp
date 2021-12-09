@@ -22,6 +22,7 @@
 #include <string>
 
 #include "core/Resource.h"
+#include "ReadArchiveStream.h"
 
 namespace org::apache::nifi::minifi::io {
 
@@ -123,11 +124,11 @@ size_t WriteArchiveStreamImpl::write(const uint8_t* data, size_t len) {
   return len;
 }
 
-class WriteArchiveStreamProviderImpl : public WriteArchiveStreamProvider {
+class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
  public:
-  using WriteArchiveStreamProvider::WriteArchiveStreamProvider;
-  std::unique_ptr<WriteArchiveStream> createStream(int compress_level, const std::string& compress_format,
-      std::shared_ptr<OutputStream> sink, std::shared_ptr<core::logging::Logger> logger) override {
+  using ArchiveStreamProvider::ArchiveStreamProvider;
+  std::unique_ptr<WriteArchiveStream> createWriteStream(int compress_level, const std::string& compress_format,
+                                              std::shared_ptr<OutputStream> sink, std::shared_ptr<core::logging::Logger> logger) override {
     CompressionFormat format = CompressionFormat::parse(compress_format.c_str(), CompressionFormat{});
     if (!format) {
       if (logger) {
@@ -137,9 +138,13 @@ class WriteArchiveStreamProviderImpl : public WriteArchiveStreamProvider {
     }
     return std::make_unique<WriteArchiveStreamImpl>(compress_level, format, std::move(sink));
   }
+
+  std::unique_ptr<ReadArchiveStream> createReadStream(std::shared_ptr<InputStream> archive_stream) override {
+    return std::make_unique<ReadArchiveStreamImpl>(std::move(archive_stream));
+  }
 };
 
-REGISTER_INTERNAL_RESOURCE_AS(WriteArchiveStreamProviderImpl, ("WriteArchiveStreamProvider"));
+REGISTER_INTERNAL_RESOURCE_AS(ArchiveStreamProviderImpl, ("ArchiveStreamProvider"));
 
 }  // namespace org::apache::nifi::minifi::io
 
