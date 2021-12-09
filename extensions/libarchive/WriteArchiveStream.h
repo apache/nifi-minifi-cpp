@@ -42,7 +42,7 @@ class WriteArchiveStreamImpl: public WriteArchiveStream {
   struct archive_ptr : public std::unique_ptr<struct archive, int(*)(struct archive*)> {
     using Base = std::unique_ptr<struct archive, int(*)(struct archive*)>;
     archive_ptr(): Base(nullptr, archive_write_free) {}
-    archive_ptr(nullptr_t): Base(nullptr, archive_write_free) {}
+    archive_ptr(std::nullptr_t): Base(nullptr, archive_write_free) {}
     archive_ptr(struct archive* arch): Base(arch, archive_write_free) {}
   };
   struct archive_entry_ptr : public std::unique_ptr<struct archive_entry, void(*)(struct archive_entry*)> {
