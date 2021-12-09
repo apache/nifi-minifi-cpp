@@ -20,7 +20,7 @@
 #include <type_traits>
 
 namespace org::apache::nifi::minifi::utils::meta {
-// partial detection idiom impl, from cppreference.com
+// detection idiom impl, from cppreference.com
 struct nonesuch{};
 
 namespace detail {

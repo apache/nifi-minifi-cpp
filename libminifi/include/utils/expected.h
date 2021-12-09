@@ -132,8 +132,7 @@ typename utils::remove_cvref_t<Expected>::value_type operator|(Expected&& object
     constexpr bool invocable_with_no_argument = meta::is_detected_v<invocable_detector, F>;
     static_assert(invocable_with_no_argument);
     using function_return_type = std::decay_t<decltype(std::invoke(std::forward<F>(f.function)))>;
-    static_assert((std::is_same_v<function_return_type, void> && std::is_default_constructible_v<value_type>)
-            || std::is_constructible_v<value_type, std::conditional_t<std::is_same_v<function_return_type, void>, meta::nonesuch, function_return_type>&&>,
+    static_assert((std::is_same_v<function_return_type, void> && std::is_default_constructible_v<value_type>) || std::is_constructible_v<value_type, function_return_type>,
         "valueOrElse expects a function returning value_type or void");
     if constexpr (std::is_same_v<function_return_type, void>) {
       std::invoke(std::forward<F>(f.function));
@@ -144,8 +143,7 @@ typename utils::remove_cvref_t<Expected>::value_type operator|(Expected&& object
   } else {
     static_assert(invocable_with_argument);
     using function_return_type = std::decay_t<decltype(std::invoke(std::forward<F>(f.function), std::forward<Expected>(object).error()))>;
-    static_assert((std::is_same_v<function_return_type, void> && std::is_default_constructible_v<value_type>)
-            || std::is_constructible_v<value_type, std::conditional_t<std::is_same_v<function_return_type, void>, meta::nonesuch, function_return_type>&&>,
+    static_assert((std::is_same_v<function_return_type, void> && std::is_default_constructible_v<value_type>) || std::is_constructible_v<value_type, function_return_type>,
         "valueOrElse expects a function returning value_type or void");
     if constexpr (std::is_same_v<function_return_type, void>) {
       std::invoke(std::forward<F>(f.function), std::forward<Expected>(object).error());

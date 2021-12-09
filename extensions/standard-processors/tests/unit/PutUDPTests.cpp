@@ -21,7 +21,7 @@
 #include <random>
 #include <string>
 #include <unordered_map>
-#include "TestBase.h"
+#include "SingleInputTestController.h"
 #include "PutUDP.h"
 #include "utils/net/DNS.h"
 #include "utils/net/Socket.h"
@@ -31,66 +31,6 @@
 namespace org::apache::nifi::minifi::processors {
 
 namespace {
-class SingleInputTestController : public TestController {
- public:
-  explicit SingleInputTestController(const std::shared_ptr<core::Processor>& processor)
-    : processor_{plan->addProcessor(processor, processor->getName())}
-  {}
-
-  std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>
-      trigger(const std::string& input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
-    const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
-    input_->put(new_flow_file);
-    plan->runProcessor(processor_);
-    std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
-    for (const auto& [relationship, connection]: outgoing_connections_) {
-      std::set<std::shared_ptr<core::FlowFile>> expired_flow_files;
-      std::vector<std::shared_ptr<core::FlowFile>> output_flow_files;
-      while (connection->isWorkAvailable()) {
-        auto output_flow_file = connection->poll(expired_flow_files);
-        CHECK(expired_flow_files.empty());
-        if (!output_flow_file) continue;
-        output_flow_files.push_back(std::move(output_flow_file));
-      }
-      result.insert_or_assign(relationship, std::move(output_flow_files));
-    }
-    return result;
-  }
-
- private:
-  std::shared_ptr<core::FlowFile> createFlowFile(const std::string& content, std::unordered_map<std::string, std::string> attributes) {
-    const auto flow_file = std::make_shared<minifi::FlowFileRecord>();
-    for (auto& attr : std::move(attributes)) {
-      flow_file->setAttribute(attr.first, std::move(attr.second));
-    }
-    auto content_session = plan->getContentRepo()->createSession();
-    auto claim = content_session->create();
-    auto stream = content_session->write(claim);
-    stream->write(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
-    flow_file->setResourceClaim(claim);
-    flow_file->setSize(stream->size());
-    flow_file->setOffset(0);
-
-    stream->close();
-    content_session->commit();
-    return flow_file;
-  }
-
- public:
-  std::shared_ptr<TestPlan> plan = createPlan();
-
- private:
-  std::shared_ptr<core::Processor> processor_;
-  std::unordered_map<core::Relationship, std::shared_ptr<minifi::Connection>> outgoing_connections_{[this] {
-    std::unordered_map<core::Relationship, std::shared_ptr<Connection>> result;
-    for (const auto& relationship: processor_->getSupportedRelationships()) {
-      result.insert_or_assign(relationship, plan->addConnection(processor_, relationship, nullptr));
-    }
-    return result;
-  }()};
-  std::shared_ptr<minifi::Connection> input_ = plan->addConnection(nullptr, PutUDP::Success, processor_);
-};
-
 struct DatagramListener {
   DatagramListener(const char* const hostname, const char* const port)
     :resolved_names_{utils::net::resolveHost(hostname, port, utils::net::IpProtocol::Udp).value()},
@@ -136,7 +76,7 @@ TEST_CASE("PutUDP", "[putudp]") {
   const auto port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine);
   const auto port_str = std::to_string(port);
 
-  SingleInputTestController controller{putudp};
+  test::SingleInputTestController controller{putudp};
   LogTestController::getInstance().setTrace<PutUDP>();
   LogTestController::getInstance().setTrace<core::ProcessContext>();
   LogTestController::getInstance().setLevelByClassName(spdlog::level::trace, "org::apache::nifi::minifi::core::ProcessContextExpr");
