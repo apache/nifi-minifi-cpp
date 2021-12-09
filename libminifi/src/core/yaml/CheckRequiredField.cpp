@@ -28,37 +28,48 @@ namespace minifi {
 namespace core {
 namespace yaml {
 
-bool isFieldPresent(const YAML::Node *yamlNode, const std::string &fieldName) {
-  return bool{yamlNode->as<YAML::Node>()[fieldName]};
+bool isFieldPresent(const YAML::Node &yaml_node, std::string_view field_name) {
+  return bool{yaml_node.as<YAML::Node>()[field_name.data()]};
 }
 
-std::string buildErrorMessage(const YAML::Node *yamlNode, const std::vector<std::string>& alternateFieldNames, const std::string &yamlSection) {
-  const YAML::Node name_node = yamlNode->as<YAML::Node>()["name"];
+std::string buildErrorMessage(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_field_names, std::string_view yaml_section) {
+  const YAML::Node name_node = yaml_node.as<YAML::Node>()["name"];
   // Build a helpful error message for the user so they can fix the
   // invalid YAML config file, using the component name if present
-  auto fieldListString = utils::StringUtils::join(", ", alternateFieldNames);
-  auto errMsg =
+  auto field_list_string = utils::StringUtils::join(", ", alternate_field_names);
+  std::string err_msg =
       name_node ?
-          "Unable to parse configuration file for component named '" + name_node.as<std::string>() + "' as none of the possible required fields [" + fieldListString + "] is available" :
-          "Unable to parse configuration file as none of the possible required fields [" + fieldListString + "] is available";
-  if (!yamlSection.empty()) {
-    errMsg += " [in '" + yamlSection + "' section of configuration file]";
+          "Unable to parse configuration file for component named '" + name_node.as<std::string>() + "' as none of the possible required fields [" + field_list_string + "] is available" :
+          "Unable to parse configuration file as none of the possible required fields [" + field_list_string + "] is available";
+  if (!yaml_section.empty()) {
+    err_msg += " [in '" + std::string(yaml_section) + "' section of configuration file]";
   }
-  const YAML::Mark mark = yamlNode->Mark();
+  const YAML::Mark mark = yaml_node.Mark();
   if (!mark.is_null()) {
-    errMsg += " [line:column, pos at " + std::to_string(mark.line) + ":" + std::to_string(mark.column) + ", " + std::to_string(mark.pos) + "]";
+    err_msg += " [line:column, pos at " + std::to_string(mark.line) + ":" + std::to_string(mark.column) + ", " + std::to_string(mark.pos) + "]";
   }
-  return errMsg;
+  return err_msg;
 }
 
-void checkRequiredField(const YAML::Node *yamlNode, const std::string &fieldName, const std::shared_ptr<logging::Logger>& logger, const std::string &yamlSection, std::string errorMessage) {
-  if (!isFieldPresent(yamlNode, fieldName)) {
-    if (errorMessage.empty()) {
-      errorMessage = buildErrorMessage(yamlNode, std::vector<std::string>{fieldName}, yamlSection);
+void checkRequiredField(const YAML::Node &yaml_node, std::string_view field_name, std::string_view yaml_section, std::string error_message) {
+  if (!isFieldPresent(yaml_node, field_name)) {
+    if (error_message.empty()) {
+      error_message = buildErrorMessage(yaml_node, std::vector<std::string>{std::string(field_name)}, yaml_section);
     }
-    logger->log_error(errorMessage.c_str());
-    throw std::invalid_argument(errorMessage);
+    throw std::invalid_argument(error_message);
   }
+}
+
+std::string getRequiredField(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_names, std::string_view yaml_section, std::string error_message) {
+  for (const auto& name : alternate_names) {
+    if (yaml::isFieldPresent(yaml_node, name)) {
+      return yaml_node[name].as<std::string>();
+    }
+  }
+  if (error_message.empty()) {
+    error_message = buildErrorMessage(yaml_node, alternate_names, yaml_section);
+  }
+  throw std::invalid_argument(error_message);
 }
 
 }  // namespace yaml
