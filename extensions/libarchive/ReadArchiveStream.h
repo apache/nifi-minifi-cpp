@@ -1,0 +1,89 @@
+/**
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
+
+#include <memory>
+#include <utility>
+
+#include "io/OutputStream.h"
+#include "core/logging/LoggerConfiguration.h"
+
+#include "archive_entry.h"
+#include "archive.h"
+
+namespace org::apache::nifi::minifi::io {
+
+class ReadArchiveStream : public InputStream {
+  struct archive_ptr : public std::unique_ptr<struct archive, int(*)(struct archive*)> {
+    using Base = std::unique_ptr<struct archive, int(*)(struct archive*)>;
+    archive_ptr(): Base(nullptr, archive_read_free) {}
+    archive_ptr(nullptr_t): Base(nullptr, archive_read_free) {}
+    archive_ptr(struct archive* arch): Base(arch, archive_read_free) {}
+  };
+  class BufferedReader {
+   public:
+    explicit BufferedReader(std::shared_ptr<InputStream> input) : input_(std::move(input)) {}
+
+    std::optional<gsl::span<const uint8_t>> readChunk() {
+      size_t result = input_->read(buffer_.data(), buffer_.size());
+      if (io::isError(result)) {
+        return std::nullopt;
+      }
+      return gsl::span<const uint8_t>(buffer_.data(), result);
+    }
+
+   private:
+    std::shared_ptr<InputStream> input_;
+    std::array<uint8_t, 4096> buffer_;
+  };
+
+  archive_ptr createReadArchive();
+
+ public:
+  explicit ReadArchiveStream(std::shared_ptr<InputStream> input) : reader_(std::move(input)) {
+    arch_ = createReadArchive();
+  }
+
+  std::shared_ptr<InputStream> input_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadArchiveStream>::getLogger();
+  BufferedReader reader_;
+  archive_ptr arch_;
+
+  static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
+    auto* const input = reinterpret_cast<BufferedReader*>(context);
+    auto opt_buffer = input->readChunk();
+    if (!opt_buffer) {
+      archive_set_error(archive, EIO, "Error reading archive");
+      return -1;
+    }
+    *buff = opt_buffer->data();
+    return gsl::narrow<la_ssize_t>(opt_buffer->size());
+  }
+
+  bool nextEntry();
+
+  using InputStream::read;
+
+  size_t read(uint8_t* buf, size_t len) override;
+
+ private:
+  std::optional<size_t> entry_size_;
+};
+
+}  // namespace org::apache::nifi::minifi::io

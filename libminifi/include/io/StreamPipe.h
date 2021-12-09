@@ -48,9 +48,31 @@ class InputOutputStreamCallback {
   virtual int64_t process(const std::shared_ptr<io::BaseStream>& input, const std::shared_ptr<io::BaseStream>& output) = 0;
 };
 
+class FunctionOutputStreamCallback : public OutputStreamCallback {
+ public:
+  explicit FunctionOutputStreamCallback(std::function<int64_t(const std::shared_ptr<io::OutputStream>&)> fn) : fn_(std::move(fn)) {}
+
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    return fn_(stream);
+  }
+ private:
+  std::function<int64_t(const std::shared_ptr<io::OutputStream>&)> fn_;
+};
+
+class FunctionInputStreamCallback : public InputStreamCallback {
+ public:
+  explicit FunctionInputStreamCallback(std::function<int64_t(const std::shared_ptr<io::InputStream>&)> fn) : fn_(std::move(fn)) {}
+
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    return fn_(stream);
+  }
+ private:
+  std::function<int64_t(const std::shared_ptr<io::InputStream>&)> fn_;
+};
+
 namespace internal {
 
-inline int64_t pipe(const std::shared_ptr<io::InputStream>& src, const std::shared_ptr<io::OutputStream>& dst) {
+inline int64_t pipe(io::InputStream* src, io::OutputStream* dst) {
   uint8_t buffer[4096U];
   int64_t totalTransferred = 0;
   while (true) {
@@ -75,6 +97,10 @@ inline int64_t pipe(const std::shared_ptr<io::InputStream>& src, const std::shar
     totalTransferred += transferred;
   }
   return totalTransferred;
+}
+
+inline int64_t pipe(const std::shared_ptr<io::InputStream>& src, const std::shared_ptr<io::OutputStream>& dst) {
+  return pipe(src.get(), dst.get());
 }
 
 }  // namespace internal
