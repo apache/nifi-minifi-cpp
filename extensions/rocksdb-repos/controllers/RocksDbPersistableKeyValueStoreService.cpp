@@ -127,7 +127,11 @@ bool RocksDbPersistableKeyValueStoreService::get(const std::string& key, std::st
   }
   rocksdb::Status status = opendb->Get(rocksdb::ReadOptions(), key, &value);
   if (!status.ok()) {
-    logger_->log_error("Failed to Get key %s from RocksDB database at %s, error: %s", key.c_str(), directory_.c_str(), status.getState());
+    if (status.getState() != nullptr) {
+      logger_->log_error("Failed to Get key %s from RocksDB database at %s, error: %s", key.c_str(), directory_.c_str(), status.getState());
+    } else {
+      logger_->log_warn("Failed to Get key %s from RocksDB database at %s (it may not have been initialized yet)", key.c_str(), directory_.c_str());
+    }
     return false;
   }
   return true;

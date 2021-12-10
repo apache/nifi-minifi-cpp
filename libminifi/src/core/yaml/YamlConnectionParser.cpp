@@ -114,7 +114,7 @@ utils::Identifier YamlConnectionParser::getSourceUUIDFromYaml() const {
     throw std::invalid_argument("Invalid source id");
   }
   // if we don't have a source id, try to resolve using source name. config schema v2 will make this unnecessary
-  checkRequiredField(&connectionNode_, "source name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
+  checkRequiredField(connectionNode_, "source name", CONFIG_YAML_CONNECTIONS_KEY);
   const auto connectionSrcProcName = connectionNode_["source name"].as<std::string>();
   const auto srcUUID = utils::Identifier::parse(connectionSrcProcName);
   if (srcUUID && parent_->findProcessorById(srcUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
@@ -147,7 +147,7 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   }
   // we use the same logic as above for resolving the source processor
   // for looking up the destination processor in absence of a processor id
-  checkRequiredField(&connectionNode_, "destination name", logger_, CONFIG_YAML_CONNECTIONS_KEY);
+  checkRequiredField(connectionNode_, "destination name", CONFIG_YAML_CONNECTIONS_KEY);
   std::string connectionDestProcName = connectionNode_["destination name"].as<std::string>();
   const auto destUUID = utils::Identifier::parse(connectionDestProcName);
   if (destUUID && parent_->findProcessorById(destUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {

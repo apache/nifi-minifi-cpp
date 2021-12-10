@@ -58,8 +58,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseRootProcessGroupYaml
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::createProcessGroup(const YAML::Node& yamlNode, bool is_root) {
   int version = 0;
 
-  yaml::checkRequiredField(&yamlNode, "name", logger_,
-  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  yaml::checkRequiredField(yamlNode, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   std::string flowName = yamlNode["name"].as<std::string>();
 
   utils::Identifier uuid;
@@ -170,14 +169,13 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
     core::ProcessorConfig procCfg;
     YAML::Node procNode = iter->as<YAML::Node>();
 
-    yaml::checkRequiredField(&procNode, "name", logger_,
-    CONFIG_YAML_PROCESSORS_KEY);
+    yaml::checkRequiredField(procNode, "name", CONFIG_YAML_PROCESSORS_KEY);
     procCfg.name = procNode["name"].as<std::string>();
     procCfg.id = getOrGenerateId(procNode);
 
     uuid = procCfg.id.c_str();
     logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
-    yaml::checkRequiredField(&procNode, "class", logger_, CONFIG_YAML_PROCESSORS_KEY);
+    yaml::checkRequiredField(procNode, "class", CONFIG_YAML_PROCESSORS_KEY);
     procCfg.javaClass = procNode["class"].as<std::string>();
     logger_->log_debug("parseProcessorNode: class => [%s]", procCfg.javaClass);
 
@@ -327,8 +325,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
   for (YAML::const_iterator iter = rpgNode.begin(); iter != rpgNode.end(); ++iter) {
     YAML::Node currRpgNode = iter->as<YAML::Node>();
 
-    yaml::checkRequiredField(&currRpgNode, "name", logger_,
-    CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+    yaml::checkRequiredField(currRpgNode, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
     auto name = currRpgNode["name"].as<std::string>();
     id = getOrGenerateId(currRpgNode);
 
@@ -413,8 +410,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
     group->setTransmitting(true);
     group->setURL(url);
 
-    yaml::checkRequiredField(&currRpgNode, "Input Ports", logger_,
-    CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+    yaml::checkRequiredField(currRpgNode, "Input Ports", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
     YAML::Node inputPorts = currRpgNode["Input Ports"].as<YAML::Node>();
     if (inputPorts && inputPorts.IsSequence()) {
       for (YAML::const_iterator portIter = inputPorts.begin(); portIter != inputPorts.end(); ++portIter) {
@@ -457,11 +453,9 @@ void YamlConfiguration::parseProvenanceReportingYaml(const YAML::Node& reportNod
 
   YAML::Node node = reportNode.as<YAML::Node>();
 
-  yaml::checkRequiredField(&node, "scheduling strategy", logger_,
-  CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  yaml::checkRequiredField(node, "scheduling strategy", CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto schedulingStrategyStr = node["scheduling strategy"].as<std::string>();
-  yaml::checkRequiredField(&node, "scheduling period", logger_,
-  CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  yaml::checkRequiredField(node, "scheduling period", CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto schedulingPeriodStr = node["scheduling period"].as<std::string>();
 
   core::TimeUnit unit;
@@ -496,9 +490,9 @@ void YamlConfiguration::parseProvenanceReportingYaml(const YAML::Node& reportNod
       logger_->log_debug("ProvenanceReportingTask URL %s", urlStr);
     }
   }
-  yaml::checkRequiredField(&node, "port uuid", logger_, CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  yaml::checkRequiredField(node, "port uuid", CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto portUUIDStr = node["port uuid"].as<std::string>();
-  yaml::checkRequiredField(&node, "batch size", logger_, CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  yaml::checkRequiredField(node, "batch size", CONFIG_YAML_PROVENANCE_REPORT_KEY);
   auto batchSizeStr = node["batch size"].as<std::string>();
 
   logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr);
@@ -523,20 +517,12 @@ void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServ
   for (const auto& iter : controllerServicesNode) {
     YAML::Node controllerServiceNode = iter.as<YAML::Node>();
     try {
-      yaml::checkRequiredField(&controllerServiceNode, "name", logger_,
-      CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-      yaml::checkRequiredField(&controllerServiceNode, "id", logger_,
-      CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-      std::string type = "";
+      yaml::checkRequiredField(controllerServiceNode, "name", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+      yaml::checkRequiredField(controllerServiceNode, "id", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
 
-      try {
-        yaml::checkRequiredField(&controllerServiceNode, "class", logger_, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-        type = controllerServiceNode["class"].as<std::string>();
-      } catch (const std::invalid_argument &) {
-        yaml::checkRequiredField(&controllerServiceNode, "type", logger_, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-        type = controllerServiceNode["type"].as<std::string>();
-        logger_->log_debug("Using type %s for controller service node", type);
-      }
+      auto type = yaml::getRequiredField(controllerServiceNode, std::vector<std::string>{"class", "type"}, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+      logger_->log_debug("Using type %s for controller service node", type);
+
       std::string fullType = type;
       auto lastOfIdx = type.find_last_of(".");
       if (lastOfIdx != std::string::npos) {
@@ -625,11 +611,9 @@ void YamlConfiguration::parsePortYaml(const YAML::Node& portNode, core::ProcessG
   YAML::Node inputPortsObj = portNode.as<YAML::Node>();
 
   // Check for required fields
-  yaml::checkRequiredField(&inputPortsObj, "name", logger_,
-  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  yaml::checkRequiredField(inputPortsObj, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   auto nameStr = inputPortsObj["name"].as<std::string>();
-  yaml::checkRequiredField(&inputPortsObj, "id", logger_,
-  CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
+  yaml::checkRequiredField(inputPortsObj, "id", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
                      "The field 'id' is required for "
                          "the port named '" + nameStr + "' in the YAML Config. If this port "
                          "is an input port for a NiFi Remote Process Group, the port "

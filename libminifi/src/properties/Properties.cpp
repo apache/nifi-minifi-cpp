@@ -76,6 +76,10 @@ void Properties::loadConfigureFile(const char *fileName) {
   }
 
   properties_file_ = utils::file::getFullPath(utils::file::FileUtils::concat_path(getHome(), fileName));
+  if (properties_file_.empty()) {
+    logger_->log_warn("Configuration file '%s' does not exist, so it could not be loaded.", fileName);
+    return;
+  }
 
   logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)",
                     getName().c_str(), fileName, properties_file_);

@@ -19,6 +19,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "yaml-cpp/yaml.h"
@@ -30,26 +31,31 @@ namespace minifi {
 namespace core {
 namespace yaml {
 
+bool isFieldPresent(const YAML::Node &yaml_node, std::string_view field_name);
+std::string buildErrorMessage(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_field_names, std::string_view yaml_section = "");
+
 /**
  * This is a helper function for verifying the existence of a required
  * field in a YAML::Node object. If the field is not present, an error
  * message will be logged and an std::invalid_argument exception will be
  * thrown indicating the absence of the required field in the YAML node.
  *
- * @param yamlNode     the YAML node to check
- * @param fieldName    the required field key
- * @param yamlSection  [optional] the top level section of the YAML config
- *                       for the yamlNode. This is used for generating a
+ * @param yaml_node     the YAML node to check
+ * @param field_name    the required field key
+ * @param yaml_section  [optional] the top level section of the YAML config
+ *                       for the yaml_node. This is used for generating a
  *                       useful error message for troubleshooting.
- * @param errorMessage [optional] the error message string to use if
+ * @param error_message [optional] the error message string to use if
  *                       the required field is missing. If not provided,
  *                       a default error message will be generated.
  *
- * @throws std::invalid_argument if the required field 'fieldName' is
- *                               not present in 'yamlNode'
+ * @throws std::invalid_argument if the required field 'field_name' is
+ *                               not present in 'yaml_node'
  */
 void checkRequiredField(
-    const YAML::Node *yamlNode, const std::string &fieldName, const std::shared_ptr<logging::Logger>& logger, const std::string &yamlSection = "", const std::string &errorMessage = "");
+    const YAML::Node &yaml_node, std::string_view field_name, std::string_view yaml_section = "", std::string error_message = "");
+
+std::string getRequiredField(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_names, std::string_view yaml_section, std::string error_message = {});
 
 }  // namespace yaml
 }  // namespace core
