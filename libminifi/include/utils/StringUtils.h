@@ -584,19 +584,6 @@ class StringUtils {
 };
 
 }  // namespace utils
-
-namespace core {
-enum TimeUnit {
-  DAY,
-  HOUR,
-  MINUTE,
-  SECOND,
-  MILLISECOND,
-  MICROSECOND,
-  NANOSECOND
-};
-
-}  // namespace core
 }  // namespace org::apache::nifi::minifi
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_STRINGUTILS_H_
