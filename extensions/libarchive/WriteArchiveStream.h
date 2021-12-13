@@ -78,7 +78,7 @@ class WriteArchiveStreamImpl: public WriteArchiveStream {
 
   using OutputStream::write;
 
-  bool newEntry(const std::string& name, size_t size) override;
+  bool newEntry(const EntryInfo& info) override;
 
   size_t write(const uint8_t* data, size_t len) override;
 };

@@ -28,14 +28,19 @@
 
 namespace org::apache::nifi::minifi::io {
 
+struct EntryInfo {
+  std::string filename;
+  size_t size;
+};
+
 class WriteArchiveStream : public OutputStream {
  public:
-  virtual bool newEntry(const std::string& name, size_t size) = 0;
+  virtual bool newEntry(const EntryInfo& info) = 0;
 };
 
 class ReadArchiveStream : public InputStream {
  public:
-  virtual bool nextEntry() = 0;
+  virtual std::optional<EntryInfo> nextEntry() = 0;
 };
 
 class ArchiveStreamProvider : public core::CoreComponent {

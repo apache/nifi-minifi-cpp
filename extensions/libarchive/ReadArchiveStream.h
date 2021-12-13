@@ -77,7 +77,7 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
     return gsl::narrow<la_ssize_t>(opt_buffer->size());
   }
 
-  bool nextEntry() override;
+  std::optional<EntryInfo> nextEntry() override;
 
   using InputStream::read;
 

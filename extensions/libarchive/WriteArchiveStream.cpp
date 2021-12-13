@@ -87,7 +87,7 @@ WriteArchiveStreamImpl::archive_ptr WriteArchiveStreamImpl::createWriteArchive()
   return arch;
 }
 
-bool WriteArchiveStreamImpl::newEntry(const std::string &name, size_t size) {
+bool WriteArchiveStreamImpl::newEntry(const EntryInfo& info) {
   if (!arch_) {
     return false;
   }
@@ -96,8 +96,8 @@ bool WriteArchiveStreamImpl::newEntry(const std::string &name, size_t size) {
     logger_->log_error("Failed to create archive entry");
     return false;
   }
-  archive_entry_set_pathname(arch_entry_.get(), name.c_str());
-  archive_entry_set_size(arch_entry_.get(), size);
+  archive_entry_set_pathname(arch_entry_.get(), info.filename.c_str());
+  archive_entry_set_size(arch_entry_.get(), info.size);
   archive_entry_set_mode(arch_entry_.get(), S_IFREG | 0755);
 
   int result = archive_write_header(arch_.get(), arch_entry_.get());

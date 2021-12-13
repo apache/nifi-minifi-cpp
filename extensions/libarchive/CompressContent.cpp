@@ -184,7 +184,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
       flowFile->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
       transformer = [&, filename] (const std::shared_ptr<io::InputStream>& in, const std::shared_ptr<io::OutputStream>& out) -> int64_t {
         io::WriteArchiveStreamImpl compressor(compressLevel_, compressFormat, out);
-        if (!compressor.newEntry(filename, in->size())) {
+        if (!compressor.newEntry({filename, in->size()})) {
           return -1;
         }
         return internal::pipe(in.get(), &compressor);

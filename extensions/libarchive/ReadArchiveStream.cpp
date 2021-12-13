@@ -47,19 +47,22 @@ ReadArchiveStreamImpl::archive_ptr ReadArchiveStreamImpl::createReadArchive() {
   return arch;
 }
 
-bool ReadArchiveStreamImpl::nextEntry() {
+std::optional<EntryInfo> ReadArchiveStreamImpl::nextEntry() {
   if (!arch_) {
-    return false;
+    return std::nullopt;
   }
   entry_size_.reset();
   struct archive_entry *entry;
-  if (archive_read_next_header(arch_.get(), &entry) != ARCHIVE_OK) {
-    logger_->log_error("Archive read next header error %s", archive_error_string(arch_.get()));
-    return false;
+  int result = archive_read_next_header(arch_.get(), &entry);
+  if (result != ARCHIVE_OK) {
+    if (result != ARCHIVE_EOF) {
+      logger_->log_error("Archive read next header error %s", archive_error_string(arch_.get()));
+    }
+    return std::nullopt;
   }
   entry_size_ = gsl::narrow<size_t>(archive_entry_size(entry));
   logger_->log_debug("Archive entry size %zu", entry_size_.value());
-  return true;
+  return EntryInfo{archive_entry_pathname(entry), entry_size_.value()};
 }
 
 size_t ReadArchiveStreamImpl::read(uint8_t* buf, size_t len) {
