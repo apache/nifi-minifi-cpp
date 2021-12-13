@@ -110,7 +110,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
     auto records = reporter->getEvents();
     record = session->get();
     REQUIRE(record == nullptr);
-    REQUIRE(records.size() == 0);
+    REQUIRE(records.empty());
 
     std::fstream file;
     std::stringstream ss;
@@ -129,7 +129,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
 
     records = reporter->getEvents();
 
-    for (auto provEventRecord : records) {
+    for (const auto& provEventRecord : records) {
       REQUIRE(provEventRecord->getComponentType() == processor->getName());
     }
     session->commit();

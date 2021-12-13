@@ -47,9 +47,7 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   static core::Property File;
 
   void onEnable() override;
-  void initialize() override {
-    initializeNonVirtual();
-  }
+  void initialize() override;
   void notifyStop() override;
 
   bool set(const std::string& key, const std::string& value) override;
@@ -81,7 +79,6 @@ class UnorderedMapPersistableKeyValueStoreService : public AbstractAutoPersistin
   bool parseLine(const std::string& line, std::string& key, std::string& value);
 
  private:
-  void initializeNonVirtual();
   bool persistNonVirtual();
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UnorderedMapPersistableKeyValueStoreService>::getLogger();

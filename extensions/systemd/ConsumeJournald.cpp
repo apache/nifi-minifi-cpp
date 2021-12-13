@@ -170,7 +170,6 @@ void ConsumeJournald::onTrigger(core::ProcessContext* const context, core::Proce
     if (include_timestamp_) flow_file->setAttribute("timestamp", date::format(timestamp_format_, chr::floor<chr::microseconds>(msg.timestamp)));
     session->transfer(flow_file, Success);
   }
-  session->commit();
   state_manager_->set({{"cursor", std::move(cursor_and_messages.first)}});
 }
 

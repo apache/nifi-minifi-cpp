@@ -165,7 +165,8 @@ TEST_CASE("Bookmark::getBookmarkHandleFromXML() returns a different event after 
   LogTestController::getInstance().setTrace<TestPlan>();
 
   GIVEN("We have two different bookmarks") {
-    std::unique_ptr<Bookmark> bookmark_one = createBookmark(*test_plan, APPLICATION_CHANNEL);
+    const auto uuid = IdGenerator::getIdGenerator()->generate();
+    std::unique_ptr<Bookmark> bookmark_one = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid);
     std::wstring bookmark_one_xml = bookmarkAsXml(bookmark_one);
 
     reportEvent(APPLICATION_CHANNEL, "Something interesting happened");
@@ -176,6 +177,7 @@ TEST_CASE("Bookmark::getBookmarkHandleFromXML() returns a different event after 
     REQUIRE(bookmark_one_xml != bookmark_two_xml);
 
     WHEN("we set the XML of the first bookmark equal to the XML of the second bookmark") {
+      const auto state_manager = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid);
       bookmark_one->saveBookmarkXml(bookmark_two_xml);
 
       THEN("getBookmarkHandleFromXML() will return the updated handle") {
@@ -235,6 +237,7 @@ TEST_CASE("Bookmark::saveBookmarkXml() updates the bookmark and saves it to the 
 
     WHEN("saveBookmarkXml() is called on bookmark one with the XML of bookmark two, "
          "and then we create a new bookmark with state manager one") {
+      const auto state_manager = test_plan->getStateManagerProvider()->getCoreComponentStateManager(uuid_one);
       bookmark_one->saveBookmarkXml(bookmarkAsXml(bookmark_two));
       std::unique_ptr<Bookmark> bookmark_one_different = createBookmark(*test_plan, APPLICATION_CHANNEL, uuid_one);
 

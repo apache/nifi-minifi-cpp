@@ -41,9 +41,7 @@ RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(c
 
 void RocksDbPersistableKeyValueStoreService::initialize() {
   AbstractAutoPersistingKeyValueStoreService::initialize();
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(Directory);
-  updateSupportedProperties(supportedProperties);
+  updateSupportedProperties({Directory});
 }
 
 void RocksDbPersistableKeyValueStoreService::onEnable() {

@@ -17,32 +17,22 @@
 # under the License.
 #
 Flow Controller:
-  name: MiNiFi Flow
-  id: 2438e3c8-015a-1000-79ca-83af40ec1990
+    name: MiNiFi Flow
+    id: 2438e3c8-015a-1000-79ca-83af40ec1990
+    onschedule retry interval: 1000 ms
 Processors:
-  - name: TailFile1
-    id: 2438e3c8-015a-1000-79ca-83af40ec1993
-    class: org.apache.nifi.processors.standard.TailFile
-    max concurrent tasks: 1
-    scheduling strategy: TIMER_DRIVEN
-    scheduling period: 1 sec
-    penalization period: 30 sec
-    yield period: 1 sec
-    run duration nanos: 0
-    auto-terminated relationships list:
-      - success
-  - name: TailFile2
-    id: 2438e3c8-015a-1000-79ca-83af40ec1994
-    class: org.apache.nifi.processors.standard.TailFile
-    max concurrent tasks: 1
-    scheduling strategy: TIMER_DRIVEN
-    scheduling period: 1 sec
-    penalization period: 30 sec
-    yield period: 1 sec
-    run duration nanos: 0
-    auto-terminated relationships list:
-      - success
+    - name: statefulProcessor
+      id: 2437e3c8-a15a-4567-79ca-83af40ec1998
+      class: org.apache.nifi.processors.StatefulProcessor
+      max concurrent tasks: 1
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 100 ms
+      penalization period: 30 sec
+      yield period: 1 sec
+      run duration nanos: 0
+      auto-terminated relationships list:
+      Properties:
 
-Connections: []
-
-Remote Processing Groups: []
+Connections:
+Remote Processing Groups:
+    

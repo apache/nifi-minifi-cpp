@@ -62,7 +62,24 @@ namespace core {
 
 std::shared_ptr<utils::IdGenerator> ProcessSession::id_generator_ = utils::IdGenerator::getIdGenerator();
 
+ProcessSession::ProcessSession(std::shared_ptr<ProcessContext> processContext)
+        : process_context_(std::move(processContext)),
+          logger_(logging::LoggerFactory<ProcessSession>::getLogger()),
+          stateManager_(process_context_->hasStateManager() ? process_context_->getStateManager() : nullptr) {
+  logger_->log_trace("ProcessSession created for %s", process_context_->getProcessorNode()->getName());
+  auto repo = process_context_->getProvenanceRepository();
+  provenance_report_ = std::make_shared<provenance::ProvenanceReporter>(repo, process_context_->getProcessorNode()->getName(), process_context_->getProcessorNode()->getName());
+  content_session_ = process_context_->getContentRepository()->createSession();
+
+  if (stateManager_ && !stateManager_->beginTransaction()) {
+    throw Exception(PROCESS_SESSION_EXCEPTION, "State manager transaction could not be initiated.");
+  }
+}
+
 ProcessSession::~ProcessSession() {
+  if (stateManager_ && stateManager_->isTransactionInProgress()) {
+    logger_->log_error("Session has ended without decision on state (commit or rollback).");
+  }
   removeReferences();
 }
 
@@ -808,6 +825,10 @@ void ProcessSession::commit() {
 
     content_session_->commit();
 
+    if (stateManager_ && !stateManager_->commit()) {
+      throw Exception(PROCESS_SESSION_EXCEPTION, "State manager commit failed.");
+    }
+
     persistFlowFilesBeforeTransfer(connectionQueues, _updatedFlowFiles);
 
     for (auto& cq : connectionQueues) {
@@ -876,6 +897,10 @@ void ProcessSession::rollback() {
     }
 
     content_session_->rollback();
+
+    if (stateManager_ && !stateManager_->rollback()) {
+      throw Exception(PROCESS_SESSION_EXCEPTION, "State manager rollback failed.");
+    }
 
     _clonedFlowFiles.clear();
     _addedFlowFiles.clear();

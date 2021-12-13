@@ -180,7 +180,7 @@ class TailFile : public core::Processor {
   std::string file_to_tail_;
   std::string base_dir_;
   bool recursive_lookup_ = false;
-  std::chrono::milliseconds lookup_frequency_;
+  std::chrono::milliseconds lookup_frequency_{};
   std::chrono::steady_clock::time_point last_multifile_lookup_;
   std::string rolling_filename_pattern_;
   InitialStartPositions initial_start_position_;

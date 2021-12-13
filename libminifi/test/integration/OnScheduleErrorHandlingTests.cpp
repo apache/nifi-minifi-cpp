@@ -34,7 +34,7 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
  public:
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] {
+    assert(verifyEventHappenedInPollTime(wait_time_, [&] {
       const std::string logs = LogTestController::getInstance().log_output.str();
       const auto result = utils::StringUtils::countOccurrences(logs, minifi::processors::KamikazeProcessor::OnScheduleExceptionStr);
       const int occurrences = result.second;

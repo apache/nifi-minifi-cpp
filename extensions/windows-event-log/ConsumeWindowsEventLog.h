@@ -141,7 +141,8 @@ class ConsumeWindowsEventLog : public core::Processor {
     return true;
   }
 
-  bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessSession> &session);
+  bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+
   std::tuple<size_t, std::wstring> processEventLogs(const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::ProcessSession> &session, const EVT_HANDLE& event_query_results);
 

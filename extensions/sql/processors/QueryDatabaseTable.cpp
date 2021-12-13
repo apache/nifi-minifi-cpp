@@ -176,7 +176,6 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
   }
 
   if (new_max_values != max_values_) {
-    session.commit();
     max_values_ = new_max_values;
     saveState();
   }

@@ -643,7 +643,6 @@ int SourceInitiatedSubscriptionListener::Handler::enumerateEventCallback(WsXmlNo
     flow_file->addAttribute(ATTRIBUTE_WEF_REMOTE_IP, remote_ip);
 
     session->transfer(flow_file, SourceInitiatedSubscriptionListener::Success);
-    session->commit();
   } catch (const std::exception& e) {
     logger->log_error("Caught exception while processing Events: %s", e.what());
     return 1;

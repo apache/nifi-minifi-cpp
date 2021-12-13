@@ -84,7 +84,9 @@ endfunction()
 enable_testing(test)
 
 SET(TEST_BASE_LIB test_base)
-add_library(${TEST_BASE_LIB} STATIC "${TEST_DIR}/TestBase.cpp" "${TEST_DIR}/RandomServerSocket.cpp" "${TEST_DIR}/KamikazeProcessor.cpp" "${TEST_DIR}/WriteToFlowFileTestProcessor.cpp" "${TEST_DIR}/ReadFromFlowFileTestProcessor.cpp")
+set(TEST_BASE_SOURCES "TestBase.cpp" "RandomServerSocket.cpp" "KamikazeProcessor.cpp" "StatefulProcessor.cpp" "WriteToFlowFileTestProcessor.cpp" "ReadFromFlowFileTestProcessor.cpp")
+list(TRANSFORM TEST_BASE_SOURCES PREPEND "${TEST_DIR}/")
+add_library(${TEST_BASE_LIB} STATIC "${TEST_BASE_SOURCES}")
 target_link_libraries(${TEST_BASE_LIB} core-minifi)
 target_include_directories(${TEST_BASE_LIB} SYSTEM BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
 target_include_directories(${TEST_BASE_LIB} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/libminifi/include/")
@@ -164,7 +166,10 @@ FOREACH(testfile ${INTEGRATION_TESTS})
   MATH(EXPR INT_TEST_COUNT "${INT_TEST_COUNT}+1")
 ENDFOREACH()
 
+target_wholearchive_library(StateTransactionalityTests minifi-standard-processors)
+
 add_test(NAME OnScheduleErrorHandlingTests COMMAND OnScheduleErrorHandlingTests "${TEST_RESOURCES}/TestOnScheduleRetry.yml"  "${TEST_RESOURCES}/")
+add_test(NAME StateTransactionalityTests COMMAND StateTransactionalityTests "${TEST_RESOURCES}/TestStateTransactionality.yml")
 
 message("-- Finished building ${INT_TEST_COUNT} integration test file(s)...")
 

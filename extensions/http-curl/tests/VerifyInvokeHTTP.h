@@ -30,10 +30,12 @@
 #include "core/state/ProcessorController.h"
 #include "HTTPIntegrationBase.h"
 
+using std::literals::chrono_literals::operator""s;
+
 class VerifyInvokeHTTP : public HTTPIntegrationBase {
  public:
   VerifyInvokeHTTP()
-      : HTTPIntegrationBase(6000) {
+      : HTTPIntegrationBase(6s) {
   }
 
   void testSetup() override {

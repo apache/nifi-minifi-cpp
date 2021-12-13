@@ -31,7 +31,6 @@ UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::st
 UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, const std::shared_ptr<Configure> &configuration)
     : PersistableKeyValueStoreService(name) {
   setConfiguration(configuration);
-  initialize();
 }
 
 UnorderedMapKeyValueStoreService::~UnorderedMapKeyValueStoreService() = default;

@@ -32,9 +32,11 @@
 #include "integration/IntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
 
+using std::literals::chrono_literals::operator""s;
+
 class TailFileTestHarness : public IntegrationBase {
  public:
-  TailFileTestHarness() : IntegrationBase(1000) {
+  TailFileTestHarness() : IntegrationBase(1s) {
     dir = testController.createTempDirectory();
 
     statefile = dir + utils::file::FileUtils::get_separator();

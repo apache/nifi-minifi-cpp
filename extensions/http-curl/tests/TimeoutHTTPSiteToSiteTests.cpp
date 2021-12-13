@@ -35,10 +35,12 @@
 #include "HTTPHandlers.h"
 #include "client/HTTPStream.h"
 
+using std::literals::chrono_literals::operator""s;
+
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:
-  explicit SiteToSiteTestHarness(bool isSecure, std::chrono::milliseconds waitTime = std::chrono::milliseconds{1000})
-      : HTTPIntegrationBase(waitTime.count()), isSecure(isSecure) {
+  explicit SiteToSiteTestHarness(bool isSecure, std::chrono::seconds waitTime = 1s)
+      : HTTPIntegrationBase(waitTime), isSecure(isSecure) {
     dir = testController.createTempDirectory();
   }
 

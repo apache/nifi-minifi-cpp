@@ -31,9 +31,11 @@
 #include "HTTPIntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
 
+using std::literals::chrono_literals::operator""s;
+
 class HttpTestHarness : public HTTPIntegrationBase {
  public:
-  HttpTestHarness() : HTTPIntegrationBase(4000) {
+  HttpTestHarness() : HTTPIntegrationBase(4s) {
     dir = testController.createTempDirectory();
   }
 

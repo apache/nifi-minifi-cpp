@@ -41,13 +41,13 @@ namespace utils = minifi::utils;
 
 class IntegrationBase {
  public:
-  explicit IntegrationBase(uint64_t waitTime = DEFAULT_WAITTIME_MSECS);
+  explicit IntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS));
 
   virtual ~IntegrationBase() = default;
 
   virtual void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& bootstrap_file = {});
 
-  void setKeyDir(const std::string key_dir) {
+  void setKeyDir(const std::string& key_dir) {
     this->key_dir = key_dir;
     configureSecurity();
   }
@@ -85,13 +85,13 @@ class IntegrationBase {
   void configureSecurity();
   std::shared_ptr<minifi::Configure> configuration;
   std::shared_ptr<minifi::FlowController> flowController_;
-  uint64_t wait_time_;
+  std::chrono::milliseconds wait_time_;
   std::string port, scheme;
   std::string key_dir;
   std::string state_dir;
 };
 
-IntegrationBase::IntegrationBase(uint64_t waitTime)
+IntegrationBase::IntegrationBase(std::chrono::milliseconds waitTime)
     : configuration(std::make_shared<minifi::Configure>()),
       wait_time_(waitTime) {
 }

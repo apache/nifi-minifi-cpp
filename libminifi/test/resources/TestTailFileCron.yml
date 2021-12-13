@@ -41,7 +41,7 @@ Processors:
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
-      auto-terminated relationships list: 
+      auto-terminated relationships list:
        - success
       Properties:
         Log Payload: true
