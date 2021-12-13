@@ -46,6 +46,7 @@ class ExecutePythonProcessor : public core::Processor {
  public:
   explicit ExecutePythonProcessor(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
+        processor_initialized_(false),
         python_dynamic_(false),
         script_engine_q_() {
   }
@@ -95,6 +96,7 @@ class ExecutePythonProcessor : public core::Processor {
 
   std::string description_;
 
+  bool processor_initialized_;
   bool python_dynamic_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger();
@@ -105,6 +107,7 @@ class ExecutePythonProcessor : public core::Processor {
 
   moodycamel::ConcurrentQueue<std::shared_ptr<python::PythonScriptEngine>> script_engine_q_;
 
+  void initalizeThroughScriptEngine(python::PythonScriptEngine& engine);
   std::shared_ptr<python::PythonScriptEngine> getScriptEngine();
   void handleEngineNoLongerInUse(std::shared_ptr<python::PythonScriptEngine>&& engine);
   void appendPathForImportModules();

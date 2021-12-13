@@ -8,10 +8,12 @@ class Processor(Connectable):
                  schedule=None,
                  name=None,
                  controller_services=None,
-                 auto_terminate=None):
+                 auto_terminate=None,
+                 class_prefix='org.apache.nifi.processors.standard.'):
 
         super(Processor, self).__init__(name=name,
                                         auto_terminate=auto_terminate)
+        self.class_prefix = class_prefix
 
         if controller_services is None:
             controller_services = []
