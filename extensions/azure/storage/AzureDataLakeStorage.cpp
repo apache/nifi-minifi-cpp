@@ -65,11 +65,11 @@ std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLake
   try {
     auto fetch_res = data_lake_storage_client_->fetchFile(params);
 
-    std::vector<uint8_t> buffer(4096);
+    std::array<uint8_t, 4096> buffer;
     size_t write_size = 0;
     if (fetch_res.FileSize < 0) return 0;
     while (write_size < gsl::narrow<uint64_t>(fetch_res.FileSize)) {
-      const auto next_write_size = (std::min)(gsl::narrow<size_t>(fetch_res.FileSize) - write_size, size_t{4096});
+      const auto next_write_size = (std::min)(gsl::narrow<size_t>(fetch_res.FileSize) - write_size, buffer.size());
       if (!fetch_res.Body->Read(buffer.data(), gsl::narrow<std::streamsize>(next_write_size))) {
         return -1;
       }

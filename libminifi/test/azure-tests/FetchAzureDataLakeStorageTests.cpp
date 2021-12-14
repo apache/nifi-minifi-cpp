@@ -121,4 +121,13 @@ TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Number of Retries is se
   REQUIRE(mock_data_lake_storage_client_ptr_->getPassedFetchParams().number_of_retries == 1);
 }
 
+TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch full file fails", "[azureDataLakeStorageFetch]") {
+  mock_data_lake_storage_client_ptr_->setFetchFailure(true);
+  test_controller_.runSession(plan_, true);
+  REQUIRE(getSuccessfulFlowFileContents().size() == 0);
+  auto success_contents = getFailedFlowFileContents();
+  REQUIRE(success_contents.size() == 1);
+  REQUIRE(success_contents[0] == TEST_DATA);
+}
+
 }  // namespace

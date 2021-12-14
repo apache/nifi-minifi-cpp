@@ -61,6 +61,10 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   }
 
   Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters& params) override {
+    if (fetch_fails_) {
+      throw std::runtime_error("error");
+    }
+
     fetch_params_ = params;
     Azure::Storage::Files::DataLake::Models::DownloadFileResult result;
     buffer_.clear();
@@ -99,6 +103,10 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     delete_result_ = delete_result;
   }
 
+  void setFetchFailure(bool fetch_fails) {
+    fetch_fails_ = fetch_fails;
+  }
+
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters getPassedPutParams() const {
     return put_params_;
   }
@@ -118,6 +126,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   bool upload_fails_ = false;
   bool delete_fails_ = false;
   bool delete_result_ = true;
+  bool fetch_fails_ = false;
   std::string input_data_;
   std::vector<uint8_t> buffer_;
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters put_params_;
