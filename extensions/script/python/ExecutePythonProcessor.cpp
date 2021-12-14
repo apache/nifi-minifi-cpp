@@ -107,21 +107,17 @@ void ExecutePythonProcessor::initalizeThroughScriptEngine(python::PythonScriptEn
 }
 
 void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  std::shared_ptr<python::PythonScriptEngine> engine = nullptr;
+  std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
   if (!processor_initialized_) {
     loadScript();
-    engine = getScriptEngine();
     initalizeThroughScriptEngine(*engine);
   } else {
-    reloadScriptIfUsingScriptFileProperty();
+    reloadScriptIfUsingScriptFileProperty(*engine);
     if (script_to_exec_.empty()) {
       throw std::runtime_error("Neither Script Body nor Script File is available to execute");
     }
   }
 
-  if (!engine) {
-    engine = getScriptEngine();
-  }
   engine->eval(script_to_exec_);
   engine->onSchedule(context);
 
