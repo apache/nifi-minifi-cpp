@@ -40,9 +40,6 @@ FlowFile::FlowFile()
     : CoreComponent("FlowFile"),
       stored(false),
       marked_delete_(false),
-      entry_date_(),
-      event_time_(),
-      lineage_start_date_(),
       last_queue_date_(0),
       size_(0),
       id_(0),
@@ -130,14 +127,14 @@ bool FlowFile::hasStashClaim(const std::string& key) {
 }
 
 // ! Get Entry Date
-std::chrono::time_point<std::chrono::system_clock> FlowFile::getEntryDate() const {
+std::chrono::system_clock::time_point FlowFile::getEntryDate() const {
   return entry_date_;
 }
-std::chrono::time_point<std::chrono::system_clock> FlowFile::getEventTime() const {
+std::chrono::system_clock::time_point FlowFile::getEventTime() const {
   return event_time_;
 }
 // ! Get Lineage Start Date
-std::chrono::time_point<std::chrono::system_clock> FlowFile::getlineageStartDate() const {
+std::chrono::system_clock::time_point FlowFile::getlineageStartDate() const {
   return lineage_start_date_;
 }
 
@@ -202,7 +199,7 @@ bool FlowFile::addAttribute(const std::string& key, const std::string& value) {
   }
 }
 
-void FlowFile::setLineageStartDate(const std::chrono::time_point<std::chrono::system_clock> date) {
+void FlowFile::setLineageStartDate(const std::chrono::system_clock::time_point date) {
   lineage_start_date_ = date;
 }
 

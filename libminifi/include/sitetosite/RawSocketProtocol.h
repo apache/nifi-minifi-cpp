@@ -77,7 +77,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     _batchCount = 0;
     _batchDuration = std::chrono::seconds(0);
     _batchSendNanos = std::chrono::seconds(5);
-    _timeOut = std::chrono::seconds(30);  // 30 seconds
+    _timeOut = std::chrono::seconds(30);
     _supportedVersion[0] = 5;
     _supportedVersion[1] = 4;
     _supportedVersion[2] = 3;

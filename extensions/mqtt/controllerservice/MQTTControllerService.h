@@ -74,8 +74,6 @@ class MQTTControllerService : public core::controller::ControllerService {
       : ControllerService(name, uuid),
         initialized_(false),
         client_(nullptr),
-        keepAliveInterval_(0),
-        connectionTimeOut_(0),
         qos_(2),
         ssl_context_service_(nullptr) {
   }
@@ -84,8 +82,6 @@ class MQTTControllerService : public core::controller::ControllerService {
       : ControllerService(name),
         initialized_(false),
         client_(nullptr),
-        keepAliveInterval_(0),
-        connectionTimeOut_(0),
         qos_(2),
         ssl_context_service_(nullptr) {
     setConfiguration(configuration);
@@ -265,7 +261,7 @@ class MQTTControllerService : public core::controller::ControllerService {
     if (MQTTClient_isConnected(client_))
       return true;
     MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-    conn_opts.keepAliveInterval = keepAliveInterval_;
+    conn_opts.keepAliveInterval = std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count();
     conn_opts.cleansession = 1;
     if (!userName_.empty()) {
       conn_opts.username = userName_.c_str();
@@ -293,8 +289,8 @@ class MQTTControllerService : public core::controller::ControllerService {
   MQTTClient client_;
   std::string uri_;
   std::string topic_;
-  int64_t keepAliveInterval_;
-  int64_t connectionTimeOut_;
+  std::chrono::milliseconds keepAliveInterval_{0};
+  std::chrono::milliseconds connectionTimeOut_{0};
   int64_t qos_;
   std::string clientID_;
   std::string userName_;

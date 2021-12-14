@@ -106,7 +106,7 @@ class Worker {
     identifier_ = identifier;
   }
 
-  virtual std::chrono::time_point<std::chrono::steady_clock> getNextExecutionTime() const {
+  virtual std::chrono::steady_clock::time_point getNextExecutionTime() const {
     return next_exec_time_;
   }
 
@@ -123,7 +123,7 @@ class Worker {
 
  protected:
   TaskId identifier_;
-  std::chrono::time_point<std::chrono::steady_clock> next_exec_time_;
+  std::chrono::steady_clock::time_point next_exec_time_;
   std::function<T()> task;
   std::unique_ptr<AfterExecute<T>> run_determinant_;
   std::shared_ptr<std::promise<T>> promise;

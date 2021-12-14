@@ -142,7 +142,7 @@ class ListSFTP : public SFTPProcessorBase {
 
   bool already_loaded_from_cache_;
 
-  std::chrono::time_point<std::chrono::steady_clock> last_run_time_;
+  std::chrono::steady_clock::time_point last_run_time_;
   uint64_t last_listed_latest_entry_timestamp_;
   uint64_t last_processed_latest_entry_timestamp_;
   std::set<std::string> latest_identifiers_processed_;

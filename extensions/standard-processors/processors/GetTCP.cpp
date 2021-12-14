@@ -151,9 +151,9 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
 
   if (auto reconnect_interval = context->getProperty<core::TimePeriodValue>(ReconnectInterval)) {
     reconnect_interval_ = reconnect_interval->getMilliseconds();
-    logger_->log_debug("Reconnect interval is %llu ms", reconnect_interval_.count());
+    logger_->log_debug("Reconnect interval is %" PRId64 " ms", reconnect_interval_.count());
   } else {
-    logger_->log_debug("Reconnect interval using default value of %llu ms", reconnect_interval_.count());
+    logger_->log_debug("Reconnect interval using default value of %" PRId64 " ms", reconnect_interval_.count());
   }
 
   handler_ = std::unique_ptr<DataHandler>(new DataHandler(sessionFactory));
@@ -199,7 +199,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               socket_ptr->close();
               return -1;
             }
-            logger_->log_info("Sleeping for %" PRIu64 " msec before attempting to reconnect", reconnect_interval_.count());
+            logger_->log_info("Sleeping for %" PRId64 " msec before attempting to reconnect", static_cast<int64_t> (reconnect_interval_.count()));
             std::this_thread::sleep_for(reconnect_interval_);
             socket_ring_buffer_.enqueue(std::move(socket_ptr));
           } else {

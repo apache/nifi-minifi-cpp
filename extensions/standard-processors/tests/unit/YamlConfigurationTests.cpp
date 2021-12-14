@@ -27,7 +27,7 @@
 #include "TestBase.h"
 #include "utils/TestUtils.h"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   TestController test_controller;

@@ -120,7 +120,7 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   }
   if (auto max_bin_age = context->getProperty<core::TimePeriodValue>(MaxBinAge)) {
     this->binManager_.setBinAge(max_bin_age->getMilliseconds());
-    logger_->log_debug("BinFiles: MaxBinAge [%" PRIu64 "]", val64);
+    logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "] ms", static_cast<int64_t>(max_bin_age->getMilliseconds().count()));
   }
   if (context->getProperty(BatchSize.getName(), batchSize_)) {
     logger_->log_debug("BinFiles: BatchSize [%" PRIu32 "]", batchSize_);
@@ -170,7 +170,7 @@ void BinManager::gatherReadyBins() {
 
 void BinManager::removeOldestBin() {
   std::lock_guard < std::mutex > lock(mutex_);
-  std::chrono::time_point<std::chrono::system_clock> olddate = std::chrono::time_point<std::chrono::system_clock>::max();
+  std::chrono::system_clock::time_point olddate = std::chrono::system_clock::time_point::max();
   std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue;
   for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>>>::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
     std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
@@ -182,7 +182,7 @@ void BinManager::removeOldestBin() {
       }
     }
   }
-  if (olddate != std::chrono::time_point<std::chrono::system_clock>::max()) {
+  if (olddate != std::chrono::system_clock::time_point::max()) {
     std::unique_ptr<Bin> &remove = (*oldqueue)->front();
     std::string group = remove->getGroupId();
     readyBin_.push_back(std::move(remove));

@@ -339,7 +339,7 @@ void GetUSBCamera::onSchedule(core::ProcessContext *context, core::ProcessSessio
         cb_data_.device_height = height;
         cb_data_.device_fps = fps;
         cb_data_.target_fps = target_fps;
-        cb_data_.last_frame_time = std::chrono::time_point<std::chrono::steady_clock>();
+        cb_data_.last_frame_time = std::chrono::steady_clock::time_point();
 
         res = uvc_start_streaming(devh_, &ctrl, onFrame, &cb_data_, 0);
 

@@ -113,8 +113,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
    */
   explicit GetFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
-        metrics_(std::make_shared<GetFileMetrics>()),
-        last_listing_time_() {
+        metrics_(std::make_shared<GetFileMetrics>()) {
   }
   // Destructor
   ~GetFile() override = default;
@@ -176,7 +175,7 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   GetFileRequest request_;
   std::queue<std::string> directory_listing_;
   mutable std::mutex directory_listing_mutex_;
-  std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_listing_time_;
+  std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_listing_time_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger();
 };
 

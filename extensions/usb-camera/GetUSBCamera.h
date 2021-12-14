@@ -87,7 +87,7 @@ class GetUSBCamera : public core::Processor {
     uint16_t device_height;
     uint32_t device_fps;
     double target_fps;
-    std::chrono::time_point<std::chrono::steady_clock> last_frame_time;
+    std::chrono::steady_clock::time_point last_frame_time;
   } CallbackData;
 
   static void onFrame(uvc_frame_t *frame, void *ptr);

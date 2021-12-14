@@ -51,9 +51,9 @@ namespace repository {
 #define FLOWFILE_CHECKPOINT_DIRECTORY "./flowfile_checkpoint"
 #endif
 #define MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
-constexpr std::chrono::milliseconds MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
-constexpr std::chrono::milliseconds FLOWFILE_REPOSITORY_PURGE_PERIOD = std::chrono::seconds(2);
-constexpr std::chrono::milliseconds FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::milliseconds(500);
+constexpr auto MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
+constexpr auto FLOWFILE_REPOSITORY_PURGE_PERIOD = std::chrono::seconds(2);
+constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::milliseconds(500);
 
 /**
  * Flow File repository
@@ -108,7 +108,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
         max_partition_millis_ = *max_partition;
     }
-    logger_->log_debug("NiFi FlowFile Max Storage Time: [%d] ms", max_partition_millis_.count());
+    logger_->log_debug("NiFi FlowFile Max Storage Time: [%" PRId64 "] ms", static_cast<int64_t>(max_partition_millis_.count()));
 
     const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
     logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");

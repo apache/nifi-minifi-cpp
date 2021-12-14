@@ -168,7 +168,7 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
 }
 
 std::chrono::milliseconds YamlConnectionParser::getFlowFileExpirationFromYaml() const {
-  using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+  using namespace std::literals::chrono_literals;
   const YAML::Node expiration_node = connectionNode_["flowfile expiration"];
   if (!expiration_node) {
     logger_->log_debug("parseConnection: flowfile expiration is not set, assuming 0 (never expire)");

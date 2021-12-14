@@ -131,7 +131,7 @@ bool SiteToSiteClient::transferFlowFiles(const std::shared_ptr<core::ProcessCont
   utils::Identifier transactionID = transaction->getUUID();
 
   bool continueTransaction = true;
-  std::chrono::time_point<std::chrono::high_resolution_clock> transaction_started_at = std::chrono::high_resolution_clock::now();
+  std::chrono::high_resolution_clock::time_point transaction_started_at = std::chrono::high_resolution_clock::now();
 
   try {
     while (continueTransaction) {

@@ -159,10 +159,9 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
         host_(host),
         port_(port),
         timeout_(std::chrono::seconds(30)),
-        yield_expiration_(),
         logger_(core::logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
-    yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
+    yield_expiration_ = std::chrono::system_clock::time_point();
     timeout_ = std::chrono::seconds(30);  // 30 seconds
     local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
@@ -233,7 +232,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   }
   // clear yield expiration
   void clearYield() {
-    yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
+    yield_expiration_ = std::chrono::system_clock::time_point();
   }
   // Yield based on the yield period
   void yield(std::string portId) {
@@ -315,7 +314,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     host_ = std::move(other.host_);
     port_ = std::move(other.port_);
     local_network_interface_ = std::move(other.local_network_interface_);
-    yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
+    yield_expiration_ = std::chrono::system_clock::time_point();
     timeout_ = std::chrono::seconds(30);
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
 
@@ -341,11 +340,11 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   // URL
   std::string url_;
   // socket timeout;
-  std::atomic<std::chrono::milliseconds> timeout_;
+  std::atomic<std::chrono::milliseconds> timeout_{};
   // Yield Period in Milliseconds
   std::atomic<std::chrono::milliseconds> yield_period_msec_;
   // Yield Expiration
-  std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_;
+  std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_{};
   // Yield Expiration per destination PortID
   std::map<std::string, std::chrono::time_point<std::chrono::system_clock>> yield_expiration_PortIdMap;
   // Logger

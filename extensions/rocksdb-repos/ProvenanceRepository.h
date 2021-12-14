@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <cinttypes>
 #include <vector>
 #include <string>
 #include <memory>
@@ -38,8 +39,8 @@ namespace provenance {
 
 #define PROVENANCE_DIRECTORY "./provenance_repository"
 #define MAX_PROVENANCE_STORAGE_SIZE (10*1024*1024)  // 10M
-constexpr std::chrono::milliseconds MAX_PROVENANCE_ENTRY_LIFE_TIME = std::chrono::minutes(1);
-constexpr std::chrono::milliseconds PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
+constexpr auto MAX_PROVENANCE_ENTRY_LIFE_TIME = std::chrono::minutes(1);
+constexpr auto PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
  public:
@@ -83,11 +84,10 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     }
     logger_->log_debug("MiNiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
     if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
-      auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value);
-      if (max_partition.has_value())
+      if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
           max_partition_millis_ = *max_partition;
     }
-    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%d] ms", max_partition_millis_.count());
+    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%" PRId64 "] ms", static_cast<int64_t> (max_partition_millis_.count()));
     rocksdb::Options options;
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;

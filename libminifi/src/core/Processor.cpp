@@ -35,7 +35,7 @@
 #include "io/StreamFactory.h"
 #include "utils/gsl.h"
 
-using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+using namespace std::literals::chrono_literals;
 
 namespace org {
 namespace apache {
@@ -59,7 +59,6 @@ Processor::Processor(const std::string& name)
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
-  yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
   incoming_connections_Iter = this->_incomingConnections.begin();
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
@@ -80,7 +79,6 @@ Processor::Processor(const std::string& name, const utils::Identifier& uuid)
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
-  yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
   incoming_connections_Iter = this->_incomingConnections.begin();
   logger_->log_debug("Processor %s created with uuid %s", name_, getUUIDStr());
 }
@@ -436,7 +434,7 @@ bool Processor::isYield() {
 }
 
 void Processor::clearYield() {
-  yield_expiration_ = std::chrono::time_point<std::chrono::system_clock>();
+  yield_expiration_ = std::chrono::system_clock::time_point();
 }
 
 std::chrono::milliseconds Processor::getYieldTime() const {

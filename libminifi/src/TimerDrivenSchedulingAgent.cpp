@@ -24,7 +24,7 @@
 #include <iostream>
 #include "core/Property.h"
 
-using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+using namespace std::literals::chrono_literals;
 
 namespace org {
 namespace apache {

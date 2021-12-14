@@ -171,7 +171,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
       idle_timeout_ = idle_timeout->getMilliseconds();
     } else {
       logger_->log_debug("%s attribute is invalid, so default value of %s will be used", idleTimeout.getName(), idleTimeout.getDefaultValue());
-      idle_timeout_ = static_cast<core::TimePeriodValue>(idleTimeout.getDefaultValue().to_string()).getMilliseconds();
+      idle_timeout_ = core::TimePeriodValue(idleTimeout.getDefaultValue().to_string()).getMilliseconds();
     }
   }
 

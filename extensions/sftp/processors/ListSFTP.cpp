@@ -54,7 +54,7 @@
 #include "rapidjson/istreamwrapper.h"
 #include "rapidjson/writer.h"
 
-using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+using namespace std::literals::chrono_literals;
 
 namespace org {
 namespace apache {
@@ -293,7 +293,7 @@ void ListSFTP::invalidateCache() {
 
   already_loaded_from_cache_ = false;
 
-  last_run_time_ = std::chrono::time_point<std::chrono::steady_clock>();
+  last_run_time_ = std::chrono::steady_clock::time_point();
   last_listed_latest_entry_timestamp_ = 0U;
   last_processed_latest_entry_timestamp_ = 0U;
   latest_identifiers_processed_.clear();
@@ -359,8 +359,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   }
 
   /* Age */
-  time_t now = time(nullptr);
-  std::chrono::milliseconds file_age = std::chrono::seconds(now - attrs.mtime);
+  auto file_age = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - std::chrono::system_clock::from_time_t(attrs.mtime));
   if (file_age < minimum_file_age_) {
     logger_->log_debug("Ignoring \"%s/%s\" because it is younger than the Minimum File Age: %ld ms < %lu ms",
         parent_path.c_str(),
@@ -370,11 +369,11 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
     return false;
   }
   if (maximum_file_age_ != 0ms && file_age > maximum_file_age_) {
-    logger_->log_debug("Ignoring \"%s/%s\" because it is older than the Maximum File Age: %ld ms > %lu ms",
+    logger_->log_debug("Ignoring \"%s/%s\" because it is older than the Maximum File Age: %" PRId64 " ms > %" PRId64 " ms",
                        parent_path.c_str(),
                        filename.c_str(),
-                       file_age.count(),
-                       maximum_file_age_.count());
+                       static_cast<int64_t> (file_age.count()),
+                       static_cast<int64_t> (maximum_file_age_.count()));
     return false;
   }
 
@@ -612,7 +611,7 @@ void ListSFTP::listByTrackingTimestamps(
     already_loaded_from_cache_ = true;
   }
 
-  std::chrono::time_point<std::chrono::steady_clock> current_run_time = std::chrono::steady_clock::now();
+  std::chrono::steady_clock::time_point current_run_time = std::chrono::steady_clock::now();
   time_t now = time(nullptr);
 
   /* Order children by timestamp and try to detect timestamp precision if needed  */
@@ -974,10 +973,12 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   while (remote_path.size() > 1U && remote_path.back() == '/') {
     remote_path.resize(remote_path.size() - 1);
   }
-  if (auto entity_tracking_window = context->getProperty<core::TimePeriodValue>(EntityTrackingTimeWindow)) {
-    entity_tracking_time_window = entity_tracking_window->getMilliseconds();
-  } else {
-    logger_->log_error("Entity Tracking Time Window attribute is invalid");
+  if (context->getProperty(EntityTrackingTimeWindow.getName(), value)) {
+    if (auto parsed_entity_time_window = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
+      entity_tracking_time_window = parsed_entity_time_window.value();
+    } else {
+      logger_->log_error("Entity Tracking Time Window attribute is invalid");
+    }
   }
 
   /* Check whether we need to invalidate the cache based on the new properties */

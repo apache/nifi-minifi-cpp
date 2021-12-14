@@ -97,13 +97,13 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 
   if (auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
-    keepAliveInterval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
-    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] s", keepAliveInterval_.count());
+    keepAliveInterval_ = keep_alive_interval->getMilliseconds();
+    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", static_cast<int64_t>(keepAliveInterval_.count()));
   }
 
   if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeOut)) {
-    connectionTimeOut_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
-    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "] s", connectionTimeOut_.count());
+    connectionTimeOut_ = connection_timeout->getMilliseconds();
+    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "] ms", static_cast<int64_t>(connectionTimeOut_.count()));
   }
 
   value = "";
@@ -159,7 +159,7 @@ bool AbstractMQTTProcessor::reconnect() {
   if (MQTTClient_isConnected(client_))
     return true;
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
-  conn_opts.keepAliveInterval = keepAliveInterval_.count();
+  conn_opts.keepAliveInterval = std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count();
   conn_opts.cleansession = cleanSession_;
   if (!userName_.empty()) {
     conn_opts.username = userName_.c_str();

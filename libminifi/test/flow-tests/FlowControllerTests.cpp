@@ -35,7 +35,7 @@
 #include "CustomProcessors.h"
 #include "TestControllerWithFlow.h"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 const char* yamlConfig =
     R"(

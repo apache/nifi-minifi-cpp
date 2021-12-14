@@ -23,7 +23,7 @@
 #include "utils/ProcessCpuUsageTracker.h"
 #include "../TestBase.h"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 using namespace std::chrono;
 
 steady_clock::duration busySleep(const milliseconds duration) {

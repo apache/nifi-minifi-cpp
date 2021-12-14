@@ -56,8 +56,8 @@ namespace core {
 
 #define REPOSITORY_DIRECTORY "./repo"
 #define MAX_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
-constexpr std::chrono::milliseconds MAX_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
-constexpr std::chrono::milliseconds REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
+constexpr auto MAX_REPOSITORY_ENTRY_LIFE_TIME = std::chrono::minutes(10);
+constexpr auto REPOSITORY_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
 class Repository : public virtual core::SerializableComponent, public core::TraceableResource {
  public:

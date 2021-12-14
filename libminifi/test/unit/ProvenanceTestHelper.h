@@ -42,7 +42,7 @@
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #endif
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 /**
  * Test repository

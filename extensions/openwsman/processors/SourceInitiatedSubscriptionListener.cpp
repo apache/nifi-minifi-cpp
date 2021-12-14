@@ -250,7 +250,7 @@ bool SourceInitiatedSubscriptionListener::loadState() {
 
 std::string SourceInitiatedSubscriptionListener::Handler::millisecondsToXsdDuration(std::chrono::milliseconds milliseconds) {
   char buf[1024];
-  snprintf(buf, sizeof(buf), "PT%" PRId64 ".%03" PRId64 "S", milliseconds.count() / 1000, milliseconds.count() % 1000);
+  snprintf(buf, sizeof(buf), "PT%" PRId64 ".%03" PRId64 "S", static_cast<int64_t> (milliseconds.count() / 1000), static_cast<int64_t> (milliseconds.count() % 1000));
   return buf;
 }
 

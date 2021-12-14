@@ -27,7 +27,7 @@
 #define TEST_PROVENANCE_STORAGE_SIZE (1024*100)  // 100 KB
 #define TEST_MAX_PROVENANCE_STORAGE_SIZE (100*1024*1024)  // 100 MB
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 void generateData(std::vector<char>& data) {
   std::random_device rd;

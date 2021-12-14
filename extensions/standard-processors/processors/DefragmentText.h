@@ -79,7 +79,7 @@ class DefragmentText : public core::Processor {
     void store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
 
     std::shared_ptr<core::FlowFile> buffered_flow_file_;
-    std::chrono::time_point<std::chrono::steady_clock> creation_time_;
+    std::chrono::steady_clock::time_point creation_time_;
     std::optional<std::chrono::milliseconds> max_age_;
     std::optional<size_t> max_size_;
   };

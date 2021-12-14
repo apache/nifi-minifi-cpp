@@ -233,7 +233,7 @@ TEST_CASE("Correctly Typed Property With Invalid Validation") {
 }
 
 TEST_CASE("TimePeriodValue Property") {
-  using namespace std::chrono_literals;
+  using namespace std::literals::chrono_literals;
   auto prop = PropertyBuilder::createProperty("prop")
       ->withDefaultValue<TimePeriodValue>("10 minutes")
       ->build();
@@ -246,7 +246,7 @@ TEST_CASE("TimePeriodValue Property") {
 }
 
 TEST_CASE("TimePeriodValue Property without validator") {
-  using namespace std::chrono_literals;
+  using namespace std::literals::chrono_literals;
   auto prop = PropertyBuilder::createProperty("prop")
       ->withDefaultValue("60 minutes")
       ->build();

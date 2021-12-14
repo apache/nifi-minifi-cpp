@@ -18,7 +18,7 @@
 #include "utils/TimeUtil.h"
 #include "../TestBase.h"
 
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 namespace {
   constexpr int ONE_HOUR = 60 * 60;

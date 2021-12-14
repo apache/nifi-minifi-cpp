@@ -265,7 +265,7 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   // Mutex for protection
   mutable std::mutex mutex_;
   // Yield Expiration
-  std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_;
+  std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_{};
 
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer

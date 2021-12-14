@@ -44,10 +44,7 @@ const char *ProvenanceEventRecord::ProvenanceEventTypeStr[REPLAY + 1] = { "CREAT
     "ATTRIBUTES_MODIFIED", "ROUTE", "ADDINFO", "REPLAY" };
 
 ProvenanceEventRecord::ProvenanceEventRecord(ProvenanceEventRecord::ProvenanceEventType event, std::string componentId, std::string componentType)
-    : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()),
-      _entryDate(std::chrono::time_point<std::chrono::system_clock>()),
-      _lineageStartDate(std::chrono::time_point<std::chrono::system_clock>()),
-      _eventDuration(0) {
+    : core::SerializableComponent(core::getClassName<ProvenanceEventRecord>()) {
   _eventType = event;
   _componentId = componentId;
   _componentType = componentType;

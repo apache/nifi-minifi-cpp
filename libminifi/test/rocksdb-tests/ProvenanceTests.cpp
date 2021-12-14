@@ -31,7 +31,7 @@
 #include "../TestBase.h"
 
 namespace provenance = minifi::provenance;
-using namespace std::chrono_literals;
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah", "blahblah");

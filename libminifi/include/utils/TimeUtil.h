@@ -279,12 +279,12 @@ std::optional<TargetDuration> StringToDuration(const std::string& input) {
 }
 
 
-inline std::chrono::milliseconds getMillisecondsSinceUnixEpoch(const std::chrono::time_point<std::chrono::system_clock> time_point) {
+inline std::chrono::milliseconds getMillisecondsSinceUnixEpoch(const std::chrono::system_clock::time_point time_point) {
   return std::chrono::duration_cast<std::chrono::milliseconds>(time_point.time_since_epoch());
 }
 
-inline std::chrono::time_point<std::chrono::system_clock> fromMillisecondsSinceUnixEpoch(const std::chrono::milliseconds milliseconds_since_unix_epoch) {
-  return std::chrono::time_point<std::chrono::system_clock>() + milliseconds_since_unix_epoch;
+inline std::chrono::system_clock::time_point fromMillisecondsSinceUnixEpoch(const std::chrono::milliseconds milliseconds_since_unix_epoch) {
+  return std::chrono::system_clock::time_point() + milliseconds_since_unix_epoch;
 }
 
 } /* namespace timeutils */

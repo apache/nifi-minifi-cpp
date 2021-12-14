@@ -27,7 +27,6 @@
 #include <type_traits>
 #include <limits>
 #include <algorithm>
-#include <chrono>
 
 #include "PropertyErrors.h"
 

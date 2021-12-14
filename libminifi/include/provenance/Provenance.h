@@ -192,15 +192,15 @@ class ProvenanceEventRecord : public core::SerializableComponent {
     return _offset;
   }
   // ! Get Entry Date
-  std::chrono::time_point<std::chrono::system_clock> getFlowFileEntryDate() {
+  std::chrono::system_clock::time_point getFlowFileEntryDate() {
     return _entryDate;
   }
   // ! Get Lineage Start Date
-  std::chrono::time_point<std::chrono::system_clock> getlineageStartDate() {
+  std::chrono::system_clock::time_point getlineageStartDate() {
     return _lineageStartDate;
   }
   // ! Get Event Time
-  std::chrono::time_point<std::chrono::system_clock> getEventTime() {
+  std::chrono::system_clock::time_point getEventTime() {
     return _eventTime;
   }
   // ! Get Event Duration
@@ -390,13 +390,13 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   // Event type
   ProvenanceEventType _eventType;
   // Date at which the event was created
-  std::chrono::time_point<std::chrono::system_clock> _eventTime;
+  std::chrono::system_clock::time_point _eventTime{};
   // Date at which the flow file entered the flow
-  std::chrono::time_point<std::chrono::system_clock> _entryDate;
+  std::chrono::system_clock::time_point _entryDate{};
   // Date at which the origin of this flow file entered the flow
-  std::chrono::time_point<std::chrono::system_clock> _lineageStartDate;
+  std::chrono::system_clock::time_point _lineageStartDate{};
   // Event Duration
-  std::chrono::milliseconds _eventDuration;
+  std::chrono::milliseconds _eventDuration{};
   // Component ID
   std::string _componentId;
   // Component Type

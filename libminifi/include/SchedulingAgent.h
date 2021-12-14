@@ -139,9 +139,9 @@ class SchedulingAgent {
 
  private:
   struct SchedulingInfo {
-    std::chrono::time_point<std::chrono::steady_clock> start_time_ = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point start_time_ = std::chrono::steady_clock::now();
     // Mutable is required to be able to modify this while leaving in std::set
-    mutable std::chrono::time_point<std::chrono::steady_clock> last_alert_time_ = std::chrono::steady_clock::now();
+    mutable std::chrono::steady_clock::time_point last_alert_time_ = std::chrono::steady_clock::now();
     std::string name_;
     std::string uuid_;
 

@@ -104,7 +104,7 @@ class Bin {
     return true;
   }
   // getBinAge
-  [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getCreationDate() const {
+  [[nodiscard]] std::chrono::system_clock::time_point getCreationDate() const {
     return creation_dated_;
   }
   [[nodiscard]] int getSize() const {
@@ -128,7 +128,7 @@ class Bin {
   uint64_t queued_data_size_;
   // Queue for the Flow File
   std::deque<std::shared_ptr<core::FlowFile>> queue_;
-  std::chrono::time_point<std::chrono::system_clock> creation_dated_;
+  std::chrono::system_clock::time_point creation_dated_;
   std::string fileCount_;
   std::string groupId_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<Bin>::getLogger();
@@ -155,7 +155,7 @@ class BinManager {
     minEntries_ = {entries};
   }
   void setBinAge(std::chrono::milliseconds age) {
-    binAge_ = {age};
+    binAge_ = age;
   }
   [[nodiscard]] int getBinCount() const {
     return binCount_;
