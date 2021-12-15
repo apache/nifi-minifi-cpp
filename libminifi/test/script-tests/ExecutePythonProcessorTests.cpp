@@ -27,17 +27,23 @@
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "utils/TestUtils.h"
 
 namespace {
 using org::apache::nifi::minifi::utils::putFileToDir;
 using org::apache::nifi::minifi::utils::getFileContent;
+using org::apache::nifi::minifi::utils::file::getFileNameAndPath;
 
 class ExecutePythonProcessorTestBase {
  public:
   ExecutePythonProcessorTestBase() :
-    logTestController_(LogTestController::getInstance()),
-    logger_(logging::LoggerFactory<ExecutePythonProcessorTestBase>::getLogger()) {
+      logTestController_(LogTestController::getInstance()),
+      logger_(logging::LoggerFactory<ExecutePythonProcessorTestBase>::getLogger()) {
+    std::string path;
+    std::string filename;;
+    getFileNameAndPath(__FILE__, path, filename);
+    SCRIPT_FILES_DIRECTORY = org::apache::nifi::minifi::utils::file::getFullPath(org::apache::nifi::minifi::utils::file::FileUtils::concat_path(path, "test_scripts"));
     reInitialize();
   }
   virtual ~ExecutePythonProcessorTestBase() {
@@ -54,13 +60,13 @@ class ExecutePythonProcessorTestBase {
   }
 
   std::string getScriptFullPath(const std::string& script_file_name) {
-    return org::apache::nifi::minifi::utils::file::FileUtils::concat_path(SCRIPT_FILES_DIRECTORY, script_file_name);
+    return org::apache::nifi::minifi::utils::file::FileUtils::resolve(SCRIPT_FILES_DIRECTORY, script_file_name);
   }
 
   static const std::string TEST_FILE_NAME;
   static const std::string TEST_FILE_CONTENT;
-  static const std::string SCRIPT_FILES_DIRECTORY;
 
+  std::string SCRIPT_FILES_DIRECTORY;
   std::unique_ptr<TestController> testController_;
   std::shared_ptr<TestPlan> plan_;
   LogTestController& logTestController_;
@@ -69,7 +75,6 @@ class ExecutePythonProcessorTestBase {
 
 const std::string ExecutePythonProcessorTestBase::TEST_FILE_NAME{ "test_file.txt" };
 const std::string ExecutePythonProcessorTestBase::TEST_FILE_CONTENT{ "Test text\n" };
-const std::string ExecutePythonProcessorTestBase::SCRIPT_FILES_DIRECTORY{ "test_scripts" };
 
 class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
  public:
@@ -77,7 +82,6 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     OUTPUT_FILE_MATCHES_INPUT,
     RUNTIME_RELATIONSHIP_EXCEPTION
   };
-  SimplePythonFlowFileTransferTest() : ExecutePythonProcessorTestBase{} {}
 
  protected:
   void testSimpleFilePassthrough(const Expectation expectation, const core::Relationship& execute_python_out_conn, const std::string& used_as_script_file, const std::string& used_as_script_body) {
@@ -128,7 +132,6 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     }
   }
 
- private:
   std::shared_ptr<core::Processor> addGetFileProcessorToPlan(const std::string& dir_path) {
     std::shared_ptr<core::Processor> getfile = plan_->addProcessor("GetFile", "getfileCreate2");
     plan_->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir_path);
@@ -142,7 +145,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
       plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath(used_as_script_file));
     }
     if ("" != used_as_script_body) {
-        plan_->setProperty(executePythonProcessor, "Script Body", getFileContent(getScriptFullPath(used_as_script_body)));
+      plan_->setProperty(executePythonProcessor, "Script Body", getFileContent(getScriptFullPath(used_as_script_body)));
     }
     return executePythonProcessor;
   }
@@ -151,6 +154,56 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     std::shared_ptr<core::Processor> putfile = plan_->addProcessor("PutFile", "putfile", execute_python_outbound_connection, true);
     plan_->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_path);
     return putfile;
+  }
+
+  void testReloadOnScriptProperty(std::optional<bool> reload_on_script_change, uint32_t expected_success_file_count, uint32_t expected_failure_file_count) {
+    const std::string input_dir = testController_->createTempDirectory();
+    putFileToDir(input_dir, TEST_FILE_NAME, TEST_FILE_CONTENT);
+    addGetFileProcessorToPlan(input_dir);
+    auto script_content{ getFileContent(getScriptFullPath("passthrough_processor_transfering_to_success.py")) };
+    const std::string reloaded_script_dir = testController_->createTempDirectory();
+    putFileToDir(reloaded_script_dir, "reloaded_script.py", script_content);
+
+    auto execute_python_processor = addExecutePythonProcessorToPlan(org::apache::nifi::minifi::utils::file::FileUtils::concat_path(reloaded_script_dir, "reloaded_script.py"), "");
+    if (reload_on_script_change) {
+      plan_->setProperty(execute_python_processor, "Reload on Script Change", *reload_on_script_change ? "true" : "false");
+    }
+
+    auto success_putfile = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
+    plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
+    success_putfile->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    auto success_output_dir = testController_->createTempDirectory();
+    plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir);
+
+    auto failure_putfile = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
+    plan_->addConnection(execute_python_processor, {"failure", "d"}, failure_putfile);
+    failure_putfile->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    auto failure_output_dir = testController_->createTempDirectory();
+    plan_->setProperty(failure_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir);
+
+    testController_->runSession(plan_);
+    plan_->reset();
+    script_content = getFileContent(getScriptFullPath("passthrough_processor_transfering_to_failure.py"));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));  // make sure the file gets newer modification time
+    putFileToDir(reloaded_script_dir, "reloaded_script.py", script_content);
+    testController_->runSession(plan_);
+
+    std::vector<std::string> file_contents;
+
+    auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
+      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+      file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
+      return true;
+    };
+
+    utils::file::FileUtils::list_dir(success_output_dir, lambda, plan_->getLogger(), false);
+
+    REQUIRE(file_contents.size() == expected_success_file_count);
+
+    file_contents.clear();
+    utils::file::FileUtils::list_dir(failure_output_dir, lambda, plan_->getLogger(), false);
+
+    REQUIRE(file_contents.size() == expected_failure_file_count);
   }
 };
 
@@ -204,6 +257,26 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Simple file passthrough", "[
 
 TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Stateful execution", "[executePythonProcessorStateful]") {
   testsStatefulProcessor();
+}
+
+TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test the Reload On Script Change property", "[executePythonProcessorReloadScript]") {
+  SECTION("When Reload On Script Change is not set the script is reloaded by default") {
+    const uint32_t EXPECTED_SUCCESS_FILE_COUNT = 1;
+    const uint32_t EXPECTED_FAILURE_FILE_COUNT = 1;
+    testReloadOnScriptProperty(std::nullopt, EXPECTED_SUCCESS_FILE_COUNT, EXPECTED_FAILURE_FILE_COUNT);
+  }
+
+  SECTION("When Reload On Script Change is set to true both transfer to success and failure scripts are run") {
+    const uint32_t EXPECTED_SUCCESS_FILE_COUNT = 1;
+    const uint32_t EXPECTED_FAILURE_FILE_COUNT = 1;
+    testReloadOnScriptProperty(true, EXPECTED_SUCCESS_FILE_COUNT, EXPECTED_FAILURE_FILE_COUNT);
+  }
+
+  SECTION("When Reload On Script Change is set to false only transfer to success script is run") {
+    const uint32_t EXPECTED_SUCCESS_FILE_COUNT = 1;
+    const uint32_t EXPECTED_FAILURE_FILE_COUNT = 0;
+    testReloadOnScriptProperty(false, EXPECTED_SUCCESS_FILE_COUNT, EXPECTED_FAILURE_FILE_COUNT);
+  }
 }
 
 }  // namespace

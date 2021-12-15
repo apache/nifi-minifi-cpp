@@ -1,6 +1,6 @@
 /**
- * @file ExecuteScript.h
- * ExecuteScript class declaration
+ * @file ExecutePythonProcessor.h
+ * ExecutePythonProcessor class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,8 +18,7 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_SCRIPT_PYTHON_EXECUTEPYTHONPROCESSOR_H_
-#define EXTENSIONS_SCRIPT_PYTHON_EXECUTEPYTHONPROCESSOR_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -48,15 +47,18 @@ class ExecutePythonProcessor : public core::Processor {
       : Processor(name, uuid),
         processor_initialized_(false),
         python_dynamic_(false),
+        reload_on_script_change_(true),
+        last_script_write_time_(0),
         script_engine_q_() {
   }
 
-  EXTENSIONAPI static core::Property ScriptFile;
-  EXTENSIONAPI static core::Property ScriptBody;
-  EXTENSIONAPI static core::Property ModuleDirectory;
+  EXTENSIONAPI static const core::Property ScriptFile;
+  EXTENSIONAPI static const core::Property ScriptBody;
+  EXTENSIONAPI static const core::Property ModuleDirectory;
+  EXTENSIONAPI static const core::Property ReloadOnScriptChange;
 
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
@@ -104,6 +106,9 @@ class ExecutePythonProcessor : public core::Processor {
 
   std::string script_to_exec_;
   std::string module_directory_;
+  bool reload_on_script_change_;
+  uint64_t last_script_write_time_;
+  std::string script_file_path_;
 
   moodycamel::ConcurrentQueue<std::shared_ptr<python::PythonScriptEngine>> script_engine_q_;
 
@@ -111,9 +116,9 @@ class ExecutePythonProcessor : public core::Processor {
   std::shared_ptr<python::PythonScriptEngine> getScriptEngine();
   void handleEngineNoLongerInUse(std::shared_ptr<python::PythonScriptEngine>&& engine);
   void appendPathForImportModules();
-  void loadScriptFromFile(const std::string& file_path);
+  void loadScriptFromFile();
   void loadScript();
-  void reloadScriptIfUsingScriptFileProperty();
+  void reloadScriptIfUsingScriptFileProperty(python::PythonScriptEngine& engine);
 
 
   template<typename T>
@@ -136,5 +141,3 @@ class ExecutePythonProcessor : public core::Processor {
 } /* namespace org */
 
 #pragma GCC visibility pop
-
-#endif  // EXTENSIONS_SCRIPT_PYTHON_EXECUTEPYTHONPROCESSOR_H_
