@@ -53,6 +53,10 @@ class WriteToFlowFileTestProcessor : public core::Processor {
     content_ = std::move(content);
   }
 
+  void clearContent() {
+    content_.clear();
+  }
+
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteToFlowFileTestProcessor>::getLogger();
   std::string content_;

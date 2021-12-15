@@ -64,14 +64,14 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
   gsl_Expects(context);
 
   if (auto max_buffer_age = context->getProperty<core::TimePeriodValue>(MaxBufferAge)) {
-    buffer_.setMaxAge(max_buffer_age->getMilliseconds());
+    max_age_ = max_buffer_age->getMilliseconds();
     setTriggerWhenEmpty(true);
     logger_->log_trace("The Buffer maximum age is configured to be %" PRId64 " ms", int64_t{max_buffer_age->getMilliseconds().count()});
   }
 
   auto max_buffer_size = context->getProperty<core::DataSizeValue>(MaxBufferSize);
   if (max_buffer_size.has_value() && max_buffer_size->getValue() > 0) {
-    buffer_.setMaxSize(max_buffer_size->getValue());
+    max_size_ = max_buffer_size->getValue();
     logger_->log_trace("The Buffer maximum size is configured to be %" PRIu64 " B", max_buffer_size->getValue());
   }
 
@@ -98,32 +98,40 @@ void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* sess
     if (original_flow_file)
       processNextFragment(session, gsl::not_null(std::move(original_flow_file)));
   }
-  if (buffer_.maxSizeReached()) {
-    buffer_.flushAndReplace(session, Failure, nullptr);
-    return;
-  }
-  if (buffer_.maxAgeReached()) {
-    if (pattern_location_ == PatternLocation::START_OF_MESSAGE)
-      buffer_.flushAndReplace(session, Success, nullptr);
-    else
-      buffer_.flushAndReplace(session, Failure, nullptr);
+  for (auto& [fragment_source_id, fragment_source] : fragment_sources_) {
+    if (fragment_source.buffer_.maxSizeReached(max_size_)) {
+      fragment_source.buffer_.flushAndReplace(session, Failure, nullptr);
+    } else if (fragment_source.buffer_.maxAgeReached(max_age_)) {
+      fragment_source.buffer_.flushAndReplace(session, pattern_location_ == PatternLocation::START_OF_MESSAGE ? Success : Failure, nullptr);
+    }
   }
 }
 
+namespace {
+std::optional<size_t> getFragmentOffset(const core::FlowFile& flow_file) {
+  if (auto offset_attribute = flow_file.getAttribute(textfragmentutils::OFFSET_ATTRIBUTE)) {
+    return std::stoi(*offset_attribute);
+  }
+  return std::nullopt;
+}
+}  // namespace
+
 void DefragmentText::processNextFragment(core::ProcessSession *session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment) {
-  if (!buffer_.isCompatible(*next_fragment)) {
-    buffer_.flushAndReplace(session, Failure, nullptr);
+  auto fragment_source_id = FragmentSource::Id(*next_fragment);
+  auto& fragment_source = fragment_sources_[fragment_source_id];
+  auto& buffer = fragment_source.buffer_;
+  if (!buffer.empty() && buffer.getNextFragmentOffset() != getFragmentOffset(*next_fragment)) {
+    buffer.flushAndReplace(session, Failure, nullptr);
     session->transfer(next_fragment, Failure);
     return;
   }
   std::shared_ptr<core::FlowFile> split_before_last_pattern;
   std::shared_ptr<core::FlowFile> split_after_last_pattern;
-  bool found_pattern = splitFlowFileAtLastPattern(session, next_fragment, split_before_last_pattern,
-                                                  split_after_last_pattern);
+  bool found_pattern = splitFlowFileAtLastPattern(session, next_fragment, split_before_last_pattern, split_after_last_pattern);
   if (split_before_last_pattern)
-    buffer_.append(session, gsl::not_null(std::move(split_before_last_pattern)));
+    buffer.append(session, gsl::not_null(std::move(split_before_last_pattern)));
   if (found_pattern) {
-    buffer_.flushAndReplace(session, Success, split_after_last_pattern);
+    buffer.flushAndReplace(session, Success, split_after_last_pattern);
   }
   session->remove(next_fragment);
 }
@@ -259,24 +267,16 @@ void DefragmentText::Buffer::append(core::ProcessSession* session, const gsl::no
   session->remove(flow_file_to_append);
 }
 
-bool DefragmentText::Buffer::maxSizeReached() const {
+bool DefragmentText::Buffer::maxSizeReached(const std::optional<size_t> max_size) const {
   return !empty()
-      && max_size_.has_value()
-      && (max_size_.value() < buffered_flow_file_->getSize());
+      && max_size.has_value()
+      && (max_size.value() < buffered_flow_file_->getSize());
 }
 
-bool DefragmentText::Buffer::maxAgeReached() const {
+bool DefragmentText::Buffer::maxAgeReached(const std::optional<std::chrono::milliseconds> max_age) const {
   return !empty()
-      && max_age_.has_value()
-      && (creation_time_ + max_age_.value() < std::chrono::steady_clock::now());
-}
-
-void DefragmentText::Buffer::setMaxAge(std::chrono::milliseconds max_age) {
-  max_age_ = max_age;
-}
-
-void DefragmentText::Buffer::setMaxSize(size_t max_size) {
-  max_size_ = max_size;
+      && max_age.has_value()
+      && (creation_time_ + max_age.value() < std::chrono::steady_clock::now());
 }
 
 void DefragmentText::Buffer::flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
@@ -297,29 +297,34 @@ void DefragmentText::Buffer::store(core::ProcessSession* session, const std::sha
   }
 }
 
-bool DefragmentText::Buffer::isCompatible(const core::FlowFile& fragment) const {
+std::optional<size_t> DefragmentText::Buffer::getNextFragmentOffset() const {
   if (empty())
-    return true;
-  if (buffered_flow_file_->getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE)
-      != fragment.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE)) {
-    return false;
-  }
-  if (buffered_flow_file_->getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE)
-      != fragment.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE)) {
-    return false;
-  }
-  std::string current_offset_str, append_offset_str;
-  if (buffered_flow_file_->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, current_offset_str)
-      != fragment.getAttribute(textfragmentutils::OFFSET_ATTRIBUTE, append_offset_str)) {
-    return false;
-  }
-  if (!current_offset_str.empty() && !append_offset_str.empty()) {
-    size_t current_offset = std::stoi(current_offset_str);
-    size_t append_offset = std::stoi(append_offset_str);
-    if (current_offset + buffered_flow_file_->getSize() != append_offset)
-      return false;
-  }
-  return true;
+    return std::nullopt;
+  if (auto offset_attribute = buffered_flow_file_->getAttribute(textfragmentutils::OFFSET_ATTRIBUTE))
+    return std::stoi(*offset_attribute) + buffered_flow_file_->getSize();
+  return std::nullopt;
+}
+
+DefragmentText::FragmentSource::Id::Id(const core::FlowFile& flow_file) {
+  if (auto base_name_attribute = flow_file.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE))
+    base_name_attribute_ = *base_name_attribute;
+  if (auto post_name_attribute = flow_file.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE))
+    post_name_attribute_ = *post_name_attribute;
+}
+
+namespace {
+template <typename T, typename... Rest>
+void hash_combine(size_t& seed, const T& v, Rest... rest) {
+  std::hash<T> hasher;
+  seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+  (hash_combine(seed, rest), ...);
+}
+}
+
+size_t DefragmentText::FragmentSource::Id::hash::operator() (const Id& fragment_id) const {
+    size_t h = 0;
+    hash_combine(h, fragment_id.base_name_attribute_, fragment_id.post_name_attribute_);
+    return h;
 }
 
 REGISTER_RESOURCE(DefragmentText, "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them");

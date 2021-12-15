@@ -58,12 +58,25 @@ class ReadFromFlowFileTestProcessor : public core::Processor {
     return flow_files_read_.size();
   }
 
+  void enableClearOnTrigger() {
+    clear_on_trigger_ = true;
+  }
+
+  void disableClearOnTrigger() {
+    clear_on_trigger_ = false;
+  }
+
+  void clear() {
+    flow_files_read_.clear();
+  }
+
  private:
   struct FlowFileData {
     FlowFileData(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file);
     std::string content_;
     std::map<std::string, std::string> attributes_;
   };
+  bool clear_on_trigger_ = true;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadFromFlowFileTestProcessor>::getLogger();
   std::vector<FlowFileData> flow_files_read_;
 };
