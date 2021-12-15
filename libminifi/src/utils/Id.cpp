@@ -251,7 +251,7 @@ void IdGenerator::initialize(const std::shared_ptr<Properties>& properties) {
       core::logging::LOG_DEBUG(logger_) << "Using minifi uid implementation for uids";
       implementation_ = MINIFI_UID_IMPL;
 
-      uint64_t timestamp = utils::timeutils::getMillisecondsSinceUnixEpoch(std::chrono::system_clock::now()).count();
+      uint64_t timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
       int device_bits = properties->getInt("uid.minifi.device.segment.bits", 16);
       std::string device_segment;
       uint64_t prefix = timestamp;

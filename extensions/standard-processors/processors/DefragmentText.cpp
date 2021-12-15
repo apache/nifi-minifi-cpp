@@ -66,7 +66,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
   if (auto max_buffer_age = context->getProperty<core::TimePeriodValue>(MaxBufferAge)) {
     buffer_.setMaxAge(max_buffer_age->getMilliseconds());
     setTriggerWhenEmpty(true);
-    logger_->log_trace("The Buffer maximum age is configured to be %" PRId64 " ms", static_cast<int64_t>(max_buffer_age->getMilliseconds().count()));
+    logger_->log_trace("The Buffer maximum age is configured to be %" PRId64 " ms", int64_t{max_buffer_age->getMilliseconds().count()});
   }
 
   auto max_buffer_size = context->getProperty<core::DataSizeValue>(MaxBufferSize);

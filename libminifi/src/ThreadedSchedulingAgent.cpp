@@ -56,7 +56,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       admin_yield_duration_ = value->getMilliseconds();
-      logger_->log_debug("nifi_administrative_yield_duration: [%" PRId64 "] ms", static_cast<int64_t>(admin_yield_duration_.count()));
+      logger_->log_debug("nifi_administrative_yield_duration: [%" PRId64 "] ms", int64_t{admin_yield_duration_.count()});
     }
   }
 
@@ -65,7 +65,7 @@ void ThreadedSchedulingAgent::schedule(std::shared_ptr<core::Processor> processo
     std::optional<core::TimePeriodValue> value = core::TimePeriodValue::fromString(yieldValue);
     if (value) {
       bored_yield_duration_ = value->getMilliseconds();
-      logger_->log_debug("nifi_bored_yield_duration: [%" PRId64 "] ms", static_cast<int64_t>(bored_yield_duration_.count()));
+      logger_->log_debug("nifi_bored_yield_duration: [%" PRId64 "] ms", int64_t{bored_yield_duration_.count()});
     }
   }
 

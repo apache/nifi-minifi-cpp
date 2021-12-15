@@ -87,7 +87,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
           max_partition_millis_ = *max_partition;
     }
-    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%" PRId64 "] ms", static_cast<int64_t>(max_partition_millis_.count()));
+    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%" PRId64 "] ms", int64_t{max_partition_millis_.count()});
     rocksdb::Options options;
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;

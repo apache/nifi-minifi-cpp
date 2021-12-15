@@ -101,7 +101,7 @@ void AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc() {
   std::unique_lock<std::mutex> lock(persisting_mutex_);
 
   while (true) {
-    logger_->log_trace("Persisting thread is going to sleep for %" PRId64 " ms", static_cast<int64_t>(auto_persistence_interval_.count()));
+    logger_->log_trace("Persisting thread is going to sleep for %" PRId64 " ms", int64_t{auto_persistence_interval_.count()});
     persisting_cv_.wait_for(lock, auto_persistence_interval_, [this] {
       return !running_;
     });

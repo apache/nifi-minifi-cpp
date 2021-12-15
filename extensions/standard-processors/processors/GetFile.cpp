@@ -246,7 +246,7 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   }
 #endif
   uint64_t file_size = gsl::narrow<uint64_t>(statbuf.st_size);
-  auto modifiedTime = utils::timeutils::fromMillisecondsSinceUnixEpoch(std::chrono::seconds(gsl::narrow<uint64_t>(statbuf.st_mtime)));
+  auto modifiedTime = std::chrono::system_clock::time_point() + std::chrono::seconds(gsl::narrow<uint64_t>(statbuf.st_mtime));
 
   if (request.minSize > 0 && file_size < request.minSize)
     return false;

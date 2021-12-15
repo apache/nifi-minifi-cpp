@@ -372,8 +372,8 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
     logger_->log_debug("Ignoring \"%s/%s\" because it is older than the Maximum File Age: %" PRId64 " ms > %" PRId64 " ms",
                        parent_path.c_str(),
                        filename.c_str(),
-                       static_cast<int64_t>(file_age.count()),
-                       static_cast<int64_t>(maximum_file_age_.count()));
+                       int64_t{file_age.count()},
+                       int64_t{maximum_file_age_.count()});
     return false;
   }
 

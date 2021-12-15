@@ -108,7 +108,7 @@ class FlowFileRepository : public core::Repository, public std::enable_shared_fr
       if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
         max_partition_millis_ = *max_partition;
     }
-    logger_->log_debug("NiFi FlowFile Max Storage Time: [%" PRId64 "] ms", static_cast<int64_t>(max_partition_millis_.count()));
+    logger_->log_debug("NiFi FlowFile Max Storage Time: [%" PRId64 "] ms", int64_t{max_partition_millis_.count()});
 
     const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
     logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");

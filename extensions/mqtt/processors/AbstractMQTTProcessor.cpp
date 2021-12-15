@@ -98,12 +98,12 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
 
   if (auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
     keepAliveInterval_ = keep_alive_interval->getMilliseconds();
-    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", static_cast<int64_t>(keepAliveInterval_.count()));
+    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keepAliveInterval_.count()});
   }
 
   if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeOut)) {
     connectionTimeOut_ = connection_timeout->getMilliseconds();
-    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "] ms", static_cast<int64_t>(connectionTimeOut_.count()));
+    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeOut [%" PRId64 "] ms", int64_t{connectionTimeOut_.count()});
   }
 
   value = "";

@@ -120,7 +120,7 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   }
   if (auto max_bin_age = context->getProperty<core::TimePeriodValue>(MaxBinAge)) {
     this->binManager_.setBinAge(max_bin_age->getMilliseconds());
-    logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "] ms", static_cast<int64_t>(max_bin_age->getMilliseconds().count()));
+    logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "] ms", int64_t{max_bin_age->getMilliseconds().count()});
   }
   if (context->getProperty(BatchSize.getName(), batchSize_)) {
     logger_->log_debug("BinFiles: BatchSize [%" PRIu32 "]", batchSize_);

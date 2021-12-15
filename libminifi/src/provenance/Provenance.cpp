@@ -99,14 +99,14 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
     }
   }
   {
-    uint64_t event_time_ms = utils::timeutils::getMillisecondsSinceUnixEpoch(_eventTime).count();
+    uint64_t event_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(_eventTime.time_since_epoch()).count();
     const auto ret = outStream.write(event_time_ms);
     if (ret != 8) {
       return false;
     }
   }
   {
-    uint64_t entry_date_ms = utils::timeutils::getMillisecondsSinceUnixEpoch(_entryDate).count();
+    uint64_t entry_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(_entryDate.time_since_epoch()).count();
     const auto ret = outStream.write(entry_date_ms);
     if (ret != 8) {
       return false;
@@ -120,7 +120,7 @@ bool ProvenanceEventRecord::Serialize(org::apache::nifi::minifi::io::BufferStrea
     }
   }
   {
-    uint64_t lineage_start_date_ms = utils::timeutils::getMillisecondsSinceUnixEpoch(_lineageStartDate).count();
+    uint64_t lineage_start_date_ms = std::chrono::duration_cast<std::chrono::milliseconds>(_lineageStartDate.time_since_epoch()).count();
     const auto ret = outStream.write(lineage_start_date_ms);
     if (ret != 8) {
       return false;
@@ -284,7 +284,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
     if (ret != 8) {
       return false;
     }
-    _eventTime = utils::timeutils::fromMillisecondsSinceUnixEpoch(std::chrono::milliseconds(event_time_in_ms));
+    _eventTime = std::chrono::system_clock::time_point() + std::chrono::milliseconds(event_time_in_ms);
   }
 
   {
@@ -293,7 +293,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
     if (ret != 8) {
       return false;
     }
-    _entryDate = utils::timeutils::fromMillisecondsSinceUnixEpoch(std::chrono::milliseconds(entry_date_in_ms));
+    _entryDate = std::chrono::system_clock::time_point() + std::chrono::milliseconds(entry_date_in_ms);
   }
 
   {
@@ -311,7 +311,7 @@ bool ProvenanceEventRecord::DeSerialize(const uint8_t *buffer, const size_t buff
     if (ret != 8) {
       return false;
     }
-    _lineageStartDate = utils::timeutils::fromMillisecondsSinceUnixEpoch(std::chrono::milliseconds(lineage_start_date_in_ms));
+    _lineageStartDate = std::chrono::system_clock::time_point() + std::chrono::milliseconds(lineage_start_date_in_ms);
   }
 
   {
