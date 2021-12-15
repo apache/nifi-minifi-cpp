@@ -199,7 +199,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               socket_ptr->close();
               return -1;
             }
-            logger_->log_info("Sleeping for %" PRId64 " msec before attempting to reconnect", static_cast<int64_t> (reconnect_interval_.count()));
+            logger_->log_info("Sleeping for %" PRId64 " msec before attempting to reconnect", static_cast<int64_t>(reconnect_interval_.count()));
             std::this_thread::sleep_for(reconnect_interval_);
             socket_ring_buffer_.enqueue(std::move(socket_ptr));
           } else {
