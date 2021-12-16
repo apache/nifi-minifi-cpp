@@ -1,0 +1,99 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+MiNiFi Config Version: 3
+Flow Controller:
+  name: MiNiFi Flow
+Processors:
+  - id: 9e5dc411-cc01-4359-adea-ff70f07b3402
+    name: ExecuteScript
+    class: org.apache.nifi.minifi.processors.ExecuteScript
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 1000 ms
+    penalization period: 30000 ms
+    yield period: 1000 ms
+    run duration nanos: 0
+    auto-terminated relationships list:
+      - failure
+    Properties:
+      Module Directory:
+      Script Body:
+      Script Engine: python
+#     Script Engine: lua
+      Script File: ../../examples/scripts/python/reverse_flow_file_content.py
+#     Script File: ../../examples/scripts/lua/reverse_flow_file_content.lua
+  - id: b3972d8e-f0de-420a-a259-4d46017699e7
+    name: GenerateFlowFile
+    class: org.apache.nifi.minifi.processors.GenerateFlowFile
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 1000 ms
+    penalization period: 30000 ms
+    yield period: 1000 ms
+    run duration nanos: 0
+    auto-terminated relationships list: []
+    Properties:
+      Batch Size: '1'
+      Custom Text: 'here is a generated uuid: ${UUID()}'
+      Data Format: Text
+      File Size: 1 kB
+      Unique FlowFiles: 'false'
+  - id: ea186cb6-48e6-40e6-98f6-b78568d9f91d
+    name: PutFile
+    class: org.apache.nifi.minifi.processors.PutFile
+    max concurrent tasks: 1
+    scheduling strategy: TIMER_DRIVEN
+    scheduling period: 1000 ms
+    penalization period: 30000 ms
+    yield period: 1000 ms
+    run duration nanos: 0
+    auto-terminated relationships list:
+      - failure
+      - success
+    Properties:
+      Conflict Resolution Strategy: fail
+      Create Missing Directories: 'true'
+      Directory: ./reversed_flow_files/
+      Directory Permissions:
+      Maximum File Count: '-1'
+      Permissions:
+Controller Services: []
+Process Groups: []
+Input Ports: []
+Output Ports: []
+Funnels: []
+Connections:
+  - id: 938cc13f-ae5a-43fc-ab10-e71cecef652e
+    name: ExecuteScript/success/PutFile
+    source id: 9e5dc411-cc01-4359-adea-ff70f07b3402
+    source relationship names:
+      - success
+    destination id: ea186cb6-48e6-40e6-98f6-b78568d9f91d
+    max work queue size: 10000
+    max work queue data size: 10 MB
+    flowfile expiration: 0 seconds
+    queue prioritizer class: ''
+  - id: 7612fcc2-c80e-4967-aeec-2b1076376f49
+    name: GenerateFlowFile/success/ExecuteScript
+    source id: b3972d8e-f0de-420a-a259-4d46017699e7
+    source relationship names:
+      - success
+    destination id: 9e5dc411-cc01-4359-adea-ff70f07b3402
+    max work queue size: 10000
+    max work queue data size: 10 MB
+    flowfile expiration: 0 seconds
+    queue prioritizer class: ''
+Remote Process Groups: []

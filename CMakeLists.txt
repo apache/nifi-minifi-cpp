@@ -500,7 +500,7 @@ endif()
 ## Scripting extensions
 if (ENABLE_ALL OR ENABLE_SCRIPTING)
 	include(Sol2)
-	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "${TEST_DIR}/script-tests")
+	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "extensions/script/tests")
 endif()
 
 # Sensors extensions

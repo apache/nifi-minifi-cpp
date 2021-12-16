@@ -127,24 +127,14 @@ void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessConte
 }
 
 void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  try {
-    auto engine = getScriptEngine();
-    reloadScriptIfUsingScriptFileProperty(*engine);
-    if (script_to_exec_.empty()) {
-      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-    }
+  auto engine = getScriptEngine();
+  reloadScriptIfUsingScriptFileProperty(*engine);
+  if (script_to_exec_.empty()) {
+    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+  }
 
-    engine->onTrigger(context, session);
-    handleEngineNoLongerInUse(std::move(engine));
-  }
-  catch (const std::exception &exception) {
-    logger_->log_error("Caught Exception: %s", exception.what());
-    this->yield();
-  }
-  catch (...) {
-    logger_->log_error("Caught Exception");
-    this->yield();
-  }
+  engine->onTrigger(context, session);
+  handleEngineNoLongerInUse(std::move(engine));
 }
 
 // TODO(hunyadi): This is potentially not what we want. See https://issues.apache.org/jira/browse/MINIFICPP-1222

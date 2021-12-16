@@ -79,7 +79,7 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
   context->getProperty(ScriptBody.getName(), script_body_);
   context->getProperty(ModuleDirectory.getName(), module_directory_);
 
-  if (script_file_.empty() && script_engine_.empty()) {
+  if (script_file_.empty() && script_body_.empty()) {
     logger_->log_error("Either Script Body or Script File must be defined");
     return;
   }
@@ -87,72 +87,64 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
 
 void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
                               const std::shared_ptr<core::ProcessSession> &session) {
-  try {
-    std::shared_ptr<script::ScriptEngine> engine;
+  std::shared_ptr<script::ScriptEngine> engine;
 
-    // Use an existing engine, if one is available
-    if (script_engine_q_.try_dequeue(engine)) {
-      logger_->log_debug("Using available %s script engine instance", script_engine_);
-    } else {
-      logger_->log_info("Creating new %s script instance", script_engine_);
-      logger_->log_info("Approximately %d %s script instances created for this processor",
-                        script_engine_q_.size_approx(),
-                        script_engine_);
-
-      if (script_engine_ == "python") {
-#ifdef PYTHON_SUPPORT
-        engine = createEngine<python::PythonScriptEngine>();
-#else
-        throw std::runtime_error("Python support is disabled in this build.");
-#endif  // PYTHON_SUPPORT
-      } else if (script_engine_ == "lua") {
-#ifdef LUA_SUPPORT
-        engine = createEngine<lua::LuaScriptEngine>();
-#else
-        throw std::runtime_error("Lua support is disabled in this build.");
-#endif  // LUA_SUPPORT
-      }
-
-      if (engine == nullptr) {
-        throw std::runtime_error("No script engine available");
-      }
-
-      if (!script_body_.empty()) {
-        engine->eval(script_body_);
-      } else if (!script_file_.empty()) {
-        engine->evalFile(script_file_);
-      } else {
-        throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-      }
-    }
+  // Use an existing engine, if one is available
+  if (script_engine_q_.try_dequeue(engine)) {
+    logger_->log_debug("Using available %s script engine instance", script_engine_);
+  } else {
+    logger_->log_info("Creating new %s script instance", script_engine_);
+    logger_->log_info("Approximately %d %s script instances created for this processor",
+                      script_engine_q_.size_approx(),
+                      script_engine_);
 
     if (script_engine_ == "python") {
 #ifdef PYTHON_SUPPORT
-      triggerEngineProcessor<python::PythonScriptEngine>(engine, context, session);
+      engine = createEngine<python::PythonScriptEngine>();
 #else
       throw std::runtime_error("Python support is disabled in this build.");
 #endif  // PYTHON_SUPPORT
     } else if (script_engine_ == "lua") {
 #ifdef LUA_SUPPORT
-      triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
+      engine = createEngine<lua::LuaScriptEngine>();
 #else
       throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT
     }
 
-    // Make engine available for use again
-    if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
-      logger_->log_debug("Releasing %s script engine", script_engine_);
-      script_engine_q_.enqueue(engine);
-    } else {
-      logger_->log_info("Destroying script engine because it is no longer needed");
+    if (engine == nullptr) {
+      throw std::runtime_error("No script engine available");
     }
-  } catch (std::exception &exception) {
-    logger_->log_error("Caught Exception %s", exception.what());
-    this->yield();
-  } catch (...) {
-    logger_->log_error("Caught Exception");
-    this->yield();
+
+    if (!script_body_.empty()) {
+      engine->eval(script_body_);
+    } else if (!script_file_.empty()) {
+      engine->evalFile(script_file_);
+    } else {
+      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+    }
+  }
+
+  if (script_engine_ == "python") {
+#ifdef PYTHON_SUPPORT
+    triggerEngineProcessor<python::PythonScriptEngine>(engine, context, session);
+#else
+    throw std::runtime_error("Python support is disabled in this build.");
+#endif  // PYTHON_SUPPORT
+  } else if (script_engine_ == "lua") {
+#ifdef LUA_SUPPORT
+    triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
+#else
+    throw std::runtime_error("Lua support is disabled in this build.");
+#endif  // LUA_SUPPORT
+  }
+
+  // Make engine available for use again
+  if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
+    logger_->log_debug("Releasing %s script engine", script_engine_);
+    script_engine_q_.enqueue(engine);
+  } else {
+    logger_->log_info("Destroying script engine because it is no longer needed");
   }
 }
 
