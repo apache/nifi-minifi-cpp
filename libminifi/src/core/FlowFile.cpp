@@ -92,7 +92,7 @@ void FlowFile::setDeleted(const bool deleted) {
   }
 }
 
-std::shared_ptr<ResourceClaim> FlowFile::getResourceClaim() {
+std::shared_ptr<ResourceClaim> FlowFile::getResourceClaim() const {
   return claim_;
 }
 

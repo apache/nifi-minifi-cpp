@@ -247,7 +247,8 @@ class TestPlan {
     return state_manager_provider_;
   }
 
-  std::string getContent(const std::shared_ptr<minifi::core::FlowFile>& file);
+  std::string getContent(const std::shared_ptr<const minifi::core::FlowFile>& file) const { return getContent(*file); }
+  std::string getContent(const minifi::core::FlowFile& file) const;
 
   void finalize();
 

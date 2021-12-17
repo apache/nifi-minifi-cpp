@@ -17,8 +17,12 @@
  */
 #pragma once
 #include <memory>
+#include <set>
 #include <string>
 #include <string_view>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 #include "TestBase.h"
 #include "core/Processor.h"
 
@@ -30,7 +34,7 @@ class SingleInputTestController : public TestController {
   {}
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>
-  trigger(std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
+  trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
     const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
     input_->put(new_flow_file);
     plan->runProcessor(processor_);
@@ -49,13 +53,14 @@ class SingleInputTestController : public TestController {
     return result;
   }
 
-  void addDynamicRelationship(std::string name) {
-    const auto relationship = core::Relationship{std::move(name), ""};
+  core::Relationship addDynamicRelationship(std::string name) {
+    auto relationship = core::Relationship{std::move(name), ""};
     outgoing_connections_.insert_or_assign(relationship, plan->addConnection(processor_, relationship, nullptr));
+    return relationship;
   }
 
  private:
-  std::shared_ptr<core::FlowFile> createFlowFile(std::string_view content, std::unordered_map<std::string, std::string> attributes) {
+  std::shared_ptr<core::FlowFile> createFlowFile(const std::string_view content, std::unordered_map<std::string, std::string> attributes) {
     const auto flow_file = std::make_shared<FlowFileRecord>();
     for (auto& attr : std::move(attributes)) {
       flow_file->setAttribute(attr.first, std::move(attr.second));
