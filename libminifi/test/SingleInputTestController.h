@@ -96,4 +96,4 @@ class SingleInputTestController : public TestController {
   std::shared_ptr<Connection> input_ = plan->addConnection(nullptr, core::Relationship{"success", "success"}, processor_);
 };
 
-}  // org::apache::nifi::minifi::test
+}  // namespace org::apache::nifi::minifi::test
