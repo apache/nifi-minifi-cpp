@@ -730,9 +730,12 @@ void YamlConfiguration::parseSingleProperty(const std::string& propertyName, con
   try {
     property_set = processor.setProperty(myProp, coercedValue);
   } catch(const utils::internal::InvalidValueException&) {
-    auto component = dynamic_cast<core::CoreComponent&>(processor);
-    // TODO(amarkovics) if cast fails?
-    logger_->log_error("Invalid value was set for property '%s' creating component '%s'", propertyName, component.getName());
+    auto component = dynamic_cast<core::CoreComponent*>(&processor);
+    if (component == nullptr) {
+      logger_->log_error("processor was not a CoreComponent for property '%s'", propertyName);
+    } else {
+      logger_->log_error("Invalid value was set for property '%s' creating component '%s'", propertyName, component->getName());
+    }
     throw;
   }
   const auto rawValueString = propertyValueNode.as<std::string>();

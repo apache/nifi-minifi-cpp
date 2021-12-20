@@ -56,7 +56,7 @@ class ControllerSocketProtocol : public HeartbeatReporter {
    * Handles the heartbeat
    * @param payload incoming payload. From this function we only care about queue metrics.
    */
-  virtual int16_t heartbeat(const C2Payload &payload);
+  int16_t heartbeat(const C2Payload &payload) override;
 
  protected:
   /**

@@ -175,7 +175,6 @@ class Processor : public Connectable, public ConfigurableComponent, public std::
   bool flowFilesOutGoingFull() const;
 
   bool addConnection(Connectable* connection);
-  void removeConnection(Connectable* connection);
 
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory);
   void onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory);

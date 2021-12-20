@@ -106,7 +106,6 @@ bool Processor::addConnection(Connectable* conn) {
   }
   const auto connection = dynamic_cast<Connection*>(conn);
   if (!connection) {
-    // TODO(amarkovics) throw
     return false;
   }
 
@@ -161,50 +160,6 @@ bool Processor::addConnection(Connectable* conn) {
     }
   }
   return result != SetAs::NONE;
-}
-
-void Processor::removeConnection(Connectable* conn) {
-  if (isRunning()) {
-    logger_->log_warn("Can not remove connection while the process %s is running", name_);
-    return;
-  }
-
-  std::lock_guard<std::mutex> lock(getGraphMutex());
-
-  const auto connection = dynamic_cast<Connection*>(conn);
-  if (!connection) {
-    // TODO(amarkovics) throw
-    return;
-  }
-
-  utils::Identifier srcUUID = connection->getSourceUUID();
-  utils::Identifier destUUID = connection->getDestinationUUID();
-
-  if (uuid_ == destUUID) {
-    // Connection is destination to the current processor
-    if (incoming_connections_.find(connection) != incoming_connections_.end()) {
-      incoming_connections_.erase(connection);
-      connection->setDestination(nullptr);
-      logger_->log_debug("Remove connection %s into Processor %s incoming connection", connection->getName(), name_);
-      incoming_connections_Iter = this->incoming_connections_.begin();
-    }
-  }
-
-  if (uuid_ == srcUUID) {
-    const auto &rels = connection->getRelationships();
-    for (auto i = rels.begin(); i != rels.end(); i++) {
-      const auto relationship = (*i).getName();
-      // Connection is source from the current processor
-      auto &&it = outgoing_connections_.find(relationship);
-      if (it != outgoing_connections_.end()) {
-        if (outgoing_connections_[relationship].find(connection) != outgoing_connections_[relationship].end()) {
-          outgoing_connections_[relationship].erase(connection);
-          connection->setSource(nullptr);
-          logger_->log_debug("Remove connection %s into Processor %s outgoing connection for relationship %s", connection->getName(), name_, relationship);
-        }
-      }
-    }
-  }
 }
 
 bool Processor::flowFilesOutGoingFull() const {
