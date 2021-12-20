@@ -93,26 +93,26 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
    * @param key key to add to the repository
    * @param buf buffer
    **/
-  virtual bool Put(T key, const uint8_t *buf, size_t bufLen);
+  bool Put(T key, const uint8_t *buf, size_t bufLen) override;
 
   /**
    * Places new objects into the volatile memory area
    * @param data the key-value pairs to add to the repository
    **/
-  virtual bool MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data);
+  bool MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data) override;
 
   /**
    * Deletes the key
    * @return status of the delete operation
    */
-  virtual bool Delete(T key);
+  bool Delete(T key) override;
 
   /**
    * Sets the value from the provided key. Once the item is retrieved
    * it may not be retrieved again.
    * @return status of the get operation.
    */
-  virtual bool Get(const T &key, std::string &value);
+  bool Get(const T &key, std::string &value) override;
   /**
    * Deserializes objects into store
    * @param store vector in which we will store newly created objects.
