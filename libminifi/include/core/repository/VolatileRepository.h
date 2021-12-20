@@ -80,11 +80,11 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
    * Initialize thevolatile repsitory
    **/
 
-  virtual bool initialize(const std::shared_ptr<Configure> &configure);
+  bool initialize(const std::shared_ptr<Configure> &configure) override;
 
-  virtual void run() = 0;
+  void run() override = 0;
 
-  virtual bool isNoop() {
+  bool isNoop() override {
     return false;
   }
 
@@ -118,7 +118,7 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
    * @param store vector in which we will store newly created objects.
    * @param max_size size of objects deserialized
    */
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda);
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) override;
 
   /**
    * Deserializes objects into a store that contains a fixed number of objects in which
@@ -126,7 +126,7 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
    * @param store precreated object vector
    * @param max_size size of objects deserialized
    */
-  virtual bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size);
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override;
 
   /**
    * Set the connection map
@@ -137,11 +137,11 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
   /**
    * Function to load this component.
    */
-  virtual void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo);
+  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
 
-  virtual void start();
+  void start() override;
 
-  virtual uint64_t getRepoSize() {
+  uint64_t getRepoSize() override {
     return current_size_;
   }
 
