@@ -47,9 +47,9 @@ Bookmark::Bookmark(const std::wstring& channel,
   if (state_manager_->get(state_map) && state_map.count(BOOKMARK_KEY) == 1U) {
     bookmarkXml_ = wel::to_wstring(state_map[BOOKMARK_KEY].c_str());
   } else if (!bookmarkRootDir.empty()) {
-    filePath_ = utils::file::FileUtils::concat_path(
-      utils::file::FileUtils::concat_path(
-        utils::file::FileUtils::concat_path(bookmarkRootDir, "uuid"), uuid.to_string()), "Bookmark.txt");
+    filePath_ = utils::file::concat_path(
+      utils::file::concat_path(
+        utils::file::concat_path(bookmarkRootDir, "uuid"), uuid.to_string()), "Bookmark.txt");
 
     std::wstring bookmarkXml;
     if (getBookmarkXmlFromFile(bookmarkXml)) {

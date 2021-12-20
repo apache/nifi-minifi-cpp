@@ -95,7 +95,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
       core::Relationship("success", "description"), true);
 
   std::stringstream ss1;
-  ss1 << tempdir << utils::file::FileUtils::get_separator() << TEST_FILE;
+  ss1 << tempdir << utils::file::get_separator() << TEST_FILE;
   std::string test_file_path = ss1.str();
 
   std::ofstream test_file(test_file_path, std::ios::binary);
@@ -153,7 +153,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
   md5processor->setAutoTerminatedRelationships({HashContent::Success, HashContent::Failure});
 
   std::stringstream stream_dir;
-  stream_dir << tempdir << utils::file::FileUtils::get_separator() << TEST_FILE;
+  stream_dir << tempdir << utils::file::get_separator() << TEST_FILE;
   std::string test_file_path = stream_dir.str();
   std::ofstream test_file(test_file_path, std::ios::binary);
 

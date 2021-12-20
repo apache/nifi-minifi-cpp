@@ -146,12 +146,12 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   // Determine dest full file paths
   std::stringstream destFileSs;
-  destFileSs << directory << utils::file::FileUtils::get_separator() << filename;
+  destFileSs << directory << utils::file::get_separator() << filename;
   std::string destFile = destFileSs.str();
 
   logger_->log_debug("PutFile writing file %s into directory %s", filename, directory);
 
-  if ((max_dest_files_ != -1) && utils::file::FileUtils::is_directory(directory.c_str())) {
+  if ((max_dest_files_ != -1) && utils::file::is_directory(directory.c_str())) {
     int64_t count = 0;
 
     // Callback, called for each file entry in the listed directory
@@ -160,7 +160,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
       return ++count < max_dest_files_;
     };
 
-    utils::file::FileUtils::list_dir(directory, lambda, logger_, false);
+    utils::file::list_dir(directory, lambda, logger_, false);
 
     if (count >= max_dest_files_) {
       logger_->log_warn("Routing to failure because the output directory %s has at least %u files, which exceeds the "
@@ -189,12 +189,12 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
   utils::Identifier tmpFileUuid = id_generator_->generate();
   std::stringstream tmpFileSs;
   tmpFileSs << directory;
-  auto lastSeparatorPos = filename.find_last_of(utils::file::FileUtils::get_separator());
+  auto lastSeparatorPos = filename.find_last_of(utils::file::get_separator());
 
   if (lastSeparatorPos == std::string::npos) {
-    tmpFileSs << utils::file::FileUtils::get_separator() << "." << filename;
+    tmpFileSs << utils::file::get_separator() << "." << filename;
   } else {
-    tmpFileSs << utils::file::FileUtils::get_separator() << filename.substr(0, lastSeparatorPos) << utils::file::FileUtils::get_separator() << "." << filename.substr(lastSeparatorPos + 1);
+    tmpFileSs << utils::file::get_separator() << filename.substr(0, lastSeparatorPos) << utils::file::get_separator() << "." << filename.substr(lastSeparatorPos + 1);
   }
 
   tmpFileSs << "." << tmpFileUuid.to_string();
@@ -209,7 +209,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
 
     logger_->log_debug("Destination directory does not exist; will attempt to create: ", destDir);
     size_t i = 0;
-    auto pos = destFile.find(utils::file::FileUtils::get_separator());
+    auto pos = destFile.find(utils::file::get_separator());
 
     while (pos != std::string::npos) {
       auto dir_path_component = destFile.substr(i, pos - i);
@@ -219,22 +219,22 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
       if (!dir_path_component.empty()) {
         logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
         if (!std::filesystem::exists(dir_path)) {
-          utils::file::FileUtils::create_dir(dir_path, false);
+          utils::file::create_dir(dir_path, false);
 #ifndef WIN32
           if (directory_permissions_.valid()) {
-            utils::file::FileUtils::set_permissions(dir_path, directory_permissions_.getValue());
+            utils::file::set_permissions(dir_path, directory_permissions_.getValue());
           }
 #endif
         }
 
-        dir_path_stream << utils::file::FileUtils::get_separator();
+        dir_path_stream << utils::file::get_separator();
       } else if (pos == 0) {
         // Support absolute paths
-        dir_path_stream << utils::file::FileUtils::get_separator();
+        dir_path_stream << utils::file::get_separator();
       }
 
       i = pos + 1;
-      pos = destFile.find(utils::file::FileUtils::get_separator(), pos + 1);
+      pos = destFile.find(utils::file::get_separator(), pos + 1);
     }
   }
 
@@ -256,7 +256,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
 
 #ifndef WIN32
   if (permissions_.valid()) {
-    utils::file::FileUtils::set_permissions(destFile, permissions_.getValue());
+    utils::file::set_permissions(destFile, permissions_.getValue());
   }
 #endif
 

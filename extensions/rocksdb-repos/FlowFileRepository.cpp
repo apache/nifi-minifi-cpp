@@ -235,7 +235,7 @@ void FlowFileRepository::initialize_repository() {
     return;
   }
   // delete any previous copy
-  if (utils::file::FileUtils::delete_dir(checkpoint_dir_) < 0) {
+  if (utils::file::delete_dir(checkpoint_dir_) < 0) {
     logger_->log_error("Could not delete existing checkpoint directory '%s'", checkpoint_dir_);
     return;
   }

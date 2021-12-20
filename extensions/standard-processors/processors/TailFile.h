@@ -53,7 +53,7 @@ struct TailState {
   TailState() = default;
 
   std::string fileNameWithPath() const {
-    return path_ + utils::file::FileUtils::get_separator() + file_name_;
+    return path_ + utils::file::get_separator() + file_name_;
   }
 
   int64_t lastReadTimeInMilliseconds() const {

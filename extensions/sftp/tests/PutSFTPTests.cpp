@@ -58,7 +58,7 @@
 #include "tools/SFTPTestServer.h"
 
 constexpr const char* PUBLIC_KEY_AUTH_ERROR_MESSAGE = "Failed to authenticate with publickey, error: Unable to extract public key from private key file: Wrong passphrase or invalid/unrecognized private key file format";  // NOLINT(whitespace/line_length)
-using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+using namespace std::literals::chrono_literals;
 
 class PutSFTPTestsFixture {
  public:
@@ -167,7 +167,7 @@ class PutSFTPTestsFixture {
     std::stringstream resultFile;
     resultFile << dst_dir << "/vfs/" << relative_path;
     uint32_t permissions = 0U;
-    REQUIRE(true == utils::file::FileUtils::get_permissions(resultFile.str(), permissions));
+    REQUIRE(true == utils::file::get_permissions(resultFile.str(), permissions));
     REQUIRE(expected_permissions == permissions);
   }
 
@@ -176,7 +176,7 @@ class PutSFTPTestsFixture {
     resultFile << dst_dir << "/vfs/" << relative_path;
     uint64_t uid = 0U;
     uint64_t gid = 0U;
-    REQUIRE(true == utils::file::FileUtils::get_uid_gid(resultFile.str(), uid, gid));
+    REQUIRE(true == utils::file::get_uid_gid(resultFile.str(), uid, gid));
     REQUIRE(expected_uid == uid);
   }
 
@@ -185,13 +185,13 @@ class PutSFTPTestsFixture {
     resultFile << dst_dir << "/vfs/" << relative_path;
     uint64_t uid = 0U;
     uint64_t gid = 0U;
-    REQUIRE(true == utils::file::FileUtils::get_uid_gid(resultFile.str(), uid, gid));
+    REQUIRE(true == utils::file::get_uid_gid(resultFile.str(), uid, gid));
     REQUIRE(expected_gid == gid);
   }
 
   size_t directoryContentCount(const std::string& dir) {
     size_t count = 0U;
-    utils::file::FileUtils::list_dir(dir, [&count](const std::string&, const std::string&) {
+    utils::file::list_dir(dir, [&count](const std::string&, const std::string&) {
       count++;
       return true;
     }, testController.getLogger());
@@ -242,7 +242,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP bad password", "[PutSFTP][authent
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
   plan->setProperty(put, "Private Key Passphrase", "privatekeypassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -255,7 +255,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase", "[PutSFTP][authentication]") {
   plan->setProperty(put, "Password", "");
-  plan->setProperty(put, "Private Key Path", utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -271,7 +271,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase fallback to password", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -284,7 +284,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -298,7 +298,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[Put
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -316,7 +316,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict"
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
   plan->setProperty(put, "Strict Host Key Checking", "false");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -328,7 +328,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-str
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking mismatch strict", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/known_hosts_mismatch"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts_mismatch"));
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -360,8 +360,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution rename", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(0 == utils::file::create_dir(utils::file::concat_path(dst_dir, "vfs/nifi_test")));
+  createFile(utils::file::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -374,7 +374,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution reject", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REJECT);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
+  REQUIRE(0 == utils::file::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
   createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);

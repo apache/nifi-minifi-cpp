@@ -175,7 +175,7 @@ std::map<std::string, TailState> update_keys_in_legacy_states(const std::map<std
   std::map<std::string, TailState> new_tail_states;
   for (const auto &key_value_pair : legacy_tail_states) {
     const TailState &state = key_value_pair.second;
-    std::string full_file_name = utils::file::FileUtils::concat_path(state.path_, state.file_name_);
+    std::string full_file_name = utils::file::concat_path(state.path_, state.file_name_);
     new_tail_states.emplace(full_file_name, state);
   }
   return new_tail_states;
@@ -359,7 +359,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory is required for multiple tail mode.");
     }
 
-    if (!utils::file::FileUtils::is_directory(base_dir_.c_str())) {
+    if (!utils::file::is_directory(base_dir_.c_str())) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory does not exist or is not a directory");
     }
 
@@ -603,15 +603,15 @@ std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) con
   auto collect_matching_files = [&](const std::string &path, const std::string &file_name) -> bool {
     std::regex pattern_regex(pattern);
     if (file_name != state.file_name_ && std::regex_match(file_name, pattern_regex)) {
-      std::string full_file_name = path + utils::file::FileUtils::get_separator() + file_name;
-      TailStateWithMtime::TimePoint mtime{utils::file::FileUtils::last_write_time_point(full_file_name)};
+      std::string full_file_name = path + utils::file::get_separator() + file_name;
+      TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
       logger_->log_debug("File %s with mtime %" PRId64 " matches rolling filename pattern %s, so we are reading it", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
       matched_files_with_mtime.emplace_back(TailState{path, file_name}, mtime);
     }
     return true;
   };
 
-  utils::file::FileUtils::list_dir(state.path_, collect_matching_files, logger_, false);
+  utils::file::list_dir(state.path_, collect_matching_files, logger_, false);
 
   return sortAndSkipMainFilePrefix(state, matched_files_with_mtime);
 }
@@ -625,8 +625,8 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
   auto collect_matching_files = [&](const std::string &path, const std::string &file_name) -> bool {
     std::regex pattern_regex(pattern);
     if (file_name != state.file_name_ && std::regex_match(file_name, pattern_regex)) {
-      std::string full_file_name = path + utils::file::FileUtils::get_separator() + file_name;
-      TailStateWithMtime::TimePoint mtime{utils::file::FileUtils::last_write_time_point(full_file_name)};
+      std::string full_file_name = path + utils::file::get_separator() + file_name;
+      TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
       logger_->log_debug("File %s with mtime %" PRId64 " matches rolling filename pattern %s", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
       if (mtime >= std::chrono::time_point_cast<std::chrono::seconds>(state.last_read_time_)) {
         logger_->log_debug("File %s has mtime >= last read time, so we are going to read it", file_name);
@@ -636,7 +636,7 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
     return true;
   };
 
-  utils::file::FileUtils::list_dir(state.path_, collect_matching_files, logger_, false);
+  utils::file::list_dir(state.path_, collect_matching_files, logger_, false);
 
   return sortAndSkipMainFilePrefix(state, matched_files_with_mtime);
 }
@@ -651,8 +651,8 @@ std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &stat
   if (!matched_files_with_mtime.empty() && state.position_ > 0) {
     TailState &first_rotated_file = matched_files_with_mtime[0].tail_state_;
     std::string full_file_name = first_rotated_file.fileNameWithPath();
-    if (utils::file::FileUtils::file_size(full_file_name) >= state.position_) {
-      uint64_t checksum = utils::file::FileUtils::computeChecksum(full_file_name, state.position_);
+    if (utils::file::file_size(full_file_name) >= state.position_) {
+      uint64_t checksum = utils::file::computeChecksum(full_file_name, state.position_);
       if (checksum == state.checksum_) {
         first_rotated_file.position_ = state.position_;
         first_rotated_file.checksum_ = state.checksum_;
@@ -701,14 +701,14 @@ void TailFile::processFile(const std::shared_ptr<core::ProcessSession> &session,
     if (initial_start_position_ == InitialStartPositions::BEGINNING_OF_TIME) {
       processAllRotatedFiles(session, state);
     } else if (initial_start_position_ == InitialStartPositions::CURRENT_TIME) {
-      state.position_ = utils::file::FileUtils::file_size(full_file_name);
+      state.position_ = utils::file::file_size(full_file_name);
       state.last_read_time_ = std::chrono::file_clock::now();
-      state.checksum_ = utils::file::FileUtils::computeChecksum(full_file_name, state.position_);
+      state.checksum_ = utils::file::computeChecksum(full_file_name, state.position_);
       storeState();
       return;
     }
   } else {
-    uint64_t fsize = utils::file::FileUtils::file_size(full_file_name);
+    uint64_t fsize = utils::file::file_size(full_file_name);
     if (fsize < state.position_) {
       processRotatedFilesAfterLastReadTime(session, state);
     } else if (fsize == state.position_) {
@@ -744,7 +744,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
                                  TailState &state) {
   std::string fileName = state.file_name_;
 
-  if (utils::file::FileUtils::file_size(full_file_name) == 0u) {
+  if (utils::file::file_size(full_file_name) == 0u) {
     logger_->log_warn("Unable to read file %s as it does not exist or has size zero", full_file_name);
     return;
   }
@@ -825,7 +825,7 @@ void TailFile::checkForRemovedFiles() {
     const std::string &full_file_name = kv.first;
     const TailState &state = kv.second;
     std::regex pattern_regex(file_to_tail_);
-    if (utils::file::FileUtils::file_size(state.fileNameWithPath()) == 0u ||
+    if (utils::file::file_size(state.fileNameWithPath()) == 0u ||
         !std::regex_match(state.file_name_, pattern_regex)) {
       file_names_to_remove.push_back(full_file_name);
     }
@@ -838,7 +838,7 @@ void TailFile::checkForRemovedFiles() {
 
 void TailFile::checkForNewFiles() {
   auto add_new_files_callback = [&](const std::string &path, const std::string &file_name) -> bool {
-    std::string full_file_name = path + utils::file::FileUtils::get_separator() + file_name;
+    std::string full_file_name = path + utils::file::get_separator() + file_name;
     std::regex file_to_tail_regex(file_to_tail_);
     if (!containsKey(tail_states_, full_file_name) && std::regex_match(file_name, file_to_tail_regex)) {
       tail_states_.emplace(full_file_name, TailState{path, file_name});
@@ -846,7 +846,7 @@ void TailFile::checkForNewFiles() {
     return true;
   };
 
-  utils::file::FileUtils::list_dir(base_dir_, add_new_files_callback, logger_, recursive_lookup_);
+  utils::file::list_dir(base_dir_, add_new_files_callback, logger_, recursive_lookup_);
 }
 
 std::chrono::milliseconds TailFile::getLookupFrequency() const {

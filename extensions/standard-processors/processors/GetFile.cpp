@@ -146,7 +146,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   if (!context->getProperty(Directory.getName(), value)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property is missing");
   }
-  if (!utils::file::FileUtils::is_directory(value.c_str())) {
+  if (!utils::file::is_directory(value.c_str())) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
   }
   request_.inputDirectory = value;
@@ -260,7 +260,7 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   if (request.maxAge > 0ms && fileAge > request.maxAge)
     return false;
 
-  if (request.ignoreHiddenFile && utils::file::FileUtils::is_hidden(fullName))
+  if (request.ignoreHiddenFile && utils::file::is_hidden(fullName))
     return false;
 
   std::regex rgx(request.fileFilter);
@@ -275,13 +275,13 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
 
 void GetFile::performListing(const GetFileRequest &request) {
   auto callback = [this, request](const std::string& dir, const std::string& filename) -> bool {
-    std::string fullpath = dir + utils::file::FileUtils::get_separator() + filename;
+    std::string fullpath = dir + utils::file::get_separator() + filename;
     if (fileMatchesRequestCriteria(fullpath, filename, request)) {
       putListing(fullpath);
     }
     return isRunning();
   };
-  utils::file::FileUtils::list_dir(request.inputDirectory, callback, logger_, request.recursive);
+  utils::file::list_dir(request.inputDirectory, callback, logger_, request.recursive);
 }
 
 int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {

@@ -54,7 +54,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setTrace<utils::HttpStreamingCallback>();
 
     std::fstream file;
-    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
+    ss << dir << utils::file::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();

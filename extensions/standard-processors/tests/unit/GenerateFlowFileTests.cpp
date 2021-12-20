@@ -57,12 +57,12 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
   std::vector<std::string> file_contents;
 
   auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
     file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
     return true;
   };
 
-  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+  utils::file::list_dir(dir, lambda, plan->getLogger(), false);
 
   REQUIRE(file_contents.size() == 2);
   REQUIRE(file_contents[0].size() == 10);
@@ -100,7 +100,7 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
   std::vector<std::vector<char>> fileContents;
 
   auto lambda = [&fileContents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
 
     is.seekg(0, is.end);
     size_t length = gsl::narrow<size_t>(is.tellg());
@@ -115,7 +115,7 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
     return true;
   };
 
-  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+  utils::file::list_dir(dir, lambda, plan->getLogger(), false);
 
   REQUIRE(fileContents.size() == 2);
   REQUIRE(fileContents[0].size() == 10);
@@ -146,7 +146,7 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
   size_t counter = 0;
 
   auto lambda = [&counter](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
 
     is.seekg(0, is.end);
     REQUIRE(is.tellg() == 0);
@@ -156,7 +156,7 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
     return true;
   };
 
-  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+  utils::file::list_dir(dir, lambda, plan->getLogger(), false);
 
   REQUIRE(counter == 1);
 }
@@ -186,12 +186,12 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
   std::vector<std::string> file_contents;
 
   auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
     file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
     return true;
   };
 
-  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+  utils::file::list_dir(dir, lambda, plan->getLogger(), false);
 
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0].size() == 36);
@@ -223,12 +223,12 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
   std::vector<std::string> file_contents;
 
   auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
     file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
     return true;
   };
 
-  utils::file::FileUtils::list_dir(dir, lambda, plan->getLogger(), false);
+  utils::file::list_dir(dir, lambda, plan->getLogger(), false);
 
   REQUIRE(file_contents.size() == 1);
   REQUIRE(file_contents[0].size() == 10);

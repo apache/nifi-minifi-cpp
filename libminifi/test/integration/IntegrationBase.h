@@ -141,7 +141,7 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
 
   auto controller_service_provider = flow_config->getControllerServiceProvider();
   char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
-  state_dir = utils::file::FileUtils::create_temp_directory(state_dir_name_template);
+  state_dir = utils::file::create_temp_directory(state_dir_name_template);
   if (!configuration->get(minifi::Configure::nifi_state_management_provider_local_path)) {
     configuration->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir);
   }

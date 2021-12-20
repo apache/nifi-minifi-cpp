@@ -121,7 +121,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
 
     for (const auto &path : pathOrFiles) {
-      utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".py", classpaths_);
+      utils::file::addFilesMatchingExtension(logger_, path, ".py", classpaths_);
     }
   }
 

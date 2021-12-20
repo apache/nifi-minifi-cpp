@@ -82,7 +82,7 @@ namespace utils = minifi::utils;
 namespace logging = minifi::core::logging;
 
 bool validHome(const std::string &home_path) {
-  const std::string properties_file_path = utils::file::FileUtils::concat_path(home_path, DEFAULT_NIFI_PROPERTIES_FILE);
+  const std::string properties_file_path = utils::file::concat_path(home_path, DEFAULT_NIFI_PROPERTIES_FILE);
   return std::filesystem::exists(properties_file_path);
 }
 
@@ -108,12 +108,12 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
     }
 
     /* Try to determine MINIFI_HOME relative to the location of the minifi executable */
-    std::string executablePath = utils::file::FileUtils::get_executable_path();
+    std::string executablePath = utils::file::get_executable_path();
     if (executablePath.empty()) {
       logger->log_error("Failed to determine location of the minifi executable");
     } else {
       std::string minifiPath, minifiFileName;
-      std::tie(minifiPath, minifiFileName) = minifi::utils::file::FileUtils::split_path(executablePath);
+      std::tie(minifiPath, minifiFileName) = minifi::utils::file::split_path(executablePath);
       logger->log_info("Inferred " MINIFI_HOME_ENV_KEY "=%s based on the minifi executable location %s", minifiPath, executablePath);
       return minifiPath;
     }
@@ -146,8 +146,8 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
     logger->log_info("%s is not a valid " MINIFI_HOME_ENV_KEY ", because there is no " DEFAULT_NIFI_PROPERTIES_FILE " file in it.", minifiHome);
 
     std::string minifiHomeWithoutBin, binDir;
-    std::tie(minifiHomeWithoutBin, binDir) = minifi::utils::file::FileUtils::split_path(minifiHome);
-    if (minifiHomeWithoutBin != "" && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::FileUtils::get_separator())) {
+    std::tie(minifiHomeWithoutBin, binDir) = minifi::utils::file::split_path(minifiHome);
+    if (minifiHomeWithoutBin != "" && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::get_separator())) {
       if (validHome(minifiHomeWithoutBin)) {
         logger->log_info("%s is a valid " MINIFI_HOME_ENV_KEY ", falling back to it.", minifiHomeWithoutBin);
         minifiHomeValid = true;

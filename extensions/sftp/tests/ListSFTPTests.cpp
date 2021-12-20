@@ -55,7 +55,7 @@
 #include "processors/UpdateAttribute.h"
 #include "tools/SFTPTestServer.h"
 #include "utils/TestUtils.h"
-using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+using namespace std::literals::chrono_literals;
 
 class ListSFTPTestsFixture {
  public:
