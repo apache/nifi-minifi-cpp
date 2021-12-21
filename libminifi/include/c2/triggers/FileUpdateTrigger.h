@@ -48,7 +48,7 @@ class FileUpdateTrigger : public C2Trigger {
   void initialize(const std::shared_ptr<minifi::Configure> &configuration) {
     if (nullptr != configuration) {
       if (configuration->get(minifi::Configure::nifi_c2_file_watch, "c2.file.watch", file_)) {
-        setLastUpdate(std::filesystem::last_write_time(file_));
+        setLastUpdate(utils::file::last_write_time(file_));
       } else {
         logger_->log_trace("Could not configure file");
       }
@@ -60,21 +60,20 @@ class FileUpdateTrigger : public C2Trigger {
       logger_->log_trace("Last Update is zero");
       return false;
     }
-    auto update_time = std::filesystem::last_write_time(file_);
+    auto update_time = utils::file::last_write_time(file_);
     auto last_update_l = getLastUpdate().value().time_since_epoch().count();
-    logger_->log_trace("Last Update is %d and update time is %d", last_update_l , update_time.time_since_epoch().count());
-    if (update_time > getLastUpdate().value()) {
+    logger_->log_trace("Last Update is %d and update time is %d", last_update_l , update_time.value().time_since_epoch().count());
+    if (update_time > getLastUpdate()) {
       setLastUpdate(update_time);
       update_ = true;
       return true;
     }
     return false;
   }
-  /**
-   * Reset the last write time
-   */
+
+
   virtual void reset() {
-    setLastUpdate(std::filesystem::last_write_time(file_));
+    setLastUpdate(utils::file::last_write_time(file_));
     update_ = false;
   }
 

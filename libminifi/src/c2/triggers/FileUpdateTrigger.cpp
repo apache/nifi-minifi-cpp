@@ -46,8 +46,7 @@ C2Payload FileUpdateTrigger::getAction() {
 
 std::optional<std::filesystem::file_time_type> FileUpdateTrigger::getLastUpdate() const {
   std::lock_guard<std::mutex> lock(last_update_lock);
-  std::optional<std::filesystem::file_time_type> last_update = last_update_;
-  return last_update;
+  return last_update_;
 }
 
 void FileUpdateTrigger::setLastUpdate(const std::optional<std::filesystem::file_time_type> &last_update) {

@@ -31,7 +31,7 @@ TEST_CASE("Empty file", "[t1]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   trigger.initialize(configuration);
 
-  REQUIRE(false ==trigger.triggered());
+  REQUIRE(false == trigger.triggered());
   REQUIRE(minifi::c2::Operation::HEARTBEAT == trigger.getAction().getOperation());
 }
 
@@ -39,7 +39,7 @@ TEST_CASE("invalidfile file", "[t2]") {
   minifi::c2::FileUpdateTrigger trigger("test");
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   configuration->set(minifi::Configure::nifi_c2_file_watch, "/tmp/blahblahblhalbha");
-  REQUIRE_THROWS(trigger.initialize(configuration));
+  trigger.initialize(configuration);
 
   REQUIRE(false == trigger.triggered());
   REQUIRE(minifi::c2::Operation::HEARTBEAT == trigger.getAction().getOperation());

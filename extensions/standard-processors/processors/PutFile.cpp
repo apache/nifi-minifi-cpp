@@ -151,7 +151,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   logger_->log_debug("PutFile writing file %s into directory %s", filename, directory);
 
-  if ((max_dest_files_ != -1) && utils::file::is_directory(directory.c_str())) {
+  if ((max_dest_files_ != -1) && utils::file::is_directory(directory)) {
     int64_t count = 0;
 
     // Callback, called for each file entry in the listed directory
@@ -170,7 +170,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
     }
   }
 
-  if (std::filesystem::exists(destFile)) {
+  if (utils::file::exists(destFile)) {
     logger_->log_warn("Destination file %s exists; applying Conflict Resolution Strategy: %s", destFile, conflict_resolution_);
 
     if (conflict_resolution_ == CONFLICT_RESOLUTION_STRATEGY_REPLACE) {
@@ -203,7 +203,7 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
 }
 
 bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowFile> flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
-  if (!std::filesystem::exists(destDir) && try_mkdirs_) {
+  if (!utils::file::exists(destDir) && try_mkdirs_) {
     // Attempt to create directories in file's path
     std::stringstream dir_path_stream;
 
@@ -218,7 +218,7 @@ bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowF
 
       if (!dir_path_component.empty()) {
         logger_->log_debug("Attempting to create directory if it does not already exist: %s", dir_path);
-        if (!std::filesystem::exists(dir_path)) {
+        if (!utils::file::exists(dir_path)) {
           utils::file::create_dir(dir_path, false);
 #ifndef WIN32
           if (directory_permissions_.valid()) {

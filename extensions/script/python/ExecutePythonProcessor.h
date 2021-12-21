@@ -47,8 +47,7 @@ class ExecutePythonProcessor : public core::Processor {
       : Processor(name, uuid),
         processor_initialized_(false),
         python_dynamic_(false),
-        reload_on_script_change_(true),
-        last_script_write_time_(0) {
+        reload_on_script_change_(true) {
   }
 
   EXTENSIONAPI static const core::Property ScriptFile;
@@ -108,7 +107,7 @@ class ExecutePythonProcessor : public core::Processor {
 
   std::string script_to_exec_;
   bool reload_on_script_change_;
-  uint64_t last_script_write_time_;
+  std::optional<std::filesystem::file_time_type> last_script_write_time_;
   std::string script_file_path_;
   std::shared_ptr<core::logging::Logger> python_logger_;
   std::unique_ptr<PythonScriptEngine> python_script_engine_;

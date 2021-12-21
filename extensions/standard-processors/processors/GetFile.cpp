@@ -146,7 +146,7 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
   if (!context->getProperty(Directory.getName(), value)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory property is missing");
   }
-  if (!utils::file::is_directory(value.c_str())) {
+  if (!utils::file::is_directory(value)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Input Directory \"" + value + "\" is not a directory");
   }
   request_.inputDirectory = value;

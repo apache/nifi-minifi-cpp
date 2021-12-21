@@ -125,16 +125,15 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
   }
 
-  std::string getPackage(const std::string& basePath, const std::string& pythonscript) {
+  std::string getPackage(const std::string &basePath, const std::string &pythonscript) {
     const auto script_directory = getPath(pythonscript);
     const auto loc = script_directory.find_first_of(basePath);
     if (loc != 0 || script_directory.size() <= basePath.size()) {
       return "";
     }
-    const auto python_dir = script_directory.substr(basePath.length() + 1);
-    auto python_package = python_dir.substr(0, python_dir.find_last_of("/\\"));
-    utils::StringUtils::replaceAll(python_package, "/", ".");
-    utils::StringUtils::replaceAll(python_package, "\\", ".");
+    const auto python_dir = script_directory.substr(basePath.length());
+    auto python_package = std::filesystem::path(python_dir).parent_path().string();
+    utils::StringUtils::replaceAll(python_package, std::string(1, utils::file::get_separator()), ".");
     if (python_package.length() > 1 && python_package.at(0) == '.') {
       python_package = python_package.substr(1);
     }
@@ -143,19 +142,15 @@ class PythonCreator : public minifi::core::CoreComponent {
   }
 
   std::string getPath(const std::string &pythonscript) {
-    std::string path = pythonscript.substr(0, pythonscript.find_last_of("/\\"));
-    return path;
+    return std::filesystem::path(pythonscript).parent_path();
   }
 
   std::string getFileName(const std::string &pythonscript) {
-    std::string path = pythonscript.substr(pythonscript.find_last_of("/\\") + 1);
-    return path;
+    return std::filesystem::path(pythonscript).filename().string();
   }
 
   std::string getScriptName(const std::string &pythonscript) {
-    std::string path = pythonscript.substr(pythonscript.find_last_of("/\\") + 1);
-    size_t dot_i = path.find_last_of('.');
-    return path.substr(0, dot_i);
+    return std::filesystem::path(pythonscript).stem();
   }
 
   std::vector<std::string> registered_classes_;

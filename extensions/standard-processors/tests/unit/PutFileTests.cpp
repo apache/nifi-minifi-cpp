@@ -216,7 +216,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  auto filemodtime = std::filesystem::last_write_time(movedFile.str());
+  auto filemodtime = utils::file::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -237,7 +237,7 @@ TEST_CASE("PutFileTestFileExistsIgnore", "[getfileputpfile]") {
   // verify that the fle was moved
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
-  REQUIRE(filemodtime == std::filesystem::last_write_time(movedFile.str()));
+  REQUIRE(filemodtime == utils::file::last_write_time(movedFile.str()));
   LogTestController::getInstance().reset();
 }
 
@@ -282,7 +282,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   file.open(movedFile.str(), std::ios::out);
   file << "tempFile";
   file.close();
-  auto filemodtime = std::filesystem::last_write_time(movedFile.str());
+  auto filemodtime = utils::file::last_write_time(movedFile.str());
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   plan->reset();
@@ -304,7 +304,7 @@ TEST_CASE("PutFileTestFileExistsReplace", "[getfileputpfile]") {
   REQUIRE(false == std::ifstream(ss.str()).good());
   REQUIRE(true == std::ifstream(movedFile.str()).good());
 #ifndef WIN32
-  REQUIRE(filemodtime != std::filesystem::last_write_time(movedFile.str()));
+  REQUIRE(filemodtime != utils::file::last_write_time(movedFile.str()));
 #endif
   LogTestController::getInstance().reset();
 }
@@ -487,8 +487,8 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
     plan->runNextProcessor();
     plan->runNextProcessor();
 
-    REQUIRE(std::filesystem::exists(putfiledir));
-    REQUIRE(std::filesystem::exists(path));
+    REQUIRE(utils::file::exists(putfiledir));
+    REQUIRE(utils::file::exists(path));
   }
 
   SECTION("with an empty file and create directory property set to false") {
@@ -502,8 +502,8 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
     plan->runNextProcessor();
     plan->runNextProcessor();
 
-    REQUIRE_FALSE(std::filesystem::exists(putfiledir));
-    REQUIRE_FALSE(std::filesystem::exists(path));
+    REQUIRE_FALSE(utils::file::exists(putfiledir));
+    REQUIRE_FALSE(utils::file::exists(path));
     std::string check = "Failed to create empty file: " + path;
     REQUIRE(LogTestController::getInstance().contains(check));
   }
@@ -519,8 +519,8 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
     plan->runNextProcessor();
     plan->runNextProcessor();
 
-    REQUIRE(std::filesystem::exists(putfiledir));
-    REQUIRE(std::filesystem::exists(path));
+    REQUIRE(utils::file::exists(putfiledir));
+    REQUIRE(utils::file::exists(path));
   }
 
   SECTION("with a non-empty file and create directory property set to false") {
@@ -535,8 +535,8 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
     plan->runNextProcessor();
     plan->runNextProcessor();
 
-    REQUIRE_FALSE(std::filesystem::exists(putfiledir));
-    REQUIRE_FALSE(std::filesystem::exists(path));
+    REQUIRE_FALSE(utils::file::exists(putfiledir));
+    REQUIRE_FALSE(utils::file::exists(path));
     std::string check = "PutFile commit put file operation to " + path + " failed because write failed";
     REQUIRE(LogTestController::getInstance().contains(check));
   }

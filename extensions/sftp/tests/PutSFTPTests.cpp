@@ -160,7 +160,7 @@ class PutSFTPTestsFixture {
   void testModificationTime(const std::string& relative_path, std::filesystem::file_time_type mtime) {
     std::stringstream resultFile;
     resultFile << dst_dir << "/vfs/" << relative_path;
-    REQUIRE(mtime == std::filesystem::last_write_time(resultFile.str()));
+    REQUIRE(mtime == utils::file::last_write_time(resultFile.str()).value());
   }
 
   void testPermissions(const std::string& relative_path, uint32_t expected_permissions) {

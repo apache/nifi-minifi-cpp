@@ -22,6 +22,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <algorithm>
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
@@ -37,10 +38,15 @@ TEST_CASE("TestFileUtils::concat_path", "[TestConcatPath]") {
 #ifdef WIN32
   std::string base = "foo\\bar";
   REQUIRE("foo\\bar\\baz" == FileUtils::concat_path(base, child));
+  std::string base2 = "foo\\bar\\";
+  REQUIRE("foo\\bar\\baz" == FileUtils::concat_path(base2, child));
 #else
   std::string base = "foo/bar";
   REQUIRE("foo/bar/baz" == FileUtils::concat_path(base, child));
+  std::string base2 = "foo/bar/";
+  REQUIRE("foo/bar/baz" == FileUtils::concat_path(base2, child));
 #endif
+  REQUIRE(base + FileUtils::get_separator() + child == FileUtils::concat_path(base, child));
 }
 
 TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
@@ -263,25 +269,18 @@ TEST_CASE("TestFileUtils::addFilesMatchingExtension", "[TestAddFilesMatchingExte
   std::ofstream out3(barGood);
   std::ofstream out4(level1);
 
-  std::vector<std::string> expectedFiles = {fooGood, barGood, level1};
+  std::vector<std::string> expectedFiles = {barGood, fooGood, level1};
   std::vector<std::string> accruedFiles;
 
   FileUtils::addFilesMatchingExtension(logger_, dir, ".ext", accruedFiles);
+  std::sort(accruedFiles.begin(), accruedFiles.end());
 
-  bool expectedFilesAdded = accruedFiles.size() == expectedFiles.size();
-
-  for (const auto &file: expectedFiles) {
-    if (!expectedFilesAdded) break;
-    expectedFilesAdded = std::count(accruedFiles.begin(), accruedFiles.end(), file) == 1;
-  }
-
-  REQUIRE(expectedFilesAdded);
+  CHECK(accruedFiles == expectedFiles);
 
   auto fakeDir = FileUtils::concat_path(dir, "fake");
   FileUtils::addFilesMatchingExtension(logger_, fakeDir, ".ext", accruedFiles);
   REQUIRE(LogTestController::getInstance().contains("Failed to open directory: " + fakeDir));
 }
-
 
 TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
   TestController testController;
@@ -314,32 +313,32 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
 
 TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_write_time][last_write_time_point]") {
   using namespace std::chrono;
+  namespace fs = std::filesystem;
 
-  // TODO(MINIFICPP-1636) this should use std::chrono::file_clock
-  uint64_t time_before_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  time_point<system_clock, seconds> time_point_before_write = time_point_cast<seconds>(system_clock::now());
+  fs::file_time_type time_before_write = file_clock::now();
+  time_point<file_clock, seconds> time_point_before_write = time_point_cast<seconds>(file_clock::now());
 
   TestController testController;
 
   std::string dir = testController.createTempDirectory();
 
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
-  REQUIRE(FileUtils::last_write_time(test_file) == 0);
-  REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<system_clock, seconds>{}));
+  REQUIRE_FALSE(FileUtils::last_write_time(test_file).has_value());  // non existent file should not return last w.t.
+  REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<file_clock, seconds>{}));
 
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   std::ofstream test_file_stream(test_file);
   test_file_stream << "foo\n";
   test_file_stream.flush();
 
-  uint64_t time_after_first_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  time_point<system_clock, seconds> time_point_after_first_write = time_point_cast<seconds>(system_clock::now());
+  fs::file_time_type time_after_first_write = file_clock::now();
+  time_point<file_clock, seconds> time_point_after_first_write = time_point_cast<seconds>(file_clock::now());
 
-  uint64_t first_mtime = FileUtils::last_write_time(test_file);
+  fs::file_time_type first_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(first_mtime >= time_before_write);
   REQUIRE(first_mtime <= time_after_first_write);
 
-  time_point<system_clock, seconds> first_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  time_point<file_clock, seconds> first_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(first_mtime_time_point >= time_point_before_write);
   REQUIRE(first_mtime_time_point <= time_point_after_first_write);
 
@@ -347,15 +346,15 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   test_file_stream << "bar\n";
   test_file_stream.flush();
 
-  uint64_t time_after_second_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  time_point<system_clock, seconds> time_point_after_second_write = time_point_cast<seconds>(system_clock::now());
+  fs::file_time_type time_after_second_write = file_clock::now();
+  time_point<file_clock, seconds> time_point_after_second_write = time_point_cast<seconds>(file_clock::now());
 
-  uint64_t second_mtime = FileUtils::last_write_time(test_file);
+  fs::file_time_type second_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(second_mtime >= first_mtime);
   REQUIRE(second_mtime >= time_after_first_write);
   REQUIRE(second_mtime <= time_after_second_write);
 
-  time_point<system_clock, seconds> second_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  time_point<file_clock, seconds> second_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(second_mtime_time_point >= first_mtime_time_point);
   REQUIRE(second_mtime_time_point >= time_point_after_first_write);
   REQUIRE(second_mtime_time_point <= time_point_after_second_write);
@@ -364,10 +363,10 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
 
   // On Windows it would rarely occur that the last_write_time is off by 1 from the previous check
 #ifndef WIN32
-  uint64_t third_mtime = FileUtils::last_write_time(test_file);
+  fs::file_time_type third_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(third_mtime == second_mtime);
 
-  time_point<system_clock, seconds> third_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  time_point<file_clock, seconds> third_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(third_mtime_time_point == second_mtime_time_point);
 #endif
 }
@@ -488,7 +487,7 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
 }
 
 #ifndef WIN32
-TEST_CASE("FileUtils::set_permissions", "[TestSetPermissions]") {
+TEST_CASE("FileUtils::set_permissions and get_permissions", "[TestSetPermissions][TestGetPermissions]") {
   TestController testController;
 
   auto dir = testController.createTempDirectory();
@@ -510,8 +509,8 @@ TEST_CASE("FileUtils::exists", "[TestExists]") {
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
   auto invalid_path = dir + FileUtils::get_separator() + "test_file2.txt";
 
-  REQUIRE(FileUtils::exists(path));
-  REQUIRE(!FileUtils::exists(invalid_path));
+  REQUIRE(utils::file::exists(path));
+  REQUIRE(!utils::file::exists(invalid_path));
 }
 
 TEST_CASE("TestFileUtils::delete_dir should fail with empty path", "[TestEmptyDeleteDir]") {

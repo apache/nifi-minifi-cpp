@@ -124,6 +124,7 @@ inline char get_separator(bool /*force_posix*/ = false) {
   return '/';
 }
 #endif
+time_t to_time_t(const std::filesystem::file_time_type time);
 
 inline std::string normalize_path_separators(std::string path, bool force_posix = false) {
   const auto normalize_separators = [force_posix](const char c) {
@@ -166,20 +167,29 @@ inline int64_t delete_dir(const std::string &path, bool delete_files_recursively
   return 0;
 }
 
-time_t to_time_t(const std::filesystem::file_time_type time);
-
 inline std::chrono::time_point<std::chrono::file_clock,
                                std::chrono::seconds> last_write_time_point(const std::string &path) {
-  return std::chrono::time_point_cast<std::chrono::seconds>(std::filesystem::last_write_time(path));
-}
-
-inline uint64_t last_write_time(const std::string &path) {
   std::error_code ec;
   auto result = std::filesystem::last_write_time(path, ec);
   if (ec.value() == 0) {
-    return to_time_t(result);
+    return std::chrono::time_point_cast<std::chrono::seconds>(result);
   }
-  return 0;
+  return std::chrono::time_point<std::chrono::file_clock, std::chrono::seconds>{};
+}
+
+inline const std::optional<std::filesystem::file_time_type> last_write_time(const std::string &path) {
+  std::error_code ec;
+  auto result = std::filesystem::last_write_time(path, ec);
+  if (ec.value() == 0) {
+    return result;
+  }
+  return std::nullopt;
+}
+
+inline bool set_last_write_time(const std::string &path, std::filesystem::file_time_type new_time) {
+  std::error_code ec;
+  std::filesystem::last_write_time(path, new_time, ec);
+  return ec.value() == 0;
 }
 
 inline uint64_t file_size(const std::string &path) {
@@ -199,12 +209,9 @@ inline uint64_t file_size(const std::string &path) {
 
 #ifndef WIN32
 inline bool get_permissions(const std::string &path, uint32_t &permissions) {
-  struct stat result;
-  if (stat(path.c_str(), &result) == 0) {
-    permissions = result.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-    return true;
-  }
-  return false;
+  std::error_code ec;
+  permissions = static_cast<uint32_t>(std::filesystem::status(path, ec).permissions());
+  return ec.value() == 0;
 }
 
 inline int set_permissions(const std::string &path, const uint32_t permissions) {
@@ -226,8 +233,22 @@ inline bool get_uid_gid(const std::string &path, uint64_t &uid, uint64_t &gid) {
 }
 #endif
 
-inline bool is_directory(const char *path) {
-  return std::filesystem::is_directory(path);
+inline bool is_directory(const std::filesystem::path &path) {
+  std::error_code ec;
+  bool result = std::filesystem::is_directory(path, ec);
+  if (ec.value() == 0) {
+    return result;
+  }
+  return false;
+}
+
+inline bool exists(const std::string &path) {
+  std::error_code ec;
+  bool result = std::filesystem::exists(path, ec);
+  if (ec.value() == 0) {
+    return result;
+  }
+  return false;
 }
 
 inline int create_dir(const std::string &path, bool recursive = true) {
@@ -257,20 +278,21 @@ inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logge
                                       const std::string &originalPath,
                                       const std::string &extension,
                                       std::vector<std::string> &accruedFiles) {
-  if (!std::filesystem::exists(originalPath)) {
+  if (!utils::file::exists(originalPath)) {
     logger->log_warn("Failed to open directory: %s", originalPath.c_str());
     return;
   }
 
-  if (std::filesystem::is_directory(originalPath)) {
+  if (utils::file::is_directory(originalPath)) {
     // only perform a listing while we are not empty
-    logger->log_debug("Performing file listing on %s", originalPath);
+    logger->log_debug("Looking for files with %s extension in %s", extension, originalPath);
 
-    for (const auto &entry: std::filesystem::directory_iterator(originalPath)) {
+    for (const auto &entry: std::filesystem::directory_iterator(originalPath,
+                                                                std::filesystem::directory_options::skip_permission_denied)) {
       std::string d_name = entry.path().filename().string();
       std::string path = entry.path().string();
 
-      if (std::filesystem::is_directory(path)) {          // if this is a directory
+      if (utils::file::is_directory(path)) {          // if this is a directory
         addFilesMatchingExtension(logger, path, extension, accruedFiles);
       } else {
         if (utils::StringUtils::endsWith(path, extension)) {
@@ -316,7 +338,7 @@ inline void list_dir(const std::string& dir,
                      const std::shared_ptr<core::logging::Logger> &logger,
                      std::function<bool(const std::string&)> dir_callback) {
   logger->log_debug("Performing file listing against %s", dir);
-  if (!std::filesystem::exists(dir)) {
+  if (!utils::file::exists(dir)) {
     logger->log_warn("Failed to open directory: %s", dir.c_str());
     return;
   }
@@ -325,7 +347,7 @@ inline void list_dir(const std::string& dir,
     std::string d_name = entry.path().filename().string();
     std::string path = entry.path().string();
 
-    if (std::filesystem::is_directory(path)) {  // if this is a directory
+    if (utils::file::is_directory(path)) {  // if this is a directory
       if (dir_callback(dir)) {
         list_dir(path, callback, logger, dir_callback);
       }
