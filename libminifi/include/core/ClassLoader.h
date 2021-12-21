@@ -160,7 +160,7 @@ std::unique_ptr<T> ClassLoader::instantiate(const std::string &class_name, const
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(name);
-    return std::unique_ptr<T>{dynamic_cast<T*>(obj.get()) ? dynamic_cast<T*>(obj.release()) : nullptr};
+    return utils::dynamic_unique_cast<T>(obj);
   }
   return nullptr;
 }
@@ -177,7 +177,7 @@ std::unique_ptr<T> ClassLoader::instantiate(const std::string &class_name, const
   auto factory_entry = loaded_factories_.find(class_name);
   if (factory_entry != loaded_factories_.end()) {
     auto obj = factory_entry->second->create(class_name, uuid);
-    return std::unique_ptr<T>{dynamic_cast<T*>(obj.get()) ? dynamic_cast<T*>(obj.release()) : nullptr};
+    return utils::dynamic_unique_cast<T>(obj);
   }
   return nullptr;
 }
