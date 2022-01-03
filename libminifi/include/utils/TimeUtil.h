@@ -42,7 +42,7 @@ namespace timeutils {
  * @returns TimeUnit since epoch
  */
 template<typename TimeUnit, typename TimePoint>
-uint64_t getTimeStamp(const TimePoint& time_point) {
+uint64_t getTimestamp(const TimePoint& time_point) {
   return std::chrono::duration_cast<TimeUnit>(time_point.time_since_epoch()).count();
 }
 

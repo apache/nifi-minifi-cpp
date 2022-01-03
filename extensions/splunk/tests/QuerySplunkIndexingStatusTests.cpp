@@ -62,7 +62,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Token.getName(), MockSplunkHEC::TOKEN);
   plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::SplunkRequestChannel.getName(), "a12254b4-f481-435d-896d-3b6033eabe58");
 
-  auto response_timestamp = std::to_string(utils::timeutils::getTimeStamp<std::chrono::milliseconds>(std::chrono::system_clock::now()));
+  auto response_timestamp = std::to_string(utils::timeutils::getTimestamp<std::chrono::milliseconds>(std::chrono::system_clock::now()));
   plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
 
   write_to_flow_file->setContent("foobar");
@@ -98,7 +98,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
 
   SECTION("Querying not indexed old id") {
     plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "100", true);
-    response_timestamp = std::to_string(utils::timeutils::getTimeStamp<std::chrono::milliseconds>(std::chrono::system_clock::now() - 2h));
+    response_timestamp = std::to_string(utils::timeutils::getTimestamp<std::chrono::milliseconds>(std::chrono::system_clock::now() - 2h));
     plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 0);

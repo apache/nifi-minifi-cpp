@@ -62,9 +62,8 @@ const core::Relationship QuerySplunkIndexingStatus::Failure("failure",
     "or if the flowfile was missing the acknowledgement id");
 
 void QuerySplunkIndexingStatus::initialize() {
-  SplunkHECProcessor::initialize();
   setSupportedRelationships({Acknowledged, Unacknowledged, Undetermined, Failure});
-  updateSupportedProperties({MaximumWaitingTime, MaxQuerySize});
+  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel, MaximumWaitingTime, MaxQuerySize});
 }
 
 void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
@@ -178,7 +177,7 @@ void QuerySplunkIndexingStatus::onTrigger(const std::shared_ptr<core::ProcessCon
   gsl_Expects(context && session);
   std::string ack_request;
 
-  utils::HTTPClient client(getUrl().append(getEndpoint()), getSSLContextService(*context));
+  utils::HTTPClient client(getNetworkLocation().append(getEndpoint()), getSSLContextService(*context));
   setHeaders(client);
   auto undetermined_flow_files = getUndeterminedFlowFiles(*session, batch_size_);
   if (undetermined_flow_files.empty())

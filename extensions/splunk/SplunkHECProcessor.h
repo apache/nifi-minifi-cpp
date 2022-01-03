@@ -48,8 +48,12 @@ class SplunkHECProcessor : public core::Processor {
     return true;
   }
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
  protected:
-  std::string getUrl() const;
+  std::string getNetworkLocation() const;
   std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(core::ProcessContext& context) const;
   void setHeaders(utils::HTTPClient& client) const;
 

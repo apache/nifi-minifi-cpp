@@ -61,7 +61,7 @@ void SplunkHECProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>&
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Failed to get SplunkRequestChannel");
 }
 
-std::string SplunkHECProcessor::getUrl() const {
+std::string SplunkHECProcessor::getNetworkLocation() const {
   return hostname_ + ":" + port_;
 }
 
