@@ -69,6 +69,9 @@ class UniqueSocketHandle {
   UniqueSocketHandle(UniqueSocketHandle&& other) noexcept
     :owner_sockfd_{std::exchange(other.owner_sockfd_, InvalidSocket)}
   {}
+  ~UniqueSocketHandle() noexcept {
+    if (owner_sockfd_ != InvalidSocket) close_socket(owner_sockfd_);
+  }
   UniqueSocketHandle& operator=(const UniqueSocketHandle&) = delete;
   UniqueSocketHandle& operator=(UniqueSocketHandle&& other) noexcept {
     if (&other == this) return *this;

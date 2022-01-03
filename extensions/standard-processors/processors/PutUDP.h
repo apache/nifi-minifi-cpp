@@ -48,7 +48,7 @@ class PutUDP final : public core::Processor {
   bool isSingleThreaded() const noexcept final { return true; /* for now */ }
  private:
   std::string hostname_;
-  std::string port_;  // Can be a service name, like http or ssh
+  std::string port_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 }  // namespace org::apache::nifi::minifi::processors

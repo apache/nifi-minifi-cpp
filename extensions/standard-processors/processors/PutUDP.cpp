@@ -48,7 +48,7 @@ const core::Property PutUDP::Hostname = core::PropertyBuilder::createProperty("H
     ->build();
 
 const core::Property PutUDP::Port = core::PropertyBuilder::createProperty("Port")
-    ->withDescription("The port on the destination.")
+    ->withDescription("The port on the destination. Can be a service name like ssh or http, as defined in /etc/services.")
     ->isRequired(true)
     ->supportsExpressionLanguage(true)
     ->build();
