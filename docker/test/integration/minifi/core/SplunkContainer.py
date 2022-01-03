@@ -20,6 +20,7 @@ class SplunkContainer(Container):
             name=self.name,
             network=self.network.name,
             environment=[
+                "SPLUNK_LICENSE_URI=Free",
                 "SPLUNK_START_ARGS=--accept-license",
                 "SPLUNK_PASSWORD=splunkadmin"
             ])
