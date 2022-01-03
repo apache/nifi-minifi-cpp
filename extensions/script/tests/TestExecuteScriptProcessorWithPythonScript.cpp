@@ -20,7 +20,7 @@
 #include <string>
 #include <set>
 
-#include "../TestBase.h"
+#include "TestBase.h"
 
 #include <ExecuteScript.h>
 #include "processors/LogAttribute.h"

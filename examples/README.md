@@ -39,6 +39,9 @@ The following examples show simple flow configurations for several common use ca
   - [List and Fetch Content from AWS S3 Bucket](#list-and-fetch-content-from-aws-s3-bucket)
 - [SQL Operations](#sql-operations)
   - [Query Database Table](#query-database-table)
+- [ExecuteScript](#ExecuteScript)
+  - [Reverse flowfile's content with lua](#reverse-content-with-lua)
+  - [Reverse flowfile's content with python](#reverse-content-with-python)
 
 ## Filesystem Operations
 
@@ -139,3 +142,17 @@ The flow: ListS3 &#10132; FetchS3Object &#10132; LogAttribute
 Using the [querydbtable_config.yml](querydbtable_config.yml) flow configuration MiNiFi queries the `id` and `name` columns of the `users` table with a `where` clause and the results are put in the `/tmp/output` directory. The database connection data is set in the `ODBCService` controller service.
 
 The flow: QueryDatabaseTable &#10132; PutFile
+
+## ExecuteScript
+
+ExecuteScript supports [Lua](https://www.lua.org/) and [Python](https://www.python.org/)
+
+### Reverse Content with Scripts
+
+Using the [process_data_with_scripts.yml](process_data_with_scripts.yml) flow configuration MiNiFi generates a flowfile
+then reverses its content with [reverse_flow_file_content.py](scripts/python/reverse_flow_file_content.py) or [reverse_flow_file_content.lua](scripts/lua/reverse_flow_file_content.lua) 
+then writes the result to _./reversed_flow_files/_
+
+The flow: [GenerateFlowFile](../PROCESSORS.md#generateflowfile) &#10132; [ExecuteScript](../PROCESSORS.md#executescript) &#10132;  [PutFile](../PROCESSORS.md#putfile) 
+
+Additional script examples can be found [here](scripts/README.md).

@@ -463,19 +463,19 @@ Executes a script given the flow file and a process session. The script is respo
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-|Module Directory|||Comma-separated list of paths to files and/or directories which contain modules required by the script|
-|Script Body|||Body of script to execute. Only one of Script File or Script Body may be used|
-|Script Engine|python||The engine to execute scripts (python, lua)|
-|Script File|||Path to script file to execute. Only one of Script File or Script Body may be used|
+| Name                 | Default Value | Allowable Values | Description                                                                                            |
+|----------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------|
+| Module Directory     |               |                  | Comma-separated list of paths to files and/or directories which contain modules required by the script |
+| Script Body          |               |                  | Body of script to execute. Only one of Script File or Script Body may be used                          |
+| Script Engine        | python        | python<br>lua    | The engine to execute scripts (python, lua)                                                            |
+| Script File          |               |                  | Path to script file to execute. Only one of Script File or Script Body may be used                     |
 
 ### Relationships
 
-| Name | Description |
-| - | - |
-|failure|Script failures|
-|success|Script successes|
+| Name    | Description      |
+|---------|------------------|
+| failure | Script failures  |
+| success | Script successes |
 
 
 ## ExtractText

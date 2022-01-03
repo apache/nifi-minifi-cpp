@@ -57,7 +57,7 @@ struct Interpreter {
 
 Interpreter *getInterpreter();
 
-class PythonScriptEngine : public script::ScriptEngine {
+class __attribute__((visibility("default"))) PythonScriptEngine : public script::ScriptEngine {
  public:
   PythonScriptEngine();
   virtual ~PythonScriptEngine() {

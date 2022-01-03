@@ -20,7 +20,7 @@
 #include <string>
 #include <set>
 
-#include "../TestBase.h"
+#include "TestBase.h"
 
 #include <ExecuteScript.h>
 #include "processors/LogAttribute.h"
@@ -43,15 +43,15 @@ TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") { // NOLINT
                                           core::Relationship("success", "description"),
                                           true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     function onTrigger(context, session)
       log:info('hello from lua')
     end
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
   std::stringstream ss;
@@ -90,12 +90,12 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") { // NOLINT
                                           true);
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     read_callback = {}
 
     function read_callback.process(self, input_stream)
-        content = input_stream:read()
+        content = input_stream:read(0)
         log:info('file content: ' .. content)
         return #content
     end
@@ -112,10 +112,10 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") { // NOLINT
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
 
@@ -178,8 +178,8 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") { // NOLINT
                                           true);
   auto putFile = plan->addProcessor("PutFile", "putFile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     write_callback = {}
 
     function write_callback.process(self, output_stream)
@@ -200,10 +200,10 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") { // NOLINT
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
 
   testController.runSession(plan, false);
 
@@ -263,8 +263,8 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") { /
                                          core::Relationship("success", "description"),
                                          true);
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     function onTrigger(context, session)
       flow_file = session:get()
 
@@ -273,14 +273,14 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") { /
         flow_file:addAttribute('test_attr', '1')
         attr = flow_file:getAttribute('test_attr')
         log:info('got flow file attr \'test_attr\': ' .. attr)
-        flow_file:updateAttribute('test_attr', attr + 1)
+        flow_file:updateAttribute('test_attr', tostring(attr + 1))
         session:transfer(flow_file, REL_SUCCESS)
       end
     end
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
   std::fstream file;
   std::stringstream ss;
@@ -290,9 +290,9 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") { /
   file.close();
   plan->reset();
 
-  testController.runSession(plan, false);
-  testController.runSession(plan, false);
-  testController.runSession(plan, false);
+  REQUIRE_NOTHROW(testController.runSession(plan, false));
+  REQUIRE_NOTHROW(testController.runSession(plan, false));
+  REQUIRE_NOTHROW(testController.runSession(plan, false));
 
   REQUIRE(LogTestController::getInstance().contains("key:test_attr value:2"));
 
@@ -311,8 +311,8 @@ TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") { // NOLINT
   auto executeScript = plan->addProcessor("ExecuteScript",
                                           "executeScript");
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     function onTrigger(context, session)
       flow_file = session:create(nil)
 
@@ -344,8 +344,8 @@ TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") { // NOLINT
   auto executeScript = plan->addProcessor("ExecuteScript",
                                           "executeScript");
 
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptEngine.getName(), "lua");
-  plan->setProperty(executeScript, processors::ExecuteScript::ScriptBody.getName(), R"(
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
     require 'os'
     require 'coroutine'
     require 'math'
@@ -355,11 +355,14 @@ TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") { // NOLINT
     require 'package'
 
     log:info('OK')
+
+    function onTrigger(context, session)
+    end
   )");
 
   plan->reset();
 
-  testController.runSession(plan, false);
+  REQUIRE_NOTHROW(testController.runSession(plan, false));
 
   REQUIRE(LogTestController::getInstance().contains("[info] OK"));
 

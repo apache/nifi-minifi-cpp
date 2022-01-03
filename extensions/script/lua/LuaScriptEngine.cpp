@@ -64,11 +64,19 @@ LuaScriptEngine::LuaScriptEngine()
 }
 
 void LuaScriptEngine::eval(const std::string &script) {
-  lua_.script(script);
+  try {
+    lua_.script(script, sol::script_throw_on_error);
+  } catch (std::exception& e) {
+    throw minifi::script::ScriptException(e.what());
+  }
 }
 
 void LuaScriptEngine::evalFile(const std::string &file_name) {
-  lua_.script_file(file_name);
+  try {
+    lua_.script_file(file_name, sol::script_throw_on_error);
+  } catch (std::exception& e) {
+    throw minifi::script::ScriptException(e.what());
+  }
 }
 
 } /* namespace lua */
