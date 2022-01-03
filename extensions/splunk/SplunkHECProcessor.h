@@ -39,7 +39,7 @@ class SplunkHECProcessor : public core::Processor {
   explicit SplunkHECProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
-  ~SplunkHECProcessor() override {};
+  ~SplunkHECProcessor() override = default;
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
