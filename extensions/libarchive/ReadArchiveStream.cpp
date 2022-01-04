@@ -69,6 +69,12 @@ size_t ReadArchiveStreamImpl::read(uint8_t* buf, size_t len) {
   if (!arch_ || !entry_size_) {
     return STREAM_ERROR;
   }
+
+  if (len == 0) {
+    return 0;
+  }
+  gsl_Expects(buf);
+
   const la_ssize_t result = archive_read_data(arch_.get(), buf, len);
   if (result < 0) {
     logger_->log_error("Archive read data error %s", archive_error_string(arch_.get()));

@@ -21,9 +21,6 @@
 #include <utility>
 #include <string>
 
-#include "core/Resource.h"
-#include "ReadArchiveStream.h"
-
 namespace org::apache::nifi::minifi::io {
 
 WriteArchiveStreamImpl::archive_ptr WriteArchiveStreamImpl::createWriteArchive() {
@@ -113,6 +110,11 @@ size_t WriteArchiveStreamImpl::write(const uint8_t* data, size_t len) {
     return STREAM_ERROR;
   }
 
+  if (len == 0) {
+    return 0;
+  }
+  gsl_Expects(data);
+
   int result = archive_write_data(arch_.get(), data, len);
   if (result < 0) {
     logger_->log_error("Archive write data error %s", archive_error_string(arch_.get()));
@@ -123,28 +125,6 @@ size_t WriteArchiveStreamImpl::write(const uint8_t* data, size_t len) {
 
   return len;
 }
-
-class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
- public:
-  using ArchiveStreamProvider::ArchiveStreamProvider;
-  std::unique_ptr<WriteArchiveStream> createWriteStream(int compress_level, const std::string& compress_format,
-                                              std::shared_ptr<OutputStream> sink, std::shared_ptr<core::logging::Logger> logger) override {
-    CompressionFormat format = CompressionFormat::parse(compress_format.c_str(), CompressionFormat{});
-    if (!format) {
-      if (logger) {
-        logger->log_error("Unrecognized compression format '%s'", compress_format);
-      }
-      return nullptr;
-    }
-    return std::make_unique<WriteArchiveStreamImpl>(compress_level, format, std::move(sink));
-  }
-
-  std::unique_ptr<ReadArchiveStream> createReadStream(std::shared_ptr<InputStream> archive_stream) override {
-    return std::make_unique<ReadArchiveStreamImpl>(std::move(archive_stream));
-  }
-};
-
-REGISTER_INTERNAL_RESOURCE_AS(ArchiveStreamProviderImpl, ("ArchiveStreamProvider"));
 
 }  // namespace org::apache::nifi::minifi::io
 
