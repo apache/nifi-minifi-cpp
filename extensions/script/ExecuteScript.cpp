@@ -52,6 +52,28 @@ core::Property ExecuteScript::ModuleDirectory("Module Directory",  // NOLINT
 core::Relationship ExecuteScript::Success("success", "Script successes");  // NOLINT
 core::Relationship ExecuteScript::Failure("failure", "Script failures");  // NOLINT
 
+ScriptEngineFactory::ScriptEngineFactory(core::Relationship& success, core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
+  : success_(success),
+    failure_(failure),
+    logger_(logger) {
+}
+
+ScriptEngineQueue::ScriptEngineQueue(uint8_t max_engine_count, ScriptEngineFactory& engine_factory, std::shared_ptr<core::logging::Logger> logger)
+    : max_engine_count_(max_engine_count),
+      engine_factory_(engine_factory),
+      logger_(logger) {
+}
+
+void ScriptEngineQueue::returnScriptEngine(std::shared_ptr<script::ScriptEngine>&& engine) {
+  const std::lock_guard<std::mutex> lock(queue_mutex_);
+  if (engine_queue_.size_approx() < max_engine_count_) {
+    logger_->log_debug("Releasing [%p] script engine", engine.get());
+    engine_queue_.enqueue(engine);
+  } else {
+    logger_->log_info("Destroying script engine because it is no longer needed");
+  }
+}
+
 void ExecuteScript::initialize() {
   std::set<core::Property> properties;
   properties.insert(ScriptEngine);
@@ -71,6 +93,8 @@ void ExecuteScript::initialize() {
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+  script_engine_q_ = std::make_unique<ScriptEngineQueue>(getMaxConcurrentTasks(), engine_factory_, logger_);
+  python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
   if (!context->getProperty(ScriptEngine.getName(), script_engine_)) {
     logger_->log_error("Script Engine attribute is missing or invalid");
   }
@@ -89,40 +113,30 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
                               const std::shared_ptr<core::ProcessSession> &session) {
   std::shared_ptr<script::ScriptEngine> engine;
 
-  // Use an existing engine, if one is available
-  if (script_engine_q_.try_dequeue(engine)) {
-    logger_->log_debug("Using available %s script engine instance", script_engine_);
-  } else {
-    logger_->log_info("Creating new %s script instance", script_engine_);
-    logger_->log_info("Approximately %d %s script instances created for this processor",
-                      script_engine_q_.size_approx(),
-                      script_engine_);
-
-    if (script_engine_ == "python") {
+  if (script_engine_ == "python") {
 #ifdef PYTHON_SUPPORT
-      engine = createEngine<python::PythonScriptEngine>();
+    engine = python_script_engine_;
 #else
-      throw std::runtime_error("Python support is disabled in this build.");
+    throw std::runtime_error("Python support is disabled in this build.");
 #endif  // PYTHON_SUPPORT
-    } else if (script_engine_ == "lua") {
+  } else if (script_engine_ == "lua") {
 #ifdef LUA_SUPPORT
-      engine = createEngine<lua::LuaScriptEngine>();
+    engine = script_engine_q_->getScriptEngine<lua::LuaScriptEngine>();
 #else
-      throw std::runtime_error("Lua support is disabled in this build.");
+    throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT
-    }
+  }
 
-    if (engine == nullptr) {
-      throw std::runtime_error("No script engine available");
-    }
+  if (engine == nullptr) {
+    throw std::runtime_error("No script engine available");
+  }
 
-    if (!script_body_.empty()) {
-      engine->eval(script_body_);
-    } else if (!script_file_.empty()) {
-      engine->evalFile(script_file_);
-    } else {
-      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-    }
+  if (!script_body_.empty()) {
+    engine->eval(script_body_);
+  } else if (!script_file_.empty()) {
+    engine->evalFile(script_file_);
+  } else {
+    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
 
   if (script_engine_ == "python") {
@@ -134,17 +148,10 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   } else if (script_engine_ == "lua") {
 #ifdef LUA_SUPPORT
     triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
+    script_engine_q_->returnScriptEngine(engine);
 #else
     throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT
-  }
-
-  // Make engine available for use again
-  if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
-    logger_->log_debug("Releasing %s script engine", script_engine_);
-    script_engine_q_.enqueue(engine);
-  } else {
-    logger_->log_info("Destroying script engine because it is no longer needed");
   }
 }
 
