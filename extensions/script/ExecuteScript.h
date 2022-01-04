@@ -28,7 +28,7 @@
 
 #include "ScriptEngine.h"
 #include "ScriptProcessContext.h"
-#include "PythonScriptEngine.h"
+#include "python/PythonScriptEngine.h"
 
 namespace org {
 namespace apache {
@@ -62,8 +62,8 @@ class ScriptEngineQueue {
   ScriptEngineQueue(uint8_t max_engine_count, ScriptEngineFactory& engine_factory, std::shared_ptr<core::logging::Logger> logger);
 
   template<typename T>
-  std::shared_ptr<T> getScriptEngine() {
-    std::shared_ptr<T> engine;
+  std::shared_ptr<script::ScriptEngine> getScriptEngine() {
+    std::shared_ptr<script::ScriptEngine> engine;
     // Use an existing engine, if one is available
     if (engine_queue_.try_dequeue(engine)) {
       logger_->log_debug("Using available [%p] script engine instance", engine.get());

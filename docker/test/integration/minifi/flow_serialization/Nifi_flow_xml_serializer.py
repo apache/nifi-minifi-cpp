@@ -120,7 +120,7 @@ class Nifi_flow_xml_serializer:
             conn_destination.append(proc_bundle)
 
             proc_max_concurrent_tasks = Element('maxConcurrentTasks')
-            proc_max_concurrent_tasks.text = '1'
+            proc_max_concurrent_tasks.text = str(connectable.max_concurrent_tasks)
             conn_destination.append(proc_max_concurrent_tasks)
 
             proc_scheduling_period = Element('schedulingPeriod')

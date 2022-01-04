@@ -9,7 +9,8 @@ class Processor(Connectable):
                  name=None,
                  controller_services=None,
                  auto_terminate=None,
-                 class_prefix='org.apache.nifi.processors.standard.'):
+                 class_prefix='org.apache.nifi.processors.standard.',
+                 max_concurrent_tasks=1):
 
         super(Processor, self).__init__(name=name,
                                         auto_terminate=auto_terminate)
@@ -24,12 +25,10 @@ class Processor(Connectable):
         if properties is None:
             properties = {}
 
-        if name is None:
-            pass
-
         self.clazz = clazz
         self.properties = properties
         self.controller_services = controller_services
+        self.max_concurrent_tasks = max_concurrent_tasks
 
         self.schedule = {
             'scheduling strategy': 'TIMER_DRIVEN',
@@ -45,6 +44,9 @@ class Processor(Connectable):
             self.properties[key] = int(value)
         else:
             self.properties[key] = value
+
+    def set_max_concurrent_tasks(self, max_concurrent_tasks):
+        self.max_concurrent_tasks = max_concurrent_tasks
 
     def unset_property(self, key):
         self.properties.pop(key, None)

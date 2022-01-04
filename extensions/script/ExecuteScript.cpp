@@ -148,7 +148,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   } else if (script_engine_ == "lua") {
 #ifdef LUA_SUPPORT
     triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
-    script_engine_q_->returnScriptEngine(engine);
+    script_engine_q_->returnScriptEngine(std::move(engine));
 #else
     throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT

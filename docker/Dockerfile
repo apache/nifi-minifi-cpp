@@ -61,6 +61,7 @@ ARG DISABLE_LZMA=OFF
 ARG DISABLE_BZIP2=OFF
 ARG ENABLE_SCRIPTING=ON
 ARG DISABLE_PYTHON_SCRIPTING=
+ARG ENABLE_LUA_SCRIPTING=
 ARG DISABLE_CONTROLLER=OFF
 ARG CMAKE_BUILD_TYPE=Release
 
@@ -89,7 +90,8 @@ RUN apk --no-cache add gcc \
   python3-dev \
   boost-dev \
   doxygen \
-  ccache
+  ccache \
+  lua-dev
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
@@ -118,8 +120,8 @@ RUN cmake -DSTATIC_BUILD= -DSKIP_TESTS=true -DENABLE_ALL="${ENABLE_ALL}" -DENABL
     -DDISABLE_CURL="${DISABLE_CURL}" -DDISABLE_JEMALLOC="${DISABLE_JEMALLOC}" -DDISABLE_CIVET="${DISABLE_CIVET}" -DENABLE_SPLUNK=${ENABLE_SPLUNK} \
     -DDISABLE_EXPRESSION_LANGUAGE="${DISABLE_EXPRESSION_LANGUAGE}" -DDISABLE_ROCKSDB="${DISABLE_ROCKSDB}" \
     -DDISABLE_LIBARCHIVE="${DISABLE_LIBARCHIVE}" -DDISABLE_LZMA="${DISABLE_LZMA}" -DDISABLE_BZIP2="${DISABLE_BZIP2}" \
-    -DENABLE_SCRIPTING="${ENABLE_SCRIPTING}" -DDISABLE_PYTHON_SCRIPTING="${DISABLE_PYTHON_SCRIPTING}" -DDISABLE_CONTROLLER="${DISABLE_CONTROLLER}" \
-    -DENABLE_ENCRYPT_CONFIG="${ENABLE_ENCRYPT_CONFIG}" -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
+    -DENABLE_SCRIPTING="${ENABLE_SCRIPTING}" -DDISABLE_PYTHON_SCRIPTING="${DISABLE_PYTHON_SCRIPTING}" -DENABLE_LUA_SCRIPTING="${ENABLE_LUA_SCRIPTING}" \
+    -DDISABLE_CONTROLLER="${DISABLE_CONTROLLER}" -DENABLE_ENCRYPT_CONFIG="${ENABLE_ENCRYPT_CONFIG}" -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" package && \
     tar -xzvf "${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" -C "${MINIFI_BASE_DIR}"
 
@@ -141,6 +143,7 @@ ARG ENABLE_PYTHON=OFF
 ARG ENABLE_BUSTACHE=OFF
 ARG ENABLE_SCRIPTING=ON
 ARG DISABLE_PYTHON_SCRIPTING=
+ARG ENABLE_LUA_SCRIPTING=
 
 # Add testing repo for rocksdb
 RUN echo 'http://dl-cdn.alpinelinux.org/alpine/edge/testing' >> /etc/apk/repositories
@@ -160,7 +163,8 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
     if [ "$ENABLE_PCAP" = "ON" ]; then apk add --no-cache libpcap; fi && \
     if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --no-cache libpng libusb; fi && \
     if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --no-cache boost; fi && \
-    if { [ "$ENABLE_PYTHON" = "ON" ] || [ "$ENABLE_SCRIPTING" = "ON" ]; } && [ -z "$DISABLE_PYTHON_SCRIPTING" ]; then apk add --no-cache python3-dev; fi
+    if { [ "$ENABLE_PYTHON" = "ON" ] || [ "$ENABLE_SCRIPTING" = "ON" ]; } && [ -z "$DISABLE_PYTHON_SCRIPTING" ]; then apk add --no-cache python3-dev; fi && \
+    if [ "$ENABLE_SCRIPTING" = "ON" ] && [ -n "$ENABLE_LUA_SCRIPTING" ]; then apk add --no-cache lua-dev; fi
 
 # Copy built minifi distribution from builder
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
