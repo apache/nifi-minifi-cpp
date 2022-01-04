@@ -21,7 +21,7 @@
 namespace org::apache::nifi::minifi::io {
 
 ReadArchiveStreamImpl::archive_ptr ReadArchiveStreamImpl::createReadArchive() {
-  archive_ptr arch = archive_read_new();
+  archive_ptr arch{archive_read_new()};
   if (!arch) {
     logger_->log_error("Failed to create read archive");
     return nullptr;

@@ -24,7 +24,7 @@
 namespace org::apache::nifi::minifi::io {
 
 WriteArchiveStreamImpl::archive_ptr WriteArchiveStreamImpl::createWriteArchive() {
-  archive_ptr arch = archive_write_new();
+  archive_ptr arch{archive_write_new()};
   if (!arch) {
     logger_->log_error("Failed to create write archive");
     return nullptr;
@@ -88,7 +88,7 @@ bool WriteArchiveStreamImpl::newEntry(const EntryInfo& info) {
   if (!arch_) {
     return false;
   }
-  arch_entry_ = archive_entry_new();
+  arch_entry_.reset(archive_entry_new());
   if (!arch_entry_) {
     logger_->log_error("Failed to create archive entry");
     return false;

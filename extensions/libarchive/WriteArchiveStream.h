@@ -39,18 +39,18 @@ SMART_ENUM(CompressionFormat,
 )
 
 class WriteArchiveStreamImpl: public WriteArchiveStream {
-  struct archive_ptr : public std::unique_ptr<struct archive, int(*)(struct archive*)> {
-    using Base = std::unique_ptr<struct archive, int(*)(struct archive*)>;
-    archive_ptr(): Base(nullptr, archive_write_free) {}
-    archive_ptr(std::nullptr_t): Base(nullptr, archive_write_free) {}
-    archive_ptr(struct archive* arch): Base(arch, archive_write_free) {}
+  struct archive_write_deleter {
+    int operator()(struct archive* ptr) const {
+      return archive_write_free(ptr);
+    }
   };
-  struct archive_entry_ptr : public std::unique_ptr<struct archive_entry, void(*)(struct archive_entry*)> {
-    using Base = std::unique_ptr<struct archive_entry, void(*)(struct archive_entry*)>;
-    archive_entry_ptr(): Base(nullptr, archive_entry_free) {}
-    archive_entry_ptr(std::nullptr_t): Base(nullptr, archive_entry_free) {}
-    archive_entry_ptr(struct archive_entry* arch_entry): Base(arch_entry, archive_entry_free) {}
+  using archive_ptr = std::unique_ptr<struct archive, archive_write_deleter>;
+  struct archive_entry_deleter {
+    void operator()(struct archive_entry* ptr) const {
+      archive_entry_free(ptr);
+    }
   };
+  using archive_entry_ptr = std::unique_ptr<struct archive_entry, archive_entry_deleter>;
 
   archive_ptr createWriteArchive();
 

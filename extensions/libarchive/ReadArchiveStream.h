@@ -31,12 +31,13 @@
 namespace org::apache::nifi::minifi::io {
 
 class ReadArchiveStreamImpl : public ReadArchiveStream {
-  struct archive_ptr : public std::unique_ptr<struct archive, int(*)(struct archive*)> {
-    using Base = std::unique_ptr<struct archive, int(*)(struct archive*)>;
-    archive_ptr(): Base(nullptr, archive_read_free) {}
-    archive_ptr(std::nullptr_t): Base(nullptr, archive_read_free) {}
-    archive_ptr(struct archive* arch): Base(arch, archive_read_free) {}
+  struct archive_read_deleter {
+    int operator()(struct archive* ptr) const {
+      return archive_read_free(ptr);
+    }
   };
+  using archive_ptr = std::unique_ptr<struct archive, archive_read_deleter>;
+
   class BufferedReader {
    public:
     explicit BufferedReader(std::shared_ptr<InputStream> input) : input_(std::move(input)) {}
