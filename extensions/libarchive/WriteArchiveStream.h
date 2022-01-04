@@ -78,7 +78,6 @@ class WriteArchiveStreamImpl: public WriteArchiveStream {
   int compress_level_;
   CompressionFormat compress_format_;
   std::shared_ptr<io::OutputStream> sink_;
-  int status_{0};
   archive_ptr arch_;
   archive_entry_ptr arch_entry_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteArchiveStreamImpl>::getLogger();
