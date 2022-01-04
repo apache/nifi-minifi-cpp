@@ -206,6 +206,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     // TODO(adebreceni): previous attempt to handle a malformed archive were in vain
     //    as the session->read threw anyway rolling back the flowfile, we should correctly
     //    forward a malformed archive to failure
+    //    https://issues.apache.org/jira/browse/MINIFICPP-1708
     success = true;
   } else {
     CompressContent::GzipWriteCallback callback(compressMode_, compressLevel_, flowFile, session);

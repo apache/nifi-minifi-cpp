@@ -123,7 +123,7 @@ size_t WriteArchiveStreamImpl::write(const uint8_t* data, size_t len) {
     return STREAM_ERROR;
   }
 
-  return len;
+  return result;
 }
 
 }  // namespace org::apache::nifi::minifi::io

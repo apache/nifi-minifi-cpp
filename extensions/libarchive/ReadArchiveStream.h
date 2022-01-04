@@ -62,11 +62,13 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
     arch_ = createReadArchive();
   }
 
-  std::shared_ptr<InputStream> input_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadArchiveStream>::getLogger();
-  BufferedReader reader_;
-  archive_ptr arch_;
+  std::optional<EntryInfo> nextEntry() override;
 
+  using InputStream::read;
+
+  size_t read(uint8_t* buf, size_t len) override;
+
+ private:
   static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {
     auto* const input = reinterpret_cast<BufferedReader*>(context);
     auto opt_buffer = input->readChunk();
@@ -78,13 +80,9 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
     return gsl::narrow<la_ssize_t>(opt_buffer->size());
   }
 
-  std::optional<EntryInfo> nextEntry() override;
-
-  using InputStream::read;
-
-  size_t read(uint8_t* buf, size_t len) override;
-
- private:
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ReadArchiveStream>::getLogger();
+  BufferedReader reader_;
+  archive_ptr arch_;
   std::optional<size_t> entry_size_;
 };
 

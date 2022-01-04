@@ -62,6 +62,19 @@ class WriteArchiveStreamImpl: public WriteArchiveStream {
     arch_ = createWriteArchive();
   }
 
+  using OutputStream::write;
+
+  bool newEntry(const EntryInfo& info) override;
+
+  size_t write(const uint8_t* data, size_t len) override;
+
+ private:
+  static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
+    auto* const output = static_cast<OutputStream*>(context);
+    const auto ret = output->write(reinterpret_cast<const uint8_t*>(buff), size);
+    return io::isError(ret) ? -1 : gsl::narrow<la_ssize_t>(ret);
+  }
+
   int compress_level_;
   CompressionFormat compress_format_;
   std::shared_ptr<io::OutputStream> sink_;
@@ -69,18 +82,6 @@ class WriteArchiveStreamImpl: public WriteArchiveStream {
   archive_ptr arch_;
   archive_entry_ptr arch_entry_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<WriteArchiveStreamImpl>::getLogger();
-
-  static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
-    auto* const output = static_cast<OutputStream*>(context);
-    const auto ret = output->write(reinterpret_cast<const uint8_t*>(buff), size);
-    return io::isError(ret) ? -1 : gsl::narrow<la_ssize_t>(ret);
-  }
-
-  using OutputStream::write;
-
-  bool newEntry(const EntryInfo& info) override;
-
-  size_t write(const uint8_t* data, size_t len) override;
 };
 
 }  // namespace org::apache::nifi::minifi::io
