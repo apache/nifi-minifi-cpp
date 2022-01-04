@@ -855,14 +855,27 @@ include(BuildDocs)
 
 
 # Create a custom build target that will run the linter.
+# Directories have their separate linter targets to be able to use better parallelization
 get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
-add_custom_target(linter
-	COMMAND python ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i
-		${CMAKE_SOURCE_DIR}/libminifi/include/
-		${CMAKE_SOURCE_DIR}/libminifi/src/
-		${CMAKE_SOURCE_DIR}/libminifi/test/
-		${CMAKE_SOURCE_DIR}/encrypt-config/
-	DEPENDS ${extensions})
+set(root_linted_dirs libminifi/include libminifi/src libminifi/test encrypt-config)
+list(TRANSFORM root_linted_dirs PREPEND ${CMAKE_SOURCE_DIR}/)
+
+set(linted_dir_counter 1)
+set(root_linter_target_names "")
+
+foreach(linted_dir ${root_linted_dirs})
+	set(linter_target_name "root-linter-${linted_dir_counter}")
+	list(APPEND root_linter_target_names ${linter_target_name})
+	add_custom_target("${linter_target_name}"
+		COMMAND python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i
+		${linted_dir}
+	)
+	math(EXPR linted_dir_counter "${linted_dir_counter}+1")
+endforeach()
+
+# Main linter target that depends on every other
+add_custom_target(linter DEPENDS ${root_linter_target_names} ${extensions})
+
 
 if(NOT WIN32)
 add_custom_target(shellcheck
