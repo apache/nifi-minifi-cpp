@@ -30,7 +30,7 @@ using QuerySplunkIndexingStatus = org::apache::nifi::minifi::extensions::splunk:
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;
 using WriteToFlowFileTestProcessor = org::apache::nifi::minifi::processors::WriteToFlowFileTestProcessor;
 using UpdateAttribute = org::apache::nifi::minifi::processors::UpdateAttribute;
-using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   MockSplunkHEC mock_splunk_hec("10132");
@@ -62,7 +62,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Token.getName(), MockSplunkHEC::TOKEN);
   plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::SplunkRequestChannel.getName(), "a12254b4-f481-435d-896d-3b6033eabe58");
 
-  auto response_timestamp = std::to_string(utils::timeutils::getTimestamp<std::chrono::milliseconds>(std::chrono::system_clock::now()));
+  auto response_timestamp = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
   plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
 
   write_to_flow_file->setContent("foobar");
@@ -98,7 +98,8 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
 
   SECTION("Querying not indexed old id") {
     plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, "100", true);
-    response_timestamp = std::to_string(utils::timeutils::getTimestamp<std::chrono::milliseconds>(std::chrono::system_clock::now() - 2h));
+    response_timestamp = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>((std::chrono::system_clock::now() - 2h).time_since_epoch()).count());
+
     plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 0);

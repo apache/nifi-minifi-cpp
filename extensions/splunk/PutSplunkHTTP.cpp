@@ -28,6 +28,7 @@
 #include "client/HTTPClient.h"
 #include "utils/HTTPClient.h"
 #include "utils/TimeUtil.h"
+#include "utils/OptionalUtils.h"
 
 #include "rapidjson/document.h"
 
@@ -71,10 +72,7 @@ void PutSplunkHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& cont
 
 namespace {
 std::optional<std::string> getContentType(core::ProcessContext& context, const core::FlowFile& flow_file) {
-  std::optional<std::string> content_type = context.getProperty(PutSplunkHTTP::ContentType);
-  if (content_type.has_value())
-    return content_type;
-  return flow_file.getAttribute("mime.key");
+  return context.getProperty(PutSplunkHTTP::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.key");});
 }
 
 
@@ -123,17 +121,17 @@ bool addAttributesFromClientResponse(core::FlowFile& flow_file, utils::HTTPClien
 
 bool enrichFlowFileWithAttributes(core::FlowFile& flow_file, utils::HTTPClient& client) {
   flow_file.addAttribute(SPLUNK_STATUS_CODE, std::to_string(client.getResponseCode()));
-  flow_file.addAttribute(SPLUNK_RESPONSE_TIME, std::to_string(utils::timeutils::getTimestamp<std::chrono::milliseconds>(std::chrono::system_clock::now())));
+  flow_file.addAttribute(SPLUNK_RESPONSE_TIME, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
   return addAttributesFromClientResponse(flow_file, client) && client.getResponseCode() == 200;
 }
 
 void setFlowFileAsPayload(core::ProcessSession& session,
-                                         core::ProcessContext& context,
-                                         utils::HTTPClient& client,
-                                         const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file,
-                                         utils::ByteInputCallBack& payload_callback,
-                                         utils::HTTPUploadCallback& payload_callback_obj) {
+                          core::ProcessContext& context,
+                          utils::HTTPClient& client,
+                          const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file,
+                          utils::ByteInputCallBack& payload_callback,
+                          utils::HTTPUploadCallback& payload_callback_obj) {
   session.read(flow_file, &payload_callback);
   payload_callback_obj.ptr = &payload_callback;
   payload_callback_obj.pos = 0;
@@ -142,9 +140,9 @@ void setFlowFileAsPayload(core::ProcessSession& session,
   client.setUploadCallback(&payload_callback_obj);
   client.setSeekFunction(&payload_callback_obj);
 
-  auto content_type = getContentType(context, *flow_file);
-  if (content_type.has_value())
+  if (auto content_type = getContentType(context, *flow_file)) {
     client.setContentType(content_type.value());
+  }
 }
 }  // namespace
 
@@ -161,9 +159,9 @@ void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
   utils::HTTPClient client(getNetworkLocation() + getEndpoint(*context, flow_file), getSSLContextService(*context));
   setHeaders(client);
 
-  auto payload_callback = std::make_unique<utils::ByteInputCallBack>();
-  auto payload_callback_obj = std::make_unique<utils::HTTPUploadCallback>();
-  setFlowFileAsPayload(*session, *context, client, flow_file, *payload_callback, *payload_callback_obj);
+  utils::ByteInputCallBack payload_callback;
+  utils::HTTPUploadCallback payload_callback_obj;
+  setFlowFileAsPayload(*session, *context, client, flow_file, payload_callback, payload_callback_obj);
 
   bool success = false;
   if (client.submit())

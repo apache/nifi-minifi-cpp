@@ -124,20 +124,19 @@ std::string getAckIdsAsPayload(const std::unordered_map<uint64_t, FlowFileWithIn
 
 void getIndexingStatusFromSplunk(utils::HTTPClient& client, std::unordered_map<uint64_t, FlowFileWithIndexStatus>& undetermined_flow_files) {
   rapidjson::Document response;
-  if (client.submit()) {
-    rapidjson::Value* acks = nullptr;
-    if (client.getResponseCode() == 200) {
-      response = rapidjson::Document();
-      rapidjson::ParseResult parse_result = response.Parse<rapidjson::kParseStopWhenDoneFlag>(client.getResponseBody().data());
-      if (!parse_result.IsError() && response.HasMember("acks"))
-        acks = &response["acks"];
-    }
-    if (!acks)
-      return;
-    for (auto& [ack_id, ff_status]: undetermined_flow_files) {
-      if (acks->HasMember(std::to_string(ack_id).c_str()) && (*acks)[std::to_string(ack_id).c_str()].IsBool())
-        ff_status.indexing_status_ = (*acks)[std::to_string(ack_id).c_str()].GetBool();
-    }
+  if (!client.submit())
+    return;
+  if (client.getResponseCode() != 200)
+    return;
+  response = rapidjson::Document();
+  rapidjson::ParseResult parse_result = response.Parse<rapidjson::kParseStopWhenDoneFlag>(client.getResponseBody().data());
+  if (parse_result.IsError() || !response.HasMember("acks"))
+    return;
+
+  rapidjson::Value& acks = response["acks"];
+  for (auto& [ack_id, ff_status]: undetermined_flow_files) {
+    if (acks.HasMember(std::to_string(ack_id).c_str()) && acks[std::to_string(ack_id).c_str()].IsBool())
+      ff_status.indexing_status_ = acks[std::to_string(ack_id).c_str()].GetBool();
   }
 }
 
@@ -148,7 +147,7 @@ bool flowFileAcknowledgementTimedOut(const gsl::not_null<std::shared_ptr<core::F
   if (!splunk_response_time_str.has_value())
     return true;
   uint64_t splunk_response_time = std::stoull(splunk_response_time_str.value());
-  if (system_clock::now() > utils::timeutils::getTimePoint<milliseconds, system_clock>(splunk_response_time) + max_age)
+  if (system_clock::now() > std::chrono::system_clock::time_point() + std::chrono::milliseconds(splunk_response_time) + max_age)
     return true;
   return false;
 }

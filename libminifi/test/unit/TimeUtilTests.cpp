@@ -92,13 +92,3 @@ TEST_CASE("Test time conversion", "[testtimeconversion]") {
   using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
   REQUIRE("2017-02-16 20:14:56.196" == getTimeStr(1487276096196, true));
 }
-
-TEST_CASE("Timestamp conversion tests", "[testtimestampconversions]") {
-  using org::apache::nifi::minifi::utils::timeutils::getTimestamp;
-  using org::apache::nifi::minifi::utils::timeutils::getTimePoint;
-  using namespace std::chrono;
-  CHECK(1389270934 == getTimestamp<seconds>(sys_days{January / 9 / 2014} + 12h + 35min + 34s));
-  CHECK(1637336922015 == getTimestamp<milliseconds>(sys_days{November / 19 / 2021} + 15h + 48min + 42s + 15ms));
-  CHECK((sys_days{November / 19 / 2021} + 15h + 51min + 13s) == getTimePoint<seconds, system_clock>(1637337073));
-  CHECK((sys_days{November / 19 / 2021} + 15h + 51min + 13s) == getTimePoint<microseconds, system_clock>(1637337073000000));
-}
