@@ -52,6 +52,32 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
   write_to_flow_file->setContent("foobar");
 
   SECTION("Happy path") {
+    mock_splunk_hec.setAssertions([](const struct mg_request_info *request_info) {
+      CHECK(request_info->query_string == nullptr);
+    });
+    test_controller.runSession(plan);
+    CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success->numberOfFlowFilesRead() == 1);
+    CHECK(read_from_success->readFlowFileWithContent("foobar"));
+    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_STATUS_CODE, "200"));
+    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "0"));
+    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
+    CHECK(read_from_success->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
+  }
+
+  SECTION("Happy path with query arguments") {
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::Source.getName(), "foo");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::SourceType.getName(), "bar");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::Host.getName(), "baz");
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::Index.getName(), "qux");
+    mock_splunk_hec.setAssertions([](const struct mg_request_info *request_info) {
+      std::string query_string = request_info->query_string;
+      CHECK(!query_string.empty());
+      CHECK(query_string.find("source=foo") != std::string::npos);
+      CHECK(query_string.find("sourcetype=bar") != std::string::npos);
+      CHECK(query_string.find("host=baz") != std::string::npos);
+      CHECK(query_string.find("index=qux") != std::string::npos);
+    });
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 0);
     CHECK(read_from_success->numberOfFlowFilesRead() == 1);

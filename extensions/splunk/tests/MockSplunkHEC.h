@@ -31,7 +31,7 @@
 
 class MockSplunkHandler : public CivetHandler {
  public:
-  explicit MockSplunkHandler(std::string token) : token_(std::move(token)) {
+  explicit MockSplunkHandler(std::string token, std::function<void(const struct mg_request_info *request_info)>& assertions) : token_(std::move(token)), assertions_(assertions) {
   }
 
   enum HeaderResult {
@@ -57,6 +57,7 @@ class MockSplunkHandler : public CivetHandler {
 
   HeaderResult checkHeaders(struct mg_connection *conn) const {
     const struct mg_request_info* req_info = mg_get_request_info(conn);
+    assertions_(req_info);
     auto auth_header = std::find_if(std::begin(req_info->http_headers),
                                     std::end(req_info->http_headers),
                                     [](auto header) -> bool {return strcmp(header.name, "Authorization") == 0;});
@@ -104,11 +105,12 @@ class MockSplunkHandler : public CivetHandler {
  protected:
   virtual bool handlePostImpl(struct mg_connection *conn) = 0;
   std::string token_;
+  std::function<void(const struct mg_request_info *request_info)>& assertions_;
 };
 
 class RawCollectorHandler : public MockSplunkHandler {
  public:
-  explicit RawCollectorHandler(std::string token) : MockSplunkHandler(std::move(token)) {}
+  explicit RawCollectorHandler(std::string token, std::function<void(const struct mg_request_info *request_info)>& assertions) : MockSplunkHandler(std::move(token), assertions) {}
  protected:
   bool handlePostImpl(struct mg_connection* conn) override {
     constexpr const char * body = "{\"text\":\"Success\",\"code\":0,\"ackId\":808}";
@@ -122,7 +124,8 @@ class RawCollectorHandler : public MockSplunkHandler {
 
 class AckIndexerHandler : public MockSplunkHandler {
  public:
-  explicit AckIndexerHandler(std::string token, std::vector<uint64_t> indexed_events) : MockSplunkHandler(std::move(token)), indexed_events_(indexed_events) {}
+  explicit AckIndexerHandler(std::string token, std::vector<uint64_t> indexed_events, std::function<void(const struct mg_request_info *request_info)>& assertions)
+      : MockSplunkHandler(std::move(token), assertions), indexed_events_(indexed_events) {}
 
  protected:
   bool handlePostImpl(struct mg_connection* conn) override {
@@ -181,12 +184,12 @@ class MockSplunkHEC {
     options.emplace_back(port_);
     server_.reset(new CivetServer(options, &callbacks_, &logger_));
     {
-      MockSplunkHandler* raw_collector_handler = new RawCollectorHandler(TOKEN);
+      MockSplunkHandler* raw_collector_handler = new RawCollectorHandler(TOKEN, assertions_);
       server_->addHandler("/services/collector/raw", raw_collector_handler);
       handlers_.emplace_back(std::move(raw_collector_handler));
     }
     {
-      MockSplunkHandler* ack_indexer_handler = new AckIndexerHandler(TOKEN, indexed_events);
+      MockSplunkHandler* ack_indexer_handler = new AckIndexerHandler(TOKEN, indexed_events, assertions_);
       server_->addHandler("/services/collector/ack", ack_indexer_handler);
       handlers_.emplace_back(std::move(ack_indexer_handler));
     }
@@ -196,10 +199,16 @@ class MockSplunkHEC {
     return port_;
   }
 
+  void setAssertions(std::function<void(const struct mg_request_info *request_info)> assertions) {
+    assertions_ = assertions;
+  }
+
+
  private:
   std::string port_;
   std::unique_ptr<CivetServer> server_;
   std::vector<std::unique_ptr<MockSplunkHandler>> handlers_;
   CivetCallbacks callbacks_;
+  std::function<void(const struct mg_request_info *request_info)> assertions_ = [](const struct mg_request_info*) {};
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<MockSplunkHEC>::getLogger();
 };

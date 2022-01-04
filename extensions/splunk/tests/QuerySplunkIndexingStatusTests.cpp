@@ -108,6 +108,16 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
     CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 0);
   }
 
+  SECTION("MaxQuerySize can limit the number of queries") {
+    plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::MaxQuerySize.getName(), "5");
+    for (size_t i = 0; i < 10; ++i) {
+      plan->runProcessor(write_to_flow_file);
+      plan->runProcessor(update_attribute);
+    }
+    plan->runProcessor(query_splunk_indexing_status);
+    CHECK(plan->getNumFlowFileProducedByProcessor(query_splunk_indexing_status) == 5);
+  }
+
   SECTION("Input flow file has no attributes") {
     test_controller.runSession(plan);
     CHECK(read_from_failure->numberOfFlowFilesRead() == 1);
