@@ -79,8 +79,6 @@ void ExecutePythonProcessor::initialize() {
     return;
   }
 
-  python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
-
   getProperty(ModuleDirectory.getName(), module_directory_);
   appendPathForImportModules();
 
@@ -93,74 +91,44 @@ void ExecutePythonProcessor::initialize() {
 
   // In case of native python processors we require initialization before onSchedule
   // so that we can provide manifest of processor identity on C2
-  auto engine = getScriptEngine();
-  initalizeThroughScriptEngine(*engine);
-  handleEngineNoLongerInUse(std::move(engine));
+  python_script_engine_ = createScriptEngine();
+  initalizeThroughScriptEngine();
 }
 
-void ExecutePythonProcessor::initalizeThroughScriptEngine(python::PythonScriptEngine& engine) {
-  engine.eval(script_to_exec_);
+void ExecutePythonProcessor::initalizeThroughScriptEngine() {
+  python_script_engine_->eval(script_to_exec_);
   auto shared_this = shared_from_this();
-  engine.describe(shared_this);
-  engine.onInitialize(shared_this);
+  python_script_engine_->describe(shared_this);
+  python_script_engine_->onInitialize(shared_this);
   processor_initialized_ = true;
 }
 
 void ExecutePythonProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  std::shared_ptr<python::PythonScriptEngine> engine = getScriptEngine();
   if (!processor_initialized_) {
     loadScript();
-    initalizeThroughScriptEngine(*engine);
+    python_script_engine_ = createScriptEngine();
+    initalizeThroughScriptEngine();
   } else {
-    reloadScriptIfUsingScriptFileProperty(*engine);
+    reloadScriptIfUsingScriptFileProperty();
     if (script_to_exec_.empty()) {
       throw std::runtime_error("Neither Script Body nor Script File is available to execute");
     }
   }
 
-  engine->eval(script_to_exec_);
-  engine->onSchedule(context);
-
-  handleEngineNoLongerInUse(std::move(engine));
+  gsl_Expects(python_script_engine_);
+  python_script_engine_->eval(script_to_exec_);
+  python_script_engine_->onSchedule(context);
 
   getProperty(ReloadOnScriptChange.getName(), reload_on_script_change_);
 }
 
 void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  auto engine = getScriptEngine();
-  reloadScriptIfUsingScriptFileProperty(*engine);
+  reloadScriptIfUsingScriptFileProperty();
   if (script_to_exec_.empty()) {
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
 
-  engine->onTrigger(context, session);
-  handleEngineNoLongerInUse(std::move(engine));
-}
-
-// TODO(hunyadi): This is potentially not what we want. See https://issues.apache.org/jira/browse/MINIFICPP-1222
-std::shared_ptr<python::PythonScriptEngine> ExecutePythonProcessor::getScriptEngine() {
-  std::shared_ptr<python::PythonScriptEngine> engine;
-  // Use an existing engine, if one is available
-  if (script_engine_q_.try_dequeue(engine)) {
-    logger_->log_debug("Using available [%p] script engine instance", engine.get());
-    return engine;
-  }
-  engine = createEngine<python::PythonScriptEngine>();
-  logger_->log_info("Created new [%p] script engine instance. Number of instances: approx. %d / %d.", engine.get(), script_engine_q_.size_approx(), getMaxConcurrentTasks());
-  if (engine == nullptr) {
-    throw std::runtime_error("No script engine available");
-  }
-  return engine;
-}
-
-void ExecutePythonProcessor::handleEngineNoLongerInUse(std::shared_ptr<python::PythonScriptEngine>&& engine) {
-  // Make engine available for use again
-  if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
-    logger_->log_debug("Releasing [%p] script engine", engine.get());
-    script_engine_q_.enqueue(engine);
-  } else {
-    logger_->log_info("Destroying script engine because it is no longer needed");
-  }
+  python_script_engine_->onTrigger(context, session);
 }
 
 void ExecutePythonProcessor::appendPathForImportModules() {
@@ -203,7 +171,7 @@ void ExecutePythonProcessor::loadScript() {
   return;
 }
 
-void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty(python::PythonScriptEngine& engine) {
+void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
   if (script_file_path_.empty() || !reload_on_script_change_) {
     return;
   }
@@ -212,8 +180,19 @@ void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty(python::Pytho
     logger_->log_debug("Script file has changed since last time, reloading...");
     loadScriptFromFile();
     last_script_write_time_ = file_write_time;
-    engine.eval(script_to_exec_);
+    python_script_engine_->eval(script_to_exec_);
   }
+}
+
+std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine() {
+  auto engine = std::make_unique<PythonScriptEngine>();
+
+  python_logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getAliasedLogger(getName());
+  engine->bind("log", python_logger_);
+  engine->bind("REL_SUCCESS", Success);
+  engine->bind("REL_FAILURE", Failure);
+
+  return engine;
 }
 
 REGISTER_RESOURCE(
