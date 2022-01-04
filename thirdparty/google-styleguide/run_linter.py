@@ -2,7 +2,6 @@ import argparse
 import multiprocessing
 import os
 import cpplint
-from multiprocessing import Pool
 import sys
 import math
 
@@ -51,7 +50,7 @@ if __name__ == '__main__':
         chunk_end += chunk_size
         if chunk_end > len(list_of_files):
             chunk_end = len(list_of_files)
-    pool = Pool(processes=chunk_num)
+    pool = multiprocessing.Pool(processes=chunk_num)
     # execute in parallel
     map_res = pool.map(cpplint_main_wrapper, chunks)
     pool.close()
