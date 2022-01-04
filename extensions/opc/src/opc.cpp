@@ -32,7 +32,6 @@
 #include "open62541/client_highlevel.h"
 #include "open62541/client_config_default.h"
 
-
 namespace org {
 namespace apache {
 namespace nifi {
@@ -177,7 +176,10 @@ Client::~Client() {
   if (client_ == nullptr) {
     return;
   }
-  if (UA_Client_getState(client_) != UA_CLIENTSTATE_DISCONNECTED) {
+
+  UA_SecureChannelState channel_state;
+  UA_Client_getState(client_, &channel_state, nullptr, nullptr);
+  if (channel_state != UA_SECURECHANNELSTATE_CLOSED) {
     auto sc = UA_Client_disconnect(client_);
     if (sc != UA_STATUSCODE_GOOD) {
       logger_->log_warn("Failed to disconnect OPC client: %s", UA_StatusCode_name(sc));
@@ -190,14 +192,17 @@ bool Client::isConnected() {
   if (!client_) {
     return false;
   }
-  return UA_Client_getState(client_) != UA_CLIENTSTATE_DISCONNECTED;
+
+  UA_SessionState session_state;
+  UA_Client_getState(client_, nullptr, &session_state, nullptr);
+  return session_state == UA_SESSIONSTATE_ACTIVATED;
 }
 
 UA_StatusCode Client::connect(const std::string& url, const std::string& username, const std::string& password) {
   if (username.empty()) {
     return UA_Client_connect(client_, url.c_str());
   } else {
-    return UA_Client_connect_username(client_, url.c_str(), username.c_str(), password.c_str());
+    return UA_Client_connectUsername(client_, url.c_str(), username.c_str(), password.c_str());
   }
 }
 
@@ -241,7 +246,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
       auto server_timestamp = OPCDateTime2String(dv->serverTimestamp);
       auto source_timestamp = OPCDateTime2String(dv->sourceTimestamp);
       nodedata.attributes["Sourcetimestamp"] = source_timestamp;
-      UA_ReadResponse_deleteMembers(&response);
+      UA_ReadResponse_clear(&response);
 
       nodedata.dataTypeID = var->type->typeIndex;
       nodedata.addVariant(var);
@@ -303,10 +308,10 @@ void Client::traverse(UA_NodeId nodeId, std::function<nodeFoundCallBackFunc> cb,
   UA_BrowseResponse bResp = UA_Client_Service_browse(client_, bReq);
 
   const auto guard = gsl::finally([&bResp]() {
-    UA_BrowseResponse_deleteMembers(&bResp);
+    UA_BrowseResponse_clear(&bResp);
   });
 
-  UA_BrowseRequest_deleteMembers(&bReq);
+  UA_BrowseRequest_clear(&bReq);
 
   for (size_t i = 0; i < bResp.resultsSize; ++i) {
     for (size_t j = 0; j < bResp.results[i].referencesSize; ++j) {
@@ -364,7 +369,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
   UA_TranslateBrowsePathsToNodeIdsResponse response = UA_Client_Service_translateBrowsePathsToNodeIds(client_, request);
 
   const auto guard = gsl::finally([&browsePath]() {
-    UA_BrowsePath_deleteMembers(&browsePath);
+    UA_BrowsePath_clear(&browsePath);
   });
 
   if (response.resultsSize < 1) {
@@ -385,7 +390,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
     }
   }
 
-  UA_TranslateBrowsePathsToNodeIdsResponse_deleteMembers(&response);
+  UA_TranslateBrowsePathsToNodeIdsResponse_clear(&response);
 
   if (foundData) {
     logger->log_debug("Found %lu nodes for path %s", foundNodeIDs.size(), path.c_str());
@@ -397,7 +402,7 @@ UA_StatusCode Client::translateBrowsePathsToNodeIdsRequest(const std::string& pa
 }
 
 template<typename T>
-UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, OPCNodeDataType dt, UA_NodeId *receivedNodeId) {
+UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, T value, UA_NodeId *receivedNodeId) {
   UA_VariableAttributes attr = UA_VariableAttributes_default;
   add_value_to_variant(&attr.value, value);
   char local[6] = "en-US";
@@ -405,7 +410,7 @@ UA_StatusCode Client::add_node(const UA_NodeId parentNodeId, const UA_NodeId tar
   UA_StatusCode sc = UA_Client_addVariableNode(client_,
                                                targetNodeId,
                                                parentNodeId,
-                                               UA_NODEID_NUMERIC(0, OPCNodeDataTypeToTypeID(dt)),
+                                               UA_NODEID_NUMERIC(0, UA_NS0ID_ORGANIZES),
                                                UA_QUALIFIEDNAME(1, const_cast<char*>(browseName.c_str())),
                                                UA_NODEID_NULL,
                                                attr, receivedNodeId);
@@ -443,40 +448,17 @@ template UA_StatusCode Client::update_node<bool>(const UA_NodeId nodeId, bool va
 template UA_StatusCode Client::update_node<const char *>(const UA_NodeId nodeId, const char * value);
 template UA_StatusCode Client::update_node<std::string>(const UA_NodeId nodeId, std::string value);
 
-template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int64_t value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint64_t value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int32_t value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint32_t value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, float value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, double value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, bool value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<int64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int64_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<uint64_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint64_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<int32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, int32_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<uint32_t>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, uint32_t value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<float>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, float value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<double>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, double value, UA_NodeId *receivedNodeId);
+template UA_StatusCode Client::add_node<bool>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName, bool value, UA_NodeId *receivedNodeId);
 template UA_StatusCode Client::add_node<const char *>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName,
-    const char * value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
+    const char * value, UA_NodeId *receivedNodeId);
 template UA_StatusCode Client::add_node<std::string>(const UA_NodeId parentNodeId, const UA_NodeId targetNodeId, std::string browseName,
-    std::string value, OPCNodeDataType dt, UA_NodeId *receivedNodeId);
-
-int32_t OPCNodeDataTypeToTypeID(OPCNodeDataType dt) {
-  switch (dt) {
-    case OPCNodeDataType::Boolean:
-      return UA_NS0ID_BOOLEAN;
-    case OPCNodeDataType::Int32:
-      return UA_NS0ID_INT32;
-    case OPCNodeDataType::UInt32:
-      return UA_NS0ID_UINT32;
-    case OPCNodeDataType::Int64:
-      return UA_NS0ID_INT64;
-    case OPCNodeDataType::UInt64:
-      return UA_NS0ID_UINT64;
-    case OPCNodeDataType::Float:
-      return UA_NS0ID_FLOAT;
-    case OPCNodeDataType::Double:
-      return UA_NS0ID_DOUBLE;
-    case OPCNodeDataType::String:
-      return UA_NS0ID_STRING;
-    default:
-      throw OPCException(GENERAL_EXCEPTION, "Data type is not supported");
-  }
-}
+    std::string value, UA_NodeId *receivedNodeId);
 
 std::string nodeValue2String(const NodeData& nd) {
   std::string ret_val;

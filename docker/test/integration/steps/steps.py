@@ -63,17 +63,29 @@ def step_impl(context, processor_type, property, property_value, processor_name)
                           format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow", processor_name=processor_name))
 
 
-@given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
-@given("a {processor_type} processor in a \"{minifi_container_name}\" flow")
-@given("a {processor_type} processor set up in a \"{minifi_container_name}\" flow")
-def step_impl(context, processor_type, minifi_container_name):
+@given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, processor_name, minifi_container_name):
     container = context.test.acquire_container(minifi_container_name)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
-    processor.set_name(processor_type)
+    processor.set_name(processor_name)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
     if not container.get_start_nodes():
         container.add_start_node(processor)
+
+
+@given("a {processor_type} processor with the name \"{processor_name}\"")
+def step_impl(context, processor_type, processor_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, processor_name=processor_name, minifi_container_name="minifi-cpp-flow"))
+
+
+@given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor set up in a \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, minifi_container_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow".
+                          format(processor_type=processor_type, processor_name=processor_type, minifi_container_name=minifi_container_name))
 
 
 @given("a {processor_type} processor")
@@ -344,6 +356,17 @@ def step_impl(context):
     context.test.acquire_container("postgresql-server", "postgresql-server")
 
 
+# OPC UA
+@given("an OPC UA server is set up")
+def step_impl(context):
+    context.test.acquire_container("opcua-server", "opcua-server")
+
+
+@given("an OPC UA server is set up with access control")
+def step_impl(context):
+    context.test.acquire_container("opcua-server", "opcua-server", ["/opt/open62541/examples/access_control_server"])
+
+
 @when("the MiNiFi instance starts up")
 @when("both instances start up")
 @when("all instances start up")
@@ -559,6 +582,11 @@ def step_impl(context, log_message, duration):
 @then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
 def step_impl(context, regex, duration):
     context.test.check_minifi_log_matches_regex(regex, timeparse(duration))
+
+
+@then("the OPC UA server logs contain the following message: \"{log_message}\" in less than {duration}")
+def step_impl(context, log_message, duration):
+    context.test.check_container_log_contents("opcua-server", log_message, timeparse(duration))
 
 
 # MQTT

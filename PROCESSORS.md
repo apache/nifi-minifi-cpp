@@ -523,7 +523,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Node ID**|||Specifies the ID of the root node to traverse|
 |**Node ID type**||Int<br>Path<br>String<br>|Specifies the type of the provided node ID|
 |**OPC server endpoint**|||Specifies the address, port and relative path of an OPC endpoint|
-|Password|||Password to log in with. Providing this requires cert and key to be provided as well, credentials are always sent encrypted.|
+|Password|||Password to log in with.|
 |Trusted server certificate path|||Path to the DER-encoded trusted server certificate|
 |Username|||Username to log in with.|
 ### Relationships
@@ -1369,7 +1369,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Parent node ID**|||Specifies the ID of the root node to traverse|
 |**Parent node ID type**||Int<br>Path<br>String<br>|Specifies the type of the provided node ID|
 |Parent node namespace index|0||The index of the namespace. Used only if node ID type is not path.|
-|Password|||Password to log in with. Providing this requires cert and key to be provided as well, credentials are always sent encrypted.|
+|Password|||Password to log in with.|
 |Target node ID|||ID of target node.<br/>**Supports Expression Language: true**|
 |Target node ID type|||ID type of target node. Allowed values are: Int, String.<br/>**Supports Expression Language: true**|
 |Target node browse name|||Browse name of target node. Only used when new node is created.<br/>**Supports Expression Language: true**|

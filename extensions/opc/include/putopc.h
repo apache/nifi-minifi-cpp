@@ -80,6 +80,10 @@ class PutOPCProcessor : public BaseOPCProcessor {
     std::shared_ptr<core::logging::Logger> logger_;
   };
 
+  core::annotation::Input getInputRequirement() const override {
+    return core::annotation::Input::INPUT_REQUIRED;
+  }
+
   std::string nodeID_;
   int32_t nameSpaceIdx_;
   opc::OPCNodeIDType idType_;

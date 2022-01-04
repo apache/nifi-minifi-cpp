@@ -3,12 +3,13 @@ import logging
 
 
 class Container:
-    def __init__(self, name, engine, vols, network, image_store):
+    def __init__(self, name, engine, vols, network, image_store, command):
         self.name = name
         self.engine = engine
         self.vols = vols
         self.network = network
         self.image_store = image_store
+        self.command = command
 
         # Get docker client
         self.client = docker.from_env()

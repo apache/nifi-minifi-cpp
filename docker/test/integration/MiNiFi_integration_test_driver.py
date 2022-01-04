@@ -44,8 +44,8 @@ class MiNiFi_integration_test():
     def docker_path_to_local_path(self, docker_path):
         return self.docker_directory_bindings.docker_path_to_local_path(self.test_id, docker_path)
 
-    def acquire_container(self, name, engine='minifi-cpp'):
-        return self.cluster.acquire_container(name, engine)
+    def acquire_container(self, name, engine='minifi-cpp', command=None):
+        return self.cluster.acquire_container(name, engine, command)
 
     def wait_for_container_startup_to_finish(self, container_name):
         startup_success = self.cluster.wait_for_startup_log(container_name, 120)
@@ -141,7 +141,8 @@ class MiNiFi_integration_test():
     def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleOrMultiFileOutputValidator(decode_escaped_str(content))
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1)
+        expected_number_of_files = timeout_seconds
+        self.check_output(timeout_seconds, output_validator, expected_number_of_files)
 
     def check_for_num_files_generated(self, num_flowfiles, timeout_seconds):
         output_validator = NoContentCheckFileNumberValidator(num_flowfiles)
@@ -163,7 +164,8 @@ class MiNiFi_integration_test():
         self.validate(output_validator)
 
     def check_output(self, timeout_seconds, output_validator, max_files):
-        self.file_system_observer.wait_for_output(timeout_seconds, max_files)
+        if self.file_system_observer.wait_for_output(timeout_seconds, max_files, output_validator):
+            return
         self.validate(output_validator)
 
     def validate(self, validator):
@@ -190,17 +192,20 @@ class MiNiFi_integration_test():
         assert self.cluster.wait_for_kafka_consumer_to_be_registered(kafka_container_name)
 
     def check_minifi_log_contents(self, line, timeout_seconds=60):
-        for container in self.cluster.containers.values():
-            if container.get_engine() == "minifi-cpp":
-                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, timeout_seconds)
-                if line_found:
-                    return
-        assert False
+        self.check_container_log_contents("minifi-cpp", line, timeout_seconds)
 
     def check_minifi_log_matches_regex(self, regex, timeout_seconds=60):
         for container in self.cluster.containers.values():
             if container.get_engine() == "minifi-cpp":
                 line_found = self.cluster.wait_for_app_logs_regex(container.get_name(), regex, timeout_seconds)
+                if line_found:
+                    return
+        assert False
+
+    def check_container_log_contents(self, container_engine, line, timeout_seconds=60):
+        for container in self.cluster.containers.values():
+            if container.get_engine() == container_engine:
+                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, timeout_seconds)
                 if line_found:
                     return
         assert False

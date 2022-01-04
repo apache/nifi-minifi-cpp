@@ -3,8 +3,8 @@ from .Container import Container
 
 
 class ZookeeperContainer(Container):
-    def __init__(self, name, vols, network, image_store):
-        super().__init__(name, 'zookeeper', vols, network, image_store)
+    def __init__(self, name, vols, network, image_store, command):
+        super().__init__(name, 'zookeeper', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "binding to port"
@@ -19,5 +19,6 @@ class ZookeeperContainer(Container):
             detach=True,
             name='zookeeper',
             network=self.network.name,
-            ports={'2181/tcp': 2181})
+            ports={'2181/tcp': 2181},
+            entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)
