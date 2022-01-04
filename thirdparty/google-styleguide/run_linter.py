@@ -35,13 +35,11 @@ def cpplint_main_wrapper(file_list):
     except SystemExit as err:
         return err.code
 
-    return 1
-
 
 if __name__ == '__main__':
     # break up list_of_files to ~equal chunks
     chunk_num = multiprocessing.cpu_count()
-    chunk_size = math.ceil((len(list_of_files) / chunk_num))
+    chunk_size = math.ceil(len(list_of_files) / chunk_num)
     chunks = []
     chunk_begin = 0
     chunk_end = chunk_size
