@@ -88,8 +88,16 @@ class ProcessSession : public ReferenceContainer {
   void remove(const std::shared_ptr<core::FlowFile> &flow);
   // Execute the given read callback against the content
   int64_t read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback *callback);
+
+  int64_t read(const std::shared_ptr<core::FlowFile> &flow, InputStreamCallback&& callback) {
+    return read(flow, &callback);
+  }
   // Execute the given write callback against the content
   void write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback *callback);
+
+  void write(const std::shared_ptr<core::FlowFile> &flow, OutputStreamCallback&& callback) {
+    return write(flow, &callback);
+  }
   // Read and write the flow file at the same time (eg. for processing it line by line)
   int64_t readWrite(const std::shared_ptr<core::FlowFile> &flow, InputOutputStreamCallback *callback);
   // Replace content with buffer
