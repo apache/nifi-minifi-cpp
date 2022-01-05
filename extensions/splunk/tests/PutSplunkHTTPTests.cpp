@@ -20,11 +20,13 @@
 #include "TestBase.h"
 #include "ReadFromFlowFileTestProcessor.h"
 #include "WriteToFlowFileTestProcessor.h"
+#include "processors/UpdateAttribute.h"
 #include "MockSplunkHEC.h"
 
 using PutSplunkHTTP = org::apache::nifi::minifi::extensions::splunk::PutSplunkHTTP;
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;
 using WriteToFlowFileTestProcessor = org::apache::nifi::minifi::processors::WriteToFlowFileTestProcessor;
+using UpdateAttribute = org::apache::nifi::minifi::processors::UpdateAttribute;
 
 
 TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
@@ -99,6 +101,68 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
     CHECK(read_from_failure->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_CODE, "4"));
     CHECK(read_from_failure->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME));
     CHECK_FALSE(read_from_failure->readFlowFileWithAttribute(org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID));
+  }
+}
+
+namespace {
+struct ContentTypeValidator {
+  explicit ContentTypeValidator(std::string required_content_type) : required_content_type_(std::move(required_content_type)) {
+  }
+  void operator() (const struct mg_request_info* req_info) const {
+    if (!required_content_type_)
+      return;
+    auto content_type_header = std::find_if(std::begin(req_info->http_headers),
+                                            std::end(req_info->http_headers),
+                                            [](auto header) -> bool {return strcmp(header.name, "Content-Type") == 0;});
+    REQUIRE(content_type_header != std::end(req_info->http_headers));
+    CHECK(strcmp(content_type_header->value, required_content_type_.value().c_str()) == 0);
+  }
+  std::optional<std::string> required_content_type_;
+};
+}  // namespace
+
+TEST_CASE("PutSplunkHTTP content type tests", "[putsplunkhttpcontenttype]") {
+  MockSplunkHEC mock_splunk_hec("10131");
+
+  TestController test_controller;
+  auto plan = test_controller.createPlan();
+  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
+  auto update_attribute = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute"));
+  auto put_splunk_http = std::dynamic_pointer_cast<PutSplunkHTTP>(plan->addProcessor("PutSplunkHTTP", "put_splunk_http"));
+
+  plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_attribute);
+  plan->addConnection(update_attribute, UpdateAttribute::Success, put_splunk_http);
+  put_splunk_http->setAutoTerminatedRelationships({PutSplunkHTTP::Success, PutSplunkHTTP::Failure});
+
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Hostname.getName(), "localhost");
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Port.getName(), mock_splunk_hec.getPort());
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::Token.getName(), MockSplunkHEC::TOKEN);
+  plan->setProperty(put_splunk_http, PutSplunkHTTP::SplunkRequestChannel.getName(), "a12254b4-f481-435d-896d-3b6033eabe58");
+
+  write_to_flow_file->setContent("foobar");
+
+  SECTION("Content Type without Property or Attribute") {
+    mock_splunk_hec.setAssertions(ContentTypeValidator("application/x-www-form-urlencoded"));
+    test_controller.runSession(plan);
+  }
+
+  SECTION("Content Type with Processor Property") {
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::ContentType.getName(), "from_property");
+    mock_splunk_hec.setAssertions(ContentTypeValidator("from_property"));
+    test_controller.runSession(plan);
+  }
+
+  SECTION("Content Type with FlowFile Attribute") {
+    plan->setProperty(update_attribute, "mime.type", "from_attribute", true);
+    mock_splunk_hec.setAssertions(ContentTypeValidator("from_attribute"));
+    test_controller.runSession(plan);
+  }
+
+  SECTION("Content Type with Property and Attribute") {
+    plan->setProperty(update_attribute, "mime.type", "from_attribute", true);
+    plan->setProperty(put_splunk_http, PutSplunkHTTP::ContentType.getName(), "from_property");
+    mock_splunk_hec.setAssertions(ContentTypeValidator("from_property"));
+    test_controller.runSession(plan);
   }
 }
 
