@@ -59,9 +59,8 @@ TEST_CASE("Test both script body and script file set", "[executescriptMisconfigu
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "python");
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/path/to/script.py");
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
-    function onTrigger(context, session)
-      log:info('hello from lua')
-    end
+    def onTrigger(context, session):
+      log.info('hello from python')
   )");
 
   REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
