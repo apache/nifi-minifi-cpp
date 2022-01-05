@@ -29,7 +29,8 @@ namespace internal {
 
 LogCompressorSink::LogCompressorSink(LogQueueSize cache_size, LogQueueSize compressed_size, std::shared_ptr<logging::Logger> logger)
   : cached_logs_(cache_size.max_total_size, cache_size.max_segment_size),
-    compressed_logs_(compressed_size.max_total_size, compressed_size.max_segment_size, ActiveCompressor::Allocator{std::move(logger)}) {
+    compressed_logs_(compressed_size.max_total_size, compressed_size.max_segment_size, ActiveCompressor::Allocator{logger}),
+    compressor_logger_(logger) {
   compression_thread_ = std::thread{&LogCompressorSink::run, this};
 }
 
@@ -73,6 +74,11 @@ LogCompressorSink::CompressionResult LogCompressorSink::compress(bool force_rota
 }
 
 void LogCompressorSink::flush_() {}
+
+std::unique_ptr<io::InputStream> LogCompressorSink::createEmptyArchive() {
+  auto compressor = ActiveCompressor::Allocator{compressor_logger_}(0);
+  return std::move(compressor.commit().buffer_);
+}
 
 }  // namespace internal
 }  // namespace logging

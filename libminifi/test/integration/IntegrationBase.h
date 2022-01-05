@@ -45,7 +45,7 @@ class IntegrationBase {
 
   virtual ~IntegrationBase() = default;
 
-  virtual void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& bootstrap_file = {});
+  virtual void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& home_path = {});
 
   void setKeyDir(const std::string& key_dir) {
     this->key_dir = key_dir;

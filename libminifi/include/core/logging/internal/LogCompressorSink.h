@@ -63,7 +63,9 @@ class LogCompressorSink : public spdlog::sinks::base_sink<spdlog::details::null_
       compress(true);
     }
     LogBuffer compressed;
-    compressed_logs_.tryDequeue(compressed, time);
+    if (!compressed_logs_.tryDequeue(compressed, time) && flush) {
+      return createEmptyArchive();
+    }
     return std::move(compressed.buffer_);
   }
 
@@ -73,6 +75,8 @@ class LogCompressorSink : public spdlog::sinks::base_sink<spdlog::details::null_
     NothingToCompress
   };
 
+  std::unique_ptr<io::InputStream> createEmptyArchive();
+
   CompressionResult compress(bool force_rotation = false);
   void run();
 
@@ -81,6 +85,8 @@ class LogCompressorSink : public spdlog::sinks::base_sink<spdlog::details::null_
 
   utils::StagingQueue<LogBuffer> cached_logs_;
   utils::StagingQueue<ActiveCompressor, ActiveCompressor::Allocator> compressed_logs_;
+
+  std::shared_ptr<logging::Logger> compressor_logger_;
 };
 
 }  // namespace internal

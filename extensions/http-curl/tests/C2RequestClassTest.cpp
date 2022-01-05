@@ -27,31 +27,6 @@
 #include "CivetStream.h"
 #include "StreamPipe.h"
 
-class C2AcknowledgeHandler : public ServerAwareHandler {
- public:
-  bool handlePost(CivetServer* /*server*/, struct mg_connection* conn) override {
-    std::string req = readPayload(conn);
-    rapidjson::Document root;
-    root.Parse(req.data(), req.size());
-    if (root.IsObject() && root.HasMember("operationId")) {
-      std::lock_guard<std::mutex> guard(mtx_);
-      acknowledged_operations_.insert(root["operationId"].GetString());
-    }
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-                    "text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
-    return true;
-  }
-
-  bool isAcknowledged(const std::string& operation_id) const {
-    std::lock_guard<std::mutex> guard(mtx_);
-    return acknowledged_operations_.count(operation_id) > 0;
-  }
-
- private:
-  mutable std::mutex mtx_;
-  std::set<std::string> acknowledged_operations_;
-};
-
 class C2HeartbeatHandler : public ServerAwareHandler {
  public:
   explicit C2HeartbeatHandler(std::string response) : response_(std::move(response)) {}

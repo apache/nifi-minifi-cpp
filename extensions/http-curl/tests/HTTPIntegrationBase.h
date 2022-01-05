@@ -122,6 +122,7 @@ void HTTPIntegrationBase::setC2Url(const std::string &heartbeat_path, const std:
 
 class VerifyC2Base : public HTTPIntegrationBase {
  public:
+  using HTTPIntegrationBase::HTTPIntegrationBase;
   void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
