@@ -74,7 +74,7 @@ void ScriptEngineQueue::returnScriptEngine(std::shared_ptr<script::ScriptEngine>
   const std::lock_guard<std::mutex> lock(queue_mutex_);
   if (engine_queue_.size_approx() < max_engine_count_) {
     logger_->log_debug("Releasing [%p] script engine", engine.get());
-    engine_queue_.enqueue(engine);
+    engine_queue_.enqueue(std::move(engine));
   } else {
     logger_->log_info("Destroying script engine because it is no longer needed");
   }
