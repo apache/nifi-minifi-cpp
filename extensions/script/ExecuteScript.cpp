@@ -23,6 +23,10 @@
 #include <set>
 #include <utility>
 
+#ifdef PYTHON_SUPPORT
+#include <PythonScriptEngine.h>
+#endif  // PYTHON_SUPPORT
+
 #ifdef LUA_SUPPORT
 #include <LuaScriptEngine.h>
 #endif  // LUA_SUPPORT

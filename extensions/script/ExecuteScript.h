@@ -29,14 +29,17 @@
 #include "ScriptEngine.h"
 #include "ScriptProcessContext.h"
 
-#ifdef PYTHON_SUPPORT
-#include <PythonScriptEngine.h>
-#endif  // PYTHON_SUPPORT
-
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
+
+#ifdef PYTHON_SUPPORT
+namespace python {
+class PythonScriptEngine;
+}
+#endif  // PYTHON_SUPPORT
+
 namespace processors {
 
 class ScriptEngineFactory {
