@@ -23,10 +23,6 @@
 #include <set>
 #include <utility>
 
-#ifdef PYTHON_SUPPORT
-#include <PythonScriptEngine.h>
-#endif  // PYTHON_SUPPORT
-
 #ifdef LUA_SUPPORT
 #include <LuaScriptEngine.h>
 #endif  // LUA_SUPPORT
@@ -93,8 +89,12 @@ void ExecuteScript::initialize() {
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
+#ifdef LUA_SUPPORT
   script_engine_q_ = std::make_unique<ScriptEngineQueue>(getMaxConcurrentTasks(), engine_factory_, logger_);
+#endif  // LUA_SUPPORT
+#ifdef PYTHON_SUPPORT
   python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
+#endif  // PYTHON_SUPPORT
   if (!context->getProperty(ScriptEngine.getName(), script_engine_)) {
     logger_->log_error("Script Engine attribute is missing or invalid");
   }

@@ -28,7 +28,10 @@
 
 #include "ScriptEngine.h"
 #include "ScriptProcessContext.h"
-#include "python/PythonScriptEngine.h"
+
+#ifdef PYTHON_SUPPORT
+#include <PythonScriptEngine.h>
+#endif  // PYTHON_SUPPORT
 
 namespace org {
 namespace apache {
@@ -132,8 +135,12 @@ class ExecuteScript : public core::Processor {
   std::string module_directory_;
 
   ScriptEngineFactory engine_factory_;
+#ifdef LUA_SUPPORT
   std::unique_ptr<ScriptEngineQueue> script_engine_q_;
+#endif  // LUA_SUPPORT
+#ifdef PYTHON_SUPPORT
   std::shared_ptr<python::PythonScriptEngine> python_script_engine_;
+#endif  // PYTHON_SUPPORT
 
   template<typename T>
   void triggerEngineProcessor(const std::shared_ptr<script::ScriptEngine> &engine,
