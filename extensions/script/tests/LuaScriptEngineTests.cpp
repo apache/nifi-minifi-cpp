@@ -26,7 +26,10 @@ TEST_CASE("LuaScriptEngine errors during eval", "[luascriptengineeval]") {
   LuaScriptEngine engine;
   REQUIRE_NOTHROW(engine.eval("print('foo')"));
   // The exception message comes from the lua engine
-  REQUIRE_THROWS_MATCHES(engine.eval("shout('foo')"), ScriptException, ExceptionSubStringMatcher<ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value"}));
+  REQUIRE_THROWS_MATCHES(
+    engine.eval("shout('foo')"),
+    ScriptException,
+    ExceptionSubStringMatcher<ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value", "attempt to call global 'shout'"}));
 }
 
 TEST_CASE("LuaScriptEngine errors during call", "[luascriptenginecall]") {
@@ -42,5 +45,8 @@ TEST_CASE("LuaScriptEngine errors during call", "[luascriptenginecall]") {
   )"));
   REQUIRE_NOTHROW(engine.call("foo"));
   // The exception message comes from the lua engine
-  REQUIRE_THROWS_MATCHES(engine.call("bar"), ScriptException, ExceptionSubStringMatcher<ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value"}));
+  REQUIRE_THROWS_MATCHES(
+    engine.call("bar"),
+    ScriptException,
+    ExceptionSubStringMatcher<ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value", "attempt to call global 'shout'"}));
 }

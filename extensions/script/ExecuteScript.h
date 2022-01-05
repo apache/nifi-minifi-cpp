@@ -28,6 +28,7 @@
 
 #include "ScriptEngine.h"
 #include "ScriptProcessContext.h"
+#include "utils/Enum.h"
 
 namespace org {
 namespace apache {
@@ -108,6 +109,11 @@ class ScriptEngineQueue {
 
 class ExecuteScript : public core::Processor {
  public:
+  SMART_ENUM(ScriptEngineOption,
+    (LUA, "lua"),
+    (PYTHON, "python")
+  )
+
   explicit ExecuteScript(const std::string &name, const utils::Identifier &uuid = {})
       : Processor(name, uuid),
         engine_factory_(Success, Failure, logger_) {
@@ -132,7 +138,7 @@ class ExecuteScript : public core::Processor {
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteScript>::getLogger();
 
-  std::string script_engine_;
+  ScriptEngineOption script_engine_;
   std::string script_file_;
   std::string script_body_;
   std::string module_directory_;
