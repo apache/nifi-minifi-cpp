@@ -49,6 +49,10 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
+  bool isSingleThreaded() const override {
+    return true;
+  }
+
  protected:
   uint32_t batch_size_ = 1000;
   std::chrono::milliseconds max_age_ = std::chrono::hours(1);

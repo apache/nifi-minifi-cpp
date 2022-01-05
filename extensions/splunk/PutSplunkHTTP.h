@@ -48,6 +48,10 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+
+  bool isSingleThreaded() const override {
+    return false;
+  }
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk
