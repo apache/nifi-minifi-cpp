@@ -68,6 +68,13 @@ class WriteArchiveStreamImpl: public WriteArchiveStream {
 
   size_t write(const uint8_t* data, size_t len) override;
 
+  // TODO(adebreceni):
+  //    Stream::close does not make it possible to signal failure (short of throwing)
+  //    investigate if it is worth making Stream::close capable of this
+  bool finish() override;
+
+  ~WriteArchiveStreamImpl() override;
+
  private:
   static la_ssize_t archive_write(struct archive* /*arch*/, void *context, const void *buff, size_t size) {
     auto* const output = static_cast<OutputStream*>(context);

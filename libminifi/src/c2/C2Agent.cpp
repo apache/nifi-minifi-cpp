@@ -42,7 +42,7 @@
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"
-#include "io/WriteArchiveStream.h"
+#include "io/ArchiveStream.h"
 #include "io/StreamPipe.h"
 
 namespace org {
@@ -615,28 +615,27 @@ bool C2Agent::update_property(const std::string &property_name, const std::strin
 
 C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
   C2Payload payload(Operation::TRANSFER, false);
-  auto stream_provider = core::ClassLoader::getDefaultClassLoader().instantiate<io::WriteArchiveStreamProvider>(
-      "WriteArchiveStreamProvider", "WriteArchiveStreamProvider");
+  auto stream_provider = core::ClassLoader::getDefaultClassLoader().instantiate<io::ArchiveStreamProvider>(
+      "ArchiveStreamProvider", "ArchiveStreamProvider");
   if (!stream_provider) {
     throw C2DebugBundleError("Couldn't instantiate archiver provider");
   }
   auto bundle = std::make_shared<io::BufferStream>();
-  {
-    auto archiver = stream_provider->createStream(9, "gzip", bundle, logger_);
-    if (!archiver) {
-      throw C2DebugBundleError("Couldn't instantiate archiver");
+  auto archiver = stream_provider->createWriteStream(9, "gzip", bundle, logger_);
+  if (!archiver) {
+    throw C2DebugBundleError("Couldn't instantiate archiver");
+  }
+  for (auto&[filename, stream] : files) {
+    size_t file_size = stream->size();
+    if (!archiver->newEntry({filename, file_size})) {
+      throw C2DebugBundleError("Couldn't initialize archive entry for '" + filename + "'");
     }
-    for (auto&[filename, stream] : files) {
-      int64_t file_size = stream->size();
-      if (!archiver->newEntry(filename, file_size)) {
-        throw C2DebugBundleError("Couldn't initialize archive entry for '" + filename + "'");
-      }
-      if (file_size != internal::pipe(stream.get(), archiver.get())) {
-        // we have touched the input streams, they cannot be reused
-        throw C2DebugBundleError("Error while writing file '" + filename + "' into the debug bundle");
-      }
+    if (gsl::narrow<int64_t>(file_size) != internal::pipe(stream.get(), archiver.get())) {
+      // we have touched the input streams, they cannot be reused
+      throw C2DebugBundleError("Error while writing file '" + filename + "' into the debug bundle");
     }
   }
+  archiver->finish();
   C2Payload file(Operation::TRANSFER, true);
   file.setLabel("debug.tar.gz");
   file.setRawData(bundle->moveBuffer());
