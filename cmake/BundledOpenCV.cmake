@@ -16,9 +16,6 @@
 # under the License.
 
 function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
-    set(PATCH_FILE "${SOURCE_DIR}/thirdparty/opencv/opencv.patch")
-    set(PC "${Patch_EXECUTABLE}" -R -p1 -s -f --dry-run -i "${PATCH_FILE}" || "${Patch_EXECUTABLE}" -p1 -i "${PATCH_FILE}")
-
     if (WIN32)
         set(CMAKE_INSTALL_LIBDIR "lib")
     else()
@@ -86,6 +83,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DBUILD_FAT_JAVA_LIB=OFF"
             "-DBUILD_PNG=ON"
             "-DBUILD_JPEG=ON"
+            "-DBUILD_OPENJPEG=OFF"
             "-DWITH_1394=OFF"
             "-DWITH_FFMPEG=OFF"
             "-DWITH_GSTREAMER=OFF"
@@ -96,6 +94,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DWITH_ITT=OFF"
             "-DWITH_OPENEXR=OFF"
             "-DWITH_WEBP=OFF"
+            "-DWITH_OPENJPEG=OFF"
             "-DWITH_TIFF=OFF")
 
     append_third_party_passthrough_args(OPENCV_CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
@@ -104,9 +103,8 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     ExternalProject_Add(
             opencv-external
             GIT_REPOSITORY "https://github.com/opencv/opencv.git"
-            GIT_TAG "4.1.0"
+            GIT_TAG "4.5.5"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/opencv-src"
-            PATCH_COMMAND ${PC}
             CMAKE_ARGS ${OPENCV_CMAKE_ARGS}
             BUILD_BYPRODUCTS "${BYPRODUCTS}"
             EXCLUDE_FROM_ALL TRUE
@@ -140,8 +138,9 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     add_library(OPENCV::libopencv-core STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-core PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_core${SUFFIX}")
-    add_dependencies(OPENCV::libopencv-core opencv-external)
+    add_dependencies(OPENCV::libopencv-core opencv-external ZLIB::ZLIB)
     target_include_directories(OPENCV::libopencv-core INTERFACE ${OPENCV_INCLUDE_DIR})
+    target_link_libraries(OPENCV::libopencv-core INTERFACE ZLIB::ZLIB)
 
     add_library(OPENCV::libopencv-flann STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-flann PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_flann${SUFFIX}")
