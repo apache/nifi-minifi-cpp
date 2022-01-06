@@ -3,8 +3,8 @@ from .Container import Container
 
 
 class SplunkContainer(Container):
-    def __init__(self, name, vols, network, image_store):
-        super().__init__(name, 'splunk', vols, network, image_store)
+    def __init__(self, name, vols, network, image_store, command=None):
+        super().__init__(name, 'splunk', vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Ansible playbook complete, will begin streaming splunkd_stderr.log"
@@ -23,5 +23,6 @@ class SplunkContainer(Container):
                 "SPLUNK_LICENSE_URI=Free",
                 "SPLUNK_START_ARGS=--accept-license",
                 "SPLUNK_PASSWORD=splunkadmin"
-            ])
+            ],
+            entrypoint=self.command)
         logging.info('Added container \'%s\'', self.name)
