@@ -59,7 +59,7 @@ constexpr auto FLOWFILE_REPOSITORY_RETRY_INTERVAL_INCREMENTS = std::chrono::mill
  * Flow File repository
  * Design: Extends Repository and implements the run function, using rocksdb as the primary substrate.
  */
-class FlowFileRepository : public core::Repository, public std::enable_shared_from_this<FlowFileRepository> {
+class FlowFileRepository : public core::Repository {
  public:
   static constexpr const char* ENCRYPTION_KEY_NAME = "nifi.flowfile.repository.encryption.key";
   // Constructor

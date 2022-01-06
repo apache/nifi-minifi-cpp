@@ -63,7 +63,7 @@ constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
 
 #define BUILDING_DLL 1
 // Processor Class
-class Processor : public Connectable, public ConfigurableComponent, public std::enable_shared_from_this<Processor> {
+class Processor : public Connectable, public ConfigurableComponent {
  public:
   Processor(const std::string& name, const utils::Identifier& uuid);
   explicit Processor(const std::string& name);

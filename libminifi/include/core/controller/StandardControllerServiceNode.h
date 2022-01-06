@@ -48,10 +48,6 @@ class StandardControllerServiceNode : public ControllerServiceNode {
         logger_(logging::LoggerFactory<StandardControllerServiceNode>::getLogger()) {
   }
 
-  std::shared_ptr<core::ProcessGroup> &getProcessGroup();
-
-  void setProcessGroup(std::shared_ptr<ProcessGroup> &processGroup);
-
   StandardControllerServiceNode(const StandardControllerServiceNode &other) = delete;
   StandardControllerServiceNode &operator=(const StandardControllerServiceNode &parent) = delete;
 
@@ -87,9 +83,6 @@ class StandardControllerServiceNode : public ControllerServiceNode {
  protected:
   // controller service provider.
   std::shared_ptr<ControllerServiceProvider> provider;
-
-  // process group.
-  std::shared_ptr<core::ProcessGroup> process_group_;
 
   std::mutex mutex_;
 

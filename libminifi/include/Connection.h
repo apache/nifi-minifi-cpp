@@ -41,7 +41,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-class Connection : public core::Connectable, public std::enable_shared_from_this<Connection> {
+class Connection : public core::Connectable {
  public:
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name);
   explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid);

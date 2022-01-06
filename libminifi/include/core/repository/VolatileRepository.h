@@ -129,12 +129,6 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
   bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override;
 
   /**
-   * Set the connection map
-   * @param connectionMap map of all connections through this repo.
-   */
-  void setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap);
-
-  /**
    * Function to load this component.
    */
   void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override;
@@ -163,7 +157,6 @@ class VolatileRepository : public core::Repository, public utils::EnableSharedFr
       return false;
   }
 
-  std::map<std::string, std::shared_ptr<minifi::Connection>> connectionMap;
   // current size of the volatile repo.
   std::atomic<size_t> current_size_;
   // current index.
@@ -395,11 +388,6 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
   } else {
     return false;
   }
-}
-
-template<typename T>
-void VolatileRepository<T>::setConnectionMap(std::map<std::string, std::shared_ptr<minifi::Connection>> &connectionMap) {
-  this->connectionMap = connectionMap;
 }
 
 template<typename T>

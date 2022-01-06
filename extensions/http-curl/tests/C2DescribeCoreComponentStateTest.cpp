@@ -42,7 +42,7 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
   }
 
  protected:
-  void updateProperties(std::shared_ptr<minifi::FlowController> flow_controller) override {
+  void updateProperties(std::unique_ptr<minifi::FlowController>& flow_controller) override {
     dynamic_cast<minifi::state::ProcessorController*>(flow_controller->getComponents("TailFile1")[0])
         ->getProcessor()->setProperty(minifi::processors::TailFile::FileName, test_file_1_);
     dynamic_cast<minifi::state::ProcessorController*>(flow_controller->getComponents("TailFile2")[0])
