@@ -38,7 +38,7 @@ std::error_code get_last_socket_error() {
   return {error_code, std::system_category()};
 }
 
-nonstd::expected<OpenSocketResult, std::error_code> open_socket(const addrinfo* const getaddrinfo_result) {
+nonstd::expected<OpenSocketResult, std::error_code> open_socket(const gsl::not_null<const addrinfo*> getaddrinfo_result) {
   for (const addrinfo* it = getaddrinfo_result; it; it = it->ai_next) {
     const auto fd = socket(it->ai_family, it->ai_socktype, it->ai_protocol);
     if (fd != utils::net::InvalidSocket) return OpenSocketResult{UniqueSocketHandle{fd}, gsl::make_not_null(it)};

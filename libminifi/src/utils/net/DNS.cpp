@@ -64,7 +64,7 @@ void addrinfo_deleter::operator()(addrinfo* const p) const noexcept {
   freeaddrinfo(p);
 }
 
-nonstd::expected<std::unique_ptr<addrinfo, addrinfo_deleter>, std::error_code> resolveHost(const char* const hostname, const char* const port, const IpProtocol protocol, const bool need_canonname) {
+nonstd::expected<gsl::not_null<std::unique_ptr<addrinfo, addrinfo_deleter>>, std::error_code> resolveHost(const char* const hostname, const char* const port, const IpProtocol protocol, const bool need_canonname) {
   addrinfo hints{};
   memset(&hints, 0, sizeof hints);  // make sure the struct is empty
   hints.ai_family = AF_UNSPEC;
@@ -82,7 +82,7 @@ nonstd::expected<std::unique_ptr<addrinfo, addrinfo_deleter>, std::error_code> r
 
   addrinfo* getaddrinfo_result = nullptr;
   const int errcode = getaddrinfo(hostname, port, &hints, &getaddrinfo_result);
-  std::unique_ptr<addrinfo, addrinfo_deleter> addr_info{ getaddrinfo_result };
+  auto addr_info = gsl::make_not_null(std::unique_ptr<addrinfo, addrinfo_deleter>{getaddrinfo_result});
   getaddrinfo_result = nullptr;
   if (errcode != 0) {
     return nonstd::make_unexpected(get_last_getaddrinfo_err_code(errcode));

@@ -46,6 +46,13 @@ Container<detail::remove_cvref_t<T>> span_to(gsl::span<T> span) {
       "The destination container must have an iterator (pointer) range constructor");
   return span_to<Container<detail::remove_cvref_t<T>>>(span);
 }
+
+template<typename T>
+struct is_not_null : std::false_type {};
+template<typename T>
+struct is_not_null<gsl::not_null<T>> : std::true_type {};
+template<typename T>
+inline constexpr bool is_not_null_v = is_not_null<T>::value;
 }  // namespace utils
 
 }  // namespace minifi

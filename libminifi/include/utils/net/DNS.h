@@ -20,6 +20,7 @@
 #include <string_view>
 #include <system_error>
 #include "nonstd/expected.hpp"
+#include "utils/gsl.h"
 
 struct addrinfo;
 
@@ -33,7 +34,7 @@ enum class IpProtocol {
   Udp
 };
 
-nonstd::expected<std::unique_ptr<addrinfo, addrinfo_deleter>, std::error_code> resolveHost(const char* hostname, const char* port, IpProtocol = IpProtocol::Tcp, bool need_canonname = false);
+nonstd::expected<gsl::not_null<std::unique_ptr<addrinfo, addrinfo_deleter>>, std::error_code> resolveHost(const char* hostname, const char* port, IpProtocol = IpProtocol::Tcp, bool need_canonname = false);
 inline auto resolveHost(const char* const port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
   return resolveHost(nullptr, port, proto, need_canonname);
 }

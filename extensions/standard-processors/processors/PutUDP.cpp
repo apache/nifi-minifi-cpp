@@ -116,20 +116,23 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
     return utils::try_expression([sa] { return utils::net::sockaddr_ntop(sa); }).value_or("(n/a)");
   };
 
-  utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::Udp)
-      | utils::flatMap([&, this](const auto& names) {
-        if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
-          std::vector<std::string> names_vector;
-          for (const addrinfo* it = names.get(); it; it = it->ai_next) {
-            names_vector.push_back(nonthrowing_sockaddr_ntop(it->ai_addr));
-          }
-          logger_->log_debug("resolved \'%s\' to: %s",
-              hostname,
-              names_vector | ranges::views::join(',') | ranges::to<std::string>());
-        }
+  const auto debug_log_resolved_names = [&, this](const addrinfo& names) -> decltype(auto) {
+    if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
+      std::vector<std::string> names_vector;
+      for (const addrinfo* it = &names; it; it = it->ai_next) {
+        names_vector.push_back(nonthrowing_sockaddr_ntop(it->ai_addr));
+      }
+      logger_->log_debug("resolved \'%s\' to: %s",
+          hostname,
+          names_vector | ranges::views::join(',') | ranges::to<std::string>());
+    }
+    return names;
+  };
 
-        return utils::net::open_socket(names.get());
-      })
+  utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::Udp)
+      | utils::map(utils::dereference)
+      | utils::map(debug_log_resolved_names)
+      | utils::flatMap([](const auto& names) { return utils::net::open_socket(names); })
       | utils::flatMap([&, this](utils::net::OpenSocketResult socket_handle_and_selected_name) -> nonstd::expected<void, std::error_code> {
         const auto& [socket_handle, selected_name] = socket_handle_and_selected_name;
         logger_->log_debug("connected to %s", nonthrowing_sockaddr_ntop(selected_name->ai_addr));

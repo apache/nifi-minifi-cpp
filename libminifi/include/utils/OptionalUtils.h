@@ -30,8 +30,8 @@
 namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
-std::optional<utils::remove_cvref_t<T>> optional_from_ptr(T&& obj) {
-  return obj == nullptr ? std::nullopt : std::optional<utils::remove_cvref_t<T>>{ std::forward<T>(obj) };
+std::optional<gsl::not_null<utils::remove_cvref_t<T>>> optional_from_ptr(T&& obj) {
+  return obj == nullptr ? std::nullopt : std::optional<gsl::not_null<utils::remove_cvref_t<T>>>{ gsl::make_not_null(std::forward<T>(obj)) };
 }
 
 template<typename, typename = void>

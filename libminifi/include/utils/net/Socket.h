@@ -99,7 +99,8 @@ struct OpenSocketResult {
  * @param getaddrinfo_result
  * @return The file descriptor and the selected list element on success, or nullopt on error. Use get_last_socket_error_message() to get the error message.
  */
-nonstd::expected<OpenSocketResult, std::error_code> open_socket(const addrinfo* getaddrinfo_result);
+nonstd::expected<OpenSocketResult, std::error_code> open_socket(gsl::not_null<const addrinfo*> getaddrinfo_result);
+inline nonstd::expected<OpenSocketResult, std::error_code> open_socket(const addrinfo& getaddrinfo_result) { return open_socket(gsl::make_not_null(&getaddrinfo_result)); }
 
 
 std::string sockaddr_ntop(const sockaddr* sa);
