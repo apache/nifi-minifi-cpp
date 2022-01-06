@@ -83,6 +83,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DBUILD_FAT_JAVA_LIB=OFF"
             "-DBUILD_PNG=ON"
             "-DBUILD_JPEG=ON"
+            "-DBUILD_OPENJPEG=ON"
             "-DWITH_1394=OFF"
             "-DWITH_FFMPEG=OFF"
             "-DWITH_GSTREAMER=OFF"
