@@ -117,6 +117,7 @@ option(ENABLE_AZURE "Enables Azure support." OFF)
 option(ENABLE_ENCRYPT_CONFIG "Enables build of encrypt-config binary." ON)
 option(ENABLE_SPLUNK "Enable Splunk support" OFF)
 option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Ideal for systems without an up-to-date compiler." OFF)
+option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." OFF)
 
 ## Keep all option definitions above this line
 
@@ -602,6 +603,12 @@ endif()
 ## Add the splunk extension
 if (ENABLE_ALL OR ENABLE_SPLUNK)
 	createExtension(SPLUNK-EXTENSIONS "SPLUNK EXTENSIONS" "This enables Splunk support" "extensions/splunk" "extensions/splunk/tests")
+endif()
+
+## Kubernetes Extensions
+if (ENABLE_KUBERNETES)
+  include(KubernetesClientC)
+  createExtension(KUBERNETES-EXTENSIONS "KUBERNETES EXTENSIONS" "This enables Kubernetes support" "extensions/kubernetes")
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN

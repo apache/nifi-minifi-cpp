@@ -1,0 +1,12 @@
+diff --git a/kubernetes/PreTarget.cmake b/kubernetes/PreTarget.cmake
+index 93ea00e..1e064b8 100644
+--- a/kubernetes/PreTarget.cmake
++++ b/kubernetes/PreTarget.cmake
+@@ -41,6 +41,3 @@ list(APPEND HDRS
+         websocket/kube_exec.h
+         include/generic.h
+         include/utils.h)
+-
+-find_package(libwebsockets CONFIG REQUIRED)
+-find_package(yaml CONFIG REQUIRED)
+\ No newline at end of file
