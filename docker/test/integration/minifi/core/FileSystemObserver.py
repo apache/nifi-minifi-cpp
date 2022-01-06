@@ -38,7 +38,7 @@ class FileSystemObserver(object):
             if max_files <= self.event_handler.get_num_files_created():
                 return False
             wait_start_time = time.perf_counter()
-            for _ in range(0, max_files):
+            while True:
                 # Note: The timing on Event.wait() is inaccurate
                 self.done_event.wait(timeout_seconds - time.perf_counter() + wait_start_time)
                 if self.done_event.isSet():
@@ -49,8 +49,7 @@ class FileSystemObserver(object):
                     if output_validator.validate():
                         return True
                 if timeout_seconds < (time.perf_counter() - wait_start_time):
-                    break
-            return False
+                    return False
         finally:
             self.observer.stop()
             self.observer.join()

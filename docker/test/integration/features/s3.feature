@@ -155,12 +155,14 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And no errors were generated on the http-proxy regarding "http://s3-server:9090/test_bucket/test_object_key"
 
   Scenario: A MiNiFi instance can list an S3 bucket directly
-    Given a TailFile processor with the "File to Tail" property set to "/tmp/input/test_file.log"
-    And the "Input Delimiter" property of the TailFile processor is set to "%"
-    And a file with filename "test_file.log" and content "test_data%" is present in "/tmp/input"
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And the "Batch Size" property of the GetFile processor is set to "1"
+    And the scheduling period of the GetFile processor is set to "5 sec"
+    And a file with filename "test_file_1.log" and content "test_data1" is present in "/tmp/input"
+    And a file with filename "test_file_2.log" and content "test_data2" is present in "/tmp/input"
     And a PutS3Object processor set up to communicate with an s3 server
     And the "Object Key" property of the PutS3Object processor is set to "${filename}"
-    And the "success" relationship of the TailFile processor is connected to the PutS3Object
+    And the "success" relationship of the GetFile processor is connected to the PutS3Object
 
     Given a ListS3 processor in the "secondary" flow
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -169,9 +171,8 @@ Feature: Sending data from MiNiFi-C++ to an AWS server
     And a s3 server is set up in correspondence with the PutS3Object
 
     When all instances start up
-    And content "test_data2%" is added to file "test_file.log" present in directory "/tmp/input" 5 seconds later
 
-    Then 2 flowfiles are placed in the monitored directory in 60 seconds
+    Then 2 flowfiles are placed in the monitored directory in 120 seconds
 
   Scenario: A MiNiFi instance can list an S3 bucket objects via a http-proxy
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
