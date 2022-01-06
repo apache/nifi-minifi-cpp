@@ -635,7 +635,9 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
       throw C2DebugBundleError("Error while writing file '" + filename + "' into the debug bundle");
     }
   }
-  archiver->finish();
+  if (!archiver->finish()) {
+    throw C2DebugBundleError("Failed to complete debug bundle archive");
+  }
   C2Payload file(Operation::TRANSFER, true);
   file.setLabel("debug.tar.gz");
   file.setRawData(bundle->moveBuffer());

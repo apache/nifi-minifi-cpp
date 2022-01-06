@@ -85,17 +85,6 @@ void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string
   client.initialize(type, url, generatedService);
 }
 
-[[maybe_unused]]
-static std::string getFileMimeType(const std::string& filename) {
-  if (utils::StringUtils::endsWith(filename, ".gz")) {
-    return "application/gzip";
-  }
-  if (utils::StringUtils::endsWith(filename, ".txt")) {
-    return "text/plain";
-  }
-  return "application/octet-stream";
-}
-
 const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, std::optional<std::string> data) {
   if (url.empty()) {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
