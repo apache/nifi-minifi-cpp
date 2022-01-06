@@ -55,7 +55,7 @@ class VerifyDebugInfo : public VerifyC2Base {
 class C2DebugBundleHandler : public ServerAwareHandler {
   static int field_found(const char* key, const char* filename, char* /*path*/, size_t /*pathlen*/, void* user_data) {
     auto& file_content = *static_cast<std::optional<std::string>*>(user_data);
-    if (!filename || std::string{filename} != "debug.tar.gz") {
+    if (!filename || std::string(filename) != "debug.tar.gz") {
       throw std::runtime_error("Unknown form entry: " + std::string{key});
     }
     if (file_content) {
@@ -69,6 +69,7 @@ class C2DebugBundleHandler : public ServerAwareHandler {
     (*file_content) += std::string(value, valuelen);
     return MG_FORM_FIELD_HANDLE_GET;
   }
+
  public:
   bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
     std::optional<std::string> file_content;

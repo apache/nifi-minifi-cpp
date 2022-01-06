@@ -76,7 +76,7 @@ LogCompressorSink::CompressionResult LogCompressorSink::compress(bool force_rota
 void LogCompressorSink::flush_() {}
 
 std::unique_ptr<io::InputStream> LogCompressorSink::createEmptyArchive() {
-  auto compressor = ActiveCompressor::Allocator{compressor_logger_}(0);
+  auto compressor = ActiveCompressor::Allocator(compressor_logger_)(0);
   return std::move(compressor.commit().buffer_);
 }
 

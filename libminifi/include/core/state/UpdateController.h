@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <map>
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
 
