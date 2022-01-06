@@ -83,7 +83,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DBUILD_FAT_JAVA_LIB=OFF"
             "-DBUILD_PNG=ON"
             "-DBUILD_JPEG=ON"
-            "-DBUILD_OPENJPEG=ON"
+            "-DBUILD_OPENJPEG=OFF"
             "-DWITH_1394=OFF"
             "-DWITH_FFMPEG=OFF"
             "-DWITH_GSTREAMER=OFF"
@@ -94,6 +94,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DWITH_ITT=OFF"
             "-DWITH_OPENEXR=OFF"
             "-DWITH_WEBP=OFF"
+            "-DWITH_OPENJPEG=OFF"
             "-DWITH_TIFF=OFF")
 
     append_third_party_passthrough_args(OPENCV_CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
@@ -135,10 +136,6 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     set_target_properties(OPENCV::libpng PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libpng${THIRDPARTY_SUFFIX}")
     add_dependencies(OPENCV::libpng opencv-external)
 
-    add_library(OPENCV::libopenjp2 STATIC IMPORTED)
-    set_target_properties(OPENCV::libopenjp2 PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libopenjp2${THIRDPARTY_SUFFIX}")
-    add_dependencies(OPENCV::libopenjp2 opencv-external)
-
     add_library(OPENCV::libopencv-core STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-core PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_core${SUFFIX}")
     add_dependencies(OPENCV::libopencv-core opencv-external ZLIB::ZLIB)
@@ -169,7 +166,7 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     set_target_properties(OPENCV::libopencv-imgcodecs PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_imgcodecs${SUFFIX}")
     add_dependencies(OPENCV::libopencv-imgcodecs opencv-external)
     target_include_directories(OPENCV::libopencv-imgcodecs INTERFACE ${OPENCV_INCLUDE_DIR})
-    target_link_libraries(OPENCV::libopencv-imgcodecs INTERFACE OPENCV::libopencv-core OPENCV::libjpeg-turbo OPENCV::libpng OPENCV::libopenjp2)
+    target_link_libraries(OPENCV::libopencv-imgcodecs INTERFACE OPENCV::libopencv-core OPENCV::libjpeg-turbo OPENCV::libpng)
 
     add_library(OPENCV::libopencv-calib3d STATIC IMPORTED)
     set_target_properties(OPENCV::libopencv-calib3d PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_calib3d${SUFFIX}")
