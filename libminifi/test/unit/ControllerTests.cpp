@@ -143,8 +143,8 @@ class TestUpdateSink : public minifi::state::StateMonitor {
     return 0;
   }
 
-  std::shared_ptr<minifi::io::InputStream> getLogs() override {
-    return nullptr;
+  std::map<std::string, std::unique_ptr<minifi::io::InputStream>> getDebugInfo() override {
+    return {};
   }
 
   /**
