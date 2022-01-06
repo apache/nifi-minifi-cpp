@@ -150,8 +150,8 @@ int main() {
 
   std::filesystem::path home_dir = controller.createTempDirectory();
   utils::file::PathUtils::create_dir((home_dir / "conf").string());
-  std::ofstream{home_dir / "conf/minifi.properties"} << properties_file;
-  std::ofstream{home_dir / "conf/config.yml"} << flow_config_file;
+  std::ofstream{home_dir / "conf/minifi.properties", std::ios::binary} << properties_file;
+  std::ofstream{home_dir / "conf/config.yml", std::ios::binary} << flow_config_file;
 
   VerifyDebugInfo harness([&]() -> bool {
     if (!ack_handler.isAcknowledged("79")) {
