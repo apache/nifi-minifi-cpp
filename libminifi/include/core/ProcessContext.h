@@ -113,7 +113,8 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
   }
 
   template<typename T>
-  std::enable_if_t<!std::is_convertible_v<T&, FlowFile&>, bool> getProperty(const std::string &name, T &value) const {
+  std::enable_if_t<!std::is_convertible_v<T&, FlowFile&> && !std::is_convertible_v<T&, const std::shared_ptr<FlowFile>&>,
+      bool> getProperty(const std::string &name, T &value) const {
     return getPropertyImp<typename std::common_type<T>::type>(name, value);
   }
 
