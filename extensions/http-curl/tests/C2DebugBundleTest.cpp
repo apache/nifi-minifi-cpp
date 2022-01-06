@@ -149,7 +149,7 @@ int main() {
   C2DebugBundleHandler bundle_handler;
 
   std::filesystem::path home_dir = controller.createTempDirectory();
-  utils::file::PathUtils::create_dir(home_dir / "conf");
+  utils::file::PathUtils::create_dir((home_dir / "conf").string());
   std::ofstream{home_dir / "conf/minifi.properties"} << properties_file;
   std::ofstream{home_dir / "conf/config.yml"} << flow_config_file;
 
@@ -190,7 +190,7 @@ int main() {
     return true;
   });
 
-  harness.getConfiguration()->setHome(home_dir);
+  harness.getConfiguration()->setHome(home_dir.string());
   harness.getConfiguration()->loadConfigureFile("conf/minifi.properties");
   harness.setUrl("http://localhost:0/heartbeat", &heartbeat_handler);
   harness.setUrl("http://localhost:0/acknowledge", &ack_handler);
@@ -201,5 +201,5 @@ int main() {
 
   logging::LoggerFactory<C2HeartbeatHandler>::getLogger()->log_error("Tis but a scratch");
 
-  harness.run(home_dir / "conf/config.yml");
+  harness.run((home_dir / "conf/config.yml").string());
 }
