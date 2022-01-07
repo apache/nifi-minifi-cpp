@@ -62,7 +62,7 @@ const core::Relationship PutSplunkHTTP::Failure("failure", "FlowFiles that faile
 
 void PutSplunkHTTP::initialize() {
   setSupportedRelationships({Success, Failure});
-  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel, Source, SourceType, Host, Index, ContentType});
+  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel, SSLContext, Source, SourceType, Host, Index, ContentType});
 }
 
 void PutSplunkHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {

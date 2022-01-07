@@ -63,7 +63,7 @@ const core::Relationship QuerySplunkIndexingStatus::Failure("failure",
 
 void QuerySplunkIndexingStatus::initialize() {
   setSupportedRelationships({Acknowledged, Unacknowledged, Undetermined, Failure});
-  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel, MaximumWaitingTime, MaxQuerySize});
+  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel, SSLContext, MaximumWaitingTime, MaxQuerySize});
 }
 
 void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {

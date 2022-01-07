@@ -64,7 +64,7 @@ class MiNiFi_integration_test():
         self.cluster.acquire_container('splunk', 'splunk')
         self.cluster.deploy('splunk')
         assert self.wait_for_container_startup_to_finish('splunk')
-        assert self.cluster.enable_hec_indexer('splunk', 'splunk_hec_token')
+        assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token')
 
     def start(self):
         logging.info("MiNiFi_integration_test start")

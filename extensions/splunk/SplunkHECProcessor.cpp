@@ -39,7 +39,7 @@ const core::Property SplunkHECProcessor::SplunkRequestChannel(core::PropertyBuil
 const core::Property SplunkHECProcessor::SSLContext(core::PropertyBuilder::createProperty("SSL Context Service")
     ->withDescription("The SSL Context Service used to provide client certificate "
                       "information for TLS/SSL (https) connections.")
-    ->isRequired(false)->withExclusiveProperty("Remote URL", "^http:.*$")
+    ->isRequired(false)->withExclusiveProperty("Hostname", "^http:.*$")
     ->asType<minifi::controllers::SSLContextService>()->build());
 
 void SplunkHECProcessor::initialize() {

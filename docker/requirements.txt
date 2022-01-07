@@ -6,3 +6,4 @@ confluent-kafka==1.7.0
 PyYAML==5.4.1
 m2crypto==0.37.1
 watchdog==2.1.2
+pyopenssl
