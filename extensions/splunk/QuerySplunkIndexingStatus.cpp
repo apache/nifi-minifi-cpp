@@ -26,7 +26,6 @@
 #include "core/Resource.h"
 #include "client/HTTPClient.h"
 #include "utils/HTTPClient.h"
-#include "utils/TimeUtil.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"

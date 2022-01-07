@@ -27,7 +27,6 @@
 #include "utils/StringUtils.h"
 #include "client/HTTPClient.h"
 #include "utils/HTTPClient.h"
-#include "utils/TimeUtil.h"
 #include "utils/OptionalUtils.h"
 
 #include "rapidjson/document.h"

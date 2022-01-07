@@ -24,7 +24,6 @@
 #include "processors/UpdateAttribute.h"
 #include "ReadFromFlowFileTestProcessor.h"
 #include "WriteToFlowFileTestProcessor.h"
-#include "utils/TimeUtil.h"
 
 using QuerySplunkIndexingStatus = org::apache::nifi::minifi::extensions::splunk::QuerySplunkIndexingStatus;
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;
