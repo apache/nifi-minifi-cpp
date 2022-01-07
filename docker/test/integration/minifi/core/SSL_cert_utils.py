@@ -5,6 +5,7 @@ import random
 from M2Crypto import X509, EVP, RSA, ASN1
 from OpenSSL import crypto
 
+
 def gen_cert():
     """
     Generate TLS certificate request for testing
@@ -57,6 +58,7 @@ def gen_req():
 
     return req, key
 
+
 def make_ca(common_name):
     ca_key = crypto.PKey()
     ca_key.generate_key(crypto.TYPE_RSA, 2048)
@@ -85,7 +87,7 @@ def make_ca(common_name):
     ca_cert.set_pubkey(ca_key)
 
     ca_cert.gmtime_adj_notBefore(0)
-    ca_cert.gmtime_adj_notAfter(10*365*24*60*60)
+    ca_cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
 
     ca_cert.sign(ca_key, 'sha256')
 
@@ -119,14 +121,16 @@ def make_cert(common_name, ca_cert, ca_key):
     cert.set_pubkey(key)
 
     cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(10*365*24*60*60)
+    cert.gmtime_adj_notAfter(10 * 365 * 24 * 60 * 60)
 
     cert.sign(ca_key, 'sha256')
 
     return cert, key
 
+
 def dump_certificate(cert):
     return crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+
 
 def dump_privatekey(key):
     return crypto.dump_privatekey(crypto.FILETYPE_PEM, key)

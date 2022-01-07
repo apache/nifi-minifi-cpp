@@ -214,7 +214,6 @@ class DockerTestCluster(SingleNodeDockerCluster):
     def wait_for_kafka_consumer_to_be_registered(self, kafka_container_name):
         return self.wait_for_app_logs(kafka_container_name, "Assignment received from leader for group docker_test_group", 60)
 
-
     def write_content_to_container(self, content, dst):
         container_name, dst_path = dst.split(':')
         container = self.client.containers.get(container_name)
