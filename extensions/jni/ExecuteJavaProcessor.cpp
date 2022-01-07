@@ -155,7 +155,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
   jpc.nifi_processor_ = clazzInstance;
   jpc.context_ = context;
   jpc.clazz_ = spn.getReference();
-  jpc.processor_ = shared_from_this();
+  jpc.processor_ = this;
   jpc.cslookup_ = init_context_.lookup_ref_;
 
   java_servicer_->setReference<minifi::jni::JniProcessContext>(env, context_instance_, &jpc);
