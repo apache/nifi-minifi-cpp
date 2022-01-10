@@ -41,6 +41,12 @@ class PythonScriptEngine;
 }
 #endif  // PYTHON_SUPPORT
 
+#ifdef LUA_SUPPORT
+namespace lua {
+class LuaScriptEngine;
+}
+#endif  // LUA_SUPPORT
+
 namespace processors {
 
 class ScriptEngineFactory {
@@ -48,7 +54,7 @@ class ScriptEngineFactory {
   ScriptEngineFactory(core::Relationship& success, core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger);
 
   template<typename T>
-  std::shared_ptr<T> createEngine() const {
+  std::enable_if_t<std::is_base_of_v<script::ScriptEngine, T>, std::shared_ptr<T>> createEngine() const {
     auto engine = std::make_shared<T>();
 
     engine->bind("log", logger_);
@@ -64,11 +70,15 @@ class ScriptEngineFactory {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
+template<typename T, typename = std::enable_if_t<std::is_base_of_v<script::ScriptEngine, T>>>
 class ScriptEngineQueue {
  public:
-  ScriptEngineQueue(uint8_t max_engine_count, ScriptEngineFactory& engine_factory, std::shared_ptr<core::logging::Logger> logger);
+  ScriptEngineQueue(uint8_t max_engine_count, ScriptEngineFactory& engine_factory, std::shared_ptr<core::logging::Logger> logger)
+    : max_engine_count_(max_engine_count),
+      engine_factory_(engine_factory),
+      logger_(logger) {
+  }
 
-  template<typename T>
   std::shared_ptr<script::ScriptEngine> getScriptEngine() {
     std::shared_ptr<script::ScriptEngine> engine;
     // Use an existing engine, if one is available
@@ -94,13 +104,21 @@ class ScriptEngineQueue {
     return engine;
   }
 
-  void returnScriptEngine(std::shared_ptr<script::ScriptEngine>&& engine);
+  void returnScriptEngine(std::shared_ptr<T>&& engine) {
+    const std::lock_guard<std::mutex> lock(queue_mutex_);
+    if (engine_queue_.size_approx() < max_engine_count_) {
+      logger_->log_debug("Releasing [%p] script engine", engine.get());
+      engine_queue_.enqueue(std::move(engine));
+    } else {
+      logger_->log_info("Destroying script engine because it is no longer needed");
+    }
+  }
 
  private:
   const uint8_t max_engine_count_;
   ScriptEngineFactory& engine_factory_;
   std::shared_ptr<core::logging::Logger> logger_;
-  moodycamel::ConcurrentQueue<std::shared_ptr<script::ScriptEngine>> engine_queue_;
+  moodycamel::ConcurrentQueue<std::shared_ptr<T>> engine_queue_;
   std::mutex queue_mutex_;
   std::condition_variable queue_cv_;
   uint8_t engine_instance_count_ = 0;
@@ -145,7 +163,7 @@ class ExecuteScript : public core::Processor {
 
   ScriptEngineFactory engine_factory_;
 #ifdef LUA_SUPPORT
-  std::unique_ptr<ScriptEngineQueue> script_engine_q_;
+  std::unique_ptr<ScriptEngineQueue<lua::LuaScriptEngine>> script_engine_q_;
 #endif  // LUA_SUPPORT
 #ifdef PYTHON_SUPPORT
   std::shared_ptr<python::PythonScriptEngine> python_script_engine_;

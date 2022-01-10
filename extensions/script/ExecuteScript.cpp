@@ -64,22 +64,6 @@ ScriptEngineFactory::ScriptEngineFactory(core::Relationship& success, core::Rela
     logger_(logger) {
 }
 
-ScriptEngineQueue::ScriptEngineQueue(uint8_t max_engine_count, ScriptEngineFactory& engine_factory, std::shared_ptr<core::logging::Logger> logger)
-    : max_engine_count_(max_engine_count),
-      engine_factory_(engine_factory),
-      logger_(logger) {
-}
-
-void ScriptEngineQueue::returnScriptEngine(std::shared_ptr<script::ScriptEngine>&& engine) {
-  const std::lock_guard<std::mutex> lock(queue_mutex_);
-  if (engine_queue_.size_approx() < max_engine_count_) {
-    logger_->log_debug("Releasing [%p] script engine", engine.get());
-    engine_queue_.enqueue(std::move(engine));
-  } else {
-    logger_->log_info("Destroying script engine because it is no longer needed");
-  }
-}
-
 void ExecuteScript::initialize() {
   std::set<core::Property> properties;
   properties.insert(ScriptEngine);
@@ -133,7 +117,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 #endif  // PYTHON_SUPPORT
   } else if (script_engine_ == ScriptEngineOption::LUA) {
 #ifdef LUA_SUPPORT
-    engine = script_engine_q_->getScriptEngine<lua::LuaScriptEngine>();
+    engine = script_engine_q_->getScriptEngine();
 #else
     throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT
