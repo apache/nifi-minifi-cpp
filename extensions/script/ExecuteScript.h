@@ -22,6 +22,7 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 
 #include "concurrentqueue.h"
 #include "core/Processor.h"
