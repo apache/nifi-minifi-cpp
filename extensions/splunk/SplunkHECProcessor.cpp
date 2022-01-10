@@ -27,7 +27,7 @@ const core::Property SplunkHECProcessor::Hostname(core::PropertyBuilder::createP
 
 const core::Property SplunkHECProcessor::Port(core::PropertyBuilder::createProperty("Port")
     ->withDescription("The HTTP Event Collector HTTP Port Number.")
-    ->withDefaultValue("8088")->isRequired(true)->build());
+    ->withDefaultValue<int>(8088, core::StandardValidators::get().PORT_VALIDATOR)->isRequired(true)->build());
 
 const core::Property SplunkHECProcessor::Token(core::PropertyBuilder::createProperty("Token")
     ->withDescription("HTTP Event Collector token starting with the string Splunk. For example \'Splunk 1234578-abcd-1234-abcd-1234abcd\'")
@@ -72,8 +72,8 @@ std::shared_ptr<minifi::controllers::SSLContextService> SplunkHECProcessor::getS
   return nullptr;
 }
 
-void SplunkHECProcessor::setHeaders(utils::HTTPClient& client) const {
-  client.initialize("POST");
+void SplunkHECProcessor::initializeClient(utils::HTTPClient& client, const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const {
+  client.initialize("POST", url, ssl_context_service);
   client.appendHeader("Authorization", token_);
   client.appendHeader("X-Splunk-Request-Channel", request_channel_);
 }

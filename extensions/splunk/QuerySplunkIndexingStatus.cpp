@@ -20,6 +20,7 @@
 
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "SplunkAttributes.h"
 
@@ -36,12 +37,12 @@ namespace org::apache::nifi::minifi::extensions::splunk {
 const core::Property QuerySplunkIndexingStatus::MaximumWaitingTime(core::PropertyBuilder::createProperty("Maximum Waiting Time")
     ->withDescription("The maximum time the processor tries to acquire acknowledgement confirmation for an index, from the point of registration. "
                       "After the given amount of time, the processor considers the index as not acknowledged and transfers the FlowFile to the \"unacknowledged\" relationship.")
-    ->withDefaultValue("1 hour")->isRequired(true)->build());
+    ->withDefaultValue<core::TimePeriodValue>("1 hour")->isRequired(true)->build());
 
 const core::Property QuerySplunkIndexingStatus::MaxQuerySize(core::PropertyBuilder::createProperty("Maximum Query Size")
     ->withDescription("The maximum number of acknowledgement identifiers the outgoing query contains in one batch. "
                       "It is recommended not to set it too low in order to reduce network communication.")
-    ->withDefaultValue("1000")->isRequired(true)->build());
+    ->withDefaultValue<uint64_t>(1000)->isRequired(true)->build());
 
 const core::Relationship QuerySplunkIndexingStatus::Acknowledged("acknowledged",
     "A FlowFile is transferred to this relationship when the acknowledgement was successful.");
@@ -94,6 +95,7 @@ struct FlowFileWithIndexStatus {
 
 std::unordered_map<uint64_t, FlowFileWithIndexStatus> getUndeterminedFlowFiles(core::ProcessSession& session, size_t batch_size) {
   std::unordered_map<uint64_t, FlowFileWithIndexStatus> undetermined_flow_files;
+  std::vector<uint64_t> duplicate_ack_ids;
   for (size_t i = 0; i < batch_size; ++i) {
     auto flow = session.get();
     if (flow == nullptr)
@@ -104,7 +106,16 @@ std::unordered_map<uint64_t, FlowFileWithIndexStatus> getUndeterminedFlowFiles(c
       continue;
     }
     uint64_t splunk_ack_id = std::stoull(splunk_ack_id_str.value());
+    if (undetermined_flow_files.contains(splunk_ack_id)) {
+      duplicate_ack_ids.push_back(splunk_ack_id);
+      session.transfer(flow, QuerySplunkIndexingStatus::Failure);
+      continue;
+    }
     undetermined_flow_files.emplace(std::make_pair(splunk_ack_id, gsl::not_null(std::move(flow))));
+  }
+  for (auto duplicate_ack_id : duplicate_ack_ids) {
+    session.transfer(undetermined_flow_files.at(duplicate_ack_id).flow_file_, QuerySplunkIndexingStatus::Failure);
+    undetermined_flow_files.erase(duplicate_ack_id);
   }
   return undetermined_flow_files;
 }
@@ -175,8 +186,8 @@ void QuerySplunkIndexingStatus::onTrigger(const std::shared_ptr<core::ProcessCon
   gsl_Expects(context && session);
   std::string ack_request;
 
-  utils::HTTPClient client(getNetworkLocation().append(getEndpoint()), getSSLContextService(*context));
-  setHeaders(client);
+  utils::HTTPClient client;
+  initializeClient(client, getNetworkLocation().append(getEndpoint()), getSSLContextService(*context));
   auto undetermined_flow_files = getUndeterminedFlowFiles(*session, batch_size_);
   if (undetermined_flow_files.empty())
     return;

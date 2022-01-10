@@ -57,7 +57,7 @@ const core::Property PutSplunkHTTP::ContentType(core::PropertyBuilder::createPro
 
 
 const core::Relationship PutSplunkHTTP::Success("success", "FlowFiles that are sent successfully to the destination are sent to this relationship.");
-const core::Relationship PutSplunkHTTP::Failure("failure", "FlowFiles that failed to send to the destination are sent to this relationship.");
+const core::Relationship PutSplunkHTTP::Failure("failure", "FlowFiles that failed to be sent to the destination are sent to this relationship.");
 
 void PutSplunkHTTP::initialize() {
   setSupportedRelationships({Success, Failure});
@@ -75,22 +75,22 @@ std::optional<std::string> getContentType(core::ProcessContext& context, const c
 }
 
 
-std::string getEndpoint(core::ProcessContext& context, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file) {
+std::string getEndpoint(core::ProcessContext& context, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file, utils::HTTPClient& client) {
   std::stringstream endpoint;
   endpoint << "/services/collector/raw";
   std::vector<std::string> parameters;
   std::string prop_value;
   if (context.getProperty(PutSplunkHTTP::SourceType, prop_value, flow_file)) {
-    parameters.push_back("sourcetype=" + prop_value);
+    parameters.push_back("sourcetype=" + client.escape(prop_value));
   }
   if (context.getProperty(PutSplunkHTTP::Source, prop_value, flow_file)) {
-    parameters.push_back("source=" + prop_value);
+    parameters.push_back("source=" + client.escape(prop_value));
   }
   if (context.getProperty(PutSplunkHTTP::Host, prop_value, flow_file)) {
-    parameters.push_back("host=" + prop_value);
+    parameters.push_back("host=" + client.escape(prop_value));
   }
   if (context.getProperty(PutSplunkHTTP::Index, prop_value, flow_file)) {
-    parameters.push_back("index=" + prop_value);
+    parameters.push_back("index=" + client.escape(prop_value));
   }
   if (!parameters.empty()) {
     endpoint << "?" << utils::StringUtils::join("&", parameters);
@@ -98,7 +98,7 @@ std::string getEndpoint(core::ProcessContext& context, const gsl::not_null<std::
   return endpoint.str();
 }
 
-bool addAttributesFromClientResponse(core::FlowFile& flow_file, utils::HTTPClient& client) {
+bool setAttributesFromClientResponse(core::FlowFile& flow_file, utils::HTTPClient& client) {
   rapidjson::Document response_json;
   rapidjson::ParseResult parse_result = response_json.Parse<rapidjson::kParseStopWhenDoneFlag>(client.getResponseBody().data());
   bool result = true;
@@ -106,12 +106,12 @@ bool addAttributesFromClientResponse(core::FlowFile& flow_file, utils::HTTPClien
     return false;
 
   if (response_json.HasMember("code") && response_json["code"].IsInt())
-    flow_file.addAttribute(SPLUNK_RESPONSE_CODE, std::to_string(response_json["code"].GetInt()));
+    flow_file.setAttribute(SPLUNK_RESPONSE_CODE, std::to_string(response_json["code"].GetInt()));
   else
     result = false;
 
   if (response_json.HasMember("ackId") && response_json["ackId"].IsUint64())
-    flow_file.addAttribute(SPLUNK_ACK_ID, std::to_string(response_json["ackId"].GetUint64()));
+    flow_file.setAttribute(SPLUNK_ACK_ID, std::to_string(response_json["ackId"].GetUint64()));
   else
     result = false;
 
@@ -119,10 +119,10 @@ bool addAttributesFromClientResponse(core::FlowFile& flow_file, utils::HTTPClien
 }
 
 bool enrichFlowFileWithAttributes(core::FlowFile& flow_file, utils::HTTPClient& client) {
-  flow_file.addAttribute(SPLUNK_STATUS_CODE, std::to_string(client.getResponseCode()));
-  flow_file.addAttribute(SPLUNK_RESPONSE_TIME, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
+  flow_file.setAttribute(SPLUNK_STATUS_CODE, std::to_string(client.getResponseCode()));
+  flow_file.setAttribute(SPLUNK_RESPONSE_TIME, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()));
 
-  return addAttributesFromClientResponse(flow_file, client) && client.getResponseCode() == 200;
+  return setAttributesFromClientResponse(flow_file, client) && client.getResponseCode() == 200;
 }
 
 void setFlowFileAsPayload(core::ProcessSession& session,
@@ -155,8 +155,8 @@ void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
   }
   auto flow_file = gsl::not_null(std::move(ff));
 
-  utils::HTTPClient client(getNetworkLocation() + getEndpoint(*context, flow_file), getSSLContextService(*context));
-  setHeaders(client);
+  utils::HTTPClient client;
+  initializeClient(client, getNetworkLocation().append(getEndpoint(*context, flow_file, client)), getSSLContextService(*context));
 
   utils::ByteInputCallBack payload_callback;
   utils::HTTPUploadCallback payload_callback_obj;

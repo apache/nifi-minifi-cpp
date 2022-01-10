@@ -49,8 +49,8 @@
 - [PutOPCProcessor](#putopcprocessor)
 - [PutS3Object](#puts3object)
 - [PutSFTP](#putsftp)
-- [PutSQL](#putsql)
 - [PutSplunkHTTP](#putsplunkhttp)
+- [PutSQL](#putsql)
 - [PutUDP](#putudp)
 - [QueryDatabaseTable](#querydatabasetable)
 - [QuerySplunkIndexingStatus](#querysplunkindexingstatus)
@@ -1477,25 +1477,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 |success|FlowFiles that are successfully sent will be routed to success|
 
 
-## PutSQL
-
-### Description
-
-Executes a SQL UPDATE or INSERT command. The content of an incoming FlowFile is expected to be the SQL command to execute. The SQL command may use the ? character to bind parameters. In this case, the parameters to use must exist as FlowFile attributes with the naming convention sql.args.N.type and sql.args.N.value, where N is a positive integer. The content of the FlowFile is expected to be in UTF-8 format.
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-|**DB Controller Service**|||Database Controller Service.|
-|SQL Statement|||The SQL statement to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of the incoming flow file is expected to contain a valid SQL statement, to be issued by the processor to the database.|
-### Relationships
-
-| Name | Description |
-| - | - |
-|success|After a successful SQL update operation, the incoming FlowFile sent here|
-
 ## PutSplunkHTTP
 
 ### Description
@@ -1541,8 +1522,27 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name     | Description                                                                            |
 | -------- | -------------------------------------------------------------------------------------- |
 | success  | FlowFiles that are sent successfully to the destination are sent to this relationship. |
-| failure  | FlowFiles that failed to send to the destination are sent to this relationship.        |
+| failure  | FlowFiles that failed to be sent to the destination are sent to this relationship.     |
 
+
+## PutSQL
+
+### Description
+
+Executes a SQL UPDATE or INSERT command. The content of an incoming FlowFile is expected to be the SQL command to execute. The SQL command may use the ? character to bind parameters. In this case, the parameters to use must exist as FlowFile attributes with the naming convention sql.args.N.type and sql.args.N.value, where N is a positive integer. The content of the FlowFile is expected to be in UTF-8 format.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**DB Controller Service**|||Database Controller Service.|
+|SQL Statement|||The SQL statement to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of the incoming flow file is expected to contain a valid SQL statement, to be issued by the processor to the database.|
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|After a successful SQL update operation, the incoming FlowFile sent here|
 
 
 ## PutUDP
