@@ -38,17 +38,14 @@ namespace processors {
 
 const core::Property ExecutePythonProcessor::ScriptFile(core::PropertyBuilder::createProperty("Script File")
     ->withDescription("Path to script file to execute. Only one of Script File or Script Body may be used")
-    ->withDefaultValue("")
     ->build());
 
 const core::Property ExecutePythonProcessor::ScriptBody(core::PropertyBuilder::createProperty("Script Body")
     ->withDescription("Script to execute. Only one of Script File or Script Body may be used")
-    ->withDefaultValue("")
     ->build());
 
 const core::Property ExecutePythonProcessor::ModuleDirectory(core::PropertyBuilder::createProperty("Module Directory")
   ->withDescription("Comma-separated list of paths to files and/or directories which contain modules required by the script")
-  ->withDefaultValue("")
   ->build());
 
 const core::Property ExecutePythonProcessor::ReloadOnScriptChange(core::PropertyBuilder::createProperty("Reload on Script Change")
@@ -79,9 +76,6 @@ void ExecutePythonProcessor::initialize() {
     return;
   }
 
-  getProperty(ModuleDirectory.getName(), module_directory_);
-  appendPathForImportModules();
-
   try {
     loadScript();
   } catch(const std::runtime_error&) {
@@ -96,6 +90,7 @@ void ExecutePythonProcessor::initialize() {
 }
 
 void ExecutePythonProcessor::initalizeThroughScriptEngine() {
+  appendPathForImportModules();
   python_script_engine_->eval(script_to_exec_);
   auto shared_this = shared_from_this();
   python_script_engine_->describe(shared_this);
@@ -132,11 +127,9 @@ void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContex
 }
 
 void ExecutePythonProcessor::appendPathForImportModules() {
-  // TODO(hunyadi): I have spent some time trying to figure out pybind11, but
-  // could not get this working yet. It is up to be implemented later
-  // https://issues.apache.org/jira/browse/MINIFICPP-1224
+  getProperty(ModuleDirectory.getName(), module_directory_);
   if (module_directory_.size()) {
-    logger_->log_error("Not supported property: Module Directory.");
+    python_script_engine_->setModuleDirectories(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory_, ","));
   }
 }
 
@@ -200,7 +193,7 @@ REGISTER_RESOURCE(
     "as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back.Scripts must define an onTrigger function which accepts NiFi Context"
     " and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state "
     "if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the "
-    "concurrent tasks to 1.");  // NOLINT
+    "concurrent tasks to 1.");
 
 } /* namespace processors */
 } /* namespace python */

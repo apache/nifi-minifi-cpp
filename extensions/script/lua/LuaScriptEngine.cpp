@@ -65,7 +65,15 @@ LuaScriptEngine::LuaScriptEngine()
 
 void LuaScriptEngine::eval(const std::string &script) {
   try {
-    lua_.script(script, sol::script_throw_on_error);
+    if (!module_directories_.empty()) {
+      auto appended_script = script;
+      for (const auto& module_dir : module_directories_) {
+        appended_script = "package.path = package.path .. \";" + module_dir + "/?.lua\"\n" + script;
+      }
+      lua_.script(appended_script, sol::script_throw_on_error);
+    } else {
+      lua_.script(script, sol::script_throw_on_error);
+    }
   } catch (std::exception& e) {
     throw minifi::script::ScriptException(e.what());
   }
@@ -73,7 +81,16 @@ void LuaScriptEngine::eval(const std::string &script) {
 
 void LuaScriptEngine::evalFile(const std::string &file_name) {
   try {
-    lua_.script_file(file_name, sol::script_throw_on_error);
+    if (!module_directories_.empty()) {
+      std::ifstream stream(file_name);
+      std::string script((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+      for (const auto& module_dir : module_directories_) {
+        script = "package.path = package.path .. \";" + module_dir + "/?.lua\"\n" + script;
+      }
+      lua_.script(script, sol::script_throw_on_error);
+    } else {
+      lua_.script_file(file_name, sol::script_throw_on_error);
+    }
   } catch (std::exception& e) {
     throw minifi::script::ScriptException(e.what());
   }

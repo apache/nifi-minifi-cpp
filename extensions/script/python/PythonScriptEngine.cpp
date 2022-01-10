@@ -39,9 +39,21 @@ PythonScriptEngine::PythonScriptEngine() {
   (*bindings_) = py::globals().attr("copy")();
 }
 
+void PythonScriptEngine::evaluateModuleImports() {
+  if (module_directories_.empty()) {
+    return;
+  }
+
+  py::eval<py::eval_statements>("import sys", *bindings_, *bindings_);
+  for (const auto& module_dir : module_directories_) {
+    py::eval<py::eval_statements>("sys.path.append('" + module_dir + "')", *bindings_, *bindings_);
+  }
+}
+
 void PythonScriptEngine::eval(const std::string &script) {
   py::gil_scoped_acquire gil { };
   try {
+    evaluateModuleImports();
     if (script[0] == '\n') {
       py::eval<py::eval_statements>(py::module::import("textwrap").attr("dedent")(script), *bindings_, *bindings_);
     } else {
@@ -55,6 +67,7 @@ void PythonScriptEngine::eval(const std::string &script) {
 void PythonScriptEngine::evalFile(const std::string &file_name) {
   py::gil_scoped_acquire gil { };
   try {
+    evaluateModuleImports();
     py::eval_file(file_name, *bindings_, *bindings_);
   } catch (const std::exception &e) {
     throw minifi::script::ScriptException(e.what());

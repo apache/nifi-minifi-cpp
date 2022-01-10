@@ -18,6 +18,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <utility>
 
 namespace org {
 namespace apache {
@@ -41,7 +43,14 @@ class ScriptEngine {
    */
   virtual void evalFile(const std::string &file_name) = 0;
 
+  void setModuleDirectories(std::vector<std::string>&& module_dirs) {
+    module_directories_ = std::move(module_dirs);
+  }
+
   virtual ~ScriptEngine() = default;
+
+ protected:
+  std::vector<std::string> module_directories_;
 };
 
 } /* namespace script */

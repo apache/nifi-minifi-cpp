@@ -26,6 +26,8 @@
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
+#include "utils/file/FileUtils.h"
+#include "utils/TestUtils.h"
 
 TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
   TestController testController;
@@ -252,8 +254,6 @@ TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") {
         session.transfer(flow_file, REL_SUCCESS)
   )");
 
-  plan->reset();
-
   testController.runSession(plan, false);
 
   REQUIRE(LogTestController::getInstance().contains("[info] created flow file:"));
@@ -296,13 +296,7 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
   auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
-  std::fstream file;
-  std::stringstream ss;
-  ss << getFileDir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
-  file << "tempFile";
-  file.close();
-  plan->reset();
+  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
   testController.runSession(plan, false);
   testController.runSession(plan, false);
@@ -341,19 +335,79 @@ TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextPr
   auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
 
-  std::fstream file;
-  std::stringstream ss;
-  ss << getFileDir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
-  file << "tempFile";
-  file.close();
-  plan->reset();
+  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
   testController.runSession(plan, false);
   testController.runSession(plan, false);
   testController.runSession(plan, false);
 
   REQUIRE(LogTestController::getInstance().contains("[info] got Script Engine property: python"));
+
+  logTestController.reset();
+}
+
+TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleDirectoryProperty]") {
+  using org::apache::nifi::minifi::utils::file::concat_path;
+  using org::apache::nifi::minifi::utils::file::get_executable_dir;
+
+  TestController testController;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<minifi::processors::ExecuteScript>();
+
+  const std::string SCRIPT_FILES_DIRECTORY = concat_path(get_executable_dir(), "test_python_scripts");
+
+  auto getScriptFullPath = [&SCRIPT_FILES_DIRECTORY](const std::string& script_file_name) {
+    return concat_path(SCRIPT_FILES_DIRECTORY, script_file_name);
+  };
+
+  auto plan = testController.createPlan();
+
+  auto getFile = plan->addProcessor("GetFile", "getFile");
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
+                                          core::Relationship("success", "description"),
+                                          true);
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), getScriptFullPath("foo_bar_processor.py"));
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath("foo_modules") + "," + getScriptFullPath("bar_modules"));
+
+  auto getFileDir = testController.createTempDirectory();
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+
+  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
+
+  testController.runSession(plan, true);
+
+  REQUIRE(LogTestController::getInstance().contains("foobar"));
+
+  logTestController.reset();
+}
+
+TEST_CASE("Python: Non existent script file should throw", "[executescriptPythonNonExistentScriptFile]") {
+  TestController testController;
+
+  LogTestController &logTestController = LogTestController::getInstance();
+  logTestController.setDebug<TestPlan>();
+  logTestController.setDebug<minifi::processors::ExecuteScript>();
+
+  auto plan = testController.createPlan();
+
+  auto getFile = plan->addProcessor("GetFile", "getFile");
+  auto executeScript = plan->addProcessor("ExecuteScript",
+                                          "executeScript",
+                                          core::Relationship("success", "description"),
+                                          true);
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/tmp/non-existent-file");
+
+  auto getFileDir = testController.createTempDirectory();
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+
+  utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan), minifi::Exception);
 
   logTestController.reset();
 }

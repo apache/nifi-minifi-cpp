@@ -30,6 +30,7 @@
 #include "ExecuteScript.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -99,6 +100,10 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
   if (!script_file_.empty() && !script_body_.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Only one of Script File or Script Body may be defined!");
   }
+
+  if (!script_file_.empty() && !std::filesystem::is_regular_file(std::filesystem::status(script_file_))) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Script File set is not a regular file or does not exist: " + script_file_);
+  }
 }
 
 void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
@@ -121,6 +126,10 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 
   if (engine == nullptr) {
     throw std::runtime_error("No script engine available");
+  }
+
+  if (module_directory_.size()) {
+    engine->setModuleDirectories(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory_, ","));
   }
 
   if (!script_body_.empty()) {
