@@ -27,10 +27,6 @@
 #include <PythonScriptEngine.h>
 #endif  // PYTHON_SUPPORT
 
-#ifdef LUA_SUPPORT
-#include <LuaScriptEngine.h>
-#endif  // LUA_SUPPORT
-
 #include "ExecuteScript.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
@@ -84,7 +80,7 @@ void ExecuteScript::initialize() {
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
 #ifdef LUA_SUPPORT
-  script_engine_q_ = std::make_unique<ScriptEngineQueue>(getMaxConcurrentTasks(), engine_factory_, logger_);
+  script_engine_q_ = std::make_unique<ScriptEngineQueue<lua::LuaScriptEngine>>(getMaxConcurrentTasks(), engine_factory_, logger_);
 #endif  // LUA_SUPPORT
 #ifdef PYTHON_SUPPORT
   python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
@@ -144,7 +140,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   } else if (script_engine_ == ScriptEngineOption::LUA) {
 #ifdef LUA_SUPPORT
     triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
-    script_engine_q_->returnScriptEngine(std::move(engine));
+    script_engine_q_->returnScriptEngine(std::move(std::static_pointer_cast<lua::LuaScriptEngine>(engine)));
 #else
     throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT

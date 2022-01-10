@@ -30,6 +30,10 @@
 #include "ScriptProcessContext.h"
 #include "utils/Enum.h"
 
+#ifdef LUA_SUPPORT
+#include "lua/LuaScriptEngine.h"
+#endif  // LUA_SUPPORT
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -40,12 +44,6 @@ namespace python {
 class PythonScriptEngine;
 }
 #endif  // PYTHON_SUPPORT
-
-#ifdef LUA_SUPPORT
-namespace lua {
-class LuaScriptEngine;
-}
-#endif  // LUA_SUPPORT
 
 namespace processors {
 
