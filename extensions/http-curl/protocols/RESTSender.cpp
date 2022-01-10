@@ -85,7 +85,7 @@ void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string
   client.initialize(type, url, generatedService);
 }
 
-const C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, std::optional<std::string> data) {
+C2Payload RESTSender::sendPayload(const std::string url, const Direction direction, const C2Payload &payload, std::optional<std::string> data) {
   if (url.empty()) {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }

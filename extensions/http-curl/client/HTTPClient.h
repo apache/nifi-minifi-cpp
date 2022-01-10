@@ -74,6 +74,10 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   HTTPClient(const std::string& name, const utils::Identifier& uuid);
 
+  // class uses raw pointers
+  HTTPClient(const HTTPClient&) = delete;
+  HTTPClient& operator=(const HTTPClient&) = delete;
+
   explicit HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
   ~HTTPClient();
