@@ -18,5 +18,5 @@ class ListS3(Processor):
                                          'Proxy Username': proxy_username,
                                          'Proxy Password': proxy_password,
                                      },
-                                     schedule={'scheduling period': '3 sec'},
+                                     schedule={'scheduling period': '2 sec'},
                                      auto_terminate=['success'])

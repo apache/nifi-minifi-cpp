@@ -1,5 +1,6 @@
 import time
 import functools
+import os
 
 
 def retry_check(max_tries=5, retry_interval=1):
@@ -36,3 +37,7 @@ def decode_escaped_str(str):
     if escaped:
         result += "\\"
     return result
+
+
+def is_temporary_output_file(filepath):
+    return filepath.split(os.path.sep)[-1][0] == '.'

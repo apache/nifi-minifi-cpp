@@ -3,6 +3,7 @@ import os
 
 from os import listdir
 from os.path import join
+from ..core.utils import is_temporary_output_file
 
 from .OutputValidator import OutputValidator
 
@@ -19,7 +20,7 @@ class FileOutputValidator(OutputValidator):
         files_of_matching_content_found = 0
         for file_name in listing:
             full_path = join(dir_path, file_name)
-            if not os.path.isfile(full_path):
+            if not os.path.isfile(full_path) or is_temporary_output_file(full_path):
                 continue
             with open(full_path, 'r') as out_file:
                 contents = out_file.read()
@@ -38,7 +39,7 @@ class FileOutputValidator(OutputValidator):
         files_found = 0
         for file_name in listing:
             full_path = join(dir_path, file_name)
-            if os.path.isfile(full_path):
+            if os.path.isfile(full_path) and not is_temporary_output_file(full_path):
                 logging.info("Found output file in %s: %s", dir_path, file_name)
                 files_found += 1
         return files_found

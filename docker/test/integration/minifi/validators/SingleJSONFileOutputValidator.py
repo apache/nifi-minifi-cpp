@@ -3,6 +3,7 @@ import os
 import json
 
 from .FileOutputValidator import FileOutputValidator
+from ..core.utils import is_temporary_output_file
 
 
 class SingleJSONFileOutputValidator(FileOutputValidator):
@@ -19,7 +20,7 @@ class SingleJSONFileOutputValidator(FileOutputValidator):
             return 0
         for file_name in listing:
             full_path = os.path.join(dir_path, file_name)
-            if not os.path.isfile(full_path):
+            if not os.path.isfile(full_path) or is_temporary_output_file(full_path):
                 continue
             with open(full_path, 'r') as out_file:
                 file_json_content = json.loads(out_file.read())
