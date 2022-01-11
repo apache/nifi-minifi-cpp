@@ -36,7 +36,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "sql.args.1.value" property set to "ApPlE"
     And the "sql.args.2.value" property of the UpdateAttribute processor is set to "BaNaNa"
-    And a ExecuteSQL processor with the "SQL select query" property set to "SELECT * FROM test_table WHERE "tExT_Col" = ? OR "tExT_Col" = ? ORDER BY int_col DESC"
+    And a ExecuteSQL processor with the "SQL select query" property set to "SELECT * FROM test_table2 WHERE "tExT_Col" = ? OR "tExT_Col" = ? ORDER BY int_col DESC"
     And the "Output Format" property of the ExecuteSQL processor is set to "JSON"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
