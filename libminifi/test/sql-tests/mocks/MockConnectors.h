@@ -130,7 +130,7 @@ class MockDB {
 class MockStatement : public Statement {
  public:
   explicit MockStatement(const std::string& query, const std::string& file_path)
-    : Statement(minifi::utils::StringUtils::toLower(query)), file_path_(file_path) {
+    : Statement(query), file_path_(file_path) {
   }
 
   std::unique_ptr<Rowset> execute(const std::vector<std::string>& args = {}) override;

@@ -68,7 +68,7 @@ void SQLRowsetProcessor::addRow(const Row& row, size_t rowCount) {
     std::vector<std::string> column_names;
     column_names.reserve(row.size());
     for (std::size_t i = 0; i != row.size(); ++i) {
-      column_names.push_back(utils::StringUtils::toLower(row.getColumnName(i)));
+      column_names.push_back(row.getColumnName(i));
     }
     for (const auto& subscriber : row_subscribers_) {
       subscriber.get().processColumnNames(column_names);
@@ -76,7 +76,7 @@ void SQLRowsetProcessor::addRow(const Row& row, size_t rowCount) {
   }
 
   for (std::size_t i = 0; i != row.size(); ++i) {
-    const auto& name = utils::StringUtils::toLower(row.getColumnName(i));
+    const auto& name = row.getColumnName(i);
 
     if (row.isNull(i)) {
       processColumn(name, "NULL");

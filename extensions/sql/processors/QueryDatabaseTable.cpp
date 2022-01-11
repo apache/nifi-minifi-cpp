@@ -35,7 +35,6 @@
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
 #include "data/MaxCollector.h"
-#include "data/Utils.h"
 #include "utils/StringUtils.h"
 
 namespace org {
@@ -125,12 +124,12 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   max_value_columns_ = [&] {
     std::string max_value_columns_str;
     context.getProperty(MaxValueColumnNames.getName(), max_value_columns_str);
-    return utils::inputStringToList(max_value_columns_str);
+    return utils::StringUtils::splitAndTrimRemovingEmpty(max_value_columns_str, ",");
   }();
   return_columns_ = [&] {
     std::string return_columns_str;
     context.getProperty(ColumnNames.getName(), return_columns_str);
-    return utils::inputStringToList(return_columns_str);
+    return utils::StringUtils::splitAndTrimRemovingEmpty(return_columns_str, ",");
   }();
   queried_columns_ = utils::StringUtils::join(", ", return_columns_);
   if (!queried_columns_.empty() && !max_value_columns_.empty()) {
@@ -240,7 +239,7 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
     if (!utils::StringUtils::startsWith(key, InitialMaxValueDynamicPropertyPrefix)) {
       throw minifi::Exception(PROCESSOR_EXCEPTION, "QueryDatabaseTable: Unsupported dynamic property \"" + key + "\"");
     }
-    const auto column_name = utils::StringUtils::toLower(key.substr(InitialMaxValueDynamicPropertyPrefix.length()));
+    const auto column_name = key.substr(InitialMaxValueDynamicPropertyPrefix.length());
     auto it = max_values_.find(column_name);
     if (it == max_values_.end()) {
       logger_->log_warn("Initial maximum value specified for column \"%s\", which is not specified as a Maximum-value Column. Ignoring.", column_name);
