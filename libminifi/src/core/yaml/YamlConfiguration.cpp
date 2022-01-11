@@ -351,7 +351,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
       auto timeout_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeout);
       if (timeout_value.has_value() && group) {
         logger_->log_debug("parseRemoteProcessGroupYaml: timeoutValue => [%" PRId64 "] ms", timeout_value->count());
-        group->setTimeOut(timeout_value->count());
+        group->setTimeout(timeout_value->count());
       }
     }
 
@@ -615,7 +615,7 @@ void YamlConfiguration::parsePortYaml(const YAML::Node& portNode, core::ProcessG
 
   processor = std::static_pointer_cast<core::Processor>(port);
   port->setDirection(direction);
-  port->setTimeOut(parent->getTimeOut());
+  port->setTimeout(parent->getTimeout());
   port->setTransmitting(true);
   processor->setYieldPeriodMsec(parent->getYieldPeriodMsec());
   processor->initialize();

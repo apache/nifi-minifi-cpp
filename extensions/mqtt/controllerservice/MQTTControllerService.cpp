@@ -39,7 +39,7 @@ core::Property MQTTControllerService::ClientID("Client ID", "MQTT client ID to u
 core::Property MQTTControllerService::UserName("Username", "Username to use when connecting to the broker", "");
 core::Property MQTTControllerService::Password("Password", "Password to use when connecting to the broker", "");
 core::Property MQTTControllerService::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
-core::Property MQTTControllerService::ConnectionTimeOut("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
+core::Property MQTTControllerService::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
 core::Property MQTTControllerService::QOS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", "MQTT_QOS_0");
 core::Property MQTTControllerService::Topic("Topic", "The topic to publish the message to", "");
 core::Property MQTTControllerService::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
@@ -86,7 +86,7 @@ void MQTTControllerService::initializeProperties() {
   supportedProperties.insert(Password);
 
   supportedProperties.insert(KeepLiveInterval);
-  supportedProperties.insert(ConnectionTimeOut);
+  supportedProperties.insert(ConnectionTimeout);
   supportedProperties.insert(Topic);
   supportedProperties.insert(QOS);
   supportedProperties.insert(SecurityProtocol);

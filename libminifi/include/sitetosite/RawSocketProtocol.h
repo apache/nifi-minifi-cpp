@@ -77,7 +77,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
     _batchCount = 0;
     _batchDuration = std::chrono::seconds(0);
     _batchSendNanos = std::chrono::seconds(5);
-    _timeOut = std::chrono::seconds(30);
+    _timeout = std::chrono::seconds(30);
     _supportedVersion[0] = 5;
     _supportedVersion[1] = 4;
     _supportedVersion[2] = 3;
@@ -107,19 +107,19 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   void setBatchDuration(std::chrono::milliseconds duration) {
     _batchDuration = duration;
   }
-  // setTimeOut
-  void setTimeOut(std::chrono::milliseconds time) {
-    _timeOut = time;
+  // setTimeout
+  void setTimeout(std::chrono::milliseconds time) {
+    _timeout = time;
     if (peer_)
-      peer_->setTimeOut(time);
+      peer_->setTimeout(time);
   }
 
   /**
    * Provides a reference to the time out
    * @returns timeout
    */
-  std::chrono::milliseconds getTimeOut() const {
-    return _timeOut;
+  std::chrono::milliseconds getTimeout() const {
+    return _timeout;
   }
 
   // getResourceName
@@ -182,7 +182,7 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   // Batch Duration in msec
   std::atomic<std::chrono::milliseconds> _batchDuration;
   // Timeout in msec
-  std::atomic<std::chrono::milliseconds> _timeOut;
+  std::atomic<std::chrono::milliseconds> _timeout;
 
   // commsIdentifier
   utils::Identifier _commsIdentifier;

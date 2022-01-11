@@ -262,12 +262,12 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
       yield_expiration_PortIdMap.erase(portId);
     }
   }
-  // setTimeOut
-  void setTimeOut(std::chrono::milliseconds time) {
+  // setTimeout
+  void setTimeout(std::chrono::milliseconds time) {
     timeout_ = time;
   }
-  // getTimeOut
-  std::chrono::milliseconds getTimeOut() {
+  // getTimeout
+  std::chrono::milliseconds getTimeout() {
     return timeout_;
   }
   void setHTTPProxy(const utils::HTTPProxy &proxy) {

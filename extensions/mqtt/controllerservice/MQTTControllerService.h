@@ -94,7 +94,7 @@ class MQTTControllerService : public core::controller::ControllerService {
   static core::Property Password;
   static core::Property CleanSession;
   static core::Property KeepLiveInterval;
-  static core::Property ConnectionTimeOut;
+  static core::Property ConnectionTimeout;
   static core::Property Topic;
   static core::Property QOS;
   static core::Property SecurityProtocol;
@@ -290,7 +290,7 @@ class MQTTControllerService : public core::controller::ControllerService {
   std::string uri_;
   std::string topic_;
   std::chrono::milliseconds keepAliveInterval_{0};
-  std::chrono::milliseconds connectionTimeOut_{0};
+  std::chrono::milliseconds connectionTimeout_{0};
   int64_t qos_;
   std::string clientID_;
   std::string userName_;

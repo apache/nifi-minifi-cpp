@@ -128,7 +128,7 @@ class RemoteProcessorGroupPort : public core::Processor {
       this->setTriggerWhenEmpty(true);
   }
   // Set Timeout
-  void setTimeOut(uint64_t timeout) {
+  void setTimeout(uint64_t timeout) {
     timeout_ = timeout;
   }
   // SetTransmitting
