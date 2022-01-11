@@ -1,9 +1,9 @@
 name: "MiNiFi-CPP CI"
 on: [push, pull_request, workflow_dispatch]
 jobs:
-  macos_xcode_12_0:
-    name: "macos-xcode12.0"
-    runs-on: macos-10.15
+  macos_xcode:
+    name: "macos-xcode"
+    runs-on: macos-11
     timeout-minutes: 90
     env:
       CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
@@ -15,10 +15,10 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.CCACHE_DIR }}
-          key: macos-xcode12.0-ccache-${{github.ref}}-${{github.sha}}
+          key: macos-xcode-ccache-${{github.ref}}-${{github.sha}}
           restore-keys: |
-            macos-xcode12.0-ccache-${{github.ref}}-
-            macos-xcode12.0-ccache-refs/heads/main-
+            macos-xcode-ccache-${{github.ref}}-
+            macos-xcode-ccache-refs/heads/main-
       - id: install_dependencies
         run: |
           brew update
@@ -28,7 +28,8 @@ jobs:
         run: |
           echo "PATH=/usr/lib/ccache:/usr/local/opt/ccache/bin:/usr/local/opt/ccache/libexec:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
-          sudo xcode-select -switch /Applications/Xcode_12.app
+          # https://github.com/actions/virtual-environments/blob/main/images/macos/macos-11-Readme.md#xcode
+          sudo xcode-select -switch /Applications/Xcode_13.2.1.app
       - name: build
         run: |
           export PATH="/usr/local/opt/flex/bin:$PATH"
