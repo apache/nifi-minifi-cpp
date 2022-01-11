@@ -24,7 +24,8 @@
 #include "../TestBase.h"
 
 using namespace std::literals::chrono_literals;
-using namespace std::chrono;
+using steady_clock = std::chrono::steady_clock;
+using milliseconds = std::chrono::milliseconds;
 
 steady_clock::duration busySleep(const milliseconds duration) {
   auto start_time = steady_clock::now();

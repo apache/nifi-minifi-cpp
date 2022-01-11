@@ -63,7 +63,7 @@ class AbstractMQTTProcessor : public core::Processor {
       MQTTClient_unsubscribe(client_, topic_.c_str());
     }
     if (client_ && MQTTClient_isConnected(client_)) {
-      MQTTClient_disconnect(client_, std::chrono::milliseconds{connectionTimeOut_}.count());
+      MQTTClient_disconnect(client_, std::chrono::milliseconds{connectionTimeout_}.count());
     }
     if (client_)
       MQTTClient_destroy(&client_);
@@ -77,7 +77,7 @@ class AbstractMQTTProcessor : public core::Processor {
   static core::Property PassWord;
   static core::Property CleanSession;
   static core::Property KeepLiveInterval;
-  static core::Property ConnectionTimeOut;
+  static core::Property ConnectionTimeout;
   static core::Property Topic;
   static core::Property QOS;
   static core::Property SecurityProtocol;
@@ -129,7 +129,7 @@ class AbstractMQTTProcessor : public core::Processor {
   std::string uri_;
   std::string topic_;
   std::chrono::milliseconds keepAliveInterval_ = std::chrono::seconds(60);
-  std::chrono::milliseconds connectionTimeOut_ = std::chrono::seconds(30);
+  std::chrono::milliseconds connectionTimeout_ = std::chrono::seconds(30);
   int64_t qos_;
   bool cleanSession_;
   std::string clientID_;

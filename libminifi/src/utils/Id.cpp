@@ -42,7 +42,6 @@
 #endif
 
 #include "utils/StringUtils.h"
-#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {

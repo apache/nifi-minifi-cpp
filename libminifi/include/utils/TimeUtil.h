@@ -253,10 +253,25 @@ std::optional<TargetDuration> cast_to_matching_unit(std::string& unit, const int
 }
 
 inline bool get_unit_and_value(const std::string& input, std::string& unit, int64_t& value) {
-  std::stringstream input_stream(input);
-  input_stream >> value >> unit;
+  const char* begin = input.c_str();
+  char *end;
+  errno = 0;
+  value = std::strtoll(begin, &end, 0);
+  if (end == begin || errno == ERANGE) {
+    return false;
+  }
+
+  if (end[0] == '\0') {
+    return false;
+  }
+
+  while (*end == ' ') {
+    // Skip the spaces
+    end++;
+  }
+  unit = std::string(end);
   std::transform(unit.begin(), unit.end(), unit.begin(), ::tolower);
-  return !input_stream.fail();
+  return true;
 }
 
 }  // namespace details
