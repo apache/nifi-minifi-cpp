@@ -63,7 +63,7 @@ class AbstractMQTTProcessor : public core::Processor {
       MQTTClient_unsubscribe(client_, topic_.c_str());
     }
     if (client_ && MQTTClient_isConnected(client_)) {
-      MQTTClient_disconnect(client_, std::chrono::duration_cast<std::chrono::milliseconds>(connectionTimeOut_).count());
+      MQTTClient_disconnect(client_, std::chrono::milliseconds{connectionTimeOut_}.count());
     }
     if (client_)
       MQTTClient_destroy(&client_);
