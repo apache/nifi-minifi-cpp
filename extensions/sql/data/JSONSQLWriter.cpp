@@ -21,7 +21,6 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/prettywriter.h"
 #include "Exception.h"
-#include "Utils.h"
 
 namespace org {
 namespace apache {

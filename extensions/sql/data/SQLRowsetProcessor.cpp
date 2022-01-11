@@ -19,7 +19,6 @@
 #include "SQLRowsetProcessor.h"
 
 #include "Exception.h"
-#include "Utils.h"
 #include "utils/StringUtils.h"
 
 namespace org {
