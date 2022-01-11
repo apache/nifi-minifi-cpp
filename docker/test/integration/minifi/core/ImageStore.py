@@ -117,6 +117,9 @@ class ImageStore:
                     echo "    INSERT INTO test_table (int_col, text_col) VALUES (1, 'apple');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table (int_col, text_col) VALUES (2, 'banana');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "    INSERT INTO test_table (int_col, text_col) VALUES (3, 'pear');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    CREATE TABLE test_table2 (int_col INTEGER, "tExT_Col" TEXT);" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    INSERT INTO test_table2 (int_col, "tExT_Col") VALUES (5, 'ApPlE');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
+                    echo "    INSERT INTO test_table2 (int_col, "tExT_Col") VALUES (6, 'BaNaNa');" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "EOSQL" >> /docker-entrypoint-initdb.d/init-user-db.sh
                 """.format(base_image='postgres:13.2'))
         return self.__build_image(dockerfile)
