@@ -30,7 +30,6 @@ endif()
 
 if (ENABLE_LUA_SCRIPTING)
 	file(GLOB EXECUTESCRIPT_LUA_TESTS "TestExecuteScriptProcessorWithLuaScript.cpp" "LuaScriptEngineTests.cpp")
-	include_directories(${LUA_INCLUDE_DIR})
 endif()
 
 SET(EXTENSIONS_TEST_COUNT 0)

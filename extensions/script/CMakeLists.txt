@@ -50,7 +50,7 @@ if (ENABLE_LUA_SCRIPTING)
     find_package(Lua 5.1 REQUIRED)
 
     target_include_directories(minifi-script-extensions PRIVATE lua)
-    target_include_directories(minifi-script-extensions PRIVATE ${LUA_INCLUDE_DIR})
+    target_include_directories(minifi-script-extensions PUBLIC ${LUA_INCLUDE_DIR})
     add_definitions(-DLUA_SUPPORT)
 
     file(GLOB LUA_SOURCES  "lua/*.cpp")
