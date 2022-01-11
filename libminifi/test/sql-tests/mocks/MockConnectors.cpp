@@ -171,11 +171,11 @@ std::unique_ptr<MockRowset> MockRowset::select(const std::vector<std::string>& c
 }
 
 std::unique_ptr<Rowset> MockDB::execute(const std::string& query, const std::vector<std::string>& args) {
-  if (minifi::utils::StringUtils::startsWith(query, "create table")) {
+  if (minifi::utils::StringUtils::startsWith(query, "create table", false)) {
     createTable(query);
-  } else if (minifi::utils::StringUtils::startsWith(query, "insert into")) {
+  } else if (minifi::utils::StringUtils::startsWith(query, "insert into", false)) {
     insertInto(query, args);
-  } else if (minifi::utils::StringUtils::startsWith(query, "select")) {
+  } else if (minifi::utils::StringUtils::startsWith(query, "select", false)) {
     return select(query, args);
   } else {
     throw std::runtime_error("Unknown query type");
@@ -186,7 +186,7 @@ std::unique_ptr<Rowset> MockDB::execute(const std::string& query, const std::vec
 
 void MockDB::createTable(const std::string& query) {
   std::smatch match;
-  std::regex expr("create table (\\w+)\\s*\\((.*)\\);");
+  std::regex expr("create table (\\w+)\\s*\\((.*)\\);", std::regex_constants::icase);
   std::regex_search(query, match, expr);
   std::string table_name = match[1];
   auto columns_with_type = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[2], ",");
@@ -208,7 +208,7 @@ void MockDB::insertInto(const std::string& query, const std::vector<std::string>
   }
 
   std::smatch match;
-  std::regex expr("insert into (\\w+)\\s*(\\((.*)\\))*\\s*values\\s*\\((.+)\\)");
+  std::regex expr("insert into (\\w+)\\s*(\\((.*)\\))*\\s*values\\s*\\((.+)\\)", std::regex_constants::icase);
   std::regex_search(replaced_query, match, expr);
   std::string table_name = match[1];
   std::vector<std::string> values = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[4], ",");
@@ -242,7 +242,7 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   }
 
   std::smatch match;
-  std::regex expr("select\\s+(.+)\\s+from\\s+(\\w+)\\s*(where ((.+(?= order by))|.+$))*\\s*(order by (.+))*");
+  std::regex expr("select\\s+(.+)\\s+from\\s+(\\w+)\\s*(where ((.+(?= order by))|.+$))*\\s*(order by (.+))*", std::regex_constants::icase);
   std::regex_search(replaced_query, match, expr);
   auto cols = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[1], ",");
   if (cols[0] == "*") {
@@ -257,7 +257,7 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   if (!order.empty()) {
     auto order_col_and_sort = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(order, " ");
     order_col = order_col_and_sort[0];
-    descending = order_col_and_sort[1] == "desc";
+    descending = minifi::utils::StringUtils::equalsIgnoreCase(order_col_and_sort[1], "desc");
   }
   return tables_.at(table_name).select(cols, condition, order_col, !descending);
 }
@@ -267,7 +267,13 @@ std::function<bool(const MockRow&)> MockDB::parseWhereCondition(const std::strin
     return [](const MockRow&){ return true; };
   }
 
-  auto condition_strings = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(full_condition_str, "and");
+  std::vector<std::string> condition_strings;
+  // TODO(adebreceni): let StringUtils::split* functions take either multiple delimiters or specify case sensitivity
+  for (auto&& condition : minifi::utils::StringUtils::splitAndTrimRemovingEmpty(full_condition_str, "and")) {
+    for (auto&& subcondition : minifi::utils::StringUtils::splitAndTrimRemovingEmpty(condition, "AND")) {
+      condition_strings.push_back(std::move(subcondition));
+    }
+  }
   std::vector<std::function<bool(const MockRow&)>> condition_parts;
   for (const auto& condition_str : condition_strings) {
     if (condition_str.find(">") != std::string::npos) {
@@ -367,9 +373,9 @@ void MockDB::storeDb() {
 }
 
 DataType MockDB::stringToDataType(const std::string& type_str) {
-  if (type_str == "integer") return DataType::INTEGER;
-  if (type_str == "text") return DataType::STRING;
-  if (type_str == "real") return DataType::DOUBLE;
+  if (utils::StringUtils::equalsIgnoreCase(type_str, "integer")) return DataType::INTEGER;
+  if (utils::StringUtils::equalsIgnoreCase(type_str, "text")) return DataType::STRING;
+  if (utils::StringUtils::equalsIgnoreCase(type_str, "real")) return DataType::DOUBLE;
   throw std::runtime_error("Unimplemented data type");
 }
 

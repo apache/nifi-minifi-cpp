@@ -343,9 +343,9 @@ def step_impl(context, topic_name):
 
 
 # SQL
-@given("an ODBCService is setup up for {processor_name} with the name \"{service_name}\" and connection string \"{connection_string}\"")
-def step_impl(context, processor_name, service_name, connection_string):
-    odbc_service = ODBCService(name=service_name, connection_string=connection_string)
+@given("an ODBCService is setup up for {processor_name} with the name \"{service_name}\"")
+def step_impl(context, processor_name, service_name):
+    odbc_service = ODBCService(name=service_name, connection_string="Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;")
     processor = context.test.get_node_by_name(processor_name)
     processor.controller_services.append(odbc_service)
     processor.set_property("DB Controller Service", odbc_service.name)

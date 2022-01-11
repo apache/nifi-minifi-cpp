@@ -35,7 +35,6 @@
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
 #include "data/MaxCollector.h"
-#include "data/Utils.h"
 #include "utils/StringUtils.h"
 
 namespace org {
@@ -122,20 +121,26 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
 
   context.getProperty(TableName.getName(), table_name_);
   context.getProperty(WhereClause.getName(), extra_where_clause_);
-  max_value_columns_ = [&] {
-    std::string max_value_columns_str;
-    context.getProperty(MaxValueColumnNames.getName(), max_value_columns_str);
-    return utils::inputStringToList(max_value_columns_str);
-  }();
-  return_columns_ = [&] {
-    std::string return_columns_str;
-    context.getProperty(ColumnNames.getName(), return_columns_str);
-    return utils::inputStringToList(return_columns_str);
-  }();
-  queried_columns_ = utils::StringUtils::join(", ", return_columns_);
-  if (!queried_columns_.empty() && !max_value_columns_.empty()) {
-    // columns will be explicitly enumerated, we need to add the max value columns
-    queried_columns_ = queried_columns_ + ", " + utils::StringUtils::join(", ", max_value_columns_);
+
+  return_columns_.clear();
+  queried_columns_.clear();
+  for (auto&& raw_col : utils::StringUtils::splitAndTrimRemovingEmpty(context.getProperty(ColumnNames).value_or(""), ",")) {
+    if (!queried_columns_.empty()) {
+      queried_columns_ += ", ";
+    }
+    queried_columns_ += raw_col;
+    return_columns_.insert(sql::SQLColumnIdentifier(std::move(raw_col)));
+  }
+
+  max_value_columns_.clear();
+  for (auto&& raw_col : utils::StringUtils::splitAndTrimRemovingEmpty(context.getProperty(MaxValueColumnNames).value_or(""), ",")) {
+    sql::SQLColumnIdentifier col_id(raw_col);
+    if (!queried_columns_.empty() && return_columns_.count(col_id) == 0) {
+      // columns will be explicitly enumerated, we need to add the max value columns as it is not yet queried
+      queried_columns_ += ", ";
+      queried_columns_ += raw_col;
+    }
+    max_value_columns_.push_back(std::move(col_id));
   }
 
   initializeMaxValues(context);
@@ -150,11 +155,10 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
 
   auto rowset = statement->execute();
 
-  std::unordered_map<std::string, std::string> new_max_values = max_values_;
+  std::unordered_map<sql::SQLColumnIdentifier, std::string> new_max_values = max_values_;
   sql::MaxCollector maxCollector{selectQuery, new_max_values};
   auto column_filter = [&] (const std::string& column_name) {
-    return return_columns_.empty()
-      || std::find(return_columns_.begin(), return_columns_.end(), column_name) != return_columns_.end();
+    return return_columns_.empty() || return_columns_.count(sql::SQLColumnIdentifier(column_name)) != 0;
   };
   sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty, column_filter};
   FlowFileGenerator flow_file_creator{session, json_writer};
@@ -171,7 +175,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
   for (auto& new_file : flow_file_creator.getFlowFiles()) {
     session.transfer(new_file, Success);
     for (const auto& max_column : max_value_columns_) {
-      new_file->addAttribute("maxvalue." + max_column, new_max_values[max_column]);
+      new_file->addAttribute("maxvalue." + max_column.str(), new_max_values[max_column]);
     }
   }
 
@@ -182,7 +186,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
 }
 
 bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<std::string, std::string> &state) {
-  std::unordered_map<std::string, std::string> new_max_values;
+  std::unordered_map<sql::SQLColumnIdentifier, std::string> new_max_values;
   if (state.count(TABLENAME_KEY) == 0) {
     logger_->log_info("State does not specify the table name.");
     return false;
@@ -193,19 +197,19 @@ bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<s
   }
   for (auto& elem : state) {
     if (utils::StringUtils::startsWith(elem.first, MAXVALUE_KEY_PREFIX)) {
-      std::string column_name = elem.first.substr(MAXVALUE_KEY_PREFIX.length());
+      sql::SQLColumnIdentifier column_name(elem.first.substr(MAXVALUE_KEY_PREFIX.length()));
       // add only those columns that we care about
       if (std::find(max_value_columns_.begin(), max_value_columns_.end(), column_name) != max_value_columns_.end()) {
         new_max_values.emplace(column_name, elem.second);
       } else {
-        logger_->log_info("State contains obsolete maximum-value column \"%s\", resetting state.", column_name);
+        logger_->log_info("State contains obsolete maximum-value column \"%s\", resetting state.", column_name.str());
         return false;
       }
     }
   }
   for (auto& column : max_value_columns_) {
     if (new_max_values.find(column) == new_max_values.end()) {
-      logger_->log_info("New maximum-value column \"%s\" specified, resetting state.", column);
+      logger_->log_info("New maximum-value column \"%s\" specified, resetting state.", column.str());
       return false;
     }
   }
@@ -240,10 +244,10 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
     if (!utils::StringUtils::startsWith(key, InitialMaxValueDynamicPropertyPrefix)) {
       throw minifi::Exception(PROCESSOR_EXCEPTION, "QueryDatabaseTable: Unsupported dynamic property \"" + key + "\"");
     }
-    const auto column_name = utils::StringUtils::toLower(key.substr(InitialMaxValueDynamicPropertyPrefix.length()));
+    sql::SQLColumnIdentifier column_name(key.substr(InitialMaxValueDynamicPropertyPrefix.length()));
     auto it = max_values_.find(column_name);
     if (it == max_values_.end()) {
-      logger_->log_warn("Initial maximum value specified for column \"%s\", which is not specified as a Maximum-value Column. Ignoring.", column_name);
+      logger_->log_warn("Initial maximum value specified for column \"%s\", which is not specified as a Maximum-value Column. Ignoring.", column_name.str());
       continue;
     }
     // do not overwrite existing max value
@@ -253,7 +257,7 @@ void QueryDatabaseTable::loadMaxValuesFromDynamicProperties(core::ProcessContext
     std::string value;
     if (context.getDynamicProperty(key, value) && !value.empty()) {
       it->second = value;
-      logger_->log_info("Setting initial maximum value of %s to %s", column_name, value);
+      logger_->log_info("Setting initial maximum value of %s to %s", column_name.str(), value);
     }
   }
 }
@@ -274,7 +278,7 @@ std::string QueryDatabaseTable::buildSelectQuery() {
     // Logic to differentiate ">" vs ">=" based on index is copied from:
     // https://github.com/apache/nifi/blob/master/nifi-nar-bundles/nifi-standard-bundle/nifi-standard-processors/src/main/java/org/apache/nifi/processors/standard/AbstractQueryDatabaseTable.java
     // (under comment "Add a condition for the WHERE clause"). And implementation explanation: https://issues.apache.org/jira/browse/NIFI-2712.
-    where_clauses.push_back(utils::StringUtils::join_pack(column_name, index == 0 ? " > " : " >= ", max_value));
+    where_clauses.push_back(utils::StringUtils::join_pack(column_name.str(), index == 0 ? " > " : " >= ", max_value));
   }
 
   if (!extra_where_clause_.empty()) {
@@ -292,7 +296,7 @@ bool QueryDatabaseTable::saveState() {
   std::unordered_map<std::string, std::string> state_map;
   state_map.emplace(TABLENAME_KEY, table_name_);
   for (const auto& item : max_values_) {
-    state_map.emplace(MAXVALUE_KEY_PREFIX + item.first, item.second);
+    state_map.emplace(MAXVALUE_KEY_PREFIX + item.first.str(), item.second);
   }
   return state_manager_->set(state_map);
 }

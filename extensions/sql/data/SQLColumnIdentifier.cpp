@@ -16,30 +16,26 @@
  * limitations under the License.
  */
 
-#include "Utils.h"
+#include "SQLColumnIdentifier.h"
 
-#include <vector>
-#include <string>
+namespace org::apache::nifi::minifi::sql {
 
-#include "utils/StringUtils.h"
+SQLColumnIdentifier::SQLColumnIdentifier(std::string str) {
+  // foo, "foo", [foo], `foo` are identifiers in different servers
+  value_ = [&] () {
+    if (str.length() < 2) {
+      return str;
+    }
+    if ((str.front() == '"' && str.back() == '"')
+        || (str.front() == '[' && str.back() == ']')
+        || (str.front() == '`' && str.back() == '`')) {
+      return str.substr(1, str.length() - 2);
+    }
+    return str;
+  }();
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-
-std::vector<std::string> inputStringToList(const std::string& str) {
-  std::vector<std::string> fragments = StringUtils::splitAndTrimRemovingEmpty(str, ",");
-  for (auto& item : fragments) {
-    item = StringUtils::toLower(item);
-  }
-
-  return fragments;
+  original_value_ = std::move(str);
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql
+
