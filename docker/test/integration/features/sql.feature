@@ -32,7 +32,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     When all instances start up
     Then at least one flowfile with the content '[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
 
-  Scenario: A MiNiFi instance can query to test table with ExecuteSQL processor
+  Scenario: A MiNiFi instance can query to test table containing mixed case column names with ExecuteSQL processor
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "sql.args.1.value" property set to "ApPlE"
     And the "sql.args.2.value" property of the UpdateAttribute processor is set to "BaNaNa"
@@ -59,7 +59,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     When all instances start up
     Then at least one flowfile with the content '[{"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
 
-  Scenario: A MiNiFi instance can query to test table with QueryDatabaseTable processor
+  Scenario: A MiNiFi instance can query to test table containing mixed case column names with QueryDatabaseTable processor
     Given a QueryDatabaseTable processor with the "Table Name" property set to "test_table2"
     And the "Columns to Return" property of the QueryDatabaseTable processor is set to ""tExT_Col""
     And the "Where Clause" property of the QueryDatabaseTable processor is set to "int_col = 5"
