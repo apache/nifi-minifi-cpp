@@ -19,8 +19,8 @@
 #include "QuerySplunkIndexingStatus.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
-#include <vector>
 
 #include "SplunkAttributes.h"
 
@@ -95,7 +95,7 @@ struct FlowFileWithIndexStatus {
 
 std::unordered_map<uint64_t, FlowFileWithIndexStatus> getUndeterminedFlowFiles(core::ProcessSession& session, size_t batch_size) {
   std::unordered_map<uint64_t, FlowFileWithIndexStatus> undetermined_flow_files;
-  std::vector<uint64_t> duplicate_ack_ids;
+  std::unordered_set<uint64_t> duplicate_ack_ids;
   for (size_t i = 0; i < batch_size; ++i) {
     auto flow = session.get();
     if (flow == nullptr)
@@ -107,7 +107,7 @@ std::unordered_map<uint64_t, FlowFileWithIndexStatus> getUndeterminedFlowFiles(c
     }
     uint64_t splunk_ack_id = std::stoull(splunk_ack_id_str.value());
     if (undetermined_flow_files.contains(splunk_ack_id)) {
-      duplicate_ack_ids.push_back(splunk_ack_id);
+      duplicate_ack_ids.insert(splunk_ack_id);
       session.transfer(flow, QuerySplunkIndexingStatus::Failure);
       continue;
     }

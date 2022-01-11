@@ -88,3 +88,9 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
 
   LogTestController::getInstance().reset();
 }
+
+TEST_CASE("HTTPClient escape test") {
+  utils::HTTPClient client;
+  CHECK(client.escape("Hello Günter") == "Hello%20G%C3%BCnter");
+  CHECK(client.escape("шеллы") == "%D1%88%D0%B5%D0%BB%D0%BB%D1%8B");
+}

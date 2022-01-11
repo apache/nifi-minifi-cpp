@@ -110,7 +110,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   SECTION("Multiple inputs with same id") {
     plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_ACK_ID, std::to_string(MockSplunkHEC::indexed_events[0]), true);
     plan->setProperty(update_attribute, org::apache::nifi::minifi::extensions::splunk::SPLUNK_RESPONSE_TIME, response_timestamp, true);
-    for (size_t i = 0; i < 2; ++i) {
+    for (size_t i = 0; i < 4; ++i) {
       plan->runProcessor(write_to_flow_file);
       plan->runProcessor(update_attribute);
     }
@@ -119,7 +119,7 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
     plan->runProcessor(read_from_undetermined);
     plan->runProcessor(read_from_unacknowledged);
     plan->runProcessor(read_from_acknowledged);
-    CHECK(read_from_failure->numberOfFlowFilesRead() == 2);
+    CHECK(read_from_failure->numberOfFlowFilesRead() == 4);
     CHECK(read_from_undetermined->numberOfFlowFilesRead() == 0);
     CHECK(read_from_unacknowledged->numberOfFlowFilesRead() == 0);
     CHECK(read_from_acknowledged->numberOfFlowFilesRead() == 0);
