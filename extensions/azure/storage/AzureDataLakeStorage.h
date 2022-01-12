@@ -52,6 +52,24 @@ class AzureDataLakeStorage {
   std::optional<uint64_t> fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream);
 
  private:
+  class AzureDataLakeStorageInputStream : public io::InputStream {
+   public:
+    AzureDataLakeStorageInputStream(Azure::Storage::Files::DataLake::Models::DownloadFileResult&& result)
+      : result_(std::move(result)) {
+    }
+
+    size_t size() const override {
+      return result_.Body->Length();
+    }
+
+    size_t read(uint8_t *value, size_t len) override {
+      return result_.Body->Read(value, len);
+    }
+
+   private:
+    Azure::Storage::Files::DataLake::Models::DownloadFileResult result_;
+  };
+
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};
   std::unique_ptr<DataLakeStorageClient> data_lake_storage_client_;
 };

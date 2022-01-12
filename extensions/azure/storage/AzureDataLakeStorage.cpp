@@ -21,6 +21,7 @@
 #include "AzureDataLakeStorage.h"
 
 #include "AzureDataLakeStorageClient.h"
+#include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -63,23 +64,8 @@ bool AzureDataLakeStorage::deleteFile(const DeleteAzureDataLakeStorageParameters
 
 std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream) {
   try {
-    auto fetch_res = data_lake_storage_client_->fetchFile(params);
-
-    std::array<uint8_t, 4096> buffer;
-    size_t write_size = 0;
-    if (fetch_res.FileSize < 0) return 0;
-    while (write_size < gsl::narrow<uint64_t>(fetch_res.FileSize)) {
-      const auto next_write_size = (std::min)(gsl::narrow<size_t>(fetch_res.FileSize) - write_size, buffer.size());
-      if (!fetch_res.Body->Read(buffer.data(), gsl::narrow<std::streamsize>(next_write_size))) {
-        return -1;
-      }
-      const auto ret = stream.write(buffer.data(), next_write_size);
-      if (io::isError(ret)) {
-        return -1;
-      }
-      write_size += next_write_size;
-    }
-    return gsl::narrow<int64_t>(write_size);
+    AzureDataLakeStorageInputStream input(data_lake_storage_client_->fetchFile(params));
+    return internal::pipe(&input, &stream);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
     return std::nullopt;
