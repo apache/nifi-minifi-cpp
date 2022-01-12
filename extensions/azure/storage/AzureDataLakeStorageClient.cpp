@@ -89,7 +89,7 @@ bool AzureDataLakeStorageClient::deleteFile(const DeleteAzureDataLakeStoragePara
   return result.Value.Deleted;
 }
 
-Azure::Storage::Files::DataLake::Models::DownloadFileResult AzureDataLakeStorageClient::fetchFile(const FetchAzureDataLakeStorageParameters& params) {
+std::unique_ptr<io::InputStream> AzureDataLakeStorageClient::fetchFile(const FetchAzureDataLakeStorageParameters& params) {
   auto file_client = getFileClient(params);
   Azure::Storage::Files::DataLake::DownloadFileOptions options;
   if (params.range_start || params.range_length) {
@@ -104,7 +104,7 @@ Azure::Storage::Files::DataLake::Models::DownloadFileResult AzureDataLakeStorage
     options.Range = range;
   }
   auto result = file_client.Download(options);
-  return std::move(result.Value);
+  return std::make_unique<AzureDataLakeStorageInputStream>(std::move(result.Value));
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

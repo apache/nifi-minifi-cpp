@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "storage/DataLakeStorageClient.h"
-#include "azure/core/io/body_stream.hpp"
+#include "io/BufferStream.h"
 
 class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::storage::DataLakeStorageClient {
  public:
@@ -60,27 +60,25 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return delete_result_;
   }
 
-  Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters& params) override {
+  std::unique_ptr<org::apache::nifi::minifi::io::InputStream> fetchFile(const org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters& params) override {
     if (fetch_fails_) {
       throw std::runtime_error("error");
     }
 
     fetch_params_ = params;
-    Azure::Storage::Files::DataLake::Models::DownloadFileResult result;
     buffer_.clear();
     uint64_t range_start = 0;
-    result.FileSize = FETCHED_DATA.size();
+    uint64_t size = FETCHED_DATA.size();
     if (params.range_start) {
       range_start = *params.range_start;
     }
 
     if (params.range_length) {
-      result.FileSize = *params.range_length;
+      size = *params.range_length;
     }
 
-    buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + result.FileSize);
-    result.Body = std::make_unique<Azure::Core::IO::MemoryBodyStream>(buffer_);
-    return result;
+    buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + size);
+    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_.data(), buffer_.size());
   }
 
   void setFileCreation(bool create_file) {

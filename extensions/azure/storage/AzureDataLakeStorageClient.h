@@ -21,6 +21,7 @@
 
 #include <string>
 #include <memory>
+#include <utility>
 
 #include <azure/storage/files/datalake.hpp>
 
@@ -61,9 +62,27 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
    * @param params Parameters required for connecting and file access on Azure
    * @return Download result of Azure Data Lake storage client
    */
-  Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const FetchAzureDataLakeStorageParameters& params) override;
+  std::unique_ptr<io::InputStream> fetchFile(const FetchAzureDataLakeStorageParameters& params) override;
 
  private:
+  class AzureDataLakeStorageInputStream : public io::InputStream {
+   public:
+    explicit AzureDataLakeStorageInputStream(Azure::Storage::Files::DataLake::Models::DownloadFileResult&& result)
+      : result_(std::move(result)) {
+    }
+
+    size_t size() const override {
+      return result_.Body->Length();
+    }
+
+    size_t read(uint8_t *value, size_t len) override {
+      return result_.Body->Read(value, len);
+    }
+
+   private:
+    Azure::Storage::Files::DataLake::Models::DownloadFileResult result_;
+  };
+
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries);
   Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageParameters& params);
 

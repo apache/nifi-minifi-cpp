@@ -21,11 +21,12 @@
 
 #include <string>
 #include <optional>
+#include <memory>
 
 #include "AzureStorageCredentials.h"
 
 #include "utils/gsl.h"
-#include "azure/storage/files/datalake/datalake_responses.hpp"
+#include "io/InputStream.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -53,7 +54,7 @@ class DataLakeStorageClient {
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual bool deleteFile(const DeleteAzureDataLakeStorageParameters& params) = 0;
-  virtual Azure::Storage::Files::DataLake::Models::DownloadFileResult fetchFile(const FetchAzureDataLakeStorageParameters& params) = 0;
+  virtual std::unique_ptr<io::InputStream> fetchFile(const FetchAzureDataLakeStorageParameters& params) = 0;
   virtual ~DataLakeStorageClient() = default;
 };
 
