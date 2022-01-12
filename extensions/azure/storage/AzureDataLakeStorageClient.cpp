@@ -47,12 +47,12 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentia
 
   if (credentials.getUseManagedIdentityCredentials()) {
     auto datalake_service_client = Azure::Storage::Files::DataLake::DataLakeServiceClient(
-      "https://" + credentials.getStorageAccountName() + ".dfs." + credentials.getEndpointSuffix(), std::make_shared<Azure::Identity::ManagedIdentityCredential>(), options);
+        "https://" + credentials.getStorageAccountName() + ".dfs." + credentials.getEndpointSuffix(), std::make_shared<Azure::Identity::ManagedIdentityCredential>(), options);
     client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(datalake_service_client.GetFileSystemClient(file_system_name));
     logger_->log_debug("Azure Data Lake Storge client has been reset with new managed identity credentials.");
   } else {
     client_ = std::make_unique<Azure::Storage::Files::DataLake::DataLakeFileSystemClient>(
-      Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(credentials.buildConnectionString(), file_system_name, options));
+        Azure::Storage::Files::DataLake::DataLakeFileSystemClient::CreateFromConnectionString(credentials.buildConnectionString(), file_system_name, options));
     logger_->log_debug("Azure Data Lake Storge client has been reset with new connection string credentials.");
   }
 
