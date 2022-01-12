@@ -28,6 +28,7 @@
 #include "core/ProcessSession.h"
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"
+#include "data/SQLIdentifier.h"
 
 namespace org {
 namespace apache {
@@ -82,11 +83,11 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
 
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   std::string table_name_;
-  std::vector<std::string> return_columns_;
+  std::vector<sql::SQLIdentifier> return_columns_;
   std::string queried_columns_;
   std::string extra_where_clause_;
-  std::vector<std::string> max_value_columns_;
-  std::unordered_map<std::string, std::string> max_values_;
+  std::vector<sql::SQLIdentifier> max_value_columns_;
+  std::unordered_map<sql::SQLIdentifier, std::string> max_values_;
 };
 
 }  // namespace processors
