@@ -17,8 +17,10 @@
 
 #include <memory>
 #include <string>
+#include <filesystem>
 
 #include "PythonScriptEngine.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -40,13 +42,20 @@ PythonScriptEngine::PythonScriptEngine() {
 }
 
 void PythonScriptEngine::evaluateModuleImports() {
-  if (module_directories_.empty()) {
+  if (module_paths_.empty()) {
     return;
   }
 
   py::eval<py::eval_statements>("import sys", *bindings_, *bindings_);
-  for (const auto& module_dir : module_directories_) {
-    py::eval<py::eval_statements>("sys.path.append('" + module_dir + "')", *bindings_, *bindings_);
+  for (const auto& module_path : module_paths_) {
+    if (std::filesystem::is_regular_file(std::filesystem::status(module_path))) {
+      std::string path;
+      std::string filename;
+      utils::file::getFileNameAndPath(module_path, path, filename);
+      py::eval<py::eval_statements>("sys.path.append('" + path + "')", *bindings_, *bindings_);
+    } else {
+      py::eval<py::eval_statements>("sys.path.append('" + module_path + "')", *bindings_, *bindings_);
+    }
   }
 }
 

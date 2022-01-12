@@ -371,7 +371,7 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
                                           true);
 
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), getScriptFullPath("foo_bar_processor.py"));
-  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath("foo_modules") + "," + getScriptFullPath("bar_modules"));
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath("foo_modules/foo.py") + "," + getScriptFullPath("bar_modules"));
 
   auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);

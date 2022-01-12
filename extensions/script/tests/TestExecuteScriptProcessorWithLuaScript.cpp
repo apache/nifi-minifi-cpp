@@ -421,7 +421,7 @@ TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirecto
 
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), getScriptFullPath("foo_bar_processor.lua"));
-  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath("foo_modules") + "," + getScriptFullPath("bar_modules"));
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath("foo_modules/foo.lua") + "," + getScriptFullPath("bar_modules"));
 
   auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);

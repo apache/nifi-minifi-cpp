@@ -127,9 +127,10 @@ void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContex
 }
 
 void ExecutePythonProcessor::appendPathForImportModules() {
-  getProperty(ModuleDirectory.getName(), module_directory_);
-  if (module_directory_.size()) {
-    python_script_engine_->setModuleDirectories(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory_, ","));
+  std::string module_directory;
+  getProperty(ModuleDirectory.getName(), module_directory);
+  if (module_directory.size()) {
+    python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory, ","));
   }
 }
 

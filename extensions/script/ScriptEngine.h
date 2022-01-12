@@ -43,14 +43,14 @@ class ScriptEngine {
    */
   virtual void evalFile(const std::string &file_name) = 0;
 
-  void setModuleDirectories(std::vector<std::string>&& module_dirs) {
-    module_directories_ = std::move(module_dirs);
+  void setModulePaths(std::vector<std::string>&& module_paths) {
+    module_paths_ = std::move(module_paths);
   }
 
   virtual ~ScriptEngine() = default;
 
  protected:
-  std::vector<std::string> module_directories_;
+  std::vector<std::string> module_paths_;
 };
 
 } /* namespace script */

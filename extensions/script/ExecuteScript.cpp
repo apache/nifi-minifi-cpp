@@ -129,7 +129,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 
   if (module_directory_.size()) {
-    engine->setModuleDirectories(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory_, ","));
+    engine->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory_, ","));
   }
 
   if (!script_body_.empty()) {
