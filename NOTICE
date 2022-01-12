@@ -58,6 +58,8 @@ This software includes third party software subject to the following copyrights:
 - IANA timezone database - public domain
 - date (HowardHinnant/date) - notices below
 - range-v3 - Eric Niebler and other contributors
+- expected-lite - Copyright (C) 2016-2020 Martin Moene.
+- TartanLlama/expected - public domain, thanks to Sy Brand
 
 The licenses for these third party components are included in LICENSE.txt
 

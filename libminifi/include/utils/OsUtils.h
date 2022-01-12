@@ -54,7 +54,6 @@ std::string getMachineArchitecture();
 extern std::string resolve_common_identifiers(const std::string &id);
 #endif
 
-std::string sockaddr_ntop(const sockaddr* const sa);
 
 } /* namespace OsUtils */
 } /* namespace utils */

@@ -92,12 +92,17 @@ struct EnableSharedFromThis : virtual internal::EnableSharedFromThisBase {
 
 namespace detail {
 struct dereference_t {
+  template<typename T, typename = std::enable_if_t<is_not_null_v<std::decay_t<T>>>>
+  decltype(auto) operator()(T&& ptr) const noexcept { return *std::forward<T>(ptr); }
+};
+struct unsafe_dereference_t {
   template<typename T>
-  T &operator()(T *ptr) const noexcept { return *ptr; }
+  decltype(auto) operator()(T&& ptr) const noexcept { return *std::forward<T>(ptr); }
 };
 }  // namespace detail
 
 constexpr detail::dereference_t dereference{};
+constexpr detail::unsafe_dereference_t unsafe_dereference{};
 
 #if __cpp_lib_remove_cvref >= 201711L
 using std::remove_cvref_t;

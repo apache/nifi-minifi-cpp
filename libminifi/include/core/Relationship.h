@@ -62,7 +62,13 @@ class Relationship {
   std::string name_ = "undefined";
   std::string description_;
 };
-
 }  // namespace org::apache::nifi::minifi::core
+
+template<>
+struct std::hash<org::apache::nifi::minifi::core::Relationship> {
+  size_t operator()(const org::apache::nifi::minifi::core::Relationship& relationship) const noexcept {
+    return std::hash<std::string>{}(relationship.getName());
+  }
+};
 
 #endif  // LIBMINIFI_INCLUDE_CORE_RELATIONSHIP_H_

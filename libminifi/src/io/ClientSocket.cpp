@@ -48,20 +48,13 @@
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
 #include "utils/OsUtils.h"
+#include "utils/net/DNS.h"
+#include "utils/net/Socket.h"
 
 namespace util = org::apache::nifi::minifi::utils;
 namespace mio = org::apache::nifi::minifi::io;
 
 namespace {
-std::string get_last_getaddrinfo_err_str(int getaddrinfo_result) {
-#ifdef WIN32
-  (void)getaddrinfo_result;  // against unused warnings on windows
-  return mio::get_last_socket_error_message();
-#else
-  return gai_strerror(getaddrinfo_result);
-#endif /* WIN32 */
-}
-
 template<typename T, typename Pred, typename Adv>
 auto find_if_custom_linked_list(T* const list, const Adv advance_func, const Pred predicate) ->
     typename std::enable_if<std::is_convertible<decltype(advance_func(std::declval<T*>())), T*>::value && std::is_convertible<decltype(predicate(std::declval<T*>())), bool>::value, T*>::type
@@ -105,7 +98,7 @@ std::error_code set_non_blocking(const mio::SocketDescriptor fd) noexcept {
   }
 #else
   u_long iMode = 1;
-  if (ioctlsocket(fd, FIONBIO, &iMode) == SOCKET_ERROR) {
+  if (ioctlsocket(fd, FIONBIO, &iMode) == mio::SocketError) {
     return { WSAGetLastError(), std::system_category() };
   }
 #endif /* !WIN32 */
@@ -119,18 +112,10 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-std::string get_last_socket_error_message() {
-#ifdef WIN32
-  const auto error_code = WSAGetLastError();
-#else
-  const auto error_code = errno;
-#endif /* WIN32 */
-  return std::system_category().message(error_code);
-}
 
 bool valid_socket(const SocketDescriptor fd) noexcept {
 #ifdef WIN32
-  return fd != INVALID_SOCKET && fd >= 0;
+  return fd != InvalidSocket && fd >= 0;
 #else
   return fd >= 0;
 #endif /* WIN32 */
@@ -179,7 +164,7 @@ Socket& Socket::operator=(Socket &&other) noexcept {
   port_ = std::exchange(other.port_, 0);
   is_loopback_only_ = std::exchange(other.is_loopback_only_, false);
   local_network_interface_ = std::exchange(other.local_network_interface_, {});
-  socket_file_descriptor_ = std::exchange(other.socket_file_descriptor_, INVALID_SOCKET);
+  socket_file_descriptor_ = std::exchange(other.socket_file_descriptor_, InvalidSocket);
   total_list_ = other.total_list_;
   FD_ZERO(&other.total_list_);
   read_fds_ = other.read_fds_;
@@ -208,7 +193,7 @@ void Socket::close() {
 #else
     ::close(socket_file_descriptor_);
 #endif
-    socket_file_descriptor_ = INVALID_SOCKET;
+    socket_file_descriptor_ = InvalidSocket;
   }
   if (total_written_ > 0) {
     local_network_interface_.log_write(gsl::narrow<uint32_t>(total_written_.load()));
@@ -229,7 +214,7 @@ void Socket::setNonBlocking() {
 int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
   for (const auto *current_addr = destination_addresses; current_addr; current_addr = current_addr->ai_next) {
     if (!valid_socket(socket_file_descriptor_ = socket(current_addr->ai_family, current_addr->ai_socktype, current_addr->ai_protocol))) {
-      logger_->log_warn("socket: %s", get_last_socket_error_message());
+      logger_->log_warn("socket: %s", utils::net::get_last_socket_error().message());
       continue;
     }
     setSocketOptions(socket_file_descriptor_);
@@ -237,20 +222,20 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
     if (listeners_ > 0) {
       // server socket
       const auto bind_result = bind(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
-      if (bind_result == SOCKET_ERROR) {
-        logger_->log_warn("bind: %s", get_last_socket_error_message());
+      if (bind_result == SocketError) {
+        logger_->log_warn("bind: %s", utils::net::get_last_socket_error().message());
         close();
         continue;
       }
 
       const auto listen_result = listen(socket_file_descriptor_, listeners_);
-      if (listen_result == SOCKET_ERROR) {
-        logger_->log_warn("listen: %s", get_last_socket_error_message());
+      if (listen_result == SocketError) {
+        logger_->log_warn("listen: %s", utils::net::get_last_socket_error().message());
         close();
         continue;
       }
 
-      logger_->log_info("Listening on %s:%" PRIu16 " with backlog %" PRIu16, utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_, listeners_);
+      logger_->log_info("Listening on %s:%" PRIu16 " with backlog %" PRIu16, utils::net::sockaddr_ntop(current_addr->ai_addr), port_, listeners_);
     } else {
       // client socket
 #ifndef WIN32
@@ -262,13 +247,13 @@ int8_t Socket::createConnection(const addrinfo* const destination_addresses) {
 #endif /* !WIN32 */
 
       const auto connect_result = connect(socket_file_descriptor_, current_addr->ai_addr, current_addr->ai_addrlen);
-      if (connect_result == SOCKET_ERROR) {
-        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_, get_last_socket_error_message());
+      if (connect_result == SocketError) {
+        logger_->log_warn("Couldn't connect to %s:%" PRIu16 ": %s", utils::net::sockaddr_ntop(current_addr->ai_addr), port_, utils::net::get_last_socket_error().message());
         close();
         continue;
       }
 
-      logger_->log_info("Connected to %s:%" PRIu16, utils::OsUtils::sockaddr_ntop(current_addr->ai_addr), port_);
+      logger_->log_info("Connected to %s:%" PRIu16, utils::net::sockaddr_ntop(current_addr->ai_addr), port_);
     }
 
     FD_SET(socket_file_descriptor_, &total_list_);
@@ -293,8 +278,8 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
     sa.sin_family = AF_INET;
     sa.sin_port = htons(port_);
     sa.sin_addr.s_addr = htonl(is_loopback_only_ ? INADDR_LOOPBACK : INADDR_ANY);
-    if (bind(socket_file_descriptor_, reinterpret_cast<const sockaddr*>(&sa), sizeof(struct sockaddr_in)) == SOCKET_ERROR) {
-      logger_->log_error("Could not bind to socket, reason %s", get_last_socket_error_message());
+    if (bind(socket_file_descriptor_, reinterpret_cast<const sockaddr*>(&sa), sizeof(struct sockaddr_in)) == SocketError) {
+      logger_->log_error("Could not bind to socket, reason %s", utils::net::get_last_socket_error().message());
       return -1;
     }
 
@@ -323,7 +308,7 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
 #ifdef WIN32
       sa_loc.sin_addr.s_addr = addr.s_addr;
     }
-    if (connect(socket_file_descriptor_, reinterpret_cast<const sockaddr*>(&sa_loc), sizeof(sockaddr_in)) == SOCKET_ERROR) {
+    if (connect(socket_file_descriptor_, reinterpret_cast<const sockaddr*>(&sa_loc), sizeof(sockaddr_in)) == SocketError) {
       int err = WSAGetLastError();
       if (err == WSAEADDRNOTAVAIL) {
         logger_->log_error("invalid or unknown IP");
@@ -350,31 +335,20 @@ int8_t Socket::createConnection(const addrinfo *, ip4addr &addr) {
 }
 
 int Socket::initialize() {
-  addrinfo hints{};
-  memset(&hints, 0, sizeof hints);  // make sure the struct is empty
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-  hints.ai_flags = AI_CANONNAME;
-  if (listeners_ > 0 && !is_loopback_only_)
-    hints.ai_flags = AI_PASSIVE;
-  hints.ai_protocol = 0; /* any protocol */
-
-  const char* const gai_node = [this]() -> const char* {
+  const char* const hostname = [this]() -> const char* {
     if (is_loopback_only_) return "localhost";
     if (!is_loopback_only_ && listeners_ > 0) return nullptr;  // all non-localhost server sockets listen on wildcard address
     if (!requested_hostname_.empty()) return requested_hostname_.c_str();
     return nullptr;
   }();
-  const auto gai_service = std::to_string(port_);
-  addrinfo* getaddrinfo_result = nullptr;
-  const int errcode = getaddrinfo(gai_node, gai_service.c_str(), &hints, &getaddrinfo_result);
-  const std::unique_ptr<addrinfo, util::addrinfo_deleter> addr_info{ getaddrinfo_result };
-  getaddrinfo_result = nullptr;
-  if (errcode != 0) {
-    logger_->log_error("getaddrinfo: %s", get_last_getaddrinfo_err_str(errcode));
+  const bool is_server = hostname == nullptr;
+  const auto addr_info_or_error = utils::net::resolveHost(hostname, port_, utils::net::IpProtocol::Tcp, !is_server);
+  if (!addr_info_or_error) {
+    logger_->log_error("getaddrinfo: %s", addr_info_or_error.error().message());
     return -1;
   }
-  socket_file_descriptor_ = INVALID_SOCKET;
+  const auto& addr_info = *addr_info_or_error;
+  socket_file_descriptor_ = InvalidSocket;
 
   // AI_CANONNAME always sets ai_canonname of the first addrinfo structure
   canonical_hostname_ = !IsNullOrEmpty(addr_info->ai_canonname) ? addr_info->ai_canonname : requested_hostname_;
@@ -487,7 +461,7 @@ size_t Socket::write(const uint8_t *value, size_t size) {
     // check for errors
     if (send_ret <= 0) {
       utils::file::FileUtils::close(fd);
-      logger_->log_error("Could not send to %d, error: %s", fd, get_last_socket_error_message());
+      logger_->log_error("Could not send to %d, error: %s", fd, utils::net::get_last_socket_error().message());
       return STREAM_ERROR;
     }
     bytes += gsl::narrow<size_t>(send_ret);

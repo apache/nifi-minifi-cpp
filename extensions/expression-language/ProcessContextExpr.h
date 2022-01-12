@@ -19,7 +19,7 @@
 
 #include <ProcessContext.h>
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include "impl/expression/Expression.h"
 
@@ -35,7 +35,7 @@ namespace core {
  * state. With this case, we can rely on instantiation of a builder to create the necessary
  * ProcessContext. *
  */
-class ProcessContextExpr : public core::ProcessContext {
+class ProcessContextExpr final : public core::ProcessContext {
  public:
   /**
    std::forward of argument list did not work on all platform.
@@ -54,7 +54,7 @@ class ProcessContextExpr : public core::ProcessContext {
         logger_(logging::LoggerFactory<ProcessContextExpr>::getLogger()) {
   }
   // Destructor
-  virtual ~ProcessContextExpr() = default;
+  ~ProcessContextExpr() override = default;
   /**
    * Retrieves property using EL
    * @param property property
@@ -65,11 +65,10 @@ class ProcessContextExpr : public core::ProcessContext {
 
   bool getDynamicProperty(const Property &property, std::string &value, const std::shared_ptr<FlowFile> &flow_file) override;
 
- protected:
-  std::map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
-  std::map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
-
  private:
+  std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> expressions_;
+  std::unordered_map<std::string, org::apache::nifi::minifi::expression::Expression> dynamic_property_expressions_;
+  std::unordered_map<std::string, std::string> expression_strs_;
   std::shared_ptr<logging::Logger> logger_;
 };
 

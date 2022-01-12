@@ -59,7 +59,20 @@ static_assert(!does_compile<1, 0>::value, "constexpr division by zero shouldn't 
 
 TEST_CASE("GeneralUtils::dereference", "[dereference]") {
   const int a = 42;
-  const auto* const pa = &a;
+  const auto pa = gsl::make_not_null(&a);
   REQUIRE(42 == utils::dereference(pa));
   REQUIRE(&a == &utils::dereference(pa));
+
+  const auto uniq_a = gsl::make_not_null(std::make_unique<int>(99));
+  REQUIRE(99 == utils::dereference(uniq_a));
+}
+
+TEST_CASE("GeneralUtils::unsafe_dereference", "[unsafe_dereference]") {
+  const int a = 42;
+  const int* const pa = &a;
+  REQUIRE(42 == utils::unsafe_dereference(pa));
+  REQUIRE(&a == &utils::unsafe_dereference(pa));
+
+  const auto uniq_a = std::make_unique<int>(99);
+  REQUIRE(99 == utils::unsafe_dereference(uniq_a));
 }

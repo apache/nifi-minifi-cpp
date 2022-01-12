@@ -53,7 +53,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Returns a pointer to this flow file record's
    * claim
    */
-  std::shared_ptr<ResourceClaim> getResourceClaim();
+  [[nodiscard]] std::shared_ptr<ResourceClaim> getResourceClaim() const;
   /**
    * Sets _claim to the inbound claim argument
    */
@@ -95,7 +95,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * is marked as deleted.
    * @return marked deleted
    */
-  bool isDeleted() const;
+  [[nodiscard]] bool isDeleted() const;
 
   /**
    * Sets whether to mark this flow file record
@@ -108,24 +108,24 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Get entry date for this record
    * @return entry date uint64_t
    */
-  uint64_t getEntryDate() const;
+  [[nodiscard]] uint64_t getEntryDate() const;
 
   /**
    * Gets the event time.
    * @return event time.
    */
-  uint64_t getEventTime() const;
+  [[nodiscard]] uint64_t getEventTime() const;
   /**
    * Get lineage start date
    * @return lineage start date uint64_t
    */
-  uint64_t getlineageStartDate() const;
+  [[nodiscard]] uint64_t getlineageStartDate() const;
 
   /**
    * Sets the lineage start date
    * @param date new lineage start date
    */
-  void setLineageStartDate(const uint64_t date);
+  void setLineageStartDate(uint64_t date);
 
   void setLineageIdentifiers(const std::vector<utils::Identifier>& lineage_Identifiers) {
     lineage_Identifiers_ = lineage_Identifiers;
@@ -139,7 +139,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    */
   bool getAttribute(const std::string& key, std::string& value) const;
 
-  std::optional<std::string> getAttribute(const std::string& key) const;
+  [[nodiscard]] std::optional<std::string> getAttribute(const std::string& key) const;
 
   /**
    * Updates the value in the attribute map that corresponds
@@ -171,7 +171,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Returns the map of attributes
    * @return attributes.
    */
-  std::map<std::string, std::string> getAttributes() const {
+  [[nodiscard]] std::map<std::string, std::string> getAttributes() const {
     return {attributes_.begin(), attributes_.end()};
   }
 
@@ -200,7 +200,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Returns the size of corresponding flow file
    * @return size as a uint64_t
    */
-  uint64_t getSize() const;
+  [[nodiscard]] uint64_t getSize() const;
 
   /**
    * Sets the offset
@@ -215,7 +215,7 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
     to_be_processed_after_ = std::chrono::steady_clock::now() + duration;
   }
 
-  std::chrono::time_point<std::chrono::steady_clock> getPenaltyExpiration() const {
+  [[nodiscard]] std::chrono::time_point<std::chrono::steady_clock> getPenaltyExpiration() const {
     return to_be_processed_after_;
   }
 
@@ -223,13 +223,13 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Gets the offset within the flow file
    * @return size as a uint64_t
    */
-  uint64_t getOffset() const;
+  [[nodiscard]] uint64_t getOffset() const;
 
-  bool isPenalized() const {
+  [[nodiscard]] bool isPenalized() const {
     return to_be_processed_after_ > std::chrono::steady_clock::now();
   }
 
-  uint64_t getId() const {
+  [[nodiscard]] uint64_t getId() const {
     return id_;
   }
 
@@ -242,13 +242,13 @@ class FlowFile : public CoreComponent, public ReferenceContainer {
    * Returns the original connection referenced by this record.
    * @return shared original connection pointer.
    */
-  std::shared_ptr<core::Connectable> getConnection() const;
+  [[nodiscard]] std::shared_ptr<core::Connectable> getConnection() const;
 
   void setStoredToRepository(bool storedInRepository) {
     stored = storedInRepository;
   }
 
-  bool isStored() const {
+  [[nodiscard]] bool isStored() const {
     return stored;
   }
 
