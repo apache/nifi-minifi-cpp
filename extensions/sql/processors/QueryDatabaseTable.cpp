@@ -36,10 +36,6 @@
 #include "data/SQLRowsetProcessor.h"
 #include "data/MaxCollector.h"
 #include "utils/StringUtils.h"
-#include "range/v3/view/transform.hpp"
-#include "range/v3/view/join.hpp"
-#include "range/v3/range/conversion.hpp"
-#include "range/v3/view/cache1.hpp"
 
 namespace org {
 namespace apache {
@@ -125,35 +121,25 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
 
   context.getProperty(TableName.getName(), table_name_);
   context.getProperty(WhereClause.getName(), extra_where_clause_);
-  max_value_columns_ = [&] {
-    std::string max_value_columns_str;
-    context.getProperty(MaxValueColumnNames.getName(), max_value_columns_str);
-    auto raw_cols = utils::StringUtils::splitAndTrimRemovingEmpty(max_value_columns_str, ",");
-    return raw_cols
-        | ranges::views::transform([] (auto& val) {return sql::SQLIdentifier(val);})
-        | ranges::to<std::vector<sql::SQLIdentifier>>;
-  }();
-  return_columns_ = [&] {
-    std::string return_columns_str;
-    context.getProperty(ColumnNames.getName(), return_columns_str);
-    auto raw_cols = utils::StringUtils::splitAndTrimRemovingEmpty(return_columns_str, ",");
-    return raw_cols
-        | ranges::views::transform([] (auto& val) {return sql::SQLIdentifier(val);})
-        | ranges::to<std::vector<sql::SQLIdentifier>>;
-  }();
-  queried_columns_ = return_columns_
-      | ranges::views::transform([] (auto& id) {return id.str();})
-      | ranges::views::cache1
-      | ranges::views::join(std::string{", "})
-      | ranges::to<std::string>;
-  if (!queried_columns_.empty() && !max_value_columns_.empty()) {
-    // columns will be explicitly enumerated, we need to add the max value columns
-    queried_columns_ = queried_columns_ + ", " +
-        (max_value_columns_
-           | ranges::views::transform([] (auto& id) {return id.str();})
-           | ranges::views::cache1
-           | ranges::views::join(std::string{", "})
-           | ranges::to<std::string>);
+
+  return_columns_.clear();
+  queried_columns_.clear();
+  for (auto&& raw_col : utils::StringUtils::splitAndTrimRemovingEmpty(context.getProperty(ColumnNames).value_or(""), ",")) {
+    if (!queried_columns_.empty()) {
+      queried_columns_ += ", ";
+    }
+    queried_columns_ += raw_col;
+    return_columns_.push_back(sql::SQLIdentifier(std::move(raw_col)));
+  }
+
+  max_value_columns_.clear();
+  for (auto&& raw_col : utils::StringUtils::splitAndTrimRemovingEmpty(context.getProperty(MaxValueColumnNames).value_or(""), ",")) {
+    if (!queried_columns_.empty()) {
+      // columns will be explicitly enumerated, we need to add the max value columns
+      queried_columns_ += ", ";
+      queried_columns_ += raw_col;
+    }
+    max_value_columns_.push_back(sql::SQLIdentifier(std::move(raw_col)));
   }
 
   initializeMaxValues(context);
