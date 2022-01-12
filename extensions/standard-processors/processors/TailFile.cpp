@@ -33,7 +33,10 @@
 #include <regex>
 
 #include "range/v3/action/sort.hpp"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/transform.hpp"
 
+#include "FlowFileRecord.h"
 #include "io/CRCStream.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
@@ -84,8 +87,10 @@ core::Property TailFile::TailMode(
 
 core::Property TailFile::BaseDirectory(
     core::PropertyBuilder::createProperty("tail-base-directory", "Base Directory")
-        ->withDescription("Base directory used to look for files to tail. This property is required when using Multiple file mode.")
+        ->withDescription("Base directory used to look for files to tail. This property is required when using Multiple file mode. "
+                          "Can contain expression language placeholders if Attribute Provider Service is set.")
         ->isRequired(false)
+        ->supportsExpressionLanguage(true)
         ->build());
 
 core::Property TailFile::RecursiveLookup(
@@ -125,6 +130,13 @@ core::Property TailFile::InitialStartPosition(
         ->isRequired(true)
         ->withDefaultValue(toString(InitialStartPositions::BEGINNING_OF_FILE))
         ->withAllowableValues(InitialStartPositions::values())
+        ->build());
+
+core::Property TailFile::AttributeProviderService(
+    core::PropertyBuilder::createProperty("Attribute Provider Service")
+        ->withDescription("Provides a list of key-value pair records which can be used in the Base Directory property using Expression Language. "
+                          "Requires Multiple file mode.")
+        ->asType<minifi::controllers::AttributeProviderService>()
         ->build());
 
 core::Relationship TailFile::Success("success", "All files are routed to success");
@@ -315,25 +327,23 @@ class WholeFileReaderCallback : public OutputStreamCallback {
 }  // namespace
 
 void TailFile::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(FileName);
-  properties.insert(StateFile);
-  properties.insert(Delimiter);
-  properties.insert(TailMode);
-  properties.insert(BaseDirectory);
-  properties.insert(RecursiveLookup);
-  properties.insert(LookupFrequency);
-  properties.insert(RollingFilenamePattern);
-  properties.insert(InitialStartPosition);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties({
+    FileName,
+    StateFile,
+    Delimiter,
+    TailMode,
+    BaseDirectory,
+    RecursiveLookup,
+    LookupFrequency,
+    RollingFilenamePattern,
+    InitialStartPosition,
+    AttributeProviderService});
+  setSupportedRelationships({Success});
 }
 
 void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  gsl_Expects(context);
+
   tail_states_.clear();
 
   state_manager_ = context->getStateManager();
@@ -355,11 +365,13 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   if (mode == "Multiple file") {
     tail_mode_ = Mode::MULTIPLE;
 
+    parseAttributeProviderServiceProperty(*context);
+
     if (!context->getProperty(BaseDirectory.getName(), base_dir_)) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory is required for multiple tail mode.");
     }
 
-    if (!utils::file::is_directory(base_dir_)) {
+    if (!attribute_provider_service_ && !utils::file::is_directory(base_dir_)) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory does not exist or is not a directory");
     }
 
@@ -376,7 +388,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
 
     recoverState(context);
 
-    doMultifileLookup();
+    doMultifileLookup(*context);
 
   } else {
     tail_mode_ = Mode::SINGLE;
@@ -396,6 +408,19 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
   initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values())};
+}
+
+void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& context) {
+  const auto attribute_provider_service_name = context.getProperty(AttributeProviderService);
+  if (attribute_provider_service_name && !attribute_provider_service_name->empty()) {
+    std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
+    if (controller_service) {
+      attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
+    }
+    if (!attribute_provider_service_) {
+      throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Could not create AttributeProviderService: ", *attribute_provider_service_name)};
+    }
+  }
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {
@@ -667,11 +692,14 @@ std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &stat
   return matched_files;
 }
 
-void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession> &session) {
+void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context);
+  gsl_Expects(session);
+
   if (tail_mode_ == Mode::MULTIPLE) {
     if (last_multifile_lookup_ + lookup_frequency_ < std::chrono::steady_clock::now()) {
       logger_->log_debug("Lookup frequency %" PRId64 " ms have elapsed, doing new multifile lookup", int64_t{lookup_frequency_.count()});
-      doMultifileLookup();
+      doMultifileLookup(*context);
     } else {
       logger_->log_trace("Skipping multifile lookup");
     }
@@ -812,9 +840,9 @@ void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t c
   state.checksum_ = checksum;
 }
 
-void TailFile::doMultifileLookup() {
+void TailFile::doMultifileLookup(core::ProcessContext& context) {
   checkForRemovedFiles();
-  checkForNewFiles();
+  checkForNewFiles(context);
   last_multifile_lookup_ = std::chrono::steady_clock::now();
 }
 
@@ -836,7 +864,7 @@ void TailFile::checkForRemovedFiles() {
   }
 }
 
-void TailFile::checkForNewFiles() {
+void TailFile::checkForNewFiles(core::ProcessContext& context) {
   auto add_new_files_callback = [&](const std::string &path, const std::string &file_name) -> bool {
     std::string full_file_name = path + utils::file::get_separator() + file_name;
     std::regex file_to_tail_regex(file_to_tail_);
@@ -846,7 +874,28 @@ void TailFile::checkForNewFiles() {
     return true;
   };
 
-  utils::file::list_dir(base_dir_, add_new_files_callback, logger_, recursive_lookup_);
+  if (attribute_provider_service_) {
+    for (const auto& base_dir : getBaseDirectories(context)) {
+      utils::file::list_dir(base_dir, add_new_files_callback, logger_, recursive_lookup_);
+    }
+  } else {
+    utils::file::list_dir(base_dir_, add_new_files_callback, logger_, recursive_lookup_);
+  }
+}
+
+std::vector<std::string> TailFile::getBaseDirectories(core::ProcessContext& context) const {
+  gsl_Expects(attribute_provider_service_);
+
+  const auto attribute_maps = attribute_provider_service_->getAttributes();
+  return attribute_maps |
+      ranges::views::transform([&context](const auto& attribute_map) {
+        auto flow_file = std::make_shared<FlowFileRecord>();
+        for (const auto& [key, value] : attribute_map) {
+          flow_file->setAttribute(key, value);
+        }
+        return context.getProperty(BaseDirectory, flow_file).value();
+      }) |
+      ranges::to<std::vector<std::string>>();
 }
 
 std::chrono::milliseconds TailFile::getLookupFrequency() const {

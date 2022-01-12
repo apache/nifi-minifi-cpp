@@ -38,6 +38,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
+#include "core/Resource.h"
 #include "TailFile.h"
 #include "LogAttribute.h"
 #include "utils/TestUtils.h"
@@ -55,9 +56,12 @@ static const std::string NEW_TAIL_DATA = "newdata\n";
 static const std::string ADDITIONALY_CREATED_FILE_CONTENT = "additional file data\n";
 
 namespace {
-std::string createTempFile(const std::string &directory, const std::string &file_name, const std::string &contents,
+std::string createTempFile(const std::filesystem::path& directory, const std::filesystem::path& file_name, const std::string& contents,
     std::ios_base::openmode open_mode = std::ios::out | std::ios::binary) {
-  std::string full_file_name = directory + utils::file::get_separator() + file_name;
+  if (!utils::file::exists(directory.string())) {
+    std::filesystem::create_directories(directory);
+  }
+  std::string full_file_name = (directory / file_name).string();
   std::ofstream tmpfile{full_file_name, open_mode};
   tmpfile << contents;
   return full_file_name;
@@ -1746,4 +1750,68 @@ TEST_CASE("Initial Start Position is set to invalid or empty value", "[initialSt
   }
 
   REQUIRE_THROWS_AS(testController.runSession(plan), minifi::Exception);
+}
+
+TEST_CASE("TailFile onSchedule throws if an invalid Attribute Provider Service is found", "[configuration][AttributeProviderService]") {
+  TestController testController;
+  LogTestController::getInstance().setDebug<minifi::processors::TailFile>();
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  std::shared_ptr<core::Processor> tail_file = plan->addProcessor("TailFile", "tailfileProc");
+  plan->setProperty(tail_file, minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+  plan->setProperty(tail_file, minifi::processors::TailFile::BaseDirectory.getName(), "/var/logs");
+  plan->setProperty(tail_file, minifi::processors::TailFile::FileName.getName(), "minifi.log");
+  plan->setProperty(tail_file, org::apache::nifi::minifi::processors::TailFile::AttributeProviderService.getName(), "this AttributeProviderService does not exist");
+
+  REQUIRE_THROWS_AS(plan->runNextProcessor(), minifi::Exception);
+}
+
+namespace {
+
+class TestAttributeProviderService : public minifi::controllers::AttributeProviderService {
+  using AttributeProviderService::AttributeProviderService;
+  void initialize() override {};
+  void onEnable() override {};
+  std::vector<AttributeMap> getAttributes() override {
+    return {AttributeMap{{"color", "red"}, {"fruit", "apple"}, {"uid", "001"}, {"animal", "dog"}},
+            AttributeMap{{"color", "yellow"}, {"fruit", "banana"}, {"uid", "004"}, {"animal", "dolphin"}}};
+  }
+};
+REGISTER_RESOURCE(TestAttributeProviderService, "An attribute provider service which provides a constant set of records.");
+
+}  // namespace
+
+TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderService]") {
+  TestController testController;
+  LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
+  LogTestController::getInstance().setDebug<core::ProcessSession>();
+  LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+
+  std::filesystem::path temp_directory{testController.createTempDirectory()};
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  plan->addController("TestAttributeProviderService", "attribute_provider_service");
+  std::shared_ptr<core::Processor> tail_file = plan->addProcessor("TailFile", "tail_file");
+  plan->setProperty(tail_file, minifi::processors::TailFile::TailMode.getName(), "Multiple file");
+  plan->setProperty(tail_file, minifi::processors::TailFile::BaseDirectory.getName(), (temp_directory / "my_${color}_${fruit}_${uid}" / "${animal}").string());
+  plan->setProperty(tail_file, minifi::processors::TailFile::LookupFrequency.getName(), "0 sec");
+  plan->setProperty(tail_file, minifi::processors::TailFile::FileName.getName(), ".*\\.log");
+  plan->setProperty(tail_file, minifi::processors::TailFile::AttributeProviderService.getName(), "attribute_provider_service");
+  std::shared_ptr<core::Processor> log_attribute = plan->addProcessor("LogAttribute", "log_attribute", core::Relationship("success", ""), true);
+  plan->setProperty(log_attribute, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
+
+  createTempFile(temp_directory / "my_red_apple_001" / "dog", "0.log", "Idared\n");
+  createTempFile(temp_directory / "my_red_apple_001" / "dog", "1.log", "Jonagold\n");
+  createTempFile(temp_directory / "my_red_strawberry_002" / "elephant", "0.log", "red strawberry\n");
+  createTempFile(temp_directory / "my_yellow_apple_003" / "horse", "0.log", "yellow apple\n");
+  createTempFile(temp_directory / "my_yellow_banana_004" / "dolphin", "0.log", "yellow banana\n");
+
+  testController.runSession(plan);
+
+  CHECK(LogTestController::getInstance().contains("Logged 3 flow files"));
+  CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (temp_directory / "my_red_apple_001" / "dog" / "0.log").string()));
+  CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (temp_directory / "my_red_apple_001" / "dog" / "1.log").string()));
+  CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (temp_directory / "my_yellow_banana_004" / "dolphin" / "0.log").string()));
+
+  LogTestController::getInstance().reset();
 }

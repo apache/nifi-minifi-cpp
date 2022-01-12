@@ -19,6 +19,8 @@
 
 - [AzureStorageCredentialsService](#azureStorageCredentialsService)
 - [AWSCredentialsService](#awsCredentialsService)
+- [KubernetesControllerService](#kubernetesControllerService)
+
 
 ## AWSCredentialsService
 
@@ -40,6 +42,7 @@ properties (not in bold) are considered optional.
 |Secret Key|||Specifies the AWS Secret Key|
 |Credentials File|||Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey|
 
+
 ## AzureStorageCredentialsService
 
 ### Description
@@ -60,3 +63,20 @@ properties (not in bold) are considered optional.
 |Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).|
 |Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.|
 |**Use Managed Identity Credentials**|false||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|
+
+
+## KubernetesControllerService
+
+### Description
+
+Controller service that provides access to the Kubernetes API.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Namespace Filter|default||Limit the output to pods in namespaces which match this regular expression|
+|Pod Name Filter|||If present, limit the output to pods the name of which matches this regular expression|
+|Container Name Filter|||If present, limit the output to containers the name of which matches this regular expression|

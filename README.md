@@ -73,7 +73,7 @@ The next table outlines CMAKE flags that correspond with MiNiFi extensions. Exte
 Through JNI extensions you can run NiFi processors using NARs. The JNI extension set allows you to run these Java processors. MiNiFi C++ will favor C++ implementations over Java implements. In the case where a processor is implemented in either language, the one in C++ will be selected; however, will remain transparent to the consumer.
 
 
-| Extension Set        | Processors           | CMAKE Flag  |
+| Extension Set        | Processors and Controller Services | CMAKE Flag  |
 | ------------- |:-------------| :-----|
 | Archive Extensions    | [ApplyTemplate](PROCESSORS.md#applytemplate)<br/>[CompressContent](PROCESSORS.md#compresscontent)<br/>[ManipulateArchive](PROCESSORS.md#manipulatearchive)<br/>[MergeContent](PROCESSORS.md#mergecontent)<br/>[FocusArchiveEntry](PROCESSORS.md#focusarchiveentry)<br/>[UnfocusArchiveEntry](PROCESSORS.md#unfocusarchiveentry)      |   -DBUILD_LIBARCHIVE=ON |
 | AWS | [AWSCredentialsService](CONTROLLERS.md#awscredentialsservice)<br/>[PutS3Object](PROCESSORS.md#puts3object)<br/>[DeleteS3Object](PROCESSORS.md#deletes3object)<br/>[FetchS3Object](PROCESSORS.md#fetchs3object)<br/>[ListS3](PROCESSORS.md#lists3) | -DENABLE_AWS=ON  |
@@ -82,6 +82,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 | CURL | [InvokeHTTP](PROCESSORS.md#invokehttp)      |    -DDISABLE_CURL=ON  |
 | GPS | GetGPS      |    -DENABLE_GPS=ON  |
 | Kafka | [PublishKafka](PROCESSORS.md#publishkafka)      |    -DENABLE_LIBRDKAFKA=ON  |
+| Kubernetes | [KubernetesControllerService](CONTROLLERS.md#kubernetesControllerService) | -DENABLE_KUBERNETES=ON |
 | JNI | **NiFi Processors**     |    -DENABLE_JNI=ON  |
 | MQTT | [ConsumeMQTT](PROCESSORS.md#consumeMQTT)<br/>[PublishMQTT](PROCESSORS.md#publishMQTT)     |    -DENABLE_MQTT=ON  |
 | OPC  | [FetchOPCProcessor](PROCESSORS.md#fetchopcprocessor)  |  -DENABLE_OPC=ON |

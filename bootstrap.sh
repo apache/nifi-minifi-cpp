@@ -290,6 +290,8 @@ add_disabled_option AWS_ENABLED ${FALSE} "ENABLE_AWS"
 
 add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA"
 
+add_disabled_option KUBERNETES_ENABLED ${FALSE} "ENABLE_KUBERNETES"
+
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
 add_disabled_option PYTHON_ENABLED ${FALSE} "ENABLE_PYTHON"
