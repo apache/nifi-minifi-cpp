@@ -48,9 +48,11 @@ class SQLIdentifier {
 
 }  // namespace org::apache::nifi::minifi::sql
 
+namespace std {
 template<>
-struct ::std::hash<org::apache::nifi::minifi::sql::SQLIdentifier> {
+struct hash<org::apache::nifi::minifi::sql::SQLIdentifier> {
   size_t operator()(const org::apache::nifi::minifi::sql::SQLIdentifier &id) const {
     return std::hash<std::string>{}(id.value_);
   }
 };
+}  // namespace std
