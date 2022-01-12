@@ -94,7 +94,7 @@ class FetchAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase
     : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::FetchAzureDataLakeStorageParameters> buildFetchParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file);
+  std::optional<storage::FetchAzureDataLakeStorageParameters> buildFetchParameters(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

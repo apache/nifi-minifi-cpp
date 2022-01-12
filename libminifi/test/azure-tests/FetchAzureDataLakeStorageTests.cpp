@@ -125,9 +125,9 @@ TEST_CASE_METHOD(FetchAzureDataLakeStorageTestsFixture, "Fetch full file fails",
   mock_data_lake_storage_client_ptr_->setFetchFailure(true);
   test_controller_.runSession(plan_, true);
   REQUIRE(getSuccessfulFlowFileContents().size() == 0);
-  auto success_contents = getFailedFlowFileContents();
-  REQUIRE(success_contents.size() == 1);
-  REQUIRE(success_contents[0] == TEST_DATA);
+  auto failed_contents = getFailedFlowFileContents();
+  REQUIRE(failed_contents.size() == 1);
+  REQUIRE(failed_contents[0] == TEST_DATA);
 }
 
 }  // namespace

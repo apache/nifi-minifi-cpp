@@ -58,6 +58,7 @@ void AzureDataLakeStorageClient::resetClientIfNeeded(const AzureStorageCredentia
 
   file_system_name_ = file_system_name;
   credentials_ = credentials;
+  number_of_retries_ = number_of_retries;
 }
 
 Azure::Storage::Files::DataLake::DataLakeFileClient AzureDataLakeStorageClient::getFileClient(const AzureDataLakeStorageParameters& params) {
