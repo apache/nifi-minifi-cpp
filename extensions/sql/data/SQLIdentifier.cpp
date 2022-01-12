@@ -20,18 +20,21 @@
 
 namespace org::apache::nifi::minifi::sql {
 
-SQLIdentifier::SQLIdentifier(const std::string& str) {
+SQLIdentifier::SQLIdentifier(std::string str) {
   // foo, "foo", [foo], `foo` are identifiers in different servers
-  original_value_ = str;
-  value_ = str;
-
-  if (str.length() >= 2) {
+  value_ = [&] () {
+    if (str.length() < 2) {
+      return str;
+    }
     if ((str.front() == '"' && str.back() == '"')
         || (str.front() == '[' && str.back() == ']')
         || (str.front() == '`' && str.back() == '`')) {
-      value_ = str.substr(1, str.length() - 2);
+      return str.substr(1, str.length() - 2);
     }
-  }
+    return str;
+  }();
+
+  original_value_ = std::move(str);
 }
 
 }  // namespace org::apache::nifi::minifi::sql

@@ -25,7 +25,7 @@ namespace org::apache::nifi::minifi::sql {
 
 class SQLIdentifier {
  public:
-  explicit SQLIdentifier(const std::string& str);
+  explicit SQLIdentifier(std::string str);
 
   std::string value() const { return value_; }
 

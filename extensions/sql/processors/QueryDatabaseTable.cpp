@@ -129,17 +129,18 @@ void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
       queried_columns_ += ", ";
     }
     queried_columns_ += raw_col;
-    return_columns_.push_back(sql::SQLIdentifier(std::move(raw_col)));
+    return_columns_.insert(sql::SQLIdentifier(std::move(raw_col)));
   }
 
   max_value_columns_.clear();
   for (auto&& raw_col : utils::StringUtils::splitAndTrimRemovingEmpty(context.getProperty(MaxValueColumnNames).value_or(""), ",")) {
-    if (!queried_columns_.empty()) {
-      // columns will be explicitly enumerated, we need to add the max value columns
+    sql::SQLIdentifier col_id(raw_col);
+    if (!queried_columns_.empty() && return_columns_.count(col_id) == 0) {
+      // columns will be explicitly enumerated, we need to add the max value columns as it is not yet queried
       queried_columns_ += ", ";
       queried_columns_ += raw_col;
     }
-    max_value_columns_.push_back(sql::SQLIdentifier(std::move(raw_col)));
+    max_value_columns_.push_back(std::move(col_id));
   }
 
   initializeMaxValues(context);
@@ -157,8 +158,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
   std::unordered_map<sql::SQLIdentifier, std::string> new_max_values = max_values_;
   sql::MaxCollector maxCollector{selectQuery, new_max_values};
   auto column_filter = [&] (const std::string& column_name) {
-    return return_columns_.empty()
-      || std::find(return_columns_.begin(), return_columns_.end(), column_name) != return_columns_.end();
+    return return_columns_.empty() || return_columns_.count(sql::SQLIdentifier(column_name)) != 0;
   };
   sql::JSONSQLWriter json_writer{output_format_ == OutputType::JSONPretty, column_filter};
   FlowFileGenerator flow_file_creator{session, json_writer};
