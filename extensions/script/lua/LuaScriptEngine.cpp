@@ -63,14 +63,18 @@ LuaScriptEngine::LuaScriptEngine()
       "write", &lua::LuaBaseStream::write);
 }
 
+void LuaScriptEngine::executeScriptWithAppendedModulePaths(std::string& script) {
+  for (const auto& module_dir : module_directories_) {
+    script = "package.path = package.path .. \";" + module_dir + "/?.lua\"\n" + script;
+  }
+  lua_.script(script, sol::script_throw_on_error);
+}
+
 void LuaScriptEngine::eval(const std::string &script) {
   try {
     if (!module_directories_.empty()) {
       auto appended_script = script;
-      for (const auto& module_dir : module_directories_) {
-        appended_script = "package.path = package.path .. \";" + module_dir + "/?.lua\"\n" + script;
-      }
-      lua_.script(appended_script, sol::script_throw_on_error);
+      executeScriptWithAppendedModulePaths(appended_script);
     } else {
       lua_.script(script, sol::script_throw_on_error);
     }
@@ -84,10 +88,7 @@ void LuaScriptEngine::evalFile(const std::string &file_name) {
     if (!module_directories_.empty()) {
       std::ifstream stream(file_name);
       std::string script((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-      for (const auto& module_dir : module_directories_) {
-        script = "package.path = package.path .. \";" + module_dir + "/?.lua\"\n" + script;
-      }
-      lua_.script(script, sol::script_throw_on_error);
+      executeScriptWithAppendedModulePaths(script);
     } else {
       lua_.script_file(file_name, sol::script_throw_on_error);
     }
