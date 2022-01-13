@@ -56,6 +56,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the QueryDatabaseTable processor is connected to the PutFile
     And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
+    And a PostgreSQL server is set up
     When all instances start up
     Then at least one flowfile with the content '[{"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
 
