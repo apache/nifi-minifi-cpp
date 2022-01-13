@@ -70,6 +70,7 @@ This software includes third party software subject to the following copyrights:
 - prometheus-cpp - Copyright (c) 2016-2021 Jupp Mueller, Copyright (c) 2017-2022 Gregor Jasny
 - Zstandard - Copyright (c) 2016-present, Facebook, Inc. All rights reserved.
 - LZ4 Library - Copyright (c) 2011-2020, Yann Collet
+- OpenSSL - Copyright (c) 1998-2022 The OpenSSL Project, Copyright (c) 1995-1998 Eric A. Young, Tim J. Hudson. All rights reserved.
 
 The licenses for these third party components are included in LICENSE.txt
 

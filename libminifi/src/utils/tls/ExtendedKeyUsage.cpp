@@ -26,12 +26,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace tls {
+namespace org::apache::nifi::minifi::utils::tls {
 
 namespace {
 
@@ -60,8 +55,11 @@ ExtendedKeyUsage::ExtendedKeyUsage(const EXTENDED_KEY_USAGE& key_usage_asn1) : E
   const int num_oids = sk_ASN1_OBJECT_num(&key_usage_asn1);
   for (int i = 0; i < num_oids; ++i) {
     const ASN1_OBJECT* const oid = sk_ASN1_OBJECT_value(&key_usage_asn1, i);
-    assert(oid && oid->length > 0);
-    const unsigned char last_byte_of_oid = oid->data[oid->length - 1];
+    assert(oid);
+    auto length = OBJ_length(oid);
+    assert(length > 0);
+    auto data = OBJ_get0_data(oid);
+    const unsigned char last_byte_of_oid = data[length - 1];
     if (last_byte_of_oid < bits_.size()) {
       bits_.set(last_byte_of_oid);
     }
@@ -95,11 +93,6 @@ bool operator!=(const ExtendedKeyUsage& left, const ExtendedKeyUsage& right) {
   return !(left == right);
 }
 
-}  // namespace tls
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::tls
 
 #endif  // OPENSSL_SUPPORT

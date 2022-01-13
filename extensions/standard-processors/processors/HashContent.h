@@ -21,8 +21,7 @@
 
 #ifdef OPENSSL_SUPPORT
 
-#include <openssl/md5.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 
 #include <array>
 #include <cstdint>
@@ -49,21 +48,25 @@ namespace { // NOLINT
     HashReturnType ret_val;
     ret_val.second = 0;
     std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
-    MD5_CTX context;
-    MD5_Init(&context);
+    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    const auto guard = gsl::finally([&context]() {
+      EVP_MD_CTX_free(context);
+    });
+    const EVP_MD *md = EVP_md5();
+    EVP_DigestInit_ex(context, md, nullptr);
 
     size_t ret = 0;
     do {
       ret = stream->read(buffer);
       if (ret > 0) {
-        MD5_Update(&context, buffer.data(), ret);
+        EVP_DigestUpdate(context, buffer.data(), ret);
         ret_val.second += gsl::narrow<int64_t>(ret);
       }
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      std::array<std::byte, MD5_DIGEST_LENGTH> digest{};
-      MD5_Final(reinterpret_cast<unsigned char*>(digest.data()), &context);
+      std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
+      EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
       ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
@@ -73,21 +76,25 @@ namespace { // NOLINT
     HashReturnType ret_val;
     ret_val.second = 0;
     std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
-    SHA_CTX context;
-    SHA1_Init(&context);
+    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    const auto guard = gsl::finally([&context]() {
+      EVP_MD_CTX_free(context);
+    });
+    const EVP_MD *md = EVP_sha1();
+    EVP_DigestInit_ex(context, md, nullptr);
 
     size_t ret = 0;
     do {
       ret = stream->read(buffer);
       if (ret > 0) {
-        SHA1_Update(&context, buffer.data(), ret);
+        EVP_DigestUpdate(context, buffer.data(), ret);
         ret_val.second += gsl::narrow<int64_t>(ret);
       }
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      std::array<std::byte, SHA_DIGEST_LENGTH> digest{};
-      SHA1_Final(reinterpret_cast<unsigned char*>(digest.data()), &context);
+      std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
+      EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
       ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
@@ -97,21 +104,25 @@ namespace { // NOLINT
     HashReturnType ret_val;
     ret_val.second = 0;
     std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
-    SHA256_CTX context;
-    SHA256_Init(&context);
+    EVP_MD_CTX *context = EVP_MD_CTX_new();
+    const auto guard = gsl::finally([&context]() {
+      EVP_MD_CTX_free(context);
+    });
+    const EVP_MD *md = EVP_sha256();
+    EVP_DigestInit_ex(context, md, nullptr);
 
     size_t ret;
     do {
       ret = stream->read(buffer);
       if (ret > 0) {
-        SHA256_Update(&context, buffer.data(), ret);
+        EVP_DigestUpdate(context, buffer.data(), ret);
         ret_val.second += gsl::narrow<int64_t>(ret);
       }
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      std::array<std::byte, SHA256_DIGEST_LENGTH> digest{};
-      SHA256_Final(reinterpret_cast<unsigned char*>(digest.data()), &context);
+      std::array<std::byte, EVP_MAX_MD_SIZE> digest{};
+      EVP_DigestFinal_ex(context, reinterpret_cast<unsigned char*>(digest.data()), nullptr);
       ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;

@@ -287,7 +287,7 @@ TEST_CASE("Test ListenTCP SSL/TLS compatibility", "[ListenTCP][NetworkListenerPr
 
   SECTION("tlsv13 should be enabled") {
     client_method = asio::ssl::context::method::tlsv13_client;
-    expected_to_work = true;
+    expected_to_work = false;
   }
 
   if (!isSslMethodAvailable(client_method))

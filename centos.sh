@@ -118,6 +118,8 @@ build_deps() {
                         INSTALLED+=("libssh2-devel")
                     elif [ "$FOUND_VALUE" = "boost" ]; then
                         INSTALLED+=("boost-devel")
+                    elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
+                        INSTALLED+=("perl")
                     fi
                 fi
             done

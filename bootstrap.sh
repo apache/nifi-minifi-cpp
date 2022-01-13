@@ -343,6 +343,9 @@ add_option PROCFS_ENABLED ${TRUE} "ENABLE_PROCFS"
 
 add_option PROMETHEUS_ENABLED ${FALSE} "ENABLE_PROMETHEUS"
 
+add_option OPENSSL_ENABLED ${TRUE} "OPENSSL_OFF"
+add_dependency OPENSSL_ENABLED "opensslbuild"
+
 USE_SHARED_LIBS=${TRUE}
 ASAN_ENABLED=${FALSE}
 FAIL_ON_WARNINGS=${FALSE}
@@ -445,7 +448,7 @@ build_cmake_command(){
     if [ "$FOUND" = "1" ]; then
       set_value=OFF
       option_value="${!option}"
-      if { [[ "$option_value" = "${FALSE}" ]] && [[ "$FOUND_VALUE" == "DISABLE"* ]]; } || \
+      if { [[ "$option_value" = "${FALSE}" ]] && { [[ "$FOUND_VALUE" == "DISABLE"* ]] || [[ "$FOUND_VALUE" == *"OFF" ]]; }; } || \
          { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" == "ENABLE"* ]]; }; then
         set_value=ON
       fi

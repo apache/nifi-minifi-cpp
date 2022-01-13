@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   LogTestController::getInstance().setTrace<minifi::io::TLSServerSocket>();
   LogTestController::getInstance().setTrace<minifi::io::TLSContext>();
 
-  auto server = std::make_unique<SimpleSSLTestServer>(TLSv1_2_server_method(), 0, key_dir);
+  auto server = std::make_unique<SimpleSSLTestServer>(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_3, 0, key_dir);
   int port = server->getPort();
   server->waitForConnection();
 

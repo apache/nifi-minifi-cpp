@@ -30,25 +30,24 @@
 #include "SimpleSSLTestServer.h"
 
 namespace minifi = org::apache::nifi::minifi;
-
 class SimpleSSLTestServerTLSv1  : public SimpleSSLTestServer {
  public:
   SimpleSSLTestServerTLSv1(int port, const std::filesystem::path& key_dir)
-      : SimpleSSLTestServer(TLSv1_server_method(), port, key_dir) {
+      : SimpleSSLTestServer(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1_2 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_3, port, key_dir) {
   }
 };
 
 class SimpleSSLTestServerTLSv1_1  : public SimpleSSLTestServer {
  public:
   SimpleSSLTestServerTLSv1_1(int port, const std::filesystem::path& key_dir)
-      : SimpleSSLTestServer(TLSv1_1_server_method(), port, key_dir) {
+      : SimpleSSLTestServer(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_2 | SSL_OP_NO_TLSv1_3, port, key_dir) {
   }
 };
 
 class SimpleSSLTestServerTLSv1_2  : public SimpleSSLTestServer {
  public:
   SimpleSSLTestServerTLSv1_2(int port, const std::filesystem::path& key_dir)
-      : SimpleSSLTestServer(TLSv1_2_server_method(), port, key_dir) {
+      : SimpleSSLTestServer(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_3, port, key_dir) {
   }
 };
 

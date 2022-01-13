@@ -400,6 +400,7 @@ show_supported_features() {
   echo "5. Build Profile ...............$(print_multi_option_status BUILD_PROFILE)"
   echo "6. Create ASAN build ...........$(print_feature_status ASAN_ENABLED)"
   echo "7. Treat warnings as errors.....$(print_feature_status FAIL_ON_WARNINGS)"
+  echo "8. Enable OpenSSL...............$(print_feature_status OPENSSL_ENABLED)"
   echo "P. Continue with these options"
   if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
     echo "R. Return to Main Menu"
@@ -452,6 +453,7 @@ read_feature_options(){
     5) ToggleMultiOption BUILD_PROFILE;;
     6) ToggleFeature ASAN_ENABLED;;
     7) ToggleFeature FAIL_ON_WARNINGS;;
+    8) ToggleFeature OPENSSL_ENABLED;;
     p) export FEATURES_SELECTED="true" ;;
     r) if [ "$GUIDED_INSTALL" = "${TRUE}" ]; then
         export MENU="main"

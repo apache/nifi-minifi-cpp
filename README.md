@@ -125,7 +125,7 @@ Through JNI extensions you can run NiFi processors using NARs. The JNI extension
 ##### External Projects
 
 The following utilities are needed to build external projects, when bundled
-versions of LibreSSL, cURL, or zlib are used:
+versions of OpenSSL, cURL, or zlib are used:
 
 * patch
 * autoconf
@@ -151,6 +151,10 @@ and rebuild.
 * Lua and development headers -- Required if Lua support is enabled
 * libgps-dev -- Required if building libGPS support
 * Zlib headers
+* perl -- Required for OpenSSL configuration
+* NASM -- Required for OpenSSL only on Windows
+
+**NOTE** On Windows if Strawberry Perl is used the `${StrawberryPerlRoot}\c\bin` directory should not be part of the %PATH% variable as Strawberry Perl's patch.exe will be found as the patch executable in the configure phase instead if the git patch executable.
 
 #### CentOS 7
 
@@ -181,7 +185,7 @@ On all distributions please use -DUSE_SHARED_LIBS=OFF to statically link zlib, l
 * libuuid
 * librocksdb (built and statically linked)
 * libcurl-openssl (If not available or desired, NSS will be used)
-* libssl and libcrypto from libressl (built and statically linked)
+* libssl and libcrypto from openssl (built and statically linked)
 * libarchive (built and statically linked)
 * librdkafka (built and statically linked)
 * Python 3 -- Required if Python support is enabled

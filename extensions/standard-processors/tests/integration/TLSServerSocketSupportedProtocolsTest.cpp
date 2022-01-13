@@ -119,10 +119,11 @@ void log_addrinfo(addrinfo* const ai, minifi::core::logging::Logger& logger) {
 
 class SimpleSSLTestClient  {
  public:
-  SimpleSSLTestClient(const SSL_METHOD* method, std::string host, std::string port) :
+  SimpleSSLTestClient(uint64_t disable_version, std::string host, std::string port) :
     host_(std::move(host)),
     port_(std::move(port)) {
-      ctx_ = SSL_CTX_new(method);
+      ctx_ = SSL_CTX_new(TLS_client_method());
+      SSL_CTX_set_options(ctx_, disable_version);
       sfd_ = openConnection(host_.c_str(), port_.c_str(), *logger_);
       if (ctx_ != nullptr)
         ssl_ = SSL_new(ctx_);
@@ -194,21 +195,21 @@ class SimpleSSLTestClient  {
 class SimpleSSLTestClientTLSv1  : public SimpleSSLTestClient {
  public:
   SimpleSSLTestClientTLSv1(const std::string& host, const std::string& port)
-      : SimpleSSLTestClient(TLSv1_client_method(), host, port) {
+      : SimpleSSLTestClient(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1_2 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_3, host, port) {
   }
 };
 
 class SimpleSSLTestClientTLSv1_1  : public SimpleSSLTestClient {
  public:
   SimpleSSLTestClientTLSv1_1(const std::string& host, const std::string& port)
-      : SimpleSSLTestClient(TLSv1_1_client_method(), host, port) {
+      : SimpleSSLTestClient(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_2 | SSL_OP_NO_TLSv1_3, host, port) {
   }
 };
 
 class SimpleSSLTestClientTLSv1_2  : public SimpleSSLTestClient {
  public:
   SimpleSSLTestClientTLSv1_2(const std::string& host, const std::string& port)
-      : SimpleSSLTestClient(TLSv1_2_client_method(), host, port) {
+      : SimpleSSLTestClient(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_NO_TLSv1_3, host, port) {
   }
 };
 
