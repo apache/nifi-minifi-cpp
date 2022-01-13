@@ -174,19 +174,20 @@ class ComponentManifest : public DeviceInformation {
               SerializedResponseNode allowed_type;
               allowed_type.name = "typeProvidedByValue";
               for (const auto &type : allowed_types) {
+                std::string class_name = utils::StringUtils::split(type, "::").back();
                 SerializedResponseNode typeNode;
                 typeNode.name = "type";
                 std::string typeClazz = type;
                 utils::StringUtils::replaceAll(typeClazz, "::", ".");
                 typeNode.value = typeClazz;
-                allowed_type.children.push_back(typeNode);
 
                 SerializedResponseNode bgroup;
                 bgroup.name = "group";
                 bgroup.value = GROUP_STR;
+
                 SerializedResponseNode artifact;
                 artifact.name = "artifact";
-                artifact.value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(type).value_or("");
+                artifact.value = core::ClassLoader::getDefaultClassLoader().getGroupForClass(class_name).value_or("");
                 allowed_type.children.push_back(typeNode);
                 allowed_type.children.push_back(bgroup);
                 allowed_type.children.push_back(artifact);
