@@ -16,43 +16,26 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <string>
-#include <functional>
+#include "SQLColumnIdentifier.h"
 
 namespace org::apache::nifi::minifi::sql {
 
-class SQLIdentifier {
- public:
-  explicit SQLIdentifier(std::string str);
+SQLColumnIdentifier::SQLColumnIdentifier(std::string str) {
+  // foo, "foo", [foo], `foo` are identifiers in different servers
+  value_ = [&] () {
+    if (str.length() < 2) {
+      return str;
+    }
+    if ((str.front() == '"' && str.back() == '"')
+        || (str.front() == '[' && str.back() == ']')
+        || (str.front() == '`' && str.back() == '`')) {
+      return str.substr(1, str.length() - 2);
+    }
+    return str;
+  }();
 
-  std::string value() const { return value_; }
-
-  std::string str() const { return original_value_; }
-
-  bool operator==(const SQLIdentifier &other) const {
-    return value_ == other.value_;
-  }
-
-  bool operator==(const std::string& other) const {
-    return value_ == other;
-  }
-
-  friend struct ::std::hash<SQLIdentifier>;
-
- private:
-  std::string original_value_;
-  std::string value_;
-};
+  original_value_ = std::move(str);
+}
 
 }  // namespace org::apache::nifi::minifi::sql
 
-namespace std {
-template<>
-struct hash<org::apache::nifi::minifi::sql::SQLIdentifier> {
-  size_t operator()(const org::apache::nifi::minifi::sql::SQLIdentifier &id) const {
-    return std::hash<std::string>{}(id.value_);
-  }
-};
-}  // namespace std

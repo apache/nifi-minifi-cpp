@@ -25,7 +25,7 @@
 #include <sstream>
 
 #include "SQLRowSubscriber.h"
-#include "SQLIdentifier.h"
+#include "SQLColumnIdentifier.h"
 
 namespace org {
 namespace apache {
@@ -76,7 +76,7 @@ class MaxCollector: public SQLRowSubscriber {
   template <typename T>
   class MaxValue {
    public:
-    void updateMaxValue(const SQLIdentifier& column, const T& value) {
+    void updateMaxValue(const SQLColumnIdentifier& column, const T& value) {
       const auto it = column_maxima.find(column);
       if (it == column_maxima.end()) {
         column_maxima.emplace(column, value);
@@ -88,7 +88,7 @@ class MaxCollector: public SQLRowSubscriber {
     }
 
    protected:
-    void updateStateImpl(std::unordered_map<SQLIdentifier, std::string>& state) const {
+    void updateStateImpl(std::unordered_map<SQLColumnIdentifier, std::string>& state) const {
       for (auto& curr_column_max : state) {
         const auto it = column_maxima.find(curr_column_max.first);
         if (it != column_maxima.end()) {
@@ -100,24 +100,24 @@ class MaxCollector: public SQLRowSubscriber {
     }
 
    private:
-    std::unordered_map<SQLIdentifier, T> column_maxima;
+    std::unordered_map<SQLColumnIdentifier, T> column_maxima;
   };
 
   template <typename ...Ts>
   struct MaxValues : public MaxValue<Ts>... {
-    void updateState(std::unordered_map<SQLIdentifier, std::string>& state) const {
+    void updateState(std::unordered_map<SQLColumnIdentifier, std::string>& state) const {
       (void)(std::initializer_list<int>{(MaxValue<Ts>::updateStateImpl(state), 0)...});
     }
   };
 
  public:
-  MaxCollector(std::string query, std::unordered_map<SQLIdentifier, std::string>& state)
+  MaxCollector(std::string query, std::unordered_map<SQLColumnIdentifier, std::string>& state)
     :query_(std::move(query)), state_(state) {
   }
 
   template <typename T>
   void updateMaxValue(const std::string& column_name, const T& value) {
-    SQLIdentifier column_id(column_name);
+    SQLColumnIdentifier column_id(column_name);
     if (state_.count(column_id)) {
       max_values_.MaxValue<T>::updateMaxValue(column_id, value);
     }
@@ -129,7 +129,7 @@ class MaxCollector: public SQLRowSubscriber {
 
  private:
   const std::string query_;
-  std::unordered_map<SQLIdentifier, std::string>& state_;
+  std::unordered_map<SQLColumnIdentifier, std::string>& state_;
   MaxValues<std::string, double, int, long long, unsigned long long> max_values_;
 };
   
