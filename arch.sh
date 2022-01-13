@@ -80,6 +80,8 @@ build_deps(){
                         INSTALLED+=("tensorflow")
                     elif [ "$FOUND_VALUE" = "boost" ]; then
                         INSTALLED+=("boost")
+                    elif [ "$FOUND_VALUE" = "opensslbuild" ]; then
+                        INSTALLED+=("perl")
                     fi
                 fi
             done

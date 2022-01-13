@@ -19,6 +19,7 @@ include(FetchContent)
 
 set(ZSTD_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 
+set(PC "")
 if (WIN32)
     set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/zstd/exclude_gcc_clang_compiler_options_from_windows.patch")
     set(PC "${Patch_EXECUTABLE}" -p1 -i "${PATCH_FILE}")

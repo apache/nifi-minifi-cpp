@@ -93,6 +93,8 @@ jobs:
           python-version: '3.11'
       - name: Set up Lua
         uses: xpol/setup-lua@v0.3
+      - name: Set up NASM for OpenSSL
+        uses: ilammy/setup-nasm@v1
       - id: install-sqliteodbc-driver
         run: |
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"

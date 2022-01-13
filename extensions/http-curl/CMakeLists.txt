@@ -33,5 +33,9 @@ add_library(minifi-http-curl SHARED ${SOURCES})
 target_link_libraries(minifi-http-curl ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-http-curl CURL::libcurl RapidJSON)
 
+if (APPLE)
+    target_link_libraries(minifi-http-curl "-framework CoreFoundation -framework SystemConfiguration")
+endif()
+
 register_extension(minifi-http-curl "HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl/tests/")
 register_extension_linter(minifi-http-curl-linter)

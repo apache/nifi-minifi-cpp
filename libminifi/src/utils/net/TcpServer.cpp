@@ -57,7 +57,7 @@ asio::awaitable<void> TcpServer::insecureSession(asio::ip::tcp::socket socket) {
 
 namespace {
 asio::ssl::context setupSslContext(SslServerOptions& ssl_data) {
-  asio::ssl::context ssl_context(asio::ssl::context::tls_server);
+  asio::ssl::context ssl_context(asio::ssl::context::tlsv12_server);
   ssl_context.set_options(asio::ssl::context::default_workarounds | asio::ssl::context::single_dh_use | asio::ssl::context::no_tlsv1 | asio::ssl::context::no_tlsv1_1);
   ssl_context.set_password_callback([key_pw = ssl_data.cert_data.key_pw](std::size_t&, asio::ssl::context_base::password_purpose&) { return key_pw; });
   ssl_context.use_certificate_file(ssl_data.cert_data.cert_loc.string(), asio::ssl::context::pem);

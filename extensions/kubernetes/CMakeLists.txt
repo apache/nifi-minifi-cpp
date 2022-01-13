@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND ENABLE_KUBERNETES))
+if (NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND ENABLE_KUBERNETES) OR OPENSSL_OFF)
     return()
 endif()
 

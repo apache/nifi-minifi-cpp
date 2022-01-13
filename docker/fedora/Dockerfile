@@ -33,7 +33,7 @@ ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
 RUN echo "fastestmirror=True" | tee -a /etc/dnf/dnf.conf
 RUN for iter in {1..10}; do yum update -y && \
     yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel flex bison make patch sudo git which maven libtool autoconf automake java-1.8.0-openjdk java-1.8.0-openjdk-devel sudo \
-    git which maven make libarchive boost-devel lua-devel libusb-devel libpng-devel gpsd-devel libpcap-devel && \
+    git which maven make libarchive boost-devel lua-devel libusb-devel libpng-devel gpsd-devel libpcap-devel perl && \
     yum clean all && exit_code=0 && break || exit_code=$? && echo "yum error: retry $iter in 10s" && sleep 10; done; \
     (exit $exit_code)
 

@@ -27,12 +27,7 @@
 struct stack_st_ASN1_OBJECT;
 typedef stack_st_ASN1_OBJECT EXTENDED_KEY_USAGE;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace tls {
+namespace org::apache::nifi::minifi::utils::tls {
 
 struct EXTENDED_KEY_USAGE_deleter {
   void operator()(EXTENDED_KEY_USAGE* key_usage) const;
@@ -55,11 +50,6 @@ class ExtendedKeyUsage {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace tls
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::tls
 
 #endif  // OPENSSL_SUPPORT

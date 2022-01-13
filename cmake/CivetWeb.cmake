@@ -24,10 +24,14 @@ set(CIVETWEB_ENABLE_LUA "OFF" CACHE STRING "" FORCE)
 set(CIVETWEB_ENABLE_CXX "ON" CACHE STRING "" FORCE)
 set(CIVETWEB_ALLOW_WARNINGS "ON" CACHE STRING "" FORCE)
 set(CIVETWEB_ENABLE_ASAN "OFF" CACHE STRING "" FORCE)
+set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/civetweb/openssl3.patch")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
 
 FetchContent_Declare(civetweb
     URL      https://github.com/civetweb/civetweb/archive/refs/tags/v1.16.tar.gz
     URL_HASH SHA256=f0e471c1bf4e7804a6cfb41ea9d13e7d623b2bcc7bc1e2a4dd54951a24d60285
+    PATCH_COMMAND "${PC}"
 )
 
 FetchContent_MakeAvailable(civetweb)

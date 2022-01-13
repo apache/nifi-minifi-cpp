@@ -59,3 +59,10 @@ FetchContent_MakeAvailable(google-cloud-cpp)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "14.0.0" )
     target_compile_options(google_cloud_cpp_common PUBLIC -Wno-error=deprecated-pragma)
 endif()
+
+# MD5_Init, MD5_Update and MD5_Final used in Google Cloud C++ library are deprecated since OpenSSL 3.0
+if (WIN32)
+    target_compile_options(google_cloud_cpp_storage PUBLIC /wd4996)
+else()
+    target_compile_options(google_cloud_cpp_storage PUBLIC -Wno-error=deprecated-declarations)
+endif()

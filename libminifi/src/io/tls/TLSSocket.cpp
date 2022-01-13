@@ -65,7 +65,7 @@ int16_t TLSContext::initialize(bool server_method) {
        org::apache::nifi::minifi::utils::StringUtils::toBool(clientAuthStr).value_or(true));
 
   const SSL_METHOD *method;
-  method = server_method ? TLSv1_2_server_method() : TLSv1_2_client_method();
+  method = server_method ? TLS_server_method() : TLS_client_method();
   auto local_context = std::unique_ptr<SSL_CTX, decltype(&deleteContext)>(SSL_CTX_new(method), deleteContext);
   if (local_context == nullptr) {
     logger_->log_error("Could not create SSL context, error: %s.", std::strerror(errno));

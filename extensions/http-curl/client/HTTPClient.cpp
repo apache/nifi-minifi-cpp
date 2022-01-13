@@ -145,6 +145,29 @@ void HTTPClient::clearBasicAuth() {
 }
 
 bool HTTPClient::setSpecificSSLVersion(utils::SSLVersion specific_version) {
+#ifdef OPENSSL_SUPPORT
+  if (ssl_context_service_) {
+    switch (specific_version) {
+      case utils::SSLVersion::TLSv1_0: {
+        ssl_context_service_->setMinTlsVersion(TLS1_VERSION);
+        ssl_context_service_->setMaxTlsVersion(TLS1_VERSION);
+        break;
+      }
+      case utils::SSLVersion::TLSv1_1: {
+        ssl_context_service_->setMinTlsVersion(TLS1_1_VERSION);
+        ssl_context_service_->setMaxTlsVersion(TLS1_1_VERSION);
+        break;
+      }
+      case utils::SSLVersion::TLSv1_2: {
+        ssl_context_service_->setMinTlsVersion(TLS1_2_VERSION);
+        ssl_context_service_->setMaxTlsVersion(TLS1_2_VERSION);
+        break;
+      }
+      default: break;
+    }
+  }
+#endif
+
 #if CURL_AT_LEAST_VERSION(7, 54, 0)
   // bitwise or of different enum types is deprecated in C++20, but the curl api explicitly supports ORing one of CURL_SSLVERSION and one of CURL_SSLVERSION_MAX
   switch (specific_version) {
@@ -163,6 +186,26 @@ bool HTTPClient::setSpecificSSLVersion(utils::SSLVersion specific_version) {
 
 // If not set, the default will be TLS 1.0, see https://curl.haxx.se/libcurl/c/CURLOPT_SSLVERSION.html
 bool HTTPClient::setMinimumSSLVersion(utils::SSLVersion minimum_version) {
+#ifdef OPENSSL_SUPPORT
+  if (ssl_context_service_) {
+    switch (minimum_version) {
+      case utils::SSLVersion::TLSv1_0: {
+        ssl_context_service_->setMinTlsVersion(TLS1_VERSION);
+        break;
+      }
+      case utils::SSLVersion::TLSv1_1: {
+        ssl_context_service_->setMinTlsVersion(TLS1_1_VERSION);
+        break;
+      }
+      case utils::SSLVersion::TLSv1_2: {
+        ssl_context_service_->setMinTlsVersion(TLS1_2_VERSION);
+        break;
+      }
+      default: break;
+    }
+  }
+#endif
+
   CURLcode ret = CURLE_UNKNOWN_OPTION;
   switch (minimum_version) {
     case utils::SSLVersion::TLSv1_0:
