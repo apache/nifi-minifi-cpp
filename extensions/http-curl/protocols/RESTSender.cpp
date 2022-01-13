@@ -110,7 +110,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
     }
     if (payload.getOperation() == Operation::TRANSFER) {
       // treat nested payloads as files
-      for (auto& file : payload.getNestedPayloads()) {
+      for (const auto& file : payload.getNestedPayloads()) {
         std::string filename = file.getLabel();
         if (filename.empty()) {
           throw std::logic_error("Missing filename");
