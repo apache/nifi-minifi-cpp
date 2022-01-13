@@ -12,7 +12,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And a PutSQL processor with the "SQL Statement" property set to "INSERT INTO test_table (int_col, text_col) VALUES (?, ?)"
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the PutSQL
-    And an ODBCService is setup up for PutSQL with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
+    And an ODBCService is setup up for PutSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
     Then the query "SELECT * FROM test_table WHERE int_col = 42" returns 1 rows in less than 120 seconds on the PostgreSQL server
@@ -27,7 +27,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the ExecuteSQL
     And the "success" relationship of the ExecuteSQL processor is connected to the PutFile
-    And an ODBCService is setup up for ExecuteSQL with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
+    And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
     Then at least one flowfile with the content '[{"int_col":2,"text_col":"banana"},{"int_col":1,"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
@@ -36,13 +36,14 @@ Feature: Executing SQL operations from MiNiFi-C++
     Given a GenerateFlowFile processor with the "File Size" property set to "0B"
     And a UpdateAttribute processor with the "sql.args.1.value" property set to "ApPlE"
     And the "sql.args.2.value" property of the UpdateAttribute processor is set to "BaNaNa"
+    # in PostgreSQL we have to quote column names if they contain uppercase characters
     And a ExecuteSQL processor with the "SQL select query" property set to "SELECT * FROM test_table2 WHERE "tExT_Col" = ? OR "tExT_Col" = ? ORDER BY int_col DESC"
     And the "Output Format" property of the ExecuteSQL processor is set to "JSON"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GenerateFlowFile processor is connected to the UpdateAttribute
     And the "success" relationship of the UpdateAttribute processor is connected to the ExecuteSQL
     And the "success" relationship of the ExecuteSQL processor is connected to the PutFile
-    And an ODBCService is setup up for ExecuteSQL with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
+    And an ODBCService is setup up for ExecuteSQL with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
     Then at least one flowfile with the content '[{"int_col":6,"tExT_Col":"BaNaNa"},{"int_col":5,"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 120 seconds
@@ -54,8 +55,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "Output Format" property of the QueryDatabaseTable processor is set to "JSON"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the QueryDatabaseTable processor is connected to the PutFile
-    And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
-    And a PostgreSQL server is set up
+    And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     When all instances start up
     Then at least one flowfile with the content '[{"text_col":"apple"}]' is placed in the monitored directory in less than 120 seconds
 
@@ -66,7 +66,7 @@ Feature: Executing SQL operations from MiNiFi-C++
     And the "Output Format" property of the QueryDatabaseTable processor is set to "JSON"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the QueryDatabaseTable processor is connected to the PutFile
-    And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService" and connection string "Driver={PostgreSQL ANSI};Server=postgresql-server;Port=5432;Database=postgres;Uid=postgres;Pwd=password;"
+    And an ODBCService is setup up for QueryDatabaseTable with the name "ODBCService"
     And a PostgreSQL server is set up
     When all instances start up
     Then at least one flowfile with the content '[{"tExT_Col":"ApPlE"}]' is placed in the monitored directory in less than 120 seconds
