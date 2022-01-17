@@ -180,14 +180,6 @@ struct ListRequestParameters : public RequestParameters {
 };
 
 struct ListedObjectAttributes : public minifi::utils::ListedObject {
-  std::string filename;
-  std::string etag;
-  bool is_latest = false;
-  int64_t last_modified = 0;
-  int64_t length = 0;
-  std::string store_class;
-  std::string version;
-
   uint64_t getLastModified() const override {
     return gsl::narrow<uint64_t>(last_modified);
   }
@@ -195,6 +187,14 @@ struct ListedObjectAttributes : public minifi::utils::ListedObject {
   std::string getKey() const override {
     return filename;
   }
+
+  std::string filename;
+  std::string etag;
+  bool is_latest = false;
+  int64_t last_modified = 0;
+  int64_t length = 0;
+  std::string store_class;
+  std::string version;
 };
 
 using HeadObjectRequestParameters = GetObjectRequestParameters;

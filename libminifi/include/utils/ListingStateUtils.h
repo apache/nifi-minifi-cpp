@@ -18,9 +18,9 @@
 
 #pragma once
 
-#include <vector>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 
 #include "core/CoreComponentState.h"
@@ -41,7 +41,7 @@ struct ListingState {
   void updateState(const ListedObject &object_attributes);
 
   uint64_t listed_key_timestamp = 0;
-  std::vector<std::string> listed_keys;
+  std::unordered_set<std::string> listed_keys;
 };
 
 class ListingStateManager {
@@ -58,7 +58,7 @@ class ListingStateManager {
   static const std::string LATEST_LISTED_OBJECT_TIMESTAMP;
 
   uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state) const;
-  std::vector<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) const;
+  std::unordered_set<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) const;
 
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   const std::string timestamp_key_;

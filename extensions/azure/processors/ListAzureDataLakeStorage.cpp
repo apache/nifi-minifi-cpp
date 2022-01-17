@@ -118,7 +118,8 @@ void ListAzureDataLakeStorage::createNewFlowFile(core::ProcessSession &session, 
 }
 
 void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  logger_->log_debug("ListAzureDataLakeStorage onTrigger");
+  gsl_Expects(context && session);
+  logger_->log_trace("ListAzureDataLakeStorage onTrigger");
 
   auto list_result = azure_data_lake_storage_.listDirectory(list_parameters_);
   if (!list_result || list_result->empty()) {
