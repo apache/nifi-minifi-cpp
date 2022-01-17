@@ -70,12 +70,8 @@ void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessCo
   gsl_Expects(context && sessionFactory);
   SplunkHECProcessor::onSchedule(context, sessionFactory);
   std::string max_wait_time_str;
-  if (context->getProperty(MaximumWaitingTime.getName(), max_wait_time_str)) {
-    core::TimeUnit unit;
-    uint64_t max_wait_time;
-    if (core::Property::StringToTime(max_wait_time_str, max_wait_time, unit) && core::Property::ConvertTimeUnitToMS(max_wait_time, unit, max_wait_time)) {
-      max_age_ = std::chrono::milliseconds(max_wait_time);
-    }
+  if (auto max_age = context->getProperty<core::TimePeriodValue>(MaximumWaitingTime)) {
+    max_age_ = max_age->getMilliseconds();
   }
 
   context->getProperty(MaxQuerySize.getName(), batch_size_);
