@@ -229,7 +229,7 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
       logger_->log_debug("Component %s property name %s, empty value", name, property.getName());
       return false;
     }
-    logger_->log_debug("Component %s property name %s value %s", name, item.getName(), item.getValue().to_string());
+    logger_->log_debug("Component %s property name %s value %s", name, property.getName(), property.getValue().to_string());
 
     if constexpr (std::is_base_of<TransformableValue, T>::value) {
       value = T(property.getValue().operator std::string());
