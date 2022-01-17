@@ -30,7 +30,7 @@ SerializedResponseNode& get(SerializedResponseNode& node, const std::string& fie
   for (auto& child : node.children) {
     if (child.name == field) return child;
   }
-  FAIL("No field '" + field + "'");
+  throw std::logic_error("No field '" + field + "'");
 }
 
 namespace test::apple {
@@ -89,7 +89,7 @@ TEST_CASE("Manifest indicates property type requirement") {
   });
 
   REQUIRE(prop_it != properties.end());
-  
+
   // TODO(adebreceni): based on PropertyBuilder::asType a property could accept
   //    multiple types, these would be dumped into the same object as the type of
   //    field "typeProvidedByValue" is not an array but an object
