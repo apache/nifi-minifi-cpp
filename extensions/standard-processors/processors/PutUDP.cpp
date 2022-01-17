@@ -24,7 +24,6 @@
 #else
 #include <netdb.h>
 #endif /* WIN32 */
-#include <tuple>
 #include <utility>
 
 #include "range/v3/view/join.hpp"
@@ -33,8 +32,9 @@
 #include "utils/gsl.h"
 #include "utils/expected.h"
 #include "utils/net/DNS.h"
-#include "utils/StringUtils.h"
 #include "utils/net/Socket.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 

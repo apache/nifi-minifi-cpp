@@ -448,7 +448,7 @@ void YamlConfiguration::parseProvenanceReportingYaml(const YAML::Node& reportNod
 
   if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
     logger_->log_debug("ProvenanceReportingTask schedulingPeriod %" PRId64 " ns", scheduling_period->count());
-    processor->setSchedulingPeriodNano(*scheduling_period);
+    reportTask->setSchedulingPeriodNano(*scheduling_period);
   }
 
   if (schedulingStrategyStr == "TIMER_DRIVEN") {

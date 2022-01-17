@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 #include "TestBase.h"
+#include "FlowFileRecord.h"
 #include "core/Processor.h"
 
 namespace org::apache::nifi::minifi::test {
@@ -86,14 +87,14 @@ class SingleInputTestController : public TestController {
 
  private:
   std::shared_ptr<core::Processor> processor_;
-  std::unordered_map<core::Relationship, std::shared_ptr<Connection>> outgoing_connections_{[this] {
-    std::unordered_map<core::Relationship, std::shared_ptr<Connection>> result;
+  std::unordered_map<core::Relationship, Connection*> outgoing_connections_{[this] {
+    std::unordered_map<core::Relationship, Connection*> result;
     for (const auto& relationship: processor_->getSupportedRelationships()) {
       result.insert_or_assign(relationship, plan->addConnection(processor_, relationship, nullptr));
     }
     return result;
   }()};
-  std::shared_ptr<Connection> input_ = plan->addConnection(nullptr, core::Relationship{"success", "success"}, processor_);
+  Connection* input_ = plan->addConnection(nullptr, core::Relationship{"success", "success"}, processor_);
 };
 
 }  // namespace org::apache::nifi::minifi::test
