@@ -17,6 +17,7 @@
 
 #include "utils/ChecksumCalculator.h"
 
+#include <array>
 #include <fstream>
 
 #include "sodium/crypto_hash_sha256.h"
@@ -80,10 +81,10 @@ std::string ChecksumCalculator::computeChecksum(const std::string& file_location
     throw std::runtime_error(StringUtils::join_pack("Error reading config file '", file_location, "' while computing the checksum: ", std::strerror(errno)));
   }
 
-  unsigned char hash[LENGTH_OF_HASH_IN_BYTES] = {0};
-  crypto_hash_sha256_final(&state, hash);
+  std::array<unsigned char, LENGTH_OF_HASH_IN_BYTES> hash{};
+  crypto_hash_sha256_final(&state, hash.data());
 
-  return StringUtils::to_hex(reinterpret_cast<const uint8_t*>(hash), LENGTH_OF_HASH_IN_BYTES);
+  return StringUtils::to_hex(gsl::make_span(hash).as_span<std::byte>());
 }
 
 }  // namespace utils

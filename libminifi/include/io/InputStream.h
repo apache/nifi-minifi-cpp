@@ -18,32 +18,28 @@
 
 #pragma once
 
+#include <array>
+#include <cstddef>
 #include <stdexcept>
 #include <vector>
 #include <string>
 #include "Stream.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 class InputStream : public virtual Stream {
  public:
-  virtual size_t size() const {
+  [[nodiscard]] virtual size_t size() const {
     throw std::runtime_error("Querying size is not supported");
   }
   /**
    * Reads a byte array from the stream. Use isError (Stream.h) to check for errors.
-   * @param value reference in which will set the result
+   * @param out_buffer reference in which will set the result
    * @param len length to read
    * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
-  virtual size_t read(uint8_t *value, size_t len) = 0;
-
-  size_t read(std::vector<uint8_t>& buffer, size_t len);
+  virtual size_t read(gsl::span<std::byte> out_buffer) = 0;
 
   /**
    * Read string from stream. Use isError (Stream.h) to check for errors.
@@ -71,10 +67,10 @@ class InputStream : public virtual Stream {
    * @param value reference in which will set the result
    * @return resulting read size or STREAM_ERROR on error or static_cast<size_t>(-2) on EAGAIN
    **/
-  template<typename Integral, typename = std::enable_if<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
+  template<typename Integral, typename = std::enable_if_t<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
   size_t read(Integral& value) {
-    uint8_t buf[sizeof(Integral)]{};
-    if (read(buf, sizeof(Integral)) != sizeof(Integral)) {
+    std::array<std::byte, sizeof(Integral)> buf;
+    if (read(buf) != sizeof(Integral)) {
       return io::STREAM_ERROR;
     }
 
@@ -87,8 +83,4 @@ class InputStream : public virtual Stream {
   }
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::io

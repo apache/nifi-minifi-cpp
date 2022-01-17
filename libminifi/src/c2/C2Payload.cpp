@@ -64,20 +64,20 @@ void C2Payload::addContent(C2ContentResponse &&content, bool collapsible) {
 }
 
 void C2Payload::setRawData(const std::string &data) {
+  const auto byte_view = gsl::make_span(data).as_span<const std::byte>();
   raw_data_.reserve(raw_data_.size() + data.size());
-  raw_data_.insert(std::end(raw_data_), std::begin(data), std::end(data));
+  raw_data_.insert(std::end(raw_data_), std::begin(byte_view), std::end(byte_view));
 }
 
 void C2Payload::setRawData(const std::vector<char> &data) {
+  const auto byte_view = gsl::make_span(data).as_span<const std::byte>();
   raw_data_.reserve(raw_data_.size() + data.size());
-  raw_data_.insert(std::end(raw_data_), std::begin(data), std::end(data));
+  raw_data_.insert(std::end(raw_data_), std::begin(byte_view), std::end(byte_view));
 }
 
-void C2Payload::setRawData(const std::vector<uint8_t> &data) {
+void C2Payload::setRawData(gsl::span<const std::byte> data) {
   raw_data_.reserve(raw_data_.size() + data.size());
-  std::transform(std::begin(data), std::end(data), std::back_inserter(raw_data_), [](uint8_t c) {
-    return static_cast<char>(c);
-  });
+  raw_data_.insert(std::end(raw_data_), std::begin(data), std::end(data));
 }
 
 void C2Payload::addPayload(C2Payload &&payload) {

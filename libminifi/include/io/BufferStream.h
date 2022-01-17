@@ -35,8 +35,8 @@ class BufferStream : public BaseStream {
  public:
   BufferStream() = default;
 
-  BufferStream(const uint8_t *buf, const size_t len) {
-    write(buf, len);
+  explicit BufferStream(gsl::span<const std::byte> buf) {
+    write(buf);
   }
 
   explicit BufferStream(const std::string& data) {
@@ -56,7 +56,7 @@ class BufferStream : public BaseStream {
 
   size_t write(const uint8_t* data, size_t len) final;
 
-  size_t read(uint8_t* buffer, size_t len) override;
+  size_t read(gsl::span<std::byte> buffer) override;
 
   int initialize() override {
     buffer_.clear();
@@ -68,7 +68,7 @@ class BufferStream : public BaseStream {
     readOffset_ = offset;
   }
 
-  size_t tell() const override {
+  [[nodiscard]] size_t tell() const override {
     return readOffset_;
   }
 
@@ -78,11 +78,11 @@ class BufferStream : public BaseStream {
    * Returns the underlying buffer
    * @return vector's array
    **/
-  const uint8_t* getBuffer() const override {
-    return buffer_.data();
+  [[nodiscard]] gsl::span<const std::byte> getBuffer() const override {
+    return buffer_;
   }
 
-  std::vector<uint8_t> moveBuffer() {
+  std::vector<std::byte> moveBuffer() {
     return std::exchange(buffer_, {});
   }
 
@@ -90,12 +90,12 @@ class BufferStream : public BaseStream {
    * Retrieve size of data stream
    * @return size of data stream
    **/
-  size_t size() const override {
+  [[nodiscard]] size_t size() const override {
     return buffer_.size();
   }
 
  private:
-  std::vector<uint8_t> buffer_;
+  std::vector<std::byte> buffer_;
 
   uint64_t readOffset_ = 0;
 };

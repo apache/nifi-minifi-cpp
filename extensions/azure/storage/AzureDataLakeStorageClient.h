@@ -49,7 +49,7 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
    * @param buffer Buffer containing the data to be uploaded
    * @return URI of the file uploaded
    */
-  std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) override;
+  std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer) override;
 
   /**
    * Deletes a file on the Azure Data Lake Storage
@@ -83,8 +83,8 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
       return result_.Body->Length();
     }
 
-    size_t read(uint8_t *value, size_t len) override {
-      return result_.Body->Read(value, len);
+    size_t read(gsl::span<std::byte> out_buffer) override {
+      return result_.Body->Read(out_buffer.as_span<uint8_t>().data(), out_buffer.size());
     }
 
    private:

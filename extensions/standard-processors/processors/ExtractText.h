@@ -77,7 +77,7 @@ class ExtractText : public core::Processor {
    private:
     std::shared_ptr<core::FlowFile> flowFile_;
     core::ProcessContext *ctx_;
-    std::vector<uint8_t> buffer_;
+    std::vector<std::byte> buffer_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
 

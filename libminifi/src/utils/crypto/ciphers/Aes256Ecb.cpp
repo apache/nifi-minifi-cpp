@@ -61,7 +61,7 @@ void Aes256EcbCipher::encrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
     handleOpenSSLError("Could not create cipher context");
   }
 
-  if (1 != EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_ecb(), nullptr, encryption_key_.data(), nullptr)) {
+  if (1 != EVP_EncryptInit_ex(ctx.get(), EVP_aes_256_ecb(), nullptr, reinterpret_cast<const unsigned char*>(encryption_key_.data()), nullptr)) {
     handleOpenSSLError("Could not initialize encryption cipher context");
   }
 
@@ -94,7 +94,7 @@ void Aes256EcbCipher::decrypt(gsl::span<unsigned char /*, BLOCK_SIZE*/> data) co
     handleOpenSSLError("Could not create cipher context");
   }
 
-  if (1 != EVP_DecryptInit_ex(ctx.get(), EVP_aes_256_ecb(), nullptr, encryption_key_.data(), nullptr)) {
+  if (1 != EVP_DecryptInit_ex(ctx.get(), EVP_aes_256_ecb(), nullptr, reinterpret_cast<const unsigned char*>(encryption_key_.data()), nullptr)) {
     handleOpenSSLError("Could not initialize decryption cipher context");
   }
 

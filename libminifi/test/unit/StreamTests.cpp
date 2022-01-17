@@ -75,7 +75,7 @@ TEST_CASE("TestWrite1", "[testwrite]") {
   auto base = std::make_shared<minifi::io::BufferStream>();
   base->write((uint64_t)0x0102030405060708);
   std::string bytes(8, '\0');
-  REQUIRE(8 == base->read(reinterpret_cast<uint8_t*>(const_cast<char*>(bytes.data())), 8));
+  REQUIRE(8 == base->read(gsl::make_span(bytes).as_span<std::byte>()));
   REQUIRE(bytes == "\x01\x02\x03\x04\x05\x06\x07\x08");
 }
 
@@ -90,11 +90,14 @@ TEST_CASE("StreamSliceTest1", "[teststreamslice]") {
   std::shared_ptr<minifi::io::BaseStream> base = std::make_shared<minifi::io::BufferStream>();
   base->write((const uint8_t*)"\x01\x02\x03\x04\x05\x06\x07\x08", 8);
   std::shared_ptr<minifi::io::BaseStream> stream_slice = std::make_shared<minifi::io::StreamSlice>(base, 2, 4);
-  std::vector<uint8_t> buffer;
-  REQUIRE(stream_slice->read(buffer, stream_slice->size()) == 4);
+  std::vector<std::byte> buffer;
+  buffer.resize(stream_slice->size());
+  REQUIRE(stream_slice->read(buffer) == 4);
   stream_slice->seek(0);
-  std::vector<uint8_t> buffer2;
-  REQUIRE(stream_slice->read(buffer2, 1000) == 4);
+  std::vector<std::byte> buffer2;
+  buffer2.resize(1000);
+  REQUIRE(stream_slice->read(buffer2) == 4);
+  buffer2.resize(4);
   REQUIRE(buffer == buffer2);
-  REQUIRE(buffer == std::vector<uint8_t>({3, 4, 5, 6}));
+  REQUIRE(utils::span_to<std::vector>(gsl::make_span(buffer).as_span<uint8_t>()) == std::vector<uint8_t>({3, 4, 5, 6}));
 }

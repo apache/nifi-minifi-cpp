@@ -178,10 +178,11 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
 namespace {
 
 struct ReadFlowFileIntoBuffer : public InputStreamCallback {
-  std::vector<uint8_t> buffer_;
+  std::vector<std::byte> buffer_;
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    size_t bytes_read = stream->read(buffer_, stream->size());
+    buffer_.resize(stream->size());
+    size_t bytes_read = stream->read(buffer_);
     return io::isError(bytes_read) ? -1 : gsl::narrow<int64_t>(bytes_read);
   }
 };
@@ -204,11 +205,8 @@ void ReplaceText::replaceTextInEntireFile(const std::shared_ptr<core::FlowFile>&
   gsl_Expects(session);
 
   try {
-    ReadFlowFileIntoBuffer read_callback;
-    session->read(flow_file, &read_callback);
-
-    std::string input{read_callback.buffer_.begin(), read_callback.buffer_.end()};
-    std::string output = applyReplacements(input, flow_file, parameters);
+    const auto read_result = session->readBuffer(flow_file);
+    std::string output = applyReplacements(to_string(read_result), flow_file, parameters);
     std::vector<uint8_t> modified_text{output.begin(), output.end()};
 
     WriteBufferToFlowFile write_callback{modified_text};

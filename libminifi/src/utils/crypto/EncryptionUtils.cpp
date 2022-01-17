@@ -32,16 +32,16 @@ namespace utils {
 namespace crypto {
 
 Bytes stringToBytes(const std::string& text) {
-  return Bytes(text.begin(), text.end());
+  return utils::span_to<std::vector>(gsl::make_span(text).as_span<const Bytes::value_type>());
 }
 
 std::string bytesToString(const Bytes& bytes) {
-  return std::string(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+  return utils::span_to<std::string>(gsl::make_span(bytes).as_span<const char>());
 }
 
 Bytes generateKey() {
   Bytes key(EncryptionType::keyLength());
-  crypto_secretbox_keygen(key.data());
+  crypto_secretbox_keygen(reinterpret_cast<unsigned char*>(key.data()));
   return key;
 }
 
@@ -72,8 +72,9 @@ Bytes encryptRaw(const Bytes& plaintext, const Bytes& key, const Bytes& nonce) {
   }
 
   Bytes ciphertext_plus_mac(plaintext.size() + EncryptionType::macLength());
-  crypto_secretbox_easy(ciphertext_plus_mac.data(), plaintext.data(), plaintext.size(), nonce.data(), key.data());
-  return ciphertext_plus_mac;
+  crypto_secretbox_easy(reinterpret_cast<unsigned char*>(ciphertext_plus_mac.data()), reinterpret_cast<const unsigned char*>(plaintext.data()), plaintext.size(),
+      reinterpret_cast<const unsigned char*>(nonce.data()), reinterpret_cast<const unsigned char*>(key.data()));
+    return ciphertext_plus_mac;
 }
 
 std::string encrypt(const std::string& plaintext, const Bytes& key) {
@@ -100,7 +101,8 @@ Bytes decryptRaw(const Bytes& input, const Bytes& key, const Bytes& nonce) {
   }
 
   Bytes plaintext(input.size() - EncryptionType::macLength());
-  if (crypto_secretbox_open_easy(plaintext.data(), input.data(), input.size(), nonce.data(), key.data())) {
+  if (crypto_secretbox_open_easy(reinterpret_cast<unsigned char*>(plaintext.data()), reinterpret_cast<const unsigned char*>(input.data()), input.size(),
+      reinterpret_cast<const unsigned char*>(nonce.data()), reinterpret_cast<const unsigned char*>(key.data()))) {
     throw std::runtime_error{"Decryption failed; the input may be forged!"};
   }
   return plaintext;
@@ -118,8 +120,8 @@ EncryptedData parseEncrypted(const std::string& input) {
     throw std::invalid_argument{"Incorrect input; expected '<nonce>" + EncryptionType::separator() + "<ciphertext_plus_mac>'"};
   }
 
-  Bytes nonce = utils::StringUtils::from_base64(nonce_and_rest[0].data(), nonce_and_rest[0].size());
-  Bytes ciphertext_plus_mac = utils::StringUtils::from_base64(nonce_and_rest[1].data(), nonce_and_rest[1].size());
+  Bytes nonce = utils::StringUtils::from_base64(nonce_and_rest[0]);
+  Bytes ciphertext_plus_mac = utils::StringUtils::from_base64(nonce_and_rest[1]);
 
   return EncryptedData{nonce, ciphertext_plus_mac};
 }

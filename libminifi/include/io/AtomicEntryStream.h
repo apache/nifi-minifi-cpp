@@ -46,7 +46,7 @@ class AtomicEntryStream : public BaseStream {
         entry_(entry) {
     core::repository::RepoValue<T> *value;
     if (entry_->getValue(key, &value)) {
-      length_ = value->getBufferSize();
+      length_ = value->getBuffer().size();
       entry_->decrementOwnership();
       invalid_stream_ = false;
     } else {
@@ -80,7 +80,7 @@ class AtomicEntryStream : public BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  size_t read(uint8_t *buf, size_t buflen) override;
+  size_t read(gsl::span<std::byte> buf) override;
 
   /**
    * writes value to stream
@@ -119,8 +119,9 @@ template<typename T>
 size_t AtomicEntryStream<T>::write(const uint8_t *value, size_t size) {
   if (size == 0) return 0;
   if (!value || invalid_stream_) return STREAM_ERROR;
+  const auto out_span = gsl::make_span(value, size).template as_span<const std::byte>();
   std::lock_guard<std::recursive_mutex> lock(entry_lock_);
-  if (entry_->insert(key_, const_cast<uint8_t*>(value), size)) {
+  if (entry_->insert(key_, out_span)) {
     offset_ += size;
     if (offset_ > length_) {
       length_ = offset_;
@@ -131,23 +132,24 @@ size_t AtomicEntryStream<T>::write(const uint8_t *value, size_t size) {
 }
 
 template<typename T>
-size_t AtomicEntryStream<T>::read(uint8_t *buf, size_t buflen) {
-  if (buflen == 0) {
+size_t AtomicEntryStream<T>::read(gsl::span<std::byte> buf) {
+  if (buf.empty()) {
     return 0;
   }
-  if (nullptr != buf && !invalid_stream_) {
+  if (!invalid_stream_) {
     std::lock_guard<std::recursive_mutex> lock(entry_lock_);
-    auto len = buflen;
+    auto len = buf.size();
     core::repository::RepoValue<T> *value;
     if (entry_->getValue(key_, &value)) {
-      if (offset_ + len > value->getBufferSize()) {
-        len = gsl::narrow<int>(value->getBufferSize()) - gsl::narrow<int>(offset_);
+      if (offset_ + len > value->getBuffer().size()) {
+        len = value->getBuffer().size() - offset_;
         if (len <= 0) {
           entry_->decrementOwnership();
           return 0;
         }
       }
-      std::memcpy(buf, reinterpret_cast<uint8_t*>(const_cast<uint8_t*>(value->getBuffer()) + offset_), len);
+      const auto src_buffer = value->getBuffer().subspan(offset_, len);
+      std::memcpy(buf.data(), src_buffer.data(), src_buffer.size());
       offset_ += len;
       entry_->decrementOwnership();
       return len;

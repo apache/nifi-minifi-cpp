@@ -41,8 +41,8 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
     return create_file_;
   }
 
-  std::string uploadFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) override {
-    input_data_ = std::string(buffer.begin(), buffer.end());
+  std::string uploadFile(const org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer) override {
+    input_data_ = org::apache::nifi::minifi::utils::span_to<std::string>(buffer.as_span<const char>());
     put_params_ = params;
 
     if (upload_fails_) {
@@ -79,8 +79,9 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
       size = *params.range_length;
     }
 
-    buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + size);
-    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_.data(), buffer_.size());
+    const auto range = gsl::make_span(FETCHED_DATA).subspan(range_start, size).as_span<const std::byte>();
+    buffer_.assign(std::begin(range), std::end(range));
+    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_);
   }
 
   std::vector<Azure::Storage::Files::DataLake::Models::PathItem> listDirectory(const org::apache::nifi::minifi::azure::storage::ListAzureDataLakeStorageParameters& params) override {
@@ -159,7 +160,7 @@ class MockDataLakeStorageClient : public org::apache::nifi::minifi::azure::stora
   bool delete_result_ = true;
   bool fetch_fails_ = false;
   std::string input_data_;
-  std::vector<uint8_t> buffer_;
+  std::vector<std::byte> buffer_;
   org::apache::nifi::minifi::azure::storage::PutAzureDataLakeStorageParameters put_params_;
   org::apache::nifi::minifi::azure::storage::DeleteAzureDataLakeStorageParameters delete_params_;
   org::apache::nifi::minifi::azure::storage::FetchAzureDataLakeStorageParameters fetch_params_;

@@ -348,10 +348,12 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
   return -1;
 }
 
-size_t TLSSocket::read(uint8_t *buf, size_t buflen, bool /*retrieve_all_bytes*/) {
+size_t TLSSocket::read(gsl::span<std::byte> buffer, bool) {
   size_t total_read = 0;
   int status = 0;
   int loc = 0;
+  auto* buf = buffer.data();
+  auto buflen = buffer.size();
   int16_t fd = select_descriptor(1000);
   if (fd < 0) {
     close();
@@ -415,9 +417,11 @@ size_t TLSSocket::write(const uint8_t *value, size_t size) {
   return writeData(value, size, fd);
 }
 
-size_t TLSSocket::read(uint8_t *buf, size_t buflen) {
+size_t TLSSocket::read(gsl::span<std::byte> buffer) {
   size_t total_read = 0;
   int status = 0;
+  auto* buf = buffer.data();
+  auto buflen = buffer.size();
   while (buflen) {
     const int16_t fd = select_descriptor(1000);
     if (fd < 0) {

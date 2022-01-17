@@ -391,7 +391,7 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
         response_flow->addAttribute(STATUS_MESSAGE, response_headers.at(0));
       response_flow->addAttribute(REQUEST_URL, url);
       response_flow->addAttribute(TRANSACTION_ID, tx_id);
-      io::BufferStream stream((const uint8_t*) response_body.data(), gsl::narrow<unsigned int>(response_body.size()));
+      io::BufferStream stream(gsl::make_span(response_body).as_span<const std::byte>());
       // need an import from the data stream.
       session->importFrom(stream, response_flow);
     }

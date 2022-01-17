@@ -25,18 +25,12 @@
 #include "core/ProcessSession.h"
 #include "SQLProcessor.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
-//! PutSQL Class
-class PutSQL: public SQLProcessor {
+class PutSQL : public SQLProcessor {
  public:
   explicit PutSQL(const std::string& name, const utils::Identifier& uuid = {});
 
-  //! Processor Name
   EXTENSIONAPI static const std::string ProcessorName;
 
   void processOnSchedule(core::ProcessContext& context) override;
@@ -49,8 +43,4 @@ class PutSQL: public SQLProcessor {
   EXTENSIONAPI static const core::Relationship Success;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

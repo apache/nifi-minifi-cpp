@@ -113,16 +113,16 @@ class CompressContent : public core::Processor {
         }
 
         int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) override {
-          std::vector<uint8_t> buffer(16 * 1024U);
+          std::vector<std::byte> buffer(16 * 1024U);
           size_t read_size = 0;
           while (read_size < writer_.flow_->getSize()) {
-            const auto ret = inputStream->read(buffer.data(), buffer.size());
+            const auto ret = inputStream->read(buffer);
             if (io::isError(ret)) {
               return -1;
             } else if (ret == 0) {
               break;
             } else {
-              const auto writeret = outputStream_->write(buffer.data(), ret);
+              const auto writeret = outputStream_->write(gsl::make_span(buffer).subspan(0, ret));
               if (io::isError(writeret) || gsl::narrow<size_t>(writeret) != ret) {
                 return -1;
               }

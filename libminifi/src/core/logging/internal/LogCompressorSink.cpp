@@ -66,7 +66,7 @@ LogCompressorSink::CompressionResult LogCompressorSink::compress(bool force_rota
     return CompressionResult::NothingToCompress;
   }
   compressed_logs_.modify([&] (ActiveCompressor& compressor) {
-    compressor.compressor_->write(log_cache.buffer_->getBuffer(), log_cache.buffer_->size());
+    compressor.compressor_->write(log_cache.buffer_->getBuffer());
     compressor.compressor_->flush();
     return force_rotation;
   });

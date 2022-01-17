@@ -47,7 +47,7 @@ TEST_CASE("Create and read archive") {
       ++extracted_entries;
       std::string file_content;
       file_content.resize(info->size);
-      REQUIRE(decompressor.read(reinterpret_cast<uint8_t*>(file_content.data()), file_content.length()) == file_content.length());
+      REQUIRE(decompressor.read(minifi::gsl::make_span(file_content).as_span<std::byte>()) == file_content.length());
       REQUIRE(files[info->filename] == file_content);
     }
     REQUIRE(extracted_entries == files.size());

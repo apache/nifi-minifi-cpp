@@ -117,8 +117,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
         }
         auto file_input = std::make_unique<utils::ByteInputCallBack>();
         auto file_cb = std::make_unique<utils::HTTPUploadCallback>();
-        auto file_data = file.getRawData();
-        file_input->write(std::string{file_data.begin(), file_data.end()});
+        file_input->write(file.getRawDataAsString());
         file_cb->ptr = file_input.get();
         client.addFormPart("application/octet-stream", "file", file_cb.get(), filename);
         inputs.push_back(std::move(file_input));
@@ -161,14 +160,14 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
   } else {
     logger_->log_debug("Response code '" "%" PRId64 "' from '%s'", respCode, url);
   }
-  auto rs = client.getResponseBody();
+  const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
   if (isOkay && respCode) {
     if (payload.isRaw()) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
-      response_payload.setRawData(client.getResponseBody());
+      response_payload.setRawData(response_body_bytes);
       return response_payload;
     }
-    return parseJsonResponse(payload, client.getResponseBody());
+    return parseJsonResponse(payload, response_body_bytes);
   } else {
     return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
   }

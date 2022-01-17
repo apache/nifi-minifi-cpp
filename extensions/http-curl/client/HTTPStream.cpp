@@ -78,10 +78,8 @@ size_t HttpStream::write(const uint8_t *value, size_t size) {
   return size;
 }
 
-size_t HttpStream::read(uint8_t *buf, size_t buflen) {
-  if (buflen == 0) {
-    return 0;
-  }
+size_t HttpStream::read(gsl::span<std::byte> buf) {
+  if (buf.empty()) { return 0; }
   if (!IsNullOrEmpty(buf)) {
     if (!started_) {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -93,8 +91,7 @@ size_t HttpStream::read(uint8_t *buf, size_t buflen) {
         started_ = true;
       }
     }
-    return http_read_callback_.readFully(reinterpret_cast<char*>(buf), buflen);
-
+    return http_read_callback_.readFully(reinterpret_cast<char*>(buf.data()), buf.size());
   } else {
     return STREAM_ERROR;
   }

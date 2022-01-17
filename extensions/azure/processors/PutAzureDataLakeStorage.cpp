@@ -138,13 +138,14 @@ PutAzureDataLakeStorage::ReadCallback::ReadCallback(
 }
 
 int64_t PutAzureDataLakeStorage::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  std::vector<uint8_t> buffer;
-  size_t read_ret = stream->read(buffer, flow_size_);
+  std::vector<std::byte> buffer;
+  buffer.resize(flow_size_);
+  size_t read_ret = stream->read(buffer);
   if (io::isError(read_ret) || read_ret != flow_size_) {
     return -1;
   }
 
-  result_ = azure_data_lake_storage_.uploadFile(params_, gsl::make_span(buffer.data(), flow_size_));
+  result_ = azure_data_lake_storage_.uploadFile(params_, buffer);
   return read_ret;
 }
 

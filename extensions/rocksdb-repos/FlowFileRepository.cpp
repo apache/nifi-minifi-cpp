@@ -72,7 +72,7 @@ void FlowFileRepository::flush() {
     }
 
     utils::Identifier containerId;
-    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(values[i].data()), gsl::narrow<int>(values[i].size()), content_repo_, containerId);
+    auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(values[i]).as_span<const std::byte>(), content_repo_, containerId);
     if (eventRead) {
       purgeList.push_back(eventRead);
     }
@@ -168,7 +168,7 @@ void FlowFileRepository::prune_stored_flowfiles() {
   auto it = opendb->NewIterator(rocksdb::ReadOptions());
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
     utils::Identifier containerId;
-    auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), gsl::narrow<int>(it->value().size()), content_repo_, containerId);
+    auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>(), content_repo_, containerId);
     std::string key = it->key().ToString();
     if (eventRead) {
       // on behalf of the just resurrected persisted instance

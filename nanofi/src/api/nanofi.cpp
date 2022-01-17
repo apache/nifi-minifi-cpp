@@ -459,7 +459,8 @@ int get_content(const flow_file_record* ff, uint8_t* target, int size) {
     std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ff->contentLocation,
                                                                                            *content_repo);
     auto stream = (*content_repo)->read(*claim);
-    return static_cast<int>(stream->read(target, static_cast<size_t>(size)));
+    const auto target_buf = gsl::make_span(target, gsl::narrow<size_t>(size)).as_span<std::byte>();
+    return static_cast<int>(stream->read(target_buf));
   } else {
     file_buffer fb = file_to_buffer(ff->contentLocation);
     if (size < 0) {

@@ -61,7 +61,7 @@ class ZlibBaseStream : public OutputStream {
 
   ZlibStreamState state_{ZlibStreamState::UNINITIALIZED};
   z_stream strm_{};
-  std::vector<uint8_t> outputBuffer_;
+  std::vector<std::byte> outputBuffer_;
   gsl::not_null<OutputStream*> output_;
 };
 
@@ -76,6 +76,7 @@ class ZlibCompressStream : public ZlibBaseStream {
 
   ~ZlibCompressStream() override;
 
+  using OutputStream::write;
   size_t write(const uint8_t* value, size_t size) override;
 
   void close() override;
@@ -100,6 +101,7 @@ class ZlibDecompressStream : public ZlibBaseStream {
 
   ~ZlibDecompressStream() override;
 
+  using OutputStream::write;
   size_t write(const uint8_t *value, size_t size) override;
 
  private:

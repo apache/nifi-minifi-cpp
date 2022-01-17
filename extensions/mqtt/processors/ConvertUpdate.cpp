@@ -40,12 +40,12 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     context->yield();
     return;
   }
-  std::vector<uint8_t> update;
+  std::vector<std::byte> update;
   bool received_update = false;
   while (mqtt_service_->get(100, listening_topic, update)) {
     // first we have the input topic string followed by the update URI
     if (!update.empty()) {
-      io::BufferStream stream(update.data(), update.size());
+      io::BufferStream stream(update);
 
       std::string returnTopic, url;
 

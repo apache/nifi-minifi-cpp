@@ -65,17 +65,16 @@ std::optional<EntryInfo> ReadArchiveStreamImpl::nextEntry() {
   return EntryInfo{archive_entry_pathname(entry), entry_size_.value()};
 }
 
-size_t ReadArchiveStreamImpl::read(uint8_t* buf, size_t len) {
+size_t ReadArchiveStreamImpl::read(const gsl::span<std::byte> out_buffer) {
   if (!arch_ || !entry_size_) {
     return STREAM_ERROR;
   }
 
-  if (len == 0) {
+  if (out_buffer.empty()) {
     return 0;
   }
-  gsl_Expects(buf);
 
-  const la_ssize_t result = archive_read_data(arch_.get(), buf, len);
+  const la_ssize_t result = archive_read_data(arch_.get(), out_buffer.data(), out_buffer.size());
   if (result < 0) {
     logger_->log_error("Archive read data error %s", archive_error_string(arch_.get()));
     entry_size_.reset();

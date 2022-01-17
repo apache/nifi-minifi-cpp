@@ -43,52 +43,48 @@
 #include "../Utils.h"
 #include "utils/gsl.h"
 
-class ReadCallback: public minifi::InputStreamCallback {
+class ReadCallback : public minifi::InputStreamCallback {
  public:
   explicit ReadCallback(size_t size)
-      :buffer_size_{size}  // default member initializers use this
+      :buffer_{size}
   {}
   ReadCallback(const ReadCallback&) = delete;
   ReadCallback(ReadCallback&&) = delete;
   ReadCallback& operator=(const ReadCallback&) = delete;
   ReadCallback& operator=(ReadCallback&&) = delete;
 
-  ~ReadCallback() override {
-    delete[] buffer_;
-    delete[] archive_buffer_;
-  }
   int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
     int64_t total_read = 0;
     do {
-      const auto ret = stream->read(buffer_ + read_size_, buffer_size_ - read_size_);
+      const auto ret = stream->read(gsl::make_span(buffer_).subspan(read_size_));
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       read_size_ += gsl::narrow<size_t>(ret);
       total_read += ret;
-    } while (buffer_size_ != read_size_);
+    } while (buffer_.size() != read_size_);
     return total_read;
   }
   void archive_read() {
-    struct archive *a;
-    a = archive_read_new();
-    archive_read_support_format_all(a);
-    archive_read_support_filter_all(a);
-    archive_read_open_memory(a, buffer_, read_size_);
+    struct archive_read_deleter { void operator()(struct archive* p) const noexcept { archive_read_free(p); } };
+    std::unique_ptr<struct archive, archive_read_deleter> a{archive_read_new()};
+    archive_read_support_format_all(a.get());
+    archive_read_support_filter_all(a.get());
+    archive_read_open_memory(a.get(), buffer_.data(), read_size_);
     struct archive_entry *ae;
 
-    REQUIRE(archive_read_next_header(a, &ae) == ARCHIVE_OK);
-    const auto size = archive_entry_size(ae);
-    archive_buffer_ = new char[size];
-    archive_buffer_size_ = size;
-    archive_read_data(a, archive_buffer_, gsl::narrow<size_t>(size));
-    archive_read_free(a);
+    REQUIRE(archive_read_next_header(a.get(), &ae) == ARCHIVE_OK);
+    const auto size = [&] {
+      const auto size = archive_entry_size(ae);
+      REQUIRE(size >= 0);
+      return gsl::narrow<size_t>(size);
+    }();
+    archive_buffer_.resize(size);
+    archive_read_data(a.get(), archive_buffer_.data(), size);
   }
 
-  size_t buffer_size_;
-  uint8_t *buffer_ = new uint8_t[buffer_size_];
+  std::vector<std::byte> buffer_;
   size_t read_size_ = 0;
-  char *archive_buffer_ = nullptr;
-  int64_t archive_buffer_size_ = 0;
+  std::vector<std::byte> archive_buffer_;
 };
 
 /**
@@ -270,10 +266,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
-    std::string content(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    std::string content(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
     REQUIRE(getRawContent() == content);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
   }
 }
 
@@ -309,7 +305,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
     REQUIRE(attribute_value == "inputfile");
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
-    std::string content(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    std::string content(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
     REQUIRE(getRawContent() == content);
   }
 }
@@ -345,10 +341,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
     REQUIRE(getRawContent() == contents);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
   }
 }
 
@@ -382,7 +378,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
     REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    std::string contents(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
     REQUIRE(getRawContent() == contents);
   }
 }
@@ -424,10 +420,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
     REQUIRE(getRawContent() == contents);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
   }
 }
 
@@ -468,7 +464,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
     REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    std::string contents(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
     REQUIRE(getRawContent() == contents);
   }
 }
@@ -510,10 +506,10 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
     callback.archive_read();
-    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    std::string contents(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
     REQUIRE(getRawContent() == contents);
     // write the compress content for next test
-    writeCompressed(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    writeCompressed(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
   }
 }
 
@@ -554,7 +550,7 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfil
     REQUIRE(flow1->getAttribute(core::SpecialFlowAttribute::MIME_TYPE, mime) == false);
     ReadCallback callback(gsl::narrow<size_t>(flow1->getSize()));
     sessionGenFlowFile.read(flow1, &callback);
-    std::string contents(reinterpret_cast<char *> (callback.buffer_), callback.read_size_);
+    std::string contents(reinterpret_cast<char *> (callback.buffer_.data()), callback.read_size_);
     REQUIRE(getRawContent() == contents);
   }
 }
@@ -721,7 +717,7 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
     ReadCallback callback(gsl::narrow<size_t>(file->getSize()));
     sessionGenFlowFile.read(file, &callback);
     callback.archive_read();
-    std::string content(reinterpret_cast<char *> (callback.archive_buffer_), callback.archive_buffer_size_);
+    std::string content(reinterpret_cast<char *> (callback.archive_buffer_.data()), callback.archive_buffer_.size());
     REQUIRE(flowFileContents[idx] == content);
   }
 }

@@ -23,24 +23,17 @@
 
 #include "c2/protocols/RESTProtocol.h"
 
-#include <algorithm>
 #include <list>
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "core/TypedValues.h"
 #include "utils/gsl.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 
 AnnotatedValue parseAnnotatedValue(const rapidjson::Value& jsonValue) {
@@ -61,11 +54,12 @@ AnnotatedValue parseAnnotatedValue(const rapidjson::Value& jsonValue) {
   return result;
 }
 
-const C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, const std::vector<char> &response) {
+C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, gsl::span<const std::byte> response) {
   rapidjson::Document root;
+  const auto char_span = response.as_span<const char>();
 
   try {
-    rapidjson::ParseResult ok = root.Parse(response.data(), response.size());
+    rapidjson::ParseResult ok = root.Parse(char_span.data(), char_span.size());
     if (ok) {
       std::string identifier;
       for (auto key : {"operationid", "operationId", "identifier"}) {
@@ -182,8 +176,4 @@ bool RESTProtocol::containsPayload(const C2Payload &o) {
 #ifdef WIN32
 #pragma pop_macro("GetObject")
 #endif
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

@@ -35,7 +35,7 @@ class AzureBlobStorageClient : public BlobStorageClient {
  public:
   AzureBlobStorageClient();
   bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) override;
-  Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) override;
+  Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) override;
   std::string getUrl(const PutAzureBlobStorageParameters& params) override;
   bool deleteBlob(const DeleteAzureBlobStorageParameters& params) override;
 

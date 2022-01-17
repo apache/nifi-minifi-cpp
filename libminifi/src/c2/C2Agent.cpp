@@ -794,8 +794,7 @@ std::optional<std::string> C2Agent::fetchFlow(const std::string& uri) const {
   C2Payload payload(Operation::TRANSFER, true);
   C2Payload &&response = protocol_.load()->consumePayload(resolved_url.value(), payload, RECEIVE, false);
 
-  auto raw_data = response.getRawData();
-  return std::string(raw_data.data(), raw_data.size());
+  return response.getRawDataAsString();
 }
 
 bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {

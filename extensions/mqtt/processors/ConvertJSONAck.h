@@ -31,11 +31,7 @@
 #include "utils/gsl.h"
 
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 /**
  * Purpose: Converts JSON acks into an MQTT consumable by
@@ -63,36 +59,17 @@ class ConvertJSONAck : public ConvertBase {
    * @param sessionFactory process session factory that is used when creating
    * ProcessSession objects.
    */
-
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  protected:
-  class ReadCallback : public InputStreamCallback {
-   public:
-    ReadCallback() = default;
-    ~ReadCallback() override = default;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      if (nullptr == stream)
-        return 0;
-      buffer_.resize(stream->size());
-      const auto ret = stream->read(reinterpret_cast<uint8_t*>(buffer_.data()), stream->size());
-      return !io::isError(ret) ? gsl::narrow<int64_t>(ret) : -1;
-    }
-    std::vector<char> buffer_;
-  };
-
   /**
    * Parse Topic name from the json -- given a known structure that we expect.
    * @param json json representation defined by the restful protocol
    */
-  std::string parseTopicName(const std::string &json);
+  static std::string parseTopicName(const std::string &json);
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConvertJSONAck>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

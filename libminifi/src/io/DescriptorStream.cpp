@@ -72,15 +72,13 @@ size_t DescriptorStream::write(const uint8_t *value, size_t size) {
   }
 }
 
-size_t DescriptorStream::read(uint8_t *buf, size_t buflen) {
-  if (buflen == 0) {
-    return 0;
-  }
+size_t DescriptorStream::read(gsl::span<std::byte> buf) {
+  if (buf.empty()) return 0;
   if (!IsNullOrEmpty(buf)) {
 #ifdef WIN32
-    const auto size_read = _read(fd_, buf, buflen);
+    const auto size_read = _read(fd_, buf.data(), buf.size());
 #else
-    const auto size_read = ::read(fd_, buf, buflen);
+    const auto size_read = ::read(fd_, buf.data(), buf.size());
 #endif
 
     if (size_read < 0) {

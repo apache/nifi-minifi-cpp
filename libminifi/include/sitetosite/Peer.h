@@ -294,8 +294,8 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
     return stream_->write(data, len);
   }
 
-  size_t read(uint8_t* data, size_t len) override {
-    return stream_->read(data, len);
+  size_t read(gsl::span<std::byte> data) override {
+    return stream_->read(data);
   }
 
   // open connection to the peer

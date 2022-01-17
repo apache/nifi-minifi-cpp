@@ -18,27 +18,15 @@
 #ifndef LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 #define LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_
 
-#include <map> // NOLINT
-#include <stdexcept> // NOLINT
-
-#include <vector> // NOLINT
-#include <string> // NOLINT
-#include <mutex> // NOLINT
+#include <map>
 #include <memory>
+#include <string>
 
-#include "utils/ByteArrayCallback.h"
-#include "c2/C2Protocol.h"
-#include "c2/HeartbeatReporter.h"
-#include "controllers/SSLContextService.h"
-#include "utils/HTTPClient.h"
-#include "Exception.h"
+#include "c2/C2Payload.h"
 #include "c2/HeartbeatJsonSerializer.h"
+#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Purpose and Justification: Encapsulates the restful protocol that is built upon C2Protocol.
@@ -48,17 +36,14 @@ namespace c2 {
  * will encompass other protocols the context of its meaning here simply translates into POST and GET respectively.
  *
  */
-
 class RESTProtocol : public HeartbeatJsonSerializer {
  public:
   RESTProtocol();
 
  protected:
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure);
-
   void serializeNestedPayload(rapidjson::Value& target, const C2Payload& payload, rapidjson::Document::AllocatorType& alloc) override;
-
-  virtual const C2Payload parseJsonResponse(const C2Payload &payload, const std::vector<char> &response);
+  static C2Payload parseJsonResponse(const C2Payload &payload, gsl::span<const std::byte> response);
 
  private:
   bool containsPayload(const C2Payload &o);
@@ -69,10 +54,6 @@ class RESTProtocol : public HeartbeatJsonSerializer {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTProtocol>::getLogger();
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2
 
 #endif  // LIBMINIFI_INCLUDE_C2_PROTOCOLS_RESTPROTOCOL_H_

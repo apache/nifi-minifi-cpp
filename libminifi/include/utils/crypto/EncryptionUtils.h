@@ -28,7 +28,7 @@ namespace minifi {
 namespace utils {
 namespace crypto {
 
-using Bytes = std::vector<unsigned char>;
+using Bytes = std::vector<std::byte>;
 
 Bytes stringToBytes(const std::string& text);
 

@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 #include "SFTPClient.h"
-#include <memory>
-#include <set>
-#include <vector>
-#include <string>
-#include <exception>
-#include <sstream>
 #include <algorithm>
+#include <exception>
+#include <memory>
+#include <optional>
+#include <set>
+#include <sstream>
+#include <string>
 #include <tuple>
 #include <utility>
+#include <vector>
 
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
@@ -308,17 +309,23 @@ bool SFTPClient::connect() {
 
   /* Checking remote host */
   if (ssh_known_hosts_ != nullptr) {
-    size_t hostkey_len = 0U;
-    int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
-    const char *hostkey = libssh2_session_hostkey(ssh_session_, &hostkey_len, &type);
-    if (hostkey == nullptr) {
-      char *err_msg = nullptr;
-      libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
-      logger_->log_info("Failed to get session hostkey, error: %s", err_msg);
-      return false;
-    }
+    auto hostkey_opt = [this]() -> std::optional<std::tuple<std::string_view, int>> {
+      size_t hostkey_len = 0U;
+      int type = LIBSSH2_HOSTKEY_TYPE_UNKNOWN;
+      const char *hostkey_ptr = libssh2_session_hostkey(ssh_session_, &hostkey_len, &type);
+      if (hostkey_ptr == nullptr) {
+        char *err_msg = nullptr;
+        libssh2_session_last_error(ssh_session_, &err_msg, nullptr, 0);
+        logger_->log_info("Failed to get session hostkey, error: %s", err_msg);
+        return std::nullopt;
+      }
+      const auto hostkey = std::string_view{hostkey_ptr, hostkey_len};
+      return std::make_optional(std::make_tuple(hostkey, type));
+    }();
+    if (!hostkey_opt) return false;
+    const auto [hostkey, hostkey_type] = *std::move(hostkey_opt);
     int keybit = 0;
-    switch (type) {
+    switch (hostkey_type) {
       case LIBSSH2_HOSTKEY_TYPE_RSA:
         keybit = LIBSSH2_KNOWNHOST_KEY_SSHRSA;
         break;
@@ -326,14 +333,14 @@ bool SFTPClient::connect() {
         keybit = LIBSSH2_KNOWNHOST_KEY_SSHDSS;
         break;
       default:
-        logger_->log_error("Unknown host key type: %d", type);
+        logger_->log_error("Unknown host key type: %d", hostkey_type);
         return false;
     }
     struct libssh2_knownhost* known_host = nullptr;
     int keycheck_result = libssh2_knownhost_checkp(ssh_known_hosts_,
                             hostname_.c_str(),
                             -1 /*port*/,
-                            hostkey, hostkey_len,
+                            hostkey.data(), hostkey.size(),
                             LIBSSH2_KNOWNHOST_TYPE_PLAIN |
                             LIBSSH2_KNOWNHOST_KEYENC_RAW |
                             keybit,
@@ -347,7 +354,7 @@ bool SFTPClient::connect() {
         logger_->log_warn("Host %s not found in the host key file", hostname_.c_str());
         break;
       case LIBSSH2_KNOWNHOST_CHECK_MISMATCH: {
-        auto hostkey_b64 = utils::StringUtils::to_base64(reinterpret_cast<const uint8_t*>(hostkey), hostkey_len);
+        auto hostkey_b64 = utils::StringUtils::to_base64(hostkey);
         logger_->log_warn("Host key mismatch for %s, expected: %s, actual: %s", hostname_.c_str(),
                           known_host == nullptr ? "" : known_host->key, hostkey_b64.c_str());
         break;
@@ -365,10 +372,11 @@ bool SFTPClient::connect() {
     }
   } else {
     const char* fingerprint = libssh2_hostkey_hash(ssh_session_, LIBSSH2_HOSTKEY_HASH_SHA1);
+    const auto fingerprint_span = gsl::make_span(fingerprint, 20);
     if (fingerprint == nullptr) {
       logger_->log_warn("Cannot get remote server fingerprint");
     } else {
-      auto fingerprint_hex = utils::StringUtils::to_hex(reinterpret_cast<const uint8_t*>(fingerprint), 20);
+      auto fingerprint_hex = utils::StringUtils::to_hex(fingerprint_span.as_span<const std::byte>());
       std::stringstream fingerprint_hex_colon;
       for (size_t i = 0; i < 20; i++) {
         fingerprint_hex_colon << fingerprint_hex.substr(i * 2, 2);
@@ -564,10 +572,10 @@ bool SFTPClient::putFile(const std::string& path, io::BaseStream& input, bool ov
   }
 
   const size_t buf_size = expected_size < 0 ? MAX_BUFFER_SIZE : std::min(gsl::narrow<size_t>(expected_size), MAX_BUFFER_SIZE);
-  std::vector<uint8_t> buf(buf_size);
+  std::vector<std::byte> buf(buf_size);
   uint64_t total_read = 0U;
   do {
-    const auto read_ret = input.read(buf.data(), buf.size());
+    const auto read_ret = input.read(buf);
     if (io::isError(read_ret)) {
       last_error_.setLibssh2Error(LIBSSH2_FX_OK);
       logger_->log_error("Error while reading input");

@@ -19,12 +19,14 @@
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+
 #include <iostream>
-#include <memory>
-#include <vector>
-#include <utility>
+#include <limits>
 #include <map>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "utils/StringUtils.h"
 #include "core/controller/ControllerService.h"
@@ -47,9 +49,9 @@ class Message {
  public:
   // empty constructor facilitates moves
   Message() = default;
-  explicit Message(const std::string &topic, void *data, size_t dataLen)
-      : topic_(topic),
-        data_(reinterpret_cast<uint8_t*>(data), (reinterpret_cast<uint8_t*>(data) + dataLen)) {
+  explicit Message(std::string topic, void *data, size_t dataLen)
+      : topic_(std::move(topic)),
+        data_(reinterpret_cast<std::byte*>(data), (reinterpret_cast<std::byte*>(data) + dataLen)) {
   }
 
   Message(const Message &other) = default;
@@ -61,7 +63,7 @@ class Message {
   Message &operator=(Message &&other) = default;
 
   std::string topic_;
-  std::vector<uint8_t> data_;
+  std::vector<std::byte> data_;
 };
 
 /**
@@ -124,12 +126,14 @@ class MQTTControllerService : public core::controller::ControllerService {
     return token;
   }
 
-  int send(const std::string &topic, const uint8_t *data, size_t dataSize) {
+  int send(const std::string &topic, gsl::span<const std::byte> data) {
+    gsl_Expects(data.size() < std::numeric_limits<int>::max());
     int token;
 
+    std::vector<std::byte> copy_because_const_correctness{std::begin(data), std::end(data)};
     MQTTClient_message pubmsg = MQTTClient_message_initializer;
-    pubmsg.payload = const_cast<uint8_t*>(data);
-    pubmsg.payloadlen = dataSize;
+    pubmsg.payload = copy_because_const_correctness.data();
+    pubmsg.payloadlen = gsl::narrow<int>(copy_because_const_correctness.size());
     pubmsg.qos = qos_;
     pubmsg.retained = 0;
 
@@ -175,7 +179,7 @@ class MQTTControllerService : public core::controller::ControllerService {
     }
   }
 
-  bool get(const uint64_t millisToWait, const std::string &topic, std::vector<uint8_t> &data) {
+  bool get(const uint64_t millisToWait, const std::string &topic, std::vector<std::byte> &data) {
     std::unique_lock<std::mutex> lock(delivery_mutex_);
     if (delivery_notification_.wait_for(lock, std::chrono::milliseconds(millisToWait), [&] {return topics_[topic].size_approx() > 0;})) {
       Message resp;
@@ -190,7 +194,7 @@ class MQTTControllerService : public core::controller::ControllerService {
     }
   }
 
-  bool awaitResponse(const uint64_t millisToWait, int token, const std::string &topic, std::vector<uint8_t> &data) {
+  bool awaitResponse(const uint64_t millisToWait, int token, const std::string &topic, std::vector<std::byte> &data) {
     std::unique_lock<std::mutex> lock(delivery_mutex_);
     if (delivery_notification_.wait_for(lock, std::chrono::milliseconds(millisToWait), [&] {
       return

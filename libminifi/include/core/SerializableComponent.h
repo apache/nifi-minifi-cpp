@@ -23,12 +23,9 @@
 
 #include "core/Connectable.h"
 #include "core/Core.h"
+#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Represents a component that is serializable and an extension point of core Component
@@ -43,7 +40,7 @@ class SerializableComponent : public core::Connectable {
       : core::Connectable(name, uuid) {
   }
 
-  virtual ~SerializableComponent() = default;
+  ~SerializableComponent() override = default;
 
   /**
    * Serialize this object into the the store
@@ -65,7 +62,7 @@ class SerializableComponent : public core::Connectable {
    * @param bufferSize length of buffer from which we can deserialize the current object.
    * @return status of the deserialization.
    */
-  virtual bool DeSerialize(const uint8_t *buffer, const size_t bufferSize) = 0;
+  virtual bool DeSerialize(gsl::span<const std::byte>) = 0;
 
   /**
    * Serialization of this object into buffer
@@ -78,13 +75,12 @@ class SerializableComponent : public core::Connectable {
     return false;
   }
 
-  virtual void yield() {
-  }
+  void yield() override { }
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
@@ -92,16 +88,12 @@ class SerializableComponent : public core::Connectable {
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core
 
 #endif  // LIBMINIFI_INCLUDE_CORE_SERIALIZABLECOMPONENT_H_
 

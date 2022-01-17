@@ -36,14 +36,15 @@ void ReadFromFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::Proc
 
 namespace {
 struct ReadFlowFileIntoBuffer : public InputStreamCallback {
-  std::vector<uint8_t> buffer_;
+  std::vector<std::byte> buffer_;
 
   int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
-    size_t bytes_read = stream->read(buffer_, stream->size());
+    buffer_.resize(stream->size());
+    size_t bytes_read = stream->read(buffer_);
     return io::isError(bytes_read) ? -1 : gsl::narrow<int64_t>(bytes_read);
   }
 };
-}
+}  // namespace
 
 void ReadFromFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   gsl_Expects(context && session);
@@ -66,7 +67,7 @@ void ReadFromFlowFileTestProcessor::onUnSchedule() {
 ReadFromFlowFileTestProcessor::FlowFileData::FlowFileData(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file) {
   ReadFlowFileIntoBuffer callback;
   session->read(flow_file, &callback);
-  content_ = std::string(callback.buffer_.begin(), callback.buffer_.end());
+  content_ = utils::span_to<std::string>(gsl::make_span(callback.buffer_).as_span<char>());
   attributes_ = flow_file->getAttributes();
 }
 

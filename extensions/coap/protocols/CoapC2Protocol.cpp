@@ -242,15 +242,16 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   size_t bsize = stream.size();
 
   CoapMessage msg;
-  msg.data_ = const_cast<uint8_t *>(stream.getBuffer());
+  msg.data_ = const_cast<uint8_t *>(stream.getBuffer().as_span<const uint8_t>().data());
   msg.size_ = bsize;
 
   coap::controllers::CoapResponse message = coap_service_->sendPayload(COAP_REQUEST_POST, endpoint, &msg);
+  const auto message_data = message.getData();
 
   if (isRegistrationMessage(message)) {
     require_registration_ = true;
-  } else if (message.getSize() > 0) {
-    io::BufferStream responseStream(message.getData(), message.getSize());
+  } else if (!message_data.empty()) {
+    io::BufferStream responseStream(message_data);
     responseStream.read(version);
     responseStream.read(size);
     logger_->log_trace("Received ack. version %d. number of operations %d", version, size);

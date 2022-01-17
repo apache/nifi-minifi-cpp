@@ -20,26 +20,15 @@
 
 #include "PutSQL.h"
 
-#include <vector>
 #include <string>
-#include <memory>
-
-#include <soci/soci.h>
 
 #include "io/BufferStream.h"
-#include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "Exception.h"
-#include "data/DatabaseConnectors.h"
-#include "data/JSONSQLWriter.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const std::string PutSQL::ProcessorName("PutSQL");
 
@@ -79,10 +68,7 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
   std::string sql_statement;
   if (!context.getProperty(SQLStatement, sql_statement, flow_file)) {
     logger_->log_debug("Using the contents of the flow file as the SQL statement");
-    auto buffer = std::make_shared<io::BufferStream>();
-    InputStreamPipe read_callback{buffer};
-    session.read(flow_file, &read_callback);
-    sql_statement = std::string{reinterpret_cast<const char*>(buffer->getBuffer()), buffer->size()};
+    sql_statement = to_string(session.readBuffer(flow_file));
   }
   if (sql_statement.empty()) {
     throw Exception(PROCESSOR_EXCEPTION, "Empty SQL statement");
@@ -93,8 +79,4 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
 
 REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

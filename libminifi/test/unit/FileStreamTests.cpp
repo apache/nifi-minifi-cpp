@@ -43,10 +43,11 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   file.close();
 
   minifi::io::FileStream stream(path, 0, true);
-  std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(stream.size());
+  REQUIRE(stream.read(readBuffer) == stream.size());
 
-  uint8_t* data = readBuffer.data();
+  std::byte* data = readBuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), readBuffer.size()) == "tempFile");
 
@@ -56,9 +57,9 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
 
   stream.seek(0);
 
-  std::vector<uint8_t> verifybuffer;
-
-  REQUIRE(stream.read(verifybuffer, stream.size()) == stream.size());
+  std::vector<std::byte> verifybuffer;
+  verifybuffer.resize(stream.size());
+  REQUIRE(stream.read(verifybuffer) == stream.size());
 
   data = verifybuffer.data();
 
@@ -80,10 +81,11 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
   file.close();
 
   minifi::io::FileStream stream(path, 0, true);
-  std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(stream.size());
+  REQUIRE(stream.read(readBuffer) == stream.size());
 
-  uint8_t* data = readBuffer.data();
+  auto* data = readBuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), readBuffer.size()) == "tempFile");
 
@@ -93,9 +95,9 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
 
   stream.seek(0);
 
-  std::vector<uint8_t> verifybuffer;
-
-  REQUIRE(stream.read(verifybuffer, stream.size()) == stream.size());
+  std::vector<std::byte> verifybuffer;
+  verifybuffer.resize(stream.size());
+  REQUIRE(stream.read(verifybuffer) == stream.size());
 
   data = verifybuffer.data();
 
@@ -117,10 +119,11 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   file.close();
 
   minifi::io::FileStream stream(path, 0, true);
-  std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(stream.size());
+  REQUIRE(stream.read(readBuffer) == stream.size());
 
-  uint8_t* data = readBuffer.data();
+  auto* data = readBuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), readBuffer.size()) == "tempFile");
 
@@ -130,9 +133,9 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
 
   stream.seek(0);
 
-  std::vector<uint8_t> verifybuffer;
-
-  REQUIRE(stream.read(verifybuffer, stream.size()) == stream.size());
+  std::vector<std::byte> verifybuffer;
+  verifybuffer.resize(stream.size());
+  REQUIRE(stream.read(verifybuffer) == stream.size());
 
   data = verifybuffer.data();
 
@@ -154,10 +157,11 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
   file.close();
 
   minifi::io::FileStream stream(path, 0, true);
-  std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(stream.size());
+  REQUIRE(stream.read(readBuffer) == stream.size());
 
-  uint8_t* data = readBuffer.data();
+  auto* data = readBuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), readBuffer.size()) == "tempFile");
 
@@ -167,10 +171,7 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
 
   stream.seek(0);
 
-  std::vector<uint8_t> verifybuffer;
-
-  REQUIRE(minifi::io::isError(stream.read(nullptr, stream.size())));
-
+  std::vector<std::byte> verifybuffer;
   data = verifybuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()).empty());
@@ -191,22 +192,24 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   file.close();
 
   minifi::io::FileStream stream(path, 0, true);
-  std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(stream.size());
+  REQUIRE(stream.read(readBuffer) == stream.size());
 
-  uint8_t* data = readBuffer.data();
+  auto* data = readBuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), readBuffer.size()) == "tempFile");
 
   stream.seek(0);
 
-  std::vector<uint8_t> verifybuffer;
-
-  REQUIRE(stream.read(verifybuffer, 8192) == 8);
+  std::vector<std::byte> verifybuffer;
+  const auto stream_size = stream.size();
+  verifybuffer.resize(stream_size);
+  REQUIRE(stream.read(verifybuffer) == 8);
 
   data = verifybuffer.data();
 
-  REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
+  REQUIRE(std::string(reinterpret_cast<char*>(data), stream_size) == "tempFile");
 
   std::remove(ss.str().c_str());
 }
@@ -225,22 +228,23 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
   file.close();
 
   minifi::io::FileStream stream(path, 0, true);
-  std::vector<uint8_t> readBuffer;
-  REQUIRE(stream.read(readBuffer, stream.size()) == stream.size());
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(stream.size());
+  REQUIRE(stream.read(readBuffer) == stream.size());
 
   stream.seek(0);
 
-  std::vector<uint8_t> verifybuffer;
-
+  std::vector<std::byte> verifybuffer;
+  verifybuffer.resize(8192);
   for (int i = 0; i < 10; i++) {
-    REQUIRE(stream.read(verifybuffer, 8192) == 8192);
+    REQUIRE(stream.read(verifybuffer) == 8192);
   }
-  REQUIRE(stream.read(verifybuffer, 8192) == 0);
+  REQUIRE(stream.read(verifybuffer) == 0);
   stream.seek(0);
   for (int i = 0; i < 10; i++) {
-    REQUIRE(stream.read(verifybuffer, 8192) == 8192);
+    REQUIRE(stream.read(verifybuffer) == 8192);
   }
-  REQUIRE(stream.read(verifybuffer, 8192) == 0);
+  REQUIRE(stream.read(verifybuffer) == 0);
 
   std::remove(ss.str().c_str());
 }
@@ -256,7 +260,8 @@ TEST_CASE("Read zero bytes") {
   TestController testController;
   auto dir = testController.createTempDirectory();
   minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
-  REQUIRE(stream.read(nullptr, 0) == 0);
+  std::byte fake_buffer[1];
+  REQUIRE(stream.read(gsl::make_span(fake_buffer).subspan(0, 0)) == 0);
 }
 
 TEST_CASE("Non-existing file read/write test") {
@@ -267,9 +272,10 @@ TEST_CASE("Non-existing file read/write test") {
   REQUIRE(test_controller.getLog().getInstance().contains("No such file or directory", std::chrono::seconds(0)));
   REQUIRE(minifi::io::isError(stream.write("lorem ipsum", false)));
   REQUIRE(test_controller.getLog().getInstance().contains("Error writing to file: invalid file stream", std::chrono::seconds(0)));
-  std::vector<uint8_t> readBuffer;
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(1);
   stream.seek(0);
-  REQUIRE(minifi::io::isError(stream.read(readBuffer, 1)));
+  REQUIRE(minifi::io::isError(stream.read(readBuffer)));
   REQUIRE(test_controller.getLog().getInstance().contains("Error reading from file: invalid file stream", std::chrono::seconds(0)));
 }
 
@@ -286,13 +292,12 @@ TEST_CASE("Existing file read/write test") {
   REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
   REQUIRE_FALSE(minifi::io::isError(stream.write("dolor sit amet", false)));
   REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error writing to file", std::chrono::seconds(0)));
-  std::vector<uint8_t> readBuffer;
+  std::vector<std::byte> readBuffer;
+  readBuffer.resize(11);
   stream.seek(0);
-  REQUIRE_FALSE(minifi::io::isError(stream.read(readBuffer, 11)));
+  REQUIRE_FALSE(minifi::io::isError(stream.read(readBuffer)));
   REQUIRE_FALSE(test_controller.getLog().getInstance().contains("Error reading from file", std::chrono::seconds(0)));
   stream.seek(0);
-  REQUIRE(minifi::io::isError(stream.read(nullptr, 11)));
-  REQUIRE(test_controller.getLog().getInstance().contains("Error reading from file: invalid buffer", std::chrono::seconds(0)));
 }
 
 #if !defined(WIN32) || defined(USE_BOOST)

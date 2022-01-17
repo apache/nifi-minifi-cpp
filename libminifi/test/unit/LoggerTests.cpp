@@ -118,7 +118,7 @@ std::string decompress(const std::shared_ptr<InputStream>& input) {
   auto decompressor = std::make_shared<ZlibDecompressStream>(gsl::make_not_null(output.get()));
   minifi::internal::pipe(input, decompressor);
   decompressor->close();
-  return std::string{reinterpret_cast<const char*>(output->getBuffer()), output->size()};
+  return utils::span_to<std::string>(output->getBuffer().as_span<const char>());
 }
 
 TEST_CASE("Test Compression", "[ttl7]") {

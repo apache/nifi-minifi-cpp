@@ -57,18 +57,17 @@ class FrameReadCallback : public InputStreamCallback {
   ~FrameReadCallback() override = default;
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    int64_t ret = 0;
-    image_buf_.resize(stream->size());
-    ret = stream->read(image_buf_.data(), static_cast<int>(stream->size()));
-    if (ret < 0 || static_cast<std::size_t>(ret) != stream->size()) {
+    std::vector<uchar> image_buf;
+    image_buf.resize(stream->size());
+    const auto ret = stream->read(gsl::make_span(image_buf).as_span<std::byte>());
+    if (ret != stream->size()) {
       throw std::runtime_error("ImageReadCallback failed to fully read flow file input stream");
     }
-    image_mat_ = cv::imdecode(image_buf_, -1);
-    return ret;
+    image_mat_ = cv::imdecode(image_buf, -1);
+    return gsl::narrow<int64_t>(ret);
   }
 
  private:
-  std::vector<uchar> image_buf_;
   cv::Mat &image_mat_;
 };
 

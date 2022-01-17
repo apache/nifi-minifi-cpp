@@ -17,7 +17,9 @@
  */
 #pragma once
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 #include "coap_message.h"
 
@@ -37,59 +39,31 @@ class CoapResponse {
    * Creates a CoAPResponse to a CoAPMessage. Takes ownership of the argument
    * and copies the data.
    */
-  explicit CoapResponse(CoapMessage * const msg)
-      : code_(msg->code_),
-        size_(msg->size_) {
-    // we take ownership of data_;
-    data_ = std::unique_ptr<uint8_t>(new uint8_t[msg->size_]);
-    memcpy(data_.get(), msg->data_, size_);
+  explicit CoapResponse(CoapMessage* const msg)
+      : code_(msg->code_) {
+    data_.resize(msg->size_);
+    memcpy(data_.data(), msg->data_, data_.size());
     free_coap_message(msg);
   }
 
   explicit CoapResponse(uint32_t code)
-      : code_(code),
-        size_(0),
-        data_(nullptr) {
+      : code_(code) {
   }
 
   CoapResponse(const CoapResponse &other) = delete;
-
   CoapResponse(CoapResponse &&other) = default;
-
   ~CoapResponse() = default;
 
-  /**
-   * Retrieve the size of the coap response.
-   * @return size_t of size
-   */
-  size_t getSize() const {
-    return size_;
-  }
-
-  /**
-   * Returns a const pointer to the constant data.
-   * @return data pointer.
-   */
-  const uint8_t* getData() const {
-    return data_.get();
+  [[nodiscard]] gsl::span<const std::byte> getData() const noexcept {
+    return data_;
   }
 
   /**
    * Returns the response code from the data.
    * @return data.
    */
-  uint32_t getCode() const {
+  [[nodiscard]] uint32_t getCode() const {
     return code_;
-  }
-
-  /**
-   * Ease of use function to take ownership of the CoAPResponse.
-   * @param data, data pointer.
-   * @size_t size of the data.
-   */
-  void takeOwnership(uint8_t **data, size_t &size) {
-    size = size_;
-    *data = data_.release();
   }
 
   CoapResponse &operator=(const CoapResponse &other) = delete;
@@ -97,8 +71,7 @@ class CoapResponse {
 
  private:
   uint32_t code_;
-  size_t size_;
-  std::unique_ptr<uint8_t> data_;
+  std::vector<std::byte> data_;
 };
 
 } /* namespace controllers */

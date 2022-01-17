@@ -53,7 +53,7 @@ class HttpStreamingCallbackTestsFixture {
         size_t buffer_size = callback_.getBufferSize();
         if (current_pos <= buffer_size) {
           size_t len = buffer_size - current_pos;
-          char* ptr = callback_.getBuffer(current_pos);
+          auto* ptr = callback_.getBuffer(current_pos);
           if (ptr == nullptr) {
             break;
           }

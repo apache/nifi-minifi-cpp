@@ -79,32 +79,29 @@ class HttpStreamingCallback : public ByteInputCallBack {
   }
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    std::vector<char> vec;
+    std::vector<std::byte> vec;
 
     if (stream->size() > 0) {
       vec.resize(stream->size());
-      stream->read(reinterpret_cast<uint8_t*>(vec.data()), stream->size());
+      stream->read(vec);
     }
 
     return processInner(std::move(vec));
   }
 
   virtual int64_t process(const uint8_t* data, size_t size) {
-    std::vector<char> vec;
+    std::vector<std::byte> vec;
     vec.resize(size);
-    memcpy(vec.data(), reinterpret_cast<const char*>(data), size);
+    memcpy(vec.data(), data, size);
 
     return processInner(std::move(vec));
   }
 
   void write(std::string content) override {
-    std::vector<char> vec;
-    vec.assign(content.begin(), content.end());
-
-    (void) processInner(std::move(vec));
+    (void) processInner(utils::span_to<std::vector>(gsl::make_span(content).as_span<std::byte>()));
   }
 
-  char* getBuffer(size_t pos) override {
+  std::byte* getBuffer(size_t pos) override {
     logger_->log_trace("getBuffer(pos: %zu) called", pos);
 
     std::unique_lock<std::mutex> lock(mutex_);
@@ -172,7 +169,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
    * @param vec the buffer to be inserted
    * @return the number of bytes processed (the size of vec)
    */
-  int64_t processInner(std::vector<char>&& vec) {
+  int64_t processInner(std::vector<std::byte>&& vec) {
     size_t size = vec.size();
 
     logger_->log_trace("processInner() called, vec.data(): %p, vec.size(): %zu", vec.data(), size);
@@ -218,10 +215,10 @@ class HttpStreamingCallback : public ByteInputCallBack {
   size_t current_buffer_start_;
   size_t current_pos_;
 
-  std::deque<std::vector<char>> byte_arrays_;
+  std::deque<std::vector<std::byte>> byte_arrays_;
 
-  std::vector<char> current_vec_;
-  char *ptr_;
+  std::vector<std::byte> current_vec_;
+  std::byte *ptr_;
 };
 
 } /* namespace utils */

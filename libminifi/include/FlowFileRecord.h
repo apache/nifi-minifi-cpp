@@ -41,10 +41,7 @@
 #include "io/OutputStream.h"
 #include "io/StreamPipe.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 #define DEFAULT_FLOWFILE_PATH "."
 
@@ -62,14 +59,12 @@ class FlowFileRecord : public core::FlowFile {
 
   //! Serialize and Persistent to the repository
   bool Persist(const std::shared_ptr<core::Repository>& flowRepository);
-  //! DeSerialize
-  static std::shared_ptr<FlowFileRecord> DeSerialize(const uint8_t *buffer, int bufferSize, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
-    io::BufferStream inStream{buffer, gsl::narrow<unsigned int>(bufferSize)};
+
+  static std::shared_ptr<FlowFileRecord> DeSerialize(gsl::span<const std::byte> buffer, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container) {
+    io::BufferStream inStream{buffer};
     return DeSerialize(inStream, content_repo, container);
   }
-  //! DeSerialize
   static std::shared_ptr<FlowFileRecord> DeSerialize(io::InputStream &stream, const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container);
-  //! DeSerialize
   static std::shared_ptr<FlowFileRecord> DeSerialize(const std::string& key, const std::shared_ptr<core::Repository>& flowRepository,
       const std::shared_ptr<core::ContentRepository> &content_repo, utils::Identifier &container);
 
@@ -85,9 +80,6 @@ class FlowFileRecord : public core::FlowFile {
   static std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
 
 #endif  // LIBMINIFI_INCLUDE_FLOWFILERECORD_H_

@@ -20,6 +20,7 @@
 #define LIBMINIFI_INCLUDE_SITETOSITE_SITETOSITECLIENT_H_
 
 #include <algorithm>
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
@@ -274,17 +275,17 @@ class WriteCallback : public OutputStreamCallback {
   DataPacket *_packet;
   // void process(std::ofstream *stream) {
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    uint8_t buffer[16384];
+    std::array<std::byte, 16384> buffer{};
     uint64_t len = _packet->_size;
     uint64_t total = 0;
     while (len > 0) {
       const auto size = std::min(len, uint64_t{16384});
-      const auto ret = _packet->transaction_->getStream().read(buffer, size);
+      const auto ret = _packet->transaction_->getStream().read(buffer);
       if (ret != size) {
         core::logging::LOG_ERROR(_packet->logger_reference_) << "Site2Site Receive Flow Size " << size << " Failed " << ret << ", should have received " << len;
         return -1;
       }
-      stream->write(buffer, size);
+      stream->write(buffer);
       len -= size;
       total += size;
     }
@@ -301,13 +302,13 @@ class ReadCallback : public InputStreamCallback {
   DataPacket *_packet;
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     _packet->_size = 0;
-    uint8_t buffer[8192] = { 0 };
+    std::array<std::byte, 8192> buffer{};
     size_t size = 0;
     do {
-      const auto readSize = stream->read(buffer, 8192);
+      const auto readSize = stream->read(buffer);
       if (readSize == 0) break;
       if (io::isError(readSize)) return -1;
-      const auto ret = _packet->transaction_->getStream().write(buffer, readSize);
+      const auto ret = _packet->transaction_->getStream().write(gsl::make_span(buffer).subspan(0, readSize));
       if (io::isError(ret) || gsl::narrow<size_t>(ret) != readSize) {
         core::logging::LOG_INFO(_packet->logger_reference_) << "Site2Site Send Flow Size " << readSize << " Failed " << ret;
         return -1;

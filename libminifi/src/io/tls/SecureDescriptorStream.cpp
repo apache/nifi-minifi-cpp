@@ -75,18 +75,16 @@ size_t SecureDescriptorStream::write(const uint8_t *value, size_t size) {
   return size;
 }
 
-size_t SecureDescriptorStream::read(uint8_t * const buf, const size_t buflen) {
-  if (buflen == 0) {
-    return 0;
-  }
+size_t SecureDescriptorStream::read(gsl::span<std::byte> buf) {
+  if (buf.empty()) { return 0; }
   if (IsNullOrEmpty(buf)) return STREAM_ERROR;
   size_t total_read = 0;
-  uint8_t* writepos = buf;
-  while (buflen > total_read) {
+  std::byte* writepos = buf.data();
+  while (buf.size() > total_read) {
     int status;
     int sslStatus;
     do {
-      const auto ssl_read_size = gsl::narrow<int>(std::min(buflen - total_read, gsl::narrow<size_t>(std::numeric_limits<int>::max())));
+      const auto ssl_read_size = gsl::narrow<int>(std::min(buf.size() - total_read, gsl::narrow<size_t>(std::numeric_limits<int>::max())));
       status = SSL_read(ssl_, writepos, ssl_read_size);
       sslStatus = SSL_get_error(ssl_, status);
     } while (status < 0 && sslStatus == SSL_ERROR_WANT_READ);

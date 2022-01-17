@@ -141,17 +141,15 @@ size_t FileStream::write(const uint8_t *value, size_t size) {
   return size;
 }
 
-size_t FileStream::read(uint8_t *buf, size_t buflen) {
-  if (buflen == 0) {
-    return 0;
-  }
+size_t FileStream::read(gsl::span<std::byte> buf) {
+  if (buf.empty()) { return 0; }
   if (!IsNullOrEmpty(buf)) {
     std::lock_guard<std::mutex> lock(file_lock_);
     if (file_stream_ == nullptr || !file_stream_->is_open()) {
       core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
       return STREAM_ERROR;
     }
-    file_stream_->read(reinterpret_cast<char*>(buf), gsl::narrow<std::streamsize>(buflen));
+    file_stream_->read(reinterpret_cast<char*>(buf.data()), gsl::narrow<std::streamsize>(buf.size()));
     if (file_stream_->eof() || file_stream_->fail()) {
       file_stream_->clear();
       seekToEndOfFile(READ_ERROR_MSG);
@@ -167,9 +165,9 @@ size_t FileStream::read(uint8_t *buf, size_t buflen) {
       core::logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
       return ret;
     } else {
-      offset_ += buflen;
+      offset_ += buf.size();
       file_stream_->seekp(gsl::narrow<std::streamoff>(offset_));
-      return buflen;
+      return buf.size();
     }
   } else {
     core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_BUFFER_ERROR_MSG;

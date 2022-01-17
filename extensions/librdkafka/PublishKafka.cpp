@@ -295,7 +295,7 @@ class ReadCallback : public InputStreamCallback {
     return rd_kafka_headers_unique_ptr{ result };
   }
 
-  rd_kafka_resp_err_t produce(const size_t segment_num, std::vector<unsigned char>& buffer, const size_t buflen) const {
+  rd_kafka_resp_err_t produce(const size_t segment_num, std::vector<std::byte>& buffer, const size_t buflen) const {
     const std::shared_ptr<PublishKafka::Messages> messages_ptr_copy = this->messages_;
     const auto flow_file_index_copy = this->flow_file_index_;
     const auto logger = logger_;
@@ -358,7 +358,7 @@ class ReadCallback : public InputStreamCallback {
   ReadCallback& operator=(ReadCallback) = delete;
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    std::vector<unsigned char> buffer;
+    std::vector<std::byte> buffer;
 
     buffer.resize(max_seg_size_);
     read_size_ = 0;
@@ -383,7 +383,7 @@ class ReadCallback : public InputStreamCallback {
     }
 
     for (size_t segment_num = 0; read_size_ < flow_size_; ++segment_num) {
-      const auto readRet = stream->read(buffer.data(), buffer.size());
+      const auto readRet = stream->read(buffer);
       if (io::isError(readRet)) {
         status_ = -1;
         error_ = "Failed to read from stream";

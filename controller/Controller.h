@@ -34,13 +34,13 @@
  * @param op operation to perform
  * @param value value to send
  */
-bool sendSingleCommand(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, uint8_t op, const std::string value) {
+bool sendSingleCommand(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, uint8_t op, const std::string& value) {
   socket->initialize();
   std::vector<uint8_t> data;
   org::apache::nifi::minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write(value);
-  return socket->write(stream.getBuffer(), stream.size()) == stream.size();
+  return socket->write(stream.getBuffer()) == stream.size();
 }
 
 /**
@@ -48,7 +48,7 @@ bool sendSingleCommand(std::unique_ptr<org::apache::nifi::minifi::io::Socket> so
  * @param socket socket unique ptr.
  * @param op operation to perform
  */
-bool stopComponent(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, std::string component) {
+bool stopComponent(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, const std::string& component) {
   return sendSingleCommand(std::move(socket), org::apache::nifi::minifi::c2::Operation::STOP, component);
 }
 
@@ -57,7 +57,7 @@ bool stopComponent(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket
  * @param socket socket unique ptr.
  * @param op operation to perform
  */
-bool startComponent(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, std::string component) {
+bool startComponent(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, const std::string& component) {
   return sendSingleCommand(std::move(socket), org::apache::nifi::minifi::c2::Operation::START, component);
 }
 
@@ -66,14 +66,14 @@ bool startComponent(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socke
  * @param socket socket unique ptr.
  * @param op operation to perform
  */
-bool clearConnection(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, std::string connection) {
+bool clearConnection(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, const std::string& connection) {
   return sendSingleCommand(std::move(socket), org::apache::nifi::minifi::c2::Operation::CLEAR, connection);
 }
 
 /**
  * Updates the flow to the provided file
  */
-int updateFlow(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, std::ostream &out, std::string file) {
+int updateFlow(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, std::ostream &out, const std::string& file) {
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = org::apache::nifi::minifi::c2::Operation::UPDATE;
@@ -81,12 +81,12 @@ int updateFlow(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, st
   stream.write(&op, 1);
   stream.write("flow");
   stream.write(file);
-  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
+  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer()))) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(&resp, 1);
+  socket->read(resp);
   if (resp == org::apache::nifi::minifi::c2::Operation::DESCRIBE) {
     uint16_t connections = 0;
     socket->read(connections);
@@ -111,12 +111,12 @@ int getFullConnections(std::unique_ptr<org::apache::nifi::minifi::io::Socket> so
   org::apache::nifi::minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write("getfull");
-  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
+  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer()))) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(&resp, 1);
+  socket->read(gsl::make_span(reinterpret_cast<std::byte*>(&resp), 1));
   if (resp == org::apache::nifi::minifi::c2::Operation::DESCRIBE) {
     uint16_t connections = 0;
     socket->read(connections);
@@ -137,12 +137,12 @@ int getJstacks(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, st
   org::apache::nifi::minifi::io::BufferStream stream;
   stream.write(&op, 1);
   stream.write("jstack");
-  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
+  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer()))) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(&resp, 1);
+  socket->read(gsl::make_span(reinterpret_cast<std::byte*>(&resp), 1));
   if (resp == org::apache::nifi::minifi::c2::Operation::DESCRIBE) {
     uint64_t size = 0;
     socket->read(size);
@@ -167,7 +167,7 @@ int getJstacks(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, st
  * @param socket socket ptr
  * @param connection connection whose size will be returned.
  */
-int getConnectionSize(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, std::ostream &out, std::string connection) {
+int getConnectionSize(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, std::ostream &out, const std::string& connection) {
   socket->initialize();
   std::vector<uint8_t> data;
   uint8_t op = org::apache::nifi::minifi::c2::Operation::DESCRIBE;
@@ -175,12 +175,12 @@ int getConnectionSize(std::unique_ptr<org::apache::nifi::minifi::io::Socket> soc
   stream.write(&op, 1);
   stream.write("queue");
   stream.write(connection);
-  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
+  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer()))) {
     return -1;
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(&resp, 1);
+  socket->read(gsl::make_span(reinterpret_cast<std::byte*>(&resp), 1));
   if (resp == org::apache::nifi::minifi::c2::Operation::DESCRIBE) {
     std::string size;
     socket->read(size);
@@ -195,11 +195,11 @@ int listComponents(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket
   uint8_t op = org::apache::nifi::minifi::c2::Operation::DESCRIBE;
   stream.write(&op, 1);
   stream.write("components");
-  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
+  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer()))) {
     return -1;
   }
   uint16_t responses = 0;
-  socket->read(&op, 1);
+  socket->read(op);
   socket->read(responses);
   if (show_header)
     out << "Components:" << std::endl;
@@ -219,11 +219,11 @@ int listConnections(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socke
   uint8_t op = org::apache::nifi::minifi::c2::Operation::DESCRIBE;
   stream.write(&op, 1);
   stream.write("connections");
-  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer(), stream.size()))) {
+  if (org::apache::nifi::minifi::io::isError(socket->write(stream.getBuffer()))) {
     return -1;
   }
   uint16_t responses = 0;
-  socket->read(&op, 1);
+  socket->read(op);
   socket->read(responses);
   if (show_header)
     out << "Connection Names:" << std::endl;

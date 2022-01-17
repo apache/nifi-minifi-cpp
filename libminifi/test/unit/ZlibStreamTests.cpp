@@ -64,17 +64,17 @@ TEST_CASE("gzip compression and decompression", "[basic]") {
   REQUIRE(0U < compressBuffer.size());
 
   if (compressBuffer.size() < 64U) {
-    std::cerr << utils::StringUtils::to_hex(compressBuffer.getBuffer(), compressBuffer.size()) << std::endl;
+    std::cerr << utils::StringUtils::to_hex(compressBuffer.getBuffer()) << std::endl;
   }
 
   /* Decompression */
   io::BufferStream decompressBuffer;
   io::ZlibDecompressStream decompressStream(gsl::make_not_null(&decompressBuffer));
 
-  decompressStream.write(compressBuffer.getBuffer(), compressBuffer.size());
+  decompressStream.write(compressBuffer.getBuffer());
 
   REQUIRE(decompressStream.isFinished());
-  REQUIRE(original == std::string(reinterpret_cast<const char*>(decompressBuffer.getBuffer()), decompressBuffer.size()));
+  REQUIRE(original == utils::span_to<std::string>(decompressBuffer.getBuffer().as_span<const char>()));
 }
 
 TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
@@ -113,5 +113,5 @@ TEST_CASE("gzip compression and decompression pipeline", "[basic]") {
   compressStream.close();
 
   REQUIRE(decompressStream.isFinished());
-  REQUIRE(original == std::string(reinterpret_cast<const char*>(output.getBuffer()), output.size()));
+  REQUIRE(original == utils::span_to<std::string>(output.getBuffer().as_span<const char>()));
 }

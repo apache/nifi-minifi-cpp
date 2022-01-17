@@ -770,7 +770,7 @@ Value expr_base64Encode(const std::vector<Value> &args) {
 }
 
 Value expr_base64Decode(const std::vector<Value> &args) {
-  return Value(utils::StringUtils::from_base64(args[0].asString()));
+  return Value(utils::StringUtils::from_base64(args[0].asString(), utils::as_string));
 }
 
 #ifdef EXPRESSION_LANGUAGE_USE_REGEX

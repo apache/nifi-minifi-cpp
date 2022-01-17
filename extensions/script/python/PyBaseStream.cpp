@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-#include <stdexcept>
 #include <memory>
 #include <utility>
 #include <string>
 #include <vector>
 
 #include "PyBaseStream.h"
+
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -47,15 +48,14 @@ py::bytes PyBaseStream::read(size_t len) {
     return nullptr;
   }
 
-  std::vector<uint8_t> buffer(len);
+  std::vector<std::byte> buffer(len);
 
-  const auto read = stream_->read(buffer.data(), len);
+  const auto read = stream_->read(buffer);
   return py::bytes(reinterpret_cast<char *>(buffer.data()), read);
 }
 
 size_t PyBaseStream::write(const py::bytes& buf) {
-  auto buf_str = buf.operator std::string();
-  return stream_->write(reinterpret_cast<const uint8_t*>(buf_str.data()), buf_str.length());
+  return stream_->write(gsl::make_span(static_cast<std::string>(buf)).as_span<const std::byte>());
 }
 
 } /* namespace python */

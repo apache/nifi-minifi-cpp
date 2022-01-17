@@ -144,10 +144,10 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     logger_->log_trace("EOM is passed in as %s", value);
     int64_t byteValue = 0;
     core::Property::StringToInt(value, byteValue);
-    endOfMessageByte = byteValue & 0xFF;
+    endOfMessageByte = static_cast<std::byte>(byteValue & 0xFF);
   }
 
-  logger_->log_trace("EOM is defined as %i", endOfMessageByte);
+  logger_->log_trace("EOM is defined as %i", static_cast<int>(endOfMessageByte));
 
   if (auto reconnect_interval = context->getProperty<core::TimePeriodValue>(ReconnectInterval)) {
     reconnect_interval_ = reconnect_interval->getMilliseconds();
@@ -161,12 +161,12 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
   f_ex = [&] {
     std::unique_ptr<io::Socket> socket_ptr;
     // reuse the byte buffer.
-      std::vector<uint8_t> buffer;
+      std::vector<std::byte> buffer;
       int reconnects = 0;
       do {
         if ( socket_ring_buffer_.try_dequeue(socket_ptr) ) {
           buffer.resize(receive_buffer_size_);
-          const auto size_read = socket_ptr->read(buffer.data(), receive_buffer_size_, false);
+          const auto size_read = socket_ptr->read(buffer);
           if (!io::isError(size_read)) {
             if (size_read != 0) {
               // determine cut location
@@ -174,7 +174,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               for (size_t i = 0; i < size_read; i++) {
                 if (buffer.at(i) == endOfMessageByte && i > 0) {
                   if (i-startLoc > 0) {
-                    handler_->handle(socket_ptr->getHostname(), buffer.data()+startLoc, (i-startLoc), true);
+                    handler_->handle(socket_ptr->getHostname(), reinterpret_cast<uint8_t*>(buffer.data())+startLoc, (i-startLoc), true);
                   }
                   startLoc = i;
                 }
@@ -182,12 +182,12 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
               if (startLoc > 0) {
                 logger_->log_trace("Starting at %i, ending at %i", startLoc, size_read);
                 if (size_read-startLoc > 0) {
-                  handler_->handle(socket_ptr->getHostname(), buffer.data()+startLoc, (size_read-startLoc), true);
+                  handler_->handle(socket_ptr->getHostname(), reinterpret_cast<uint8_t*>(buffer.data())+startLoc, (size_read-startLoc), true);
                 }
               } else {
                 logger_->log_trace("Handling at %i, ending at %i", startLoc, size_read);
                 if (size_read > 0) {
-                  handler_->handle(socket_ptr->getHostname(), buffer.data(), size_read, false);
+                  handler_->handle(socket_ptr->getHostname(), reinterpret_cast<uint8_t*>(buffer.data()), size_read, false);
                 }
               }
               reconnects = 0;

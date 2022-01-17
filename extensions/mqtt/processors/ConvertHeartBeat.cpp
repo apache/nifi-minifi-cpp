@@ -47,7 +47,7 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
     context->yield();
     return;
   }
-  std::vector<uint8_t> heartbeat;
+  std::vector<std::byte> heartbeat;
   bool received_heartbeat = false;
   // while we have heartbeats we can continue to loop.
   while (mqtt_service_->get(100, listening_topic, heartbeat)) {
