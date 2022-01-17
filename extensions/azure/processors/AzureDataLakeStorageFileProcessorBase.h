@@ -33,21 +33,21 @@ class AzureDataLakeStorageFileProcessorBase : public AzureDataLakeStorageProcess
   // Supported Properties
   EXTENSIONAPI static const core::Property FileName;
 
-  explicit AzureDataLakeStorageFileProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger)
+  explicit AzureDataLakeStorageFileProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
     : AzureDataLakeStorageProcessorBase(name, uuid, logger) {
   }
 
   ~AzureDataLakeStorageFileProcessorBase() override = default;
 
  protected:
-  explicit AzureDataLakeStorageFileProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<logging::Logger> &logger,
+  explicit AzureDataLakeStorageFileProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger,
       std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
     : AzureDataLakeStorageProcessorBase(name, uuid, logger, std::move(data_lake_storage_client)) {
   }
 
   bool setFileOperationCommonParameters(
     storage::AzureDataLakeStorageFileOperationParameters& params,
-    const std::shared_ptr<core::ProcessContext>& context,
+    core::ProcessContext& context,
     const std::shared_ptr<core::FlowFile>& flow_file);
 };
 

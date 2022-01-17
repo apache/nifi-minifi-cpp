@@ -78,7 +78,7 @@ void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCon
   }
   state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
-  auto params = buildListParameters(context);
+  auto params = buildListParameters(*context);
   if (!params) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required parameters for ListAzureDataLakeStorage processor are missing or invalid");
   }
@@ -88,20 +88,19 @@ void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCon
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ListingStrategy.getName(), storage::EntityTracking::values()).c_str());
 }
 
-std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStorage::buildListParameters(
-    const std::shared_ptr<core::ProcessContext>& context) {
+std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStorage::buildListParameters(core::ProcessContext& context) {
   storage::ListAzureDataLakeStorageParameters params;
   if (!setCommonParameters(params, context, nullptr)) {
     return std::nullopt;
   }
 
-  if (!context->getProperty(RecurseSubdirectories.getName(), params.recurse_subdirectories)) {
+  if (!context.getProperty(RecurseSubdirectories.getName(), params.recurse_subdirectories)) {
     logger_->log_error("Recurse Subdirectories property missing or invalid");
     return std::nullopt;
   }
 
-  context->getProperty(FileFilter.getName(), params.file_filter);
-  context->getProperty(PathFilter.getName(), params.path_filter);
+  context.getProperty(FileFilter.getName(), params.file_filter);
+  context.getProperty(PathFilter.getName(), params.path_filter);
 
   return params;
 }

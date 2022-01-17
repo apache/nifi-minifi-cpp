@@ -63,7 +63,7 @@ class ListingStateManager {
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   const std::string timestamp_key_;
   const std::string listed_object_prefix_;
-  std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ListingState>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ListingState>::getLogger()};
 };
 
 }  // namespace org::apache::nifi::minifi::utils

@@ -41,7 +41,7 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   static const core::Relationship Success;
 
   explicit ListAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageProcessorBase(name, uuid, logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger()) {
+    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger()) {
   }
 
   ~ListAzureDataLakeStorage() override = default;
@@ -58,10 +58,10 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   }
 
   explicit ListAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(name, uuid, logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
+    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
   }
 
-  std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(const std::shared_ptr<core::ProcessContext>& context);
+  std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext& context);
   void createNewFlowFile(core::ProcessSession &session, const storage::ListDataLakeStorageElement &element);
 
   bool recurse_subdirectories_ = true;

@@ -33,7 +33,7 @@ class ListAzureDataLakeStorageTestsFixture {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::azure::processors::ListAzureDataLakeStorage>();
 
     // Build MiNiFi processing graph

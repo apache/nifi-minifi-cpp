@@ -32,12 +32,12 @@ const core::Property AzureDataLakeStorageFileProcessorBase::FileName(
       ->build());
 
 bool AzureDataLakeStorageFileProcessorBase::setFileOperationCommonParameters(
-    storage::AzureDataLakeStorageFileOperationParameters& params, const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) {
+    storage::AzureDataLakeStorageFileOperationParameters& params, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   if (!setCommonParameters(params, context, flow_file)) {
     return false;
   }
 
-  context->getProperty(FileName, params.filename, flow_file);
+  context.getProperty(FileName, params.filename, flow_file);
   if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
     logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
     return false;
