@@ -202,7 +202,7 @@ bool unit_matches(const std::string&) {
 
 template<>
 inline bool unit_matches<std::chrono::nanoseconds>(const std::string& unit) {
-  return unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds";
+  return unit == "ns" || unit == "nano" || unit == "nanos" || unit == "nanoseconds" || unit == "nanosecond";
 }
 
 template<>

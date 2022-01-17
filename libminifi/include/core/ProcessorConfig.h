@@ -35,7 +35,7 @@ namespace core {
 constexpr std::chrono::milliseconds DEFAULT_SCHEDULING_PERIOD_MILLIS{1000};
 constexpr std::chrono::nanoseconds DEFAULT_RUN_DURATION{0};
 #define DEFAULT_MAX_CONCURRENT_TASKS 1
-#define DEFAULT_YIELD_PERIOD_SECONDS 1
+constexpr std::chrono::seconds DEFAULT_YIELD_PERIOD_SECONDS{1};
 constexpr std::chrono::seconds DEFAULT_PENALIZATION_PERIOD{30};
 
 struct ProcessorConfig {

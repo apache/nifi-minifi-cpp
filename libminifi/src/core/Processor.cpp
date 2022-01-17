@@ -55,7 +55,7 @@ Processor::Processor(const std::string& name)
   _triggerWhenEmpty = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
-  yield_period_msec_ = std::chrono::seconds(DEFAULT_YIELD_PERIOD_SECONDS);
+  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;
@@ -75,7 +75,7 @@ Processor::Processor(const std::string& name, const utils::Identifier& uuid)
   _triggerWhenEmpty = false;
   scheduling_period_nano_ = MINIMUM_SCHEDULING_NANOS;
   run_duration_nano_ = DEFAULT_RUN_DURATION;
-  yield_period_msec_ = std::chrono::seconds(DEFAULT_YIELD_PERIOD_SECONDS);
+  yield_period_msec_ = DEFAULT_YIELD_PERIOD_SECONDS;
   penalization_period_ = DEFAULT_PENALIZATION_PERIOD;
   max_concurrent_tasks_ = DEFAULT_MAX_CONCURRENT_TASKS;
   active_tasks_ = 0;

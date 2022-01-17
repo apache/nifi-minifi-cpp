@@ -162,7 +162,7 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
         logger_(core::logging::LoggerFactory<SiteToSitePeer>::getLogger()) {
     url_ = "nifi://" + host_ + ":" + std::to_string(port_);
     yield_expiration_ = std::chrono::system_clock::time_point();
-    timeout_ = std::chrono::seconds(30);  // 30 seconds
+    timeout_ = std::chrono::seconds(30);
     local_network_interface_ = io::NetworkInterface(ifc, nullptr);
   }
 

@@ -79,7 +79,7 @@ class SchedulingDefaults : public DeviceInformation {
 
     SerializedResponseNode yieldDuration;
     yieldDuration.name = "yieldDurationMillis";
-    yieldDuration.value = DEFAULT_YIELD_PERIOD_SECONDS*1000;
+    yieldDuration.value = std::chrono::milliseconds(core::DEFAULT_YIELD_PERIOD_SECONDS).count();
 
     schedulingDefaults.children.push_back(yieldDuration);
 
