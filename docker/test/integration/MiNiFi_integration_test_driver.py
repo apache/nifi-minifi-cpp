@@ -118,57 +118,57 @@ class MiNiFi_integration_test():
     def add_file_system_observer(self, file_system_observer):
         self.file_system_observer = file_system_observer
 
-    def check_for_no_files_generated(self, timeout_seconds):
+    def check_for_no_files_generated(self, wait_time_in_seconds):
         output_validator = NoFileOutPutValidator()
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1)
+        self.__check_output_after_time_period(wait_time_in_seconds, output_validator)
 
     def check_for_single_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleFileOutputValidator(decode_escaped_str(content))
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1)
+        self.__check_output(timeout_seconds, output_validator, 1)
 
     def check_for_single_json_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleJSONFileOutputValidator(content)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1)
+        self.__check_output(timeout_seconds, output_validator, 1)
 
     def check_for_multiple_files_generated(self, file_count, timeout_seconds, expected_content=[]):
         output_validator = MultiFileOutputValidator(file_count, [decode_escaped_str(content) for content in expected_content])
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, file_count)
+        self.__check_output(timeout_seconds, output_validator, file_count)
 
     def check_for_at_least_one_file_with_content_generated(self, content, timeout_seconds):
         output_validator = SingleOrMultiFileOutputValidator(decode_escaped_str(content))
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        expected_number_of_files = timeout_seconds
-        self.check_output(timeout_seconds, output_validator, expected_number_of_files)
+        self.__check_output(timeout_seconds, output_validator)
 
     def check_for_num_files_generated(self, num_flowfiles, timeout_seconds):
         output_validator = NoContentCheckFileNumberValidator(num_flowfiles)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, max(1, num_flowfiles))
+        self.__check_output(timeout_seconds, output_validator, max(1, num_flowfiles))
 
-    def check_for_num_file_range_generated(self, min_files, max_files, timeout_seconds):
+    def check_for_num_file_range_generated(self, min_files, max_files, wait_time_in_seconds):
         output_validator = NumFileRangeValidator(min_files, max_files)
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output_force_wait(timeout_seconds, output_validator)
+        self.__check_output_after_time_period(wait_time_in_seconds, output_validator)
 
     def check_for_an_empty_file_generated(self, timeout_seconds):
         output_validator = EmptyFilesOutPutValidator()
         output_validator.set_output_dir(self.file_system_observer.get_output_dir())
-        self.check_output(timeout_seconds, output_validator, 1)
+        self.__check_output(timeout_seconds, output_validator, 1)
 
-    def check_output_force_wait(self, timeout_seconds, output_validator):
-        time.sleep(timeout_seconds)
-        self.validate(output_validator)
+    def __check_output_after_time_period(self, wait_time_in_seconds, output_validator):
+        time.sleep(wait_time_in_seconds)
+        self.__validate(output_validator)
 
-    def check_output(self, timeout_seconds, output_validator, max_files):
-        if self.file_system_observer.wait_for_output(timeout_seconds, max_files, output_validator):
-            return
-        self.validate(output_validator)
+    def __check_output(self, timeout_seconds, output_validator, max_files=0):
+        result = self.file_system_observer.validate_output(timeout_seconds, output_validator, max_files)
+        self.cluster.log_app_output()
+        assert not self.cluster.segfault_happened()
+        assert result
 
-    def validate(self, validator):
+    def __validate(self, validator):
         self.cluster.log_app_output()
         assert not self.cluster.segfault_happened()
         assert validator.validate()
