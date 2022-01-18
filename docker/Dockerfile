@@ -163,9 +163,9 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
     if [ "$ENABLE_JNI" = "ON" ]; then apk add --no-cache openjdk8-jre-base; fi && \
     if [ "$ENABLE_PCAP" = "ON" ]; then apk add --no-cache libpcap; fi && \
     if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --no-cache libpng libusb; fi && \
-    if [ "$ENABLE_LUA_SCRIPTING" = "ON" ]; then apk add --no-cache lua; fi && \
     if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --no-cache boost; fi && \
-    if { [ "$ENABLE_PYTHON" = "ON" ] || [ "$ENABLE_SCRIPTING" = "ON" ]; } && [ -z "$DISABLE_PYTHON_SCRIPTING" ]; then apk add --no-cache python3-dev; fi
+    if [ "$ENABLE_SCRIPTING" = "ON" ] && [ "$ENABLE_LUA_SCRIPTING" = "ON" ]; then apk add --no-cache lua; fi && \
+    if [ "$ENABLE_SCRIPTING" = "ON" ] && [ -z "$DISABLE_PYTHON_SCRIPTING"]; then apk add --no-cache python3; fi
 
 # Copy built minifi distribution from builder
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
