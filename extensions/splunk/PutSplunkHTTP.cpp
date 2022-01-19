@@ -30,6 +30,7 @@
 #include "client/HTTPClient.h"
 #include "utils/HTTPClient.h"
 #include "utils/OptionalUtils.h"
+#include "utils/ByteArrayCallback.h"
 
 #include "rapidjson/document.h"
 
