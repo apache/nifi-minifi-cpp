@@ -27,12 +27,9 @@
 #include <PythonScriptEngine.h>
 #endif  // PYTHON_SUPPORT
 
-#ifdef LUA_SUPPORT
-#include <LuaScriptEngine.h>
-#endif  // LUA_SUPPORT
-
 #include "ExecuteScript.h"
 #include "core/Resource.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org {
 namespace apache {
@@ -40,17 +37,28 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ExecuteScript::ScriptEngine("Script Engine",  // NOLINT
-    R"(The engine to execute scripts (python, lua))", "python");
-core::Property ExecuteScript::ScriptFile("Script File",  // NOLINT
+core::Property ExecuteScript::ScriptEngine(
+  core::PropertyBuilder::createProperty("Script Engine")
+    ->withDescription(R"(The engine to execute scripts (python, lua))")
+    ->isRequired(true)
+    ->withAllowableValues(ScriptEngineOption::values())
+    ->withDefaultValue(toString(ScriptEngineOption::PYTHON))
+    ->build());
+core::Property ExecuteScript::ScriptFile("Script File",
     R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecuteScript::ScriptBody("Script Body",  // NOLINT
+core::Property ExecuteScript::ScriptBody("Script Body",
     R"(Body of script to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecuteScript::ModuleDirectory("Module Directory",  // NOLINT
+core::Property ExecuteScript::ModuleDirectory("Module Directory",
     R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
 
-core::Relationship ExecuteScript::Success("success", "Script successes");  // NOLINT
-core::Relationship ExecuteScript::Failure("failure", "Script failures");  // NOLINT
+core::Relationship ExecuteScript::Success("success", "Script successes");
+core::Relationship ExecuteScript::Failure("failure", "Script failures");
+
+ScriptEngineFactory::ScriptEngineFactory(core::Relationship& success, core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
+  : success_(success),
+    failure_(failure),
+    logger_(logger) {
+}
 
 void ExecuteScript::initialize() {
   std::set<core::Property> properties;
@@ -71,17 +79,25 @@ void ExecuteScript::initialize() {
 }
 
 void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
-  if (!context->getProperty(ScriptEngine.getName(), script_engine_)) {
-    logger_->log_error("Script Engine attribute is missing or invalid");
-  }
+#ifdef LUA_SUPPORT
+  script_engine_q_ = std::make_unique<ScriptEngineQueue<lua::LuaScriptEngine>>(getMaxConcurrentTasks(), engine_factory_, logger_);
+#endif  // LUA_SUPPORT
+#ifdef PYTHON_SUPPORT
+  python_script_engine_ = engine_factory_.createEngine<python::PythonScriptEngine>();
+#endif  // PYTHON_SUPPORT
+
+  script_engine_ = ScriptEngineOption::parse(utils::parsePropertyWithAllowableValuesOrThrow(*context, ScriptEngine.getName(), ScriptEngineOption::values()).c_str());
 
   context->getProperty(ScriptFile.getName(), script_file_);
   context->getProperty(ScriptBody.getName(), script_body_);
   context->getProperty(ModuleDirectory.getName(), module_directory_);
 
   if (script_file_.empty() && script_body_.empty()) {
-    logger_->log_error("Either Script Body or Script File must be defined");
-    return;
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either Script Body or Script File must be defined");
+  }
+
+  if (!script_file_.empty() && !script_body_.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Only one of Script File or Script Body may be defined!");
   }
 }
 
@@ -89,62 +105,45 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
                               const std::shared_ptr<core::ProcessSession> &session) {
   std::shared_ptr<script::ScriptEngine> engine;
 
-  // Use an existing engine, if one is available
-  if (script_engine_q_.try_dequeue(engine)) {
-    logger_->log_debug("Using available %s script engine instance", script_engine_);
-  } else {
-    logger_->log_info("Creating new %s script instance", script_engine_);
-    logger_->log_info("Approximately %d %s script instances created for this processor",
-                      script_engine_q_.size_approx(),
-                      script_engine_);
-
-    if (script_engine_ == "python") {
+  if (script_engine_ == ScriptEngineOption::PYTHON) {
 #ifdef PYTHON_SUPPORT
-      engine = createEngine<python::PythonScriptEngine>();
-#else
-      throw std::runtime_error("Python support is disabled in this build.");
-#endif  // PYTHON_SUPPORT
-    } else if (script_engine_ == "lua") {
-#ifdef LUA_SUPPORT
-      engine = createEngine<lua::LuaScriptEngine>();
-#else
-      throw std::runtime_error("Lua support is disabled in this build.");
-#endif  // LUA_SUPPORT
-    }
-
-    if (engine == nullptr) {
-      throw std::runtime_error("No script engine available");
-    }
-
-    if (!script_body_.empty()) {
-      engine->eval(script_body_);
-    } else if (!script_file_.empty()) {
-      engine->evalFile(script_file_);
-    } else {
-      throw std::runtime_error("Neither Script Body nor Script File is available to execute");
-    }
-  }
-
-  if (script_engine_ == "python") {
-#ifdef PYTHON_SUPPORT
-    triggerEngineProcessor<python::PythonScriptEngine>(engine, context, session);
+    engine = python_script_engine_;
 #else
     throw std::runtime_error("Python support is disabled in this build.");
 #endif  // PYTHON_SUPPORT
-  } else if (script_engine_ == "lua") {
+  } else if (script_engine_ == ScriptEngineOption::LUA) {
 #ifdef LUA_SUPPORT
-    triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
+    engine = script_engine_q_->getScriptEngine();
 #else
     throw std::runtime_error("Lua support is disabled in this build.");
 #endif  // LUA_SUPPORT
   }
 
-  // Make engine available for use again
-  if (script_engine_q_.size_approx() < getMaxConcurrentTasks()) {
-    logger_->log_debug("Releasing %s script engine", script_engine_);
-    script_engine_q_.enqueue(engine);
+  if (engine == nullptr) {
+    throw std::runtime_error("No script engine available");
+  }
+
+  if (!script_body_.empty()) {
+    engine->eval(script_body_);
+  } else if (!script_file_.empty()) {
+    engine->evalFile(script_file_);
   } else {
-    logger_->log_info("Destroying script engine because it is no longer needed");
+    throw std::runtime_error("Neither Script Body nor Script File is available to execute");
+  }
+
+  if (script_engine_ == ScriptEngineOption::PYTHON) {
+#ifdef PYTHON_SUPPORT
+    triggerEngineProcessor<python::PythonScriptEngine>(engine, context, session);
+#else
+    throw std::runtime_error("Python support is disabled in this build.");
+#endif  // PYTHON_SUPPORT
+  } else if (script_engine_ == ScriptEngineOption::LUA) {
+#ifdef LUA_SUPPORT
+    triggerEngineProcessor<lua::LuaScriptEngine>(engine, context, session);
+    script_engine_q_->returnScriptEngine(std::static_pointer_cast<lua::LuaScriptEngine>(engine));
+#else
+    throw std::runtime_error("Lua support is disabled in this build.");
+#endif  // LUA_SUPPORT
   }
 }
 
@@ -152,7 +151,7 @@ REGISTER_RESOURCE(ExecuteScript, "Executes a script given the flow file and a pr
     "as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back.Scripts must define an onTrigger function which accepts NiFi Context"
     " and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state "
     "if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the "
-    "concurrent tasks to 1."); // NOLINT
+    "concurrent tasks to 1.");
 
 } /* namespace processors */
 } /* namespace minifi */

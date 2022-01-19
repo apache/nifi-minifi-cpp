@@ -203,21 +203,21 @@ class MiNiFi_integration_test():
     def check_splunk_event_with_attributes(self, splunk_container_name, query, attributes):
         assert self.cluster.check_splunk_event_with_attributes(splunk_container_name, query, attributes)
 
-    def check_minifi_log_contents(self, line, timeout_seconds=60):
-        self.check_container_log_contents("minifi-cpp", line, timeout_seconds)
+    def check_minifi_log_contents(self, line, timeout_seconds=60, count=1):
+        self.check_container_log_contents("minifi-cpp", line, timeout_seconds, count)
 
-    def check_minifi_log_matches_regex(self, regex, timeout_seconds=60):
+    def check_minifi_log_matches_regex(self, regex, timeout_seconds=60, count=1):
         for container in self.cluster.containers.values():
             if container.get_engine() == "minifi-cpp":
-                line_found = self.cluster.wait_for_app_logs_regex(container.get_name(), regex, timeout_seconds)
+                line_found = self.cluster.wait_for_app_logs_regex(container.get_name(), regex, timeout_seconds, count)
                 if line_found:
                     return
         assert False
 
-    def check_container_log_contents(self, container_engine, line, timeout_seconds=60):
+    def check_container_log_contents(self, container_engine, line, timeout_seconds=60, count=1):
         for container in self.cluster.containers.values():
             if container.get_engine() == container_engine:
-                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, timeout_seconds)
+                line_found = self.cluster.wait_for_app_logs(container.get_name(), line, timeout_seconds, count)
                 if line_found:
                     return
         assert False

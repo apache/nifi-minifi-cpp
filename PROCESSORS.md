@@ -471,7 +471,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |----------------------|---------------|------------------|--------------------------------------------------------------------------------------------------------|
 | Module Directory     |               |                  | Comma-separated list of paths to files and/or directories which contain modules required by the script |
 | Script Body          |               |                  | Body of script to execute. Only one of Script File or Script Body may be used                          |
-| Script Engine        | python        | python<br>lua    | The engine to execute scripts (python, lua)                                                            |
+| **Script Engine**    | python        | python<br>lua    | The engine to execute scripts (python, lua)                                                            |
 | Script File          |               |                  | Path to script file to execute. Only one of Script File or Script Body may be used                     |
 
 ### Relationships

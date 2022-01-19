@@ -77,6 +77,7 @@ class ImageStore:
                     echo "Password = password" >> /etc/odbc.ini && \
                     echo "Database = postgres" >> /etc/odbc.ini
                 RUN sed -i -e 's/INFO/DEBUG/g' {minifi_root}/conf/minifi-log.properties
+                RUN echo nifi.flow.engine.threads=5 >> {minifi_root}/conf/minifi.properties
                 USER minificpp
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
                            minifi_root=MinifiContainer.MINIFI_ROOT))

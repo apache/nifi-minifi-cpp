@@ -152,6 +152,12 @@ def step_impl(context, property_name, processor_name_one, processor_name_two):
     context.test.get_node_by_name(processor_name_two).set_property(property_name, uuid_str)
 
 
+@given("the max concurrent tasks attribute of the {processor_name} processor is set to {max_concurrent_tasks:d}")
+def step_impl(context, processor_name, max_concurrent_tasks):
+    processor = context.test.get_node_by_name(processor_name)
+    processor.set_max_concurrent_tasks(max_concurrent_tasks)
+
+
 @given("the \"{property_name}\" property of the {processor_name} processor is set to match {key_attribute_encoding} encoded kafka message key \"{message_key}\"")
 def step_impl(context, property_name, processor_name, key_attribute_encoding, message_key):
     encoded_key = ""
@@ -613,6 +619,12 @@ def step_impl(context, query, number_of_rows, timeout_seconds):
 @then("the Minifi logs contain the following message: \"{log_message}\" in less than {duration}")
 def step_impl(context, log_message, duration):
     context.test.check_minifi_log_contents(log_message, timeparse(duration))
+
+
+@then("the Minifi logs contain the following message: \"{log_message}\" {count:d} times after {seconds:d} seconds")
+def step_impl(context, log_message, count, seconds):
+    time.sleep(seconds)
+    context.test.check_minifi_log_contents(log_message, 1, count)
 
 
 @then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")

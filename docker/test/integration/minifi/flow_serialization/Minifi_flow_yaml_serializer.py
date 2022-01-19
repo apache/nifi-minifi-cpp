@@ -80,7 +80,8 @@ class Minifi_flow_yaml_serializer:
                 'yield period': connectable.schedule['yield period'],
                 'run duration nanos': connectable.schedule['run duration nanos'],
                 'Properties': connectable.properties,
-                'auto-terminated relationships list': connectable.auto_terminate
+                'auto-terminated relationships list': connectable.auto_terminate,
+                'max concurrent tasks': connectable.max_concurrent_tasks
             })
 
             for svc in connectable.controller_services:

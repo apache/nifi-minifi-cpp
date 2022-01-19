@@ -49,9 +49,8 @@ if (ENABLE_LUA_SCRIPTING)
     SET(CMAKE_FIND_PACKAGE_SORT_DIRECTION ASC)
     find_package(Lua 5.1 REQUIRED)
 
-    include_directories(${LUA_INCLUDE_DIR})
-
-    include_directories(lua)
+    target_include_directories(minifi-script-extensions PRIVATE lua)
+    target_include_directories(minifi-script-extensions PUBLIC ${LUA_INCLUDE_DIR})
     add_definitions(-DLUA_SUPPORT)
 
     file(GLOB LUA_SOURCES  "lua/*.cpp")

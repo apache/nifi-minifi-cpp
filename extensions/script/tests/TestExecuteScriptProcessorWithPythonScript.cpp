@@ -27,7 +27,46 @@
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 
-TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") { // NOLINT
+TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/path/to/script.py");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE("Neither script body nor script file is set", "[executescriptMisconfiguration]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "python");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE("Test both script body and script file set", "[executescriptMisconfiguration]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "python");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/path/to/script.py");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
+    def onTrigger(context, session):
+      log.info('hello from python')
+  )");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -112,7 +151,7 @@ TEST_CASE("Python: Test Read File", "[executescriptPythonRead]") { // NOLINT
   logTestController.reset();
 }
 
-TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") { // NOLINT
+TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -192,7 +231,7 @@ TEST_CASE("Python: Test Write File", "[executescriptPythonWrite]") { // NOLINT
   logTestController.reset();
 }
 
-TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") { // NOLINT
+TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -222,7 +261,7 @@ TEST_CASE("Python: Test Create", "[executescriptPythonCreate]") { // NOLINT
   logTestController.reset();
 }
 
-TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]") { // NOLINT
+TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -274,7 +313,7 @@ TEST_CASE("Python: Test Update Attribute", "[executescriptPythonUpdateAttribute]
   logTestController.reset();
 }
 
-TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextProperty]") { // NOLINT
+TEST_CASE("Python: Test Get Context Property", "[executescriptPythonGetContextProperty]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();

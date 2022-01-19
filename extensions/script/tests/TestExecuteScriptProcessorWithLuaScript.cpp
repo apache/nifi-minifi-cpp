@@ -27,7 +27,47 @@
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 
-TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") { // NOLINT
+TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE("Neither script body nor script file is set", "[executescriptMisconfiguration]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE("Test both script body and script file set", "[executescriptMisconfiguration]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+
+  auto executeScript = plan->addProcessor("ExecuteScript", "executeScript");
+
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptEngine.getName(), "lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/path/to/script.lua");
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptBody.getName(), R"(
+    function onTrigger(context, session)
+      log:info('hello from lua')
+    end
+  )");
+
+  REQUIRE_THROWS_AS(testController.runSession(plan, true), minifi::Exception);
+}
+
+TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -70,7 +110,7 @@ TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") { // NOLINT
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") { // NOLINT
+TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -158,7 +198,7 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") { // NOLINT
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") { // NOLINT
+TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -244,7 +284,7 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") { // NOLINT
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") { // NOLINT
+TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -299,7 +339,7 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") { /
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") { // NOLINT
+TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -332,7 +372,7 @@ TEST_CASE("Lua: Test Create", "[executescriptLuaCreate]") { // NOLINT
   logTestController.reset();
 }
 
-TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") { // NOLINT
+TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
