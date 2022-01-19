@@ -59,7 +59,7 @@ ARG DISABLE_ROCKSDB=OFF
 ARG DISABLE_LIBARCHIVE=OFF
 ARG DISABLE_LZMA=OFF
 ARG DISABLE_BZIP2=OFF
-ARG ENABLE_SCRIPTING=ON
+ARG ENABLE_SCRIPTING=OFF
 ARG DISABLE_PYTHON_SCRIPTING=
 ARG ENABLE_LUA_SCRIPTING=
 ARG DISABLE_CONTROLLER=OFF
@@ -141,7 +141,7 @@ ARG ENABLE_USB_CAMERA=OFF
 ARG ENABLE_OPENCV=OFF
 ARG ENABLE_PYTHON=OFF
 ARG ENABLE_BUSTACHE=OFF
-ARG ENABLE_SCRIPTING=ON
+ARG ENABLE_SCRIPTING=OFF
 ARG DISABLE_PYTHON_SCRIPTING=
 ARG ENABLE_LUA_SCRIPTING=
 
@@ -163,8 +163,8 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
     if [ "$ENABLE_PCAP" = "ON" ]; then apk add --no-cache libpcap; fi && \
     if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --no-cache libpng libusb; fi && \
     if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --no-cache boost; fi && \
-    if { [ "$ENABLE_PYTHON" = "ON" ] || [ "$ENABLE_SCRIPTING" = "ON" ]; } && [ -z "$DISABLE_PYTHON_SCRIPTING" ]; then apk add --no-cache python3-dev; fi && \
-    if [ "$ENABLE_SCRIPTING" = "ON" ] && [ -n "$ENABLE_LUA_SCRIPTING" ]; then apk add --no-cache lua-dev; fi
+    if [ "$ENABLE_SCRIPTING" = "ON" ] && [ -n "$ENABLE_LUA_SCRIPTING" ]; then apk add --no-cache lua; fi && \
+    if [ "$ENABLE_SCRIPTING" = "ON" ] && [ -z "$DISABLE_PYTHON_SCRIPTING" ]; then apk add --no-cache python3; fi
 
 # Copy built minifi distribution from builder
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
