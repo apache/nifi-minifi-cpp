@@ -37,7 +37,7 @@ function usage {
   echo "-t, --tag             Additional prefix added to the image tag"
   echo "-u, --uid             User id to be used in the Docker image (default: 1000)"
   echo "-g, --gid             Group id to be used in the Docker image (default: 1000)"
-  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (bionic|focal|fedora|debian|centos)"
+  echo "-d, --distro-name     Linux distribution build to be used for alternative builds (bionic|focal|fedora|centos)"
   echo "-l  --dump-location   Path where to the output dump to be put"
   echo "-c  --cmake-param     CMake parameter passed in PARAM=value format"
   echo "-h  --help            Show this help message"
