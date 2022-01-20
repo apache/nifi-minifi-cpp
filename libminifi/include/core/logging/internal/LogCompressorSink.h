@@ -45,7 +45,7 @@ struct LogQueueSize {
   size_t max_segment_size;
 };
 
-class LogCompressorSink : public spdlog::sinks::base_sink<spdlog::details::null_mutex> {
+class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
   friend class ::LoggerTestAccessor;
 
  private:
