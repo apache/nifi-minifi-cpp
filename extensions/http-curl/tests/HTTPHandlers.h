@@ -34,11 +34,14 @@
 #include "CivetStream.h"
 #include "io/CRCStream.h"
 #include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 #include "rapidjson/error/en.h"
 #include "HTTPUtils.h"
 #include "ServerAwareHandler.h"
 #include "utils/gsl.h"
 #include "agent/build_description.h"
+#include "c2/C2Payload.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -421,6 +424,26 @@ class HeartbeatHandler : public ServerAwareHandler {
       mg_printf(conn, "%s", heartbeat_response.c_str());
   }
 
+  void verifySupportedOperations(const rapidjson::Document& root) {
+    // rapidjson::StringBuffer buffer;
+    // buffer.Clear();
+    // rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    // root.Accept(writer);
+    // auto str = strdup(buffer.GetString());
+    // (void)str;
+
+    auto& agent_manifest = root["agentInfo"]["agentManifest"];
+    assert(agent_manifest.HasMember("supportedOperations"));
+
+    std::set<std::string> operations;
+    for (const auto& operation : agent_manifest["supportedOperations"].GetArray()) {
+      operation.HasMember("type");
+      operations.insert(operation["type"].GetString());
+    }
+
+    assert(operations == minifi::c2::Operation::values());
+  }
+
   void verifyJsonHasAgentManifest(const rapidjson::Document& root) {
     bool found = false;
     assert(root.HasMember("agentInfo"));
@@ -453,6 +476,8 @@ class HeartbeatHandler : public ServerAwareHandler {
     }
     assert(found);
     (void)found;  // unused in release builds
+
+    verifySupportedOperations(root);
   }
 
   virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {

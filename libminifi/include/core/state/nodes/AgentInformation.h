@@ -62,6 +62,7 @@
 #include "utils/ProcessCpuUsageTracker.h"
 #include "core/AgentIdentificationProvider.h"
 #include "utils/Export.h"
+#include "SupportedOperations.h"
 
 namespace org {
 namespace apache {
@@ -670,6 +671,11 @@ class AgentManifest : public DeviceInformation {
 
       for (auto defaultNode : defaults.serialize()) {
         serialized.push_back(defaultNode);
+      }
+
+      SupportedOperations supported_operations("supportedOperations");
+      for (const auto& operation : supported_operations.serialize()) {
+        serialized.push_back(operation);
       }
     }
     return serialized;
