@@ -28,6 +28,7 @@
 #include "io/StreamFactory.h"
 #include "io/Sockets.h"
 #include "utils/ThreadPool.h"
+#include "properties/Configuration.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace io = minifi::io;
@@ -206,7 +207,7 @@ TEST_CASE("TestTLSContextCreation", "[TestSocket8]") {
  */
 TEST_CASE("TestTLSContextCreation2", "[TestSocket9]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
-  configure->set("nifi.remote.input.secure", "false");
+  configure->set(minifi::Configuration::nifi_remote_input_secure, "false");
   auto factory = io::StreamFactory::getInstance(configure);
   std::string host = Socket::getMyHostName();
   Socket *socket = factory->createSocket(host, 10001).release();
@@ -220,7 +221,7 @@ TEST_CASE("TestTLSContextCreation2", "[TestSocket9]") {
  */
 TEST_CASE("TestTLSContextCreationNullptr", "[TestSocket10]") {
   std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>();
-  configure->set("nifi.remote.input.secure", "false");
+  configure->set(minifi::Configuration::nifi_remote_input_secure, "false");
   auto factory = io::StreamFactory::getInstance(configure);
   std::string host = Socket::getMyHostName();
   io::Socket *socket = factory->createSecureSocket(host, 10001, nullptr).release();

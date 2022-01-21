@@ -25,6 +25,7 @@
 #include "core/extension/DynamicLibrary.h"
 #include "agent/agent_version.h"
 #include "core/extension/Utils.h"
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -57,7 +58,11 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
       return;
     }
     std::string pattern = [&] {
-      auto opt_pattern = config->get(nifi_extension_path);
+      /**
+       * Comma separated list of path patterns. Patterns prepended with "!" result in the exclusion
+       * of the extensions matching that pattern, unless some subsequent pattern re-enables it.
+       */
+      auto opt_pattern = config->get(minifi::Configuration::nifi_extension_path);
       if (!opt_pattern) {
         logger_->log_warn("No extension path is provided, using default: '%s'", DEFAULT_EXTENSION_PATH);
       }

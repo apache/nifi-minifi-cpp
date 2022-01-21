@@ -138,7 +138,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   std::string clazz, heartbeat_period, device;
 
   if (!reconfigure) {
-    if (!configure->get("nifi.c2.agent.protocol.class", "c2.agent.protocol.class", clazz)) {
+    if (!configure->get(Configuration::nifi_c2_agent_protocol_class, "c2.agent.protocol.class", clazz)) {
       clazz = "RESTSender";
     }
     logger_->log_info("Class is %s", clazz);
@@ -150,7 +150,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       if (!protocol) {
         const char* errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
         logger_->log_error(errmsg);
-        throw minifi::Exception{ minifi::GENERAL_EXCEPTION, errmsg };
+        throw Exception{ GENERAL_EXCEPTION, errmsg };
       }
 
       logger_->log_info("Class is RESTSender");
@@ -164,7 +164,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     protocol_.load()->update(configure);
   }
 
-  if (configure->get("nifi.c2.agent.heartbeat.period", "c2.agent.heartbeat.period", heartbeat_period)) {
+  if (configure->get(Configuration::nifi_c2_agent_heartbeat_period, "c2.agent.heartbeat.period", heartbeat_period)) {
     try {
       if (auto heartbeat_period_ms = utils::timeutils::StringToDuration<std::chrono::milliseconds>(heartbeat_period)) {
         heart_beat_period_ = *heartbeat_period_ms;
@@ -181,7 +181,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string heartbeat_reporters;
-  if (configure->get("nifi.c2.agent.heartbeat.reporter.classes", "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
+  if (configure->get(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::StringUtils::splitAndTrim(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& reporter : reporters) {
@@ -196,7 +196,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string trigger_classes;
-  if (configure->get("nifi.c2.agent.trigger.classes", "c2.agent.trigger.classes", trigger_classes)) {
+  if (configure->get(Configuration::nifi_c2_agent_trigger_classes, "c2.agent.trigger.classes", trigger_classes)) {
     std::vector<std::string> triggers = utils::StringUtils::splitAndTrim(trigger_classes, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& trigger : triggers) {
@@ -255,10 +255,10 @@ void C2Agent::performHeartBeat() {
 }
 
 void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container, bool is_collapsible) {
-  const auto payloads = std::count_if(begin(metrics), end(metrics), [](const state::response::SerializedResponseNode& metric) { return !metric.children.empty(); });
+  const auto payloads = std::count_if(begin(metrics), end(metrics), [](const state::response::SerializedResponseNode& metric) { return !metric.children.empty() || metric.keep_empty; });
   metric_payload.reservePayloads(metric_payload.getNestedPayloads().size() + payloads);
   for (const auto &metric : metrics) {
-    if (metric.children.size() > 0) {
+    if (metric.children.size() > 0 || (metric.children.size() == 0 && metric.keep_empty)) {
       C2Payload child_metric_payload(metric_payload.getOperation());
       if (metric.array) {
         child_metric_payload.setContainer(true);
@@ -426,180 +426,220 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
     return response;
 }
 
+void C2Agent::handle_clear(const C2ContentResponse &resp) {
+  ClearOperand operand;
+  try {
+    operand = ClearOperand::parse(resp.name.c_str());
+  } catch(const std::runtime_error&) {
+    logger_->log_debug("Clearing unknown %s", resp.name);
+    return;
+  }
+
+  switch (operand.value()) {
+    case ClearOperand::CONNECTION: {
+      for (const auto& connection : resp.operation_arguments) {
+        logger_->log_debug("Clearing connection %s", connection.second.to_string());
+        update_sink_->clearConnection(connection.second.to_string());
+      }
+      break;
+    }
+    case ClearOperand::REPOSITORIES: {
+      update_sink_->drainRepositories();
+      break;
+    }
+    case ClearOperand::CORECOMPONENTSTATE: {
+      for (const auto& corecomponent : resp.operation_arguments) {
+        std::vector<state::StateController*> components = update_sink_->getComponents(corecomponent.second.to_string());
+        auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
+        if (state_manager_provider != nullptr) {
+          for (auto* component : components) {
+            logger_->log_debug("Clearing state for component %s", component->getComponentName());
+            auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
+            if (state_manager != nullptr) {
+              component->stop();
+              state_manager->clear();
+              state_manager->persist();
+              component->start();
+            } else {
+              logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
+            }
+          }
+        } else {
+          logger_->log_error("Failed to get StateManagerProvider");
+        }
+      }
+      break;
+    }
+    default:
+      logger_->log_error("Unknown clear operand %s", resp.name);
+  }
+
+  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+  enqueue_c2_response(std::move(response));
+}
+
 /**
  * Descriptions are special types of requests that require information
  * to be put into the acknowledgement
  */
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
-  auto reporter = dynamic_cast<state::response::NodeReporter*>(update_sink_);
-  if (resp.name == "metrics") {
+  DescribeOperand operand;
+  try {
+    operand = DescribeOperand::parse(resp.name.c_str());
+  } catch(const std::runtime_error&) {
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-    if (reporter != nullptr) {
-      auto iter = resp.operation_arguments.find("metricsClass");
-      std::string metricsClass;
-      if (iter != resp.operation_arguments.end()) {
-        metricsClass = iter->second.to_string();
-      }
-      auto metricsNode = reporter->getMetricsNode(metricsClass);
-      C2Payload metrics(Operation::ACKNOWLEDGE);
-      metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
-      if (metricsNode) {
-        serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
-      }
-      response.addPayload(std::move(metrics));
-    }
     enqueue_c2_response(std::move(response));
     return;
-  } else if (resp.name == "configuration") {
-    auto configOptions = prepareConfigurationOptions(resp);
-    enqueue_c2_response(std::move(configOptions));
-    return;
-  } else if (resp.name == "manifest") {
-    C2Payload response(prepareConfigurationOptions(resp));
-    if (reporter != nullptr) {
-      C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, true);
-      agentInfo.setLabel("agentInfo");
+  }
 
-      const auto manifest = reporter->getAgentManifest();
-      serializeMetrics(agentInfo, manifest->getName(), manifest->serialize());
-      response.addPayload(std::move(agentInfo));
-    }
-    enqueue_c2_response(std::move(response));
-    return;
-  } else if (resp.name == "jstack") {
-    if (update_sink_->isRunning()) {
-      const std::vector<BackTrace> traces = update_sink_->getTraces();
-      for (const auto &trace : traces) {
-        for (const auto & line : trace.getTraces()) {
-          logger_->log_trace("%s -- %s", trace.getName(), line);
-        }
-      }
-      auto keys = configuration_->getConfiguredKeys();
+  auto reporter = dynamic_cast<state::response::NodeReporter*>(update_sink_);
+  switch (operand.value()) {
+    case DescribeOperand::METRICS: {
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-      for (const auto &trace : traces) {
-        C2Payload options(Operation::ACKNOWLEDGE, resp.ident, true);
-        options.setLabel(trace.getName());
-        std::string value;
-        for (const auto &line : trace.getTraces()) {
-          C2ContentResponse option(Operation::ACKNOWLEDGE);
-          option.name = line;
-          option.operation_arguments[line] = line;
-          options.addContent(std::move(option));
+      if (reporter != nullptr) {
+        auto iter = resp.operation_arguments.find("metricsClass");
+        std::string metricsClass;
+        if (iter != resp.operation_arguments.end()) {
+          metricsClass = iter->second.to_string();
         }
-        response.addPayload(std::move(options));
+        auto metricsNode = reporter->getMetricsNode(metricsClass);
+        C2Payload metrics(Operation::ACKNOWLEDGE);
+        metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
+        if (metricsNode) {
+          serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
+        }
+        response.addPayload(std::move(metrics));
       }
       enqueue_c2_response(std::move(response));
-      return;
+      break;
     }
-  } else if (resp.name == "corecomponentstate") {
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-    response.setLabel("corecomponentstate");
-    C2Payload states(Operation::ACKNOWLEDGE, resp.ident, true);
-    states.setLabel("corecomponentstate");
-    auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
-    if (state_manager_provider != nullptr) {
-      auto core_component_states = state_manager_provider->getAllCoreComponentStates();
-      for (const auto& core_component_state : core_component_states) {
-        C2Payload state(Operation::ACKNOWLEDGE, resp.ident, true);
-        state.setLabel(core_component_state.first.to_string());
-        for (const auto& kv : core_component_state.second) {
-          C2ContentResponse entry(Operation::ACKNOWLEDGE);
-          entry.name = kv.first;
-          entry.operation_arguments[kv.first] = kv.second;
-          state.addContent(std::move(entry));
-        }
-        states.addPayload(std::move(state));
-      }
+    case DescribeOperand::CONFIGURATION: {
+      auto configOptions = prepareConfigurationOptions(resp);
+      enqueue_c2_response(std::move(configOptions));
+      break;
     }
-    response.addPayload(std::move(states));
-    enqueue_c2_response(std::move(response));
-    return;
-  }
-  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-  enqueue_c2_response(std::move(response));
-}
+    case DescribeOperand::MANIFEST: {
+      C2Payload response(prepareConfigurationOptions(resp));
+      if (reporter != nullptr) {
+        C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, true);
+        agentInfo.setLabel("agentInfo");
 
-void C2Agent::handle_clear(const C2ContentResponse &resp) {
-  if (resp.name == "connection") {
-    for (const auto& connection : resp.operation_arguments) {
-      logger_->log_debug("Clearing connection %s", connection.second.to_string());
-      update_sink_->clearConnection(connection.second.to_string());
+        const auto manifest = reporter->getAgentManifest();
+        serializeMetrics(agentInfo, manifest->getName(), manifest->serialize());
+        response.addPayload(std::move(agentInfo));
+      }
+      enqueue_c2_response(std::move(response));
+      break;
     }
-  } else if (resp.name == "repositories") {
-    update_sink_->drainRepositories();
-  } else if (resp.name == "corecomponentstate") {
-    for (const auto& corecomponent : resp.operation_arguments) {
-      std::vector<state::StateController*> components = update_sink_->getComponents(corecomponent.second.to_string());
-      auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
-      if (state_manager_provider != nullptr) {
-        for (auto* component : components) {
-          logger_->log_debug("Clearing state for component %s", component->getComponentName());
-          auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
-          if (state_manager != nullptr) {
-            component->stop();
-            state_manager->clear();
-            state_manager->persist();
-            component->start();
-          } else {
-            logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
+    case DescribeOperand::JSTACK: {
+      if (update_sink_->isRunning()) {
+        const std::vector<BackTrace> traces = update_sink_->getTraces();
+        for (const auto &trace : traces) {
+          for (const auto & line : trace.getTraces()) {
+            logger_->log_trace("%s -- %s", trace.getName(), line);
           }
         }
-      } else {
-        logger_->log_error("Failed to get StateManagerProvider");
+        auto keys = configuration_->getConfiguredKeys();
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        for (const auto &trace : traces) {
+          C2Payload options(Operation::ACKNOWLEDGE, resp.ident, true);
+          options.setLabel(trace.getName());
+          std::string value;
+          for (const auto &line : trace.getTraces()) {
+            C2ContentResponse option(Operation::ACKNOWLEDGE);
+            option.name = line;
+            option.operation_arguments[line] = line;
+            options.addContent(std::move(option));
+          }
+          response.addPayload(std::move(options));
+        }
+        enqueue_c2_response(std::move(response));
       }
+      break;
     }
-  } else {
-    logger_->log_error("Unknown clear operand %s", resp.name);
+    case DescribeOperand::CORECOMPONENTSTATE: {
+      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+      response.setLabel("corecomponentstate");
+      C2Payload states(Operation::ACKNOWLEDGE, resp.ident, true);
+      states.setLabel("corecomponentstate");
+      auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
+      if (state_manager_provider != nullptr) {
+        auto core_component_states = state_manager_provider->getAllCoreComponentStates();
+        for (const auto& core_component_state : core_component_states) {
+          C2Payload state(Operation::ACKNOWLEDGE, resp.ident, true);
+          state.setLabel(core_component_state.first.to_string());
+          for (const auto& kv : core_component_state.second) {
+            C2ContentResponse entry(Operation::ACKNOWLEDGE);
+            entry.name = kv.first;
+            entry.operation_arguments[kv.first] = kv.second;
+            state.addContent(std::move(entry));
+          }
+          states.addPayload(std::move(state));
+        }
+      }
+      response.addPayload(std::move(states));
+      enqueue_c2_response(std::move(response));
+      break;
+    }
   }
-
-  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-  enqueue_c2_response(std::move(response));
 }
 
 void C2Agent::handle_update(const C2ContentResponse &resp) {
-  // we've been told to update something
-  if (resp.name == "configuration") {
-    handleConfigurationUpdate(resp);
-  } else if (resp.name == "properties") {
-    state::UpdateState result = state::UpdateState::FULLY_APPLIED;
-    for (auto entry : resp.operation_arguments) {
-      bool persist = (
-          entry.second.getAnnotation("persist")
-          | utils::map(&AnnotatedValue::to_string)
-          | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
-      PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
-      if (!update_property(entry.first, entry.second.to_string(), lifetime)) {
-        result = state::UpdateState::PARTIALLY_APPLIED;
-      }
-    }
-    // apply changes and persist properties requested to be persisted
-    if (!configuration_->commitChanges()) {
-      result = state::UpdateState::PARTIALLY_APPLIED;
-    }
-    C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
-    enqueue_c2_response(std::move(response));
-  } else if (resp.name == "c2") {
-    // prior configuration options were already in place. thus
-    // we clear the map so that we don't go through replacing
-    // unnecessary objects.
-    running_c2_configuration->clear();
-
-    for (auto entry : resp.operation_arguments) {
-      bool can_update = true;
-      if (nullptr != update_service_) {
-        can_update = update_service_->canUpdate(entry.first);
-      }
-      if (can_update)
-        running_c2_configuration->set(entry.first, entry.second.to_string());
-    }
-
-    if (resp.operation_arguments.size() > 0)
-      configure(running_c2_configuration);
-    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
-    enqueue_c2_response(std::move(response));
-  } else {
+  UpdateOperand operand;
+  try {
+    operand = UpdateOperand::parse(resp.name.c_str());
+  } catch(const std::runtime_error&) {
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
+    return;
+  }
+
+  // we've been told to update something
+  switch (operand.value()) {
+    case UpdateOperand::CONFIGURATION: {
+      handleConfigurationUpdate(resp);
+      break;
+    }
+    case UpdateOperand::PROPERTIES: {
+      state::UpdateState result = state::UpdateState::FULLY_APPLIED;
+      for (auto entry : resp.operation_arguments) {
+        bool persist = (
+            entry.second.getAnnotation("persist")
+            | utils::map(&AnnotatedValue::to_string)
+            | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+        PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
+        if (!update_property(entry.first, entry.second.to_string(), lifetime)) {
+          result = state::UpdateState::PARTIALLY_APPLIED;
+        }
+      }
+      // apply changes and persist properties requested to be persisted
+      if (!configuration_->commitChanges()) {
+        result = state::UpdateState::PARTIALLY_APPLIED;
+      }
+      C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
+      enqueue_c2_response(std::move(response));
+      break;
+    } case UpdateOperand::C2: {
+      // prior configuration options were already in place. thus
+      // we clear the map so that we don't go through replacing
+      // unnecessary objects.
+      running_c2_configuration->clear();
+
+      for (auto entry : resp.operation_arguments) {
+        bool can_update = true;
+        if (nullptr != update_service_) {
+          can_update = update_service_->canUpdate(entry.first);
+        }
+        if (can_update)
+          running_c2_configuration->set(entry.first, entry.second.to_string());
+      }
+
+      if (resp.operation_arguments.size() > 0)
+        configure(running_c2_configuration);
+      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
+      enqueue_c2_response(std::move(response));
+      break;
+    }
   }
 }
 
@@ -647,23 +687,32 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
 }
 
 void C2Agent::handle_transfer(const C2ContentResponse &resp) {
-  if (resp.name != "debug") {
+  TransferOperand operand;
+  try {
+    operand = TransferOperand::parse(resp.name.c_str());
+  } catch(const std::runtime_error&) {
     throw C2TransferError("Unknown operand '" + resp.name + "'");
   }
-  auto target_it = resp.operation_arguments.find("target");
-  if (target_it == resp.operation_arguments.end()) {
-    throw C2DebugBundleError("Missing argument for debug operation: 'target'");
-  }
-  std::optional<std::string> url = resolveUrl(target_it->second.to_string());
-  if (!url) {
-    throw C2DebugBundleError("Invalid url");
-  }
-  std::map<std::string, std::unique_ptr<io::InputStream>> files = update_sink_->getDebugInfo();
 
-  auto bundle = bundleDebugInfo(files);
-  C2Payload &&response = protocol_.load()->consumePayload(url.value(), bundle, TRANSMIT, false);
-  if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
-    throw C2DebugBundleError("Error while uploading");
+  switch (operand.value()) {
+    case TransferOperand::DEBUG: {
+      auto target_it = resp.operation_arguments.find("target");
+      if (target_it == resp.operation_arguments.end()) {
+        throw C2DebugBundleError("Missing argument for debug operation: 'target'");
+      }
+      std::optional<std::string> url = resolveUrl(target_it->second.to_string());
+      if (!url) {
+        throw C2DebugBundleError("Invalid url");
+      }
+      std::map<std::string, std::unique_ptr<io::InputStream>> files = update_sink_->getDebugInfo();
+
+      auto bundle = bundleDebugInfo(files);
+      C2Payload &&response = protocol_.load()->consumePayload(url.value(), bundle, TRANSMIT, false);
+      if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
+        throw C2DebugBundleError("Error while uploading");
+      }
+      break;
+    }
   }
 }
 
@@ -740,14 +789,14 @@ std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const
     return url;
   }
   std::string base;
-  if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+  if (configuration_->get(Configure::nifi_c2_flow_base_url, base)) {
     base = utils::StringUtils::trim(base);
     if (!utils::StringUtils::endsWith(base, "/")) {
       base += "/";
     }
     base += url;
     return base;
-  } else if (configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
+  } else if (configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
     utils::URL base_url{utils::StringUtils::trim(base)};
     if (base_url.isValid()) {
       return base_url.hostPort() + "/c2/api/" + url;
@@ -763,7 +812,7 @@ std::optional<std::string> C2Agent::resolveUrl(const std::string& url) const {
     return url;
   }
   std::string base;
-  if (!configuration_->get("nifi.c2.rest.url", "c2.rest.url", base)) {
+  if (!configuration_->get(Configuration::nifi_c2_rest_url, "c2.rest.url", base)) {
     logger_->log_error("Missing C2 REST URL");
     return std::nullopt;
   }

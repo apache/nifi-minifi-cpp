@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "ConfigFile.h"
+#include "properties/Configuration.h"
 
 #include "utils/gsl.h"
 
@@ -49,6 +50,7 @@ class ConfigFileTestAccessor {
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
 using org::apache::nifi::minifi::encrypt_config::ConfigFileTestAccessor;
+using org::apache::nifi::minifi::Configuration;
 
 TEST_CASE("ConfigLine can be constructed from a line", "[encrypt-config][constructor]") {
   auto line_is_parsed_correctly = [](const std::string& line, const std::string& expected_key, const std::string& expected_value) {
@@ -113,9 +115,9 @@ TEST_CASE("ConfigFile can parse a simple config file", "[encrypt-config][constru
 
 TEST_CASE("ConfigFile can test whether a key is present", "[encrypt-config][hasValue]") {
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-  REQUIRE(test_file.hasValue("nifi.version"));
-  REQUIRE(test_file.hasValue("nifi.c2.flow.id"));  // present but blank
-  REQUIRE(!test_file.hasValue("nifi.remote.input.secure"));  // commented out
+  REQUIRE(test_file.hasValue(Configuration::nifi_version));
+  REQUIRE(test_file.hasValue(Configuration::nifi_c2_flow_id));  // present but blank
+  REQUIRE(!test_file.hasValue(Configuration::nifi_remote_input_secure));  // commented out
   REQUIRE(!test_file.hasValue("nifi.this.property.does.not.exist"));
 }
 
@@ -123,11 +125,11 @@ TEST_CASE("ConfigFile can read empty properties correctly", "[encrypt-config][co
   ConfigFile test_file{std::ifstream{"resources/with-additional-sensitive-props.minifi.properties"}};
   REQUIRE(test_file.size() == 103);
 
-  auto empty_property = test_file.getValue("nifi.security.need.ClientAuth");
+  auto empty_property = test_file.getValue(Configuration::nifi_security_need_ClientAuth);
   REQUIRE(empty_property);
   REQUIRE(empty_property->empty());
 
-  auto whitespace_property = test_file.getValue("nifi.security.client.certificate");  // value = " \t\r"
+  auto whitespace_property = test_file.getValue(Configuration::nifi_security_client_certificate);  // value = " \t\r"
   REQUIRE(whitespace_property);
   REQUIRE(whitespace_property->empty());
 }
@@ -136,7 +138,7 @@ TEST_CASE("ConfigFile can find the value for a key", "[encrypt-config][getValue]
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
 
   SECTION("valid key") {
-    REQUIRE(test_file.getValue("nifi.bored.yield.duration") == "10 millis");
+    REQUIRE(test_file.getValue(Configuration::nifi_bored_yield_duration) == "10 millis");
   }
 
   SECTION("nonexistent key") {
@@ -148,8 +150,8 @@ TEST_CASE("ConfigFile can update the value for a key", "[encrypt-config][update]
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
 
   SECTION("valid key") {
-    test_file.update("nifi.bored.yield.duration", "20 millis");
-    REQUIRE(test_file.getValue("nifi.bored.yield.duration") == "20 millis");
+    test_file.update(Configuration::nifi_bored_yield_duration, "20 millis");
+    REQUIRE(test_file.getValue(Configuration::nifi_bored_yield_duration) == "20 millis");
   }
 
   SECTION("nonexistent key") {
@@ -161,7 +163,7 @@ TEST_CASE("ConfigFile can add a new setting after an existing setting", "[encryp
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
 
   SECTION("valid key") {
-    test_file.insertAfter("nifi.rest.api.password", "nifi.rest.api.password.protected", "my-cipher-name");
+    test_file.insertAfter(Configuration::nifi_rest_api_password, "nifi.rest.api.password.protected", "my-cipher-name");
     REQUIRE(test_file.size() == 102);
     REQUIRE(test_file.getValue("nifi.rest.api.password.protected") == "my-cipher-name");
   }
@@ -183,7 +185,7 @@ TEST_CASE("ConfigFile can add a new setting at the end", "[encrypt-config][appen
 
 TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-  test_file.update("nifi.bored.yield.duration", "20 millis");
+  test_file.update(Configuration::nifi_bored_yield_duration, "20 millis");
 
   TestController test_controller;
   std::string temp_dir = test_controller.createTempDirectory();
@@ -194,7 +196,7 @@ TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
 
   ConfigFile test_file_copy{std::ifstream{file_path}};
   REQUIRE(test_file.size() == test_file_copy.size());
-  REQUIRE(test_file_copy.getValue("nifi.bored.yield.duration") == "20 millis");
+  REQUIRE(test_file_copy.getValue(Configuration::nifi_bored_yield_duration) == "20 millis");
 }
 
 TEST_CASE("ConfigFile will throw if we try to write to an invalid file name", "[encrypt-config][writeTo]") {
@@ -230,14 +232,15 @@ TEST_CASE("ConfigFile can merge lists of property names", "[encrypt-config][merg
 TEST_CASE("ConfigFile can find the list of sensitive properties", "[encrypt-config][getSensitiveProperties]") {
   SECTION("default properties") {
     ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-    std::vector<std::string> expected_properties{"nifi.rest.api.password"};
+    std::vector<std::string> expected_properties{Configuration::nifi_rest_api_password};
     REQUIRE(test_file.getSensitiveProperties() == expected_properties);
   }
 
   SECTION("with additional properties") {
     ConfigFile test_file{std::ifstream{"resources/with-additional-sensitive-props.minifi.properties"}};
     std::vector<std::string> expected_properties{
-        "nifi.c2.enable", "nifi.flow.configuration.file", "nifi.rest.api.password", "nifi.security.client.pass.phrase"};
+        Configuration::nifi_c2_enable, Configuration::nifi_flow_configuration_file,
+        Configuration::nifi_rest_api_password, Configuration::nifi_security_client_pass_phrase};
     REQUIRE(test_file.getSensitiveProperties() == expected_properties);
   }
 }

@@ -64,7 +64,7 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
     return controller_service_provider_impl_->clearControllerServices();
   }
 
-  std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) override {
+  std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const override {
     return controller_service_provider_impl_->getControllerService(identifier);
   }
 
@@ -100,7 +100,7 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
     return controller_service_provider_impl_->scheduleReferencingComponents(serviceNode);
   }
 
-  std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) override {
+  std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string &serviceIdentifier, const utils::Identifier &componentId) const override {
     return controller_service_provider_impl_->getControllerServiceForComponent(serviceIdentifier, componentId);
   }
 
@@ -112,7 +112,7 @@ class ForwardingControllerServiceProvider : public ControllerServiceProvider {
     return controller_service_provider_impl_->isControllerServiceEnabling(identifier);
   }
 
-  const std::string getControllerServiceName(const std::string &identifier) override {
+  const std::string getControllerServiceName(const std::string &identifier) const override {
     return controller_service_provider_impl_->getControllerServiceName(identifier);
   }
 

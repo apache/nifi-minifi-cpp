@@ -55,7 +55,7 @@ void C2Client::stopC2() {
 
 bool C2Client::isC2Enabled() const {
   std::string c2_enable_str;
-  configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str);
+  configuration_->get(minifi::Configuration::nifi_c2_enable, "c2.enable", c2_enable_str);
   return utils::StringUtils::toBool(c2_enable_str).value_or(false);
 }
 
@@ -85,7 +85,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   }
 
   std::string class_csv;
-  if (configuration_->get("nifi.c2.root.classes", class_csv)) {
+  if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
@@ -104,6 +104,10 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         monitor->addRepository(provenance_repo_);
         monitor->addRepository(flow_file_repo_);
         monitor->setStateMonitor(update_sink);
+      }
+      auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
+      if (agent_node != nullptr && controller != nullptr) {
+        agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller->getControllerService(C2Agent::UPDATE_NAME)).get());
       }
       auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
       if (configuration_checksums) {
@@ -312,7 +316,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const st
 
 std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
   std::string fullHb{"true"};
-  configuration_->get("nifi.c2.full.heartbeat", fullHb);
+  configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
   const bool include = include_manifest || fullHb == "true";
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;

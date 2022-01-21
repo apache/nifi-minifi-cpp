@@ -34,6 +34,7 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "client/HTTPStream.h"
+#include "properties/Configuration.h"
 
 using std::literals::chrono_literals::operator""s;
 
@@ -60,9 +61,9 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
     file << "tempFile";
     file.close();
 
-    configuration->set("nifi.c2.enable", "false");
-    configuration->set("nifi.remote.input.http.enabled", "true");
-    configuration->set("nifi.remote.input.socket.port", "8099");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "false");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_remote_input_http, "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_remote_input_socket_port, "8099");
   }
 
   void runAssertions() override {

@@ -175,7 +175,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Returns a controller service for the service identifier and componentID
    * @param service Identifier service identifier.
    */
-  virtual std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string& serviceIdentifier, const utils::Identifier& /*componentId*/) {
+  virtual std::shared_ptr<ControllerService> getControllerServiceForComponent(const std::string& serviceIdentifier, const utils::Identifier& /*componentId*/) const {
     std::shared_ptr<ControllerService> node = getControllerService(serviceIdentifier);
     return node;
   }
@@ -184,13 +184,13 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Gets the controller service for the provided identifier
    * @param identifier service identifier.
    */
-  virtual std::shared_ptr<ControllerService> getControllerService(const std::string &identifier);
+  std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const override;
 
   /**
    * Determines if Controller service is enabled.
    * @param identifier service identifier.
    */
-  virtual bool isControllerServiceEnabled(const std::string &identifier) {
+  bool isControllerServiceEnabled(const std::string &identifier) override {
     std::shared_ptr<ControllerServiceNode> node = getControllerServiceNode(identifier);
     if (nullptr != node) {
       return linkedServicesAre(ENABLED, node);
@@ -203,7 +203,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
    * Determines if Controller service is being enabled.
    * @param identifier service identifier.
    */
-  virtual bool isControllerServiceEnabling(const std::string &identifier) {
+  bool isControllerServiceEnabling(const std::string &identifier) override {
     std::shared_ptr<ControllerServiceNode> node = getControllerServiceNode(identifier);
     if (nullptr != node) {
       return linkedServicesAre(ENABLING, node);
@@ -212,7 +212,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
     }
   }
 
-  virtual const std::string getControllerServiceName(const std::string &identifier) {
+  const std::string getControllerServiceName(const std::string &identifier) const override {
     std::shared_ptr<ControllerService> node = getControllerService(identifier);
     if (nullptr != node) {
       return node->getName();
@@ -246,7 +246,7 @@ class ControllerServiceProvider : public CoreComponent, public ConfigurableCompo
     }
   }
 
-  bool canEdit() {
+  bool canEdit() override {
     return true;
   }
 

@@ -23,18 +23,17 @@
 #include <optional>
 
 #include "utils/StringUtils.h"
-
-namespace {
-constexpr std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES{"nifi.security.client.pass.phrase",
-                                                                  "nifi.rest.api.password"};
-constexpr const char* ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME = "nifi.sensitive.props.additional.keys";
-}  // namespace
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 namespace encrypt_config {
+
+constexpr std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES{Configuration::nifi_security_client_pass_phrase,
+                                                                  Configuration::nifi_rest_api_password};
+constexpr const char* ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME = Configuration::nifi_sensitive_props_additional_keys;
 
 std::vector<std::string> ConfigFile::getSensitiveProperties() const {
   std::vector<std::string> sensitive_properties(DEFAULT_SENSITIVE_PROPERTIES.begin(), DEFAULT_SENSITIVE_PROPERTIES.end());

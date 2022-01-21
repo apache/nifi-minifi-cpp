@@ -35,6 +35,7 @@
 #include "range/v3/view/transform.hpp"
 #include "utils/IntegrationTestUtils.h"
 #include "utils/StringUtils.h"
+#include "properties/Configuration.h"
 
 class VerifyLogC2Heartbeat : public VerifyC2Base {
  public:
@@ -66,7 +67,7 @@ class VerifyLogC2Heartbeat : public VerifyC2Base {
 
   void configureC2() override {
     VerifyC2Base::configureC2();
-    configuration->set("nifi.c2.agent.heartbeat.reporter.classes", "HeartbeatLogger");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_reporter_classes, "HeartbeatLogger");
   }
 };
 

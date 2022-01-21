@@ -62,6 +62,7 @@
 #include "utils/ProcessCpuUsageTracker.h"
 #include "core/AgentIdentificationProvider.h"
 #include "utils/Export.h"
+#include "SupportedOperations.h"
 
 namespace org {
 namespace apache {
@@ -592,7 +593,7 @@ class AgentMonitor {
 
  protected:
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
-  state::StateMonitor* monitor_;
+  state::StateMonitor* monitor_ = nullptr;
 };
 
 /**
@@ -600,12 +601,24 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
+  AgentManifest(std::string name, const utils::Identifier& uuid)
+    : DeviceInformation(std::move(name), uuid) {
+  }
+
   explicit AgentManifest(std::string name)
-      : DeviceInformation(std::move(name)) {
+    : DeviceInformation(std::move(name)) {
   }
 
   std::string getName() const {
     return "agentManifest";
+  }
+
+  void setStateMonitor(state::StateMonitor* monitor) {
+    monitor_ = monitor;
+  }
+
+  void setUpdatePolicyController(controllers::UpdatePolicyControllerService* update_policy_controller) {
+    update_policy_controller_ = update_policy_controller;
   }
 
   std::vector<SerializedResponseNode> serialize() {
@@ -671,9 +684,20 @@ class AgentManifest : public DeviceInformation {
       for (auto defaultNode : defaults.serialize()) {
         serialized.push_back(defaultNode);
       }
+
+      SupportedOperations supported_operations("supportedOperations");
+      supported_operations.setStateMonitor(monitor_);
+      supported_operations.setUpdatePolicyController(update_policy_controller_);
+      for (const auto& operation : supported_operations.serialize()) {
+        serialized.push_back(operation);
+      }
     }
     return serialized;
   }
+
+ private:
+  state::StateMonitor* monitor_ = nullptr;
+  controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
 };
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
@@ -686,6 +710,10 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   explicit AgentNode(const std::string& name)
       : DeviceInformation(name) {
     setArray(false);
+  }
+
+  void setUpdatePolicyController(controllers::UpdatePolicyControllerService* update_policy_controller) {
+    update_policy_controller_ = update_policy_controller;
   }
 
  protected:
@@ -717,7 +745,10 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   std::vector<SerializedResponseNode> getAgentManifest() const {
     SerializedResponseNode agentManifest;
     agentManifest.name = "agentManifest";
-    agentManifest.children = AgentManifest{"manifest"}.serialize();
+    AgentManifest manifest{"manifest"};
+    manifest.setStateMonitor(monitor_);
+    manifest.setUpdatePolicyController(update_policy_controller_);
+    agentManifest.children = manifest.serialize();
     return std::vector<SerializedResponseNode>{ agentManifest };
   }
 
@@ -748,6 +779,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
 
  private:
   std::optional<std::string> agentManifestHash_;
+  controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
 };
 
 /**

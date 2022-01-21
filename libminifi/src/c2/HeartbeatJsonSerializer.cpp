@@ -221,13 +221,10 @@ struct NamedValue {
       }
       return;
     }
-    rapidjson::Value& val = [&] () -> rapidjson::Value& {
-      return values[0].IsObject() && values[0].HasMember(member_key) ? values[0][member_key] : values[0];
-    }();
     if (target.IsArray()) {
-      target.PushBack(val, alloc);
+      target.PushBack(values[0], alloc);
     } else {
-      target.AddMember(member_key, val, alloc);
+      target.AddMember(member_key, values[0], alloc);
     }
   }
 };

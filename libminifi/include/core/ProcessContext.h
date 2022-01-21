@@ -207,7 +207,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
    * @return the ControllerService that is registered with the given
    * identifier
    */
-  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) {
+  std::shared_ptr<core::controller::ControllerService> getControllerService(const std::string &identifier) const override {
     return controller_service_provider_ == nullptr ? nullptr : controller_service_provider_->getControllerServiceForComponent(identifier, processor_node_->getUUID());
   }
 
@@ -218,7 +218,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
    * identifier is not known by this ControllerServiceLookup, returns
    * <code>false</code>
    */
-  bool isControllerServiceEnabled(const std::string &identifier) {
+  bool isControllerServiceEnabled(const std::string &identifier) override {
     return controller_service_provider_->isControllerServiceEnabled(identifier);
   }
 
@@ -229,7 +229,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
    * otherwise returns <code>false</code>. If the given identifier is not
    * known by this ControllerServiceLookup, returns <code>false</code>
    */
-  bool isControllerServiceEnabling(const std::string &identifier) {
+  bool isControllerServiceEnabling(const std::string &identifier) override {
     return controller_service_provider_->isControllerServiceEnabling(identifier);
   }
 
@@ -238,7 +238,7 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
    * @return the name of the Controller service with the given identifier. If
    * no service can be found with this identifier, returns {@code null}
    */
-  const std::string getControllerServiceName(const std::string &identifier) {
+  const std::string getControllerServiceName(const std::string &identifier) const override {
     return controller_service_provider_->getControllerServiceName(identifier);
   }
 

@@ -41,7 +41,7 @@ CoapProtocol::~CoapProtocol() = default;
 
 void CoapProtocol::initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) {
   RESTSender::initialize(controller, configure);
-  if (configure->get("nifi.c2.coap.connector.service", controller_service_name_)) {
+  if (configure->get(minifi::Configuration::nifi_c2_coap_connector_service, controller_service_name_)) {
     auto service = controller->getControllerService(controller_service_name_);
     coap_service_ = std::static_pointer_cast<coap::controllers::CoapConnectorService>(service);
   } else {

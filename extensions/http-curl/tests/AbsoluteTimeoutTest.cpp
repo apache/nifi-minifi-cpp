@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#undef NDEBUG
 #include "TestBase.h"
 #include "Catch.h"
 #include "tests/TestServer.h"

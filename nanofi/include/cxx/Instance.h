@@ -102,8 +102,8 @@ class Instance {
   void enableAsyncC2(C2_Server *server, c2_stop_callback *c1, c2_start_callback* /*c2*/, c2_update_callback* /*c3*/) {
     running_ = true;
     if (server->type != C2_Server_Type::MQTT) {
-      configure_->set("c2.rest.url", server->url);
-      configure_->set("c2.rest.url.ack", server->ack_url);
+      configure_->set(minifi::Configuration::nifi_c2_rest_url, server->url);
+      configure_->set(minifi::Configuration::nifi_c2_rest_url_ack, server->ack_url);
     }
     agent_ = std::make_shared<c2::C2CallbackAgent>(nullptr, nullptr, nullptr, configure_);
     listener_thread_pool_.start();

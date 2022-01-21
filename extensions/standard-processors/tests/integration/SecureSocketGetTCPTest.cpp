@@ -93,16 +93,16 @@ class SecureSocketTest : public IntegrationBase {
 
     assert(inv != nullptr);
     std::string url;
-    configuration->set("nifi.remote.input.secure", "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_remote_input_secure, "true");
     std::string path = key_dir + "cn.crt.pem";
-    configuration->set("nifi.security.client.certificate", path);
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_security_client_certificate, path);
     path = key_dir + "cn.ckey.pem";
-    configuration->set("nifi.security.client.private.key", path);
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_security_client_private_key, path);
     path = key_dir + "cn.pass";
-    configuration->set("nifi.security.client.pass.phrase", path);
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_security_client_pass_phrase, path);
     path = key_dir + "nifi-cert.pem";
-    configuration->set("nifi.security.client.ca.certificate", path);
-    configuration->set("nifi.c2.enable", "false");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_security_client_ca_certificate, path);
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "false");
     std::string endpoint;
     inv->getProperty(minifi::processors::GetTCP::EndpointList.getName(), endpoint);
     auto endpoints = utils::StringUtils::split(endpoint, ",");

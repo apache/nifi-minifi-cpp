@@ -39,6 +39,9 @@
 #include "ServerAwareHandler.h"
 #include "utils/gsl.h"
 #include "agent/build_description.h"
+#include "c2/C2Payload.h"
+#include "properties/Configuration.h"
+#include "range/v3/algorithm/find.hpp"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -385,15 +388,20 @@ std::string readPayload(struct mg_connection *conn) {
 
 class HeartbeatHandler : public ServerAwareHandler {
  public:
-  void sendStopOperation(struct mg_connection *conn) {
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              resp.length());
-    mg_printf(conn, "%s", resp.c_str());
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
+    verifyJsonHasAgentManifest(root);
   }
 
+  virtual void handleAcknowledge(const rapidjson::Document&) {
+  }
+
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
+    verify(conn);
+    sendStopOperation(conn);
+    return true;
+  }
+
+ protected:
   void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn,
       const std::unordered_map<std::string, std::string>& args = {}) {
     std::string resp_args;
@@ -421,7 +429,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       mg_printf(conn, "%s", heartbeat_response.c_str());
   }
 
-  void verifyJsonHasAgentManifest(const rapidjson::Document& root) {
+  void verifyJsonHasAgentManifest(const rapidjson::Document& root, const std::vector<std::string>& verify_components = {}, const std::vector<std::string>& disallowed_properties = {}) {
     bool found = false;
     assert(root.HasMember("agentInfo"));
     assert(root["agentInfo"].HasMember("agentManifest"));
@@ -453,13 +461,122 @@ class HeartbeatHandler : public ServerAwareHandler {
     }
     assert(found);
     (void)found;  // unused in release builds
+
+    verifySupportedOperations(root, verify_components, disallowed_properties);
   }
 
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
-    verifyJsonHasAgentManifest(root);
+ private:
+  using Metadata = std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>;
+
+  static void sendStopOperation(struct mg_connection *conn) {
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
+        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              resp.length());
+    mg_printf(conn, "%s", resp.c_str());
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document&) {
+  static std::set<std::string> getOperandsOfProperties(const rapidjson::Value& operation_node) {
+    std::set<std::string> operands;
+    assert(operation_node.HasMember("properties"));
+    const auto& properties_node = operation_node["properties"];
+    for (auto it = properties_node.MemberBegin(); it != properties_node.MemberEnd(); ++it) {
+      operands.insert(it->name.GetString());
+    }
+    return operands;
+  }
+
+  static void verifyMetadata(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata) {
+    std::unordered_map<std::string, Metadata> operand_with_metadata_found;
+    const auto& properties_node = operation_node["properties"];
+    for (auto prop_it = properties_node.MemberBegin(); prop_it != properties_node.MemberEnd(); ++prop_it) {
+      if (prop_it->value.ObjectEmpty()) {
+        continue;
+      }
+      Metadata metadata_item;
+      for (auto metadata_it = prop_it->value.MemberBegin(); metadata_it != prop_it->value.MemberEnd(); ++metadata_it) {
+        std::vector<std::unordered_map<std::string, std::string>> values;
+        for (const auto& value : metadata_it->value.GetArray()) {
+          std::unordered_map<std::string, std::string> value_item;
+          for (auto value_it = value.MemberBegin(); value_it != value.MemberEnd(); ++value_it) {
+            value_item.emplace(value_it->name.GetString(), value_it->value.GetString());
+          }
+          values.push_back(value_item);
+        }
+        metadata_item.emplace(metadata_it->name.GetString(), values);
+      }
+      operand_with_metadata_found.emplace(prop_it->name.GetString(), metadata_item);
+    }
+    assert(operand_with_metadata_found == operand_with_metadata);
+  }
+
+  template<typename T>
+  void verifyOperands(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
+    auto operands = getOperandsOfProperties(operation_node);
+    assert(operands == T::values());
+    verifyMetadata(operation_node, operand_with_metadata);
+  }
+
+  void verifyProperties(const rapidjson::Value& operation_node, minifi::c2::Operation operation,
+      const std::vector<std::string>& verify_components, const std::vector<std::string>& disallowed_properties) {
+    switch (operation.value()) {
+      case minifi::c2::Operation::DESCRIBE: {
+        verifyOperands<minifi::c2::DescribeOperand>(operation_node);
+        break;
+      }
+      case minifi::c2::Operation::UPDATE: {
+        std::vector<std::unordered_map<std::string, std::string>> config_properties;
+        for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
+          std::unordered_map<std::string, std::string> config_property;
+          if (ranges::find(disallowed_properties, property.name) == ranges::end(disallowed_properties)) {
+            config_property.emplace("propertyName", property.name);
+            config_property.emplace("validator", property.validator->getName());
+            config_properties.push_back(config_property);
+          }
+        }
+        Metadata metadata;
+        metadata.emplace("availableProperties", config_properties);
+        std::unordered_map<std::string, Metadata> operand_with_metadata;
+        operand_with_metadata.emplace("properties", metadata);
+        verifyOperands<minifi::c2::UpdateOperand>(operation_node, operand_with_metadata);
+        break;
+      }
+      case minifi::c2::Operation::TRANSFER: {
+        verifyOperands<minifi::c2::TransferOperand>(operation_node);
+        break;
+      }
+      case minifi::c2::Operation::CLEAR: {
+        verifyOperands<minifi::c2::ClearOperand>(operation_node);
+        break;
+      }
+      case minifi::c2::Operation::START:
+      case minifi::c2::Operation::STOP: {
+        auto operands = getOperandsOfProperties(operation_node);
+        assert(operands.find("c2") != operands.end());
+        assert(operands.find("FlowController") != operands.end());
+        for (const auto& component : verify_components) {
+          assert(operands.find(component) != operands.end());
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  void verifySupportedOperations(const rapidjson::Document& root, const std::vector<std::string>& verify_components, const std::vector<std::string>& disallowed_properties) {
+    auto& agent_manifest = root["agentInfo"]["agentManifest"];
+    assert(agent_manifest.HasMember("supportedOperations"));
+
+    std::set<std::string> operations;
+    for (const auto& operation_node : agent_manifest["supportedOperations"].GetArray()) {
+      assert(operation_node.HasMember("type"));
+      operations.insert(operation_node["type"].GetString());
+      verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString()), verify_components, disallowed_properties);
+    }
+
+    assert(operations == minifi::c2::Operation::values());
   }
 
   void verify(struct mg_connection *conn) {
@@ -482,12 +599,6 @@ class HeartbeatHandler : public ServerAwareHandler {
         throw std::runtime_error("operation not supported " + operation);
       }
     }
-  }
-
-  bool handlePost(CivetServer *, struct mg_connection *conn) override {
-    verify(conn);
-    sendStopOperation(conn);
-    return true;
   }
 };
 

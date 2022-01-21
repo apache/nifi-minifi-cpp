@@ -157,14 +157,14 @@ class VerifyCoAPServer : public CoapIntegrationBase {
       return response;
     });
     server->start();
-    configuration->set("c2.enable", "true");
-    configuration->set("c2.agent.class", "test");
-    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation,RepositoryMetrics");
-    configuration->set("nifi.c2.agent.protocol.class", "CoapProtocol");
-    configuration->set("nifi.c2.agent.coap.host", "127.0.0.1");
-    configuration->set("nifi.c2.agent.coap.port", new_port_str);
-    configuration->set("c2.agent.heartbeat.period", "10");
-    configuration->set("c2.rest.listener.heartbeat.rooturi", path);
+    configuration->set(minifi::Configuration::nifi_c2_enable, "true");
+    configuration->set(minifi::Configuration::nifi_c2_agent_class, "test");
+    configuration->set(minifi::Configuration::nifi_c2_root_classes, "DeviceInfoNode,AgentInformation,FlowInformation,RepositoryMetrics");
+    configuration->set(minifi::Configuration::nifi_c2_agent_protocol_class, "CoapProtocol");
+    configuration->set(minifi::Configuration::nifi_c2_agent_coap_host, "127.0.0.1");
+    configuration->set(minifi::Configuration::nifi_c2_agent_coap_port, new_port_str);
+    configuration->set(minifi::Configuration::nifi_c2_agent_heartbeat_period, "10");
+    configuration->set(minifi::Configuration::nifi_c2_rest_listener_heartbeat_rooturi, path);
   }
 
  protected:

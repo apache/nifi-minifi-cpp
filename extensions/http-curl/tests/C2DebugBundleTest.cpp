@@ -28,6 +28,7 @@
 #include "HTTPHandlers.h"
 #include "io/ArchiveStream.h"
 #include "EmptyFlow.h"
+#include "properties/Configuration.h"
 
 using std::literals::chrono_literals::operator""s;
 
@@ -48,7 +49,7 @@ class VerifyDebugInfo : public VerifyC2Base {
 
   void configureC2() override {
     VerifyC2Base::configureC2();
-    configuration->set("nifi.c2.agent.heartbeat.period", "100");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "100");
   }
 
   std::function<bool()> verify_;

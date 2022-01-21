@@ -33,6 +33,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "range/v3/algorithm.hpp"
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -59,7 +60,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     python::PythonScriptEngine::initialize();
 
     auto engine = std::make_shared<python::PythonScriptEngine>();
-    std::optional<std::string> pathListings = configuration ? configuration->get("nifi.python.processor.dir") : std::nullopt;
+    std::optional<std::string> pathListings = configuration ? configuration->get(minifi::Configuration::nifi_python_processor_dir) : std::nullopt;
     if (!pathListings) {
       return;
     }

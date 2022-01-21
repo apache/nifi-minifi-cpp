@@ -315,12 +315,11 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
     org::apache::nifi::minifi::setDefaultDirectory(content_repo_path);
   }
 
-  configuration->set("nifi.c2.agent.heartbeat.period", "25");
-  configuration->set("nifi.c2.root.classes", "AgentInformation");
-  configuration->set("nifi.c2.enable", "true");
-  configuration->set("nifi.c2.agent.class", "test");
-  configuration->set("c2.agent.listen", "true");
-  configuration->set("nifi.c2.agent.heartbeat.reporter.classes", "AgentPrinter");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_agent_heartbeat_period, "25");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_root_classes, "AgentInformation");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_enable, "true");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_agent_class, "test");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_agent_heartbeat_reporter_classes, "AgentPrinter");
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 

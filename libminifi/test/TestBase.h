@@ -37,6 +37,7 @@
 #include "core/Relationship.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "utils/file/FileUtils.h"
+#include "properties/Configuration.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace utils = minifi::utils;
@@ -373,9 +374,9 @@ static bool extensionInitializer = [] {
   LogTestController::getInstance().setTrace<core::extension::Module>();
   auto config = std::make_shared<minifi::Configure>();
 #ifdef EXTENSION_LIST
-  config->set(core::extension::nifi_extension_path, EXTENSION_LIST);
+  config->set(minifi::Configuration::nifi_extension_path, EXTENSION_LIST);
 #else
-  config->set(core::extension::nifi_extension_path, "*minifi-*");
+  config->set(minifi::Configuration::nifi_extension_path, "*minifi-*");
 #endif
   core::extension::ExtensionManager::get().initialize(config);
   return true;

@@ -44,11 +44,34 @@ SMART_ENUM(Operation,
   (DESCRIBE, "describe"),
   (HEARTBEAT, "heartbeat"),
   (UPDATE, "update"),
-  (VALIDATE, "validate"),
   (CLEAR, "clear"),
   (TRANSFER, "transfer"),
   (PAUSE, "pause"),
   (RESUME, "resume")
+)
+
+SMART_ENUM(DescribeOperand,
+  (METRICS, "metrics"),
+  (CONFIGURATION, "configuration"),
+  (MANIFEST, "manifest"),
+  (JSTACK, "jstack"),
+  (CORECOMPONENTSTATE, "corecomponentstate")
+)
+
+SMART_ENUM(UpdateOperand,
+  (CONFIGURATION, "configuration"),
+  (PROPERTIES, "properties"),
+  (C2, "c2")
+)
+
+SMART_ENUM(TransferOperand,
+  (DEBUG, "debug")
+)
+
+SMART_ENUM(ClearOperand,
+  (CONNECTION, "connection"),
+  (REPOSITORIES, "repositories"),
+  (CORECOMPONENTSTATE, "corecomponentstate")
 )
 
 #define PAYLOAD_NO_STATUS 0

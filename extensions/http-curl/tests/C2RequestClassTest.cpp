@@ -26,6 +26,7 @@
 #include "utils/IntegrationTestUtils.h"
 #include "CivetStream.h"
 #include "StreamPipe.h"
+#include "properties/Configuration.h"
 
 class C2HeartbeatHandler : public ServerAwareHandler {
  public:
@@ -75,10 +76,10 @@ class VerifyC2ClassRequest : public VerifyC2Base {
   explicit VerifyC2ClassRequest(std::function<bool()> verify) : verify_(std::move(verify)) {}
 
   void configureC2() override {
-    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
-    configuration->set("nifi.c2.enable", "true");
-    configuration->set("nifi.c2.agent.heartbeat.period", "100");
-    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "100");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_root_classes, "DeviceInfoNode,AgentInformation,FlowInformation");
   }
 
   void runAssertions() override {

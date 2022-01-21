@@ -26,6 +26,7 @@
 #include "utils/file/FileUtils.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -62,19 +63,19 @@ class JVMCreator : public minifi::core::CoreComponent {
 
     // assuming we have the options set and can access the JVMCreator
 
-    if (configuration->get("nifi.framework.dir", pathListings)) {
+    if (configuration->get(minifi::Configuration::nifi_framework_dir, pathListings)) {
       std::vector<std::string> paths;
       paths.emplace_back(pathListings);
       configure(paths);
 
-      if (configuration->get("nifi.jvm.options", jvmOptionsStr)) {
+      if (configuration->get(minifi::Configuration::nifi_jvm_options, jvmOptionsStr)) {
         jvm_options_ = utils::StringUtils::split(jvmOptionsStr, ",");
       }
 
       initializeJVM();
     }
     std::string nar_dir, nar_dep, nar_docs;
-    if (loader_ && configuration->get("nifi.nar.directory", nar_dir) && configuration->get("nifi.nar.deploy.directory", nar_dep)) {
+    if (loader_ && configuration->get(minifi::Configuration::nifi_nar_directory, nar_dir) && configuration->get(minifi::Configuration::nifi_nar_deploy_directory, nar_dep)) {
       std::shared_ptr<jni::controllers::JavaControllerService> servicer = std::make_shared<jni::controllers::JavaControllerService>("BaseService");
       servicer->initialize();
       servicer->setProperty(jni::controllers::JavaControllerService::NarDirectory, nar_dir);
