@@ -285,7 +285,7 @@ endif()
 
 # Simple-Windows-Posix-Semaphore
 if (WIN32)
-  	add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")
+	add_subdirectory("thirdparty/Simple-Windows-Posix-Semaphore")
 endif()
 
 # ossp-uuid
@@ -873,25 +873,25 @@ include(BuildDocs)
 # Create a custom build target that will run the linter.
 # Directories have their separate linter targets to be able to use better parallelization
 if (ENABLE_LINTER)
-    get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
-    set(root_linted_dirs libminifi/include libminifi/src libminifi/test encrypt-config)
-    list(TRANSFORM root_linted_dirs PREPEND ${CMAKE_SOURCE_DIR}/)
+  get_property(extensions GLOBAL PROPERTY EXTENSION-LINTERS)
+  set(root_linted_dirs libminifi/include libminifi/src libminifi/test encrypt-config)
+  list(TRANSFORM root_linted_dirs PREPEND ${CMAKE_SOURCE_DIR}/)
 
-    set(linted_dir_counter 1)
-    set(root_linter_target_names "")
+  set(linted_dir_counter 1)
+  set(root_linter_target_names "")
 
-    foreach(linted_dir ${root_linted_dirs})
-        set(linter_target_name "root-linter-${linted_dir_counter}")
-        list(APPEND root_linter_target_names ${linter_target_name})
-        add_custom_target("${linter_target_name}"
-            COMMAND python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i ${linted_dir}
-        )
-        math(EXPR linted_dir_counter "${linted_dir_counter}+1")
-    endforeach()
+  foreach(linted_dir ${root_linted_dirs})
+		set(linter_target_name "root-linter-${linted_dir_counter}")
+		list(APPEND root_linter_target_names ${linter_target_name})
+		add_custom_target("${linter_target_name}"
+		    COMMAND python3 ${CMAKE_SOURCE_DIR}/thirdparty/google-styleguide/run_linter.py -q -i ${linted_dir}
+		)
+		math(EXPR linted_dir_counter "${linted_dir_counter}+1")
+  endforeach()
 
-    # Main linter target that depends on every other
-    add_custom_target(linter)
-    add_dependencies(linter ${root_linter_target_names} ${extensions})
+  # Main linter target that depends on every other
+  add_custom_target(linter)
+  add_dependencies(linter ${root_linter_target_names} ${extensions})
 endif()
 
 
