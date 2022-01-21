@@ -46,15 +46,6 @@ std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext&
 std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values);
 
 template<typename T>
-std::optional<T> getOptionalProperty(const core::ProcessContext& context, const std::string& property_name) {
-  T value;
-  if (context.getProperty(property_name, value)) {
-    return { value };
-  }
-  return std::nullopt;
-}
-
-template<typename T>
 T parseEnumProperty(const core::ProcessContext& context, const core::Property& prop) {
   std::string value;
   if (!context.getProperty(prop.getName(), value)) {

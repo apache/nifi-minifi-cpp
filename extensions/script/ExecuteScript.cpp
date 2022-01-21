@@ -91,7 +91,7 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
 
   context->getProperty(ScriptFile.getName(), script_file_);
   context->getProperty(ScriptBody.getName(), script_body_);
-  module_directory_ = utils::getOptionalProperty<std::string>(*context, ModuleDirectory.getName());
+  module_directory_ = context->getProperty(ModuleDirectory);
 
   if (script_file_.empty() && script_body_.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either Script Body or Script File must be defined");
