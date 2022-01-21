@@ -91,7 +91,7 @@ void ExecuteScript::onSchedule(core::ProcessContext *context, core::ProcessSessi
 
   context->getProperty(ScriptFile.getName(), script_file_);
   context->getProperty(ScriptBody.getName(), script_body_);
-  context->getProperty(ModuleDirectory.getName(), module_directory_);
+  module_directory_ = utils::getOptionalProperty<std::string>(*context, ModuleDirectory.getName());
 
   if (script_file_.empty() && script_body_.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either Script Body or Script File must be defined");
@@ -128,8 +128,8 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     throw std::runtime_error("No script engine available");
   }
 
-  if (module_directory_.size()) {
-    engine->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory_, ","));
+  if (module_directory_) {
+    engine->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(*module_directory_, ","));
   }
 
   if (!script_body_.empty()) {

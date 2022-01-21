@@ -23,6 +23,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <optional>
 
 #include "concurrentqueue.h"
 #include "core/Processor.h"
@@ -158,7 +159,7 @@ class ExecuteScript : public core::Processor {
   ScriptEngineOption script_engine_;
   std::string script_file_;
   std::string script_body_;
-  std::string module_directory_;
+  std::optional<std::string> module_directory_;
 
   ScriptEngineFactory engine_factory_;
 #ifdef LUA_SUPPORT
