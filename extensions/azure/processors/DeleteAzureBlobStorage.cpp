@@ -61,8 +61,7 @@ void DeleteAzureBlobStorage::initialize() {
 void DeleteAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
   gsl_Expects(context && session_factory);
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
-  optional_deletion_ = storage::OptionalDeletion::parse(
-    utils::parsePropertyWithAllowableValuesOrThrow(*context, DeleteSnapshotsOption.getName(), storage::OptionalDeletion::values()).c_str());
+  optional_deletion_ = utils::parseEnumProperty<storage::OptionalDeletion>(*context, DeleteSnapshotsOption);
 }
 
 std::optional<storage::DeleteAzureBlobStorageParameters> DeleteAzureBlobStorage::buildDeleteAzureBlobStorageParameters(
