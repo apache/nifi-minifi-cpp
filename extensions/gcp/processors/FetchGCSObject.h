@@ -30,34 +30,21 @@
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class PutGCSObject : public GCSProcessor {
+class FetchGCSObject : public GCSProcessor {
  public:
-  SMART_ENUM(PredefinedAcl,
-             (AUTHENTICATED_READ, "authenticatedRead"),
-             (BUCKET_OWNER_FULL_CONTROL, "bucketOwnerFullControl"),
-             (BUCKET_OWNER_READ_ONLY, "bucketOwnerRead"),
-             (PRIVATE, "private"),
-             (PROJECT_PRIVATE, "projectPrivate"),
-             (PUBLIC_READ_ONLY, "publicRead"),
-             (PUBLIC_READ_WRITE, "publicReadWrite"));
-
-  explicit PutGCSObject(const std::string& name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
+  explicit FetchGCSObject(const std::string& name, const utils::Identifier& uuid = {})
+      : GCSProcessor(name, uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger()) {
   }
-  PutGCSObject(const PutGCSObject&) = delete;
-  PutGCSObject(PutGCSObject&&) = delete;
-  PutGCSObject& operator=(const PutGCSObject&) = delete;
-  PutGCSObject& operator=(PutGCSObject&&) = delete;
-  ~PutGCSObject() override = default;
+  FetchGCSObject(const FetchGCSObject&) = delete;
+  FetchGCSObject(FetchGCSObject&&) = delete;
+  FetchGCSObject& operator=(const FetchGCSObject&) = delete;
+  FetchGCSObject& operator=(FetchGCSObject&&) = delete;
+  ~FetchGCSObject() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;
   EXTENSIONAPI static const core::Property Key;
-  EXTENSIONAPI static const core::Property ContentType;
-  EXTENSIONAPI static const core::Property MD5Hash;
-  EXTENSIONAPI static const core::Property Crc32cChecksum;
   EXTENSIONAPI static const core::Property EncryptionKey;
-  EXTENSIONAPI static const core::Property ObjectACL;
-  EXTENSIONAPI static const core::Property OverwriteObject;
+  EXTENSIONAPI static const core::Property Generation;
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;

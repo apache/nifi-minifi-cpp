@@ -31,13 +31,6 @@
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-const core::Property PutGCSObject::GCPCredentials(
-    core::PropertyBuilder::createProperty("GCP Credentials Provider Service")
-        ->withDescription("The Controller Service used to obtain Google Cloud Platform credentials.")
-        ->isRequired(true)
-        ->asType<GCPCredentialsControllerService>()
-        ->build());
-
 const core::Property PutGCSObject::Bucket(
     core::PropertyBuilder::createProperty("Bucket")
         ->withDescription("Bucket of the object.")
@@ -50,14 +43,6 @@ const core::Property PutGCSObject::Key(
         ->withDescription("Name of the object.")
         ->withDefaultValue("${filename}")
         ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGCSObject::NumberOfRetries(
-    core::PropertyBuilder::createProperty("Number of retries")
-        ->withDescription("How many retry attempts should be made before routing to the failure relationship.")
-        ->withDefaultValue<uint64_t>(6)
-        ->isRequired(true)
-        ->supportsExpressionLanguage(false)
         ->build());
 
 const core::Property PutGCSObject::ContentType(
@@ -102,16 +87,8 @@ const core::Property PutGCSObject::OverwriteObject(
         ->withDefaultValue<bool>(true)
         ->build());
 
-const core::Property PutGCSObject::EndpointOverrideURL(
-    core::PropertyBuilder::createProperty("Endpoint Override URL")
-        ->withDescription("Overrides the default Google Cloud Storage endpoints")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
 const core::Relationship PutGCSObject::Success("success", "Files that have been successfully written to Google Cloud Storage are transferred to this relationship");
 const core::Relationship PutGCSObject::Failure("failure", "Files that could not be written to Google Cloud Storage for some reason are transferred to this relationship");
-
 
 namespace {
 class UploadToGCSCallback {
@@ -183,16 +160,6 @@ class UploadToGCSCallback {
   google::cloud::StatusOr<gcs::ObjectMetadata> result_;
 };
 
-std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) {
-  std::string service_name;
-  if (context.getProperty(PutGCSObject::GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name)) {
-    auto gcp_credentials_controller_service = std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name));
-    if (!gcp_credentials_controller_service)
-      return nullptr;
-    return gcp_credentials_controller_service->getCredentials();
-  }
-  return nullptr;
-}
 }  // namespace
 
 
@@ -211,26 +178,16 @@ void PutGCSObject::initialize() {
   setSupportedRelationships({Success, Failure});
 }
 
-gcs::Client PutGCSObject::getClient(const gcs::ClientOptions& options) const {
-  return gcs::Client(options, *retry_policy_);
-}
 
-
-void PutGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
+void PutGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
+  GCSProcessor::onSchedule(context, session_factory);
   gsl_Expects(context);
-  if (auto number_of_retries = context->getProperty<uint64_t>(NumberOfRetries)) {
-    retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(*number_of_retries);
-  }
   if (auto encryption_key = context->getProperty(EncryptionKey)) {
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
       throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Could not decode the base64-encoded encryption key from property " + EncryptionKey.getName());
     }
-  }
-  gcp_credentials_ = getCredentials(*context);
-  if (!gcp_credentials_) {
-    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing GCP Credentials");
   }
 }
 
@@ -256,13 +213,7 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     return;
   }
 
-  auto options = gcs::ClientOptions(gcp_credentials_);
-  if (auto endpoint_override_url = context->getProperty(EndpointOverrideURL)) {
-    options.set_endpoint(*endpoint_override_url);
-    logger_->log_debug("Endpoint override url %s", *endpoint_override_url);
-  }
-
-  gcs::Client client = getClient(options);
+  gcs::Client client = getClient();
   UploadToGCSCallback callback(client, *bucket, *object_name);
 
   if (auto crc32_checksum = context->getProperty(Crc32cChecksum, flow_file)) {
@@ -286,6 +237,7 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
   session->read(flow_file, std::ref(callback));
   auto& result = callback.getResult();
   if (!result.ok()) {
+    flow_file->setAttribute(GCS_STATUS_MESSAGE, result.status().message());
     flow_file->setAttribute(GCS_ERROR_REASON, result.status().error_info().reason());
     flow_file->setAttribute(GCS_ERROR_DOMAIN, result.status().error_info().domain());
     logger_->log_error("Failed to upload to Google Cloud Storage %s %s", result.status().message(), result.status().error_info().reason());

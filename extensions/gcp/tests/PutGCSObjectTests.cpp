@@ -39,7 +39,7 @@ namespace {
 class PutGCSObjectMocked : public PutGCSObject {
   using org::apache::nifi::minifi::extensions::gcp::PutGCSObject::PutGCSObject;
  public:
-  gcs::Client getClient(const gcs::ClientOptions&) const override {
+  gcs::Client getClient() const override {
     return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();

@@ -30,34 +30,21 @@
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class PutGCSObject : public GCSProcessor {
+class DeleteGCSObject : public GCSProcessor {
  public:
-  SMART_ENUM(PredefinedAcl,
-             (AUTHENTICATED_READ, "authenticatedRead"),
-             (BUCKET_OWNER_FULL_CONTROL, "bucketOwnerFullControl"),
-             (BUCKET_OWNER_READ_ONLY, "bucketOwnerRead"),
-             (PRIVATE, "private"),
-             (PROJECT_PRIVATE, "projectPrivate"),
-             (PUBLIC_READ_ONLY, "publicRead"),
-             (PUBLIC_READ_WRITE, "publicReadWrite"));
-
-  explicit PutGCSObject(const std::string& name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
+  explicit DeleteGCSObject(const std::string& name, const utils::Identifier& uuid = {})
+      : GCSProcessor(name, uuid, core::logging::LoggerFactory<DeleteGCSObject>::getLogger()) {
   }
-  PutGCSObject(const PutGCSObject&) = delete;
-  PutGCSObject(PutGCSObject&&) = delete;
-  PutGCSObject& operator=(const PutGCSObject&) = delete;
-  PutGCSObject& operator=(PutGCSObject&&) = delete;
-  ~PutGCSObject() override = default;
+  DeleteGCSObject(const DeleteGCSObject&) = delete;
+  DeleteGCSObject(DeleteGCSObject&&) = delete;
+  DeleteGCSObject& operator=(const DeleteGCSObject&) = delete;
+  DeleteGCSObject& operator=(DeleteGCSObject&&) = delete;
+  ~DeleteGCSObject() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;
   EXTENSIONAPI static const core::Property Key;
-  EXTENSIONAPI static const core::Property ContentType;
-  EXTENSIONAPI static const core::Property MD5Hash;
-  EXTENSIONAPI static const core::Property Crc32cChecksum;
   EXTENSIONAPI static const core::Property EncryptionKey;
-  EXTENSIONAPI static const core::Property ObjectACL;
-  EXTENSIONAPI static const core::Property OverwriteObject;
+  EXTENSIONAPI static const core::Property Generation;
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
@@ -73,9 +60,6 @@ class PutGCSObject : public GCSProcessor {
   bool isSingleThreaded() const override {
     return true;
   }
-
- private:
-  google::cloud::storage::EncryptionKey encryption_key_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp

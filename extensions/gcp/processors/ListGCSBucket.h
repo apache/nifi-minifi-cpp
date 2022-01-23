@@ -26,48 +26,31 @@
 #include "../controllerservices/GCPCredentialsControllerService.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
-#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class PutGCSObject : public GCSProcessor {
+class ListGCSBucket : public GCSProcessor {
  public:
-  SMART_ENUM(PredefinedAcl,
-             (AUTHENTICATED_READ, "authenticatedRead"),
-             (BUCKET_OWNER_FULL_CONTROL, "bucketOwnerFullControl"),
-             (BUCKET_OWNER_READ_ONLY, "bucketOwnerRead"),
-             (PRIVATE, "private"),
-             (PROJECT_PRIVATE, "projectPrivate"),
-             (PUBLIC_READ_ONLY, "publicRead"),
-             (PUBLIC_READ_WRITE, "publicReadWrite"));
-
-  explicit PutGCSObject(const std::string& name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
+  explicit ListGCSBucket(const std::string& name, const utils::Identifier& uuid = {})
+      : GCSProcessor(name, uuid, core::logging::LoggerFactory<ListGCSBucket>::getLogger()) {
   }
-  PutGCSObject(const PutGCSObject&) = delete;
-  PutGCSObject(PutGCSObject&&) = delete;
-  PutGCSObject& operator=(const PutGCSObject&) = delete;
-  PutGCSObject& operator=(PutGCSObject&&) = delete;
-  ~PutGCSObject() override = default;
+  ListGCSBucket(const ListGCSBucket&) = delete;
+  ListGCSBucket(ListGCSBucket&&) = delete;
+  ListGCSBucket& operator=(const ListGCSBucket&) = delete;
+  ListGCSBucket& operator=(ListGCSBucket&&) = delete;
+  ~ListGCSBucket() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;
-  EXTENSIONAPI static const core::Property Key;
-  EXTENSIONAPI static const core::Property ContentType;
-  EXTENSIONAPI static const core::Property MD5Hash;
-  EXTENSIONAPI static const core::Property Crc32cChecksum;
-  EXTENSIONAPI static const core::Property EncryptionKey;
-  EXTENSIONAPI static const core::Property ObjectACL;
-  EXTENSIONAPI static const core::Property OverwriteObject;
+  EXTENSIONAPI static const core::Property UseVersions;
 
   EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
 
   core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
+    return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
   bool isSingleThreaded() const override {
@@ -75,7 +58,7 @@ class PutGCSObject : public GCSProcessor {
   }
 
  private:
-  google::cloud::storage::EncryptionKey encryption_key_;
+  std::string bucket_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp
