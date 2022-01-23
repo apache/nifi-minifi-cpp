@@ -17,10 +17,10 @@
 
 ## Table of Contents
 
-- [AzureStorageCredentialsService](#azureStorageCredentialsService)
-- [AWSCredentialsService](#awsCredentialsService)
+- [AWSCredentialsService](#AWSCredentialsService)
+- [AzureStorageCredentialsService](#AzureStorageCredentialsService)
+- [GcpCredentialsControllerService](#GcpCredentialsControllerService)
 - [KubernetesControllerService](#kubernetesControllerService)
-
 
 ## AWSCredentialsService
 
@@ -63,6 +63,25 @@ properties (not in bold) are considered optional.
 |Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).|
 |Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.|
 |**Use Managed Identity Credentials**|false||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|
+
+## GcpCredentialsControllerService
+
+### Description
+
+Manages the credentials for Google Cloud Platform. This allows for multiple Google Cloud Platform related processors to reference this single
+controller service so that Google Cloud Platform credentials can be managed and controlled in a central location.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional.
+
+
+| Name                      | Default Value                          | Allowable Values                                                                                                                                            | Description                                                          |
+|---------------------------|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+| **Credentials Location**  | Google Application Default Credentials | Google Application Default Credentials<br> Use Compute Engine Credentials<br>Service Account JSON File<br>Service Account JSON<br>Use Anonymous credentials | The location of the credentials.                                     |
+| Service Account JSON File |                                        |                                                                                                                                                             | Path to a file containing a Service Account key file in JSON format. |
+| Service Account JSON      |                                        |                                                                                                                                                             | The raw JSON containing a Service Account keyfile.                   |
 
 
 ## KubernetesControllerService

@@ -49,6 +49,7 @@
 - [PublishMQTT](#publishmqtt)
 - [PutAzureBlobStorage](#putazureblobstorage)
 - [PutAzureDataLakeStorage](#putazuredatalakestorage)
+- [PutGcsObject](#putgcsobject)
 - [PutFile](#putfile)
 - [PutOPCProcessor](#putopcprocessor)
 - [PutS3Object](#puts3object)
@@ -1446,6 +1447,59 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |failure|Files that could not be written to Azure storage for some reason are transferred to this relationship|
 |success|Files that have been successfully written to Azure storage are transferred to this relationship|
+
+
+## PutGcsObject
+
+### Description
+
+Puts content into a Google Cloud Storage bucket
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                       | Default Value | Allowable Values                                                                                          | Description                                                                                                                                                                                                                                                                                       |
+|----------------------------|---------------|-----------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Bucket Name**            |               |                                                                                                           | The name of the Bucket to upload to. If left empty the _gcs.bucket_ attribute will be used by default.<br>**Supports Expression Language: true**                                                                                                                                                  |
+| **Object Name**            |               |                                                                                                           | The name of the object to be uploaded. If left empty the _filename_ attribute will be used by default.<br>**Supports Expression Language: true**                                                                                                                                                  |
+| **NumberOfRetries**        | 6             | integers                                                                                                  | How many retry attempts should be made before routing to the failure relationship.                                                                                                                                                                                                                |
+| **GcpCredentials**         |               | [GcpCredentialsControllerService](CONTROLLERS.md#GcpCredentialsControllerService)                         | The Controller Service used to obtain Google Cloud Platform credentials.                                                                                                                                                                                                                          |
+| Object ACL                 |               | authenticatedRead<br>bucketOwnerFullControl<br>bucketOwnerRead<br>private<br>projectPrivate<br>publicRead | Access Control to be attached to the object uploaded. Not providing this will revert to bucket defaults. For more information please visit [Google Cloud Access control lists](https://cloud.google.com/storage/docs/access-control/lists#predefined-acl)                                         |
+| Server Side Encryption Key |               |                                                                                                           | An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.<br>**Supports Expression Language: true**                                                                                                                                                                  |
+| CRC32 Checksum location    |               |                                                                                                           | The name of the attribute where the crc32 checksum is stored for server-side validation.<br>**Supports Expression Language: true**                                                                                                                                                                |
+| MD5 Hash Location          |               |                                                                                                           | The name of the attribute where the md5 hash is stored for server-side validation.<br>**Supports Expression Language: true**                                                                                                                                                                      |
+| Content Type               |               |                                                                                                           | The Content Type of the uploaded object. If not set, "mime.type" flow file attribute will be used. If not set, "mime.type" flow file attribute will be used. In case of neither of them is specified, this information will not be sent to the server. <br>**Supports Expression Language: true** |
+
+### Relationships
+
+| Name    | Description                                                                            |
+|---------|----------------------------------------------------------------------------------------|
+| success | FlowFiles that are sent successfully to the destination are sent to this relationship. |
+| failure | FlowFiles that failed to be sent to the destination are sent to this relationship.     |
+
+### Output Attributes
+
+| Attribute                  | Relationship | Description                                                         |
+|----------------------------|--------------|---------------------------------------------------------------------|
+| _gcs.error.reason_         | failure      | The description of the error occurred during upload.                |
+| _gcs.error.domain_         | failure      | The domain of the error occurred during upload.                     |
+| _gcs.bucket_               | success      | Bucket of the object.                                               |
+| _gcs.key_                  | success      | Name of the object.                                                 |
+| _gcs.size_                 | success      | Size of the object.                                                 |
+| _gcs.crc32c_               | success      | The CRC32C checksum of object's data, encoded in base64             |
+| _gcs.md5_                  | success      | The MD5 hash of the object's data encoded in base64.                |
+| _gcs.owner.entity_         | success      | The owner entity, in the form "user-emailAddress".                  |
+| _gcs.owner.entity.id_      | success      | The ID for the entity.                                              |
+| _gcs.media.link_           | success      | The media download link to the object.                              |
+| _gcs.self.link_            | success      | The link to this object.                                            |
+| _gcs.etag_                 | success      | The HTTP 1.1 Entity tag for the object.                             |
+| _gcs.generated.id_         | success      | The service-generated ID for the object                             |
+| _gcs.generation_           | success      | The content generation of this object. Used for object versioning.  |
+| _gcs.create.time_          | success      | The creation time of the object (milliseconds)                      |
+| _gcs.update.time_          | success      | The last modification time of the object (milliseconds)             |
+| _gcs.encryption.algorithm_ | success      | The algorithm used to encrypt the object.                           |
+| _gcs.encryption.sha256_    | success      | The SHA256 hash of the key used to encrypt the object               |
+
 
 
 ## PutFile
