@@ -16,8 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
+#pragma once
 
 #include <memory>
 #include <type_traits>
@@ -25,11 +24,7 @@
 
 #include "gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T, typename = typename std::enable_if<std::is_integral<T>::value>::type>
 constexpr T intdiv_ceil(T numerator, T denominator) {
@@ -111,10 +106,6 @@ template<typename T>
 using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 #endif
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+bool implies(bool a, bool b) noexcept;
 
-#endif  // LIBMINIFI_INCLUDE_UTILS_GENERALUTILS_H_
+}  // namespace org::apache::nifi::minifi::utils

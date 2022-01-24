@@ -86,7 +86,7 @@ class ListS3 : public S3Processor {
   bool write_object_tags_ = false;
   bool write_user_metadata_ = false;
   bool requester_pays_ = false;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_ = nullptr;
+  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
 }  // namespace processors

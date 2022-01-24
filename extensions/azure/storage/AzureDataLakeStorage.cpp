@@ -21,14 +21,41 @@
 #include "AzureDataLakeStorage.h"
 
 #include <regex>
+#include <string_view>
 
 #include "AzureDataLakeStorageClient.h"
 #include "io/StreamPipe.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
+#include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
+
+namespace {
+bool matchesPathFilter(std::string_view base_directory, const std::string& path_filter, std::string path) {
+  gsl_Expects(utils::implies(!base_directory.empty(), minifi::utils::StringUtils::startsWith(path, base_directory)));
+  if (path_filter.empty()) {
+    return true;
+  }
+
+  if (!base_directory.empty()) {
+    path = path.size() == base_directory.size() ? "" : path.substr(base_directory.size() + 1);
+  }
+
+  std::regex pattern(path_filter);
+  return std::regex_match(path, pattern);
+}
+
+bool matchesFileFilter(const std::string& file_filter, const std::string& filename) {
+  if (file_filter.empty()) {
+    return true;
+  }
+
+  std::regex pattern(file_filter);
+  return std::regex_match(filename, pattern);
+}
+}  // namespace
 
 AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client)
   : data_lake_storage_client_(data_lake_storage_client ? std::move(data_lake_storage_client) : std::make_unique<AzureDataLakeStorageClient>()) {
@@ -77,29 +104,6 @@ std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLake
   }
 }
 
-bool AzureDataLakeStorage::matchesPathFilter(const std::string& base_directory, const std::string& path_filter, std::string path) {
-  if (path_filter.empty()) {
-    return true;
-  }
-
-  if (!base_directory.empty()) {
-    gsl_Expects(minifi::utils::StringUtils::startsWith(path, base_directory));
-    path = path.size() == base_directory.size() ? "" : path.substr(base_directory.size() + 1);
-  }
-
-  std::regex pattern(path_filter);
-  return std::regex_match(path, pattern);
-}
-
-bool AzureDataLakeStorage::matchesFileFilter(const std::string& file_filter, const std::string& filename) {
-  if (file_filter.empty()) {
-    return true;
-  }
-
-  std::regex pattern(file_filter);
-  return std::regex_match(filename, pattern);
-}
-
 std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(const ListAzureDataLakeStorageParameters& params) {
   try {
     auto list_res = data_lake_storage_client_->listDirectory(params);
@@ -120,7 +124,7 @@ std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(con
       }
 
       element.filename = filename;
-      element.last_modified = std::chrono::duration_cast<std::chrono::milliseconds>(static_cast<std::chrono::system_clock::time_point>(azure_element.LastModified).time_since_epoch()).count();
+      element.last_modified = static_cast<std::chrono::system_clock::time_point>(azure_element.LastModified);
       element.etag = azure_element.ETag;
       element.length = azure_element.FileSize;
       element.filesystem = params.file_system_name;

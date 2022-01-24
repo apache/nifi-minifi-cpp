@@ -37,7 +37,6 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   EXTENSIONAPI static const core::Property PathFilter;
   EXTENSIONAPI static const core::Property ListingStrategy;
 
-  // Supported Relationships
   static const core::Relationship Success;
 
   explicit ListAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
@@ -62,12 +61,10 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
   }
 
   std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext& context);
-  void createNewFlowFile(core::ProcessSession &session, const storage::ListDataLakeStorageElement &element);
 
-  bool recurse_subdirectories_ = true;
   storage::EntityTracking tracking_strategy_ = storage::EntityTracking::TIMESTAMPS;
   storage::ListAzureDataLakeStorageParameters list_parameters_;
-  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_ = nullptr;
+  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

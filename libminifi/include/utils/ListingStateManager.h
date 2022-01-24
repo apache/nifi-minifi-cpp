@@ -22,6 +22,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <chrono>
+#include <utility>
 
 #include "core/CoreComponentState.h"
 #include "core/logging/Logger.h"
@@ -31,8 +33,8 @@ namespace org::apache::nifi::minifi::utils {
 
 class ListedObject {
  public:
-  virtual uint64_t getLastModified() const = 0;
-  virtual std::string getKey() const = 0;
+  [[nodiscard]] virtual std::chrono::time_point<std::chrono::system_clock> getLastModified() const = 0;
+  [[nodiscard]] virtual std::string getKey() const = 0;
   virtual ~ListedObject() = default;
 };
 
@@ -40,25 +42,25 @@ struct ListingState {
   bool wasObjectListedAlready(const ListedObject &object_attributes) const;
   void updateState(const ListedObject &object_attributes);
 
-  uint64_t listed_key_timestamp = 0;
+  std::chrono::time_point<std::chrono::system_clock> listed_key_timestamp;
   std::unordered_set<std::string> listed_keys;
 };
 
 class ListingStateManager {
  public:
-  explicit ListingStateManager(const std::shared_ptr<core::CoreComponentStateManager>& state_manager)
-    : state_manager_(state_manager) {
+  explicit ListingStateManager(std::shared_ptr<core::CoreComponentStateManager> state_manager)
+    : state_manager_(std::move(state_manager)) {
   }
 
-  ListingState getCurrentState() const;
+  [[nodiscard]] ListingState getCurrentState() const;
   void storeState(const ListingState &latest_listing_state);
 
  private:
   static const std::string LATEST_LISTED_OBJECT_PREFIX;
   static const std::string LATEST_LISTED_OBJECT_TIMESTAMP;
 
-  uint64_t getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state) const;
-  std::unordered_set<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) const;
+  [[nodiscard]] static uint64_t getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state);
+  [[nodiscard]] static std::unordered_set<std::string> getLatestListedKeys(const std::unordered_map<std::string, std::string> &state);
 
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   const std::string timestamp_key_;

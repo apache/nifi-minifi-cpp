@@ -24,12 +24,11 @@
 #include <memory>
 #include <optional>
 #include <utility>
-#include <string_view>
 
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "DataLakeStorageClient.h"
-#include "utils/ListingStateUtils.h"
+#include "utils/ListingStateManager.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -50,10 +49,10 @@ struct ListDataLakeStorageElement : public minifi::utils::ListedObject {
   std::string directory;
   std::string filename;
   uint64_t length = 0;
-  uint64_t last_modified = 0;
+  std::chrono::time_point<std::chrono::system_clock> last_modified;
   std::string etag;
 
-  uint64_t getLastModified() const override {
+  std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
     return last_modified;
   }
 
@@ -74,8 +73,6 @@ class AzureDataLakeStorage {
   std::optional<ListDataLakeStorageResult> listDirectory(const ListAzureDataLakeStorageParameters& params);
 
  private:
-  bool matchesPathFilter(const std::string& base_directory, const std::string& path_filter, std::string path);
-  bool matchesFileFilter(const std::string& file_filter, const std::string& filename);
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureDataLakeStorage>::getLogger()};
   std::unique_ptr<DataLakeStorageClient> data_lake_storage_client_;
 };

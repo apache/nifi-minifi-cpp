@@ -34,11 +34,11 @@
 - [GetUSBCamera](#getusbcamera)
 - [HashContent](#hashcontent)
 - [InvokeHTTP](#invokehttp)
-- [ListSFTP](#listsftp)
+- [ListAzureDataLakeStorage](#listazuredatalakestorage)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
-- [ListAzureDataLakeStorage](#listazuredatalakestorage)
 - [ListS3](#lists3)
+- [ListSFTP](#listsftp)
 - [LogAttribute](#logattribute)
 - [ManipulateArchive](#manipulatearchive)
 - [MergeContent](#mergecontent)
@@ -881,48 +881,25 @@ In the list below, the names of required properties appear in bold. Any other pr
 |failure|The original FlowFile will be routed on any type of connection failure, timeout or general exception. It will have new attributes detailing the request.|
 
 
-## ListSFTP
+## ListAzureDataLakeStorage
 
 ### Description
 
-Performs a listing of the files residing on an SFTP server. For each file that is found on the remote server, a new FlowFile will be created with the filename attribute set to the name of the file on the remote server. This can then be used in conjunction with FetchSFTP in order to fetch those files.
+Lists directory in an Azure Data Lake Storage Gen 2 filesystem
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
 | Name | Default Value | Allowable Values | Description |
 | - | - | - | - |
-|**Connection Timeout**|30 sec||Amount of time to wait before timing out while creating a connection|
-|**Data Timeout**|30 sec||When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems|
-|Entity Tracking Initial Listing Target|All Available|All Available<br>Tracking Time Window<br>|Specify how initial listing should be handled. Used by 'Tracking Entities' strategy.|
-|Entity Tracking Time Window|||Specify how long this processor should track already-listed entities. 'Tracking Entities' strategy can pick any entity whose timestamp is inside the specified time window. For example, if set to '30 minutes', any entity having timestamp in recent 30 minutes will be the listing target when this processor runs. A listed entity is considered 'new/updated' and a FlowFile is emitted if one of following condition meets: 1. does not exist in the already-listed entities, 2. has newer timestamp than the cached entity, 3. has different size than the cached entity. If a cached entity's timestamp becomes older than specified time window, that entity will be removed from the cached already-listed entities. Used by 'Tracking Entities' strategy.|
-|File Filter Regex|||Provides a Java Regular Expression for filtering Filenames; if a filter is supplied, only files whose names match that Regular Expression will be fetched|
-|**Follow symlink**|false||If true, will pull even symbolic files and also nested symbolic subdirectories; otherwise, will not read symbolic files and will not traverse symbolic link subdirectories|
-|Host Key File|||If supplied, the given file will be used as the Host Key; otherwise, no use host key file will be used|
-|**Hostname**|||The fully qualified hostname or IP address of the remote system<br/>**Supports Expression Language: true**|
-|Http Proxy Password|||Http Proxy Password<br/>**Supports Expression Language: true**|
-|Http Proxy Username|||Http Proxy Username<br/>**Supports Expression Language: true**|
-|**Ignore Dotted Files**|true||If true, files whose names begin with a dot (".") will be ignored|
-|**Listing Strategy**|Tracking Timestamps|Tracking Entities<br>Tracking Timestamps<br>|Specify how to determine new/updated entities. See each strategy descriptions for detail.|
-|Maximum File Age|||The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored|
-|Maximum File Size|||The maximum size that a file must be in order to be pulled|
-|**Minimum File Age**|0 sec||The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored|
-|**Minimum File Size**|0 B||The minimum size that a file must be in order to be pulled|
-|Password|||Password for the user account<br/>**Supports Expression Language: true**|
-|Path Filter Regex|||When Search Recursively is true, then only subdirectories whose path matches the given Regular Expression will be scanned|
-|**Port**|||The port that the remote system is listening on for file transfers<br/>**Supports Expression Language: true**|
-|Private Key Passphrase|||Password for the private key<br/>**Supports Expression Language: true**|
-|Private Key Path|||The fully qualified path to the Private Key file<br/>**Supports Expression Language: true**|
-|Proxy Host|||The fully qualified hostname or IP address of the proxy server<br/>**Supports Expression Language: true**|
-|Proxy Port|||The port of the proxy server<br/>**Supports Expression Language: true**|
-|Proxy Type|DIRECT|DIRECT<br>HTTP<br>SOCKS<br>|Specifies the Proxy Configuration Controller Service to proxy network requests. If set, it supersedes proxy settings configured per component. Supported proxies: HTTP + AuthN, SOCKS + AuthN|
-|Remote Path|||The fully qualified filename on the remote system<br/>**Supports Expression Language: true**|
-|**Search Recursively**|false||If true, will pull files from arbitrarily nested subdirectories; otherwise, will not traverse subdirectories|
-|**Send Keep Alive On Timeout**|true||Indicates whether or not to send a single Keep Alive message when SSH socket times out|
-|**State File**|ListSFTP||Specifies the file that should be used for storing state about what data has been ingested so that upon restart MiNiFi can resume from where it left off|
-|**Strict Host Key Checking**|false||Indicates whether or not strict enforcement of hosts keys should be applied|
-|**Target System Timestamp Precision**|Auto Detect|Auto Detect<br>Milliseconds<br>Minutes<br>Seconds<br>|Specify timestamp precision at the target system. Since this processor uses timestamp of entities to decide which should be listed, it is crucial to use the right timestamp precision.|
-|**Username**|||Username<br/>**Supports Expression Language: true**|
+|**Azure Storage Credentials Service**|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
+|**Filesystem Name**|||Name of the Azure Storage File System. It is assumed to be already existing.<br/>**Supports Expression Language: true**|
+|Directory Name|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. If left empty it designates the root directory. The directory will be created if not already existing.<br/>**Supports Expression Language: true**|
+|**Recurse Subdirectories**|true||Indicates whether to list files from subdirectories of the directory|
+|File Filter|||Only files whose names match the given regular expression will be listed|
+|Path Filter|||When 'Recurse Subdirectories' is true, then only subdirectories whose paths match the given regular expression will be scanned|
+|Listing Strategy|timestamps|none<br/>timestamps|Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.|
+
 ### Relationships
 
 | Name | Description |
@@ -985,32 +962,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 |success|All files are routed to success|
 
 
-## ListAzureDataLakeStorage
-
-### Description
-
-Lists directory in an Azure Data Lake Storage Gen 2 filesystem
-### Properties
-
-In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
-
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-|**Azure Storage Credentials Service**|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
-|**Filesystem Name**|||Name of the Azure Storage File System. It is assumed to be already existing.<br/>**Supports Expression Language: true**|
-|Directory Name|||Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. If left empty it designates the root directory. The directory will be created if not already existing.<br/>**Supports Expression Language: true**|
-|**Recurse Subdirectories**|true||Indicates whether to list files from subdirectories of the directory|
-|File Filter|||Only files whose names match the given regular expression will be listed|
-|Path Filter|||When 'Recurse Subdirectories' is true, then only subdirectories whose paths match the given regular expression will be scanned|
-|Listing Strategy|timestamps|none<br/>timestamps|Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.|
-
-### Relationships
-
-| Name | Description |
-| - | - |
-|success|All FlowFiles that are received are routed to success|
-
-
 ## ListS3
 
 ### Description
@@ -1041,6 +992,56 @@ In the list below, the names of required properties appear in bold. Any other pr
 |**Write Object Tags**|false||If set to 'true', the tags associated with the S3 object will be written as FlowFile attributes.|
 |**Write User Metadata**|false||If set to 'true', the user defined metadata associated with the S3 object will be added to FlowFile attributes/records.|
 |**Requester Pays**|false||If true, indicates that the requester consents to pay any charges associated with listing the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'. Note that this setting is only used if Write User Metadata is true.|
+
+
+## ListSFTP
+
+### Description
+
+Performs a listing of the files residing on an SFTP server. For each file that is found on the remote server, a new FlowFile will be created with the filename attribute set to the name of the file on the remote server. This can then be used in conjunction with FetchSFTP in order to fetch those files.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Connection Timeout**|30 sec||Amount of time to wait before timing out while creating a connection|
+|**Data Timeout**|30 sec||When transferring a file between the local and remote system, this value specifies how long is allowed to elapse without any data being transferred between systems|
+|Entity Tracking Initial Listing Target|All Available|All Available<br>Tracking Time Window<br>|Specify how initial listing should be handled. Used by 'Tracking Entities' strategy.|
+|Entity Tracking Time Window|||Specify how long this processor should track already-listed entities. 'Tracking Entities' strategy can pick any entity whose timestamp is inside the specified time window. For example, if set to '30 minutes', any entity having timestamp in recent 30 minutes will be the listing target when this processor runs. A listed entity is considered 'new/updated' and a FlowFile is emitted if one of following condition meets: 1. does not exist in the already-listed entities, 2. has newer timestamp than the cached entity, 3. has different size than the cached entity. If a cached entity's timestamp becomes older than specified time window, that entity will be removed from the cached already-listed entities. Used by 'Tracking Entities' strategy.|
+|File Filter Regex|||Provides a Java Regular Expression for filtering Filenames; if a filter is supplied, only files whose names match that Regular Expression will be fetched|
+|**Follow symlink**|false||If true, will pull even symbolic files and also nested symbolic subdirectories; otherwise, will not read symbolic files and will not traverse symbolic link subdirectories|
+|Host Key File|||If supplied, the given file will be used as the Host Key; otherwise, no use host key file will be used|
+|**Hostname**|||The fully qualified hostname or IP address of the remote system<br/>**Supports Expression Language: true**|
+|Http Proxy Password|||Http Proxy Password<br/>**Supports Expression Language: true**|
+|Http Proxy Username|||Http Proxy Username<br/>**Supports Expression Language: true**|
+|**Ignore Dotted Files**|true||If true, files whose names begin with a dot (".") will be ignored|
+|**Listing Strategy**|Tracking Timestamps|Tracking Entities<br>Tracking Timestamps<br>|Specify how to determine new/updated entities. See each strategy descriptions for detail.|
+|Maximum File Age|||The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored|
+|Maximum File Size|||The maximum size that a file must be in order to be pulled|
+|**Minimum File Age**|0 sec||The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored|
+|**Minimum File Size**|0 B||The minimum size that a file must be in order to be pulled|
+|Password|||Password for the user account<br/>**Supports Expression Language: true**|
+|Path Filter Regex|||When Search Recursively is true, then only subdirectories whose path matches the given Regular Expression will be scanned|
+|**Port**|||The port that the remote system is listening on for file transfers<br/>**Supports Expression Language: true**|
+|Private Key Passphrase|||Password for the private key<br/>**Supports Expression Language: true**|
+|Private Key Path|||The fully qualified path to the Private Key file<br/>**Supports Expression Language: true**|
+|Proxy Host|||The fully qualified hostname or IP address of the proxy server<br/>**Supports Expression Language: true**|
+|Proxy Port|||The port of the proxy server<br/>**Supports Expression Language: true**|
+|Proxy Type|DIRECT|DIRECT<br>HTTP<br>SOCKS<br>|Specifies the Proxy Configuration Controller Service to proxy network requests. If set, it supersedes proxy settings configured per component. Supported proxies: HTTP + AuthN, SOCKS + AuthN|
+|Remote Path|||The fully qualified filename on the remote system<br/>**Supports Expression Language: true**|
+|**Search Recursively**|false||If true, will pull files from arbitrarily nested subdirectories; otherwise, will not traverse subdirectories|
+|**Send Keep Alive On Timeout**|true||Indicates whether or not to send a single Keep Alive message when SSH socket times out|
+|**State File**|ListSFTP||Specifies the file that should be used for storing state about what data has been ingested so that upon restart MiNiFi can resume from where it left off|
+|**Strict Host Key Checking**|false||Indicates whether or not strict enforcement of hosts keys should be applied|
+|**Target System Timestamp Precision**|Auto Detect|Auto Detect<br>Milliseconds<br>Minutes<br>Seconds<br>|Specify timestamp precision at the target system. Since this processor uses timestamp of entities to decide which should be listed, it is crucial to use the right timestamp precision.|
+|**Username**|||Username<br/>**Supports Expression Language: true**|
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|All FlowFiles that are received are routed to success|
+
 
 ### Relationships
 

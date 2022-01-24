@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "utils/ListingStateUtils.h"
+#include "utils/ListingStateManager.h"
 
 #include "core/Property.h"
 
@@ -40,7 +40,7 @@ void ListingState::updateState(const ListedObject &object) {
   }
 }
 
-uint64_t ListingStateManager::getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state) const {
+uint64_t ListingStateManager::getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state) {
   std::string stored_listed_key_timestamp_str;
   auto it = state.find(LATEST_LISTED_OBJECT_TIMESTAMP);
   if (it != state.end()) {
@@ -53,7 +53,7 @@ uint64_t ListingStateManager::getLatestListedKeyTimestamp(const std::unordered_m
   return stored_listed_key_timestamp;
 }
 
-std::unordered_set<std::string> ListingStateManager::getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) const {
+std::unordered_set<std::string> ListingStateManager::getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) {
   std::unordered_set<std::string> latest_listed_keys;
   for (const auto& kvp : state) {
     if (kvp.first.rfind(LATEST_LISTED_OBJECT_PREFIX, 0) == 0) {
@@ -71,8 +71,9 @@ ListingState ListingStateManager::getCurrentState() const {
     return current_listing_state;
   }
 
-  current_listing_state.listed_key_timestamp = getLatestListedKeyTimestamp(state);
-  logger_->log_debug("Restored previous listed timestamp %lld", current_listing_state.listed_key_timestamp);
+  auto milliseconds = getLatestListedKeyTimestampInMilliseconds(state);
+  current_listing_state.listed_key_timestamp = std::chrono::time_point<std::chrono::system_clock>(std::chrono::milliseconds(milliseconds));
+  logger_->log_debug("Restored previous listed timestamp %lld", milliseconds);
 
   current_listing_state.listed_keys = getLatestListedKeys(state);
   return current_listing_state;
@@ -80,7 +81,7 @@ ListingState ListingStateManager::getCurrentState() const {
 
 void ListingStateManager::storeState(const ListingState &latest_listing_state) {
   std::unordered_map<std::string, std::string> state;
-  state[LATEST_LISTED_OBJECT_TIMESTAMP] = std::to_string(latest_listing_state.listed_key_timestamp);
+  state[LATEST_LISTED_OBJECT_TIMESTAMP] = std::to_string(latest_listing_state.listed_key_timestamp.time_since_epoch().count());
 
   uint64_t id = 0;
   for (const auto& key : latest_listing_state.listed_keys) {
@@ -88,7 +89,7 @@ void ListingStateManager::storeState(const ListingState &latest_listing_state) {
     ++id;
   }
 
-  logger_->log_debug("Stored new listed timestamp %lld", latest_listing_state.listed_key_timestamp);
+  logger_->log_debug("Stored new listed timestamp %s", state[LATEST_LISTED_OBJECT_TIMESTAMP]);
   state_manager_->set(state);
 }
 

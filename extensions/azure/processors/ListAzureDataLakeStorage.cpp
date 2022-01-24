@@ -52,8 +52,21 @@ const core::Property ListAzureDataLakeStorage::ListingStrategy(
 
 const core::Relationship ListAzureDataLakeStorage::Success("success", "All FlowFiles that are received are routed to success");
 
+namespace {
+std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session, const storage::ListDataLakeStorageElement &element) {
+  auto flow_file = session.create();
+  session.putAttribute(flow_file, "azure.filesystem", element.filesystem);
+  session.putAttribute(flow_file, "azure.filePath", element.file_path);
+  session.putAttribute(flow_file, "azure.directory", element.directory);
+  session.putAttribute(flow_file, "azure.filename", element.filename);
+  session.putAttribute(flow_file, "azure.length", std::to_string(element.length));
+  session.putAttribute(flow_file, "azure.lastModified", std::to_string(element.last_modified.time_since_epoch().count()));
+  session.putAttribute(flow_file, "azure.etag", element.etag);
+  return flow_file;
+}
+}  // namespace
+
 void ListAzureDataLakeStorage::initialize() {
-  // Set supported properties
   setSupportedProperties({
     AzureStorageCredentialsService,
     FilesystemName,
@@ -63,13 +76,13 @@ void ListAzureDataLakeStorage::initialize() {
     PathFilter,
     ListingStrategy
   });
-  // Set the supported relationships
   setSupportedRelationships({
     Success
   });
 }
 
 void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+  gsl_Expects(context && sessionFactory);
   AzureDataLakeStorageProcessorBase::onSchedule(context, sessionFactory);
 
   auto state_manager = context->getStateManager();
@@ -83,9 +96,8 @@ void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCon
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required parameters for ListAzureDataLakeStorage processor are missing or invalid");
   }
 
-  list_parameters_ = *params;
-  tracking_strategy_ = storage::EntityTracking::parse(
-    utils::parsePropertyWithAllowableValuesOrThrow(*context, ListingStrategy.getName(), storage::EntityTracking::values()).c_str());
+  list_parameters_ = *std::move(params);
+  tracking_strategy_ = utils::parseEnumProperty<storage::EntityTracking>(*context, ListingStrategy);
 }
 
 std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStorage::buildListParameters(core::ProcessContext& context) {
@@ -103,18 +115,6 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
   context.getProperty(PathFilter.getName(), params.path_filter);
 
   return params;
-}
-
-void ListAzureDataLakeStorage::createNewFlowFile(core::ProcessSession &session, const storage::ListDataLakeStorageElement &element) {
-  auto flow_file = session.create();
-  session.putAttribute(flow_file, "azure.filesystem", element.filesystem);
-  session.putAttribute(flow_file, "azure.filePath", element.file_path);
-  session.putAttribute(flow_file, "azure.directory", element.directory);
-  session.putAttribute(flow_file, "azure.filename", element.filename);
-  session.putAttribute(flow_file, "azure.length", std::to_string(element.length));
-  session.putAttribute(flow_file, "azure.lastModified", std::to_string(element.last_modified));
-  session.putAttribute(flow_file, "azure.etag", element.etag);
-  session.transfer(flow_file, Success);
 }
 
 void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -136,7 +136,8 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
       continue;
     }
 
-    createNewFlowFile(*session, element);
+    auto flow_file = createNewFlowFile(*session, element);
+    session->transfer(flow_file, Success);
     ++files_transferred;
     latest_listing_state.updateState(element);
   }

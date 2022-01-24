@@ -161,7 +161,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::ObjectVersion>&
     attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(version.GetETag(), '"');
     attributes.filename = version.GetKey();
     attributes.is_latest = version.GetIsLatest();
-    attributes.last_modified = version.GetLastModified().Millis();
+    attributes.last_modified = version.GetLastModified().UnderlyingTimestamp();
     attributes.length = version.GetSize();
     attributes.store_class = VERSION_STORAGE_CLASS_MAP.at(version.GetStorageClass());
     attributes.version = version.GetVersionId();
@@ -180,7 +180,7 @@ void S3Wrapper::addListResults(const Aws::Vector<Aws::S3::Model::Object>& conten
     attributes.etag = minifi::utils::StringUtils::removeFramingCharacters(object.GetETag(), '"');
     attributes.filename = object.GetKey();
     attributes.is_latest = true;
-    attributes.last_modified = object.GetLastModified().Millis();
+    attributes.last_modified = object.GetLastModified().UnderlyingTimestamp();
     attributes.length = object.GetSize();
     attributes.store_class = OBJECT_STORAGE_CLASS_MAP.at(object.GetStorageClass());
     listed_objects.push_back(attributes);
