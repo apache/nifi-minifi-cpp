@@ -27,28 +27,18 @@
 #include <vector>
 
 #include "core/Property.h"
-#include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "storage/AzureBlobStorage.h"
-#include "AzureStorageProcessorBase.h"
-#include "storage/AzureStorageCredentials.h"
+#include "AzureBlobStorageProcessorBase.h"
 
-class PutAzureBlobStorageTestsFixture;
+template<typename T>
+class AzureBlobStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureBlobStorage final : public AzureStorageProcessorBase {
+class PutAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  public:
   // Supported Properties
-  static const core::Property ContainerName;
-  static const core::Property StorageAccountName;
-  static const core::Property StorageAccountKey;
-  static const core::Property SASToken;
-  static const core::Property CommonStorageAccountEndpointSuffix;
-  static const core::Property ConnectionString;
-  static const core::Property Blob;
   static const core::Property CreateContainer;
-  static const core::Property UseManagedIdentityCredentials;
 
   // Supported Relationships
   static const core::Relationship Failure;
@@ -59,7 +49,7 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
   }
 
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &session_factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
   class ReadCallback : public InputStreamCallback {
@@ -93,34 +83,15 @@ class PutAzureBlobStorage final : public AzureStorageProcessorBase {
   };
 
  private:
-  friend class ::PutAzureBlobStorageTestsFixture;
+  friend class ::AzureBlobStorageTestsFixture<PutAzureBlobStorage>;
 
   explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureStorageProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger())
-    , azure_blob_storage_(std::move(blob_storage_client)) {
+    : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
+  std::optional<storage::PutAzureBlobStorageParameters> buildPutAzureBlobStorageParameters(core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
 
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
-  storage::AzureStorageCredentials getAzureCredentialsFromProperties(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const;
-  std::optional<storage::AzureStorageCredentials> getCredentials(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) const;
-  std::optional<storage::PutAzureBlobStorageParameters> buildAzureBlobStorageParameters(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file);
-
-  storage::AzureBlobStorage azure_blob_storage_;
   bool create_container_ = false;
-  bool use_managed_identity_credentials_ = false;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

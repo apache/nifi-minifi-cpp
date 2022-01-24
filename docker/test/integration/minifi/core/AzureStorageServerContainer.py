@@ -15,7 +15,7 @@ class AzureStorageServerContainer(Container):
 
         logging.info('Creating and running azure storage server docker container...')
         self.client.containers.run(
-            "mcr.microsoft.com/azure-storage/azurite:3.13.0",
+            "mcr.microsoft.com/azure-storage/azurite:3.14.2",
             detach=True,
             name=self.name,
             network=self.network.name,

@@ -27,13 +27,26 @@
 #include "azure/storage/blobs/protocol/blob_rest_client.hpp"
 #include "AzureStorageCredentials.h"
 #include "utils/gsl.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-struct PutAzureBlobStorageParameters {
+SMART_ENUM(OptionalDeletion,
+  (NONE, "None"),
+  (INCLUDE_SNAPSHOTS, "Include Snapshots"),
+  (DELETE_SNAPSHOTS_ONLY, "Delete Snapshots Only")
+)
+
+struct AzureBlobStorageParameters {
   AzureStorageCredentials credentials;
   std::string container_name;
   std::string blob_name;
+};
+
+using PutAzureBlobStorageParameters = AzureBlobStorageParameters;
+
+struct DeleteAzureBlobStorageParameters : public AzureBlobStorageParameters {
+  OptionalDeletion optional_deletion;
 };
 
 class BlobStorageClient {
@@ -41,6 +54,7 @@ class BlobStorageClient {
   virtual bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) = 0;
   virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
+  virtual bool deleteBlob(const DeleteAzureBlobStorageParameters& params) = 0;
   virtual ~BlobStorageClient() = default;
 };
 

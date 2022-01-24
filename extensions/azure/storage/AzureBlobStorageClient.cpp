@@ -21,6 +21,7 @@
 #include "AzureBlobStorageClient.h"
 
 #include "azure/identity.hpp"
+#include "azure/storage/blobs/blob_options.hpp"
 
 #include "utils/AzureSdkLogger.h"
 
@@ -66,6 +67,18 @@ Azure::Storage::Blobs::Models::UploadBlockBlobResult AzureBlobStorageClient::upl
 std::string AzureBlobStorageClient::getUrl(const PutAzureBlobStorageParameters& params) {
   resetClientIfNeeded(params.credentials, params.container_name);
   return container_client_->GetUrl();
+}
+
+bool AzureBlobStorageClient::deleteBlob(const DeleteAzureBlobStorageParameters& params) {
+  resetClientIfNeeded(params.credentials, params.container_name);
+  Azure::Storage::Blobs::DeleteBlobOptions delete_options;
+  if (params.optional_deletion == OptionalDeletion::INCLUDE_SNAPSHOTS) {
+    delete_options.DeleteSnapshots = Azure::Storage::Blobs::Models::DeleteSnapshotsOption::IncludeSnapshots;
+  } else if (params.optional_deletion == OptionalDeletion::DELETE_SNAPSHOTS_ONLY) {
+    delete_options.DeleteSnapshots = Azure::Storage::Blobs::Models::DeleteSnapshotsOption::OnlySnapshots;
+  }
+  auto response = container_client_->DeleteBlob(params.blob_name, delete_options);
+  return response.Value.Deleted;
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

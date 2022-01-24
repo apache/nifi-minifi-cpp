@@ -332,7 +332,7 @@ def step_impl(context):
 
 
 # azure storage setup
-@given("an Azure storage server is set up in correspondence with the PutAzureBlobStorage")
+@given("an Azure storage server is set up")
 def step_impl(context):
     context.test.acquire_container("azure-storage-server", "azure-storage-server")
 
@@ -605,9 +605,30 @@ def step_impl(context):
     context.test.check_empty_s3_bucket("s3-server")
 
 
+# Azure
+@when("test blob \"{blob_name}\" is created on Azure blob storage")
+def step_impl(context, blob_name):
+    context.test.add_test_blob(blob_name, False)
+
+
+@when("test blob \"{blob_name}\" is created on Azure blob storage with a snapshot")
+def step_impl(context, blob_name):
+    context.test.add_test_blob(blob_name, True)
+
+
 @then("the object on the Azure storage server is \"{object_data}\"")
 def step_impl(context, object_data):
     context.test.check_azure_storage_server_data("azure-storage-server", object_data)
+
+
+@then("the Azure blob storage becomes empty in {timeout_seconds:d} seconds")
+def step_impl(context, timeout_seconds):
+    context.test.check_azure_blob_storage_is_empty(timeout_seconds)
+
+
+@then("the blob and snapshot count becomes {blob_and_snapshot_count:d} in {timeout_seconds:d} seconds")
+def step_impl(context, blob_and_snapshot_count, timeout_seconds):
+    context.test.check_azure_blob_and_snapshot_count(blob_and_snapshot_count, timeout_seconds)
 
 
 # SQL
