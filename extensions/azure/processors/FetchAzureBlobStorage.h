@@ -57,7 +57,7 @@ class FetchAzureBlobStorage final : public AzureBlobStorageProcessorBase {
 
   class WriteCallback : public OutputStreamCallback {
    public:
-    WriteCallback(storage::AzureBlobStorage& azure_blob_storage, const storage::FetchAzureBlobStorageParameters& params, std::shared_ptr<logging::Logger> logger)
+    WriteCallback(storage::AzureBlobStorage& azure_blob_storage, const storage::FetchAzureBlobStorageParameters& params, std::shared_ptr<core::logging::Logger> logger)
       : azure_blob_storage_(azure_blob_storage),
         params_(params),
         logger_(std::move(logger)) {
@@ -80,7 +80,7 @@ class FetchAzureBlobStorage final : public AzureBlobStorageProcessorBase {
     storage::AzureBlobStorage& azure_blob_storage_;
     const storage::FetchAzureBlobStorageParameters& params_;
     std::optional<uint64_t> result_size_ = std::nullopt;
-    std::shared_ptr<logging::Logger> logger_;
+    std::shared_ptr<core::logging::Logger> logger_;
   };
 
   core::annotation::Input getInputRequirement() const override {
@@ -88,12 +88,11 @@ class FetchAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   }
 
   explicit FetchAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageProcessorBase(name, uuid, logging::LoggerFactory<FetchAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+    : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
   std::optional<storage::FetchAzureBlobStorageParameters> buildFetchAzureBlobStorageParameters(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file);
+    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
 
   storage::OptionalDeletion optional_deletion_;
 };

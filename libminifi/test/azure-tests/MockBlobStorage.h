@@ -68,23 +68,25 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return true;
   }
 
-  Azure::Storage::Blobs::Models::DownloadBlobResult fetchBlob(const minifi::azure::storage::FetchAzureBlobStorageParameters& params) override {
+  std::unique_ptr<org::apache::nifi::minifi::io::InputStream> fetchBlob(const minifi::azure::storage::FetchAzureBlobStorageParameters& params) override {
+    if (fetch_fails_) {
+      throw std::runtime_error("error");
+    }
+
     fetch_params_ = params;
-    Azure::Storage::Blobs::Models::DownloadBlobResult result;
     buffer_.clear();
     uint64_t range_start = 0;
-    result.BlobSize = FETCHED_DATA.size();
+    uint64_t size = FETCHED_DATA.size();
     if (params.range_start) {
       range_start = *params.range_start;
     }
 
     if (params.range_length) {
-      result.BlobSize = *params.range_length;
+      size = *params.range_length;
     }
 
-    buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + result.BlobSize);
-    result.BodyStream = std::make_unique<Azure::Core::IO::MemoryBodyStream>(buffer_);
-    return result;
+    buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + size);
+    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_.data(), buffer_.size());
   }
 
   minifi::azure::storage::PutAzureBlobStorageParameters getPassedPutParams() const {
@@ -115,6 +117,10 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     delete_fails_ = delete_fails;
   }
 
+  void setFetchFailure(bool fetch_fails) {
+    fetch_fails_ = fetch_fails;
+  }
+
  private:
   const std::string RETURNED_PRIMARY_URI = "http://test-uri/file?secret-sas";
   minifi::azure::storage::PutAzureBlobStorageParameters put_params_;
@@ -123,6 +129,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   bool container_created_ = false;
   bool upload_fails_ = false;
   bool delete_fails_ = false;
+  bool fetch_fails_ = false;
   std::string input_data_;
   std::vector<uint8_t> buffer_;
 };

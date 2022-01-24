@@ -25,6 +25,7 @@
 
 #include "azure/identity.hpp"
 #include "AzureBlobStorageClient.h"
+#include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -77,22 +78,7 @@ bool AzureBlobStorage::deleteBlob(const DeleteAzureBlobStorageParameters& params
 std::optional<uint64_t> AzureBlobStorage::fetchBlob(const FetchAzureBlobStorageParameters& params, io::BaseStream& stream) {
   try {
     auto fetch_res = blob_storage_client_->fetchBlob(params);
-
-    std::vector<uint8_t> buffer(4096);
-    size_t write_size = 0;
-    if (fetch_res.BlobSize < 0) return 0;
-    while (write_size < gsl::narrow<uint64_t>(fetch_res.BlobSize)) {
-      const auto next_write_size = (std::min)(gsl::narrow<size_t>(fetch_res.BlobSize) - write_size, size_t{4096});
-      if (!fetch_res.BodyStream->Read(buffer.data(), gsl::narrow<std::streamsize>(next_write_size))) {
-        return -1;
-      }
-      const auto ret = stream.write(buffer.data(), next_write_size);
-      if (io::isError(ret)) {
-        return -1;
-      }
-      write_size += next_write_size;
-    }
-    return gsl::narrow<int64_t>(write_size);
+    return internal::pipe(fetch_res.get(), &stream);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while fetching blob '%s' of container '%s': %s", params.blob_name, params.container_name, ex.what());
     return std::nullopt;

@@ -252,4 +252,15 @@ TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch a range of the blob s
   REQUIRE(success_contents[0] == mock_blob_storage_ptr_->FETCHED_DATA.substr(5, 10));
 }
 
+TEST_CASE_METHOD(FetchAzureBlobStorageTestsFixture, "Fetch full file fails", "[azureBlobStorageFetch]") {
+  plan_->setProperty(azure_blob_storage_processor_, minifi::azure::processors::FetchAzureBlobStorage::ContainerName.getName(), CONTAINER_NAME);
+  setDefaultCredentials();
+  mock_blob_storage_ptr_->setFetchFailure(true);
+  test_controller_.runSession(plan_, true);
+  REQUIRE(getSuccessfulFlowFileContents().size() == 0);
+  auto failed_contents = getFailedFlowFileContents();
+  REQUIRE(failed_contents.size() == 1);
+  REQUIRE(failed_contents[0] == TEST_DATA);
+}
+
 }  // namespace

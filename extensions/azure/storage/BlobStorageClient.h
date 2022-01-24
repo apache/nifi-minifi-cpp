@@ -23,11 +23,13 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include "azure/storage/blobs/protocol/blob_rest_client.hpp"
 #include "AzureStorageCredentials.h"
 #include "utils/gsl.h"
 #include "utils/Enum.h"
+#include "io/InputStream.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -60,7 +62,7 @@ class BlobStorageClient {
   virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
   virtual bool deleteBlob(const DeleteAzureBlobStorageParameters& params) = 0;
-  virtual Azure::Storage::Blobs::Models::DownloadBlobResult fetchBlob(const FetchAzureBlobStorageParameters& params) = 0;
+  virtual std::unique_ptr<io::InputStream> fetchBlob(const FetchAzureBlobStorageParameters& params) = 0;
   virtual ~BlobStorageClient() = default;
 };
 

@@ -83,7 +83,7 @@ bool AzureBlobStorageClient::deleteBlob(const DeleteAzureBlobStorageParameters& 
   return response.Value.Deleted;
 }
 
-Azure::Storage::Blobs::Models::DownloadBlobResult AzureBlobStorageClient::fetchBlob(const FetchAzureBlobStorageParameters& params) {
+std::unique_ptr<io::InputStream> AzureBlobStorageClient::fetchBlob(const FetchAzureBlobStorageParameters& params) {
   resetClientIfNeeded(params.credentials, params.container_name);
   auto blob_client = container_client_->GetBlobClient(params.blob_name);
   Azure::Storage::Blobs::DownloadBlobOptions options;
@@ -99,7 +99,7 @@ Azure::Storage::Blobs::Models::DownloadBlobResult AzureBlobStorageClient::fetchB
     options.Range = range;
   }
   auto result = blob_client.Download(options);
-  return std::move(result.Value);
+  return std::make_unique<AzureBlobStorageInputStream>(std::move(result.Value));
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

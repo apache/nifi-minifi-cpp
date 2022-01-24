@@ -63,20 +63,19 @@ void FetchAzureBlobStorage::initialize() {
 }
 
 std::optional<storage::FetchAzureBlobStorageParameters> FetchAzureBlobStorage::buildFetchAzureBlobStorageParameters(
-    const std::shared_ptr<core::ProcessContext> &context,
-    const std::shared_ptr<core::FlowFile> &flow_file) {
+    core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file) {
   storage::FetchAzureBlobStorageParameters params;
   if (!setCommonStorageParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 
   std::string value;
-  if (context->getProperty(RangeStart, value, flow_file)) {
+  if (context.getProperty(RangeStart, value, flow_file)) {
     params.range_start = std::stoull(value);
     logger_->log_debug("Range Start property set to %llu", *params.range_start);
   }
 
-  if (context->getProperty(RangeLength, value, flow_file)) {
+  if (context.getProperty(RangeLength, value, flow_file)) {
     params.range_length = std::stoull(value);
     logger_->log_debug("Range Length property set to %llu", *params.range_length);
   }
@@ -85,6 +84,7 @@ std::optional<storage::FetchAzureBlobStorageParameters> FetchAzureBlobStorage::b
 }
 
 void FetchAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
+  gsl_Expects(context && session);
   logger_->log_trace("FetchAzureBlobStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
@@ -92,22 +92,24 @@ void FetchAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext
     return;
   }
 
-  const auto params = buildFetchAzureBlobStorageParameters(context, flow_file);
+  const auto params = buildFetchAzureBlobStorageParameters(*context, flow_file);
   if (!params) {
     session->transfer(flow_file, Failure);
     return;
   }
 
+  auto fetched_flow_file = session->create(flow_file);
   WriteCallback callback(azure_blob_storage_, *params, logger_);
-  session->write(flow_file, &callback);
+  session->write(fetched_flow_file, &callback);
 
-  auto result_size = callback.getResult();
-  if (result_size == std::nullopt) {
+  if (callback.getResult() == std::nullopt) {
     logger_->log_error("Failed to fetch blob '%s' from Azure Blob storage", params->blob_name);
     session->transfer(flow_file, Failure);
+    session->remove(fetched_flow_file);
   } else {
     logger_->log_debug("Successfully fetched blob '%s' from container '%s' on Azure Blob storage", params->blob_name, params->container_name);
-    session->transfer(flow_file, Success);
+    session->transfer(fetched_flow_file, Success);
+    session->remove(flow_file);
   }
 }
 
