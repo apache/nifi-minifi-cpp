@@ -42,24 +42,6 @@ class AzureBlobStorageClient : public BlobStorageClient {
   std::unique_ptr<io::InputStream> fetchBlob(const FetchAzureBlobStorageParameters& params) override;
 
  private:
-  class AzureBlobStorageInputStream : public io::InputStream {
-   public:
-    explicit AzureBlobStorageInputStream(Azure::Storage::Blobs::Models::DownloadBlobResult&& result)
-      : result_(std::move(result)) {
-    }
-
-    size_t size() const override {
-      return result_.BodyStream->Length();
-    }
-
-    size_t read(uint8_t *value, size_t len) override {
-      return result_.BodyStream->Read(value, len);
-    }
-
-   private:
-    Azure::Storage::Blobs::Models::DownloadBlobResult result_;
-  };
-
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string &container_name);
 
   AzureStorageCredentials credentials_;

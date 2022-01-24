@@ -40,8 +40,37 @@ const core::Property FetchAzureBlobStorage::RangeLength(
 const core::Relationship FetchAzureBlobStorage::Success("success", "All successfully processed FlowFiles are routed to this relationship");
 const core::Relationship FetchAzureBlobStorage::Failure("failure", "Unsuccessful operations will be transferred to the failure relationship");
 
+namespace {
+class WriteCallback : public OutputStreamCallback {
+ public:
+  WriteCallback(storage::AzureBlobStorage& azure_blob_storage, const storage::FetchAzureBlobStorageParameters& params, std::shared_ptr<core::logging::Logger> logger)
+    : azure_blob_storage_(azure_blob_storage),
+      params_(params),
+      logger_(std::move(logger)) {
+  }
+
+  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    result_size_ = azure_blob_storage_.fetchBlob(params_, *stream);
+    if (!result_size_) {
+      return 0;
+    }
+
+    return gsl::narrow<int64_t>(*result_size_);
+  }
+
+  auto getResult() const {
+    return result_size_;
+  }
+
+ private:
+  storage::AzureBlobStorage& azure_blob_storage_;
+  const storage::FetchAzureBlobStorageParameters& params_;
+  std::optional<uint64_t> result_size_ = std::nullopt;
+  std::shared_ptr<core::logging::Logger> logger_;
+};
+}  // namespace
+
 void FetchAzureBlobStorage::initialize() {
-  // Set the supported properties
   setSupportedProperties({
     AzureStorageCredentialsService,
     ContainerName,
@@ -55,7 +84,6 @@ void FetchAzureBlobStorage::initialize() {
     RangeStart,
     RangeLength
   });
-  // Set the supported relationships
   setSupportedRelationships({
     Success,
     Failure
