@@ -106,6 +106,6 @@ template<typename T>
 using remove_cvref_t = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 #endif
 
-bool implies(bool a, bool b) noexcept;
+inline constexpr bool implies(bool a, bool b) noexcept { return !a || b; }
 
 }  // namespace org::apache::nifi::minifi::utils

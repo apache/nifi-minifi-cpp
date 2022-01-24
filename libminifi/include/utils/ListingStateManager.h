@@ -39,7 +39,7 @@ class ListedObject {
 };
 
 struct ListingState {
-  bool wasObjectListedAlready(const ListedObject &object_attributes) const;
+  [[nodiscard]] bool wasObjectListedAlready(const ListedObject &object_attributes) const;
   void updateState(const ListedObject &object_attributes);
 
   std::chrono::time_point<std::chrono::system_clock> listed_key_timestamp;
