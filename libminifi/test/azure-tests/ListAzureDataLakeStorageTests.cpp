@@ -194,4 +194,14 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered pat
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM1_LAST_MODIFIED, 0s, 0ms));
 }
 
+TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Throw on invalid file filter", "[listAzureDataLakeStorage]") {
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::FileFilter.getName(), "(item1][].*g");
+  REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
+}
+
+TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Throw on invalid path filter", "[listAzureDataLakeStorage]") {
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::PathFilter.getName(), "su.([[*");
+  REQUIRE_THROWS_AS(test_controller_.runSession(plan_, true), minifi::Exception);
+}
+
 }  // namespace

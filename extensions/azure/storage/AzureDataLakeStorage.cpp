@@ -33,9 +33,9 @@
 namespace org::apache::nifi::minifi::azure::storage {
 
 namespace {
-bool matchesPathFilter(std::string_view base_directory, const std::string& path_filter, std::string path) {
+bool matchesPathFilter(std::string_view base_directory, const std::optional<std::regex>& path_regex, std::string path) {
   gsl_Expects(utils::implies(!base_directory.empty(), minifi::utils::StringUtils::startsWith(path, base_directory)));
-  if (path_filter.empty()) {
+  if (!path_regex) {
     return true;
   }
 
@@ -43,17 +43,15 @@ bool matchesPathFilter(std::string_view base_directory, const std::string& path_
     path = path.size() == base_directory.size() ? "" : path.substr(base_directory.size() + 1);
   }
 
-  std::regex pattern(path_filter);
-  return std::regex_match(path, pattern);
+  return std::regex_match(path, *path_regex);
 }
 
-bool matchesFileFilter(const std::string& file_filter, const std::string& filename) {
-  if (file_filter.empty()) {
+bool matchesFileFilter(const std::optional<std::regex>& file_regex, const std::string& filename) {
+  if (!file_regex) {
     return true;
   }
 
-  std::regex pattern(file_filter);
-  return std::regex_match(filename, pattern);
+  return std::regex_match(filename, *file_regex);
 }
 }  // namespace
 
@@ -119,7 +117,7 @@ std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(con
         directory = directory.substr(0, directory.size() - 1);  // Remove ending '/' character
       }
 
-      if (!matchesPathFilter(params.directory_name, params.path_filter, directory) || !matchesFileFilter(params.file_filter, filename)) {
+      if (!matchesPathFilter(params.directory_name, params.path_regex, directory) || !matchesFileFilter(params.file_regex, filename)) {
         continue;
       }
 

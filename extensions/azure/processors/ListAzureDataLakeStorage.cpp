@@ -111,8 +111,22 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
     return std::nullopt;
   }
 
-  context.getProperty(FileFilter.getName(), params.file_filter);
-  context.getProperty(PathFilter.getName(), params.path_filter);
+  auto createFilterRegex = [&context](const std::string& property_name) -> std::optional<std::regex> {
+    try {
+      std::string filter_str;
+      context.getProperty(property_name, filter_str);
+      if (!filter_str.empty()) {
+        return std::regex(filter_str);
+      }
+
+      return std::nullopt;
+    } catch (const std::regex_error&) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " regex is invalid");
+    }
+  };
+
+  params.file_regex = createFilterRegex(FileFilter.getName());
+  params.path_regex = createFilterRegex(PathFilter.getName());
 
   return params;
 }

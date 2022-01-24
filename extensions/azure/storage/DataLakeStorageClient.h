@@ -23,6 +23,7 @@
 #include <optional>
 #include <memory>
 #include <vector>
+#include <regex>
 
 #include "AzureStorageCredentials.h"
 
@@ -62,8 +63,8 @@ struct FetchAzureDataLakeStorageParameters : public AzureDataLakeStorageFileOper
 
 struct ListAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
   bool recurse_subdirectories = true;
-  std::string path_filter;
-  std::string file_filter;
+  std::optional<std::regex> path_regex;
+  std::optional<std::regex> file_regex;
 };
 
 class DataLakeStorageClient {
