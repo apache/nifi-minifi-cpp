@@ -37,11 +37,9 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class FetchAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  public:
-  // Supported Properties
   EXTENSIONAPI static const core::Property RangeStart;
   EXTENSIONAPI static const core::Property RangeLength;
 
-  // Supported Relationships
   static const core::Relationship Failure;
   static const core::Relationship Success;
 
@@ -65,8 +63,6 @@ class FetchAzureBlobStorage final : public AzureBlobStorageProcessorBase {
 
   std::optional<storage::FetchAzureBlobStorageParameters> buildFetchAzureBlobStorageParameters(
     core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);
-
-  storage::OptionalDeletion optional_deletion_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

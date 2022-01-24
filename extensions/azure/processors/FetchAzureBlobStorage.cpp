@@ -43,10 +43,9 @@ const core::Relationship FetchAzureBlobStorage::Failure("failure", "Unsuccessful
 namespace {
 class WriteCallback : public OutputStreamCallback {
  public:
-  WriteCallback(storage::AzureBlobStorage& azure_blob_storage, const storage::FetchAzureBlobStorageParameters& params, std::shared_ptr<core::logging::Logger> logger)
+  WriteCallback(storage::AzureBlobStorage& azure_blob_storage, const storage::FetchAzureBlobStorageParameters& params)
     : azure_blob_storage_(azure_blob_storage),
-      params_(params),
-      logger_(std::move(logger)) {
+      params_(params) {
   }
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
@@ -58,7 +57,7 @@ class WriteCallback : public OutputStreamCallback {
     return gsl::narrow<int64_t>(*result_size_);
   }
 
-  auto getResult() const {
+  [[nodiscard]] auto getResult() const {
     return result_size_;
   }
 
@@ -66,7 +65,6 @@ class WriteCallback : public OutputStreamCallback {
   storage::AzureBlobStorage& azure_blob_storage_;
   const storage::FetchAzureBlobStorageParameters& params_;
   std::optional<uint64_t> result_size_ = std::nullopt;
-  std::shared_ptr<core::logging::Logger> logger_;
 };
 }  // namespace
 
@@ -127,7 +125,7 @@ void FetchAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext
   }
 
   auto fetched_flow_file = session->create(flow_file);
-  WriteCallback callback(azure_blob_storage_, *params, logger_);
+  WriteCallback callback(azure_blob_storage_, *params);
   session->write(fetched_flow_file, &callback);
 
   if (callback.getResult() == std::nullopt) {
