@@ -52,14 +52,6 @@ std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext&
   return time_property.getMilliseconds();
 }
 
-std::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name) {
-  uint64_t value;
-  if (context.getProperty(property_name, value)) {
-    return { value };
-  }
-  return std::nullopt;
-}
-
 std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values) {
   std::string value;
   if (!context.getProperty(property_name, value)

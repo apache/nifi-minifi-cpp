@@ -107,7 +107,6 @@ class ExecutePythonProcessor : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecutePythonProcessor>::getLogger();
 
   std::string script_to_exec_;
-  std::string module_directory_;
   bool reload_on_script_change_;
   uint64_t last_script_write_time_;
   std::string script_file_path_;

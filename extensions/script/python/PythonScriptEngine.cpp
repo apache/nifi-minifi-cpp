@@ -17,8 +17,10 @@
 
 #include <memory>
 #include <string>
+#include <filesystem>
 
 #include "PythonScriptEngine.h"
+#include "utils/file/FileUtils.h"
 
 namespace org {
 namespace apache {
@@ -39,9 +41,28 @@ PythonScriptEngine::PythonScriptEngine() {
   (*bindings_) = py::globals().attr("copy")();
 }
 
+void PythonScriptEngine::evaluateModuleImports() {
+  if (module_paths_.empty()) {
+    return;
+  }
+
+  py::eval<py::eval_statements>("import sys", *bindings_, *bindings_);
+  for (const auto& module_path : module_paths_) {
+    if (std::filesystem::is_regular_file(std::filesystem::status(module_path))) {
+      std::string path;
+      std::string filename;
+      utils::file::getFileNameAndPath(module_path, path, filename);
+      py::eval<py::eval_statements>("sys.path.append('" + path + "')", *bindings_, *bindings_);
+    } else {
+      py::eval<py::eval_statements>("sys.path.append('" + module_path + "')", *bindings_, *bindings_);
+    }
+  }
+}
+
 void PythonScriptEngine::eval(const std::string &script) {
   py::gil_scoped_acquire gil { };
   try {
+    evaluateModuleImports();
     if (script[0] == '\n') {
       py::eval<py::eval_statements>(py::module::import("textwrap").attr("dedent")(script), *bindings_, *bindings_);
     } else {
@@ -55,6 +76,7 @@ void PythonScriptEngine::eval(const std::string &script) {
 void PythonScriptEngine::evalFile(const std::string &file_name) {
   py::gil_scoped_acquire gil { };
   try {
+    evaluateModuleImports();
     py::eval_file(file_name, *bindings_, *bindings_);
   } catch (const std::exception &e) {
     throw minifi::script::ScriptException(e.what());

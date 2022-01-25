@@ -228,6 +228,8 @@ class __attribute__((visibility("default"))) PythonScriptEngine : public script:
   }
 
  private:
+  void evaluateModuleImports();
+
   std::unique_ptr<py::dict> bindings_;
 };
 

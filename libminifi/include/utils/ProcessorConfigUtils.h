@@ -43,7 +43,6 @@ std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessConte
 std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext& context, const std::string& property_name);
 bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, const std::string& property_name);
 std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, const std::string& property_name);
-std::optional<uint64_t> getOptionalUintProperty(const core::ProcessContext& context, const std::string& property_name);
 std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, const std::string& property_name, const std::set<std::string>& allowable_values);
 
 template<typename T>

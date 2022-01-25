@@ -110,6 +110,8 @@ class LuaScriptEngine : public script::ScriptEngine {
   }
 
  private:
+  void executeScriptWithAppendedModulePaths(std::string& script);
+
   sol::state lua_;
 };
 

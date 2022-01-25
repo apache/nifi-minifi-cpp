@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <filesystem>
 
 #include "../ScriptProcessContext.h"
 
@@ -63,9 +64,25 @@ LuaScriptEngine::LuaScriptEngine()
       "write", &lua::LuaBaseStream::write);
 }
 
+void LuaScriptEngine::executeScriptWithAppendedModulePaths(std::string& script) {
+  for (const auto& module_path : module_paths_) {
+    if (std::filesystem::is_regular_file(std::filesystem::status(module_path))) {
+      script = "package.path = package.path .. \";" + module_path + "\"\n" + script;
+    } else {
+      script = "package.path = package.path .. \";" + module_path + "/?.lua\"\n" + script;
+    }
+  }
+  lua_.script(script, sol::script_throw_on_error);
+}
+
 void LuaScriptEngine::eval(const std::string &script) {
   try {
-    lua_.script(script, sol::script_throw_on_error);
+    if (!module_paths_.empty()) {
+      auto appended_script = script;
+      executeScriptWithAppendedModulePaths(appended_script);
+    } else {
+      lua_.script(script, sol::script_throw_on_error);
+    }
   } catch (std::exception& e) {
     throw minifi::script::ScriptException(e.what());
   }
@@ -73,7 +90,13 @@ void LuaScriptEngine::eval(const std::string &script) {
 
 void LuaScriptEngine::evalFile(const std::string &file_name) {
   try {
-    lua_.script_file(file_name, sol::script_throw_on_error);
+    if (!module_paths_.empty()) {
+      std::ifstream stream(file_name);
+      std::string script((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
+      executeScriptWithAppendedModulePaths(script);
+    } else {
+      lua_.script_file(file_name, sol::script_throw_on_error);
+    }
   } catch (std::exception& e) {
     throw minifi::script::ScriptException(e.what());
   }
