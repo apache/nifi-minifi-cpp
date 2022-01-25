@@ -319,12 +319,12 @@ void hash_combine(size_t& seed, const T& v, Rest... rest) {
   seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
   (hash_combine(seed, rest), ...);
 }
-}
+}  // namespace
 
 size_t DefragmentText::FragmentSource::Id::hash::operator() (const Id& fragment_id) const {
-    size_t h = 0;
-    hash_combine(h, fragment_id.base_name_attribute_, fragment_id.post_name_attribute_);
-    return h;
+  size_t h = 0;
+  hash_combine(h, fragment_id.base_name_attribute_, fragment_id.post_name_attribute_);
+  return h;
 }
 
 REGISTER_RESOURCE(DefragmentText, "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them");
