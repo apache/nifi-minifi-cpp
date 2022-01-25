@@ -24,6 +24,7 @@
 #include <set>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "core/Core.h"
 #include "wel/MetadataWalker.h"
 #include "wel/XMLString.h"

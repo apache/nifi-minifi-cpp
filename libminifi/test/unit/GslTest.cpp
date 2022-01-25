@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/gsl.h"
 
 namespace utils = org::apache::nifi::minifi::utils;

@@ -20,6 +20,7 @@
 
 #include <filesystem>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "agent/agent_version.h"
 #include "core/extension/Utils.h"
 #include "utils/IntegrationTestUtils.h"

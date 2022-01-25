@@ -24,6 +24,7 @@
 #include <memory>
 #include <utility>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "io/StreamFactory.h"
 #include "io/Sockets.h"
 #include "utils/ThreadPool.h"

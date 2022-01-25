@@ -18,6 +18,7 @@
 #include "PutSplunkHTTP.h"
 #include "SplunkAttributes.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "ReadFromFlowFileTestProcessor.h"
 #include "WriteToFlowFileTestProcessor.h"
 #include "processors/UpdateAttribute.h"

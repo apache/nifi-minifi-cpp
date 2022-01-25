@@ -23,6 +23,7 @@
 #include <string>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 
 #include "processors/PutSQL.h"
 #include "processors/GenerateFlowFile.h"

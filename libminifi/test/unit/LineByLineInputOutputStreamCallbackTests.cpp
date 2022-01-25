@@ -17,6 +17,7 @@
 #include "LineByLineInputOutputStreamCallback.h"
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/BufferStream.h"
 #include "spdlog/spdlog.h"

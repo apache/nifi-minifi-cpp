@@ -17,6 +17,7 @@
 
 #include "utils/TimeUtil.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 
 using namespace std::literals::chrono_literals;
 

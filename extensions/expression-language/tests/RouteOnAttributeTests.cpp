@@ -17,6 +17,7 @@
  */
 #include <memory>
 #include "TestBase.h"
+#include "Catch.h"
 #include <RouteOnAttribute.h>
 #include "processors/LogAttribute.h"
 #include "processors/UpdateAttribute.h"

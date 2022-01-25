@@ -23,6 +23,7 @@
 
 #include "io/FileStream.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/gsl.h"
 #include "utils/file/FileUtils.h"
 

@@ -27,6 +27,7 @@
 #include "sitetosite/HTTPProtocol.h"
 #include "InvokeHTTP.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "FlowController.h"
 #include "io/StreamFactory.h"
 #include "RemoteProcessorGroupPort.h"

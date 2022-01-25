@@ -17,6 +17,7 @@
  */
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "FlowFileRepository.h"
 #include "utils/IntegrationTestUtils.h"
 #include "../Path.h"

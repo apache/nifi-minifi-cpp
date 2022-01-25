@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "ConsumeJournald.h"
 #include "libwrapper/LibWrapper.h"
 #include "utils/gsl.h"

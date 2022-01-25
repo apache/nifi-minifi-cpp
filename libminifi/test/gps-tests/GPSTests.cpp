@@ -34,6 +34,7 @@
 #include "GetGPS.h"
 #include "processors/GetFile.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "../unit/ProvenanceTestHelper.h"
 
 TEST_CASE("GPSD Create", "[gpsdtest1]") {

@@ -16,6 +16,7 @@
  */
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "YamlConfiguration.h"
 #include "Utils.h"
 #include "IntegrationTestUtils.h"

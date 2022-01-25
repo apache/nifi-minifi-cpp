@@ -18,6 +18,7 @@
 #include "utils/crypto/EncryptionUtils.h"
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 

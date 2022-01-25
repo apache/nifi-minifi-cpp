@@ -20,6 +20,7 @@
 #include <future>
 #include <memory>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/ThreadPool.h"
 
 bool function() {

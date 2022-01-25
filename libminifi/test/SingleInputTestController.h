@@ -44,7 +44,7 @@ class SingleInputTestController : public TestController {
       std::vector<std::shared_ptr<core::FlowFile>> output_flow_files;
       while (connection->isWorkAvailable()) {
         auto output_flow_file = connection->poll(expired_flow_files);
-        CHECK(expired_flow_files.empty());
+        assert(expired_flow_files.empty());
         if (!output_flow_file) continue;
         output_flow_files.push_back(std::move(output_flow_file));
       }

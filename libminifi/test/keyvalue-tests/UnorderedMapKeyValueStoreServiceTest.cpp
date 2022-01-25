@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/controller/ControllerService.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"

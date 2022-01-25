@@ -24,6 +24,7 @@
 #include <memory>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/Processor.h"
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"

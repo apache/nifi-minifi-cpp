@@ -27,6 +27,7 @@
 #include <iostream>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "TestUtils.h"
 #include "core/Core.h"
 #include "unit/ProvenanceTestHelper.h"

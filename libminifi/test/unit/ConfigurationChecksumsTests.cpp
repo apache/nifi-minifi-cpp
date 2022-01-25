@@ -16,6 +16,7 @@
  */
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/TestUtils.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "utils/ChecksumCalculator.h"

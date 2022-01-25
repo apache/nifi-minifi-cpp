@@ -17,6 +17,7 @@
  */
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "PDHCounters.h"
 #include "MemoryConsumptionCounter.h"
 #include "utils/gsl.h"

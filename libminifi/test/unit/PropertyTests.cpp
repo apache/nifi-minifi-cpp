@@ -22,6 +22,7 @@
 #include "../../include/core/Property.h"
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 namespace {
 enum class ConversionTestTarget { MS, NS };
 

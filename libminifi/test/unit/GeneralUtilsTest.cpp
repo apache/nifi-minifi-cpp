@@ -21,6 +21,7 @@
 #include <type_traits>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/GeneralUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;

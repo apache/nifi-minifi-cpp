@@ -19,6 +19,7 @@
 
 #include "../../include/core/state/Value.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 
 using ValueNode = org::apache::nifi::minifi::state::response::ValueNode;
 using Value = org::apache::nifi::minifi::state::response::Value;

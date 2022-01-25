@@ -23,6 +23,7 @@
 #include <functional>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
 #include "utils/TestUtils.h"

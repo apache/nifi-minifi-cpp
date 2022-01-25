@@ -26,6 +26,7 @@
 
 #include "client/HTTPCallback.h"
 #include "TestBase.h"
+#include "Catch.h"
 
 class HttpStreamingCallbackTestsFixture {
  public:

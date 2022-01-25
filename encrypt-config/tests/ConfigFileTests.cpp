@@ -25,6 +25,7 @@
 #include "utils/gsl.h"
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/file/FileUtils.h"
 
 namespace org {

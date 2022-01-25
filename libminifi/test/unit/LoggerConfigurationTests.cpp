@@ -24,6 +24,7 @@
 #include <iostream>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "spdlog/formatter.h"
 #include "spdlog/sinks/ostream_sink.h"

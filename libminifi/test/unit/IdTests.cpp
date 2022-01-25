@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cctype>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/Id.h"
 #include "../Utils.h"
 

@@ -25,6 +25,7 @@
 #include <iostream>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/Core.h"
 
 #include "core/FlowFile.h"

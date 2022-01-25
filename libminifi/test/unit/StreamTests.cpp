@@ -24,6 +24,7 @@
 #include <memory>
 #include <utility>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "io/BaseStream.h"
 #include "io/StreamSlice.h"
 

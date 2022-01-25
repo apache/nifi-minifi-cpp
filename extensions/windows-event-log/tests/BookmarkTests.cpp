@@ -21,6 +21,7 @@
 #include <regex>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/gsl.h"
 #include "wel/UniqueEvtHandle.h"
 

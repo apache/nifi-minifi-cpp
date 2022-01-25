@@ -39,6 +39,7 @@
 #endif
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "Exception.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"

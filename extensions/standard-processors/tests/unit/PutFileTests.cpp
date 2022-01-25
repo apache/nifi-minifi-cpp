@@ -28,6 +28,7 @@
 
 #include "utils/file/FileUtils.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "TestUtils.h"
 #include "processors/LogAttribute.h"
 #include "processors/GetFile.h"

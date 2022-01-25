@@ -23,6 +23,7 @@
 #include <fstream>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/file/FileUtils.h"
 #include "GenerateFlowFile.h"
 #include "PutFile.h"

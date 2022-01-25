@@ -21,6 +21,7 @@
 #include <string>
 #include "io/BaseStream.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "core/Core.h"
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"

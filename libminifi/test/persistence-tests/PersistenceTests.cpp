@@ -30,6 +30,7 @@
 #include "properties/Configure.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "../../extensions/libarchive/MergeContent.h"
 #include "core/repository/VolatileFlowFileRepository.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"

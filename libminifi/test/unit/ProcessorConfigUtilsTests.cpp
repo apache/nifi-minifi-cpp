@@ -16,6 +16,7 @@
  */
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/Processor.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/Enum.h"

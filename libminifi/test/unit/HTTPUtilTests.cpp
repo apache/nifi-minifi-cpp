@@ -18,6 +18,7 @@
 
 #include <string>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/HTTPClient.h"
 
 TEST_CASE("The URL class can parse various URL strings", "[URL][parsing]") {

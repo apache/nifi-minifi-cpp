@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "InvokeHTTP.h"

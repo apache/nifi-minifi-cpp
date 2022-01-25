@@ -22,6 +22,7 @@
 #include <vector>
 #include <string>
 #include "TestBase.h"
+#include "Catch.h"
 #include "client/HTTPClient.h"
 #include "CivetServer.h"
 

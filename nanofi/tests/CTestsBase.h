@@ -30,6 +30,7 @@
 #include "api/ecu.h"
 #include "api/nanofi.h"
 #include "TestBase.h"
+#include "Catch.h"
 
 class FileManager {
 public:

@@ -19,6 +19,7 @@
 #include <string>
 #include "core/ConfigurableComponent.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 
 namespace org {
 namespace apache {

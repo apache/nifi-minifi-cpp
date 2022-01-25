@@ -17,6 +17,7 @@
  */
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "AppendHostInfo.h"
 #include "LogAttribute.h"
 

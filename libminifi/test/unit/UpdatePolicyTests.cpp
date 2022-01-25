@@ -20,6 +20,7 @@
 #include <utility>
 #include <string>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "io/ClientSocket.h"
 #include "core/Processor.h"
 #include "../../controller/Controller.h"

@@ -17,6 +17,7 @@
  */
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/OptionalUtils.h"
 
 namespace utils = org::apache::nifi::minifi::utils;

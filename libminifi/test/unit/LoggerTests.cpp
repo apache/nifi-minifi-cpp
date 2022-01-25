@@ -21,6 +21,7 @@
 #include <vector>
 #include <ctime>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "io/ZlibStream.h"
 #include "StreamPipe.h"

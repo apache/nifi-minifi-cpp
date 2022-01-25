@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include "TestBase.h"
+#include "Catch.h"
 
 #include "utils/file/FileUtils.h"
 #include "processors/GetFile.h"

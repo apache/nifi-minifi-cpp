@@ -22,6 +22,7 @@
 #include "io/CRCStream.h"
 #include "io/BufferStream.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "GetFile.h"
 #include "LogAttribute.h"
 #include "SchedulingAgent.h"

@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include "FlowController.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "core/Core.h"
 #include "core/FlowFile.h"
 #include "utils/file/FileUtils.h"

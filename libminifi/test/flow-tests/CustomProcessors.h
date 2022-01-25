@@ -25,6 +25,7 @@
 #include <YamlConfiguration.h>
 #include "core/Processor.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "processors/GenerateFlowFile.h"
 #include "core/Resource.h"
 

@@ -21,6 +21,7 @@
 #include <type_traits>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/net/DNS.h"
 #include "utils/net/Socket.h"
 #include "utils/StringUtils.h"

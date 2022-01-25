@@ -24,6 +24,7 @@
 #include "serialization/PayloadSerializer.h"
 #include "core/FlowFile.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/gsl.h"
 #include "FlowFile.h"
 #include "FlowFileRecord.h"

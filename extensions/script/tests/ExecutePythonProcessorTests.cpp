@@ -21,6 +21,7 @@
 #include <set>
 
 #include "TestBase.h"
+#include "Catch.h"
 
 #include "processors/GetFile.h"
 #include "python/ExecutePythonProcessor.h"

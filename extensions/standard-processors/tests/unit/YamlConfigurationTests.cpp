@@ -25,6 +25,7 @@
 #include "core/yaml/YamlConfiguration.h"
 #include "TailFile.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/TestUtils.h"
 
 using namespace std::literals::chrono_literals;

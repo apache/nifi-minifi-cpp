@@ -17,6 +17,7 @@
  */
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "processors/RouteText.h"
 
 namespace processors = minifi::processors;

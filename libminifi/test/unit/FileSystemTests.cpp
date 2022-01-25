@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/file/FileSystem.h"
 
 using utils::crypto::EncryptionProvider;

@@ -19,6 +19,7 @@
 #undef NDEBUG
 
 #include "TestBase.h"
+#include "Catch.h"
 
 #include "c2/C2Agent.h"
 #include "c2/HeartbeatLogger.h"

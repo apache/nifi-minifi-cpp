@@ -20,6 +20,7 @@
 #include <filesystem>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/file/FilePattern.h"
 #include "range/v3/view/map.hpp"
 #include "range/v3/view/join.hpp"

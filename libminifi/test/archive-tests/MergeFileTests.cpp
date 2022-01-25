@@ -35,6 +35,7 @@
 #include "MergeContent.h"
 #include "processors/LogAttribute.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "serialization/FlowFileV3Serializer.h"
 #include "serialization/PayloadSerializer.h"

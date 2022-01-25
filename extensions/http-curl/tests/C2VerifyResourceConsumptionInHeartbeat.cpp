@@ -20,6 +20,7 @@
 #include <functional>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "c2/C2Agent.h"
 #include "protocols/RESTProtocol.h"
 #include "protocols/RESTSender.h"

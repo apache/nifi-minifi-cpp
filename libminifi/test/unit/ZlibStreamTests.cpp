@@ -20,6 +20,7 @@
 #include <random>
 #include <algorithm>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "io/ZlibStream.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
