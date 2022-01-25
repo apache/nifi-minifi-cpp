@@ -40,6 +40,10 @@ void ListingState::updateState(const ListedObject &object) {
   }
 }
 
+uint64_t ListingState::getListedKeyTimeStampInMilliseconds() const {
+  return listed_key_timestamp.time_since_epoch() / std::chrono::milliseconds(1);
+}
+
 uint64_t ListingStateManager::getLatestListedKeyTimestampInMilliseconds(const std::unordered_map<std::string, std::string> &state) {
   std::string stored_listed_key_timestamp_str;
   auto it = state.find(LATEST_LISTED_OBJECT_TIMESTAMP);
@@ -81,7 +85,7 @@ ListingState ListingStateManager::getCurrentState() const {
 
 void ListingStateManager::storeState(const ListingState &latest_listing_state) {
   std::unordered_map<std::string, std::string> state;
-  state[LATEST_LISTED_OBJECT_TIMESTAMP] = std::to_string(latest_listing_state.listed_key_timestamp.time_since_epoch().count());
+  state[LATEST_LISTED_OBJECT_TIMESTAMP] = std::to_string(latest_listing_state.getListedKeyTimeStampInMilliseconds());
 
   uint64_t id = 0;
   for (const auto& key : latest_listing_state.listed_keys) {

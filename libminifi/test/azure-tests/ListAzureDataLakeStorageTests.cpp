@@ -34,6 +34,7 @@ class ListAzureDataLakeStorageTestsFixture {
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::utils::ListingStateManager>();
     LogTestController::getInstance().setTrace<minifi::azure::processors::ListAzureDataLakeStorage>();
 
     // Build MiNiFi processing graph
@@ -140,8 +141,8 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list same files t
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.length value:256"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag1"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag2"));
-  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM1_LAST_MODIFIED));
-  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM2_LAST_MODIFIED));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM1_LAST_MODIFIED + "\n"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM2_LAST_MODIFIED + "\n"));
   plan_->reset();
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
   test_controller_.runSession(plan_, true);
@@ -163,7 +164,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered fil
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.filename value:item1.log"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.length value:128"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag1"));
-  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM1_LAST_MODIFIED));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM1_LAST_MODIFIED + "\n"));
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure.filePath value:testdir/sub/item2.log", 0s, 0ms));
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure.filename value:item2.log", 0s, 0ms));
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure.length value:256", 0s, 0ms));
@@ -186,7 +187,7 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list filtered pat
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.filename value:item2.log"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.length value:256"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag2"));
-  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM2_LAST_MODIFIED));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.lastModified value:" + mock_data_lake_storage_client_ptr_->ITEM2_LAST_MODIFIED + "\n"));
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure.filePath value:testdir/item1.log", 0s, 0ms));
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure.filename value:item1.log", 0s, 0ms));
   CHECK_FALSE(LogTestController::getInstance().contains("key:azure.length value:128", 0s, 0ms));

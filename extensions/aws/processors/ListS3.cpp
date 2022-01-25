@@ -183,7 +183,7 @@ void ListS3::createNewFlowFile(
   session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
   session.putAttribute(flow_file, "s3.etag", object_attributes.etag);
   session.putAttribute(flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
-  session.putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified.time_since_epoch().count()));
+  session.putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
   session.putAttribute(flow_file, "s3.length", std::to_string(object_attributes.length));
   session.putAttribute(flow_file, "s3.storeClass", object_attributes.store_class);
   if (!object_attributes.version.empty()) {

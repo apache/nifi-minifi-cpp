@@ -60,7 +60,7 @@ std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session,
   session.putAttribute(flow_file, "azure.directory", element.directory);
   session.putAttribute(flow_file, "azure.filename", element.filename);
   session.putAttribute(flow_file, "azure.length", std::to_string(element.length));
-  session.putAttribute(flow_file, "azure.lastModified", std::to_string(element.last_modified.time_since_epoch().count()));
+  session.putAttribute(flow_file, "azure.lastModified", std::to_string(element.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
   session.putAttribute(flow_file, "azure.etag", element.etag);
   return flow_file;
 }

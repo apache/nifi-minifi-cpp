@@ -41,6 +41,7 @@ class ListedObject {
 struct ListingState {
   [[nodiscard]] bool wasObjectListedAlready(const ListedObject &object_attributes) const;
   void updateState(const ListedObject &object_attributes);
+  uint64_t getListedKeyTimeStampInMilliseconds() const;
 
   std::chrono::time_point<std::chrono::system_clock> listed_key_timestamp;
   std::unordered_set<std::string> listed_keys;
@@ -65,7 +66,7 @@ class ListingStateManager {
   std::shared_ptr<core::CoreComponentStateManager> state_manager_;
   const std::string timestamp_key_;
   const std::string listed_object_prefix_;
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ListingState>::getLogger()};
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ListingStateManager>::getLogger()};
 };
 
 }  // namespace org::apache::nifi::minifi::utils
