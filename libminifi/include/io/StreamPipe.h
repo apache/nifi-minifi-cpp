@@ -82,7 +82,7 @@ inline int64_t pipe(io::InputStream* src, io::OutputStream* dst) {
     auto remaining = readRet;
     int transferred = 0;
     while (remaining > 0) {
-      const auto writeRet = dst->write(gsl::make_span(buffer.begin() + transferred, remaining));
+      const auto writeRet = dst->write(gsl::make_span(buffer).subspan(transferred, remaining));
       // TODO(adebreceni):
       //   write might return 0, e.g. in case of a congested server
       //   what should we return then?

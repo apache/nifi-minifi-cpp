@@ -77,7 +77,6 @@ size_t SecureDescriptorStream::write(const uint8_t *value, size_t size) {
 
 size_t SecureDescriptorStream::read(gsl::span<std::byte> buf) {
   if (buf.empty()) { return 0; }
-  if (IsNullOrEmpty(buf)) return STREAM_ERROR;
   size_t total_read = 0;
   std::byte* writepos = buf.data();
   while (buf.size() > total_read) {
