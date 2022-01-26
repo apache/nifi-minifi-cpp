@@ -157,6 +157,8 @@ class C2Agent : public state::UpdateController {
 
   void handle_transfer(const C2ContentResponse &resp);
 
+  void handle_clear(const C2ContentResponse &resp);
+
   C2Payload bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files);
 
   /**

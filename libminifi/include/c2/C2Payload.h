@@ -68,6 +68,12 @@ SMART_ENUM(TransferOperand,
   (DEBUG, "debug")
 )
 
+SMART_ENUM(ClearOperand,
+  (CONNECTION, "connection"),
+  (REPOSITORIES, "repositories"),
+  (CORECOMPONENTSTATE, "corecomponentstate")
+)
+
 #define PAYLOAD_NO_STATUS 0
 #define PAYLOAD_SUCCESS 1
 #define PAYLOAD_FAILURE 2

@@ -49,6 +49,10 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
       serializeProperty<minifi::c2::TransferOperand>(properties);
       break;
     }
+    case minifi::c2::Operation::CLEAR: {
+      serializeProperty<minifi::c2::ClearOperand>(properties);
+      break;
+    }
     default:
       break;
   }
