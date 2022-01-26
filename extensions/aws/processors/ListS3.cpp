@@ -36,9 +36,6 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-const std::string ListS3::LATEST_LISTED_KEY_PREFIX = "listed_key.";
-const std::string ListS3::LATEST_LISTED_KEY_TIMESTAMP = "listed_timestamp";
-
 const core::Property ListS3::Delimiter(
   core::PropertyBuilder::createProperty("Delimiter")
     ->withDescription("The string used to delimit directories within the bucket. Please consult the AWS documentation for the correct use of this field.")
@@ -93,10 +90,11 @@ void ListS3::initialize() {
 void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
   S3Processor::onSchedule(context, sessionFactory);
 
-  state_manager_ = context->getStateManager();
-  if (state_manager_ == nullptr) {
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
   }
+  state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
 
   auto common_properties = getCommonELSupportedProperties(context, nullptr);
   if (!common_properties) {
@@ -177,54 +175,6 @@ void ListS3::writeUserMetadata(
   }
 }
 
-std::vector<std::string> ListS3::getLatestListedKeys(const std::unordered_map<std::string, std::string> &state) {
-  std::vector<std::string> latest_listed_keys;
-  for (const auto& kvp : state) {
-    if (kvp.first.rfind(LATEST_LISTED_KEY_PREFIX, 0) == 0) {
-      latest_listed_keys.push_back(kvp.second);
-    }
-  }
-  return latest_listed_keys;
-}
-
-uint64_t ListS3::getLatestListedKeyTimestamp(const std::unordered_map<std::string, std::string> &state) {
-  std::string stored_listed_key_timestamp_str;
-  auto it = state.find(LATEST_LISTED_KEY_TIMESTAMP);
-  if (it != state.end()) {
-    stored_listed_key_timestamp_str = it->second;
-  }
-
-  int64_t stored_listed_key_timestamp = 0;
-  core::Property::StringToInt(stored_listed_key_timestamp_str, stored_listed_key_timestamp);
-
-  return stored_listed_key_timestamp;
-}
-
-ListS3::ListingState ListS3::getCurrentState(const std::shared_ptr<core::ProcessContext>& /*context*/) {
-  ListS3::ListingState current_listing_state;
-  std::unordered_map<std::string, std::string> state;
-  if (!state_manager_->get(state)) {
-    logger_->log_info("No stored state for listed objects was found");
-    return current_listing_state;
-  }
-
-  current_listing_state.listed_key_timestamp = getLatestListedKeyTimestamp(state);
-  logger_->log_debug("Restored previous listed timestamp %lld", current_listing_state.listed_key_timestamp);
-
-  current_listing_state.listed_keys = getLatestListedKeys(state);
-  return current_listing_state;
-}
-
-void ListS3::storeState(const ListS3::ListingState &latest_listing_state) {
-  std::unordered_map<std::string, std::string> state;
-  state[LATEST_LISTED_KEY_TIMESTAMP] = std::to_string(latest_listing_state.listed_key_timestamp);
-  for (std::size_t i = 0; i < latest_listing_state.listed_keys.size(); ++i) {
-    state[LATEST_LISTED_KEY_PREFIX + std::to_string(i)] = latest_listing_state.listed_keys.at(i);
-  }
-  logger_->log_debug("Stored new listed timestamp %lld", latest_listing_state.listed_key_timestamp);
-  state_manager_->set(state);
-}
-
 void ListS3::createNewFlowFile(
     core::ProcessSession &session,
     const aws::s3::ListedObjectAttributes &object_attributes) {
@@ -233,7 +183,7 @@ void ListS3::createNewFlowFile(
   session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, object_attributes.filename);
   session.putAttribute(flow_file, "s3.etag", object_attributes.etag);
   session.putAttribute(flow_file, "s3.isLatest", object_attributes.is_latest ? "true" : "false");
-  session.putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified));
+  session.putAttribute(flow_file, "s3.lastModified", std::to_string(object_attributes.last_modified.time_since_epoch() / std::chrono::milliseconds(1)));
   session.putAttribute(flow_file, "s3.length", std::to_string(object_attributes.length));
   session.putAttribute(flow_file, "s3.storeClass", object_attributes.store_class);
   if (!object_attributes.version.empty()) {
@@ -255,7 +205,7 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
     return;
   }
 
-  auto stored_listing_state = getCurrentState(context);
+  auto stored_listing_state = state_manager_->getCurrentState();
   auto latest_listing_state = stored_listing_state;
   std::size_t files_transferred = 0;
 
@@ -270,28 +220,12 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   }
 
   logger_->log_debug("ListS3 transferred %zu flow files", files_transferred);
-  storeState(latest_listing_state);
+  state_manager_->storeState(latest_listing_state);
 
   if (files_transferred == 0) {
     logger_->log_debug("No new S3 objects were found in bucket %s to list", list_request_params_->bucket);
     context->yield();
     return;
-  }
-}
-
-bool ListS3::ListingState::wasObjectListedAlready(const aws::s3::ListedObjectAttributes &object_attributes) const {
-  return listed_key_timestamp > object_attributes.last_modified ||
-      (listed_key_timestamp == object_attributes.last_modified &&
-        std::find(listed_keys.begin(), listed_keys.end(), object_attributes.filename) != listed_keys.end());
-}
-
-void ListS3::ListingState::updateState(const aws::s3::ListedObjectAttributes &object_attributes) {
-  if (listed_key_timestamp < object_attributes.last_modified) {
-    listed_key_timestamp = object_attributes.last_modified;
-    listed_keys.clear();
-    listed_keys.push_back(object_attributes.filename);
-  } else if (listed_key_timestamp == object_attributes.last_modified) {
-    listed_keys.push_back(object_attributes.filename);
   }
 }
 

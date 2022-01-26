@@ -38,6 +38,8 @@
 #include "utils/AWSInitializer.h"
 #include "utils/OptionalUtils.h"
 #include "utils/StringUtils.h"
+#include "utils/ListingStateManager.h"
+#include "utils/gsl.h"
 #include "io/BaseStream.h"
 #include "S3RequestSender.h"
 
@@ -177,11 +179,19 @@ struct ListRequestParameters : public RequestParameters {
   uint64_t min_object_age = 0;
 };
 
-struct ListedObjectAttributes {
+struct ListedObjectAttributes : public minifi::utils::ListedObject {
+  std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
+    return last_modified;
+  }
+
+  std::string getKey() const override {
+    return filename;
+  }
+
   std::string filename;
   std::string etag;
   bool is_latest = false;
-  int64_t last_modified = 0;
+  std::chrono::time_point<std::chrono::system_clock> last_modified;
   int64_t length = 0;
   std::string store_class;
   std::string version;

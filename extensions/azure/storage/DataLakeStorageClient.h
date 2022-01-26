@@ -22,31 +22,49 @@
 #include <string>
 #include <optional>
 #include <memory>
+#include <vector>
+#include <regex>
 
 #include "AzureStorageCredentials.h"
 
 #include "utils/gsl.h"
 #include "io/InputStream.h"
+#include "azure/storage/files/datalake/protocol/datalake_rest_client.hpp"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
+
+SMART_ENUM(EntityTracking,
+  (NONE, "none"),
+  (TIMESTAMPS, "timestamps")
+)
 
 struct AzureDataLakeStorageParameters {
   AzureStorageCredentials credentials;
   std::string file_system_name;
   std::string directory_name;
-  std::string filename;
   std::optional<uint64_t> number_of_retries;
 };
 
-struct PutAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
+struct AzureDataLakeStorageFileOperationParameters : public AzureDataLakeStorageParameters {
+  std::string filename;
+};
+
+struct PutAzureDataLakeStorageParameters : public AzureDataLakeStorageFileOperationParameters {
   bool replace_file = false;
 };
 
-using DeleteAzureDataLakeStorageParameters = AzureDataLakeStorageParameters;
+using DeleteAzureDataLakeStorageParameters = AzureDataLakeStorageFileOperationParameters;
 
-struct FetchAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
+struct FetchAzureDataLakeStorageParameters : public AzureDataLakeStorageFileOperationParameters {
   std::optional<uint64_t> range_start;
   std::optional<uint64_t> range_length;
+};
+
+struct ListAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
+  bool recurse_subdirectories = true;
+  std::optional<std::regex> path_regex;
+  std::optional<std::regex> file_regex;
 };
 
 class DataLakeStorageClient {
@@ -55,6 +73,7 @@ class DataLakeStorageClient {
   virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
   virtual bool deleteFile(const DeleteAzureDataLakeStorageParameters& params) = 0;
   virtual std::unique_ptr<io::InputStream> fetchFile(const FetchAzureDataLakeStorageParameters& params) = 0;
+  virtual std::vector<Azure::Storage::Files::DataLake::Models::PathItem> listDirectory(const ListAzureDataLakeStorageParameters& params) = 0;
   virtual ~DataLakeStorageClient() = default;
 };
 

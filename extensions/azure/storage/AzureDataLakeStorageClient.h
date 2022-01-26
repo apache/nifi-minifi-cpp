@@ -22,6 +22,7 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include <azure/storage/files/datalake.hpp>
 
@@ -64,6 +65,13 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
    */
   std::unique_ptr<io::InputStream> fetchFile(const FetchAzureDataLakeStorageParameters& params) override;
 
+  /**
+   * Lists a directory in Azure Data Lake Storage
+   * @param params Parameters required for connecting and directory acces on Azure
+   * @return The list of paths present in the directory
+   */
+  std::vector<Azure::Storage::Files::DataLake::Models::PathItem> listDirectory(const ListAzureDataLakeStorageParameters& params) override;
+
  private:
   class AzureDataLakeStorageInputStream : public io::InputStream {
    public:
@@ -84,7 +92,8 @@ class AzureDataLakeStorageClient : public DataLakeStorageClient {
   };
 
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string& file_system_name, std::optional<uint64_t> number_of_retries);
-  Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageParameters& params);
+  Azure::Storage::Files::DataLake::DataLakeDirectoryClient getDirectoryClient(const AzureDataLakeStorageParameters& params);
+  Azure::Storage::Files::DataLake::DataLakeFileClient getFileClient(const AzureDataLakeStorageFileOperationParameters& params);
 
   AzureStorageCredentials credentials_;
   std::string file_system_name_;

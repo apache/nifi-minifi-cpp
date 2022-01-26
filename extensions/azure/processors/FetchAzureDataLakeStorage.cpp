@@ -68,7 +68,7 @@ void FetchAzureDataLakeStorage::initialize() {
 std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeStorage::buildFetchParameters(
     core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::FetchAzureDataLakeStorageParameters params;
-  if (!setCommonParameters(params, context, flow_file)) {
+  if (!setFileOperationCommonParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 
@@ -93,7 +93,7 @@ std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeSt
 
 void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session);
-  logger_->log_debug("FetchAzureDataLakeStorage onTrigger");
+  logger_->log_trace("FetchAzureDataLakeStorage onTrigger");
   std::shared_ptr<core::FlowFile> flow_file = session->get();
   if (!flow_file) {
     context->yield();

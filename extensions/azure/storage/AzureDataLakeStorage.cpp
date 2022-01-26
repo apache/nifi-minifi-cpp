@@ -20,10 +20,40 @@
 
 #include "AzureDataLakeStorage.h"
 
+#include <regex>
+#include <string_view>
+
 #include "AzureDataLakeStorageClient.h"
 #include "io/StreamPipe.h"
+#include "utils/file/FileUtils.h"
+#include "utils/StringUtils.h"
+#include "utils/gsl.h"
+#include "utils/GeneralUtils.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
+
+namespace {
+bool matchesPathFilter(std::string_view base_directory, const std::optional<std::regex>& path_regex, std::string path) {
+  gsl_Expects(utils::implies(!base_directory.empty(), minifi::utils::StringUtils::startsWith(path, base_directory)));
+  if (!path_regex) {
+    return true;
+  }
+
+  if (!base_directory.empty()) {
+    path = path.size() == base_directory.size() ? "" : path.substr(base_directory.size() + 1);
+  }
+
+  return std::regex_match(path, *path_regex);
+}
+
+bool matchesFileFilter(const std::optional<std::regex>& file_regex, const std::string& filename) {
+  if (!file_regex) {
+    return true;
+  }
+
+  return std::regex_match(filename, *file_regex);
+}
+}  // namespace
 
 AzureDataLakeStorage::AzureDataLakeStorage(std::unique_ptr<DataLakeStorageClient> data_lake_storage_client)
   : data_lake_storage_client_(data_lake_storage_client ? std::move(data_lake_storage_client) : std::make_unique<AzureDataLakeStorageClient>()) {
@@ -68,6 +98,41 @@ std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLake
     return internal::pipe(result.get(), &stream);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
+    return std::nullopt;
+  }
+}
+
+std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(const ListAzureDataLakeStorageParameters& params) {
+  try {
+    auto list_res = data_lake_storage_client_->listDirectory(params);
+
+    ListDataLakeStorageResult result;
+    for (const auto& azure_element : list_res) {
+      if (azure_element.IsDirectory) {
+        continue;
+      }
+      ListDataLakeStorageElement element;
+      auto [directory, filename] = minifi::utils::file::FileUtils::split_path(azure_element.Name, true /*force_posix*/);
+      if (!directory.empty()) {
+        directory = directory.substr(0, directory.size() - 1);  // Remove ending '/' character
+      }
+
+      if (!matchesPathFilter(params.directory_name, params.path_regex, directory) || !matchesFileFilter(params.file_regex, filename)) {
+        continue;
+      }
+
+      element.filename = filename;
+      element.last_modified = static_cast<std::chrono::system_clock::time_point>(azure_element.LastModified);
+      element.etag = azure_element.ETag;
+      element.length = azure_element.FileSize;
+      element.filesystem = params.file_system_name;
+      element.file_path = azure_element.Name;
+      element.directory = directory;
+      result.push_back(element);
+    }
+    return result;
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while listing directory '%s' of filesystem '%s': %s", params.directory_name, params.file_system_name, ex.what());
     return std::nullopt;
   }
 }

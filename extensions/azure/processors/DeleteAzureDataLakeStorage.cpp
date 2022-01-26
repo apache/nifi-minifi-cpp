@@ -48,7 +48,7 @@ void DeleteAzureDataLakeStorage::initialize() {
 std::optional<storage::DeleteAzureDataLakeStorageParameters> DeleteAzureDataLakeStorage::buildDeleteParameters(
     core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   storage::DeleteAzureDataLakeStorageParameters params;
-  if (!setCommonParameters(params, context, flow_file)) {
+  if (!setFileOperationCommonParameters(params, context, flow_file)) {
     return std::nullopt;
   }
 

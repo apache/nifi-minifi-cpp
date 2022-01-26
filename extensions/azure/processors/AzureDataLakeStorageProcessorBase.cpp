@@ -37,11 +37,6 @@ const core::Property AzureDataLakeStorageProcessorBase::DirectoryName(
                         "If left empty it designates the root directory. The directory will be created if not already existing.")
       ->supportsExpressionLanguage(true)
       ->build());
-const core::Property AzureDataLakeStorageProcessorBase::FileName(
-    core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename in Azure Storage. If left empty the filename attribute will be used by default.")
-      ->supportsExpressionLanguage(true)
-      ->build());
 
 void AzureDataLakeStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   gsl_Expects(context);
@@ -68,12 +63,6 @@ bool AzureDataLakeStorageProcessorBase::setCommonParameters(
   }
 
   context.getProperty(DirectoryName, params.directory_name, flow_file);
-
-  context.getProperty(FileName, params.filename, flow_file);
-  if (params.filename.empty() && (!flow_file->getAttribute("filename", params.filename) || params.filename.empty())) {
-    logger_->log_error("No File Name is set and default object key 'filename' attribute could not be found!");
-    return false;
-  }
 
   return true;
 }
