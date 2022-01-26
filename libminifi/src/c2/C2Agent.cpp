@@ -431,92 +431,105 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
  * to be put into the acknowledgement
  */
 void C2Agent::handle_describe(const C2ContentResponse &resp) {
-  auto reporter = dynamic_cast<state::response::NodeReporter*>(update_sink_);
-  if (resp.name == "metrics") {
+  DescribeOperand operand;
+  try {
+    operand = DescribeOperand::parse(resp.name.c_str());
+  } catch(const std::runtime_error& ex) {
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-    if (reporter != nullptr) {
-      auto iter = resp.operation_arguments.find("metricsClass");
-      std::string metricsClass;
-      if (iter != resp.operation_arguments.end()) {
-        metricsClass = iter->second.to_string();
-      }
-      auto metricsNode = reporter->getMetricsNode(metricsClass);
-      C2Payload metrics(Operation::ACKNOWLEDGE);
-      metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
-      if (metricsNode) {
-        serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
-      }
-      response.addPayload(std::move(metrics));
-    }
-    enqueue_c2_response(std::move(response));
-    return;
-  } else if (resp.name == "configuration") {
-    auto configOptions = prepareConfigurationOptions(resp);
-    enqueue_c2_response(std::move(configOptions));
-    return;
-  } else if (resp.name == "manifest") {
-    C2Payload response(prepareConfigurationOptions(resp));
-    if (reporter != nullptr) {
-      C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, true);
-      agentInfo.setLabel("agentInfo");
-
-      const auto manifest = reporter->getAgentManifest();
-      serializeMetrics(agentInfo, manifest->getName(), manifest->serialize());
-      response.addPayload(std::move(agentInfo));
-    }
-    enqueue_c2_response(std::move(response));
-    return;
-  } else if (resp.name == "jstack") {
-    if (update_sink_->isRunning()) {
-      const std::vector<BackTrace> traces = update_sink_->getTraces();
-      for (const auto &trace : traces) {
-        for (const auto & line : trace.getTraces()) {
-          logger_->log_trace("%s -- %s", trace.getName(), line);
-        }
-      }
-      auto keys = configuration_->getConfiguredKeys();
-      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-      for (const auto &trace : traces) {
-        C2Payload options(Operation::ACKNOWLEDGE, resp.ident, true);
-        options.setLabel(trace.getName());
-        std::string value;
-        for (const auto &line : trace.getTraces()) {
-          C2ContentResponse option(Operation::ACKNOWLEDGE);
-          option.name = line;
-          option.operation_arguments[line] = line;
-          options.addContent(std::move(option));
-        }
-        response.addPayload(std::move(options));
-      }
-      enqueue_c2_response(std::move(response));
-      return;
-    }
-  } else if (resp.name == "corecomponentstate") {
-    C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-    response.setLabel("corecomponentstate");
-    C2Payload states(Operation::ACKNOWLEDGE, resp.ident, true);
-    states.setLabel("corecomponentstate");
-    auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
-    if (state_manager_provider != nullptr) {
-      auto core_component_states = state_manager_provider->getAllCoreComponentStates();
-      for (const auto& core_component_state : core_component_states) {
-        C2Payload state(Operation::ACKNOWLEDGE, resp.ident, true);
-        state.setLabel(core_component_state.first.to_string());
-        for (const auto& kv : core_component_state.second) {
-          C2ContentResponse entry(Operation::ACKNOWLEDGE);
-          entry.name = kv.first;
-          entry.operation_arguments[kv.first] = kv.second;
-          state.addContent(std::move(entry));
-        }
-        states.addPayload(std::move(state));
-      }
-    }
-    response.addPayload(std::move(states));
     enqueue_c2_response(std::move(response));
     return;
   }
-  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-  enqueue_c2_response(std::move(response));
+
+  auto reporter = dynamic_cast<state::response::NodeReporter*>(update_sink_);
+  switch (operand.value()) {
+    case DescribeOperand::METRICS: {
+      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+      if (reporter != nullptr) {
+        auto iter = resp.operation_arguments.find("metricsClass");
+        std::string metricsClass;
+        if (iter != resp.operation_arguments.end()) {
+          metricsClass = iter->second.to_string();
+        }
+        auto metricsNode = reporter->getMetricsNode(metricsClass);
+        C2Payload metrics(Operation::ACKNOWLEDGE);
+        metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
+        if (metricsNode) {
+          serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
+        }
+        response.addPayload(std::move(metrics));
+      }
+      enqueue_c2_response(std::move(response));
+      break;
+    }
+    case DescribeOperand::CONFIGURATION: {
+      auto configOptions = prepareConfigurationOptions(resp);
+      enqueue_c2_response(std::move(configOptions));
+      break;
+    }
+    case DescribeOperand::MANIFEST: {
+      C2Payload response(prepareConfigurationOptions(resp));
+      if (reporter != nullptr) {
+        C2Payload agentInfo(Operation::ACKNOWLEDGE, resp.ident, true);
+        agentInfo.setLabel("agentInfo");
+
+        const auto manifest = reporter->getAgentManifest();
+        serializeMetrics(agentInfo, manifest->getName(), manifest->serialize());
+        response.addPayload(std::move(agentInfo));
+      }
+      enqueue_c2_response(std::move(response));
+      break;
+    }
+    case DescribeOperand::JSTACK: {
+      if (update_sink_->isRunning()) {
+        const std::vector<BackTrace> traces = update_sink_->getTraces();
+        for (const auto &trace : traces) {
+          for (const auto & line : trace.getTraces()) {
+            logger_->log_trace("%s -- %s", trace.getName(), line);
+          }
+        }
+        auto keys = configuration_->getConfiguredKeys();
+        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+        for (const auto &trace : traces) {
+          C2Payload options(Operation::ACKNOWLEDGE, resp.ident, true);
+          options.setLabel(trace.getName());
+          std::string value;
+          for (const auto &line : trace.getTraces()) {
+            C2ContentResponse option(Operation::ACKNOWLEDGE);
+            option.name = line;
+            option.operation_arguments[line] = line;
+            options.addContent(std::move(option));
+          }
+          response.addPayload(std::move(options));
+        }
+        enqueue_c2_response(std::move(response));
+      }
+      break;
+    }
+    case DescribeOperand::CORECOMPONENTSTATE: {
+      C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+      response.setLabel("corecomponentstate");
+      C2Payload states(Operation::ACKNOWLEDGE, resp.ident, true);
+      states.setLabel("corecomponentstate");
+      auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
+      if (state_manager_provider != nullptr) {
+        auto core_component_states = state_manager_provider->getAllCoreComponentStates();
+        for (const auto& core_component_state : core_component_states) {
+          C2Payload state(Operation::ACKNOWLEDGE, resp.ident, true);
+          state.setLabel(core_component_state.first.to_string());
+          for (const auto& kv : core_component_state.second) {
+            C2ContentResponse entry(Operation::ACKNOWLEDGE);
+            entry.name = kv.first;
+            entry.operation_arguments[kv.first] = kv.second;
+            state.addContent(std::move(entry));
+          }
+          states.addPayload(std::move(state));
+        }
+      }
+      response.addPayload(std::move(states));
+      enqueue_c2_response(std::move(response));
+      break;
+    }
+  }
 }
 
 void C2Agent::handle_clear(const C2ContentResponse &resp) {

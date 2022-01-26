@@ -51,6 +51,14 @@ SMART_ENUM(Operation,
   (RESUME, "resume")
 )
 
+SMART_ENUM(DescribeOperand,
+  (METRICS, "metrics"),
+  (CONFIGURATION, "configuration"),
+  (MANIFEST, "manifest"),
+  (JSTACK, "jstack"),
+  (CORECOMPONENTSTATE, "corecomponentstate")
+)
+
 #define PAYLOAD_NO_STATUS 0
 #define PAYLOAD_SUCCESS 1
 #define PAYLOAD_FAILURE 2

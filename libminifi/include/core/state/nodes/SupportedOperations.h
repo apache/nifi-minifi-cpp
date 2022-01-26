@@ -31,6 +31,9 @@ class SupportedOperations : public DeviceInformation {
 
   std::string getName() const override;
   std::vector<SerializedResponseNode> serialize() override;
+
+ private:
+  void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation);
 };
 
 }  // org::apache::nifi::minifi::state::response

@@ -35,6 +35,26 @@ std::string SupportedOperations::getName() const {
   return "supportedOperations";
 }
 
+void SupportedOperations::fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) {
+  switch(operation.value()) {
+    case minifi::c2::Operation::DESCRIBE: {
+      for (const auto& operand_type: minifi::c2::DescribeOperand::values()) {
+        SerializedResponseNode child;
+        child.name = "properties";
+
+        SerializedResponseNode operand;
+        operand.name = "operand";
+        operand.value = operand_type;
+        child.children.push_back(operand);
+        properties.children.push_back(child);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 std::vector<SerializedResponseNode> SupportedOperations::serialize() {
   std::vector<SerializedResponseNode> serialized;
   SerializedResponseNode supported_operation;
@@ -49,7 +69,14 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
     operation_type.name = "type";
     operation_type.value = operation;
 
+    SerializedResponseNode properties;
+    properties.name = "properties";
+    properties.array = true;
+
+    fillProperties(properties, minifi::c2::Operation::parse(operation.c_str()));
+
     child.children.push_back(operation_type);
+    child.children.push_back(properties);
     supported_operation.children.push_back(child);
   }
 

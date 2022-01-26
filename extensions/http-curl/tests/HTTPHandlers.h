@@ -424,6 +424,23 @@ class HeartbeatHandler : public ServerAwareHandler {
       mg_printf(conn, "%s", heartbeat_response.c_str());
   }
 
+  void verifyOperands(const rapidjson::Value& operation_node, minifi::c2::Operation operation) {
+    switch(operation.value()) {
+      case minifi::c2::Operation::DESCRIBE: {
+        std::set<std::string> operands;
+        assert(operation_node.HasMember("properties"));
+        for (const auto& operand : operation_node["properties"].GetArray()) {
+          assert(operand.HasMember("operand"));
+          operands.insert(operand["operand"].GetString());
+        }
+        assert(operands == minifi::c2::DescribeOperand::values());
+        break;
+      }
+      default:
+        break;
+    };
+  }
+
   void verifySupportedOperations(const rapidjson::Document& root) {
     // rapidjson::StringBuffer buffer;
     // buffer.Clear();
@@ -437,11 +454,15 @@ class HeartbeatHandler : public ServerAwareHandler {
 
     std::set<std::string> operations;
     for (const auto& operation : agent_manifest["supportedOperations"].GetArray()) {
-      operation.HasMember("type");
+      assert(operation.HasMember("type"));
       operations.insert(operation["type"].GetString());
+      verifyOperands(operation, minifi::c2::Operation::parse(operation["type"].GetString()));
     }
 
     assert(operations == minifi::c2::Operation::values());
+    // for (const auto& operand : minifi::c2::DescribeOperand::values()) {
+    //   agent_manifest["supportedOperations"][]
+    // }
   }
 
   void verifyJsonHasAgentManifest(const rapidjson::Document& root) {
