@@ -30,7 +30,7 @@ class DescribeManifestHandler: public HeartbeatHandler {
   }
 
   void handleAcknowledge(const rapidjson::Document& root) override {
-    verifyJsonHasAgentManifest(root);
+    verifyJsonHasAgentManifest(root, {"InvokeHTTP", "LogAttribute"});
   }
 };
 

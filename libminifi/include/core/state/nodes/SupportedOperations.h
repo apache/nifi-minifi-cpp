@@ -18,6 +18,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <memory>
 
 #include "MetricsBase.h"
 #include "c2/C2Payload.h"
@@ -31,23 +33,22 @@ class SupportedOperations : public DeviceInformation {
 
   std::string getName() const override;
   std::vector<SerializedResponseNode> serialize() override;
+  void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
+    monitor_ = monitor;
+  }
 
  private:
   template<typename T>
-  void serializeProperty(SerializedResponseNode& properties) {
+  static void serializeProperty(SerializedResponseNode& properties) {
     for (const auto& operand_type: T::values()) {
-      SerializedResponseNode child;
-      child.name = "properties";
-
-      SerializedResponseNode operand;
-      operand.name = "operand";
-      operand.value = operand_type;
-      child.children.push_back(operand);
-      properties.children.push_back(child);
+      addProperty(properties, operand_type);
     }
   }
 
-  void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation);
+  static void addProperty(SerializedResponseNode& properties, const std::string& operand);
+  void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const;
+
+  std::shared_ptr<state::StateMonitor> monitor_;
 };
 
-}  // org::apache::nifi::minifi::state::response
+}  // namespace org::apache::nifi::minifi::state::response

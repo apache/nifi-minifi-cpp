@@ -601,12 +601,20 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
+  AgentManifest(std::string name, const utils::Identifier& uuid)
+    : DeviceInformation(std::move(name), uuid) {
+  }
+
   explicit AgentManifest(std::string name)
-      : DeviceInformation(std::move(name)) {
+    : DeviceInformation(std::move(name)) {
   }
 
   std::string getName() const {
     return "agentManifest";
+  }
+
+  void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
+    monitor_ = monitor;
   }
 
   std::vector<SerializedResponseNode> serialize() {
@@ -674,12 +682,16 @@ class AgentManifest : public DeviceInformation {
       }
 
       SupportedOperations supported_operations("supportedOperations");
+      supported_operations.setStateMonitor(monitor_);
       for (const auto& operation : supported_operations.serialize()) {
         serialized.push_back(operation);
       }
     }
     return serialized;
   }
+
+ private:
+  std::shared_ptr<state::StateMonitor> monitor_;
 };
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
@@ -723,7 +735,9 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   std::vector<SerializedResponseNode> getAgentManifest() const {
     SerializedResponseNode agentManifest;
     agentManifest.name = "agentManifest";
-    agentManifest.children = AgentManifest{"manifest"}.serialize();
+    AgentManifest manifest{"manifest"};
+    manifest.setStateMonitor(monitor_);
+    agentManifest.children = manifest.serialize();
     return std::vector<SerializedResponseNode>{ agentManifest };
   }
 

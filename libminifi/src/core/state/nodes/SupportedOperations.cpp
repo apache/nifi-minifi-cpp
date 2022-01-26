@@ -35,8 +35,19 @@ std::string SupportedOperations::getName() const {
   return "supportedOperations";
 }
 
-void SupportedOperations::fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) {
-  switch(operation.value()) {
+void SupportedOperations::addProperty(SerializedResponseNode& properties, const std::string& operand) {
+  SerializedResponseNode child;
+  child.name = "properties";
+
+  SerializedResponseNode operand_node;
+  operand_node.name = "operand";
+  operand_node.value = operand;
+  child.children.push_back(operand_node);
+  properties.children.push_back(child);
+}
+
+void SupportedOperations::fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const {
+  switch (operation.value()) {
     case minifi::c2::Operation::DESCRIBE: {
       serializeProperty<minifi::c2::DescribeOperand>(properties);
       break;
@@ -51,6 +62,16 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
     }
     case minifi::c2::Operation::CLEAR: {
       serializeProperty<minifi::c2::ClearOperand>(properties);
+      break;
+    }
+    case minifi::c2::Operation::START:
+    case minifi::c2::Operation::STOP: {
+      addProperty(properties, "c2");
+      if (monitor_) {
+        for (const auto& component: monitor_->getAllComponents()) {
+          addProperty(properties, component->getComponentName());
+        }
+      }
       break;
     }
     default:
@@ -89,4 +110,4 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
 
 REGISTER_RESOURCE(SupportedOperations, "Node part of an AST that defines the supported C2 operations in the Agent Manifest.");
 
-}  // org::apache::nifi::minifi::state::response
+}  // namespace org::apache::nifi::minifi::state::response

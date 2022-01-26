@@ -435,7 +435,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
     return;
   }
 
-  switch(operand.value()) {
+  switch (operand.value()) {
     case ClearOperand::CONNECTION: {
       for (const auto& connection : resp.operation_arguments) {
         logger_->log_debug("Clearing connection %s", connection.second.to_string());
@@ -632,7 +632,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   }
 
   // we've been told to update something
-  switch(operand.value()) {
+  switch (operand.value()) {
     case UpdateOperand::CONFIGURATION: {
       handleConfigurationUpdate(resp);
       break;
@@ -731,7 +731,7 @@ void C2Agent::handle_transfer(const C2ContentResponse &resp) {
     throw C2TransferError("Unknown operand '" + resp.name + "'");
   }
 
-  switch(operand.value()) {
+  switch (operand.value()) {
     case TransferOperand::DEBUG: {
       auto target_it = resp.operation_arguments.find("target");
       if (target_it == resp.operation_arguments.end()) {
