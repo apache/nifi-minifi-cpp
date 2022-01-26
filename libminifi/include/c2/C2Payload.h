@@ -59,6 +59,12 @@ SMART_ENUM(DescribeOperand,
   (CORECOMPONENTSTATE, "corecomponentstate")
 )
 
+SMART_ENUM(UpdateOperand,
+  (CONFIGURATION, "configuration"),
+  (PROPERTIES, "properties"),
+  (C2, "c2")
+)
+
 #define PAYLOAD_NO_STATUS 0
 #define PAYLOAD_SUCCESS 1
 #define PAYLOAD_FAILURE 2

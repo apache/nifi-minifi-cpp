@@ -388,15 +388,20 @@ std::string readPayload(struct mg_connection *conn) {
 
 class HeartbeatHandler : public ServerAwareHandler {
  public:
-  void sendStopOperation(struct mg_connection *conn) {
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              resp.length());
-    mg_printf(conn, "%s", resp.c_str());
+  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
+    verifyJsonHasAgentManifest(root);
   }
 
+  virtual void handleAcknowledge(const rapidjson::Document&) {
+  }
+
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
+    verify(conn);
+    sendStopOperation(conn);
+    return true;
+  }
+
+ protected:
   void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn,
       const std::unordered_map<std::string, std::string>& args = {}) {
     std::string resp_args;
@@ -422,47 +427,6 @@ class HeartbeatHandler : public ServerAwareHandler {
                 "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
                 heartbeat_response.length());
       mg_printf(conn, "%s", heartbeat_response.c_str());
-  }
-
-  void verifyOperands(const rapidjson::Value& operation_node, minifi::c2::Operation operation) {
-    switch(operation.value()) {
-      case minifi::c2::Operation::DESCRIBE: {
-        std::set<std::string> operands;
-        assert(operation_node.HasMember("properties"));
-        for (const auto& operand : operation_node["properties"].GetArray()) {
-          assert(operand.HasMember("operand"));
-          operands.insert(operand["operand"].GetString());
-        }
-        assert(operands == minifi::c2::DescribeOperand::values());
-        break;
-      }
-      default:
-        break;
-    };
-  }
-
-  void verifySupportedOperations(const rapidjson::Document& root) {
-    // rapidjson::StringBuffer buffer;
-    // buffer.Clear();
-    // rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    // root.Accept(writer);
-    // auto str = strdup(buffer.GetString());
-    // (void)str;
-
-    auto& agent_manifest = root["agentInfo"]["agentManifest"];
-    assert(agent_manifest.HasMember("supportedOperations"));
-
-    std::set<std::string> operations;
-    for (const auto& operation : agent_manifest["supportedOperations"].GetArray()) {
-      assert(operation.HasMember("type"));
-      operations.insert(operation["type"].GetString());
-      verifyOperands(operation, minifi::c2::Operation::parse(operation["type"].GetString()));
-    }
-
-    assert(operations == minifi::c2::Operation::values());
-    // for (const auto& operand : minifi::c2::DescribeOperand::values()) {
-    //   agent_manifest["supportedOperations"][]
-    // }
   }
 
   void verifyJsonHasAgentManifest(const rapidjson::Document& root) {
@@ -501,11 +465,61 @@ class HeartbeatHandler : public ServerAwareHandler {
     verifySupportedOperations(root);
   }
 
-  virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
-    verifyJsonHasAgentManifest(root);
+ private:
+  void sendStopOperation(struct mg_connection *conn) {
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
+        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              resp.length());
+    mg_printf(conn, "%s", resp.c_str());
   }
 
-  virtual void handleAcknowledge(const rapidjson::Document&) {
+  template<typename T>
+  void verifyOperands(const rapidjson::Value& operation_node) {
+    std::set<std::string> operands;
+    assert(operation_node.HasMember("properties"));
+    for (const auto& operand : operation_node["properties"].GetArray()) {
+      assert(operand.HasMember("operand"));
+      operands.insert(operand["operand"].GetString());
+    }
+    assert(operands == T::values());
+  }
+
+  void verifyProperties(const rapidjson::Value& operation_node, minifi::c2::Operation operation) {
+    switch(operation.value()) {
+      case minifi::c2::Operation::DESCRIBE: {
+        verifyOperands<minifi::c2::DescribeOperand>(operation_node);
+        break;
+      }
+      case minifi::c2::Operation::UPDATE: {
+        verifyOperands<minifi::c2::UpdateOperand>(operation_node);
+        break;
+      }
+      default:
+        break;
+    };
+  }
+
+  void verifySupportedOperations(const rapidjson::Document& root) {
+    // rapidjson::StringBuffer buffer;
+    // buffer.Clear();
+    // rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    // root.Accept(writer);
+    // auto str = strdup(buffer.GetString());
+    // (void)str;
+
+    auto& agent_manifest = root["agentInfo"]["agentManifest"];
+    assert(agent_manifest.HasMember("supportedOperations"));
+
+    std::set<std::string> operations;
+    for (const auto& operation_node : agent_manifest["supportedOperations"].GetArray()) {
+      assert(operation_node.HasMember("type"));
+      operations.insert(operation_node["type"].GetString());
+      verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString()));
+    }
+
+    assert(operations == minifi::c2::Operation::values());
   }
 
   void verify(struct mg_connection *conn) {
@@ -528,12 +542,6 @@ class HeartbeatHandler : public ServerAwareHandler {
         throw std::runtime_error("operation not supported " + operation);
       }
     }
-  }
-
-  bool handlePost(CivetServer *, struct mg_connection *conn) override {
-    verify(conn);
-    sendStopOperation(conn);
-    return true;
   }
 };
 
