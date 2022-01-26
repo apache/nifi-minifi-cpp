@@ -33,6 +33,20 @@ class SupportedOperations : public DeviceInformation {
   std::vector<SerializedResponseNode> serialize() override;
 
  private:
+  template<typename T>
+  void serializeProperty(SerializedResponseNode& properties) {
+    for (const auto& operand_type: T::values()) {
+      SerializedResponseNode child;
+      child.name = "properties";
+
+      SerializedResponseNode operand;
+      operand.name = "operand";
+      operand.value = operand_type;
+      child.children.push_back(operand);
+      properties.children.push_back(child);
+    }
+  }
+
   void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation);
 };
 

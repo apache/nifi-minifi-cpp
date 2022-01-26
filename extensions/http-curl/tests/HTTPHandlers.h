@@ -496,6 +496,10 @@ class HeartbeatHandler : public ServerAwareHandler {
         verifyOperands<minifi::c2::UpdateOperand>(operation_node);
         break;
       }
+      case minifi::c2::Operation::TRANSFER: {
+        verifyOperands<minifi::c2::TransferOperand>(operation_node);
+        break;
+      }
       default:
         break;
     };

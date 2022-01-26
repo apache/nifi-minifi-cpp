@@ -65,6 +65,10 @@ SMART_ENUM(UpdateOperand,
   (C2, "c2")
 )
 
+SMART_ENUM(TransferOperand,
+  (DEBUG, "debug")
+)
+
 #define PAYLOAD_NO_STATUS 0
 #define PAYLOAD_SUCCESS 1
 #define PAYLOAD_FAILURE 2

@@ -434,7 +434,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
   DescribeOperand operand;
   try {
     operand = DescribeOperand::parse(resp.name.c_str());
-  } catch(const std::runtime_error& ex) {
+  } catch(const std::runtime_error&) {
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
     enqueue_c2_response(std::move(response));
     return;
@@ -573,7 +573,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   UpdateOperand operand;
   try {
     operand = UpdateOperand::parse(resp.name.c_str());
-  } catch(const std::runtime_error& ex) {
+  } catch(const std::runtime_error&) {
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NOT_APPLIED, resp.ident, true);
     enqueue_c2_response(std::move(response));
     return;
@@ -672,23 +672,32 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
 }
 
 void C2Agent::handle_transfer(const C2ContentResponse &resp) {
-  if (resp.name != "debug") {
+  TransferOperand operand;
+  try {
+    operand = TransferOperand::parse(resp.name.c_str());
+  } catch(const std::runtime_error&) {
     throw C2TransferError("Unknown operand '" + resp.name + "'");
   }
-  auto target_it = resp.operation_arguments.find("target");
-  if (target_it == resp.operation_arguments.end()) {
-    throw C2DebugBundleError("Missing argument for debug operation: 'target'");
-  }
-  std::optional<std::string> url = resolveUrl(target_it->second.to_string());
-  if (!url) {
-    throw C2DebugBundleError("Invalid url");
-  }
-  std::map<std::string, std::unique_ptr<io::InputStream>> files = update_sink_->getDebugInfo();
 
-  auto bundle = bundleDebugInfo(files);
-  C2Payload &&response = protocol_.load()->consumePayload(url.value(), bundle, TRANSMIT, false);
-  if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
-    throw C2DebugBundleError("Error while uploading");
+  switch(operand.value()) {
+    case TransferOperand::DEBUG: {
+      auto target_it = resp.operation_arguments.find("target");
+      if (target_it == resp.operation_arguments.end()) {
+        throw C2DebugBundleError("Missing argument for debug operation: 'target'");
+      }
+      std::optional<std::string> url = resolveUrl(target_it->second.to_string());
+      if (!url) {
+        throw C2DebugBundleError("Invalid url");
+      }
+      std::map<std::string, std::unique_ptr<io::InputStream>> files = update_sink_->getDebugInfo();
+
+      auto bundle = bundleDebugInfo(files);
+      C2Payload &&response = protocol_.load()->consumePayload(url.value(), bundle, TRANSMIT, false);
+      if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
+        throw C2DebugBundleError("Error while uploading");
+      }
+      break;
+    }
   }
 }
 
