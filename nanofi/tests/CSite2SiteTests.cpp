@@ -142,9 +142,8 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   // just consume handshake data
   bool found_codec = false;
   size_t read_len = 0;
+  std::array<std::byte, 1000> handshake_data{};
   while (!found_codec) {
-    // TODO(szaszm): this buffer usage doesn't make any sense to me, maybe bug?
-    std::array<std::byte, 1000> handshake_data{};
     const auto actual_len = stream->read(gsl::make_span(handshake_data).subspan(read_len));
     if(actual_len == 0 || minifi::io::isError(actual_len)) {
       continue;
