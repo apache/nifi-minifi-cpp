@@ -26,14 +26,14 @@
 namespace org::apache::nifi::minifi {
 namespace detail {
 template<typename T>
-concept emptiness_checkable = requires(T t) {
-  { t.empty() };
-};
+concept emptiness_checkable = requires(T t) {  // NOLINT
+  { t.empty() };  // NOLINT
+};  // NOLINT
 
 template<typename T>
-concept size_checkable = requires(T t) {
-  { t.size() };
-};
+concept size_checkable = requires(T t) {  // NOLINT
+  { t.size() };  // NOLINT
+};  // NOLINT
 
 template<typename T>
 concept only_size_checkable = !emptiness_checkable<T> && size_checkable<T>;
@@ -74,7 +74,7 @@ static bool IsNullOrEmpty(detail::not_size_or_emptiness_checkable auto* object) 
 * Determines if the variable is null or ::empty()
 */
 template<typename T>
-requires (!detail::emptiness_checkable<T>)
+requires (!detail::emptiness_checkable<T>)  // NOLINT
 static bool IsNullOrEmpty(std::shared_ptr<T> object) {
   return (nullptr == object || nullptr == object.get());
 }
