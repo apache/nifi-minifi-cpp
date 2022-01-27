@@ -66,7 +66,7 @@ TEST_CASE("Test Required", "[required]") {
 }
 
 TEST_CASE("Test Valid Regex", "[validRegex]") {
-  minifi::state::response::ComponentManifest manifest("minifi-system");
+  minifi::state::response::ComponentManifest manifest("minifi-test-processors");
   auto serialized = manifest.serialize();
   REQUIRE(serialized.size() > 0);
   const auto &resp = serialized[0];

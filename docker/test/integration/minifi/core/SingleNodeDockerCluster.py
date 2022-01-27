@@ -68,6 +68,12 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, NifiContainer(self.data_directories["nifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'minifi-cpp':
             return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+        elif engine == 'transient-minifi':
+            if command is None:
+                custom_command = ["/bin/sh", "-c", "cp /tmp/minifi_config/config.yml " + MinifiContainer.MINIFI_ROOT + "/conf && /opt/minifi/minifi-current/bin/minifi.sh start && sleep 10 && /opt/minifi/minifi-current/bin/minifi.sh stop && sleep 100"]
+            else:
+                custom_command = command
+            return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, custom_command))
         elif engine == 'kafka-broker':
             if 'zookeeper' not in self.containers:
                 self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store, command))

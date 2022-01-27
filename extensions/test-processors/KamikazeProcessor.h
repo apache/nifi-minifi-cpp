@@ -25,11 +25,7 @@
 
 #pragma once
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class KamikazeProcessor : public core::Processor {
  public:
@@ -60,8 +56,4 @@ class KamikazeProcessor : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<KamikazeProcessor>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

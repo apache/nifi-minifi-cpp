@@ -30,10 +30,9 @@ def step_impl(context, directory):
 
 
 # MiNiFi cluster setups
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
-def step_impl(context, processor_type, processor_name, property, property_value, minifi_container_name):
-    container = context.test.acquire_container(minifi_container_name)
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+def step_impl(context, processor_type, processor_name, property, property_value, minifi_container_name, engine_name):
+    container = context.test.acquire_container(minifi_container_name, engine_name)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
     processor.set_name(processor_name)
     if property:
@@ -43,6 +42,11 @@ def step_impl(context, processor_type, processor_name, property, property_value,
     if not container.get_start_nodes():
         container.add_start_node(processor)
 
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, processor_name, property, property_value, minifi_container_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"".
+        format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name=minifi_container_name, processor_name=processor_name, engine_name='minifi-cpp'))
 
 @given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
 @given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
@@ -63,15 +67,21 @@ def step_impl(context, processor_type, property, property_value, processor_name)
                           format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow", processor_name=processor_name))
 
 
-@given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow")
-def step_impl(context, processor_type, processor_name, minifi_container_name):
-    container = context.test.acquire_container(minifi_container_name)
+@given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"")
+def step_impl(context, processor_type, processor_name, minifi_container_name, engine_name):
+    container = context.test.acquire_container(minifi_container_name, engine_name)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
     processor.set_name(processor_name)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
     if not container.get_start_nodes():
         container.add_start_node(processor)
+
+
+@given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, processor_name, minifi_container_name):
+    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow with engine \"{engine_name}\"".
+                          format(processor_type=processor_type, processor_name=processor_name, minifi_container_name="minifi-cpp-flow", engine_name='minifi-cpp'))
 
 
 @given("a {processor_type} processor with the name \"{processor_name}\"")
