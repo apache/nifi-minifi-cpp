@@ -21,6 +21,7 @@
 #include <string>
 
 #include "ConfigFileEncryptor.h"
+#include "properties/Configuration.h"
 
 #include "TestBase.h"
 #include "Catch.h"
@@ -76,13 +77,13 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
 
   SECTION("default properties") {
     ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-    std::string original_password = test_file.getValue("nifi.rest.api.password").value();
+    std::string original_password = test_file.getValue(org::apache::nifi::minifi::Configuration::nifi_rest_api_password).value();
 
     uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
     REQUIRE(num_properties_encrypted == 1);
     REQUIRE(test_file.size() == 102);
-    REQUIRE(check_encryption(test_file, "nifi.rest.api.password", original_password.length()));
+    REQUIRE(check_encryption(test_file, org::apache::nifi::minifi::Configuration::nifi_rest_api_password, original_password.length()));
 
     SECTION("calling encryptSensitiveProperties a second time does nothing") {
       ConfigFile test_file_copy = test_file;
@@ -94,7 +95,7 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
     }
 
     SECTION("if you reset the password, it will get encrypted again") {
-      test_file.update("nifi.rest.api.password", original_password);
+      test_file.update(org::apache::nifi::minifi::Configuration::nifi_rest_api_password, original_password);
 
       SECTION("remove the .protected property") {
         int num_lines_removed = test_file.erase("nifi.rest.api.password.protected");
@@ -110,7 +111,7 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
       uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
       REQUIRE(num_properties_encrypted == 1);
-      REQUIRE(check_encryption(test_file, "nifi.rest.api.password", original_password.length()));
+      REQUIRE(check_encryption(test_file, org::apache::nifi::minifi::Configuration::nifi_rest_api_password, original_password.length()));
     }
   }
 
@@ -118,19 +119,19 @@ TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-
     ConfigFile test_file{std::ifstream{"resources/with-additional-sensitive-props.minifi.properties"}};
     size_t original_file_size = test_file.size();
 
-    std::string original_c2_enable = test_file.getValue("nifi.c2.enable").value();
-    std::string original_flow_config_file = test_file.getValue("nifi.flow.configuration.file").value();
-    std::string original_password = test_file.getValue("nifi.rest.api.password").value();
-    std::string original_pass_phrase = test_file.getValue("nifi.security.client.pass.phrase").value();
+    std::string original_c2_enable = test_file.getValue(org::apache::nifi::minifi::Configuration::nifi_c2_enable).value();
+    std::string original_flow_config_file = test_file.getValue(org::apache::nifi::minifi::Configuration::nifi_flow_configuration_file).value();
+    std::string original_password = test_file.getValue(org::apache::nifi::minifi::Configuration::nifi_rest_api_password).value();
+    std::string original_pass_phrase = test_file.getValue(org::apache::nifi::minifi::Configuration::nifi_security_client_pass_phrase).value();
 
     uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(test_file, KEY);
 
     REQUIRE(num_properties_encrypted == 4);
     REQUIRE(test_file.size() == original_file_size + 4);
 
-    REQUIRE(check_encryption(test_file, "nifi.c2.enable", original_c2_enable.length()));
-    REQUIRE(check_encryption(test_file, "nifi.flow.configuration.file", original_flow_config_file.length()));
-    REQUIRE(check_encryption(test_file, "nifi.rest.api.password", original_password.length()));
-    REQUIRE(check_encryption(test_file, "nifi.security.client.pass.phrase", original_pass_phrase.length()));
+    REQUIRE(check_encryption(test_file, org::apache::nifi::minifi::Configuration::nifi_c2_enable, original_c2_enable.length()));
+    REQUIRE(check_encryption(test_file, org::apache::nifi::minifi::Configuration::nifi_flow_configuration_file, original_flow_config_file.length()));
+    REQUIRE(check_encryption(test_file, org::apache::nifi::minifi::Configuration::nifi_rest_api_password, original_password.length()));
+    REQUIRE(check_encryption(test_file, org::apache::nifi::minifi::Configuration::nifi_security_client_pass_phrase, original_pass_phrase.length()));
   }
 }

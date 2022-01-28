@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include <string>
 #include <mutex>
+#include <vector>
+
 #include "properties/Properties.h"
 #include "utils/OptionalUtils.h"
 
@@ -27,12 +28,19 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
+namespace core {
+  struct ConfigurationProperty;
+}
+
 // TODO(adebreceni): eliminate this class in a separate PR
 class Configuration : public Properties {
  public:
   Configuration() : Properties("MiNiFi configuration") {}
 
+  static constexpr const char *nifi_volatile_repository_options = "nifi.volatile.repository.options.";
+
   // nifi.flow.configuration.file
+  static constexpr const char *nifi_version = "nifi.version";
   static constexpr const char *nifi_default_directory = "nifi.default.directory";
   static constexpr const char *nifi_flow_configuration_file = "nifi.flow.configuration.file";
   static constexpr const char *nifi_flow_configuration_encrypt = "nifi.flow.configuration.encrypt";
@@ -50,8 +58,14 @@ class Configuration : public Properties {
   static constexpr const char *nifi_configuration_class_name = "nifi.flow.configuration.class.name";
   static constexpr const char *nifi_flow_repository_class_name = "nifi.flowfile.repository.class.name";
   static constexpr const char *nifi_content_repository_class_name = "nifi.content.repository.class.name";
-  static constexpr const char *nifi_volatile_repository_options = "nifi.volatile.repository.options.";
   static constexpr const char *nifi_provenance_repository_class_name = "nifi.provenance.repository.class.name";
+  static constexpr const char *nifi_volatile_repository_options_flowfile_max_count = "nifi.volatile.repository.options.flowfile.max.count";
+  static constexpr const char *nifi_volatile_repository_options_flowfile_max_bytes = "nifi.volatile.repository.options.flowfile.max.bytes";
+  static constexpr const char *nifi_volatile_repository_options_provenance_max_count = "nifi.volatile.repository.options.provenance.max.count";
+  static constexpr const char *nifi_volatile_repository_options_provenance_max_bytes = "nifi.volatile.repository.options.provenance.max.bytes";
+  static constexpr const char *nifi_volatile_repository_options_content_max_count = "nifi.volatile.repository.options.content.max.count";
+  static constexpr const char *nifi_volatile_repository_options_content_max_bytes = "nifi.volatile.repository.options.content.max.bytes";
+  static constexpr const char *nifi_volatile_repository_options_content_minimal_locking = "nifi.volatile.repository.options.content.minimal.locking";
   static constexpr const char *nifi_server_port = "nifi.server.port";
   static constexpr const char *nifi_server_report_interval = "nifi.server.report.interval";
   static constexpr const char *nifi_provenance_repository_max_storage_size = "nifi.provenance.repository.max.storage.size";
@@ -63,7 +77,12 @@ class Configuration : public Properties {
   static constexpr const char *nifi_dbcontent_repository_directory_default = "nifi.database.content.repository.directory.default";
   static constexpr const char *nifi_remote_input_secure = "nifi.remote.input.secure";
   static constexpr const char *nifi_remote_input_http = "nifi.remote.input.http.enabled";
+  static constexpr const char *nifi_remote_input_socket_port = "nifi.remote.input.socket.port";
   static constexpr const char *nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
+  static constexpr const char *nifi_sensitive_props_additional_keys = "nifi.sensitive.props.additional.keys";
+  static constexpr const char *nifi_python_processor_dir = "nifi.python.processor.dir";
+  static constexpr const char *nifi_extension_path = "nifi.extension.path";
+
   // site2site security config
   static constexpr const char *nifi_security_client_certificate = "nifi.security.client.certificate";
   static constexpr const char *nifi_security_client_private_key = "nifi.security.client.private.key";
@@ -86,6 +105,27 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_flow_url = "nifi.c2.flow.url";
   static constexpr const char *nifi_c2_flow_base_url = "nifi.c2.flow.base.url";
   static constexpr const char *nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
+  static constexpr const char *nifi_c2_agent_heartbeat_period = "nifi.c2.agent.heartbeat.period";
+  static constexpr const char *nifi_c2_root_classes = "nifi.c2.root.classes";
+  static constexpr const char *nifi_c2_agent_class = "nifi.c2.agent.class";
+  static constexpr const char *nifi_c2_agent_heartbeat_reporter_classes = "nifi.c2.agent.heartbeat.reporter.classes";
+  static constexpr const char *nifi_c2_rest_listener_port = "nifi.c2.rest.listener.port";
+  static constexpr const char *nifi_c2_rest_listener_cacert = "nifi.c2.rest.listener.cacert";
+  static constexpr const char *nifi_c2_agent_coap_host = "nifi.c2.agent.coap.host";
+  static constexpr const char *nifi_c2_agent_coap_port = "nifi.c2.agent.coap.port";
+  static constexpr const char *nifi_c2_coap_connector_service = "nifi.c2.coap.connector.service";
+  static constexpr const char *nifi_c2_agent_protocol_class = "nifi.c2.agent.protocol.class";
+  static constexpr const char *nifi_c2_rest_url = "nifi.c2.rest.url";
+  static constexpr const char *nifi_c2_rest_url_ack = "nifi.c2.rest.url.ack";
+  static constexpr const char *nifi_c2_rest_ssl_context_service = "nifi.c2.rest.ssl.context.service";
+  static constexpr const char *nifi_c2_rest_listener_heartbeat_rooturi = "nifi.c2.rest.listener.heartbeat.rooturi";
+  static constexpr const char *nifi_c2_rest_heartbeat_minimize_updates = "nifi.c2.rest.heartbeat.minimize.updates";
+  static constexpr const char *nifi_c2_mqtt_connector_service = "nifi.c2.mqtt.connector.service";
+  static constexpr const char *nifi_c2_mqtt_heartbeat_topic = "nifi.c2.mqtt.heartbeat.topic";
+  static constexpr const char *nifi_c2_mqtt_update_topic = "nifi.c2.mqtt.update.topic";
+  static constexpr const char *nifi_c2_agent_identifier = "nifi.c2.agent.identifier";
+  static constexpr const char *nifi_c2_agent_trigger_classes = "nifi.c2.agent.trigger.classes";
+  static constexpr const char *nifi_c2_root_class_definitions = "nifi.c2.root.class.definitions";
 
   // state management options
   static constexpr const char *nifi_state_management_provider_local = "nifi.state.management.provider.local";
@@ -99,6 +139,14 @@ class Configuration : public Properties {
   static constexpr const char *minifi_disk_space_watchdog_interval = "minifi.disk.space.watchdog.interval";
   static constexpr const char *minifi_disk_space_watchdog_stop_threshold = "minifi.disk.space.watchdog.stop.threshold";
   static constexpr const char *minifi_disk_space_watchdog_restart_threshold = "minifi.disk.space.watchdog.restart.threshold";
+
+  // JNI options
+  static constexpr const char *nifi_framework_dir = "nifi.framework.dir";
+  static constexpr const char *nifi_jvm_options = "nifi.jvm.options";
+  static constexpr const char *nifi_nar_directory = "nifi.nar.directory";
+  static constexpr const char *nifi_nar_deploy_directory = "nifi.nar.deploy.directory";
+
+  static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
 };
 
 }  // namespace minifi

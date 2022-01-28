@@ -26,6 +26,7 @@
 #include <limits>
 #include "utils/file/FileUtils.h"
 #include "core/Resource.h"
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -43,8 +44,8 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
   // base URL when one is not specified.
   if (nullptr != configure) {
     std::string update_str, ssl_context_service_str;
-    configure->get("nifi.c2.rest.url", "c2.rest.url", rest_uri_);
-    configure->get("nifi.c2.rest.url.ack", "c2.rest.url.ack", ack_uri_);
+    configure->get(minifi::Configuration::nifi_c2_rest_url, "c2.rest.url", rest_uri_);
+    configure->get(minifi::Configuration::nifi_c2_rest_url_ack, "c2.rest.url.ack", ack_uri_);
     if (configure->get("nifi.c2.rest.ssl.context.service", "c2.rest.ssl.context.service", ssl_context_service_str)) {
       auto service = controller->getControllerService(ssl_context_service_str);
       if (nullptr != service) {
@@ -74,8 +75,8 @@ C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction directi
 
 void RESTSender::update(const std::shared_ptr<Configure> &configure) {
   std::string url;
-  configure->get("nifi.c2.rest.url", "c2.rest.url", url);
-  configure->get("nifi.c2.rest.url.ack", "c2.rest.url.ack", url);
+  configure->get(minifi::Configuration::nifi_c2_rest_url, "c2.rest.url", url);
+  configure->get(minifi::Configuration::nifi_c2_rest_url_ack, "c2.rest.url.ack", url);
 }
 
 void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string &type, const std::string &url) {

@@ -31,6 +31,7 @@
 #include <typeindex>
 #include <utility>
 #include <vector>
+#include <string_view>
 
 #include "CachedValueValidator.h"
 #include "core/Core.h"
@@ -465,6 +466,16 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
   std::shared_ptr<PropertyBuilder> builder_;
 
   friend class PropertyBuilder;
+};
+
+struct ConfigurationProperty {
+  ConfigurationProperty(std::string_view name_, const gsl::not_null<std::shared_ptr<PropertyValidator>>& validator_ = StandardValidators::get().VALID_VALIDATOR)
+    : name(name_),
+      validator(validator_) {
+  }
+
+  std::string_view name;
+  gsl::not_null<std::shared_ptr<PropertyValidator>> validator;
 };
 
 }  // namespace core

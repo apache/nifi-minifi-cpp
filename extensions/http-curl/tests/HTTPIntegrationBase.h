@@ -29,6 +29,7 @@
 #include "Catch.h"
 #include "utils/IntegrationTestUtils.h"
 #include "TestServer.h"
+#include "properties/Configuration.h"
 
 int log_message(const struct mg_connection* /*conn*/, const char *message) {
   puts(message);
@@ -64,7 +65,7 @@ class HTTPIntegrationBase : public IntegrationBase {
 
   std::string getC2RestUrl() const {
     std::string c2_rest_url;
-    configuration->get("nifi.c2.rest.url", c2_rest_url);
+    configuration->get(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url, c2_rest_url);
     return c2_rest_url;
   }
 
@@ -107,8 +108,8 @@ void HTTPIntegrationBase::setUrl(const std::string &url, ServerAwareHandler *han
     }
   }
   std::string c2_url = std::string("http") + (secure ? "s" : "") + "://localhost:" + getWebPort() + url_path;
-  configuration->set("nifi.c2.rest.url", c2_url);
-  configuration->set("nifi.c2.rest.url.ack", c2_url);
+  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url, c2_url);
+  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url_ack, c2_url);
 }
 
 void HTTPIntegrationBase::setC2Url(const std::string &heartbeat_path, const std::string &acknowledge_path) {
@@ -117,8 +118,8 @@ void HTTPIntegrationBase::setC2Url(const std::string &heartbeat_path, const std:
   }
   bool secure = port.back() == 's';
   std::string base = std::string("http") + (secure ? "s" : "") + "://localhost:" + getWebPort();
-  configuration->set("nifi.c2.rest.url", base + heartbeat_path);
-  configuration->set("nifi.c2.rest.url.ack", base + acknowledge_path);
+  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url, base + heartbeat_path);
+  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url_ack, base + acknowledge_path);
 }
 
 class VerifyC2Base : public HTTPIntegrationBase {
@@ -130,11 +131,11 @@ class VerifyC2Base : public HTTPIntegrationBase {
   }
 
   void configureC2() override {
-    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
-    configuration->set("nifi.c2.enable", "true");
-    configuration->set("nifi.c2.agent.class", "test");
-    configuration->set("nifi.c2.agent.heartbeat.period", "1000");
-    configuration->set("nifi.c2.root.classes", "DeviceInfoNode,AgentInformation,FlowInformation");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "1000");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_root_classes, "DeviceInfoNode,AgentInformation,FlowInformation");
   }
 
   void cleanup() override {
@@ -153,7 +154,7 @@ class VerifyC2Describe : public VerifyC2Base {
   }
 
   void configureFullHeartbeat() override {
-    configuration->set("nifi.c2.full.heartbeat", "false");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_full_heartbeat, "false");
   }
 
   void runAssertions() override {
@@ -177,10 +178,10 @@ class VerifyC2Update : public HTTPIntegrationBase {
   }
 
   void configureC2() override {
-    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
-    configuration->set("nifi.c2.enable", "true");
-    configuration->set("nifi.c2.agent.class", "test");
-    configuration->set("nifi.c2.agent.heartbeat.period", "1000");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "1000");
   }
 
   void cleanup() override {
@@ -206,10 +207,10 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
   }
 
   void configureC2() override {
-    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
-    configuration->set("nifi.c2.enable", "true");
-    configuration->set("nifi.c2.agent.class", "test");
-    configuration->set("nifi.c2.agent.heartbeat.period", "1000");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "1000");
   }
 
   void setFlowUrl(const std::string& url) {

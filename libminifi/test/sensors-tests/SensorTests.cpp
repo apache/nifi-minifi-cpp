@@ -43,6 +43,7 @@
 #include "../integration/IntegrationBase.h"
 #include "GetEnvironmentalSensors.h"
 #include "utils/IntegrationTestUtils.h"
+#include "properties/Configuration.h"
 
 class PcapTestHarness : public IntegrationBase {
  public:
@@ -76,7 +77,7 @@ class PcapTestHarness : public IntegrationBase {
     auto inv = dynamic_cast<minifi::processors::GetEnvironmentalSensors*>(proc);
     assert(inv != nullptr);
 
-    configuration->set("nifi.c2.enable", "false");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "false");
   }
 
  protected:

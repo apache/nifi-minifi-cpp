@@ -30,6 +30,7 @@
 #include "c2/C2Agent.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -85,7 +86,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   }
 
   std::string class_csv;
-  if (configuration_->get("nifi.c2.root.classes", class_csv)) {
+  if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
@@ -312,7 +313,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const st
 
 std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
   std::string fullHb{"true"};
-  configuration_->get("nifi.c2.full.heartbeat", fullHb);
+  configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
   const bool include = include_manifest || fullHb == "true";
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;

@@ -23,10 +23,11 @@
 #include "sodium/crypto_hash_sha256.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "properties/Configuration.h"
 
 namespace {
 
-const std::string AGENT_IDENTIFIER_KEY = "nifi.c2.agent.identifier=";
+const std::string AGENT_IDENTIFIER_KEY = std::string(org::apache::nifi::minifi::Configuration::nifi_c2_agent_identifier) + "=";
 
 }
 

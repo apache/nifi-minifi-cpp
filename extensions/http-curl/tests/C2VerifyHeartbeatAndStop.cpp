@@ -26,6 +26,7 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
+#include "properties/Configuration.h"
 
 class LightWeightC2Handler : public HeartbeatHandler {
  public:
@@ -61,14 +62,14 @@ class VerifyC2Heartbeat : public VerifyC2Base {
   }
 
   void configureFullHeartbeat() override {
-    configuration->set("nifi.c2.full.heartbeat", "true");
+    configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "true");
   }
 };
 
 class VerifyLightWeightC2Heartbeat : public VerifyC2Heartbeat {
  public:
   void configureFullHeartbeat() override {
-    configuration->set("nifi.c2.full.heartbeat", "false");
+    configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "false");
   }
 };
 

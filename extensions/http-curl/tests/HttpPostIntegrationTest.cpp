@@ -31,6 +31,7 @@
 #include "FlowController.h"
 #include "HTTPIntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
+#include "properties/Configuration.h"
 
 using std::literals::chrono_literals::operator""s;
 
@@ -60,8 +61,8 @@ class HttpTestHarness : public HTTPIntegrationBase {
     file.open(ss.str(), std::ios::out);
     file << "tempFile";
     file.close();
-    configuration->set("nifi.flow.engine.threads", "8");
-    configuration->set("nifi.c2.enable", "false");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_flow_engine_threads, "8");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "false");
   }
 
   void cleanup() override {

@@ -28,6 +28,7 @@
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -67,7 +68,7 @@ void CoapConnectorService::onEnable() {
     core::Property::StringToInt(port_str, port_);
   } else {
     // this is the case where we aren't being used in the context of a single controller service.
-    if (configuration_->get("nifi.c2.agent.coap.host", host_) && configuration_->get("nifi.c2.agent.coap.port", port_str)) {
+    if (configuration_->get(minifi::Configuration::nifi_c2_agent_coap_host, host_) && configuration_->get(minifi::Configuration::nifi_c2_agent_coap_port, port_str)) {
       core::Property::StringToInt(port_str, port_);
     }
   }

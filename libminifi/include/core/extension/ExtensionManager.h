@@ -32,12 +32,6 @@ namespace minifi {
 namespace core {
 namespace extension {
 
-/**
- * Comma separated list of path patterns. Patterns prepended with "!" result in the exclusion
- * of the extensions matching that pattern, unless some subsequent pattern re-enables it.
- */
-static constexpr const char* nifi_extension_path = "nifi.extension.path";
-
 class ExtensionManager {
   ExtensionManager();
 

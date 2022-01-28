@@ -22,6 +22,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/StringUtils.h"
+#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -69,7 +70,7 @@ bool Configure::isEncrypted(const std::string& key) const {
 
 std::optional<std::string> Configure::getAgentClass() const {
   std::string agent_class;
-  if (get("nifi.c2.agent.class", "c2.agent.class", agent_class) && !agent_class.empty()) {
+  if (get(minifi::Configuration::nifi_c2_agent_class, "c2.agent.class", agent_class) && !agent_class.empty()) {
     return agent_class;
   }
   return {};
@@ -77,7 +78,7 @@ std::optional<std::string> Configure::getAgentClass() const {
 
 std::string Configure::getAgentIdentifier() const {
   std::string agent_id;
-  if (!get("nifi.c2.agent.identifier", "c2.agent.identifier", agent_id) || agent_id.empty()) {
+  if (!get(minifi::Configuration::nifi_c2_agent_identifier, "c2.agent.identifier", agent_id) || agent_id.empty()) {
     std::lock_guard<std::mutex> guard(fallback_identifier_mutex_);
     return fallback_identifier_;
   }

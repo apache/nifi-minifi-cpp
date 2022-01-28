@@ -29,6 +29,7 @@
 #include "TestServer.h"
 #include "HTTPIntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
+#include "properties/Configuration.h"
 
 class VerifyC2Server : public HTTPIntegrationBase {
  public:
@@ -70,13 +71,13 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
-    configuration->set("nifi.c2.enable", "true");
-    configuration->set("nifi.c2.agent.class", "test");
-    configuration->set("nifi.c2.agent.heartbeat.reporter.classes", "RESTReceiver");
-    configuration->set("nifi.c2.agent.protocol.class", "RESTSender");
-    configuration->set("nifi.c2.rest.listener.port", port);
-    configuration->set("nifi.c2.agent.heartbeat.period", "10");
-    configuration->set("nifi.c2.rest.listener.heartbeat.rooturi", path);
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_reporter_classes, "RESTReceiver");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_port, port);
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "10");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_heartbeat_rooturi, path);
   }
 
  protected:

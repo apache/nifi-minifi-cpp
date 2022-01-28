@@ -28,6 +28,7 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
+#include "properties/Configuration.h"
 
 class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
  public:
@@ -114,7 +115,7 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
   }
 
   void configureFullHeartbeat() override {
-    configuration->set("nifi.c2.full.heartbeat", "false");
+    configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "false");
   }
 
   std::function<bool()> event_to_wait_for_;
