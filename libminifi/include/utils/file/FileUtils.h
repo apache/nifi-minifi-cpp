@@ -24,30 +24,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#ifndef USE_BOOST
-#include <errno.h>
-
-#include <cstdlib>
-#include <cstring>
-
-#ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-  #define WIN32_LEAN_AND_MEAN
-#endif
-#include <Windows.h>
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-
-#pragma comment(lib, "Ws2_32.lib")
-#else
-#include <dirent.h> // NOLINT
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <utime.h>
-
-#endif
-#endif
 #include <cstdio>
 
 #ifndef WIN32
@@ -65,6 +41,15 @@
 #include <sys/utime.h>  // _utime64
 #include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
 #include <windows.h>  // winapi
+
+#ifndef WIN32_LEAN_AND_MEAN
+  #define WIN32_LEAN_AND_MEAN
+#endif
+#include <Windows.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+
+#pragma comment(lib, "Ws2_32.lib")
 
 #include <algorithm>  // replace
 #include <string>  // string
