@@ -21,6 +21,7 @@
 #include "ListAzureDataLakeStorage.h"
 
 #include "utils/ProcessorConfigUtils.h"
+#include "core/ProcessSession.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
