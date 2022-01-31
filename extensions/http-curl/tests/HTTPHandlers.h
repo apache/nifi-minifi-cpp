@@ -489,9 +489,9 @@ class HeartbeatHandler : public ServerAwareHandler {
   }
 
   void verifyMetadata(const rapidjson::Value& operation_node, const Metadata& metadata) {
-    for (const auto& [operand, metadata_map] : metadata) {
+    for (const auto& operand_and_map : metadata) {
       auto properties = operation_node["properties"].GetArray();
-      auto property_it = std::find_if(properties.begin(), properties.end(), [&operand](const auto& value) { return value["operand"].GetString() == operand; });
+      auto property_it = std::find_if(properties.begin(), properties.end(), [&operand_and_map](const auto& value) { return value["operand"].GetString() == operand_and_map.first; });
       assert(property_it != properties.end());
       auto& property = *property_it;
       assert(property.HasMember("metaData"));
@@ -500,7 +500,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       for (const auto& metadata : metadata_node.GetArray()) {
         metadata_map_found.emplace(metadata["key"].GetString(), metadata["value"].GetString());
       }
-      assert(metadata_map_found == metadata_map);
+      assert(metadata_map_found == operand_and_map.second);
     }
   }
 
