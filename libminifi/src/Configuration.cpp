@@ -22,7 +22,7 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES{
+const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROPERTIES{
   core::ConfigurationProperty{Configuration::nifi_version},
   core::ConfigurationProperty{Configuration::nifi_default_directory},
   core::ConfigurationProperty{Configuration::nifi_c2_enable, core::StandardValidators::get().BOOLEAN_VALIDATOR},

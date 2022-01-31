@@ -35,14 +35,37 @@ std::string SupportedOperations::getName() const {
   return "supportedOperations";
 }
 
-void SupportedOperations::addProperty(SerializedResponseNode& properties, const std::string& operand) {
+void SupportedOperations::addProperty(SerializedResponseNode& properties, const std::string& operand, const std::unordered_map<std::string, std::string>& metadata) {
   SerializedResponseNode child;
   child.name = "properties";
 
   SerializedResponseNode operand_node;
   operand_node.name = "operand";
   operand_node.value = operand;
+
+  SerializedResponseNode metadata_node;
+  metadata_node.name = "metaData";
+  metadata_node.array = true;
+
+  for (const auto& [key, value] : metadata) {
+    SerializedResponseNode metadata_child;
+    metadata_child.name = "metaData";
+
+    SerializedResponseNode key_node;
+    key_node.name = "key";
+    key_node.value = key;
+
+    SerializedResponseNode value_node;
+    value_node.name = "value";
+    value_node.value = value;
+
+    metadata_child.children.push_back(key_node);
+    metadata_child.children.push_back(value_node);
+    metadata_node.children.push_back(metadata_child);
+  }
+
   child.children.push_back(operand_node);
+  child.children.push_back(metadata_node);
   properties.children.push_back(child);
 }
 
@@ -53,7 +76,13 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
       break;
     }
     case minifi::c2::Operation::UPDATE: {
-      serializeProperty<minifi::c2::UpdateOperand>(properties);
+      Metadata metadata;
+      std::unordered_map<std::string, std::string> supported_config_update;
+      for (const auto& config_property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
+        supported_config_update.emplace(config_property.name, config_property.validator->getName());
+      }
+      metadata.emplace("properties", supported_config_update);
+      serializeProperty<minifi::c2::UpdateOperand>(properties, metadata);
       break;
     }
     case minifi::c2::Operation::TRANSFER: {

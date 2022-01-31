@@ -469,7 +469,7 @@ class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedPrope
 };
 
 struct ConfigurationProperty {
-  ConfigurationProperty(std::string_view name_, const gsl::not_null<std::shared_ptr<PropertyValidator>>& validator_ = StandardValidators::get().VALID_VALIDATOR)
+  explicit ConfigurationProperty(std::string_view name_, const gsl::not_null<std::shared_ptr<PropertyValidator>>& validator_ = StandardValidators::get().VALID_VALIDATOR)
     : name(name_),
       validator(validator_) {
   }

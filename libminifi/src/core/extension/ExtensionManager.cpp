@@ -58,7 +58,6 @@ bool ExtensionManager::initialize(const std::shared_ptr<Configure>& config) {
       return;
     }
     std::string pattern = [&] {
-
       /**
        * Comma separated list of path patterns. Patterns prepended with "!" result in the exclusion
        * of the extensions matching that pattern, unless some subsequent pattern re-enables it.

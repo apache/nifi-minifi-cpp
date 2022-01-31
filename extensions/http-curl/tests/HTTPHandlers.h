@@ -42,6 +42,7 @@
 #include "utils/gsl.h"
 #include "agent/build_description.h"
 #include "c2/C2Payload.h"
+#include "properties/Configuration.h"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -466,6 +467,8 @@ class HeartbeatHandler : public ServerAwareHandler {
   }
 
  private:
+  using Metadata = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+
   void sendStopOperation(struct mg_connection *conn) {
     std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
         "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
@@ -485,10 +488,27 @@ class HeartbeatHandler : public ServerAwareHandler {
     return operands;
   }
 
+  void verifyMetadata(const rapidjson::Value& operation_node, const Metadata& metadata) {
+    for (const auto& [operand, metadata_map] : metadata) {
+      auto properties = operation_node["properties"].GetArray();
+      auto property_it = std::find_if(properties.begin(), properties.end(), [&operand](const auto& value) { return value["operand"].GetString() == operand; });
+      assert(property_it != properties.end());
+      auto& property = *property_it;
+      assert(property.HasMember("metaData"));
+      auto& metadata_node = property["metaData"];
+      std::unordered_map<std::string, std::string> metadata_map_found;
+      for (const auto& metadata : metadata_node.GetArray()) {
+        metadata_map_found.emplace(metadata["key"].GetString(), metadata["value"].GetString());
+      }
+      assert(metadata_map_found == metadata_map);
+    }
+  }
+
   template<typename T>
-  void verifyOperands(const rapidjson::Value& operation_node) {
+  void verifyOperands(const rapidjson::Value& operation_node, const Metadata& metadata = {}) {
     auto operands = getOperandsofProperties(operation_node);
     assert(operands == T::values());
+    verifyMetadata(operation_node, metadata);
   }
 
   void verifyProperties(const rapidjson::Value& operation_node, minifi::c2::Operation operation, const std::vector<std::string>& verify_components) {
@@ -498,7 +518,13 @@ class HeartbeatHandler : public ServerAwareHandler {
         break;
       }
       case minifi::c2::Operation::UPDATE: {
-        verifyOperands<minifi::c2::UpdateOperand>(operation_node);
+        std::unordered_map<std::string, std::string> config_properties;
+        for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
+          config_properties.emplace(property.name, property.validator->getName());
+        }
+        Metadata metadata;
+        metadata.emplace("properties", config_properties);
+        verifyOperands<minifi::c2::UpdateOperand>(operation_node, metadata);
         break;
       }
       case minifi::c2::Operation::TRANSFER: {

@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <unordered_map>
 
 #include "MetricsBase.h"
 #include "c2/C2Payload.h"
@@ -38,14 +39,21 @@ class SupportedOperations : public DeviceInformation {
   }
 
  private:
+  using Metadata = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+
   template<typename T>
-  static void serializeProperty(SerializedResponseNode& properties) {
+  static void serializeProperty(SerializedResponseNode& properties, const Metadata& metadata = {}) {
     for (const auto& operand_type: T::values()) {
-      addProperty(properties, operand_type);
+      auto metadata_it = metadata.find(operand_type);
+      if (metadata_it != metadata.end()) {
+        addProperty(properties, operand_type, metadata_it->second);
+      } else {
+        addProperty(properties, operand_type);
+      }
     }
   }
 
-  static void addProperty(SerializedResponseNode& properties, const std::string& operand);
+  static void addProperty(SerializedResponseNode& properties, const std::string& operand, const std::unordered_map<std::string, std::string>& metadata = {});
   void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const;
 
   std::shared_ptr<state::StateMonitor> monitor_;
