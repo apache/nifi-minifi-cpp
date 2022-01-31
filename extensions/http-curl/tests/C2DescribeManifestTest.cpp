@@ -30,7 +30,7 @@ class DescribeManifestHandler: public HeartbeatHandler {
   }
 
   void handleAcknowledge(const rapidjson::Document& root) override {
-    verifyJsonHasAgentManifest(root, {"InvokeHTTP", "LogAttribute"});
+    verifyJsonHasAgentManifest(root, {"InvokeHTTP", "LogAttribute"}, {"nifi.extension.path", "nifi.python.processor.dir"});
   }
 };
 

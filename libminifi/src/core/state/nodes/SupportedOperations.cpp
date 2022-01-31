@@ -79,7 +79,10 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
       Metadata metadata;
       std::unordered_map<std::string, std::string> supported_config_update;
       for (const auto& config_property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
-        supported_config_update.emplace(config_property.name, config_property.validator->getName());
+        if (!update_policy_controller_ ||
+            (update_policy_controller_ && update_policy_controller_->canUpdate(std::string(config_property.name)))) {
+          supported_config_update.emplace(config_property.name, config_property.validator->getName());
+        }
       }
       metadata.emplace("properties", supported_config_update);
       serializeProperty<minifi::c2::UpdateOperand>(properties, metadata);

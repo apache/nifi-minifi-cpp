@@ -24,6 +24,7 @@
 
 #include "MetricsBase.h"
 #include "c2/C2Payload.h"
+#include "controllers/UpdatePolicyControllerService.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -36,6 +37,10 @@ class SupportedOperations : public DeviceInformation {
   std::vector<SerializedResponseNode> serialize() override;
   void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
     monitor_ = monitor;
+  }
+
+  void setUpdatePolicyController(const std::shared_ptr<controllers::UpdatePolicyControllerService>& update_policy_controller) {
+    update_policy_controller_ = update_policy_controller;
   }
 
  private:
@@ -57,6 +62,7 @@ class SupportedOperations : public DeviceInformation {
   void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const;
 
   std::shared_ptr<state::StateMonitor> monitor_;
+  std::shared_ptr<controllers::UpdatePolicyControllerService> update_policy_controller_;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

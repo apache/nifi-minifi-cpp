@@ -430,8 +430,9 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() const {
+std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() {
   auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
+  agentInfo->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)));
   agentInfo->setAgentIdentificationProvider(configuration_);
   agentInfo->includeAgentStatus(false);
   return agentInfo;

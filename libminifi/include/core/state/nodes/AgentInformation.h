@@ -617,6 +617,10 @@ class AgentManifest : public DeviceInformation {
     monitor_ = monitor;
   }
 
+  void setUpdatePolicyController(const std::shared_ptr<controllers::UpdatePolicyControllerService>& update_policy_controller) {
+    update_policy_controller_ = update_policy_controller;
+  }
+
   std::vector<SerializedResponseNode> serialize() {
     static std::vector<SerializedResponseNode> serialized;
     if (serialized.empty()) {
@@ -683,6 +687,7 @@ class AgentManifest : public DeviceInformation {
 
       SupportedOperations supported_operations("supportedOperations");
       supported_operations.setStateMonitor(monitor_);
+      supported_operations.setUpdatePolicyController(update_policy_controller_);
       for (const auto& operation : supported_operations.serialize()) {
         serialized.push_back(operation);
       }
@@ -692,6 +697,7 @@ class AgentManifest : public DeviceInformation {
 
  private:
   std::shared_ptr<state::StateMonitor> monitor_;
+  std::shared_ptr<controllers::UpdatePolicyControllerService> update_policy_controller_;
 };
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
@@ -704,6 +710,10 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   explicit AgentNode(const std::string& name)
       : DeviceInformation(name) {
     setArray(false);
+  }
+
+  void setUpdatePolicyController(const std::shared_ptr<controllers::UpdatePolicyControllerService>& update_policy_controller) {
+    update_policy_controller_ = update_policy_controller;
   }
 
  protected:
@@ -737,6 +747,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     agentManifest.name = "agentManifest";
     AgentManifest manifest{"manifest"};
     manifest.setStateMonitor(monitor_);
+    manifest.setUpdatePolicyController(update_policy_controller_);
     agentManifest.children = manifest.serialize();
     return std::vector<SerializedResponseNode>{ agentManifest };
   }
@@ -768,6 +779,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
 
  private:
   std::optional<std::string> agentManifestHash_;
+  std::shared_ptr<controllers::UpdatePolicyControllerService> update_policy_controller_;
 };
 
 /**

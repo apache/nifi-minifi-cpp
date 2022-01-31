@@ -50,7 +50,17 @@ Processors:
       Properties:
         Log Level: info
         Log Payload: true
-
+Controller Services:
+    - id: 94491a38-015a-1000-0000-000000000001
+      name: C2UpdatePolicy
+      class: UpdatePolicyControllerService
+      Properties:
+        # true enables all properties to be updated.
+        Allow All Properties: true
+        # allowed properties are those which can be updated
+        Disallowed Properties:
+          - value: nifi.extension.path
+          - value: nifi.python.processor.dir
 Connections:
     - name: TransferFilesToRPG
       id: 2438e3c8-015a-1000-79ca-83af40ec1997

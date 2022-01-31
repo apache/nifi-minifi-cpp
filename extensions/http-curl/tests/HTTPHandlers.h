@@ -430,7 +430,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       mg_printf(conn, "%s", heartbeat_response.c_str());
   }
 
-  void verifyJsonHasAgentManifest(const rapidjson::Document& root, const std::vector<std::string>& verify_components = {}) {
+  void verifyJsonHasAgentManifest(const rapidjson::Document& root, const std::vector<std::string>& verify_components = {}, const std::vector<std::string>& disallowed_properties = {}) {
     bool found = false;
     assert(root.HasMember("agentInfo"));
     assert(root["agentInfo"].HasMember("agentManifest"));
@@ -463,7 +463,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     assert(found);
     (void)found;  // unused in release builds
 
-    verifySupportedOperations(root, verify_components);
+    verifySupportedOperations(root, verify_components, disallowed_properties);
   }
 
  private:
@@ -511,7 +511,8 @@ class HeartbeatHandler : public ServerAwareHandler {
     verifyMetadata(operation_node, metadata);
   }
 
-  void verifyProperties(const rapidjson::Value& operation_node, minifi::c2::Operation operation, const std::vector<std::string>& verify_components) {
+  void verifyProperties(const rapidjson::Value& operation_node, minifi::c2::Operation operation,
+      const std::vector<std::string>& verify_components, const std::vector<std::string>& disallowed_properties) {
     switch (operation.value()) {
       case minifi::c2::Operation::DESCRIBE: {
         verifyOperands<minifi::c2::DescribeOperand>(operation_node);
@@ -520,7 +521,9 @@ class HeartbeatHandler : public ServerAwareHandler {
       case minifi::c2::Operation::UPDATE: {
         std::unordered_map<std::string, std::string> config_properties;
         for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
-          config_properties.emplace(property.name, property.validator->getName());
+          if (std::find(disallowed_properties.begin(), disallowed_properties.end(), property.name) == disallowed_properties.end()) {
+            config_properties.emplace(property.name, property.validator->getName());
+          }
         }
         Metadata metadata;
         metadata.emplace("properties", config_properties);
@@ -550,7 +553,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     }
   }
 
-  void verifySupportedOperations(const rapidjson::Document& root, const std::vector<std::string>& verify_components) {
+  void verifySupportedOperations(const rapidjson::Document& root, const std::vector<std::string>& verify_components, const std::vector<std::string>& disallowed_properties) {
     auto& agent_manifest = root["agentInfo"]["agentManifest"];
     assert(agent_manifest.HasMember("supportedOperations"));
 
@@ -558,7 +561,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     for (const auto& operation_node : agent_manifest["supportedOperations"].GetArray()) {
       assert(operation_node.HasMember("type"));
       operations.insert(operation_node["type"].GetString());
-      verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString()), verify_components);
+      verifyProperties(operation_node, minifi::c2::Operation::parse(operation_node["type"].GetString()), verify_components, disallowed_properties);
     }
 
     assert(operations == minifi::c2::Operation::values());
