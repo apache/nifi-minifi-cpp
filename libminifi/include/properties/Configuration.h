@@ -22,6 +22,7 @@
 
 #include "properties/Properties.h"
 #include "utils/OptionalUtils.h"
+#include "utils/Export.h"
 
 namespace org {
 namespace apache {
@@ -146,7 +147,7 @@ class Configuration : public Properties {
   static constexpr const char *nifi_nar_directory = "nifi.nar.directory";
   static constexpr const char *nifi_nar_deploy_directory = "nifi.nar.deploy.directory";
 
-  static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
+  MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
 };
 
 }  // namespace minifi
