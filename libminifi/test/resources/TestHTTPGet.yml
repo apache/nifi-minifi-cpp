@@ -55,9 +55,7 @@ Controller Services:
       name: C2UpdatePolicy
       class: UpdatePolicyControllerService
       Properties:
-        # true enables all properties to be updated.
         Allow All Properties: true
-        # allowed properties are those which can be updated
         Disallowed Properties:
           - value: nifi.extension.path
           - value: nifi.python.processor.dir

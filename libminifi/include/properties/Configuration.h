@@ -33,7 +33,6 @@ namespace core {
   struct ConfigurationProperty;
 }
 
-// TODO(adebreceni): eliminate this class in a separate PR
 class Configuration : public Properties {
  public:
   Configuration() : Properties("MiNiFi configuration") {}
