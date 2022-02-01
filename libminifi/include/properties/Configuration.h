@@ -146,6 +146,22 @@ class Configuration : public Properties {
   static constexpr const char *nifi_nar_directory = "nifi.nar.directory";
   static constexpr const char *nifi_nar_deploy_directory = "nifi.nar.deploy.directory";
 
+  // Log options
+  static constexpr const char *nifi_log_spdlog_pattern = "nifi.log.spdlog.pattern";
+  static constexpr const char *nifi_log_spdlog_shorten_names = "nifi.log.spdlog.shorten_names";
+  static constexpr const char *nifi_log_appender_rolling = "nifi.log.appender.rolling";
+  static constexpr const char *nifi_log_appender_rolling_directory = "nifi.log.appender.rolling.directory";
+  static constexpr const char *nifi_log_appender_rolling_file_name = "nifi.log.appender.rolling.file_name";
+  static constexpr const char *nifi_log_appender_rolling_max_files = "nifi.log.appender.rolling.max_files";
+  static constexpr const char *nifi_log_appender_rolling_max_file_size = "nifi.log.appender.rolling.max_file_size";
+  static constexpr const char *nifi_log_appender_stdout = "nifi.log.appender.stdout";
+  static constexpr const char *nifi_log_appender_stderr = "nifi.log.appender.stderr";
+  static constexpr const char *nifi_log_appender_null = "nifi.log.appender.null";
+  static constexpr const char *nifi_log_appender_syslog = "nifi.log.appender.syslog";
+  static constexpr const char *nifi_log_logger_root = "nifi.log.logger.root";
+  static constexpr const char *nifi_log_compression_cached_log_max_size = "nifi.log.compression.cached.log.max.size";
+  static constexpr const char *nifi_log_compression_compressed_log_max_size = "nifi.log.compression.compressed.log.max.size";
+
   MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
 };
 

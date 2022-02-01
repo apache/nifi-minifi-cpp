@@ -116,7 +116,21 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_framework_dir},
   core::ConfigurationProperty{Configuration::nifi_jvm_options},
   core::ConfigurationProperty{Configuration::nifi_nar_directory},
-  core::ConfigurationProperty{Configuration::nifi_nar_deploy_directory}
+  core::ConfigurationProperty{Configuration::nifi_nar_deploy_directory},
+  core::ConfigurationProperty{Configuration::nifi_log_spdlog_pattern},
+  core::ConfigurationProperty{Configuration::nifi_log_spdlog_shorten_names, core::StandardValidators::get().BOOLEAN_VALIDATOR},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_rolling},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_rolling_directory},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_rolling_file_name},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_rolling_max_files, core::StandardValidators::get().UNSIGNED_INT_VALIDATOR},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_rolling_max_file_size, core::StandardValidators::get().DATA_SIZE_VALIDATOR},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_stdout},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_stderr},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_null},
+  core::ConfigurationProperty{Configuration::nifi_log_appender_syslog},
+  core::ConfigurationProperty{Configuration::nifi_log_logger_root},
+  core::ConfigurationProperty{Configuration::nifi_log_compression_cached_log_max_size, core::StandardValidators::get().DATA_SIZE_VALIDATOR},
+  core::ConfigurationProperty{Configuration::nifi_log_compression_compressed_log_max_size, core::StandardValidators::get().DATA_SIZE_VALIDATOR}
 };
 
 } /* namespace minifi */
