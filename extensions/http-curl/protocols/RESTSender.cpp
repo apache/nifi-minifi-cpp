@@ -46,7 +46,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
     std::string update_str, ssl_context_service_str;
     configure->get(minifi::Configuration::nifi_c2_rest_url, "c2.rest.url", rest_uri_);
     configure->get(minifi::Configuration::nifi_c2_rest_url_ack, "c2.rest.url.ack", ack_uri_);
-    if (configure->get("nifi.c2.rest.ssl.context.service", "c2.rest.ssl.context.service", ssl_context_service_str)) {
+    if (configure->get(minifi::Configuration::nifi_c2_rest_ssl_context_service, "c2.rest.ssl.context.service", ssl_context_service_str)) {
       auto service = controller->getControllerService(ssl_context_service_str);
       if (nullptr != service) {
         ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);

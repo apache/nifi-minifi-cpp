@@ -53,7 +53,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_bored_yield_duration = "nifi.bored.yield.duration";
   static constexpr const char *nifi_graceful_shutdown_seconds = "nifi.flowcontroller.graceful.shutdown.period";
   static constexpr const char *nifi_flowcontroller_drain_timeout = "nifi.flowcontroller.drain.timeout";
-  static constexpr const char *nifi_log_level = "nifi.log.level";
   static constexpr const char *nifi_server_name = "nifi.server.name";
   static constexpr const char *nifi_configuration_class_name = "nifi.flow.configuration.class.name";
   static constexpr const char *nifi_flow_repository_class_name = "nifi.flowfile.repository.class.name";
@@ -98,6 +97,7 @@ class Configuration : public Properties {
   // nifi rest api user name and password
   static constexpr const char *nifi_rest_api_user_name = "nifi.rest.api.user.name";
   static constexpr const char *nifi_rest_api_password = "nifi.rest.api.password";
+
   // c2 options
   static constexpr const char *nifi_c2_enable = "nifi.c2.enable";
   static constexpr const char *nifi_c2_file_watch = "nifi.c2.file.watch";
@@ -105,16 +105,19 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_flow_url = "nifi.c2.flow.url";
   static constexpr const char *nifi_c2_flow_base_url = "nifi.c2.flow.base.url";
   static constexpr const char *nifi_c2_full_heartbeat = "nifi.c2.full.heartbeat";
+  static constexpr const char *nifi_c2_coap_connector_service = "nifi.c2.coap.connector.service";
   static constexpr const char *nifi_c2_agent_heartbeat_period = "nifi.c2.agent.heartbeat.period";
-  static constexpr const char *nifi_c2_root_classes = "nifi.c2.root.classes";
   static constexpr const char *nifi_c2_agent_class = "nifi.c2.agent.class";
   static constexpr const char *nifi_c2_agent_heartbeat_reporter_classes = "nifi.c2.agent.heartbeat.reporter.classes";
-  static constexpr const char *nifi_c2_rest_listener_port = "nifi.c2.rest.listener.port";
-  static constexpr const char *nifi_c2_rest_listener_cacert = "nifi.c2.rest.listener.cacert";
   static constexpr const char *nifi_c2_agent_coap_host = "nifi.c2.agent.coap.host";
   static constexpr const char *nifi_c2_agent_coap_port = "nifi.c2.agent.coap.port";
-  static constexpr const char *nifi_c2_coap_connector_service = "nifi.c2.coap.connector.service";
   static constexpr const char *nifi_c2_agent_protocol_class = "nifi.c2.agent.protocol.class";
+  static constexpr const char *nifi_c2_agent_identifier = "nifi.c2.agent.identifier";
+  static constexpr const char *nifi_c2_agent_trigger_classes = "nifi.c2.agent.trigger.classes";
+  static constexpr const char *nifi_c2_root_classes = "nifi.c2.root.classes";
+  static constexpr const char *nifi_c2_root_class_definitions = "nifi.c2.root.class.definitions";
+  static constexpr const char *nifi_c2_rest_listener_port = "nifi.c2.rest.listener.port";
+  static constexpr const char *nifi_c2_rest_listener_cacert = "nifi.c2.rest.listener.cacert";
   static constexpr const char *nifi_c2_rest_url = "nifi.c2.rest.url";
   static constexpr const char *nifi_c2_rest_url_ack = "nifi.c2.rest.url.ack";
   static constexpr const char *nifi_c2_rest_ssl_context_service = "nifi.c2.rest.ssl.context.service";
@@ -123,9 +126,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_mqtt_connector_service = "nifi.c2.mqtt.connector.service";
   static constexpr const char *nifi_c2_mqtt_heartbeat_topic = "nifi.c2.mqtt.heartbeat.topic";
   static constexpr const char *nifi_c2_mqtt_update_topic = "nifi.c2.mqtt.update.topic";
-  static constexpr const char *nifi_c2_agent_identifier = "nifi.c2.agent.identifier";
-  static constexpr const char *nifi_c2_agent_trigger_classes = "nifi.c2.agent.trigger.classes";
-  static constexpr const char *nifi_c2_root_class_definitions = "nifi.c2.root.class.definitions";
 
   // state management options
   static constexpr const char *nifi_state_management_provider_local = "nifi.state.management.provider.local";

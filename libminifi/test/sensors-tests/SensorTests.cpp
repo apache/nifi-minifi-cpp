@@ -43,7 +43,6 @@
 #include "../integration/IntegrationBase.h"
 #include "GetEnvironmentalSensors.h"
 #include "utils/IntegrationTestUtils.h"
-#include "properties/Configuration.h"
 
 class PcapTestHarness : public IntegrationBase {
  public:

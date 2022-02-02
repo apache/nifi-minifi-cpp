@@ -28,7 +28,6 @@
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
-#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {

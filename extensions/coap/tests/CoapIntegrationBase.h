@@ -59,7 +59,7 @@ class CoapIntegrationBase : public IntegrationBase {
     if (test_file_location) {
       configuration->set(minifi::Configure::nifi_flow_configuration_file, *test_file_location);
     }
-    configuration->set("c2.agent.heartbeat.period", "200");
+    configuration->set(minifi::Configure::nifi_c2_agent_heartbeat_period, "200");
 
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo->initialize(configuration);

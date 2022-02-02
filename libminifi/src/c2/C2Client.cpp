@@ -30,7 +30,6 @@
 #include "c2/C2Agent.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
-#include "properties/Configuration.h"
 
 namespace org {
 namespace apache {
@@ -56,7 +55,7 @@ void C2Client::stopC2() {
 
 bool C2Client::isC2Enabled() const {
   std::string c2_enable_str;
-  configuration_->get(Configure::nifi_c2_enable, "c2.enable", c2_enable_str);
+  configuration_->get(minifi::Configuration::nifi_c2_enable, "c2.enable", c2_enable_str);
   return utils::StringUtils::toBool(c2_enable_str).value_or(false);
 }
 

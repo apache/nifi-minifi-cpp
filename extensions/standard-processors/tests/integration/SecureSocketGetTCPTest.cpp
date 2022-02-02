@@ -51,7 +51,6 @@
 #include "io/tls/TLSSocket.h"
 #include "io/tls/TLSServerSocket.h"
 #include "utils/IntegrationTestUtils.h"
-#include "properties/Configuration.h"
 
 class SecureSocketTest : public IntegrationBase {
  public:

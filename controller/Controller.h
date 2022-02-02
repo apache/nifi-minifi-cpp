@@ -27,7 +27,6 @@
 #include "c2/ControllerSocketProtocol.h"
 #include "utils/gsl.h"
 #include "FlowController.h"
-#include "properties/Configuration.h"
 
 /**
  * Sends a single argument comment
@@ -316,12 +315,11 @@ void printManifest(const std::shared_ptr<org::apache::nifi::minifi::Configure> &
     org::apache::nifi::minifi::setDefaultDirectory(content_repo_path);
   }
 
-  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "25");
-  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_root_classes, "AgentInformation");
-  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
-  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
-  configuration->set("c2.agent.listen", "true");
-  configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_reporter_classes, "AgentPrinter");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_agent_heartbeat_period, "25");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_root_classes, "AgentInformation");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_enable, "true");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_agent_class, "test");
+  configuration->set(org::apache::nifi::minifi::Configure::nifi_c2_agent_heartbeat_reporter_classes, "AgentPrinter");
 
   configuration->get(org::apache::nifi::minifi::Configure::nifi_configuration_class_name, nifi_configuration_class_name);
 

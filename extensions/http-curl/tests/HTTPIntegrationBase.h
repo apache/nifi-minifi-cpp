@@ -214,7 +214,7 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
   }
 
   void setFlowUrl(const std::string& url) {
-    configuration->set(minifi::Configure::nifi_c2_flow_url, url);
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_flow_url, url);
   }
 
   void cleanup() override {

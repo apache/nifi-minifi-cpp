@@ -73,15 +73,15 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
-    configuration->set("c2.enable", "true");
-    configuration->set("c2.agent.class", "test");
-    configuration->set("c2.agent.protocol.class", "RESTSender");
-    configuration->set("c2.rest.url", "");
-    configuration->set("c2.rest.url.ack", "");
-    configuration->set("c2.agent.heartbeat.reporter.classes", "null");
-    configuration->set("c2.rest.listener.port", "null");
-    configuration->set("c2.agent.heartbeat.period", "null");
-    configuration->set("c2.rest.listener.heartbeat.rooturi", "null");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url, "");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url_ack, "");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_reporter_classes, "null");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_port, "null");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "null");
+    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_heartbeat_rooturi, "null");
   }
 
  protected:

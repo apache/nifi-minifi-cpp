@@ -17,15 +17,11 @@
 #include "properties/Configuration.h"
 #include "core/Property.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROPERTIES{
   core::ConfigurationProperty{Configuration::nifi_version},
   core::ConfigurationProperty{Configuration::nifi_default_directory},
-  core::ConfigurationProperty{Configuration::nifi_c2_enable, core::StandardValidators::get().BOOLEAN_VALIDATOR},
   core::ConfigurationProperty{Configuration::nifi_flow_configuration_file},
   core::ConfigurationProperty{Configuration::nifi_flow_configuration_encrypt, core::StandardValidators::get().BOOLEAN_VALIDATOR},
   core::ConfigurationProperty{Configuration::nifi_flow_configuration_file_exit_failure, core::StandardValidators::get().BOOLEAN_VALIDATOR},
@@ -37,7 +33,6 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_bored_yield_duration, core::StandardValidators::get().TIME_PERIOD_VALIDATOR},
   core::ConfigurationProperty{Configuration::nifi_graceful_shutdown_seconds, core::StandardValidators::get().UNSIGNED_INT_VALIDATOR},
   core::ConfigurationProperty{Configuration::nifi_flowcontroller_drain_timeout, core::StandardValidators::get().TIME_PERIOD_VALIDATOR},
-  core::ConfigurationProperty{Configuration::nifi_log_level},
   core::ConfigurationProperty{Configuration::nifi_server_name},
   core::ConfigurationProperty{Configuration::nifi_configuration_class_name},
   core::ConfigurationProperty{Configuration::nifi_flow_repository_class_name},
@@ -78,21 +73,25 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_security_windows_client_cert_key_usage},
   core::ConfigurationProperty{Configuration::nifi_rest_api_user_name},
   core::ConfigurationProperty{Configuration::nifi_rest_api_password},
+  core::ConfigurationProperty{Configuration::nifi_c2_enable, core::StandardValidators::get().BOOLEAN_VALIDATOR},
   core::ConfigurationProperty{Configuration::nifi_c2_file_watch},
   core::ConfigurationProperty{Configuration::nifi_c2_flow_id},
   core::ConfigurationProperty{Configuration::nifi_c2_flow_url},
   core::ConfigurationProperty{Configuration::nifi_c2_flow_base_url},
   core::ConfigurationProperty{Configuration::nifi_c2_full_heartbeat, core::StandardValidators::get().BOOLEAN_VALIDATOR},
+  core::ConfigurationProperty{Configuration::nifi_c2_coap_connector_service},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_heartbeat_period, core::StandardValidators::get().UNSIGNED_INT_VALIDATOR},
-  core::ConfigurationProperty{Configuration::nifi_c2_root_classes},
-  core::ConfigurationProperty{Configuration::nifi_c2_agent_class},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_heartbeat_reporter_classes},
-  core::ConfigurationProperty{Configuration::nifi_c2_rest_listener_port, core::StandardValidators::get().LISTEN_PORT_VALIDATOR},
-  core::ConfigurationProperty{Configuration::nifi_c2_rest_listener_cacert},
+  core::ConfigurationProperty{Configuration::nifi_c2_agent_class},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_coap_host},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_coap_port, core::StandardValidators::get().PORT_VALIDATOR},
-  core::ConfigurationProperty{Configuration::nifi_c2_coap_connector_service},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_protocol_class},
+  core::ConfigurationProperty{Configuration::nifi_c2_agent_identifier},
+  core::ConfigurationProperty{Configuration::nifi_c2_agent_trigger_classes},
+  core::ConfigurationProperty{Configuration::nifi_c2_root_classes},
+  core::ConfigurationProperty{Configuration::nifi_c2_root_class_definitions},
+  core::ConfigurationProperty{Configuration::nifi_c2_rest_listener_port, core::StandardValidators::get().LISTEN_PORT_VALIDATOR},
+  core::ConfigurationProperty{Configuration::nifi_c2_rest_listener_cacert},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_url},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_url_ack},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_ssl_context_service},
@@ -101,9 +100,6 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_c2_mqtt_connector_service},
   core::ConfigurationProperty{Configuration::nifi_c2_mqtt_heartbeat_topic},
   core::ConfigurationProperty{Configuration::nifi_c2_mqtt_update_topic},
-  core::ConfigurationProperty{Configuration::nifi_c2_agent_identifier},
-  core::ConfigurationProperty{Configuration::nifi_c2_agent_trigger_classes},
-  core::ConfigurationProperty{Configuration::nifi_c2_root_class_definitions},
   core::ConfigurationProperty{Configuration::nifi_state_management_provider_local},
   core::ConfigurationProperty{Configuration::nifi_state_management_provider_local_class_name},
   core::ConfigurationProperty{Configuration::nifi_state_management_provider_local_always_persist, core::StandardValidators::get().BOOLEAN_VALIDATOR},
@@ -133,7 +129,4 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_log_compression_compressed_log_max_size, core::StandardValidators::get().DATA_SIZE_VALIDATOR}
 };
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi
