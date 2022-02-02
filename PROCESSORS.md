@@ -313,7 +313,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them, it can handle multiple inputs differentiated by the <em>absolute.path</em> flow file attribute.
+DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. It can handle multiple inputs differentiated by the <em>absolute.path</em> flow file attribute.
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
