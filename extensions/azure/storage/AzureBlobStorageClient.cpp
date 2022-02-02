@@ -128,8 +128,7 @@ std::vector<Azure::Storage::Blobs::Models::BlobItem> AzureBlobStorageClient::lis
   resetClientIfNeeded(params.credentials, params.container_name);
   Azure::Storage::Blobs::ListBlobsOptions options;
   options.Prefix = params.prefix;
-  for (auto page_result = container_client_->ListBlobs(options); page_result.HasPage(); page_result.MoveToNextPage())
-  {
+  for (auto page_result = container_client_->ListBlobs(options); page_result.HasPage(); page_result.MoveToNextPage()) {
     result.insert(result.end(), page_result.Blobs.begin(), page_result.Blobs.end());
   }
   return result;

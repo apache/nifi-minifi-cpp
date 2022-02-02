@@ -67,8 +67,7 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
     : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
-  std::optional<storage::ListAzureBlobStorageParameters> buildListAzureBlobStorageParameters(
-    const std::shared_ptr<core::ProcessContext> &context);
+  std::optional<storage::ListAzureBlobStorageParameters> buildListAzureBlobStorageParameters(core::ProcessContext &context);
 
   storage::ListAzureBlobStorageParameters list_parameters_;
   EntityTracking tracking_strategy_ = EntityTracking::TIMESTAMPS;

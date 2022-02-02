@@ -67,7 +67,7 @@ void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext
   tracking_strategy_ = EntityTracking::parse(
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ListingStrategy.getName(), EntityTracking::values()).c_str());
 
-  auto params = buildListAzureBlobStorageParameters(context);
+  auto params = buildListAzureBlobStorageParameters(*context);
   if (!params) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Required parameters for ListAzureBlobStorage processor are missing or invalid");
   }
@@ -75,14 +75,13 @@ void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext
   list_parameters_ = *params;
 }
 
-std::optional<storage::ListAzureBlobStorageParameters> ListAzureBlobStorage::buildListAzureBlobStorageParameters(
-    const std::shared_ptr<core::ProcessContext> &context) {
+std::optional<storage::ListAzureBlobStorageParameters> ListAzureBlobStorage::buildListAzureBlobStorageParameters(core::ProcessContext &context) {
   storage::ListAzureBlobStorageParameters params;
   if (!setCommonStorageParameters(params, *context, nullptr)) {
     return std::nullopt;
   }
 
-  context->getProperty(Prefix, params.prefix, nullptr);
+  context.getProperty(Prefix, params.prefix, nullptr);
 
   return params;
 }

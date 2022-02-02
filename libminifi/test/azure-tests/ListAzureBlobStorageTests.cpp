@@ -37,7 +37,7 @@ class ListAzureBlobStorageTestsFixture {
     LogTestController::getInstance().setDebug<TestPlan>();
     LogTestController::getInstance().setDebug<minifi::core::Processor>();
     LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
-    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::azure::processors::ListAzureBlobStorage>();
 
     // Build MiNiFi processing graph
@@ -219,7 +219,8 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
   setDefaultCredentials();
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName.getName(), CONTAINER_NAME);
   plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix.getName(), PREFIX);
-  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy.getName(), toString(minifi::azure::processors::ListAzureBlobStorage::EntityTracking::NONE));
+  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy.getName(),
+    toString(minifi::azure::processors::ListAzureBlobStorage::EntityTracking::NONE));
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   auto run_assertions = [this]() {
