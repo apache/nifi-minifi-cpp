@@ -306,25 +306,12 @@ std::optional<size_t> DefragmentText::Buffer::getNextFragmentOffset() const {
 }
 
 DefragmentText::FragmentSource::Id::Id(const core::FlowFile& flow_file) {
-  if (auto base_name_attribute = flow_file.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE))
-    base_name_attribute_ = *base_name_attribute;
-  if (auto post_name_attribute = flow_file.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE))
-    post_name_attribute_ = *post_name_attribute;
+  if (auto absolute_path = flow_file.getAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH))
+    absolute_path_ = *absolute_path;
 }
-
-namespace {
-template <typename T, typename... Rest>
-void hash_combine(size_t& seed, const T& v, Rest... rest) {
-  std::hash<T> hasher;
-  seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-  (hash_combine(seed, rest), ...);
-}
-}  // namespace
 
 size_t DefragmentText::FragmentSource::Id::hash::operator() (const Id& fragment_id) const {
-  size_t h = 0;
-  hash_combine(h, fragment_id.base_name_attribute_, fragment_id.post_name_attribute_);
-  return h;
+  return std::hash<std::optional<std::string>>{}(fragment_id.absolute_path_);
 }
 
 REGISTER_RESOURCE(DefragmentText, "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them");

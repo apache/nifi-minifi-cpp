@@ -242,8 +242,8 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
   plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "%");
 
   SECTION("Multiple Sources with different fragment attributes") {
-    plan->setProperty(update_ff_1, textfragmentutils::BASE_NAME_ATTRIBUTE, "input_1", true);
-    plan->setProperty(update_ff_2, textfragmentutils::BASE_NAME_ATTRIBUTE, "input_2", true);
+    plan->setProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_1", true);
+    plan->setProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_2", true);
 
     input_1->setContent("abc%def");
     input_2->setContent("ABC%DEF");
@@ -274,8 +274,8 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
   }
 
   SECTION("Multiple Sources with same fragment attributes mix up") {
-    plan->setProperty(update_ff_1, textfragmentutils::BASE_NAME_ATTRIBUTE, "input", true);
-    plan->setProperty(update_ff_2, textfragmentutils::BASE_NAME_ATTRIBUTE, "input", true);
+    plan->setProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input", true);
+    plan->setProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input", true);
 
     input_1->setContent("abc%def");
     input_2->setContent("ABC%DEF");
@@ -325,6 +325,8 @@ class FragmentGenerator : public core::Processor {
         flow_file->addAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, *base_name_attribute_);
       if (post_name_attribute_)
         flow_file->addAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, *post_name_attribute_);
+      if (absolute_path_attribute_)
+        flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, *absolute_path_attribute_);
       flow_file->addAttribute(textfragmentutils::OFFSET_ATTRIBUTE, std::to_string(offset_));
       offset_ += fragment_content.size();
       session->write(flow_file, &callback);
@@ -336,8 +338,10 @@ class FragmentGenerator : public core::Processor {
 
   void setFragments(std::vector<std::string>&& fragments) {fragment_contents_ = std::move(fragments);}
   void setBatchSize(const size_t batch_size) {batch_size_ = batch_size;}
+  void setAbsolutePathAttribute(const std::string& absolute_path_attribute) { absolute_path_attribute_ = absolute_path_attribute; }
   void setBaseNameAttribute(const std::string& base_name_attribute) { base_name_attribute_ = base_name_attribute; }
   void setPostNameAttribute(const std::string& post_name_attribute) { post_name_attribute_ = post_name_attribute; }
+  void clearAbsolutePathAttribute() { absolute_path_attribute_.reset(); }
   void clearPostNameAttribute() { post_name_attribute_.reset(); }
   void clearBaseNameAttribute() { base_name_attribute_.reset(); }
 
@@ -356,6 +360,7 @@ class FragmentGenerator : public core::Processor {
   size_t offset_ = 0;
   size_t batch_size_ = 1;
   size_t i_ = 0;
+  std::optional<std::string> absolute_path_attribute_;
   std::optional<std::string> base_name_attribute_;
   std::optional<std::string> post_name_attribute_;
   std::vector<std::string> fragment_contents_;
@@ -388,6 +393,8 @@ TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattribu
   input_2->setBaseNameAttribute("input_2");
   input_1->setPostNameAttribute("log");
   input_2->setPostNameAttribute("log");
+  input_1->setAbsolutePathAttribute("/tmp/input/input_1.log");
+  input_2->setAbsolutePathAttribute("/tmp/input/input_2.log");
 
   SECTION("Single source input with offsets") {
     input_1->setFragments({"foo%bar", "%baz,app", "le%"});

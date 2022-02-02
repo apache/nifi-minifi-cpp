@@ -91,8 +91,7 @@ class DefragmentText : public core::Processor {
       };
       bool operator==(const Id& rhs) const = default;
      protected:
-      std::optional<std::string> base_name_attribute_;
-      std::optional<std::string> post_name_attribute_;
+      std::optional<std::string> absolute_path_;
     };
 
     Buffer buffer_;
