@@ -98,6 +98,8 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     item1.Name = "testdir/item1.log";
     item1.Details.LastModified = Azure::DateTime(2021, 9, 10, 16, 42, 0);
     item1.Details.ETag = Azure::ETag("etag1");
+    item1.Details.HttpHeaders.ContentType = "application/zip";
+    item1.Details.HttpHeaders.ContentLanguage = "en-US";
     item1.BlobSize = 128;
     item1.BlobType = Azure::Storage::Blobs::Models::BlobType::BlockBlob;
 
@@ -105,6 +107,8 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     item2.Name = "testdir/item2.log";
     item2.Details.LastModified = Azure::DateTime(2021, 10, 13, 12, 12, 0);
     item2.Details.ETag = Azure::ETag("etag2");
+    item2.Details.HttpHeaders.ContentType = "text/html";
+    item2.Details.HttpHeaders.ContentLanguage = "de-DE";
     item2.BlobSize = 256;
     item2.BlobType = Azure::Storage::Blobs::Models::BlobType::PageBlob;
 

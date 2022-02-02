@@ -45,6 +45,8 @@ struct ListContainerResultElement : public minifi::utils::ListedObject {
   std::string etag;
   int64_t length = 0;
   std::chrono::time_point<std::chrono::system_clock> timestamp;
+  std::string mime_type;
+  std::string language;
   std::string blob_type;
 
   std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {

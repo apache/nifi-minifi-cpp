@@ -97,6 +97,8 @@ std::optional<ListContainerResult> AzureBlobStorage::listContainer(const ListAzu
       element.etag = blob.Details.ETag.ToString();
       element.length = blob.BlobSize;
       element.timestamp = static_cast<std::chrono::system_clock::time_point>(blob.Details.LastModified);
+      element.mime_type = blob.Details.HttpHeaders.ContentType;
+      element.language = blob.Details.HttpHeaders.ContentLanguage;
       element.blob_type = blob.BlobType.ToString();
       result.push_back(element);
     }

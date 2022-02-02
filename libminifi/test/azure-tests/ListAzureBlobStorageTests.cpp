@@ -239,6 +239,10 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.timestamp value:" + mock_blob_storage_ptr_->ITEM2_LAST_MODIFIED));
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:PageBlob"));
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:BlockBlob"));
+    CHECK(verifyLogLinePresenceInPollTime(1s, "key:mime.type value:application/zip"));
+    CHECK(verifyLogLinePresenceInPollTime(1s, "key:mime.type value:text/html"));
+    CHECK(verifyLogLinePresenceInPollTime(1s, "key:lang value:en-US"));
+    CHECK(verifyLogLinePresenceInPollTime(1s, "key:lang value:de-DE"));
   };
   run_assertions();
   plan_->reset();
@@ -270,6 +274,10 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Do not list same files the s
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.timestamp value:" + mock_blob_storage_ptr_->ITEM2_LAST_MODIFIED));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:PageBlob"));
   CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:BlockBlob"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:mime.type value:application/zip"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:mime.type value:text/html"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:lang value:en-US"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:lang value:de-DE"));
   plan_->reset();
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
   test_controller_.runSession(plan_, true);
