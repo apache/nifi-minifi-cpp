@@ -314,7 +314,8 @@ size_t DefragmentText::FragmentSource::Id::hash::operator() (const Id& fragment_
   return std::hash<std::optional<std::string>>{}(fragment_id.absolute_path_);
 }
 
-REGISTER_RESOURCE(DefragmentText, "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them");
+REGISTER_RESOURCE(DefragmentText, "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "
+                                  "It can handle multiple inputs differentiated by the absolute.path flow file attribute.");
 
 
 }  // namespace org::apache::nifi::minifi::processors
