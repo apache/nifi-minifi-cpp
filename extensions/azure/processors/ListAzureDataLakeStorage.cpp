@@ -47,8 +47,8 @@ const core::Property ListAzureDataLakeStorage::ListingStrategy(
   core::PropertyBuilder::createProperty("Listing Strategy")
     ->withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to "
                       "determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
-    ->withDefaultValue<std::string>(toString(storage::EntityTracking::TIMESTAMPS))
-    ->withAllowableValues<std::string>(storage::EntityTracking::values())
+    ->withDefaultValue<std::string>(toString(EntityTracking::TIMESTAMPS))
+    ->withAllowableValues<std::string>(EntityTracking::values())
     ->build());
 
 const core::Relationship ListAzureDataLakeStorage::Success("success", "All FlowFiles that are received are routed to success");
@@ -98,7 +98,7 @@ void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessCon
   }
 
   list_parameters_ = *std::move(params);
-  tracking_strategy_ = utils::parseEnumProperty<storage::EntityTracking>(*context, ListingStrategy);
+  tracking_strategy_ = utils::parseEnumProperty<EntityTracking>(*context, ListingStrategy);
 }
 
 std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStorage::buildListParameters(core::ProcessContext& context) {
@@ -147,7 +147,7 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
   std::size_t files_transferred = 0;
 
   for (const auto& element : *list_result) {
-    if (tracking_strategy_ == storage::EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
+    if (tracking_strategy_ == EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
       continue;
     }
 

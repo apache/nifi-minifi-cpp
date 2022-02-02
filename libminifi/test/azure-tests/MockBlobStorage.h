@@ -32,6 +32,8 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   const std::string PRIMARY_URI = "http://test-uri/file";
   const std::string TEST_TIMESTAMP = "Sun, 21 Oct 2018 12:16:24 GMT";
   const std::string FETCHED_DATA = "test azure data for stream";
+  const std::string ITEM1_LAST_MODIFIED = "1631292120000";
+  const std::string ITEM2_LAST_MODIFIED = "1634127120000";
 
   bool createContainerIfNotExists(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
     put_params_ = params;
@@ -94,14 +96,14 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
 
     Azure::Storage::Blobs::Models::BlobItem item1;
     item1.Name = "testdir/item1.log";
-    item1.Details.LastModified = Azure::DateTime::Parse(TEST_TIMESTAMP, Azure::DateTime::DateFormat::Rfc1123);
+    item1.Details.LastModified = Azure::DateTime(2021, 9, 10, 16, 42, 0);
     item1.Details.ETag = Azure::ETag("etag1");
     item1.BlobSize = 128;
     item1.BlobType = Azure::Storage::Blobs::Models::BlobType::BlockBlob;
 
     Azure::Storage::Blobs::Models::BlobItem item2;
     item2.Name = "testdir/item2.log";
-    item2.Details.LastModified = Azure::DateTime::Parse(TEST_TIMESTAMP, Azure::DateTime::DateFormat::Rfc1123);
+    item2.Details.LastModified = Azure::DateTime(2021, 10, 13, 12, 12, 0);
     item2.Details.ETag = Azure::ETag("etag2");
     item2.BlobSize = 256;
     item2.BlobType = Azure::Storage::Blobs::Models::BlobType::PageBlob;

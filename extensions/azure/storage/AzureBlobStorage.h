@@ -29,6 +29,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
+#include "utils/ListingStateManager.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -38,13 +39,21 @@ struct UploadBlobResult {
   std::string timestamp;
 };
 
-struct ListContainerResultElement {
+struct ListContainerResultElement : public minifi::utils::ListedObject {
   std::string blob_name;
   std::string primary_uri;
   std::string etag;
   int64_t length = 0;
-  std::string timestamp;
+  std::chrono::time_point<std::chrono::system_clock> timestamp;
   std::string blob_type;
+
+  std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
+    return timestamp;
+  }
+
+  std::string getKey() const override {
+    return blob_name;
+  }
 };
 
 using ListContainerResult = std::vector<ListContainerResultElement>;

@@ -42,8 +42,8 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   )
 
   // Supported Properties
-  static const core::Property ListingStrategy;
-  static const core::Property Prefix;
+  EXTENSIONAPI static const core::Property ListingStrategy;
+  EXTENSIONAPI static const core::Property Prefix;
 
   // Supported Relationships
   static const core::Relationship Success;
@@ -68,9 +68,11 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   }
 
   std::optional<storage::ListAzureBlobStorageParameters> buildListAzureBlobStorageParameters(core::ProcessContext &context);
+  std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session, const storage::ListContainerResultElement &element);
 
   storage::ListAzureBlobStorageParameters list_parameters_;
   EntityTracking tracking_strategy_ = EntityTracking::TIMESTAMPS;
+  std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::azure::processors

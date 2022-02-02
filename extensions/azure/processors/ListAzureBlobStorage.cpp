@@ -64,6 +64,13 @@ void ListAzureBlobStorage::initialize() {
 
 void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
   AzureBlobStorageProcessorBase::onSchedule(context, session_factory);
+
+  auto state_manager = context->getStateManager();
+  if (state_manager == nullptr) {
+    throw Exception(PROCESSOR_EXCEPTION, "Failed to get StateManager");
+  }
+  state_manager_ = std::make_unique<minifi::utils::ListingStateManager>(state_manager);
+
   tracking_strategy_ = EntityTracking::parse(
     utils::parsePropertyWithAllowableValuesOrThrow(*context, ListingStrategy.getName(), EntityTracking::values()).c_str());
 
@@ -86,7 +93,24 @@ std::optional<storage::ListAzureBlobStorageParameters> ListAzureBlobStorage::bui
   return params;
 }
 
+std::shared_ptr<core::FlowFile> ListAzureBlobStorage::createNewFlowFile(core::ProcessSession &session, const storage::ListContainerResultElement &element) {
+  auto flow_file = session.create();
+  session.putAttribute(flow_file, "azure.container", list_parameters_.container_name);
+  session.putAttribute(flow_file, "azure.blobname", element.blob_name);
+  session.putAttribute(flow_file, "azure.primaryUri", element.primary_uri);
+  // session.putAttribute(flow_file, "azure.secondaryUri", "");
+  session.putAttribute(flow_file, "azure.etag", element.etag);
+  session.putAttribute(flow_file, "azure.length", std::to_string(element.length));
+  session.putAttribute(flow_file, "azure.timestamp", std::to_string(element.timestamp.time_since_epoch() / std::chrono::milliseconds(1)));
+  // session.putAttribute(flow_file, "mime.type", "");
+  // session.putAttribute(flow_file, "lang", "");
+  session.putAttribute(flow_file, "azure.blobtype", element.blob_type);
+  session.transfer(flow_file, Success);
+  return flow_file;
+}
+
 void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context && session);
   logger_->log_trace("ListAzureBlobStorage onTrigger");
 
   auto list_result = azure_blob_storage_.listContainer(list_parameters_);
@@ -95,19 +119,29 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
     return;
   }
 
+  auto stored_listing_state = state_manager_->getCurrentState();
+  auto latest_listing_state = stored_listing_state;
+  std::size_t files_transferred = 0;
+
   for (const auto& element : *list_result) {
-    auto flow_file = session->create();
-    session->putAttribute(flow_file, "azure.container", list_parameters_.container_name);
-    session->putAttribute(flow_file, "azure.blobname", element.blob_name);
-    session->putAttribute(flow_file, "azure.primaryUri", element.primary_uri);
-    // session->putAttribute(flow_file, "azure.secondaryUri", "");
-    session->putAttribute(flow_file, "azure.etag", element.etag);
-    session->putAttribute(flow_file, "azure.length", std::to_string(element.length));
-    session->putAttribute(flow_file, "azure.timestamp", element.timestamp);
-    // session->putAttribute(flow_file, "mime.type", "");
-    // session->putAttribute(flow_file, "lang", "");
-    session->putAttribute(flow_file, "azure.blobtype", element.blob_type);
+    if (tracking_strategy_ == EntityTracking::TIMESTAMPS && stored_listing_state.wasObjectListedAlready(element)) {
+      continue;
+    }
+
+    auto flow_file = createNewFlowFile(*session, element);
     session->transfer(flow_file, Success);
+    ++files_transferred;
+    latest_listing_state.updateState(element);
+  }
+
+  state_manager_->storeState(latest_listing_state);
+
+  logger_->log_debug("ListAzureBlobStorage transferred %zu flow files", files_transferred);
+
+  if (files_transferred == 0) {
+    logger_->log_debug("No new Azure Storage blobs were found in container '%s'", list_parameters_.container_name);
+    context->yield();
+    return;
   }
 }
 

@@ -235,7 +235,8 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.length value:256"));
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag1"));
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag2"));
-    CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.timestamp value:" + mock_blob_storage_ptr_->TEST_TIMESTAMP));
+    CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.timestamp value:" + mock_blob_storage_ptr_->ITEM1_LAST_MODIFIED));
+    CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.timestamp value:" + mock_blob_storage_ptr_->ITEM2_LAST_MODIFIED));
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:PageBlob"));
     CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:BlockBlob"));
   };
@@ -244,6 +245,35 @@ TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "List all files every time", 
   LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
   test_controller_.runSession(plan_, true);
   run_assertions();
+}
+
+TEST_CASE_METHOD(ListAzureBlobStorageTestsFixture, "Do not list same files the second time when timestamps are tracked", "[ListAzureBlobStorage]") {
+  setDefaultCredentials();
+  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ContainerName.getName(), CONTAINER_NAME);
+  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::Prefix.getName(), PREFIX);
+  plan_->setProperty(list_azure_blob_storage_, minifi::azure::processors::ListAzureBlobStorage::ListingStrategy.getName(),
+    toString(minifi::azure::processors::ListAzureBlobStorage::EntityTracking::TIMESTAMPS));
+  test_controller_.runSession(plan_, true);
+  using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
+  auto passed_params = mock_blob_storage_ptr_->getPassedListParams();
+  CHECK(passed_params.container_name == CONTAINER_NAME);
+  CHECK(passed_params.prefix == PREFIX);
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.container value:" + CONTAINER_NAME));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobname value:testdir/item1.log"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobname value:testdir/item2.log"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.primaryUri value:" + mock_blob_storage_ptr_->PRIMARY_URI));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.length value:128"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.length value:256"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag1"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.etag value:etag2"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.timestamp value:" + mock_blob_storage_ptr_->ITEM1_LAST_MODIFIED));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.timestamp value:" + mock_blob_storage_ptr_->ITEM2_LAST_MODIFIED));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:PageBlob"));
+  CHECK(verifyLogLinePresenceInPollTime(1s, "key:azure.blobtype value:BlockBlob"));
+  plan_->reset();
+  LogTestController::getInstance().resetStream(LogTestController::getInstance().log_output);
+  test_controller_.runSession(plan_, true);
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:azure", 0s, 0ms));
 }
 
 }  // namespace

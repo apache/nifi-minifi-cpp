@@ -94,7 +94,8 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Connection String is emp
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "List all files every time", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy.getName(), toString(minifi::azure::storage::EntityTracking::NONE));
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy.getName(),
+    toString(minifi::azure::processors::ListAzureDataLakeStorage::EntityTracking::NONE));
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories.getName(), "false");
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
@@ -123,7 +124,8 @@ TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "List all files every tim
 }
 
 TEST_CASE_METHOD(ListAzureDataLakeStorageTestsFixture, "Do not list same files the second time when timestamps are tracked", "[listAzureDataLakeStorage]") {
-  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy.getName(), toString(minifi::azure::storage::EntityTracking::TIMESTAMPS));
+  plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::ListingStrategy.getName(),
+    toString(minifi::azure::processors::ListAzureDataLakeStorage::EntityTracking::TIMESTAMPS));
   plan_->setProperty(list_azure_data_lake_storage_, minifi::azure::processors::ListAzureDataLakeStorage::RecurseSubdirectories.getName(), "false");
   test_controller_.runSession(plan_, true);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;

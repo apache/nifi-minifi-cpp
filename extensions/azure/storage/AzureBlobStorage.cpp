@@ -96,7 +96,7 @@ std::optional<ListContainerResult> AzureBlobStorage::listContainer(const ListAzu
       element.primary_uri = primary_uri;
       element.etag = blob.Details.ETag.ToString();
       element.length = blob.BlobSize;
-      element.timestamp = blob.Details.LastModified.ToString(Azure::DateTime::DateFormat::Rfc1123);
+      element.timestamp = static_cast<std::chrono::system_clock::time_point>(blob.Details.LastModified);
       element.blob_type = blob.BlobType.ToString();
       result.push_back(element);
     }

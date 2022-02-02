@@ -32,6 +32,11 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
  public:
+  SMART_ENUM(EntityTracking,
+    (NONE, "none"),
+    (TIMESTAMPS, "timestamps")
+  )
+
   EXTENSIONAPI static const core::Property RecurseSubdirectories;
   EXTENSIONAPI static const core::Property FileFilter;
   EXTENSIONAPI static const core::Property PathFilter;
@@ -62,7 +67,7 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
 
   std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext& context);
 
-  storage::EntityTracking tracking_strategy_ = storage::EntityTracking::TIMESTAMPS;
+  EntityTracking tracking_strategy_ = EntityTracking::TIMESTAMPS;
   storage::ListAzureDataLakeStorageParameters list_parameters_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
