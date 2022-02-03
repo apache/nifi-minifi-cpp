@@ -84,8 +84,7 @@ int main(int argc, char **argv) {
 
   auto pg = yaml_config.getRoot();
 
-  std::shared_ptr<core::controller::StandardControllerServiceProvider> provider =
-          std::make_shared<core::controller::StandardControllerServiceProvider>(map, pg.get(), std::make_shared<minifi::Configure>());
+  auto provider = std::make_shared<core::controller::StandardControllerServiceProvider>(map, pg.get(), std::make_shared<minifi::Configure>());
   std::shared_ptr<core::controller::ControllerServiceNode> mockNode = pg->findControllerService("MockItLikeIts1995");
   assert(mockNode != nullptr);
   mockNode->enable();

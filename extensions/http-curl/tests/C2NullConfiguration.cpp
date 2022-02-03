@@ -62,7 +62,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
   }
 
   void queryRootProcessGroup(std::shared_ptr<core::ProcessGroup> pg) override {
-    auto proc = pg->findProcessorByName("invoke");
+    auto* const proc = pg->findProcessorByName("invoke");
     assert(proc != nullptr);
 
     const auto inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
