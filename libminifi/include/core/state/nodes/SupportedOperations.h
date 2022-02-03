@@ -44,13 +44,14 @@ class SupportedOperations : public DeviceInformation {
   }
 
  private:
-  using Metadata = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+  using MetadataItem = std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>;
+  using Metadata = std::vector<MetadataItem>;
 
   template<typename T>
-  static void serializeProperty(SerializedResponseNode& properties, const Metadata& metadata = {}) {
+  static void serializeProperty(SerializedResponseNode& properties, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
     for (const auto& operand_type: T::values()) {
-      auto metadata_it = metadata.find(operand_type);
-      if (metadata_it != metadata.end()) {
+      auto metadata_it = operand_with_metadata.find(operand_type);
+      if (metadata_it != operand_with_metadata.end()) {
         addProperty(properties, operand_type, metadata_it->second);
       } else {
         addProperty(properties, operand_type);
@@ -58,8 +59,9 @@ class SupportedOperations : public DeviceInformation {
     }
   }
 
-  static void addProperty(SerializedResponseNode& properties, const std::string& operand, const std::unordered_map<std::string, std::string>& metadata = {});
+  static void addProperty(SerializedResponseNode& properties, const std::string& operand, const Metadata& metadata = {});
   void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const;
+  Metadata buildUpdatePropertiesMetadata() const;
 
   std::shared_ptr<state::StateMonitor> monitor_;
   std::shared_ptr<controllers::UpdatePolicyControllerService> update_policy_controller_;

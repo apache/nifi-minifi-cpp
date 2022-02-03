@@ -467,7 +467,7 @@ class HeartbeatHandler : public ServerAwareHandler {
   }
 
  private:
-  using Metadata = std::unordered_map<std::string, std::unordered_map<std::string, std::string>>;
+  using Metadata = std::vector<std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>>;
 
   void sendStopOperation(struct mg_connection *conn) {
     std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
@@ -488,27 +488,40 @@ class HeartbeatHandler : public ServerAwareHandler {
     return operands;
   }
 
-  void verifyMetadata(const rapidjson::Value& operation_node, const Metadata& metadata) {
-    for (const auto& operand_and_map : metadata) {
+  void verifyMetadata(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata) {
+    for (const auto& operand_and_map : operand_with_metadata) {
       auto properties = operation_node["properties"].GetArray();
       auto property_it = std::find_if(properties.begin(), properties.end(), [&operand_and_map](const auto& value) { return value["operand"].GetString() == operand_and_map.first; });
       assert(property_it != properties.end());
       auto& property = *property_it;
       assert(property.HasMember("metaData"));
       auto& metadata_node = property["metaData"];
-      std::unordered_map<std::string, std::string> metadata_map_found;
+      Metadata metadata_found;
       for (const auto& metadata : metadata_node.GetArray()) {
-        metadata_map_found.emplace(metadata["key"].GetString(), metadata["value"].GetString());
+        std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>> metadata_item;
+        assert(metadata.HasMember("key"));
+        auto key = metadata["key"].GetString();
+        std::vector<std::unordered_map<std::string, std::string>> values;
+        assert(metadata.HasMember("value"));
+        for (const auto& value : metadata["value"].GetArray()) {
+          std::unordered_map<std::string, std::string> value_item;
+          for (auto it = value.MemberBegin(); it < value.MemberEnd(); ++it) {
+            value_item.emplace(it->name.GetString(), it->value.GetString());
+          }
+          values.push_back(value_item);
+        }
+        metadata_item.emplace(key, values);
+        metadata_found.push_back(metadata_item);
       }
-      assert(metadata_map_found == operand_and_map.second);
+      assert(metadata_found == operand_and_map.second);
     }
   }
 
   template<typename T>
-  void verifyOperands(const rapidjson::Value& operation_node, const Metadata& metadata = {}) {
+  void verifyOperands(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
     auto operands = getOperandsofProperties(operation_node);
     assert(operands == T::values());
-    verifyMetadata(operation_node, metadata);
+    verifyMetadata(operation_node, operand_with_metadata);
   }
 
   void verifyProperties(const rapidjson::Value& operation_node, minifi::c2::Operation operation,
@@ -519,15 +532,22 @@ class HeartbeatHandler : public ServerAwareHandler {
         break;
       }
       case minifi::c2::Operation::UPDATE: {
-        std::unordered_map<std::string, std::string> config_properties;
+        std::vector<std::unordered_map<std::string, std::string>> config_properties;
         for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
+          std::unordered_map<std::string, std::string> config_property;
           if (std::find(disallowed_properties.begin(), disallowed_properties.end(), property.name) == disallowed_properties.end()) {
-            config_properties.emplace(property.name, property.validator->getName());
+            config_property.emplace("propertyName", property.name);
+            config_property.emplace("validator", property.validator->getName());
+            config_properties.push_back(config_property);
           }
         }
+        std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>> available_properties;
+        available_properties.emplace("availableProperties", config_properties);
+        std::unordered_map<std::string, Metadata> operand_with_metadata;
         Metadata metadata;
-        metadata.emplace("properties", config_properties);
-        verifyOperands<minifi::c2::UpdateOperand>(operation_node, metadata);
+        metadata.push_back(available_properties);
+        operand_with_metadata.emplace("properties", metadata);
+        verifyOperands<minifi::c2::UpdateOperand>(operation_node, operand_with_metadata);
         break;
       }
       case minifi::c2::Operation::TRANSFER: {
