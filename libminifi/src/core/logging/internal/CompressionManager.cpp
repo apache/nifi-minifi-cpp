@@ -51,19 +51,19 @@ std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
   };
   auto cached_log_max_size = get_size(compression_cached_log_max_size_).value_or(8_MiB);
   auto compressed_log_max_size = get_size(compression_compressed_log_max_size_).value_or(8_MiB);
-  std::shared_ptr<internal::LogCompressorSink> sink;
-  if (cached_log_max_size != 0 && compressed_log_max_size != 0) {
-    sink = std::make_shared<internal::LogCompressorSink>(
+  std::lock_guard<std::mutex> lock(mtx_);
+  if (cached_log_max_size == 0 || compressed_log_max_size == 0) {
+    sink_.reset();
+    return sink_;
+  }
+  // do not create new sink if all relevant parameters match
+  if (!sink_ || sink_->getMaxCacheSize() != cached_log_max_size || sink_->getMaxCompressedSize() != compressed_log_max_size) {
+    sink_ = std::make_shared<internal::LogCompressorSink>(
         LogQueueSize{cached_log_max_size, cache_segment_size},
         LogQueueSize{compressed_log_max_size, compressed_segment_size},
         logger_factory(getClassName<LogCompressorSink>()));
   }
-  {
-    // gcc4.8 bug => cannot use std::atomic_store
-    std::lock_guard<std::mutex> lock(mtx_);
-    sink_ = sink;
-  }
-  return sink;
+  return sink_;
 }
 
 }  // namespace internal

@@ -567,9 +567,14 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
           entry.second.getAnnotation("persist")
           | utils::map(&AnnotatedValue::to_string)
           | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
-      if (!update_property(entry.first, entry.second.to_string(), persist)) {
+      PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
+      if (!update_property(entry.first, entry.second.to_string(), lifetime)) {
         result = state::UpdateState::PARTIALLY_APPLIED;
       }
+    }
+    // apply changes and persist properties requested to be persisted
+    if (!configuration_->commitChanges()) {
+      result = state::UpdateState::PARTIALLY_APPLIED;
     }
     C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
     enqueue_c2_response(std::move(response));
@@ -601,15 +606,12 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
 /**
  * Updates a property
  */
-bool C2Agent::update_property(const std::string &property_name, const std::string &property_value, bool persist) {
+bool C2Agent::update_property(const std::string &property_name, const std::string &property_value, PropertyChangeLifetime lifetime) {
   if (update_service_ && !update_service_->canUpdate(property_name)) {
     return false;
   }
-  configuration_->set(property_name, property_value);
-  if (!persist) {
-    return true;
-  }
-  return configuration_->persistProperties();
+  configuration_->set(property_name, property_value, lifetime);
+  return true;
 }
 
 C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
@@ -849,7 +851,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
 
   if (should_persist) {
     // update the flow id
-    configuration_->persistProperties();
+    configuration_->commitChanges();
   }
 
   return true;

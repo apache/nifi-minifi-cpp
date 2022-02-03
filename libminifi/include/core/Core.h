@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 #ifdef WIN32
 #pragma comment(lib, "shlwapi.lib")
@@ -64,6 +65,7 @@
 
 #include "utils/Id.h"
 #include "properties/Configure.h"
+#include "utils/StringUtils.h"
 
 /**
  * namespace aliasing
@@ -80,13 +82,16 @@ static inline std::string getClassName() {
   std::free(b);
   return name;
 #else
-  std::string adjusted_name = typeid(T).name();
-  // can probably skip class  manually for slightly higher performance
-  const std::string clazz = "class ";
-  auto haz_clazz = adjusted_name.find(clazz);
-  if (haz_clazz == 0)
-    adjusted_name = adjusted_name.substr(clazz.length(), adjusted_name.length() - clazz.length());
-  return adjusted_name;
+  std::string_view name = typeid(T).name();
+  const std::string_view class_prefix = "class ";
+  const std::string_view struct_prefix = "struct ";
+
+  if (utils::StringUtils::startsWith(name, class_prefix)) {
+    name.remove_prefix(class_prefix.length());
+  } else if (utils::StringUtils::startsWith(name, struct_prefix)) {
+    name.remove_prefix(struct_prefix.length());
+  }
+  return std::string{name};
 #endif
 }
 

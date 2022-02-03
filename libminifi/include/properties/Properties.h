@@ -29,16 +29,23 @@
 
 #include "core/logging/Logger.h"
 #include "utils/ChecksumCalculator.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
+enum class PropertyChangeLifetime {
+  TRANSIENT,  // the changed value will not be committed to disk
+  PERSISTENT  // the changed value will be written to the source file
+};
+
 class Properties {
   struct PropertyValue {
-    std::string value;
-    bool changed;
+    std::string persisted_value;
+    std::string active_value;
+    bool need_to_persist_new_value{false};
   };
 
  public:
@@ -55,11 +62,29 @@ class Properties {
     std::lock_guard<std::mutex> lock(mutex_);
     properties_.clear();
   }
+  void set(const std::string& key, const std::string& value) {
+    set(key, value, PropertyChangeLifetime::PERSISTENT);
+  }
   // Set the config value
-  void set(const std::string &key, const std::string &value) {
+  virtual void set(const std::string &key, const std::string &value, PropertyChangeLifetime lifetime) {
+    auto active_value = utils::StringUtils::replaceEnvironmentVariables(value);
     std::lock_guard<std::mutex> lock(mutex_);
-    properties_[key] = PropertyValue{value, true};
-    dirty_ = true;
+    bool should_persist = lifetime == PropertyChangeLifetime::PERSISTENT;
+    if (auto it = properties_.find(key); it != properties_.end()) {
+      // update an existing property
+      it->second.active_value = active_value;
+      if (should_persist) {
+        it->second.persisted_value = value;
+        it->second.need_to_persist_new_value = true;
+      }
+    } else {
+      // brand new property
+      properties_[key] = PropertyValue{value, active_value, should_persist};
+    }
+
+    if (should_persist) {
+      dirty_ = true;
+    }
   }
   // Check whether the config value existed
   bool has(const std::string& key) const {
@@ -112,7 +137,7 @@ class Properties {
     return minifi_home_;
   }
 
-  bool persistProperties();
+  virtual bool commitChanges();
 
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 

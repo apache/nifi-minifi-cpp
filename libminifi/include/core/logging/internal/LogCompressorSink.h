@@ -69,6 +69,14 @@ class LogCompressorSink : public spdlog::sinks::base_sink<std::mutex> {
     return std::move(compressed.buffer_);
   }
 
+  size_t getMaxCacheSize() const {
+    return cached_logs_.getMaxSize();
+  }
+
+  size_t getMaxCompressedSize() const {
+    return compressed_logs_.getMaxSize();
+  }
+
  private:
   enum class CompressionResult {
     Success,

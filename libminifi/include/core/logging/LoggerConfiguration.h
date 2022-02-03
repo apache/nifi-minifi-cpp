@@ -145,6 +145,8 @@ class LoggerConfiguration {
     const std::string name;
   };
 
+  static std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> getRotatingFileSink(const std::string& appender_key, const std::shared_ptr<LoggerProperties>& properties);
+
   LoggerConfiguration();
   internal::CompressionManager compression_manager_;
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;

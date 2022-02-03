@@ -197,9 +197,9 @@ TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo
   controller_services_provider_ = std::make_shared<minifi::core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
   /* Inject the default state provider ahead of ProcessContext to make sure we have a unique state directory */
   if (state_dir == nullptr) {
-    state_dir_ = std::make_unique<StateDir>();
+    state_dir_ = std::make_unique<TempDirectory>();
   } else {
-    state_dir_ = std::make_unique<StateDir>(state_dir);
+    state_dir_ = std::make_unique<TempDirectory>(state_dir);
   }
   if (!configuration_->get(minifi::Configure::nifi_state_management_provider_local_path)) {
     configuration_->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir_->getPath());
@@ -625,8 +625,6 @@ std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Con
 }
 
 std::string TestController::createTempDirectory() {
-  char format[] = "/var/tmp/nifi-minifi-cpp.test.XXXXXX";
-  auto dir = minifi::utils::file::FileUtils::create_temp_directory(format);
-  directories.push_back(dir);
-  return dir;
+  directories.push_back(std::make_unique<TempDirectory>());
+  return directories.back()->getPath();
 }

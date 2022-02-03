@@ -78,7 +78,7 @@ bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) 
   bootstrap_conf.setHome(key_dir_);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
   bootstrap_conf.set(key_name, utils::StringUtils::to_hex(key));
-  return bootstrap_conf.persistProperties();
+  return bootstrap_conf.commitChanges();
 }
 
 }  // namespace crypto

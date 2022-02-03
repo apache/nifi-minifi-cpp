@@ -151,7 +151,7 @@ class C2Agent : public state::UpdateController {
   /**
    * Updates a property
    */
-  bool update_property(const std::string &property_name, const std::string &property_value,  bool persist);
+  bool update_property(const std::string &property_name, const std::string &property_value,  PropertyChangeLifetime lifetime);
 
   void handle_transfer(const C2ContentResponse &resp);
 

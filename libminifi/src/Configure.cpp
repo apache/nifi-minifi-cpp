@@ -21,6 +21,7 @@
 #include "utils/gsl.h"
 
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -86,6 +87,31 @@ std::string Configure::getAgentIdentifier() const {
 void Configure::setFallbackAgentIdentifier(const std::string& id) {
   std::lock_guard<std::mutex> guard(fallback_identifier_mutex_);
   fallback_identifier_ = id;
+}
+
+void Configure::set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) {
+  const std::string_view log_prefix = "nifi.log.";
+  if (utils::StringUtils::startsWith(key, log_prefix)) {
+    if (logger_properties_) {
+      logger_properties_changed_ = true;
+      logger_properties_->set(key.substr(log_prefix.length()), value, lifetime);
+    }
+  } else {
+    Configuration::set(key, value, lifetime);
+  }
+}
+
+bool Configure::commitChanges() {
+  bool success = true;
+  if (logger_properties_) {
+    success &= logger_properties_->commitChanges();
+    if (logger_properties_changed_) {
+      core::logging::LoggerConfiguration::getConfiguration().initialize(logger_properties_);
+      logger_properties_changed_ = false;
+    }
+  }
+  success &= Configuration::commitChanges();
+  return success;
 }
 
 } /* namespace minifi */
