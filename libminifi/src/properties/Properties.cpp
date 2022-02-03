@@ -43,7 +43,7 @@ bool Properties::getString(const std::string &key, std::string &value) const {
   auto it = properties_.find(key);
 
   if (it != properties_.end()) {
-    value = it->second.value;
+    value = it->second.active_value;
     return true;
   } else {
     return false;
@@ -64,7 +64,7 @@ int Properties::getInt(const std::string &key, int default_value) const {
   std::lock_guard<std::mutex> lock(mutex_);
   auto it = properties_.find(key);
 
-  return it != properties_.end() ? std::stoi(it->second.value) : default_value;
+  return it != properties_.end() ? std::stoi(it->second.active_value) : default_value;
 }
 
 // Load Configure File
@@ -91,7 +91,9 @@ void Properties::loadConfigureFile(const char *fileName) {
   }
   properties_.clear();
   for (const auto& line : PropertiesFile{file}) {
-    properties_[line.getKey()] = {utils::StringUtils::replaceEnvironmentVariables(line.getValue()), false};
+    auto persisted_value = line.getValue();
+    auto value = utils::StringUtils::replaceEnvironmentVariables(persisted_value);
+    properties_[line.getKey()] = {persisted_value, value, false};
   }
   checksum_calculator_.setFileLocation(properties_file_);
   dirty_ = false;
@@ -102,7 +104,7 @@ std::string Properties::getFilePath() const {
   return properties_file_;
 }
 
-bool Properties::persistProperties() {
+bool Properties::commitChanges() {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!dirty_) {
     logger_->log_info("Attempt to persist, but properties are not updated");
@@ -122,9 +124,9 @@ bool Properties::persistProperties() {
       continue;
     }
     if (current_content.hasValue(prop.first)) {
-      current_content.update(prop.first, prop.second.value);
+      current_content.update(prop.first, prop.second.persisted_value);
     } else {
-      current_content.append(prop.first, prop.second.value);
+      current_content.append(prop.first, prop.second.persisted_value);
     }
   }
 
@@ -151,7 +153,7 @@ std::map<std::string, std::string> Properties::getProperties() const {
   std::lock_guard<std::mutex> lock(mutex_);
   std::map<std::string, std::string> properties;
   for (const auto& prop : properties_) {
-    properties[prop.first] = prop.second.value;
+    properties[prop.first] = prop.second.active_value;
   }
   return properties;
 }

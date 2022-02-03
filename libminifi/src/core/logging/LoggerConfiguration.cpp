@@ -185,43 +185,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
     if ("nullappender" == appender_type || "null appender" == appender_type || "null" == appender_type) {
       sink_map[appender_name] = std::make_shared<spdlog::sinks::null_sink_st>();
     } else if ("rollingappender" == appender_type || "rolling appender" == appender_type || "rolling" == appender_type) {
-      std::string file_name;
-      if (!logger_properties->getString(appender_key + ".file_name", file_name)) {
-        file_name = "minifi-app.log";
-      }
-      std::string directory;
-      if (!logger_properties->getString(appender_key + ".directory", directory)) {
-        // The below part assumes logger_properties->getHome() is existing
-        // Cause minifiHome must be set at MiNiFiMain.cpp?
-        directory = logger_properties->getHome() + utils::file::FileUtils::get_separator() + "logs";
-      }
-
-      if (utils::file::FileUtils::create_dir(directory) == -1) {
-        std::cerr << directory << " cannot be created\n";
-        exit(1);
-      }
-      file_name = directory + utils::file::FileUtils::get_separator() + file_name;
-
-      int max_files = 3;
-      std::string max_files_str = "";
-      if (logger_properties->getString(appender_key + ".max_files", max_files_str)) {
-        try {
-          max_files = std::stoi(max_files_str);
-        } catch (const std::invalid_argument &) {
-        } catch (const std::out_of_range &) {
-        }
-      }
-
-      int max_file_size = 5 * 1024 * 1024;
-      std::string max_file_size_str = "";
-      if (logger_properties->getString(appender_key + ".max_file_size", max_file_size_str)) {
-        try {
-          max_file_size = std::stoi(max_file_size_str);
-        } catch (const std::invalid_argument &) {
-        } catch (const std::out_of_range &) {
-        }
-      }
-      sink_map[appender_name] = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
+      sink_map[appender_name] = getRotatingFileSink(appender_key, logger_properties);
     } else if ("stdout" == appender_type) {
       sink_map[appender_name] = std::make_shared<spdlog::sinks::stdout_sink_mt>();
     } else if ("stderr" == appender_type) {
@@ -318,7 +282,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
   std::copy(inherited_sinks.begin(), inherited_sinks.end(), std::back_inserter(sinks));
   spdlogger = std::make_shared<spdlog::logger>(name, begin(sinks), end(sinks));
   spdlogger->set_level(level);
-  spdlogger->set_formatter(formatter -> clone());
+  spdlogger->set_formatter(formatter->clone());
   spdlogger->flush_on(std::max(spdlog::level::info, current_namespace->level));
   try {
     spdlog::register_logger(spdlogger);
@@ -357,6 +321,57 @@ void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex
     root_namespace_->sinks.push_back(compression_sink);
     root_namespace_->exported_sinks.push_back(compression_sink);
   }
+}
+
+std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRotatingFileSink(const std::string& appender_key, const std::shared_ptr<LoggerProperties>& properties) {
+  static std::map<std::filesystem::path, std::shared_ptr<spdlog::sinks::rotating_file_sink_mt>> rotating_file_sinks;
+  static std::mutex sink_map_mtx;
+
+  std::string file_name;
+  if (!properties->getString(appender_key + ".file_name", file_name)) {
+    file_name = "minifi-app.log";
+  }
+  std::string directory;
+  if (!properties->getString(appender_key + ".directory", directory)) {
+    // The below part assumes logger_properties->getHome() is existing
+    // Cause minifiHome must be set at MiNiFiMain.cpp?
+    directory = properties->getHome() + utils::file::FileUtils::get_separator() + "logs";
+  }
+
+  file_name = directory + utils::file::FileUtils::get_separator() + file_name;
+  if (utils::file::FileUtils::create_dir(directory) == -1) {
+    std::cerr << directory << " cannot be created\n";
+    exit(1);
+  }
+
+  int max_files = 3;
+  std::string max_files_str = "";
+  if (properties->getString(appender_key + ".max_files", max_files_str)) {
+    try {
+      max_files = std::stoi(max_files_str);
+    } catch (const std::invalid_argument &) {
+    } catch (const std::out_of_range &) {
+    }
+  }
+
+  int max_file_size = 5_MiB;
+  std::string max_file_size_str = "";
+  if (properties->getString(appender_key + ".max_file_size", max_file_size_str)) {
+    try {
+      max_file_size = std::stoi(max_file_size_str);
+    } catch (const std::invalid_argument &) {
+    } catch (const std::out_of_range &) {
+    }
+  }
+
+  std::lock_guard<std::mutex> guard(sink_map_mtx);
+  auto it = rotating_file_sinks.find(file_name);
+  if (it != rotating_file_sinks.end()) {
+    return it->second;
+  }
+  auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
+  rotating_file_sinks.emplace(file_name, sink);
+  return sink;
 }
 
 } /* namespace logging */

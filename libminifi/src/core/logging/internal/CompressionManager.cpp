@@ -37,6 +37,12 @@ namespace internal {
 
 std::shared_ptr<LogCompressorSink> CompressionManager::initialize(
     const std::shared_ptr<LoggerProperties>& properties, const std::shared_ptr<Logger>& error_logger, const LoggerFactory& logger_factory) {
+  {
+    std::lock_guard<std::mutex> lock(mtx_);
+    if (sink_) {
+      return sink_;
+    }
+  }
   const auto get_size = [&] (const char* const property_name) -> std::optional<size_t> {
     auto size_str = properties->getString(property_name);
     if (!size_str) return {};
