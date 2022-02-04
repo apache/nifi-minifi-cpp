@@ -247,7 +247,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   /* Set attributes */
   std::string parent_path;
   std::string child_path;
-  std::tie(parent_path, child_path) = utils::file::FileUtils::split_path(remote_file, true /*force_posix*/);
+  std::tie(parent_path, child_path) = utils::file::split_path(remote_file, true /*force_posix*/);
 
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
@@ -273,7 +273,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     if (!should_move) {
       logger_->log_warn("Completion Strategy is Move File, but failed to create Move Destination Directory \"%s\"", move_destination_directory);
     } else {
-      auto target_path = utils::file::FileUtils::concat_path(move_destination_directory, child_path);
+      auto target_path = utils::file::concat_path(move_destination_directory, child_path);
       if (!client->rename(remote_file, target_path, false /*overwrite*/)) {
         logger_->log_warn("Completion Strategy is Move File, but failed to move file \"%s\" to \"%s\"", remote_file, target_path);
       }

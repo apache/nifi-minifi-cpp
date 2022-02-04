@@ -39,10 +39,10 @@ class TailFileTestHarness : public IntegrationBase {
   TailFileTestHarness() : IntegrationBase(1s) {
     dir = testController.createTempDirectory();
 
-    statefile = dir + utils::file::FileUtils::get_separator();
+    statefile = dir + utils::file::get_separator();
     statefile += "statefile";
     std::fstream file;
-    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
+    ss << dir << utils::file::get_separator() << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
     file << "Lin\\e1\nli\\nen\nli\\ne3\nli\\ne4\nli\\ne5\n";
     file.close();

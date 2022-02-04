@@ -79,7 +79,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
 
   std::stringstream ss1;
-  ss1 << temp_dir << utils::file::FileUtils::get_separator() << TEST_FILE;
+  ss1 << temp_dir << utils::file::get_separator() << TEST_FILE;
   std::string test_file_path = ss1.str();
 
   std::ofstream test_file(test_file_path);
@@ -151,7 +151,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
 
   std::stringstream ss;
-  ss << dir << utils::file::FileUtils::get_separator() << TEST_FILE;
+  ss << dir << utils::file::get_separator() << TEST_FILE;
   std::string test_file_path = ss.str();
 
   std::ofstream test_file(test_file_path);

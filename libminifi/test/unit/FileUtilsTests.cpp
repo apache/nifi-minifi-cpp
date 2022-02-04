@@ -22,6 +22,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <algorithm>
 #include "../TestBase.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
@@ -37,10 +38,15 @@ TEST_CASE("TestFileUtils::concat_path", "[TestConcatPath]") {
 #ifdef WIN32
   std::string base = "foo\\bar";
   REQUIRE("foo\\bar\\baz" == FileUtils::concat_path(base, child));
+  std::string base2 = "foo\\bar\\";
+  REQUIRE("foo\\bar\\baz" == FileUtils::concat_path(base2, child));
 #else
   std::string base = "foo/bar";
   REQUIRE("foo/bar/baz" == FileUtils::concat_path(base, child));
+  std::string base2 = "foo/bar/";
+  REQUIRE("foo/bar/baz" == FileUtils::concat_path(base2, child));
 #endif
+  REQUIRE(base + FileUtils::get_separator() + child == FileUtils::concat_path(base, child));
 }
 
 TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
@@ -147,7 +153,7 @@ TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
   std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir";
 
   REQUIRE(FileUtils::create_dir(test_dir_path, false) == 0);  // Dir has to be created successfully
-  REQUIRE(utils::file::exists(test_dir_path));  // Check if directory exists
+  REQUIRE(std::filesystem::exists(test_dir_path));  // Check if directory exists
   REQUIRE(FileUtils::create_dir(test_dir_path, false) == 0);  // Dir already exists, success should be returned
   REQUIRE(FileUtils::delete_dir(test_dir_path, false) == 0);  // Delete should be successful as well
   test_dir_path += "/random_dir2";
@@ -163,9 +169,117 @@ TEST_CASE("TestFileUtils::create_dir recursively", "[TestCreateDir]") {
     "random_dir2" + FileUtils::get_separator() + "random_dir3";
 
   REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir has to be created successfully
-  REQUIRE(utils::file::exists(test_dir_path));  // Check if directory exists
+  REQUIRE(std::filesystem::exists(test_dir_path));  // Check if directory exists
   REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir already exists, success should be returned
   REQUIRE(FileUtils::delete_dir(test_dir_path) == 0);  // Delete should be successful as well
+}
+
+TEST_CASE("TestFileUtils::list_dir", "[TestListDir]") {
+  TestController testController;
+
+  struct ListDirLogger {};
+  const std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ListDirLogger>::getLogger()};
+  LogTestController::getInstance().setDebug<ListDirLogger>();
+
+  // Callback, called for each file entry in the listed directory
+  // Return value is used to break (false) or continue (true) listing
+  auto lambda = [](const std::string &, const std::string &) -> bool {
+    return true;
+  };
+
+  auto dir = testController.createTempDirectory();
+  auto foo = FileUtils::concat_path(dir, "foo");
+  FileUtils::create_dir(foo);
+
+  FileUtils::list_dir(dir, lambda, logger_, false);
+
+  REQUIRE(LogTestController::getInstance().contains(dir));
+  REQUIRE_FALSE(LogTestController::getInstance().contains(foo));
+}
+
+TEST_CASE("TestFileUtils::list_dir recursively", "[TestListDir]") {
+  TestController testController;
+
+  struct ListDirLogger {};
+  const std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<ListDirLogger>::getLogger()};
+  LogTestController::getInstance().setDebug<ListDirLogger>();
+
+  // Callback, called for each file entry in the listed directory
+  // Return value is used to break (false) or continue (true) listing
+  auto lambda = [](const std::string &, const std::string &) -> bool {
+    return true;
+  };
+
+  auto dir = testController.createTempDirectory();
+  auto foo = FileUtils::concat_path(dir, "foo");
+  auto bar = FileUtils::concat_path(dir, "bar");
+  auto fooBaz = FileUtils::concat_path(foo, "baz");
+
+  FileUtils::create_dir(foo);
+  FileUtils::create_dir(bar);
+  FileUtils::create_dir(fooBaz);
+
+  FileUtils::list_dir(dir, lambda, logger_, true);
+
+  REQUIRE(LogTestController::getInstance().contains(dir));
+  REQUIRE(LogTestController::getInstance().contains(foo));
+  REQUIRE(LogTestController::getInstance().contains(bar));
+  REQUIRE(LogTestController::getInstance().contains(fooBaz));
+}
+
+TEST_CASE("TestFileUtils::addFilesMatchingExtension", "[TestAddFilesMatchingExtension]") {
+  TestController testController;
+
+  struct addFilesMatchingExtension {};
+  const std::shared_ptr<logging::Logger> logger_{logging::LoggerFactory<addFilesMatchingExtension>::getLogger()};
+  LogTestController::getInstance().setInfo<addFilesMatchingExtension>();
+
+  /*dir/
+   * |
+   * |---foo/
+   * |    |
+   * |    |--fooFile.ext
+   * |    |--fooFile.noext
+   * |    |___baz/
+   * |
+   * |---bar/
+   * |    |
+   * |    |__barFile.ext
+   * |
+   * |__level1.ext
+   *
+   * */
+
+  auto dir = testController.createTempDirectory();
+  auto foo = FileUtils::concat_path(dir, "foo");
+  auto fooGood = FileUtils::concat_path(foo, "fooFile.ext");
+  auto fooBad = FileUtils::concat_path(foo, "fooFile.noext");
+  auto fooBaz = FileUtils::concat_path(foo, "baz");
+
+  auto bar = FileUtils::concat_path(dir, "bar");
+  auto barGood = FileUtils::concat_path(bar, "barFile.ext");
+
+  auto level1 = FileUtils::concat_path(dir, "level1.ext");
+
+  FileUtils::create_dir(foo);
+  FileUtils::create_dir(bar);
+  FileUtils::create_dir(fooBaz);
+  std::ofstream out1(fooGood);
+  std::ofstream out2(fooBad);
+  std::ofstream out3(barGood);
+  std::ofstream out4(level1);
+
+  std::vector<std::string> expectedFiles = {barGood, fooGood, level1};
+  std::vector<std::string> accruedFiles;
+
+  FileUtils::addFilesMatchingExtension(logger_, dir, ".ext", accruedFiles);
+  std::sort(accruedFiles.begin(), accruedFiles.end());
+
+  CHECK(accruedFiles == expectedFiles);
+
+  auto fakeDir = FileUtils::concat_path(dir, "fake");
+  FileUtils::addFilesMatchingExtension(logger_, fakeDir, ".ext", accruedFiles);
+  REQUIRE(LogTestController::getInstance().contains("Failed to open directory: " + fakeDir));
 }
 
 TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
@@ -199,32 +313,32 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
 
 TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_write_time][last_write_time_point]") {
   using namespace std::chrono;
+  namespace fs = std::filesystem;
 
-  // TODO(MINIFICPP-1636) this should use std::chrono::file_clock
-  uint64_t time_before_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  time_point<system_clock, seconds> time_point_before_write = time_point_cast<seconds>(system_clock::now());
+  fs::file_time_type time_before_write = file_clock::now();
+  time_point<file_clock, seconds> time_point_before_write = time_point_cast<seconds>(file_clock::now());
 
   TestController testController;
 
   std::string dir = testController.createTempDirectory();
 
   std::string test_file = dir + FileUtils::get_separator() + "test.txt";
-  REQUIRE(FileUtils::last_write_time(test_file) == 0);
-  REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<system_clock, seconds>{}));
+  REQUIRE_FALSE(FileUtils::last_write_time(test_file).has_value());  // non existent file should not return last w.t.
+  REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<file_clock, seconds>{}));
 
   std::this_thread::sleep_for(std::chrono::milliseconds(10));
   std::ofstream test_file_stream(test_file);
   test_file_stream << "foo\n";
   test_file_stream.flush();
 
-  uint64_t time_after_first_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  time_point<system_clock, seconds> time_point_after_first_write = time_point_cast<seconds>(system_clock::now());
+  fs::file_time_type time_after_first_write = file_clock::now();
+  time_point<file_clock, seconds> time_point_after_first_write = time_point_cast<seconds>(file_clock::now());
 
-  uint64_t first_mtime = FileUtils::last_write_time(test_file);
+  fs::file_time_type first_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(first_mtime >= time_before_write);
   REQUIRE(first_mtime <= time_after_first_write);
 
-  time_point<system_clock, seconds> first_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  time_point<file_clock, seconds> first_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(first_mtime_time_point >= time_point_before_write);
   REQUIRE(first_mtime_time_point <= time_point_after_first_write);
 
@@ -232,15 +346,15 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
   test_file_stream << "bar\n";
   test_file_stream.flush();
 
-  uint64_t time_after_second_write = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-  time_point<system_clock, seconds> time_point_after_second_write = time_point_cast<seconds>(system_clock::now());
+  fs::file_time_type time_after_second_write = file_clock::now();
+  time_point<file_clock, seconds> time_point_after_second_write = time_point_cast<seconds>(file_clock::now());
 
-  uint64_t second_mtime = FileUtils::last_write_time(test_file);
+  fs::file_time_type second_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(second_mtime >= first_mtime);
   REQUIRE(second_mtime >= time_after_first_write);
   REQUIRE(second_mtime <= time_after_second_write);
 
-  time_point<system_clock, seconds> second_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  time_point<file_clock, seconds> second_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(second_mtime_time_point >= first_mtime_time_point);
   REQUIRE(second_mtime_time_point >= time_point_after_first_write);
   REQUIRE(second_mtime_time_point <= time_point_after_second_write);
@@ -249,10 +363,10 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
 
   // On Windows it would rarely occur that the last_write_time is off by 1 from the previous check
 #ifndef WIN32
-  uint64_t third_mtime = FileUtils::last_write_time(test_file);
+  fs::file_time_type third_mtime = FileUtils::last_write_time(test_file).value();
   REQUIRE(third_mtime == second_mtime);
 
-  time_point<system_clock, seconds> third_mtime_time_point = FileUtils::last_write_time_point(test_file);
+  time_point<file_clock, seconds> third_mtime_time_point = FileUtils::last_write_time_point(test_file);
   REQUIRE(third_mtime_time_point == second_mtime_time_point);
 #endif
 }
@@ -373,7 +487,7 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
 }
 
 #ifndef WIN32
-TEST_CASE("FileUtils::set_permissions", "[TestSetPermissions]") {
+TEST_CASE("FileUtils::set_permissions and get_permissions", "[TestSetPermissions][TestGetPermissions]") {
   TestController testController;
 
   auto dir = testController.createTempDirectory();
@@ -395,8 +509,8 @@ TEST_CASE("FileUtils::exists", "[TestExists]") {
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
   auto invalid_path = dir + FileUtils::get_separator() + "test_file2.txt";
 
-  REQUIRE(FileUtils::exists(path));
-  REQUIRE(!FileUtils::exists(invalid_path));
+  REQUIRE(utils::file::exists(path));
+  REQUIRE(!utils::file::exists(invalid_path));
 }
 
 TEST_CASE("TestFileUtils::delete_dir should fail with empty path", "[TestEmptyDeleteDir]") {

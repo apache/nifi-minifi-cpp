@@ -44,11 +44,11 @@ echo "Installing test dependencies..." 1>&2
 # hint include/library paths if homewbrew is in use
 if brew list 2> /dev/null | grep openssl > /dev/null 2>&1; then
   echo "Using homebrew paths for openssl" 1>&2
-  LDFLAGS="-L$(brew --prefix openssl)/lib"
+  LDFLAGS="-L$(brew --prefix openssl@1.1)/lib"
   export LDFLAGS
-  CFLAGS="-I$(brew --prefix openssl)/include"
+  CFLAGS="-I$(brew --prefix openssl@1.1)/include"
   export CFLAGS
-  SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl)/include"
+  SWIG_FEATURES="-cpperraswarn -includeall -I$(brew --prefix openssl@1.1)/include"
   export SWIG_FEATURES
 fi
 

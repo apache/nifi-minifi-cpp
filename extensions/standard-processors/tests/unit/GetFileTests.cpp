@@ -138,7 +138,7 @@ TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
 
   test_controller.runSession();
 
-  REQUIRE_FALSE(utils::file::FileUtils::exists(test_controller.getInputFilePath()));
+  REQUIRE_FALSE(utils::file::exists(test_controller.getInputFilePath()));
 }
 
 TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
@@ -147,7 +147,7 @@ TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
 
   test_controller.runSession();
 
-  REQUIRE(utils::file::FileUtils::exists(test_controller.getInputFilePath()));
+  REQUIRE(utils::file::exists(test_controller.getInputFilePath()));
 }
 
 TEST_CASE("Hidden files are read when IgnoreHiddenFile property is false", "[getFileProperty]") {
@@ -193,9 +193,8 @@ TEST_CASE("Only older files are read when MinAge property is set", "[getFileProp
   GetFileTestController test_controller;
   test_controller.setProperty(minifi::processors::GetFile::MinAge, "1 hour");
 
-  const auto more_than_an_hour_ago = std::chrono::system_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(),
-    std::chrono::duration_cast<std::chrono::seconds>(more_than_an_hour_ago.time_since_epoch()).count());
+  const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
 
   test_controller.runSession();
 
@@ -208,9 +207,8 @@ TEST_CASE("Only newer files are read when MaxAge property is set", "[getFileProp
   GetFileTestController test_controller;
   test_controller.setProperty(minifi::processors::GetFile::MaxAge, "1 hour");
 
-  const auto more_than_an_hour_ago = std::chrono::system_clock::now() - 65min;
-  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(),
-    std::chrono::duration_cast<std::chrono::seconds>(more_than_an_hour_ago.time_since_epoch()).count());
+  const auto more_than_an_hour_ago = std::chrono::file_clock::now() - 65min;
+  utils::file::FileUtils::set_last_write_time(test_controller.getInputFilePath(), more_than_an_hour_ago);
 
   test_controller.runSession();
 

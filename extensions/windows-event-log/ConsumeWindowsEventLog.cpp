@@ -51,7 +51,7 @@
 #pragma comment(lib, "wevtapi.lib")
 #pragma comment(lib, "ole32.lib")
 
-using namespace std::chrono_literals;  // NOLINT(build/namespaces)
+using namespace std::literals::chrono_literals;
 
 namespace org {
 namespace apache {

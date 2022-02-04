@@ -54,6 +54,8 @@
 #include "processors/PutFile.h"
 #include "tools/SFTPTestServer.h"
 
+using namespace std::literals::chrono_literals;
+
 class ListThenFetchSFTPTestsFixture {
  public:
   ListThenFetchSFTPTestsFixture() {
@@ -147,30 +149,31 @@ class ListThenFetchSFTPTestsFixture {
   }
 
   // Create source file
-  void createFile(const std::string& relative_path, const std::string& content, uint64_t modification_timestamp = 0U) {
+  void createFile(const std::string& relative_path, const std::string& content, std::optional<std::filesystem::file_time_type> modification_time) {
     std::fstream file;
     std::stringstream ss;
     ss << src_dir << "/vfs/" << relative_path;
     auto full_path = ss.str();
     std::deque<std::string> parent_dirs;
     std::string parent_dir = full_path;
-    while (!(parent_dir = utils::file::FileUtils::get_parent_path(parent_dir)).empty()) {
+    while (!(parent_dir = utils::file::get_parent_path(parent_dir)).empty()) {
       parent_dirs.push_front(parent_dir);
     }
     for (const auto& dir : parent_dirs) {
-      utils::file::FileUtils::create_dir(dir);
+      utils::file::create_dir(dir);
     }
     file.open(ss.str(), std::ios::out);
     file << content;
     file.close();
-    if (modification_timestamp != 0U) {
-      REQUIRE(true == utils::file::FileUtils::set_last_write_time(full_path, modification_timestamp));
+    if (modification_time.has_value()) {
+      std::error_code ec;
+      utils::file::set_last_write_time(full_path, modification_time.value());
+      REQUIRE(ec.value() == 0);
     }
   }
 
-  void createFileWithModificationTimeDiff(const std::string& relative_path, const std::string& content, int64_t modification_timediff = -300 /*5 minutes ago*/) {
-    time_t now = time(nullptr);
-    return createFile(relative_path, content, now + modification_timediff);
+  void createFileWithModificationTimeDiff(const std::string& relative_path, const std::string& content, std::chrono::seconds modification_timediff = -5min) {
+    return createFile(relative_path, content, std::chrono::file_clock::now() + modification_timediff);
   }
 
   enum TestWhere {

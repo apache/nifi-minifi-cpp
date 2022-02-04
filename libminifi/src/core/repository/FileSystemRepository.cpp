@@ -36,7 +36,7 @@ bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure> &
   } else {
     directory_ = configuration->getHome();
   }
-  utils::file::FileUtils::create_dir(directory_);
+  utils::file::create_dir(directory_);
   return true;
 }
 void FileSystemRepository::stop() {

@@ -32,6 +32,7 @@
 #include "agent/build_description.h"
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "range/v3/algorithm.hpp"
 
 namespace org {
 namespace apache {
@@ -121,41 +122,34 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
 
     for (const auto &path : pathOrFiles) {
-      utils::file::FileUtils::addFilesMatchingExtension(logger_, path, ".py", classpaths_);
+      utils::file::addFilesMatchingExtension(logger_, path, ".py", classpaths_);
     }
   }
 
-  std::string getPackage(const std::string& basePath, const std::string& pythonscript) {
-    const auto script_directory = getPath(pythonscript);
-    const auto loc = script_directory.find_first_of(basePath);
-    if (loc != 0 || script_directory.size() <= basePath.size()) {
+  std::string getPackage(const std::string &basePath, const std::string &pythonscript) {
+    if (!minifi::utils::StringUtils::startsWith(pythonscript, basePath)) {
       return "";
     }
-    const auto python_dir = script_directory.substr(basePath.length() + 1);
-    auto python_package = python_dir.substr(0, python_dir.find_last_of("/\\"));
-    utils::StringUtils::replaceAll(python_package, "/", ".");
-    utils::StringUtils::replaceAll(python_package, "\\", ".");
+    const auto python_package_path = std::filesystem::relative(pythonscript, basePath).parent_path();
+    std::vector<std::string> path_elements{python_package_path.begin(), python_package_path.end()};
+    std::string python_package = minifi::utils::StringUtils::join(".", path_elements);
     if (python_package.length() > 1 && python_package.at(0) == '.') {
       python_package = python_package.substr(1);
     }
-    std::transform(python_package.begin(), python_package.end(), python_package.begin(), ::tolower);
+    ranges::transform(python_package, python_package.begin(), ::tolower);
     return python_package;
   }
 
   std::string getPath(const std::string &pythonscript) {
-    std::string path = pythonscript.substr(0, pythonscript.find_last_of("/\\"));
-    return path;
+    return std::filesystem::path(pythonscript).parent_path().string();
   }
 
   std::string getFileName(const std::string &pythonscript) {
-    std::string path = pythonscript.substr(pythonscript.find_last_of("/\\") + 1);
-    return path;
+    return std::filesystem::path(pythonscript).filename().string();
   }
 
   std::string getScriptName(const std::string &pythonscript) {
-    std::string path = pythonscript.substr(pythonscript.find_last_of("/\\") + 1);
-    size_t dot_i = path.find_last_of('.');
-    return path.substr(0, dot_i);
+    return std::filesystem::path(pythonscript).stem().string();
   }
 
   std::vector<std::string> registered_classes_;

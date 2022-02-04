@@ -24,43 +24,14 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-#ifdef USE_BOOST
-#include <dirent.h>
-#include <boost/filesystem.hpp>
-#include <boost/system/error_code.hpp>
-#ifndef WIN32
-#include <sys/stat.h>
-#endif
-#else
-#include <errno.h>
-
-#include <cstdlib>
-#include <cstring>
-
-#ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-  #define WIN32_LEAN_AND_MEAN
-#endif
-#include <Windows.h>
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-
-#pragma comment(lib, "Ws2_32.lib")
-#else
-#include <dirent.h> // NOLINT
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <utime.h>
-
-#endif
-#endif
 #include <cstdio>
 
 #ifndef WIN32
 #include <unistd.h>
+#include <sys/stat.h> //NOLINT
 
 #endif
+
 #include <fcntl.h>
 
 #ifdef WIN32
@@ -70,6 +41,15 @@
 #include <sys/utime.h>  // _utime64
 #include <tchar.h>  // _tcscpy,_tcscat,_tcscmp
 #include <windows.h>  // winapi
+
+#ifndef WIN32_LEAN_AND_MEAN
+  #define WIN32_LEAN_AND_MEAN
+#endif
+#include <Windows.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
+
+#pragma comment(lib, "Ws2_32.lib")
 
 #include <algorithm>  // replace
 #include <string>  // string
@@ -129,6 +109,7 @@ inline char get_separator(bool /*force_posix*/ = false) {
   return '/';
 }
 #endif
+time_t to_time_t(const std::filesystem::file_time_type time);
 
 inline std::string normalize_path_separators(std::string path, bool force_posix = false) {
   const auto normalize_separators = [force_posix](const char c) {
@@ -156,115 +137,44 @@ inline int64_t delete_dir(const std::string &path, bool delete_files_recursively
   if (path.empty()) {
     return -1;
   }
-#ifdef USE_BOOST
   try {
-    if (boost::filesystem::exists(path)) {
+    if (std::filesystem::exists(path)) {
       if (delete_files_recursively) {
-        boost::filesystem::remove_all(path);
+        std::filesystem::remove_all(path);
       } else {
-        boost::filesystem::remove(path);
+        std::filesystem::remove(path);
       }
     }
-  } catch(boost::filesystem::filesystem_error const & e) {
+  } catch (std::filesystem::filesystem_error const &e) {
     return -1;
     // display error message
   }
   return 0;
-#elif defined(WIN32)
-  WIN32_FIND_DATA FindFileData;
-  HANDLE hFind;
-  DWORD Attributes;
-  std::string str;
-
-
-  std::stringstream pathstr;
-  pathstr << path << "\\*";
-  str = pathstr.str();
-  // List files
-  hFind = FindFirstFile(str.c_str(), &FindFileData);
-  if (hFind != INVALID_HANDLE_VALUE) {
-    do {
-      if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
-        std::stringstream strs;
-        strs << path << "\\" << FindFileData.cFileName;
-        str = strs.str();
-
-        Attributes = GetFileAttributes(str.c_str());
-        if (Attributes & FILE_ATTRIBUTE_DIRECTORY) {
-          // is directory
-          delete_dir(str, delete_files_recursively);
-        } else {
-          remove(str.c_str());
-          // not directory
-        }
-      }
-    }while (FindNextFile(hFind, &FindFileData));
-    FindClose(hFind);
-
-    RemoveDirectory(path.c_str());
-  }
-  return 0;
-#else
-  DIR *current_directory = opendir(path.c_str());
-  int r = -1;
-  if (current_directory) {
-    struct dirent *p;
-    r = 0;
-    while (!r && (p = readdir(current_directory))) {
-      int r2 = -1;
-      std::stringstream newpath;
-      if (!strcmp(p->d_name, ".") || !strcmp(p->d_name, "..")) {
-        continue;
-      }
-      struct stat statbuf;
-
-      newpath << path << "/" << p->d_name;
-
-      if (!stat(newpath.str().c_str(), &statbuf)) {
-        if (S_ISDIR(statbuf.st_mode)) {
-          if (delete_files_recursively) {
-            r2 = delete_dir(newpath.str(), delete_files_recursively);
-          }
-        } else {
-          r2 = unlink(newpath.str().c_str());
-        }
-      }
-      r = r2;
-    }
-    closedir(current_directory);
-  }
-
-  if (!r) {
-    return rmdir(path.c_str());
-  }
-
-  return 0;
-#endif
 }
 
-inline uint64_t last_write_time(const std::string &path) {
-#ifdef USE_BOOST
-  boost::system::error_code ec;
-  auto result = boost::filesystem::last_write_time(path, ec);
+inline std::chrono::time_point<std::chrono::file_clock,
+                               std::chrono::seconds> last_write_time_point(const std::string &path) {
+  std::error_code ec;
+  auto result = std::filesystem::last_write_time(path, ec);
+  if (ec.value() == 0) {
+    return std::chrono::time_point_cast<std::chrono::seconds>(result);
+  }
+  return std::chrono::time_point<std::chrono::file_clock, std::chrono::seconds>{};
+}
+
+inline const std::optional<std::filesystem::file_time_type> last_write_time(const std::string &path) {
+  std::error_code ec;
+  auto result = std::filesystem::last_write_time(path, ec);
   if (ec.value() == 0) {
     return result;
   }
-#elif defined(WIN32)
-  struct _stat64 result;
-  if (_stat64(path.c_str(), &result) == 0) {
-    return result.st_mtime;
-  }
-#else
-  struct stat result;
-  if (stat(path.c_str(), &result) == 0) {
-    return result.st_mtime;
-  }
-#endif
-  return 0;
+  return std::nullopt;
 }
 
-inline std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds> last_write_time_point(const std::string &path) {
-  return std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>{std::chrono::seconds{last_write_time(path)}};
+inline bool set_last_write_time(const std::string &path, std::filesystem::file_time_type new_time) {
+  std::error_code ec;
+  std::filesystem::last_write_time(path, new_time, ec);
+  return ec.value() == 0;
 }
 
 inline uint64_t file_size(const std::string &path) {
@@ -282,41 +192,17 @@ inline uint64_t file_size(const std::string &path) {
   return 0;
 }
 
-inline bool set_last_write_time(const std::string &path, uint64_t write_time) {
-#ifdef USE_BOOST
-  boost::filesystem::last_write_time(path, write_time);
-  return true;
-#elif defined(WIN32)
-  struct __utimbuf64 utim;
-  utim.actime = write_time;
-  utim.modtime = write_time;
-  return _utime64(path.c_str(), &utim) == 0U;
-#else
-  struct utimbuf utim;
-  utim.actime = write_time;
-  utim.modtime = write_time;
-  return utime(path.c_str(), &utim) == 0U;
-#endif
-}
-
 #ifndef WIN32
 inline bool get_permissions(const std::string &path, uint32_t &permissions) {
-  struct stat result;
-  if (stat(path.c_str(), &result) == 0) {
-    permissions = result.st_mode & (S_IRWXU | S_IRWXG | S_IRWXO);
-    return true;
-  }
-  return false;
+  std::error_code ec;
+  permissions = static_cast<uint32_t>(std::filesystem::status(path, ec).permissions());
+  return ec.value() == 0;
 }
 
 inline int set_permissions(const std::string &path, const uint32_t permissions) {
-#ifdef USE_BOOST
-  boost::system::error_code ec;
-  boost::filesystem::permissions(path, static_cast<boost::filesystem::perms>(permissions), ec);
+  std::error_code ec;
+  std::filesystem::permissions(path, static_cast<std::filesystem::perms>(permissions), ec);
   return ec.value();
-#else
-  return chmod(path.c_str(), permissions);
-#endif
 }
 #endif
 
@@ -332,84 +218,36 @@ inline bool get_uid_gid(const std::string &path, uint64_t &uid, uint64_t &gid) {
 }
 #endif
 
-inline bool is_directory(const char * path) {
-#ifndef WIN32
-  struct stat dir_stat;
-  if (stat(path, &dir_stat) != 0) {
-      return false;
+inline bool is_directory(const std::filesystem::path &path) {
+  std::error_code ec;
+  bool result = std::filesystem::is_directory(path, ec);
+  if (ec.value() == 0) {
+    return result;
   }
-  return S_ISDIR(dir_stat.st_mode) != 0;
-#else
-  struct _stat64 dir_stat;
-  if (_stat64(path, &dir_stat) != 0) {
-      return false;
-  }
-  return S_ISDIR(dir_stat.st_mode) != 0;
-#endif
+  return false;
 }
 
-inline bool exists(const std::string& path) {
-#ifdef USE_BOOST
-  return boost::filesystem::exists(path);
-#elif defined(WIN32)
-  struct _stat64 statbuf;
-  return _stat64(path.c_str(), &statbuf) == 0;
-#else
-  struct stat statbuf;
-  return stat(path.c_str(), &statbuf) == 0;
-#endif
+inline bool exists(const std::string &path) {
+  std::error_code ec;
+  bool result = std::filesystem::exists(path, ec);
+  if (ec.value() == 0) {
+    return result;
+  }
+  return false;
 }
 
-inline int create_dir(const std::string& path, bool recursive = true) {
-#ifdef USE_BOOST
-  boost::filesystem::path dir(path);
-  boost::system::error_code ec;
+inline int create_dir(const std::string &path, bool recursive = true) {
+  std::filesystem::path dir(path);
+  std::error_code ec;
   if (!recursive) {
-    boost::filesystem::create_directory(dir, ec);
+    std::filesystem::create_directory(dir, ec);
   } else {
-    boost::filesystem::create_directories(dir, ec);
+    std::filesystem::create_directories(dir, ec);
   }
   if (ec.value() == 0 || (ec.value() == EEXIST && is_directory(path.c_str()))) {
     return 0;
   }
   return ec.value();
-#else
-  if (!recursive) {
-    if (detail::platform_create_dir(path) != 0 && errno != EEXIST) {
-      return -1;
-    }
-    return 0;
-  }
-  if (detail::platform_create_dir(path) == 0) {
-    return 0;
-  }
-
-  switch (errno) {
-  case ENOENT: {
-    size_t found = path.find_last_of(get_separator());
-
-    if (found == std::string::npos) {
-      return -1;
-    }
-
-    const std::string dir = path.substr(0, found);
-    int res = create_dir(dir, recursive);
-    if (res < 0) {
-      return -1;
-    }
-    return detail::platform_create_dir(path);
-  }
-  case EEXIST: {
-    if (is_directory(path.c_str())) {
-      return 0;
-    }
-    return -1;
-  }
-  default:
-    return -1;
-  }
-  return -1;
-#endif
 }
 
 inline int copy_file(const std::string &path_from, const std::string& dest_path) {
@@ -421,73 +259,25 @@ inline int copy_file(const std::string &path_from, const std::string& dest_path)
   return 0;
 }
 
-inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logger> &logger, const std::string &originalPath, const std::string &extension, std::vector<std::string> &accruedFiles) {
-#ifndef WIN32
-
-  struct stat s;
-  if (stat(originalPath.c_str(), &s) == 0) {
-    if (s.st_mode & S_IFDIR) {
-      DIR *d;
-      d = opendir(originalPath.c_str());
-      if (!d) {
-        return;
-      }
-      // only perform a listing while we are not empty
-      logger->log_debug("Performing file listing on %s", originalPath);
-
-      struct dirent *entry;
-      entry = readdir(d);
-      while (entry != nullptr) {
-        std::string d_name = entry->d_name;
-        std::string path = originalPath + "/" + d_name;
-        struct stat statbuf { };
-        if (stat(path.c_str(), &statbuf) != 0) {
-          logger->log_warn("Failed to stat %s", path);
-          return;
-        }
-        if (S_ISDIR(statbuf.st_mode)) {
-          // if this is a directory
-          if (d_name != ".." && d_name != ".") {
-            addFilesMatchingExtension(logger, path, extension, accruedFiles);
-          }
-        } else {
-          if (utils::StringUtils::endsWith(path, extension)) {
-            logger->log_info("Adding %s to paths", path);
-            accruedFiles.push_back(path);
-          }
-        }
-        entry = readdir(d);
-      }
-      closedir(d);
-    } else if (s.st_mode & S_IFREG) {
-      if (utils::StringUtils::endsWith(originalPath, extension)) {
-        logger->log_info("Adding %s to paths", originalPath);
-        accruedFiles.push_back(originalPath);
-      }
-    } else {
-      logger->log_error("Could not stat", originalPath);
-    }
-
-  } else {
-    logger->log_error("Could not access %s", originalPath);
+inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logger> &logger,
+                                      const std::string &originalPath,
+                                      const std::string &extension,
+                                      std::vector<std::string> &accruedFiles) {
+  if (!utils::file::exists(originalPath)) {
+    logger->log_warn("Failed to open directory: %s", originalPath.c_str());
+    return;
   }
-#else
-  HANDLE hFind;
-  WIN32_FIND_DATA FindFileData;
 
-  std::string pathToSearch = originalPath + "\\*" + extension;
-  if ((hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData)) != INVALID_HANDLE_VALUE) {
-    do {
-      struct _stat64 statbuf {};
+  if (utils::file::is_directory(originalPath)) {
+    // only perform a listing while we are not empty
+    logger->log_debug("Looking for files with %s extension in %s", extension, originalPath);
 
-      std::string path = originalPath + "\\" + FindFileData.cFileName;
-      logger->log_info("Adding %s to paths", path);
-      if (_stat64(path.c_str(), &statbuf) != 0) {
-        logger->log_warn("Failed to stat %s", path);
-        break;
-      }
-      logger->log_info("Adding %s to paths", path);
-      if (S_ISDIR(statbuf.st_mode)) {
+    for (const auto &entry: std::filesystem::directory_iterator(originalPath,
+                                                                std::filesystem::directory_options::skip_permission_denied)) {
+      std::string d_name = entry.path().filename().string();
+      std::string path = entry.path().string();
+
+      if (utils::file::is_directory(path)) {          // if this is a directory
         addFilesMatchingExtension(logger, path, extension, accruedFiles);
       } else {
         if (utils::StringUtils::endsWith(path, extension)) {
@@ -495,10 +285,15 @@ inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logge
           accruedFiles.push_back(path);
         }
       }
-    }while (FindNextFileA(hFind, &FindFileData));
-    FindClose(hFind);
+    }
+  } else if (std::filesystem::is_regular_file(originalPath)) {
+    if (utils::StringUtils::endsWith(originalPath, extension)) {
+      logger->log_info("Adding %s to paths", originalPath);
+      accruedFiles.push_back(originalPath);
+    }
+  } else {
+    logger->log_error("Could not access %s", originalPath);
   }
-#endif
 }
 
 inline std::string concat_path(const std::string& root, const std::string& child, bool force_posix = false) {
@@ -523,33 +318,23 @@ inline std::string concat_path(const std::string& root, const std::string& child
  * @param dir_callback Called for every child directory, its return value decides if we should descend and recursively
  * process that directory or not.
  */
-inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
-                     const std::shared_ptr<core::logging::Logger> &logger, std::function<bool(const std::string&)> dir_callback) {
+inline void list_dir(const std::string& dir,
+                     std::function<bool(const std::string&, const std::string&)> callback,
+                     const std::shared_ptr<core::logging::Logger> &logger,
+                     std::function<bool(const std::string&)> dir_callback) {
   logger->log_debug("Performing file listing against %s", dir);
-#ifndef WIN32
-  DIR *d = opendir(dir.c_str());
-  if (!d) {
+  if (!utils::file::exists(dir)) {
     logger->log_warn("Failed to open directory: %s", dir.c_str());
     return;
   }
 
-  struct dirent *entry;
-  while ((entry = readdir(d)) != NULL) {
-    std::string d_name = entry->d_name;
-    std::string path = concat_path(dir, d_name);
+  for (const auto &entry: std::filesystem::directory_iterator(dir, std::filesystem::directory_options::skip_permission_denied)) {
+    std::string d_name = entry.path().filename().string();
+    std::string path = entry.path().string();
 
-    struct stat statbuf;
-    if (stat(path.c_str(), &statbuf) != 0) {
-      logger->log_warn("Failed to stat %s", path);
-      continue;
-    }
-
-    if (S_ISDIR(statbuf.st_mode)) {
-      // if this is a directory
-      if (strcmp(d_name.c_str(), "..") != 0 && strcmp(d_name.c_str(), ".") != 0) {
-        if (dir_callback(dir)) {
-          list_dir(path, callback, logger, dir_callback);
-        }
+    if (utils::file::is_directory(path)) {  // if this is a directory
+      if (dir_callback(dir)) {
+        list_dir(path, callback, logger, dir_callback);
       }
     } else {
       if (!callback(dir, d_name)) {
@@ -557,44 +342,12 @@ inline void list_dir(const std::string& dir, std::function<bool(const std::strin
       }
     }
   }
-  closedir(d);
-#else
-  HANDLE hFind;
-  WIN32_FIND_DATA FindFileData;
-
-  std::string pathToSearch = dir + "\\*.*";
-  hFind = FindFirstFileA(pathToSearch.c_str(), &FindFileData);
-
-  if (hFind == INVALID_HANDLE_VALUE) {
-    logger->log_warn("Failed to open directory: %s", dir.c_str());
-    return;
-  }
-
-  do {
-    struct _stat64 statbuf {};
-    if (strcmp(FindFileData.cFileName, ".") != 0 && strcmp(FindFileData.cFileName, "..") != 0) {
-      std::string path = concat_path(dir, FindFileData.cFileName);
-      if (_stat64(path.c_str(), &statbuf) != 0) {
-        logger->log_warn("Failed to stat %s", path);
-        continue;
-      }
-      if (S_ISDIR(statbuf.st_mode)) {
-        if (dir_callback(dir)) {
-          list_dir(path, callback, logger, dir_callback);
-        }
-      } else {
-        if (!callback(dir, FindFileData.cFileName)) {
-          break;
-        }
-      }
-    }
-  } while (FindNextFileA(hFind, &FindFileData));
-  FindClose(hFind);
-#endif
 }
 
-inline void list_dir(const std::string& dir, std::function<bool(const std::string&, const std::string&)> callback,
-                     const std::shared_ptr<core::logging::Logger> &logger, bool recursive = true) {
+inline void list_dir(const std::string& dir,
+                     std::function<bool(const std::string&, const std::string&)> callback,
+                     const std::shared_ptr<core::logging::Logger> &logger,
+                     bool recursive = true) {
   list_dir(dir, callback, logger, [&] (const std::string&) {
     return recursive;
   });
@@ -736,35 +489,35 @@ inline std::string get_executable_path() {
   }
 #elif defined(__APPLE__)
   std::vector<char> buf(PATH_MAX);
-    uint32_t buf_size = buf.size();
-    while (_NSGetExecutablePath(buf.data(), &buf_size) != 0) {
-      buf.resize(buf_size);
-    }
-    std::vector<char> resolved_name(PATH_MAX);
-    if (realpath(buf.data(), resolved_name.data()) == nullptr) {
-      return "";
-    }
-    return std::string(resolved_name.data());
-#elif defined(WIN32)
-    HMODULE hModule = GetModuleHandleA(nullptr);
-    if (hModule == nullptr) {
-      return "";
-    }
-    std::vector<char> buf(1024U);
-    while (true) {
-      size_t ret = GetModuleFileNameA(hModule, buf.data(), gsl::narrow<DWORD>(buf.size()));
-      if (ret == 0U) {
-        return "";
-      }
-      if (ret == buf.size() && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-        /* It has been truncated */
-        buf.resize(buf.size() * 2);
-        continue;
-      }
-      return std::string(buf.data());
-    }
-#else
+  uint32_t buf_size = buf.size();
+  while (_NSGetExecutablePath(buf.data(), &buf_size) != 0) {
+    buf.resize(buf_size);
+  }
+  std::vector<char> resolved_name(PATH_MAX);
+  if (realpath(buf.data(), resolved_name.data()) == nullptr) {
     return "";
+  }
+  return std::string(resolved_name.data());
+#elif defined(WIN32)
+  HMODULE hModule = GetModuleHandleA(nullptr);
+  if (hModule == nullptr) {
+    return "";
+  }
+  std::vector<char> buf(1024U);
+  while (true) {
+    size_t ret = GetModuleFileNameA(hModule, buf.data(), gsl::narrow<DWORD>(buf.size()));
+    if (ret == 0U) {
+      return "";
+    }
+    if (ret == buf.size() && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+      /* It has been truncated */
+      buf.resize(buf.size() * 2);
+      continue;
+    }
+    return std::string(buf.data());
+  }
+#else
+  return "";
 #endif
 }
 
@@ -801,7 +554,6 @@ inline int access(const char *path_name, int mode) {
   return ::access(path_name, mode);
 #endif
 }
-
 #ifdef WIN32
 inline std::error_code hide_file(const char* const file_name) {
     const bool success = SetFileAttributesA(file_name, FILE_ATTRIBUTE_HIDDEN);
@@ -824,11 +576,11 @@ inline std::string get_file_content(const std::string &file_name) {
 
 bool contains(const std::filesystem::path& file_path, std::string_view text_to_search);
 
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
 #endif  // LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_

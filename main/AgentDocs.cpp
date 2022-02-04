@@ -61,7 +61,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     }
   }
   for (const auto &processor : processorSet) {
-    const std::string &filename = docsdir + utils::file::FileUtils::get_separator() + processor.first;
+    const std::string &filename = docsdir + utils::file::get_separator() + processor.first;
     std::ofstream outfile(filename);
 
     std::string description;
@@ -126,12 +126,12 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
 
   auto fileFind = [&fileList](const std::string& base_path, const std::string& file) -> bool {
     if (file.find(".extra") == std::string::npos)
-      fileList.insert(std::make_pair(file, base_path + utils::file::FileUtils::get_separator() + file));
+      fileList.insert(std::make_pair(file, base_path + utils::file::get_separator() + file));
     return true;
   };
 
   // shortened with list_dir
-  utils::file::FileUtils::list_dir(docsdir, fileFind, core::logging::LoggerFactory<AgentDocs>::getLogger());
+  utils::file::list_dir(docsdir, fileFind, core::logging::LoggerFactory<AgentDocs>::getLogger());
   genStream << "<!--"
   "Licensed to the Apache Software Foundation (ASF) under one or more"
   "contributor license agreements.  See the NOTICE file distributed with"

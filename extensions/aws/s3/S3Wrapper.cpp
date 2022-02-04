@@ -38,7 +38,7 @@ namespace s3 {
 
 void HeadObjectResult::setFilePaths(const std::string& key) {
   absolute_path = key;
-  std::tie(path, filename) = minifi::utils::file::FileUtils::split_path(key, true /*force_posix*/);
+  std::tie(path, filename) = minifi::utils::file::split_path(key, true /*force_posix*/);
 }
 
 S3Wrapper::S3Wrapper() : request_sender_(std::make_unique<S3ClientRequestSender>()) {

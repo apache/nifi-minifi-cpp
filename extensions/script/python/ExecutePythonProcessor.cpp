@@ -158,7 +158,7 @@ void ExecutePythonProcessor::loadScript() {
     }
     script_file_path_ = script_file;
     loadScriptFromFile();
-    last_script_write_time_ = utils::file::FileUtils::last_write_time(script_file_path_);
+    last_script_write_time_ = utils::file::last_write_time(script_file_path_);
     return;
   }
   script_to_exec_ = script_body;
@@ -169,7 +169,7 @@ void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
   if (script_file_path_.empty() || !reload_on_script_change_) {
     return;
   }
-  auto file_write_time = utils::file::FileUtils::last_write_time(script_file_path_);
+  auto file_write_time = utils::file::last_write_time(script_file_path_);
   if (file_write_time != last_script_write_time_) {
     logger_->log_debug("Script file has changed since last time, reloading...");
     loadScriptFromFile();

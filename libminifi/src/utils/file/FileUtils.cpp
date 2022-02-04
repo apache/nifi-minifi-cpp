@@ -86,6 +86,16 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   return check_range(left.size(), left.size() + right.size());
 }
 
+time_t to_time_t(const std::filesystem::file_time_type file_time) {
+#if defined(WIN32)
+  return std::chrono::system_clock::to_time_t(std::chrono::utc_clock::to_sys(std::chrono::file_clock::to_utc(file_time)));
+#elif defined(__APPLE__)
+  return std::chrono::file_clock::to_time_t(file_time);
+#else
+  return std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(file_time));
+#endif
+}
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi
