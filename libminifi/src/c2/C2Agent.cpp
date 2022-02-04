@@ -347,24 +347,25 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
         enqueue_c2_response(std::move(response));
       } else if (resp.name == "corecomponentstate") {
-        // TODO(bakaid): untested
-        std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(resp.name);
-        auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
-        if (state_manager_provider != nullptr) {
-          for (auto &component : components) {
-            logger_->log_debug("Clearing state for component %s", component->getComponentName());
-            auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
-            if (state_manager != nullptr) {
-              component->stop();
-              state_manager->clear();
-              state_manager->persist();
-              component->start();
-            } else {
-              logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
+        for (const auto& corecomponent : resp.operation_arguments) {
+          std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(corecomponent.second.to_string());
+          auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
+          if (state_manager_provider != nullptr) {
+            for (auto &component : components) {
+              logger_->log_debug("Clearing state for component %s", component->getComponentName());
+              auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
+              if (state_manager != nullptr) {
+                component->stop();
+                state_manager->clear();
+                state_manager->persist();
+                component->start();
+              } else {
+                logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
+              }
             }
+          } else {
+            logger_->log_error("Failed to get StateManagerProvider");
           }
-        } else {
-          logger_->log_error("Failed to get StateManagerProvider");
         }
         C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
         enqueue_c2_response(std::move(response));
