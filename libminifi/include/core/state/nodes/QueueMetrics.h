@@ -65,7 +65,7 @@ class QueueMetrics : public ResponseNode {
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
-    for (auto& conn : connections) {
+    for (const auto& conn : connections) {
       auto& connection = conn.second;
       SerializedResponseNode parent;
       parent.name = connection->getName();

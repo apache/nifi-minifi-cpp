@@ -115,11 +115,11 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   }
 
   void setConnectionMap(std::map<std::string, core::Connectable*> connectionMap) {
-    this->connection_map_ = std::move(connectionMap);
+    connection_map_ = std::move(connectionMap);
   }
 
   void setContainers(std::map<std::string, core::Connectable*> containers) {
-    this->containers_ = std::move(containers);
+    containers_ = std::move(containers);
   }
 
   virtual bool Get(const std::string& /*key*/, std::string& /*value*/) {

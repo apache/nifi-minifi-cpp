@@ -35,4 +35,3 @@ Feature: Core flow functionalities
     Given a LogOnDestructionProcessor processor with the name "logOnDestruction" in the "transient-minifi" flow with engine "transient-minifi"
     When the MiNiFi instance starts up
     Then the Minifi logs contain the following message: "LogOnDestructionProcessor is being destructed" in less than 100 seconds
-    #TODO decrease timeout
