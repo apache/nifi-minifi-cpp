@@ -50,7 +50,7 @@ bool Property::getRequired() const {
   return is_required_;
 }
 
-bool Property::supportsExpressionLangauge() const {
+bool Property::supportsExpressionLanguage() const {
   return supports_el_;
 }
 

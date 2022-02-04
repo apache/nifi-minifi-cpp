@@ -85,7 +85,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
 
     outfile << "| Name | Default Value | Allowable Values | Description | " << std::endl << "| - | - | - | - | " << std::endl;
     for (const auto &prop : processor.second.class_properties_) {
-      bool supportsEl = prop.second.supportsExpressionLangauge();
+      bool supportsEl = prop.second.supportsExpressionLanguage();
       outfile << "|";
       if (prop.second.getRequired()) {
         outfile << "**";
