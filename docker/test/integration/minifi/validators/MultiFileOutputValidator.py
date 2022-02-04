@@ -56,7 +56,10 @@ class MultiFileOutputValidator(FileOutputValidator):
             self.file_timestamps[full_path] = os.path.getmtime(full_path)
             logging.info("New file added %s", full_path)
 
-            if len(self.file_timestamps) == self.expected_file_count:
-                return self.check_expected_content(full_dir)
+        if self.expected_file_count != 0 and len(self.file_timestamps) != self.expected_file_count:
+            return False
+
+        if len(self.file_timestamps) >= len(self.expected_content):
+            return self.check_expected_content(full_dir)
 
         return False
