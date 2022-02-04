@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <unordered_map>
 
 #include "civetweb.h"
 #include "CivetServer.h"
@@ -393,11 +394,26 @@ class HeartbeatHandler : public ServerAwareHandler {
     mg_printf(conn, "%s", resp.c_str());
   }
 
-  void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn) {
+  void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn,
+      const std::unordered_map<std::string, std::string>& args = {}) {
+    std::string resp_args;
+    if (!args.empty()) {
+      resp_args = ", \"args\": {";
+      auto it = args.begin();
+      while (it != args.end()) {
+        resp_args += "\"" + it->first + "\": \"" + it->second + "\"";
+        ++it;
+        if (it != args.end()) {
+          resp_args += ", ";
+        }
+      }
+      resp_args += "}";
+    }
     std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
           "\"operation\" : \"" + operation + "\","
           "\"operationid\" : \"" + operationId + "\","
-          "\"operand\": \"" + operand + "\"}]}";
+          "\"operand\": \"" + operand + "\"" +
+          resp_args + "}]}";
 
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
                 "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",

@@ -46,7 +46,7 @@ std::string putFileToDir(const std::string& dir_path, const std::string& file_na
 
 std::string getFileContent(const std::string& file_name) {
   std::ifstream file_handle(file_name, std::ios::binary | std::ios::in);
-  REQUIRE(file_handle.is_open());
+  assert(file_handle.is_open());
   std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
   return file_content;
 }
