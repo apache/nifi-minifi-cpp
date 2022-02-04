@@ -81,8 +81,7 @@ class DefragmentText : public core::Processor {
     std::chrono::steady_clock::time_point creation_time_;
   };
 
-  class FragmentSource {
-   public:
+  struct FragmentSource {
     class Id {
      public:
       explicit Id(const core::FlowFile& flow_file);
@@ -94,7 +93,7 @@ class DefragmentText : public core::Processor {
       std::optional<std::string> absolute_path_;
     };
 
-    Buffer buffer_;
+    Buffer buffer;
   };
 
 

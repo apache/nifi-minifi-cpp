@@ -99,10 +99,10 @@ void DefragmentText::onTrigger(core::ProcessContext*, core::ProcessSession* sess
       processNextFragment(session, gsl::not_null(std::move(original_flow_file)));
   }
   for (auto& [fragment_source_id, fragment_source] : fragment_sources_) {
-    if (fragment_source.buffer_.maxSizeReached(max_size_)) {
-      fragment_source.buffer_.flushAndReplace(session, Failure, nullptr);
-    } else if (fragment_source.buffer_.maxAgeReached(max_age_)) {
-      fragment_source.buffer_.flushAndReplace(session, pattern_location_ == PatternLocation::START_OF_MESSAGE ? Success : Failure, nullptr);
+    if (fragment_source.buffer.maxSizeReached(max_size_)) {
+      fragment_source.buffer.flushAndReplace(session, Failure, nullptr);
+    } else if (fragment_source.buffer.maxAgeReached(max_age_)) {
+      fragment_source.buffer.flushAndReplace(session, pattern_location_ == PatternLocation::START_OF_MESSAGE ? Success : Failure, nullptr);
     }
   }
 }
@@ -119,7 +119,7 @@ std::optional<size_t> getFragmentOffset(const core::FlowFile& flow_file) {
 void DefragmentText::processNextFragment(core::ProcessSession *session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment) {
   auto fragment_source_id = FragmentSource::Id(*next_fragment);
   auto& fragment_source = fragment_sources_[fragment_source_id];
-  auto& buffer = fragment_source.buffer_;
+  auto& buffer = fragment_source.buffer;
   if (!buffer.empty() && buffer.getNextFragmentOffset() != getFragmentOffset(*next_fragment)) {
     buffer.flushAndReplace(session, Failure, nullptr);
     session->transfer(next_fragment, Failure);
