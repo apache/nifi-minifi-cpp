@@ -64,6 +64,17 @@ bool ProcessContextExpr::getDynamicProperty(const Property &property, std::strin
   return true;
 }
 
+
+bool ProcessContextExpr::setProperty(const std::string& property, std::string value) {
+  expressions_.erase(property);
+  return ProcessContext::setProperty(property, value);
+}
+
+bool ProcessContextExpr::setDynamicProperty(const std::string& property, std::string value) {
+  dynamic_property_expressions_.erase(property);
+  return ProcessContext::setDynamicProperty(property, value);
+}
+
 } /* namespace core */
 } /* namespace minifi */
 } /* namespace nifi */

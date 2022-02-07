@@ -151,15 +151,15 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
     return processor_node_->getDynamicPropertyKeys();
   }
   // Sets the property value using the property's string name
-  bool setProperty(const std::string &name, std::string value) {
+  virtual bool setProperty(const std::string &name, std::string value) {
     return processor_node_->setProperty(name, value);
   }  // Sets the dynamic property value using the property's string name
-  bool setDynamicProperty(const std::string &name, std::string value) {
+  virtual bool setDynamicProperty(const std::string &name, std::string value) {
     return processor_node_->setDynamicProperty(name, value);
   }
   // Sets the property value using the Property object
-  bool setProperty(const Property& prop, std::string value) {
-    return processor_node_->setProperty(prop, value);
+  bool setProperty(const Property& property, std::string value) {
+    return setProperty(property.getName(), value);
   }
   // Whether the relationship is supported
   bool isSupportedRelationship(Relationship relationship) const {
