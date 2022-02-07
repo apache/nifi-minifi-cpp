@@ -88,7 +88,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   processor->addConnection(connection.get());
   REQUIRE(!dir.empty());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
@@ -172,7 +172,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   processor->addConnection(connection.get());
   REQUIRE(!dir.empty());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
@@ -267,7 +267,7 @@ TEST_CASE("TestConnectionFull", "[ConnectionFull]") {
   processor->addConnection(connection.get());
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
@@ -571,7 +571,7 @@ void testRPGBypass(const std::string &host, const std::string &port, const std::
   rpg->initialize();
   REQUIRE(rpg->setProperty(minifi::RemoteProcessorGroupPort::hostName, host));
   rpg->setProperty(minifi::RemoteProcessorGroupPort::port, port);
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(rpg.get());
+  auto node = std::make_shared<core::ProcessorNode>(rpg.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
   auto psf = std::make_shared<core::ProcessSessionFactory>(context);
   if (hasException) {

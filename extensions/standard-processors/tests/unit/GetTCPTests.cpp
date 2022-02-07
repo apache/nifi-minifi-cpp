@@ -91,15 +91,15 @@ TEST_CASE("GetTCPWithoutEOM", "[GetTCP1]") {
   logAttribute->addConnection(connection.get());
   logAttribute->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
-    std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
   auto session = std::make_shared<core::ProcessSession>(context);
-    auto session2 = std::make_shared<core::ProcessSession>(context2);
+  auto session2 = std::make_shared<core::ProcessSession>(context2);
 
   REQUIRE(processor->getName() == "gettcpexample");
 
@@ -200,10 +200,10 @@ TEST_CASE("GetTCPWithOEM", "[GetTCP2]") {
   logAttribute->addConnection(connection.get());
   logAttribute->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
-    std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
@@ -319,17 +319,17 @@ TEST_CASE("GetTCPWithOnlyOEM", "[GetTCP3]") {
   logAttribute->addConnection(connection.get());
   logAttribute->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
-    std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
-    std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-    std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node2 = std::make_shared<core::ProcessorNode>(logAttribute.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndpointList, org::apache::nifi::minifi::io::Socket::getMyHostName() + ":" + std::to_string(server.getPort()));
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ReconnectInterval, "200 msec");
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::ConnectionAttemptLimit, "10");
   // we're using new lines above
   context->setProperty(org::apache::nifi::minifi::processors::GetTCP::EndOfMessageByte, "10");
   auto session = std::make_shared<core::ProcessSession>(context);
-    auto session2 = std::make_shared<core::ProcessSession>(context2);
+  auto session2 = std::make_shared<core::ProcessSession>(context2);
 
 
   REQUIRE(processor->getName() == "gettcpexample");

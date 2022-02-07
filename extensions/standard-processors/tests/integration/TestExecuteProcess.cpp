@@ -82,17 +82,17 @@ int main(int /*argc*/, char ** /*argv*/) {
 
   std::vector<std::thread> processor_workers;
 
-  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(processor.get());
-  std::shared_ptr<core::ProcessContext> contextset = std::make_shared<core::ProcessContext>(node2, nullptr, test_repo, test_repo);
+  auto node2 = std::make_shared<core::ProcessorNode>(processor.get());
+  auto contextset = std::make_shared<core::ProcessContext>(node2, nullptr, test_repo, test_repo);
   core::ProcessSessionFactory factory(contextset);
   processor->onSchedule(contextset.get(), &factory);
 
   for (int i = 0; i < 1; i++) {
     processor_workers.push_back(std::thread([processor, test_repo, &is_ready]() {
-      std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
-      std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, test_repo, test_repo);
+      auto node = std::make_shared<core::ProcessorNode>(processor.get());
+      auto context = std::make_shared<core::ProcessContext>(node, nullptr, test_repo, test_repo);
       context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
-      std::shared_ptr<core::ProcessSession> session = std::make_shared<core::ProcessSession>(context);
+      auto session = std::make_shared<core::ProcessSession>(context);
       while (!is_ready.load(std::memory_order_relaxed)) {
       }
       processor->onTrigger(context.get(), session.get());
@@ -105,6 +105,6 @@ int main(int /*argc*/, char ** /*argv*/) {
     t.join();
   });
 
-  std::shared_ptr<org::apache::nifi::minifi::processors::ExecuteProcess> execp = std::static_pointer_cast<org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
+  auto execp = std::static_pointer_cast<org::apache::nifi::minifi::processors::ExecuteProcess>(processor);
 #endif
 }

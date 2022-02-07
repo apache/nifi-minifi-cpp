@@ -108,7 +108,7 @@ std::shared_ptr<core::Processor> ExecutionPlan::addProcessor(const std::shared_p
     relationships_.push_back(connectProcessors(last, processor, relationship, true));
   }
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(processor.get());
+  auto node = std::make_shared<core::ProcessorNode>(processor.get());
 
   processor_nodes_.push_back(node);
 
@@ -222,7 +222,7 @@ void ExecutionPlan::finalize() {
       }
     }
 
-    std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(failure_proc.get());
+    auto node = std::make_shared<core::ProcessorNode>(failure_proc.get());
 
     processor_nodes_.push_back(node);
 

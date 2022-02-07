@@ -71,8 +71,8 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(invokehttp.get());
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(invokehttp.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
   context->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::Method, "POST");
   context->setProperty(org::apache::nifi::minifi::processors::InvokeHTTP::URL, TestHTTPServer::URL);
@@ -81,13 +81,13 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context);
+  auto factory2 = std::make_shared<core::ProcessSessionFactory>(context);
   invokehttp->onSchedule(context, factory2);
   invokehttp->onTrigger(context, session);
 
   auto reporter = session->getProvenanceReporter();
   auto records = reporter->getEvents();
-  std::shared_ptr<core::FlowFile> record = session->get();
+  auto record = session->get();
   REQUIRE(record == nullptr);
   REQUIRE(records.size() == 0);
 
@@ -115,7 +115,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::InvokeHTTP>();
 
-  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  auto repo = std::make_shared<TestRepository>();
 
   std::shared_ptr<core::Processor> listenhttp = std::make_shared<org::apache::nifi::minifi::processors::ListenHTTP>("listenhttp");
   listenhttp->initialize();
@@ -133,10 +133,10 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
 
-  std::shared_ptr<minifi::Connection> connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
+  auto connection = std::make_shared<minifi::Connection>(repo, content_repo, "getfileCreate2Connection");
   connection->addRelationship(core::Relationship("success", "description"));
 
-  std::shared_ptr<minifi::Connection> connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
+  auto connection2 = std::make_shared<minifi::Connection>(repo, content_repo, "listenhttp");
 
   connection2->addRelationship(core::Relationship("No Retry", "description"));
 
@@ -150,10 +150,10 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   invokehttp->addConnection(connection.get());
   invokehttp->addConnection(connection2.get());
 
-  std::shared_ptr<core::ProcessorNode> node = std::make_shared<core::ProcessorNode>(listenhttp.get());
-  std::shared_ptr<core::ProcessorNode> node2 = std::make_shared<core::ProcessorNode>(invokehttp.get());
-  std::shared_ptr<core::ProcessContext> context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
-  std::shared_ptr<core::ProcessContext> context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
+  auto node = std::make_shared<core::ProcessorNode>(listenhttp.get());
+  auto node2 = std::make_shared<core::ProcessorNode>(invokehttp.get());
+  auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
+  auto context2 = std::make_shared<core::ProcessContext>(node2, nullptr, repo, repo, content_repo);
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::Port, "8680");
   context->setProperty(org::apache::nifi::minifi::processors::ListenHTTP::BasePath, "/testytesttest");
 
@@ -164,13 +164,13 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
 
   REQUIRE(listenhttp->getName() == "listenhttp");
 
-  std::shared_ptr<core::ProcessSessionFactory> factory = std::make_shared<core::ProcessSessionFactory>(context);
+  auto factory = std::make_shared<core::ProcessSessionFactory>(context);
 
   std::shared_ptr<core::FlowFile> record;
 
   invokehttp->incrementActiveTasks();
   invokehttp->setScheduledState(core::ScheduledState::RUNNING);
-  std::shared_ptr<core::ProcessSessionFactory> factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
+  auto factory2 = std::make_shared<core::ProcessSessionFactory>(context2);
   invokehttp->onSchedule(context2, factory2);
   invokehttp->onTrigger(context2, session2);
 
