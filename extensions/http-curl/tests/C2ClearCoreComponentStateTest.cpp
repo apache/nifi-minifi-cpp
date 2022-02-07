@@ -36,6 +36,14 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
     test_file_2_ = minifi::utils::putFileToDir(temp_dir, "test2.txt", "foobar\n");
   }
 
+  void testSetup() override {
+    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
+    LogTestController::getInstance().setDebug<minifi::FlowController>();
+    LogTestController::getInstance().setDebug<minifi::core::ProcessContext>();
+    VerifyC2Base::testSetup();
+  }
+
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     assert(verifyEventHappenedInPollTime(40s, [&] { return component_cleared_successfully_.load(); }));
@@ -100,18 +108,17 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
         last_read_time_2_ = std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString());
         break;
       }
-      case FlowState::CLEAR_SENT: {
+      case FlowState::CLEAR_SENT:
         break;
-      }
       case FlowState::SECOND_DESCRIBE_SENT: {
-        assert(root.HasMember("corecomponentstate"));
-        assert(root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1993"));
-        assert(root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1994"));
-        assert(std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString()) == last_read_time_2_);
-        auto latest_read_time_1 = std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1993"]["file.0.last_read_time"].GetString());
-        if (last_read_time_1_ != latest_read_time_1) {
-          component_cleared_successfully_ = true;
-        }
+        auto clearedStateFound = [this, &root]() {
+          return root.HasMember("corecomponentstate") &&
+            root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1993") &&
+            root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1994") &&
+            std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString()) == last_read_time_2_ &&
+            std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1993"]["file.0.last_read_time"].GetString()) != last_read_time_1_;
+        };
+        component_cleared_successfully_ = clearedStateFound();
         break;
       }
       default:
