@@ -116,7 +116,7 @@ class Property {
   std::shared_ptr<PropertyValidator> getValidator() const;
   const PropertyValue &getValue() const;
   bool getRequired() const;
-  bool supportsExpressionLangauge() const;
+  bool supportsExpressionLanguage() const;
   std::string getValidRegex() const;
   std::vector<std::string> getDependentProperties() const;
   std::vector<std::pair<std::string, std::string>> getExclusiveOfProperties() const;

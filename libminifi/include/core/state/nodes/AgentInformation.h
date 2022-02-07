@@ -136,7 +136,7 @@ class ComponentManifest : public DeviceInformation {
 
             SerializedResponseNode supportsExpressionLanguageScope;
             supportsExpressionLanguageScope.name = "expressionLanguageScope";
-            supportsExpressionLanguageScope.value = prop.second.supportsExpressionLangauge() ? "FLOWFILE_ATTRIBUTES" : "NONE";
+            supportsExpressionLanguageScope.value = prop.second.supportsExpressionLanguage() ? "FLOWFILE_ATTRIBUTES" : "NONE";
 
             SerializedResponseNode descriptorRequired;
             descriptorRequired.name = "required";
