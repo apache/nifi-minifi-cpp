@@ -24,14 +24,9 @@
 #include "io/validation.h"
 #include "io/FileStream.h"
 #include "io/InputStream.h"
-#include "io/OutputStream.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 constexpr const char *FILE_OPENING_ERROR_MSG = "Error opening file: ";
 constexpr const char *READ_ERROR_MSG = "Error reading from file: ";
@@ -39,7 +34,6 @@ constexpr const char *WRITE_ERROR_MSG = "Error writing to file: ";
 constexpr const char *SEEK_ERROR_MSG = "Error seeking in file: ";
 constexpr const char *INVALID_FILE_STREAM_ERROR_MSG = "invalid file stream";
 constexpr const char *TELLG_CALL_ERROR_MSG = "tellg call on file stream failed";
-constexpr const char *INVALID_BUFFER_ERROR_MSG = "invalid buffer";
 constexpr const char *FLUSH_CALL_ERROR_MSG = "flush call on file stream failed";
 constexpr const char *WRITE_CALL_ERROR_MSG = "write call on file stream failed";
 constexpr const char *EMPTY_MESSAGE_ERROR_MSG = "empty message";
@@ -176,9 +170,6 @@ void FileStream::seekToEndOfFile(const char *caller_error_msg) {
   if (!file_stream_->seekp(0, file_stream_->end))
     core::logging::LOG_ERROR(logger_) << caller_error_msg << SEEKP_CALL_ERROR_MSG;
 }
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+
+}  // namespace org::apache::nifi::minifi::io
 
