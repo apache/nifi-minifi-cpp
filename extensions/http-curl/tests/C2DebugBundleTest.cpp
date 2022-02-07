@@ -26,6 +26,7 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "io/ArchiveStream.h"
+#include "EmpyFlow.h"
 
 using std::literals::chrono_literals::operator""s;
 
@@ -133,14 +134,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
 };
 
 static std::string properties_file = "some.dummy.content = here\n";
-static std::string flow_config_file = R"(
-  Flow Controller:
-    name: Banana Bread
-  Processors: []
-  Connections: []
-  Remote Processing Groups: []
-  Provenance Reporting:
-)";
+static std::string flow_config_file = empty_flow;
 
 int main() {
   TestController controller;

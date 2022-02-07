@@ -47,6 +47,11 @@ class Configure : public Configuration, public core::AgentIdentificationProvider
   void set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) override;
   bool commitChanges() override;
 
+  // WARNING! a test utility
+  void setLoggerProperties(std::shared_ptr<core::logging::LoggerProperties> new_properties) {
+    logger_properties_ = new_properties;
+  }
+
  private:
   bool isEncrypted(const std::string& key) const;
 

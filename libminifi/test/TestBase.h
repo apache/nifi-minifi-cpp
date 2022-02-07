@@ -166,6 +166,35 @@ class LogTestController {
   std::vector<std::string> modified_loggers;
 };
 
+class TempDirectory {
+ public:
+  TempDirectory() {
+    char format[] = "/var/tmp/nifi-minifi-cpp.test.XXXXXX";
+    path_ = minifi::utils::file::FileUtils::create_temp_directory(format);
+    is_owner_ = true;
+  }
+  explicit TempDirectory(std::string path): path_{std::move(path)}, is_owner_{false} {}
+
+  // disable copy
+  TempDirectory(const TempDirectory&) = delete;
+  TempDirectory& operator=(const TempDirectory&) = delete;
+
+  ~TempDirectory() {
+    if (is_owner_) {
+      minifi::utils::file::FileUtils::delete_dir(path_, true);
+    }
+  }
+
+  [[nodiscard]]
+  std::string getPath() const {
+    return path_;
+  }
+
+ private:
+  std::string path_;
+  bool is_owner_;
+};
+
 class TestPlan {
  public:
   explicit TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo, std::shared_ptr<minifi::core::Repository> flow_repo, std::shared_ptr<minifi::core::Repository> prov_repo,
@@ -256,35 +285,7 @@ class TestPlan {
   void validateAnnotations() const;
 
  protected:
-  class StateDir {
-   public:
-    StateDir() {
-      char state_dir_name_template[] = "/var/tmp/teststate.XXXXXX";
-      path_ = minifi::utils::file::FileUtils::create_temp_directory(state_dir_name_template);
-      is_owner_ = true;
-    }
-
-    explicit StateDir(std::string path) : path_(std::move(path)), is_owner_(false) {}
-
-    StateDir(const StateDir&) = delete;
-    StateDir& operator=(const StateDir&) = delete;
-
-    ~StateDir() {
-      if (is_owner_) {
-        minifi::utils::file::FileUtils::delete_dir(path_, true);
-      }
-    }
-
-    [[nodiscard]] std::string getPath() const {
-      return path_;
-    }
-
-   private:
-    std::string path_;
-    bool is_owner_;
-  };
-
-  std::unique_ptr<StateDir> state_dir_;
+  std::unique_ptr<TempDirectory> state_dir_;
 
   std::shared_ptr<minifi::Connection> buildFinalConnection(const std::shared_ptr<minifi::core::Processor>& processor, bool setDest = false);
 
@@ -349,18 +350,12 @@ class TestController {
     return log;
   }
 
-  ~TestController() {
-    for (const auto& dir : directories) {
-      minifi::utils::file::FileUtils::delete_dir(dir, true);
-    }
-  }
-
   std::string createTempDirectory();
 
  protected:
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;
   LogTestController &log;
-  std::vector<std::string> directories;
+  std::vector<std::unique_ptr<TempDirectory>> directories;
 };
 
 static bool disableAwsMetadata = [] {
