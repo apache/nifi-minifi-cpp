@@ -116,7 +116,7 @@ int getFullConnections(std::unique_ptr<org::apache::nifi::minifi::io::Socket> so
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(gsl::make_span(reinterpret_cast<std::byte*>(&resp), 1));
+  socket->read(resp);
   if (resp == org::apache::nifi::minifi::c2::Operation::DESCRIBE) {
     uint16_t connections = 0;
     socket->read(connections);
@@ -142,7 +142,7 @@ int getJstacks(std::unique_ptr<org::apache::nifi::minifi::io::Socket> socket, st
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(gsl::make_span(reinterpret_cast<std::byte*>(&resp), 1));
+  socket->read(resp);
   if (resp == org::apache::nifi::minifi::c2::Operation::DESCRIBE) {
     uint64_t size = 0;
     socket->read(size);
@@ -180,7 +180,7 @@ int getConnectionSize(std::unique_ptr<org::apache::nifi::minifi::io::Socket> soc
   }
   // read the response
   uint8_t resp = 0;
-  socket->read(gsl::make_span(reinterpret_cast<std::byte*>(&resp), 1));
+  socket->read(resp);
   if (resp == org::apache::nifi::minifi::c2::Operation::DESCRIBE) {
     std::string size;
     socket->read(size);

@@ -195,7 +195,7 @@ struct ReadFlowFileContent : public InputStreamCallback {
 
   int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
     content.resize(stream->size());
-    const auto ret = stream->read(gsl::make_span(reinterpret_cast<std::byte*>(content.data()), stream->size()));
+    const auto ret = stream->read(gsl::make_span(content).as_span<std::byte>());
     if (io::isError(ret))
       return -1;
     return gsl::narrow<int64_t>(ret);

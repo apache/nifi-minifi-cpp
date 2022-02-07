@@ -138,7 +138,7 @@ class Socket : public BaseStream {
    * @param retrieve_all_bytes determines if we should read all bytes before returning
    */
   size_t read(gsl::span<std::byte> buf) override {
-    return read(buf, false);
+    return read(buf, true);
   }
 
   /**

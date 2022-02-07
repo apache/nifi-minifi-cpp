@@ -325,7 +325,7 @@ std::vector<std::byte> StringUtils::from_hex(const char* hex, size_t hex_length)
   std::vector<std::byte> decoded(hex_length / 2);
   size_t data_length = decoded.size();
   if (!from_hex(decoded.data(), &data_length, hex, hex_length)) {
-    throw std::invalid_argument("Hexencoded string is malformatted");
+    throw std::invalid_argument("Hexencoded string is malformed");
   }
   decoded.resize(data_length);
   return decoded;

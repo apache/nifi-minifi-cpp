@@ -143,35 +143,30 @@ size_t FileStream::write(const uint8_t *value, size_t size) {
 
 size_t FileStream::read(gsl::span<std::byte> buf) {
   if (buf.empty()) { return 0; }
-  if (!IsNullOrEmpty(buf)) {
-    std::lock_guard<std::mutex> lock(file_lock_);
-    if (file_stream_ == nullptr || !file_stream_->is_open()) {
-      core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
+  std::lock_guard<std::mutex> lock(file_lock_);
+  if (file_stream_ == nullptr || !file_stream_->is_open()) {
+    core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
+    return STREAM_ERROR;
+  }
+  file_stream_->read(reinterpret_cast<char*>(buf.data()), gsl::narrow<std::streamsize>(buf.size()));
+  if (file_stream_->eof() || file_stream_->fail()) {
+    file_stream_->clear();
+    seekToEndOfFile(READ_ERROR_MSG);
+    auto tellg_result = file_stream_->tellg();
+    if (tellg_result == std::streampos(-1)) {
+      core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
       return STREAM_ERROR;
     }
-    file_stream_->read(reinterpret_cast<char*>(buf.data()), gsl::narrow<std::streamsize>(buf.size()));
-    if (file_stream_->eof() || file_stream_->fail()) {
-      file_stream_->clear();
-      seekToEndOfFile(READ_ERROR_MSG);
-      auto tellg_result = file_stream_->tellg();
-      if (tellg_result == std::streampos(-1)) {
-        core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
-        return STREAM_ERROR;
-      }
-      const auto len = gsl::narrow<size_t>(tellg_result);
-      size_t ret = len - offset_;
-      offset_ = len;
-      length_ = len;
-      core::logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
-      return ret;
-    } else {
-      offset_ += buf.size();
-      file_stream_->seekp(gsl::narrow<std::streamoff>(offset_));
-      return buf.size();
-    }
+    const auto len = gsl::narrow<size_t>(tellg_result);
+    size_t ret = len - offset_;
+    offset_ = len;
+    length_ = len;
+    core::logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
+    return ret;
   } else {
-    core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_BUFFER_ERROR_MSG;
-    return STREAM_ERROR;
+    offset_ += buf.size();
+    file_stream_->seekp(gsl::narrow<std::streamoff>(offset_));
+    return buf.size();
   }
 }
 

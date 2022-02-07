@@ -209,7 +209,7 @@ class PayloadSerializer {
     }
     return node;
   }
-  static C2Payload deserialize(std::vector<std::byte> data) {
+  static C2Payload deserialize(const std::vector<std::byte>& data) {
     C2Payload payload(Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE);
     if (deserialize(data, payload)) {
       return payload;

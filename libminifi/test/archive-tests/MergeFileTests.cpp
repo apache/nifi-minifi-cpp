@@ -87,7 +87,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
-      const size_t ret{input.read(gsl::make_span(reinterpret_cast<std::byte*>(end()), len))};
+      const size_t ret{input.read(gsl::make_span(end(), len).as_span<std::byte>())};
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       size_ += ret;

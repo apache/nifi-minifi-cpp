@@ -41,8 +41,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
     if (stream->size() > 0) {
       vec.resize(stream->size());
-
-      stream->read(gsl::make_span(reinterpret_cast<std::byte*>(vec.data()), vec.size()));
+      stream->read(vec);
     }
 
     return gsl::narrow<int64_t>(vec.size());

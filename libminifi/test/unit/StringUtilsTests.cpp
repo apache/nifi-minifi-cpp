@@ -312,8 +312,8 @@ TEST_CASE("TestStringUtils::testHexDecode", "[test hex decode]") {
                        0x08, 0x09, 0x0a, 0x0b,
                        0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090A0B0C0D0E0F"));
 
-  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f62617"), "Hexencoded string is malformatted");
-  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f6261 7"), "Hexencoded string is malformatted");
+  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f62617"), "Hexencoded string is malformed");
+  REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f6261 7"), "Hexencoded string is malformed");
 }
 
 TEST_CASE("TestStringUtils::testHexEncodeDecode", "[test hex encode decode]") {

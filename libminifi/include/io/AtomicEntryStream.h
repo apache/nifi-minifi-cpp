@@ -119,7 +119,7 @@ template<typename T>
 size_t AtomicEntryStream<T>::write(const uint8_t *value, size_t size) {
   if (size == 0) return 0;
   if (!value || invalid_stream_) return STREAM_ERROR;
-  const auto out_span = gsl::make_span(value, size).template as_span<const std::byte>();
+  const auto out_span = gsl::make_span(value, size).as_span<const std::byte>();
   std::lock_guard<std::recursive_mutex> lock(entry_lock_);
   if (entry_->insert(key_, out_span)) {
     offset_ += size;
