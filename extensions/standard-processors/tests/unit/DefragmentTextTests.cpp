@@ -22,15 +22,14 @@
 #include "UpdateAttribute.h"
 #include "DefragmentText.h"
 #include "TextFragmentUtils.h"
-#include "utils/TestUtils.h"
 #include "serialization/PayloadSerializer.h"
 #include "serialization/FlowFileSerializer.h"
-#include "unit/ContentRepositoryDependentTests.h"
 
 using WriteToFlowFileTestProcessor = org::apache::nifi::minifi::processors::WriteToFlowFileTestProcessor;
 using ReadFromFlowFileTestProcessor = org::apache::nifi::minifi::processors::ReadFromFlowFileTestProcessor;
 using UpdateAttribute = org::apache::nifi::minifi::processors::UpdateAttribute;
 using DefragmentText = org::apache::nifi::minifi::processors::DefragmentText;
+namespace textfragmentutils = org::apache::nifi::minifi::processors::textfragmentutils;
 
 TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") {
   TestController testController;
@@ -217,32 +216,213 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   }
 }
 
-TEST_CASE("DefragmentTextInvalidSources", "[defragmenttextinvalidsources]") {
+TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
   TestController testController;
   auto plan = testController.createPlan();
-  auto write_to_flow_file = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "write_to_flow_file"));
-  auto update_ff = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute"));
-  auto defrag_text_flow_files =  std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
+  auto input_1 = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "input_1"));
+  auto input_2 = std::dynamic_pointer_cast<WriteToFlowFileTestProcessor>(plan->addProcessor("WriteToFlowFileTestProcessor", "input_2"));
+  auto update_ff_1 = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute_1"));
+  auto update_ff_2 = std::dynamic_pointer_cast<UpdateAttribute>(plan->addProcessor("UpdateAttribute", "update_attribute_2"));
+  auto defrag_text_flow_files = std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
   auto read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+  auto read_from_success_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
 
-  plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_ff);
-  plan->addConnection(update_ff, UpdateAttribute ::Success, defrag_text_flow_files);
+  plan->addConnection(input_1, WriteToFlowFileTestProcessor::Success, update_ff_1);
+  plan->addConnection(input_2, WriteToFlowFileTestProcessor::Success, update_ff_2);
+  plan->addConnection(update_ff_1, UpdateAttribute::Success, defrag_text_flow_files);
+  plan->addConnection(update_ff_2, UpdateAttribute::Success, defrag_text_flow_files);
 
   plan->addConnection(defrag_text_flow_files, DefragmentText::Failure, read_from_failure_relationship);
-  defrag_text_flow_files->setAutoTerminatedRelationships({DefragmentText::Success});
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Success, read_from_success_relationship);
 
+  read_from_failure_relationship->disableClearOnTrigger();
+  read_from_success_relationship->disableClearOnTrigger();
   read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "%");
 
-  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "<[0-9]+>");
-  plan->setProperty(update_ff, org::apache::nifi::minifi::processors::textfragmentutils::BASE_NAME_ATTRIBUTE, "${UUID()}", true);
+  SECTION("Multiple Sources with different fragment attributes") {
+    plan->setProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_1", true);
+    plan->setProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input_2", true);
 
-  write_to_flow_file->setContent("Foo <1> Foo");
-  testController.runSession(plan);
-  CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
-  write_to_flow_file->setContent("Bar <2> Bar");
-  plan->reset();
-  testController.runSession(plan);
-  CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 2);
-  CHECK(read_from_failure_relationship->readFlowFileWithContent("<1> Foo"));
-  CHECK(read_from_failure_relationship->readFlowFileWithContent("Bar <2> Bar"));
+    input_1->setContent("abc%def");
+    input_2->setContent("ABC%DEF");
+    testController.runSession(plan);
+    plan->reset();
+    input_1->clearContent();
+    input_2->clearContent();
+    testController.runSession(plan);
+
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 2);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("abc"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("ABC"));
+
+    plan->reset();
+    input_1->setContent("ghi%jkl");
+    input_2->setContent("GHI%JKL");
+    testController.runSession(plan);
+    plan->reset();
+    input_1->clearContent();
+    input_2->clearContent();
+    testController.runSession(plan);
+
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 4);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%defghi"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%DEFGHI"));
+  }
+
+  SECTION("Multiple Sources with same fragment attributes mix up") {
+    plan->setProperty(update_ff_1, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input", true);
+    plan->setProperty(update_ff_2, core::SpecialFlowAttribute::ABSOLUTE_PATH, "input", true);
+
+    input_1->setContent("abc%def");
+    input_2->setContent("ABC%DEF");
+    testController.runSession(plan);
+    plan->reset();
+    input_1->clearContent();
+    input_2->clearContent();
+    testController.runSession(plan);
+
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 2);
+    CHECK((read_from_success_relationship->readFlowFileWithContent("abc") || read_from_success_relationship->readFlowFileWithContent("ABC")));
+    CHECK((read_from_success_relationship->readFlowFileWithContent("%DEFabc") || read_from_success_relationship->readFlowFileWithContent("%defABC")));
+
+    plan->reset();
+    input_1->setContent("ghi%jkl");
+    input_2->setContent("GHI%JKL");
+    testController.runSession(plan);
+    plan->reset();
+    input_1->clearContent();
+    input_2->clearContent();
+    testController.runSession(plan);
+
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 4);
+    CHECK((read_from_success_relationship->readFlowFileWithContent("%defghi")
+        || read_from_success_relationship->readFlowFileWithContent("%defGHI")
+        || read_from_success_relationship->readFlowFileWithContent("%DEFGHI")
+        || read_from_success_relationship->readFlowFileWithContent("%DEFghi")));
+  }
+}
+
+class FragmentGenerator : public core::Processor {
+ public:
+  static inline const core::Relationship Success = core::Relationship("success", "success operational on the flow record");
+  explicit FragmentGenerator(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
+      : Processor(name, uuid) {
+  }
+
+  void onTrigger(core::ProcessContext*, core::ProcessSession* session) override {
+    std::vector<core::FlowFile> flow_files;
+    for (const size_t max_i = i_ + batch_size_; i_ < fragment_contents_.size() && i_ < max_i; ++i_) {
+      auto& fragment_content = fragment_contents_[i_];
+      WriteCallback callback(fragment_content);
+      std::shared_ptr<core::FlowFile> flow_file = session->create();
+      if (base_name_attribute_)
+        flow_file->addAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, *base_name_attribute_);
+      if (post_name_attribute_)
+        flow_file->addAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, *post_name_attribute_);
+      if (absolute_path_attribute_)
+        flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, *absolute_path_attribute_);
+      flow_file->addAttribute(textfragmentutils::OFFSET_ATTRIBUTE, std::to_string(offset_));
+      offset_ += fragment_content.size();
+      session->write(flow_file, &callback);
+      session->transfer(flow_file, Success);
+    }
+  }
+  void initialize() override { setSupportedRelationships({Success});}
+
+
+  void setFragments(std::vector<std::string>&& fragments) {fragment_contents_ = std::move(fragments);}
+  void setBatchSize(const size_t batch_size) {batch_size_ = batch_size;}
+  void setAbsolutePathAttribute(const std::string& absolute_path_attribute) { absolute_path_attribute_ = absolute_path_attribute; }
+  void setBaseNameAttribute(const std::string& base_name_attribute) { base_name_attribute_ = base_name_attribute; }
+  void setPostNameAttribute(const std::string& post_name_attribute) { post_name_attribute_ = post_name_attribute; }
+  void clearAbsolutePathAttribute() { absolute_path_attribute_.reset(); }
+  void clearPostNameAttribute() { post_name_attribute_.reset(); }
+  void clearBaseNameAttribute() { base_name_attribute_.reset(); }
+
+ protected:
+  struct WriteCallback : public org::apache::nifi::minifi::OutputStreamCallback {
+    const gsl::span<const uint8_t> content_;
+
+    explicit WriteCallback(const std::string& content) : content_(reinterpret_cast<const uint8_t*>(content.data()), content.size()) {}
+
+    int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> &stream) override {
+      size_t bytes_written = stream->write(content_.begin(), content_.size());
+      return org::apache::nifi::minifi::io::isError(bytes_written) ? -1 : gsl::narrow<int64_t>(bytes_written);
+    }
+  };
+
+  size_t offset_ = 0;
+  size_t batch_size_ = 1;
+  size_t i_ = 0;
+  std::optional<std::string> absolute_path_attribute_;
+  std::optional<std::string> base_name_attribute_;
+  std::optional<std::string> post_name_attribute_;
+  std::vector<std::string> fragment_contents_;
+};
+
+REGISTER_RESOURCE(FragmentGenerator, "FragmentGenerator (only for testing purposes)");
+
+TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattributes]") {
+  TestController testController;
+  auto plan = testController.createPlan();
+  auto input_1 = std::dynamic_pointer_cast<FragmentGenerator>(plan->addProcessor("FragmentGenerator", "input_1"));
+  auto input_2 = std::dynamic_pointer_cast<FragmentGenerator>(plan->addProcessor("FragmentGenerator", "input_2"));
+
+  auto defrag_text_flow_files = std::dynamic_pointer_cast<DefragmentText>(plan->addProcessor("DefragmentText", "defrag_text_flow_files"));
+  auto read_from_failure_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_failure_relationship"));
+  auto read_from_success_relationship = std::dynamic_pointer_cast<ReadFromFlowFileTestProcessor>(plan->addProcessor("ReadFromFlowFileTestProcessor", "read_from_success_relationship"));
+
+  plan->addConnection(input_1, FragmentGenerator::Success, defrag_text_flow_files);
+  plan->addConnection(input_2, FragmentGenerator::Success, defrag_text_flow_files);
+
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Failure, read_from_failure_relationship);
+  plan->addConnection(defrag_text_flow_files, DefragmentText::Success, read_from_success_relationship);
+
+  read_from_failure_relationship->disableClearOnTrigger();
+  read_from_success_relationship->disableClearOnTrigger();
+  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "%");
+  input_1->setBaseNameAttribute("input_1");
+  input_2->setBaseNameAttribute("input_2");
+  input_1->setPostNameAttribute("log");
+  input_2->setPostNameAttribute("log");
+  input_1->setAbsolutePathAttribute("/tmp/input/input_1.log");
+  input_2->setAbsolutePathAttribute("/tmp/input/input_2.log");
+
+  SECTION("Single source input with offsets") {
+    input_1->setFragments({"foo%bar", "%baz,app", "le%"});
+    for (size_t i=0; i < 10; ++i) {
+      testController.runSession(plan);
+      plan->reset();
+    }
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 3);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("foo"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%bar"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%baz,apple"));
+  }
+
+  SECTION("Two input sources with offsets") {
+    input_1->setFragments({"foo%bar", "%baz,app", "le%"});
+    input_2->setFragments({"monkey%dog", "%cat,octopu", "s%"});
+    for (size_t i=0; i < 10; ++i) {
+      testController.runSession(plan);
+      plan->reset();
+    }
+    CHECK(read_from_failure_relationship->numberOfFlowFilesRead() == 0);
+    CHECK(read_from_success_relationship->numberOfFlowFilesRead() == 6);
+    CHECK(read_from_success_relationship->readFlowFileWithContent("foo"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%bar"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%baz,apple"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("monkey"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%dog"));
+    CHECK(read_from_success_relationship->readFlowFileWithContent("%cat,octopus"));
+  }
 }

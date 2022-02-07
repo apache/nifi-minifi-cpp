@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <unordered_map>
 
 #include "core/Processor.h"
 #include "core/FlowFileStore.h"
@@ -64,32 +65,46 @@ class DefragmentText : public core::Processor {
  protected:
   class Buffer {
    public:
-    bool isCompatible(const core::FlowFile& fragment) const;
     void append(core::ProcessSession* session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append);
-    bool maxSizeReached() const;
-    bool maxAgeReached() const;
-    void setMaxAge(std::chrono::milliseconds max_age);
-    void setMaxSize(size_t max_size);
+    bool maxSizeReached(const std::optional<size_t> max_size) const;
+    bool maxAgeReached(const std::optional<std::chrono::milliseconds> max_age) const;
     void flushAndReplace(core::ProcessSession* session, const core::Relationship& relationship,
                          const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
 
     bool empty() const { return buffered_flow_file_ == nullptr; }
+    std::optional<size_t> getNextFragmentOffset() const;
 
    private:
     void store(core::ProcessSession* session, const std::shared_ptr<core::FlowFile>& new_buffered_flow_file);
 
     std::shared_ptr<core::FlowFile> buffered_flow_file_;
     std::chrono::steady_clock::time_point creation_time_;
-    std::optional<std::chrono::milliseconds> max_age_;
-    std::optional<size_t> max_size_;
   };
+
+  struct FragmentSource {
+    class Id {
+     public:
+      explicit Id(const core::FlowFile& flow_file);
+      struct hash {
+        size_t operator()(const Id& fragment_id) const;
+      };
+      bool operator==(const Id& rhs) const = default;
+     protected:
+      std::optional<std::string> absolute_path_;
+    };
+
+    Buffer buffer;
+  };
+
 
   std::regex pattern_;
   PatternLocation pattern_location_;
+  std::optional<std::chrono::milliseconds> max_age_;
+  std::optional<size_t> max_size_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DefragmentText>::getLogger();
   core::FlowFileStore flow_file_store_;
-  Buffer buffer_;
+  std::unordered_map<FragmentSource::Id, FragmentSource, FragmentSource::Id::hash> fragment_sources_;
 
   void processNextFragment(core::ProcessSession *session, const gsl::not_null<std::shared_ptr<core::FlowFile>>& next_fragment);
 

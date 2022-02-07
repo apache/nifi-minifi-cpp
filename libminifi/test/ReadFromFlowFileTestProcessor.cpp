@@ -48,7 +48,8 @@ struct ReadFlowFileIntoBuffer : public InputStreamCallback {
 void ReadFromFlowFileTestProcessor::onTrigger(core::ProcessContext* context, core::ProcessSession* session) {
   gsl_Expects(context && session);
   logger_->log_info("%s", ON_TRIGGER_LOG_STR);
-  flow_files_read_.clear();
+  if (clear_on_trigger_)
+    clear();
 
   while (std::shared_ptr<core::FlowFile> flow_file = session->get()) {
     ReadFlowFileIntoBuffer callback;
