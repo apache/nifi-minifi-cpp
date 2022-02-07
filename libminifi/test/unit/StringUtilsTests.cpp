@@ -297,20 +297,20 @@ TEST_CASE("TestStringUtils::testHexEncode", "[test hex encode]") {
 
 TEST_CASE("TestStringUtils::testHexDecode", "[test hex decode]") {
   REQUIRE(StringUtils::from_hex("").empty());
-  REQUIRE("o" == StringUtils::from_hex("6f"));
-  REQUIRE("o" == StringUtils::from_hex("6F"));
-  REQUIRE("foobar" == StringUtils::from_hex("666f6f626172"));
-  REQUIRE("foobar" == StringUtils::from_hex("666F6F626172"));
-  REQUIRE("foobar" == StringUtils::from_hex("66:6F:6F:62:61:72"));
-  REQUIRE("foobar" == StringUtils::from_hex("66 6F 6F 62 61 72"));
+  REQUIRE("o" == StringUtils::from_hex("6f", utils::as_string));
+  REQUIRE("o" == StringUtils::from_hex("6F", utils::as_string));
+  REQUIRE("foobar" == StringUtils::from_hex("666f6f626172", utils::as_string));
+  REQUIRE("foobar" == StringUtils::from_hex("666F6F626172", utils::as_string));
+  REQUIRE("foobar" == StringUtils::from_hex("66:6F:6F:62:61:72", utils::as_string));
+  REQUIRE("foobar" == StringUtils::from_hex("66 6F 6F 62 61 72", utils::as_string));
   REQUIRE(std::string({0x00, 0x01, 0x02, 0x03,
                        0x04, 0x05, 0x06, 0x07,
                        0x08, 0x09, 0x0a, 0x0b,
-                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090a0b0c0d0e0f"));
+                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090a0b0c0d0e0f", utils::as_string));
   REQUIRE(std::string({0x00, 0x01, 0x02, 0x03,
                        0x04, 0x05, 0x06, 0x07,
                        0x08, 0x09, 0x0a, 0x0b,
-                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090A0B0C0D0E0F"));
+                       0x0c, 0x0d, 0x0e, 0x0f}) == StringUtils::from_hex("000102030405060708090A0B0C0D0E0F", utils::as_string));
 
   REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f62617"), "Hexencoded string is malformed");
   REQUIRE_THROWS_WITH(StringUtils::from_hex("666f6f6261 7"), "Hexencoded string is malformed");
@@ -326,7 +326,7 @@ TEST_CASE("TestStringUtils::testHexEncodeDecode", "[test hex encode decode]") {
       return static_cast<std::byte>(gen() % 256);
     });
     auto hex = utils::StringUtils::to_hex(data, uppercase);
-    REQUIRE(data == utils::StringUtils::from_hex(hex.data(), hex.size()));
+    REQUIRE(data == utils::StringUtils::from_hex(hex));
   }
 }
 

@@ -292,15 +292,15 @@ bool StringUtils::from_hex(uint8_t ch, uint8_t& output) {
   return output != SKIP;
 }
 
-bool StringUtils::from_hex(std::byte* data, size_t* data_length, const char* hex, size_t hex_length) {
-  if (*data_length < hex_length / 2) {
+bool StringUtils::from_hex(std::byte* data, size_t* data_length, std::string_view hex) {
+  if (*data_length < hex.size() / 2) {
     return false;
   }
   uint8_t n1;
   bool found_first_nibble = false;
   *data_length = 0;
-  for (size_t i = 0; i < hex_length; i++) {
-    const auto byte = static_cast<uint8_t>(hex[i]);
+  for (char c : hex) {
+    const auto byte = static_cast<uint8_t>(c);
     if (byte > 127) {
       continue;
     }
@@ -321,10 +321,10 @@ bool StringUtils::from_hex(std::byte* data, size_t* data_length, const char* hex
   return true;
 }
 
-std::vector<std::byte> StringUtils::from_hex(const char* hex, size_t hex_length) {
-  std::vector<std::byte> decoded(hex_length / 2);
+std::vector<std::byte> StringUtils::from_hex(std::string_view hex) {
+  std::vector<std::byte> decoded(hex.size() / 2);
   size_t data_length = decoded.size();
-  if (!from_hex(decoded.data(), &data_length, hex, hex_length)) {
+  if (!from_hex(decoded.data(), &data_length, hex)) {
     throw std::invalid_argument("Hexencoded string is malformed");
   }
   decoded.resize(data_length);

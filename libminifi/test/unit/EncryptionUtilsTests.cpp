@@ -22,8 +22,7 @@
 namespace utils = org::apache::nifi::minifi::utils;
 
 namespace {
-const utils::crypto::Bytes SECRET_KEY = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
-    "aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab"));
+const utils::crypto::Bytes SECRET_KEY = utils::StringUtils::from_hex("aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab");
 
 const utils::crypto::Bytes NONCE = utils::StringUtils::from_base64("RBrWo9lv7xNA6JJWHCa9avnT42CCr1bn");
 }  // namespace

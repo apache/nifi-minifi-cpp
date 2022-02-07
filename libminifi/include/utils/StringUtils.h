@@ -359,7 +359,7 @@ class StringUtils {
    * @param hex_length the length of hex
    * @return true on success
    */
-  static bool from_hex(std::byte* data, size_t* data_length, const char* hex, size_t hex_length);
+  static bool from_hex(std::byte* data, size_t* data_length, std::string_view hex);
 
   /**
    * Hexdecodes a string
@@ -367,17 +367,11 @@ class StringUtils {
    * @param hex_length the length of hex
    * @return the vector containing the hexdecoded bytes
    */
-  static std::vector<std::byte> from_hex(const char* hex, size_t hex_length);
-
-  /**
-   * Hexdecodes a string
-   * @param hex the hexencoded string
-   * @return the hexdecoded string
-   */
-  inline static std::string from_hex(const std::string& hex) {
-    auto data = from_hex(hex.data(), hex.length());
-    return std::string(reinterpret_cast<char*>(data.data()), data.size());
+  static std::vector<std::byte> from_hex(std::string_view hex);
+  static std::string from_hex(std::string_view hex, as_string_tag_t) {
+    return utils::span_to<std::string>(gsl::make_span(from_hex(hex)).as_span<const char>());
   }
+
 
   /**
    * Hexencodes bytes and writes the result to hex
@@ -404,7 +398,7 @@ class StringUtils {
    * @param uppercase whether the hexencoded string should be upper case
    * @return the hexencoded string
    */
-  inline static std::string to_hex(const std::string& str, bool uppercase = false) {
+  inline static std::string to_hex(std::string_view str, bool uppercase = false) {
     return to_hex(gsl::make_span(str).as_span<const std::byte>(), uppercase);
   }
 
@@ -437,7 +431,7 @@ class StringUtils {
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the size of Base64 encoded bytes
    */
-  static size_t to_base64(char* base64, gsl::span<const std::byte> raw_data, bool url, bool padded);
+  static size_t to_base64(char* base64, gsl::span<const std::byte> data_to_be_transformed, bool url, bool padded);
 
   /**
    * Creates a Base64 encoded string from data
@@ -446,7 +440,7 @@ class StringUtils {
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the Base64 encoded string
    */
-  static std::string to_base64(gsl::span<const std::byte> raw_data, bool url = false, bool padded = true);
+  static std::string to_base64(gsl::span<const std::byte> data_to_be_transformed, bool url = false, bool padded = true);
 
   /**
    * Base64 encodes a string
