@@ -24,25 +24,21 @@
 #include "processors/TailFile.h"
 #include "state/ProcessorController.h"
 #include "utils/file/FileUtils.h"
+#include "utils/TestUtils.h"
+
+using namespace std::literals::chrono_literals;
 
 class VerifyC2ClearCoreComponentState : public VerifyC2Base {
  public:
-  VerifyC2ClearCoreComponentState(const std::atomic_bool& component_cleared_successfully) : component_cleared_successfully_(component_cleared_successfully) {
-    temp_dir_ = testController.createTempDirectory();
-
-    test_file_1_ = utils::file::FileUtils::concat_path(temp_dir_, "test1.txt");
-    test_file_2_ = utils::file::FileUtils::concat_path(temp_dir_, "test2.txt");
-
-    std::ofstream f1(test_file_1_, std::ios::out | std::ios::binary);
-    f1 << "foo\n";
-
-    std::ofstream f2(test_file_2_, std::ios::out | std::ios::binary);
-    f2 << "foobar\n";
+  explicit VerifyC2ClearCoreComponentState(const std::atomic_bool& component_cleared_successfully) : component_cleared_successfully_(component_cleared_successfully) {
+    auto temp_dir = testController.createTempDirectory();
+    test_file_1_ = minifi::utils::putFileToDir(temp_dir, "test1.txt", "foo\n");
+    test_file_2_ = minifi::utils::putFileToDir(temp_dir, "test2.txt", "foobar\n");
   }
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(std::chrono::seconds(60), [&] { return component_cleared_successfully_.load(); }));
+    assert(verifyEventHappenedInPollTime(40s, [&] { return component_cleared_successfully_.load(); }));
   }
 
  protected:
@@ -54,7 +50,6 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
   }
 
   TestController testController;
-  std::string temp_dir_;
   std::string test_file_1_;
   std::string test_file_2_;
   const std::atomic_bool& component_cleared_successfully_;
@@ -62,19 +57,17 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
 
 class ClearCoreComponentStateHandler: public HeartbeatHandler {
  public:
-  ClearCoreComponentStateHandler(std::atomic_bool& component_cleared_successfully) : component_cleared_successfully_(component_cleared_successfully) {
+  explicit ClearCoreComponentStateHandler(std::atomic_bool& component_cleared_successfully) : component_cleared_successfully_(component_cleared_successfully) {
   }
 
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
-    switch(flow_state_) {
+    switch (flow_state_) {
       case FlowState::STARTED:
         sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889345", conn);
         flow_state_ = FlowState::FIRST_DESCRIBE_SENT;
         break;
       case FlowState::FIRST_DESCRIBE_SENT: {
-        std::unordered_map<std::string, std::string> args;
-        args.emplace("key", "TailFile1");
-        sendHeartbeatResponse("CLEAR", "corecomponentstate", "889346", conn, args);
+        sendHeartbeatResponse("CLEAR", "corecomponentstate", "889346", conn, { {"corecomponent1", "TailFile1"} });
         flow_state_ = FlowState::CLEAR_SENT;
         break;
       }
@@ -82,11 +75,10 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
         sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889347", conn);
         flow_state_ = FlowState::SECOND_DESCRIBE_SENT;
     }
-
   }
 
   void handleAcknowledge(const rapidjson::Document& root) override {
-    switch(flow_state_) {
+    switch (flow_state_) {
       case FlowState::FIRST_DESCRIBE_SENT: {
         assert(root.HasMember("corecomponentstate"));
 
@@ -113,6 +105,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
       }
       case FlowState::SECOND_DESCRIBE_SENT: {
         assert(root.HasMember("corecomponentstate"));
+        assert(root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1993"));
         assert(root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1994"));
         assert(std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString()) == last_read_time_2_);
         auto latest_read_time_1 = std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1993"]["file.0.last_read_time"].GetString());
@@ -122,7 +115,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
         break;
       }
       default:
-        assert(false);
+        throw std::runtime_error("Invalid flow state state when handling acknowledge message!");
     }
   }
 

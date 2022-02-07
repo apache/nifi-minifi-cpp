@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 #include <set>
+#include <unordered_map>
 
 #include "civetweb.h"
 #include "CivetServer.h"
@@ -393,7 +394,8 @@ class HeartbeatHandler : public ServerAwareHandler {
     mg_printf(conn, "%s", resp.c_str());
   }
 
-  void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn, const std::unordered_map<std::string, std::string>& args = {}) {
+  void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn,
+      const std::unordered_map<std::string, std::string>& args = {}) {
     std::string resp_args;
     if (!args.empty()) {
       resp_args = ", \"args\": {";
