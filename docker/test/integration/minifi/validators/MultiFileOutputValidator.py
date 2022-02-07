@@ -10,7 +10,7 @@ from .FileOutputValidator import FileOutputValidator
 
 class MultiFileOutputValidator(FileOutputValidator):
     """
-    Validates the content of multiple files in the given directory, also verifying that the old files are not rewritten.
+    Validates the number of files created and/or the content of multiple files in the given directory, also verifying that the old files are not rewritten.
     """
 
     def __init__(self, expected_file_count, expected_content=[]):
