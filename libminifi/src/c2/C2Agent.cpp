@@ -334,45 +334,7 @@ struct C2DebugBundleError : public C2TransferError {
 void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
   switch (resp.op.value()) {
     case Operation::CLEAR:
-      // we've been told to clear something
-      if (resp.name == "connection") {
-        for (const auto& connection : resp.operation_arguments) {
-          logger_->log_debug("Clearing connection %s", connection.second.to_string());
-          update_sink_->clearConnection(connection.second.to_string());
-        }
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-        enqueue_c2_response(std::move(response));
-      } else if (resp.name == "repositories") {
-        update_sink_->drainRepositories();
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-        enqueue_c2_response(std::move(response));
-      } else if (resp.name == "corecomponentstate") {
-        for (const auto& corecomponent : resp.operation_arguments) {
-          std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(corecomponent.second.to_string());
-          auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
-          if (state_manager_provider != nullptr) {
-            for (auto &component : components) {
-              logger_->log_debug("Clearing state for component %s", component->getComponentName());
-              auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
-              if (state_manager != nullptr) {
-                component->stop();
-                state_manager->clear();
-                state_manager->persist();
-                component->start();
-              } else {
-                logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
-              }
-            }
-          } else {
-            logger_->log_error("Failed to get StateManagerProvider");
-          }
-        }
-        C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-        enqueue_c2_response(std::move(response));
-      } else {
-        logger_->log_debug("Clearing unknown %s", resp.name);
-      }
-
+      handle_clear(resp);
       break;
     case Operation::UPDATE:
       handle_update(resp);
@@ -553,6 +515,43 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
     enqueue_c2_response(std::move(response));
     return;
   }
+  C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
+  enqueue_c2_response(std::move(response));
+}
+
+void C2Agent::handle_clear(const C2ContentResponse &resp) {
+  if (resp.name == "connection") {
+    for (const auto& connection : resp.operation_arguments) {
+      logger_->log_debug("Clearing connection %s", connection.second.to_string());
+      update_sink_->clearConnection(connection.second.to_string());
+    }
+  } else if (resp.name == "repositories") {
+    update_sink_->drainRepositories();
+  } else if (resp.name == "corecomponentstate") {
+    for (const auto& corecomponent : resp.operation_arguments) {
+      std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(corecomponent.second.to_string());
+      auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
+      if (state_manager_provider != nullptr) {
+        for (auto &component : components) {
+          logger_->log_debug("Clearing state for component %s", component->getComponentName());
+          auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
+          if (state_manager != nullptr) {
+            component->stop();
+            state_manager->clear();
+            state_manager->persist();
+            component->start();
+          } else {
+            logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
+          }
+        }
+      } else {
+        logger_->log_error("Failed to get StateManagerProvider");
+      }
+    }
+  } else {
+    logger_->log_error("Unknown clear operand %s", resp.name);
+  }
+
   C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
   enqueue_c2_response(std::move(response));
 }
