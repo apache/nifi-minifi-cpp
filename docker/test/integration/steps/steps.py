@@ -561,7 +561,7 @@ def step_impl(context, content_1, content_2, duration):
 @then("flowfiles with these contents are placed in the monitored directory in less than {duration}: \"{contents}\"")
 def step_impl(context, duration, contents):
     contents_arr = contents.split(",")
-    context.test.check_for_multiple_files_generated(len(contents_arr), timeparse(duration), contents_arr)
+    context.test.check_for_multiple_files_generated(0, timeparse(duration), contents_arr)
 
 
 @then("after a wait of {duration}, at least {lower_bound:d} and at most {upper_bound:d} flowfiles are produced and placed in the monitored directory")

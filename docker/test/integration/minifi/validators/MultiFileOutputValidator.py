@@ -10,7 +10,7 @@ from .FileOutputValidator import FileOutputValidator
 
 class MultiFileOutputValidator(FileOutputValidator):
     """
-    Validates the content of multiple files in the given directory, also verifying that the old files are not rewritten.
+    Validates the number of files created and/or the content of multiple files in the given directory, also verifying that the old files are not rewritten.
     """
 
     def __init__(self, expected_file_count, expected_content=[]):
@@ -56,7 +56,10 @@ class MultiFileOutputValidator(FileOutputValidator):
             self.file_timestamps[full_path] = os.path.getmtime(full_path)
             logging.info("New file added %s", full_path)
 
-            if len(self.file_timestamps) == self.expected_file_count:
-                return self.check_expected_content(full_dir)
+        if self.expected_file_count != 0 and len(self.file_timestamps) != self.expected_file_count:
+            return False
+
+        if len(self.file_timestamps) >= len(self.expected_content):
+            return self.check_expected_content(full_dir)
 
         return False
