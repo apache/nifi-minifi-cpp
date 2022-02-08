@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: daemon
+  name: log-collector
+spec:
+  containers:
+  - name: minifi
+    image: minifi-kubernetes-test:v1
+    imagePullPolicy: Never
+    volumeMounts:
+    - name: var-log-pods
+      mountPath: /var/log/pods
+      readOnly: true
+    - name: tmp-minifi-config
+      mountPath: /tmp/minifi_config
+      readOnly: true
+    - name: tmp-output
+      mountPath: /tmp/output
+  volumes:
+  - name: var-log-pods
+    hostPath:
+      path: /var/log/pods
+  - name: tmp-minifi-config
+    hostPath:
+      path: /tmp/minifi_config
+  - name: tmp-output
+    hostPath:
+      path: /tmp/output

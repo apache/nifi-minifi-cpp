@@ -19,7 +19,7 @@ class MinifiContainer(FlowContainer):
     def get_log_file_path(self):
         return MinifiContainer.MINIFI_ROOT + '/logs/minifi-app.log'
 
-    def __create_config(self):
+    def _create_config(self):
         serializer = Minifi_flow_yaml_serializer()
         test_flow_yaml = serializer.serialize(self.start_nodes)
         logging.info('Using generated flow config yml:\n%s', test_flow_yaml)
@@ -31,7 +31,7 @@ class MinifiContainer(FlowContainer):
             return
 
         logging.info('Creating and running minifi docker container...')
-        self.__create_config()
+        self._create_config()
 
         self.client.containers.run(
             self.image_store.get_image(self.get_engine()),

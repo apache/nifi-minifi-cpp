@@ -41,6 +41,9 @@ class Container:
     def deploy(self):
         raise NotImplementedError()
 
+    def type(self):
+        return 'docker container'
+
     def get_startup_finished_log_entry(self):
         raise NotImplementedError()
 

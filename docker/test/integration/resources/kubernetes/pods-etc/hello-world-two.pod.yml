@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hello-world-two
+spec:
+  containers:
+  - name: echo-two
+    image: busybox
+    args:
+    - /bin/sh
+    - -c
+    - 'echo "Hello again, World!"; sleep 10000'

@@ -5,6 +5,7 @@ from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
 from minifi.controllers.ODBCService import ODBCService
+from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 
 from behave import given, then, when
 from behave.model_describe import ModelDescriptor
@@ -29,63 +30,56 @@ def step_impl(context, directory):
     context.test.add_file_system_observer(FileSystemObserver(context.test.docker_path_to_local_path(directory)))
 
 
-# MiNiFi cluster setups
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
-def step_impl(context, processor_type, processor_name, property, property_value, minifi_container_name):
-    container = context.test.acquire_container(minifi_container_name)
+def __create_processor(context, processor_type, processor_name, property_name, property_value, container_name, engine='minifi-cpp'):
+    container = context.test.acquire_container(container_name, engine)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
     processor.set_name(processor_name)
-    if property:
-        processor.set_property(property, property_value)
+    if property_name:
+        processor.set_property(property_name, property_value)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
     if not container.get_start_nodes():
         container.add_start_node(processor)
 
 
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
-def step_impl(context, processor_type, property, property_value, minifi_container_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name=minifi_container_name, processor_name=processor_type))
+# MiNiFi cluster setups
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, processor_name, property_name, property_value, minifi_container_name):
+    __create_processor(context, processor_type, processor_name, property_name, property_value, minifi_container_name)
 
 
-@given("a {processor_type} processor with the \"{property}\" property set to \"{property_value}\"")
-def step_impl(context, processor_type, property, property_value):
-    context.execute_steps("given a {processor_type} processor with the \"{property}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow"))
+@given("a {processor_type} processor with the \"{property_name}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow")
+@given("a {processor_type} processor with the \"{property_name}\" property set to \"{property_value}\" in the \"{minifi_container_name}\" flow")
+def step_impl(context, processor_type, property_name, property_value, minifi_container_name):
+    __create_processor(context, processor_type, processor_type, property_name, property_value, minifi_container_name)
 
 
-@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\"")
-def step_impl(context, processor_type, property, property_value, processor_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" and the \"{property}\" property set to \"{property_value}\" in a \"{minifi_container_name}\" flow".
-                          format(processor_type=processor_type, property=property, property_value=property_value, minifi_container_name="minifi-cpp-flow", processor_name=processor_name))
+@given("a {processor_type} processor with the \"{property_name}\" property set to \"{property_value}\"")
+def step_impl(context, processor_type, property_name, property_value):
+    __create_processor(context, processor_type, processor_type, property_name, property_value, "minifi-cpp-flow")
+
+
+@given("a {processor_type} processor with the name \"{processor_name}\" and the \"{property_name}\" property set to \"{property_value}\"")
+def step_impl(context, processor_type, property_name, property_value, processor_name):
+    __create_processor(context, processor_type, processor_name, property_name, property_value, "minifi-cpp-flow")
 
 
 @given("a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow")
 def step_impl(context, processor_type, processor_name, minifi_container_name):
-    container = context.test.acquire_container(minifi_container_name)
-    processor = locate("minifi.processors." + processor_type + "." + processor_type)()
-    processor.set_name(processor_name)
-    context.test.add_node(processor)
-    # Assume that the first node declared is primary unless specified otherwise
-    if not container.get_start_nodes():
-        container.add_start_node(processor)
+    __create_processor(context, processor_type, processor_name, None, None, minifi_container_name)
 
 
 @given("a {processor_type} processor with the name \"{processor_name}\"")
 def step_impl(context, processor_type, processor_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow".
-                          format(processor_type=processor_type, processor_name=processor_name, minifi_container_name="minifi-cpp-flow"))
+    __create_processor(context, processor_type, processor_name, None, None, "minifi-cpp-flow")
 
 
 @given("a {processor_type} processor in the \"{minifi_container_name}\" flow")
 @given("a {processor_type} processor in a \"{minifi_container_name}\" flow")
 @given("a {processor_type} processor set up in a \"{minifi_container_name}\" flow")
 def step_impl(context, processor_type, minifi_container_name):
-    context.execute_steps("given a {processor_type} processor with the name \"{processor_name}\" in the \"{minifi_container_name}\" flow".
-                          format(processor_type=processor_type, processor_name=processor_type, minifi_container_name=minifi_container_name))
+    __create_processor(context, processor_type, processor_type, None, None, minifi_container_name)
 
 
 @given("a {processor_type} processor")
@@ -96,7 +90,13 @@ def step_impl(context, processor_type, minifi_container_name):
 @given("a {processor_type} processor set up to communicate with an MQTT broker instance")
 @given("a {processor_type} processor set up to communicate with the Splunk HEC instance")
 def step_impl(context, processor_type):
-    context.execute_steps("given a {processor_type} processor in the \"{minifi_container_name}\" flow".format(processor_type=processor_type, minifi_container_name="minifi-cpp-flow"))
+    __create_processor(context, processor_type, processor_type, None, None, "minifi-cpp-flow")
+
+
+@given("a {processor_type} processor in a Kubernetes cluster")
+@given("a {processor_type} processor in the Kubernetes cluster")
+def step_impl(context, processor_type):
+    __create_processor(context, processor_type, processor_type, None, None, "kubernetes", "kubernetes")
 
 
 @given("a set of processors in the \"{minifi_container_name}\" flow")
@@ -307,6 +307,26 @@ def step_impl(context, producer_name):
     producer = context.test.get_node_by_name(producer_name)
     producer.controller_services.append(ssl_context_service)
     producer.set_property("SSL Context Service", ssl_context_service.name)
+
+
+# Kubernetes
+def __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, properties):
+    kubernetes_controller_service = KubernetesControllerService("Kubernetes Controller Service", properties)
+    processor = context.test.get_node_by_name(processor_name)
+    processor.controller_services.append(kubernetes_controller_service)
+    processor.set_property(service_property_name, kubernetes_controller_service.name)
+
+
+@given("the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service")
+@given("the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service")
+def step_impl(context, processor_name, service_property_name):
+    __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {})
+
+
+@given("the {processor_name} processor has a {service_property_name} which is a Kubernetes Controller Service with the \"{property_name}\" property set to \"{property_value}\"")
+@given("the {processor_name} processor has an {service_property_name} which is a Kubernetes Controller Service with the \"{property_name}\" property set to \"{property_value}\"")
+def step_impl(context, processor_name, service_property_name, property_name, property_value):
+    __set_up_the_kubernetes_controller_service(context, processor_name, service_property_name, {property_name: property_value})
 
 
 # Kafka setup
@@ -551,6 +571,11 @@ def step_impl(context, num_flowfiles, duration):
         context.execute_steps("""no files are placed in the monitored directory in {duration} of running time""".format(duration=duration))
         return
     context.test.check_for_num_files_generated(int(num_flowfiles), timeparse(duration))
+
+
+@then("one flowfile with the contents \"{content}\" is placed in the monitored directory in less than {duration}")
+def step_impl(context, content, duration):
+    context.test.check_for_multiple_files_generated(1, timeparse(duration), [content])
 
 
 @then("two flowfiles with the contents \"{content_1}\" and \"{content_2}\" are placed in the monitored directory in less than {duration}")
