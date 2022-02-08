@@ -60,7 +60,6 @@ function(use_libre_ssl SOURCE_DIR BINARY_DIR)
     # Set variables
     set(OPENSSL_FOUND "YES" CACHE STRING "" FORCE)
     set(OPENSSL_INCLUDE_DIR "${LIBRESSL_BIN_DIR}/include" CACHE STRING "" FORCE)
-    set(OPENSSL_INCLUDE_DIRS "${OPENSSL_INCLUDE_DIR}" CACHE STRING "" FORCE)  # workaround for libwebsockets
     set(OPENSSL_LIBRARIES ${LIBRESSL_LIBRARIES_LIST} CACHE STRING "" FORCE)
     set(OPENSSL_CRYPTO_LIBRARY "${LIBRESSL_BIN_DIR}/lib/${BYPRODUCT_PREFIX}crypto${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
     set(OPENSSL_SSL_LIBRARY "${LIBRESSL_BIN_DIR}/lib/${BYPRODUCT_PREFIX}ssl${BYPRODUCT_SUFFIX}" CACHE STRING "" FORCE)
@@ -100,4 +99,4 @@ function(use_libre_ssl SOURCE_DIR BINARY_DIR)
             IMPORTED_LOCATION "${LIBRESSL_BIN_DIR}/lib/${BYPRODUCT_PREFIX}tls${BYPRODUCT_SUFFIX}")
     add_dependencies(LibreSSL::TLS libressl-portable)
     set_property(TARGET LibreSSL::TLS APPEND PROPERTY INTERFACE_LINK_LIBRARIES OpenSSL::Crypto)
-endfunction(use_libre_ssl) 
+endfunction(use_libre_ssl)
