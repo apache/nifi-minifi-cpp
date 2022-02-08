@@ -151,7 +151,6 @@ class LoggerConfiguration {
   LoggerConfiguration();
   internal::CompressionManager compression_manager_;
   std::shared_ptr<internal::LoggerNamespace> root_namespace_;
-  std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sink_map_;
   std::vector<std::shared_ptr<LoggerImpl>> loggers;
   std::shared_ptr<spdlog::formatter> formatter_;
   std::mutex mutex;
