@@ -98,9 +98,9 @@ KubernetesControllerService::KubernetesControllerService(const std::string& name
 }
 
 void KubernetesControllerService::initialize() {
+  std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (initialized_) { return; }
 
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
   ControllerService::initialize();
   setSupportedProperties({NamespaceFilter, PodNameFilter, ContainerNameFilter});
   initialized_ = true;

@@ -45,7 +45,7 @@ class KubernetesControllerService : public AttributeProviderService {
   bool matchesRegexFilters(const std::string& name_space, const std::string& pod_name, const std::string& container_name) const;
 
   std::mutex initialization_mutex_;
-  std::atomic<bool> initialized_ = false;
+  bool initialized_ = false;
   std::optional<std::regex> namespace_filter_;
   std::optional<std::regex> pod_name_filter_;
   std::optional<std::regex> container_name_filter_;
