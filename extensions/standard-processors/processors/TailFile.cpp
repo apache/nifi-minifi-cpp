@@ -693,8 +693,7 @@ std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &stat
 }
 
 void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context);
-  gsl_Expects(session);
+  gsl_Expects(context && session);
 
   if (tail_mode_ == Mode::MULTIPLE) {
     if (last_multifile_lookup_ + lookup_frequency_ < std::chrono::steady_clock::now()) {
