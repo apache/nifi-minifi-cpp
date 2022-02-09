@@ -29,6 +29,7 @@ extern "C" {
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "Exception.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -136,7 +137,7 @@ struct v1_pod_list_t_deleter {
 };
 using v1_pod_list_unique_ptr = std::unique_ptr<v1_pod_list_t, v1_pod_list_t_deleter>;
 
-v1_pod_list_unique_ptr getPods(apiClient_t* api_client, core::logging::Logger& logger) {
+v1_pod_list_unique_ptr getPods(gsl::not_null<apiClient_t*> api_client, core::logging::Logger& logger) {
   logger.log_info("Calling Kubernetes API listPodForAllNamespaces...");
   v1_pod_list_unique_ptr pod_list{CoreV1API_listPodForAllNamespaces(api_client,
                                                                     0,  // allowWatchBookmarks
@@ -161,7 +162,7 @@ std::optional<std::vector<KubernetesControllerService::AttributeMap>> Kubernetes
     return std::nullopt;
   }
 
-  const auto pod_list = getPods(api_client_->getClient(), *logger_);
+  const auto pod_list = getPods(gsl::make_not_null(api_client_->getClient()), *logger_);
   if (!pod_list) {
     logger_->log_warn("Could not find any Kubernetes pods");
     return std::nullopt;
