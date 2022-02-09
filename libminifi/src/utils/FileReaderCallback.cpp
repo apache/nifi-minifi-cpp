@@ -40,7 +40,7 @@ FileReaderCallback::FileReaderCallback(const std::string& file_name)
   logger_->log_debug("Opening %s", file_name);
   input_stream_.open(file_name.c_str(), std::fstream::in | std::fstream::binary);
   if (!input_stream_.is_open()) {
-    throw FileReaderCallbackIOError(StringUtils::join_pack("Error opening file: ", std::strerror(errno)));
+    throw FileReaderCallbackIOError(StringUtils::join_pack("Error opening file: ", std::strerror(errno)), errno);
   }
 }
 
@@ -51,7 +51,7 @@ int64_t FileReaderCallback::process(const std::shared_ptr<io::BaseStream>& outpu
   while (input_stream_.good()) {
     input_stream_.read(buffer.data(), buffer.size());
     if (input_stream_.bad()) {
-      throw FileReaderCallbackIOError(StringUtils::join_pack("Error reading file: ", std::strerror(errno)));
+      throw FileReaderCallbackIOError(StringUtils::join_pack("Error reading file: ", std::strerror(errno)), errno);
     }
     const auto num_bytes_read = input_stream_.gcount();
     logger_->log_trace("Read %jd bytes of input", std::intmax_t{num_bytes_read});

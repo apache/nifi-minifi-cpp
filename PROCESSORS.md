@@ -24,6 +24,7 @@
 - [ExtractText](#extracttext)
 - [FetchAzureBlobStorage](#fetchazureblobstorage)
 - [FetchAzureDataLakeStorage](#fetchazuredatalakestorage)
+- [FetchFile](#fetchfile)
 - [FetchOPCProcessor](#fetchopcprocessor)
 - [FetchS3Object](#fetchs3object)
 - [FetchSFTP](#fetchsftp)
@@ -596,6 +597,34 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |failure|In case of fetch failure flowfiles are transferred to this relationship|
 |success|Files that have been successfully fetched from Azure storage are transferred to this relationship|
+
+
+## FetchFile
+
+### Description
+
+Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. Once this is done, the file is optionally moved elsewhere or deleted to help keep the file system organized.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|File to Fetch|||The fully-qualified filename of the file to fetch from the file system. If not defined the default ${absolute.path}/${filename} path is used.<br/>**Supports Expression Language: true**|
+|**Completion Strategy**|None|None<br/>Move File<br/>Delete File|Specifies what to do with the original file on the file system once it has been pulled into MiNiFi|
+|Move Destination Directory|||The directory to move the original file to once it has been fetched from the file system. This property is ignored unless the Completion Strategy is set to "Move File". If the directory does not exist, it will be created.<br/>**Supports Expression Language: true**|
+|**Move Conflict Strategy**|Rename|Rename<br/>Replace File<br/>Keep Existing<br/>Fail|If Completion Strategy is set to Move File and a file already exists in the destination directory with the same name, this property specifies how that naming conflict should be resolved|
+|**Log level when file not found**|ERROR|TRACE<br/>DEBUG<br/>INFO<br/>WARN<br/>ERROR<br/>OFF|Log level to use in case the file does not exist when the processor is triggered|
+|**Log level when permission denied**|ERROR|TRACE<br/>DEBUG<br/>INFO<br/>WARN<br/>ERROR<br/>OFF|Log level to use in case agent does not have sufficient permissions to read the file|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|Any FlowFile that is successfully fetched from the file system will be transferred to this Relationship.|
+|not.found|Any FlowFile that could not be fetched from the file system because the file could not be found will be transferred to this Relationship.|
+|permission.denied|Any FlowFile that could not be fetched from the file system due to the user running MiNiFi not having sufficient permissions will be transferred to this Relationship.|
+|failure|Any FlowFile that could not be fetched from the file system for any reason other than insufficient permissions or the file not existing will be transferred to this Relationship.|
 
 
 ## FetchOPCProcessor
