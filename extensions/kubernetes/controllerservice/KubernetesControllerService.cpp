@@ -36,6 +36,12 @@ class KubernetesControllerService::APIClient {
  public:
   explicit APIClient(core::logging::Logger& logger);
   ~APIClient();
+
+  APIClient(APIClient&&) = delete;
+  APIClient(const APIClient&) = delete;
+  APIClient& operator=(APIClient&&) = delete;
+  APIClient& operator=(const APIClient&) = delete;
+
   apiClient_t* getClient() { return api_client_; }
 
  private:
