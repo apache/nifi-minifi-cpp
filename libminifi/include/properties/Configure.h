@@ -19,6 +19,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <memory>
 
 #include "properties/Configuration.h"
 #include "properties/Decryptor.h"
