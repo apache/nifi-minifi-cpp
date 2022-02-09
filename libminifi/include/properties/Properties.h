@@ -45,7 +45,7 @@ class Properties {
   struct PropertyValue {
     std::string persisted_value;
     std::string active_value;
-    bool changed;  // persisted_value should be written to disk if requested
+    bool changed{false};  // persisted_value should be written to disk if requested
   };
 
  public:

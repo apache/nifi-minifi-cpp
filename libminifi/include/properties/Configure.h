@@ -26,12 +26,15 @@
 #include "core/AgentIdentificationProvider.h"
 #include "core/logging/LoggerProperties.h"
 
+struct ConfigTestAccessor;
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
 class Configure : public Configuration, public core::AgentIdentificationProvider {
+  friend struct ::ConfigTestAccessor;
  public:
   explicit Configure(std::optional<Decryptor> decryptor = std::nullopt, std::shared_ptr<core::logging::LoggerProperties> logger_properties = {})
       : Configuration{}, decryptor_(std::move(decryptor)), logger_properties_(std::move(logger_properties)) {}
@@ -48,12 +51,13 @@ class Configure : public Configuration, public core::AgentIdentificationProvider
   void set(const std::string& key, const std::string& value, PropertyChangeLifetime lifetime) override;
   bool commitChanges() override;
 
+
+ private:
   // WARNING! a test utility
   void setLoggerProperties(std::shared_ptr<core::logging::LoggerProperties> new_properties) {
     logger_properties_ = new_properties;
   }
 
- private:
   bool isEncrypted(const std::string& key) const;
 
   std::optional<Decryptor> decryptor_;

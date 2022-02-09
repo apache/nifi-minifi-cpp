@@ -28,6 +28,7 @@
 #include "spdlog/sinks/dist_sink.h"
 #include "LogUtils.h"
 #include "properties/PropertiesFile.h"
+#include "Utils.h"
 
 struct PropertyChange {
   std::string name;
@@ -88,14 +89,14 @@ class VerifyPropertyUpdate : public HTTPIntegrationBase {
   std::function<void()> fn_;
 };
 
-static std::string properties_file =
+static const std::string properties_file =
     "nifi.property.one=tree\n"
     "nifi.c2.agent.protocol.class=RESTSender\n"
     "nifi.c2.enable=true\n"
     "nifi.c2.agent.class=test\n"
     "nifi.c2.agent.heartbeat.period=100\n";
 
-static std::string log_properties_file =
+static const std::string log_properties_file =
     "logger.root=INFO,ostream\n";
 
 using std::literals::chrono_literals::operator""s;
@@ -105,6 +106,10 @@ struct DummyClass2 {};
 namespace test {
 struct DummyClass3 {};
 }  // namespace test
+
+struct ConfigTestAccessor {
+  METHOD_ACCESSOR(setLoggerProperties);
+};
 
 int main() {
   TempDirectory tmp_dir;
@@ -171,7 +176,7 @@ int main() {
 
   harness.getConfiguration()->setHome(home_dir.string());
   harness.getConfiguration()->loadConfigureFile("conf/minifi.properties");
-  harness.getConfiguration()->setLoggerProperties(logger_properties);
+  ConfigTestAccessor::call_setLoggerProperties(*harness.getConfiguration(), logger_properties);
 
   harness.setUrl("http://localhost:0/heartbeat", &hb_handler);
   harness.setUrl("http://localhost:0/acknowledge", &ack_handler);
