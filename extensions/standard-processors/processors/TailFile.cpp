@@ -412,14 +412,18 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
 
 void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& context) {
   const auto attribute_provider_service_name = context.getProperty(AttributeProviderService);
-  if (attribute_provider_service_name && !attribute_provider_service_name->empty()) {
-    std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
-    if (controller_service) {
-      attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
-    }
-    if (!attribute_provider_service_) {
-      throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Could not create AttributeProviderService: ", *attribute_provider_service_name)};
-    }
+  if (!attribute_provider_service_name || attribute_provider_service_name->empty()) {
+    return;
+  }
+
+  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
+  if (!controller_service) {
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
+  }
+
+  attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
+  if (!attribute_provider_service_) {
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
   }
 }
 
