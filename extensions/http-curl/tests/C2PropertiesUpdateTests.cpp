@@ -28,7 +28,6 @@
 #include "spdlog/sinks/dist_sink.h"
 #include "LogUtils.h"
 #include "properties/PropertiesFile.h"
-#include "Utils.h"
 
 struct PropertyChange {
   std::string name;
@@ -108,7 +107,9 @@ struct DummyClass3 {};
 }  // namespace test
 
 struct ConfigTestAccessor {
-  METHOD_ACCESSOR(setLoggerProperties);
+  static void call_setLoggerProperties(const std::shared_ptr<minifi::Configure>& config, std::shared_ptr<core::logging::LoggerProperties> props) {
+    config->setLoggerProperties(props);
+  }
 };
 
 int main() {
@@ -176,7 +177,7 @@ int main() {
 
   harness.getConfiguration()->setHome(home_dir.string());
   harness.getConfiguration()->loadConfigureFile("conf/minifi.properties");
-  ConfigTestAccessor::call_setLoggerProperties(*harness.getConfiguration(), logger_properties);
+  ConfigTestAccessor::call_setLoggerProperties(harness.getConfiguration(), logger_properties);
 
   harness.setUrl("http://localhost:0/heartbeat", &hb_handler);
   harness.setUrl("http://localhost:0/acknowledge", &ack_handler);
