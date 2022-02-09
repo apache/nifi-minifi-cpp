@@ -78,16 +78,16 @@ KubernetesControllerService::APIClient::~APIClient() {
   apiClient_unsetupGlobalEnv();
 }
 
-core::Property KubernetesControllerService::NamespaceFilter{
+const core::Property KubernetesControllerService::NamespaceFilter{
     core::PropertyBuilder::createProperty("Namespace Filter")
         ->withDescription("Limit the output to pods in namespaces which match this regular expression")
         ->withDefaultValue<std::string>("default")
         ->build()};
-core::Property KubernetesControllerService::PodNameFilter{
+const core::Property KubernetesControllerService::PodNameFilter{
     core::PropertyBuilder::createProperty("Pod Name Filter")
         ->withDescription("If present, limit the output to pods the name of which matches this regular expression")
         ->build()};
-core::Property KubernetesControllerService::ContainerNameFilter{
+const core::Property KubernetesControllerService::ContainerNameFilter{
     core::PropertyBuilder::createProperty("Container Name Filter")
         ->withDescription("If present, limit the output to containers the name of which matches this regular expression")
         ->build()};

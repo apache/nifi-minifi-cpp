@@ -56,20 +56,20 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property TailFile::FileName(
+const core::Property TailFile::FileName(
     core::PropertyBuilder::createProperty("File to Tail")
         ->withDescription("Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode")
         ->isRequired(true)
         ->build());
 
-core::Property TailFile::StateFile(
+const core::Property TailFile::StateFile(
     core::PropertyBuilder::createProperty("State File")
         ->withDescription("DEPRECATED. Only use it for state migration from the legacy state file.")
         ->isRequired(false)
         ->withDefaultValue<std::string>("TailFileState")
         ->build());
 
-core::Property TailFile::Delimiter(
+const core::Property TailFile::Delimiter(
     core::PropertyBuilder::createProperty("Input Delimiter")
         ->withDescription("Specifies the character that should be used for delimiting the data being tailed"
          "from the incoming file. If none is specified, data will be ingested as it becomes available.")
@@ -77,7 +77,7 @@ core::Property TailFile::Delimiter(
         ->withDefaultValue<std::string>("\\n")
         ->build());
 
-core::Property TailFile::TailMode(
+const core::Property TailFile::TailMode(
     core::PropertyBuilder::createProperty("tail-mode", "Tailing Mode")
         ->withDescription("Specifies the tail file mode. In 'Single file' mode only a single file will be watched. "
         "In 'Multiple file' mode a regex may be used. Note that in multiple file mode we will still continue to watch for rollover on the initial set of watched files. "
@@ -85,7 +85,7 @@ core::Property TailFile::TailMode(
         ->withAllowableValue<std::string>("Single file")->withAllowableValue("Multiple file")->withDefaultValue("Single file")
         ->build());
 
-core::Property TailFile::BaseDirectory(
+const core::Property TailFile::BaseDirectory(
     core::PropertyBuilder::createProperty("tail-base-directory", "Base Directory")
         ->withDescription("Base directory used to look for files to tail. This property is required when using Multiple file mode. "
                           "Can contain expression language placeholders if Attribute Provider Service is set.")
@@ -93,7 +93,7 @@ core::Property TailFile::BaseDirectory(
         ->supportsExpressionLanguage(true)
         ->build());
 
-core::Property TailFile::RecursiveLookup(
+const core::Property TailFile::RecursiveLookup(
     core::PropertyBuilder::createProperty("Recursive lookup")
         ->withDescription("When using Multiple file mode, this property determines whether files are tailed in "
         "child directories of the Base Directory or not.")
@@ -101,7 +101,7 @@ core::Property TailFile::RecursiveLookup(
         ->withDefaultValue<bool>(false)
         ->build());
 
-core::Property TailFile::LookupFrequency(
+const core::Property TailFile::LookupFrequency(
     core::PropertyBuilder::createProperty("Lookup frequency")
         ->withDescription("When using Multiple file mode, this property specifies the minimum duration "
         "the processor will wait between looking for new files to tail in the Base Directory.")
@@ -109,7 +109,7 @@ core::Property TailFile::LookupFrequency(
         ->withDefaultValue<core::TimePeriodValue>("10 min")
         ->build());
 
-core::Property TailFile::RollingFilenamePattern(
+const core::Property TailFile::RollingFilenamePattern(
     core::PropertyBuilder::createProperty("Rolling Filename Pattern")
         ->withDescription("If the file to tail \"rolls over\" as would be the case with log files, this filename pattern will be used to "
         "identify files that have rolled over so MiNiFi can read the remaining of the rolled-over file and then continue with the new log file. "
@@ -119,7 +119,7 @@ core::Property TailFile::RollingFilenamePattern(
         ->withDefaultValue<std::string>("${filename}.*")
         ->build());
 
-core::Property TailFile::InitialStartPosition(
+const core::Property TailFile::InitialStartPosition(
     core::PropertyBuilder::createProperty("Initial Start Position")
         ->withDescription("When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
                           "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.\n"
@@ -132,14 +132,14 @@ core::Property TailFile::InitialStartPosition(
         ->withAllowableValues(InitialStartPositions::values())
         ->build());
 
-core::Property TailFile::AttributeProviderService(
+const core::Property TailFile::AttributeProviderService(
     core::PropertyBuilder::createProperty("Attribute Provider Service")
         ->withDescription("Provides a list of key-value pair records which can be used in the Base Directory property using Expression Language. "
                           "Requires Multiple file mode.")
         ->asType<minifi::controllers::AttributeProviderService>()
         ->build());
 
-core::Relationship TailFile::Success("success", "All files are routed to success");
+const core::Relationship TailFile::Success("success", "All files are routed to success");
 
 const char *TailFile::CURRENT_STR = "CURRENT.";
 const char *TailFile::POSITION_STR = "POSITION.";

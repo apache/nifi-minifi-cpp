@@ -92,19 +92,19 @@ class TailFile : public core::Processor {
   EXTENSIONAPI static constexpr char const* ProcessorName = "TailFile";
 
   // Supported Properties
-  EXTENSIONAPI static core::Property FileName;
-  EXTENSIONAPI static core::Property StateFile;
-  EXTENSIONAPI static core::Property Delimiter;
-  EXTENSIONAPI static core::Property TailMode;
-  EXTENSIONAPI static core::Property BaseDirectory;
-  EXTENSIONAPI static core::Property RecursiveLookup;
-  EXTENSIONAPI static core::Property LookupFrequency;
-  EXTENSIONAPI static core::Property RollingFilenamePattern;
-  EXTENSIONAPI static core::Property InitialStartPosition;
-  EXTENSIONAPI static core::Property AttributeProviderService;
+  EXTENSIONAPI static const core::Property FileName;
+  EXTENSIONAPI static const core::Property StateFile;
+  EXTENSIONAPI static const core::Property Delimiter;
+  EXTENSIONAPI static const core::Property TailMode;
+  EXTENSIONAPI static const core::Property BaseDirectory;
+  EXTENSIONAPI static const core::Property RecursiveLookup;
+  EXTENSIONAPI static const core::Property LookupFrequency;
+  EXTENSIONAPI static const core::Property RollingFilenamePattern;
+  EXTENSIONAPI static const core::Property InitialStartPosition;
+  EXTENSIONAPI static const core::Property AttributeProviderService;
 
   // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
 
   /**
    * Function that's executed when the processor is scheduled.

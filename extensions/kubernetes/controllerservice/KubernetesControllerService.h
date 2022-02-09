@@ -28,9 +28,9 @@ namespace org::apache::nifi::minifi::controllers {
 
 class KubernetesControllerService : public AttributeProviderService {
  public:
-  EXTENSIONAPI static core::Property NamespaceFilter;
-  EXTENSIONAPI static core::Property PodNameFilter;
-  EXTENSIONAPI static core::Property ContainerNameFilter;
+  EXTENSIONAPI static const core::Property NamespaceFilter;
+  EXTENSIONAPI static const core::Property PodNameFilter;
+  EXTENSIONAPI static const core::Property ContainerNameFilter;
 
   explicit KubernetesControllerService(const std::string& name, const utils::Identifier& uuid = {});
   KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration);
