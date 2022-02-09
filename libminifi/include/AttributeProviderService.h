@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -33,7 +34,7 @@ class AttributeProviderService : public core::controller::ControllerService {
   bool isWorkAvailable() override { return false; }
 
   using AttributeMap = std::unordered_map<std::string, std::string>;
-  virtual std::vector<AttributeMap> getAttributes() = 0;
+  virtual std::optional<std::vector<AttributeMap>> getAttributes() = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

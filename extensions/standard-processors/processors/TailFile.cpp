@@ -887,7 +887,12 @@ std::vector<std::string> TailFile::getBaseDirectories(core::ProcessContext& cont
   gsl_Expects(attribute_provider_service_);
 
   const auto attribute_maps = attribute_provider_service_->getAttributes();
-  return attribute_maps |
+  if (!attribute_maps) {
+    logger_->log_error("Could not get attributes from the Attribute Provider Service");
+    return {};
+  }
+
+  return attribute_maps.value() |
       ranges::views::transform([&context](const auto& attribute_map) {
         auto flow_file = std::make_shared<FlowFileRecord>();
         for (const auto& [key, value] : attribute_map) {

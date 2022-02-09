@@ -37,7 +37,7 @@ class KubernetesControllerService : public AttributeProviderService {
 
   void initialize() final;
   void onEnable() override;
-  std::vector<AttributeMap> getAttributes() override;
+  std::optional<std::vector<AttributeMap>> getAttributes() override;
 
  private:
   class APIClient;

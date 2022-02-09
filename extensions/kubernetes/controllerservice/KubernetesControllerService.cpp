@@ -149,16 +149,16 @@ v1_pod_list_unique_ptr getPods(apiClient_t* api_client, core::logging::Logger& l
 
 }  // namespace
 
-std::vector<KubernetesControllerService::AttributeMap> KubernetesControllerService::getAttributes() {
+std::optional<std::vector<KubernetesControllerService::AttributeMap>> KubernetesControllerService::getAttributes() {
   if (!api_client_->getClient()) {
     logger_->log_warn("The Kubernetes client is not valid, unable to call the Kubernetes API");
-    return {};
+    return std::nullopt;
   }
 
   const auto pod_list = getPods(api_client_->getClient(), *logger_);
   if (!pod_list) {
     logger_->log_warn("Could not find any Kubernetes pods");
-    return {};
+    return std::nullopt;
   }
 
   std::vector<AttributeMap> container_attribute_maps;

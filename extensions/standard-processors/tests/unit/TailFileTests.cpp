@@ -1772,9 +1772,9 @@ class TestAttributeProviderService : public minifi::controllers::AttributeProvid
   using AttributeProviderService::AttributeProviderService;
   void initialize() override {};
   void onEnable() override {};
-  std::vector<AttributeMap> getAttributes() override {
-    return {AttributeMap{{"color", "red"}, {"fruit", "apple"}, {"uid", "001"}, {"animal", "dog"}},
-            AttributeMap{{"color", "yellow"}, {"fruit", "banana"}, {"uid", "004"}, {"animal", "dolphin"}}};
+  std::optional<std::vector<AttributeMap>> getAttributes() override {
+    return std::vector<AttributeMap>{AttributeMap{{"color", "red"}, {"fruit", "apple"}, {"uid", "001"}, {"animal", "dog"}},
+                                     AttributeMap{{"color", "yellow"}, {"fruit", "banana"}, {"uid", "004"}, {"animal", "dolphin"}}};
   }
 };
 REGISTER_RESOURCE(TestAttributeProviderService, "An attribute provider service which provides a constant set of records.");
