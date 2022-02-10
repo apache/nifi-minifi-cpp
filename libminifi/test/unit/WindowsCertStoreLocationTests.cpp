@@ -20,6 +20,7 @@
 #include <wincrypt.h>
 
 #include "TestUtils.h"
+#include "../Catch.h"
 #include "utils/tls/WindowsCertStoreLocation.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
