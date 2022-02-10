@@ -16,7 +16,9 @@
  */
 
 #include "properties/Decryptor.h"
-#include "TestUtils.h"
+#include "../Catch.h"
+#include "StringUtils.h"
+#include "properties/Configure.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace utils = org::apache::nifi::minifi::utils;
