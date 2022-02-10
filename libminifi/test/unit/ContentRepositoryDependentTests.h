@@ -177,4 +177,17 @@ void testAppendToManagedFlowFile(std::shared_ptr<core::ContentRepository> conten
   CHECK(to_string(read_result) == "myfoobar");
   CHECK(read_until_it_can_callback.value_ == "myfoobar");
 }
+
+void testReadFromZeroLengthFlowFile(std::shared_ptr<core::ContentRepository> content_repo) {
+  Fixture fixture = Fixture(content_repo);
+  core::ProcessSession& process_session = fixture.processSession();
+  const auto flow_file = process_session.create();
+  REQUIRE(flow_file);
+  fixture.transferAndCommit(flow_file);
+
+  CHECK(flow_file->getSize() == 0);
+  REQUIRE_NOTHROW(process_session.readBuffer(flow_file));
+  ReadUntilItCan read_until_it_can_callback;
+  REQUIRE_NOTHROW(process_session.read(flow_file, &read_until_it_can_callback));
+}
 }  // namespace ContentRepositoryDependentTests

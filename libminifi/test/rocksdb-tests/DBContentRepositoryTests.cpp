@@ -228,13 +228,17 @@ TEST_CASE("Delete Remove Count Claim", "[TestDBCR5]") {
   REQUIRE(readstr == "well hello there");
 }
 
-TEST_CASE("ProcessSession::read reads the flowfile from offset to size", "[readoffsetsize]") {
+TEST_CASE("ProcessSession::read reads the flowfile from offset to size (RocksDB)", "[readoffsetsize]") {
   ContentRepositoryDependentTests::testReadOnSmallerClonedFlowFiles(std::make_shared<core::repository::DatabaseContentRepository>());
 }
 
 
-TEST_CASE("ProcessSession::append should append to the flowfile and set its size correctly" "[appendsetsize]") {
+TEST_CASE("ProcessSession::append should append to the flowfile and set its size correctly (RocksDB)" "[appendsetsize]") {
   ContentRepositoryDependentTests::testAppendToUnmanagedFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
 
   ContentRepositoryDependentTests::testAppendToManagedFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
+}
+
+TEST_CASE("ProcessSession::read can read zero length flowfiles without crash (RocksDB)", "[zerolengthread]") {
+  ContentRepositoryDependentTests::testReadFromZeroLengthFlowFile(std::make_shared<core::repository::DatabaseContentRepository>());
 }

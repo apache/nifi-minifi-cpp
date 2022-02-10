@@ -56,8 +56,7 @@ size_t RocksDbStream::tell() const {
 
 size_t RocksDbStream::write(const uint8_t *value, size_t size) {
   if (!write_enable_) return STREAM_ERROR;
-  if (size == 0) return 0;
-  if (IsNullOrEmpty(value)) return STREAM_ERROR;
+  if (size != 0 && IsNullOrEmpty(value)) return STREAM_ERROR;
   auto opendb = db_->open();
   if (!opendb) {
     return STREAM_ERROR;
