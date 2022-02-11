@@ -90,7 +90,7 @@ static inline std::string getClassName() {
   } else if (name.find(struct_prefix) == 0) {
     name.remove_prefix(struct_prefix.length());
   }
-  return name;
+  return std::string{name};
 #endif
 }
 
