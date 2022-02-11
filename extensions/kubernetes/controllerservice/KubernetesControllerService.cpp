@@ -43,7 +43,7 @@ class KubernetesControllerService::APIClient {
   APIClient& operator=(APIClient&&) = delete;
   APIClient& operator=(const APIClient&) = delete;
 
-  apiClient_t* getClient() { return api_client_; }
+  [[nodiscard]] apiClient_t* getClient() const noexcept { return api_client_; }
 
  private:
   char* base_path_ = nullptr;
