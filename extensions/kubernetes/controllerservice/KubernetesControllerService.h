@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "AttributeProviderService.h"
+#include "controllers/AttributeProviderService.h"
 #include "core/logging/Logger.h"
 #include "core/Property.h"
 

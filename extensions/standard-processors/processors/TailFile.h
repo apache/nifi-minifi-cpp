@@ -27,7 +27,7 @@
 #include <vector>
 #include <set>
 
-#include "AttributeProviderService.h"
+#include "controllers/AttributeProviderService.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
