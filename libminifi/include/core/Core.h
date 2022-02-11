@@ -81,7 +81,7 @@ static inline std::string getClassName() {
   std::free(b);
   return name;
 #else
-  const std::string_view name = typeid(T).name();
+  std::string_view name = typeid(T).name();
   const std::string_view class_prefix = "class ";
   const std::string_view struct_prefix = "struct ";
 
