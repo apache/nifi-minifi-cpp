@@ -30,51 +30,46 @@ extern "C" {
 #include "core/logging/LoggerConfiguration.h"
 #include "Exception.h"
 #include "utils/gsl.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
 class KubernetesControllerService::APIClient {
  public:
-  explicit APIClient(core::logging::Logger& logger);
-  ~APIClient();
+  APIClient();
+  ~APIClient() noexcept;
 
   APIClient(APIClient&&) = delete;
   APIClient(const APIClient&) = delete;
   APIClient& operator=(APIClient&&) = delete;
   APIClient& operator=(const APIClient&) = delete;
 
-  [[nodiscard]] apiClient_t* getClient() const noexcept { return api_client_; }
+  [[nodiscard]] gsl::not_null<apiClient_t*> getClient() const noexcept { return api_client_; }
 
  private:
   char* base_path_ = nullptr;
   sslConfig_t* ssl_config_ = nullptr;
   list_t* api_keys_ = nullptr;
-  apiClient_t* api_client_ = nullptr;
+  gsl::not_null<apiClient_t*> api_client_;
 };
 
-KubernetesControllerService::APIClient::APIClient(core::logging::Logger& logger) {
-  int rc = load_incluster_config(&base_path_, &ssl_config_, &api_keys_);
-  if (rc != 0) {
-    logger.log_error("Cannot load kubernetes configuration in cluster");
-    return;
-  }
-  api_client_ = apiClient_create_with_base_path(base_path_, ssl_config_, api_keys_);
-  if (!api_client_) {
-    logger.log_error("Cannot create a kubernetes client");
-  }
+KubernetesControllerService::APIClient::APIClient()
+  : api_client_([this] {
+    int rc = load_incluster_config(&base_path_, &ssl_config_, &api_keys_);
+    if (rc != 0) {
+      throw std::runtime_error(utils::StringUtils::join_pack("load_incluster_config() failed with error code ", std::to_string(rc)));
+    }
+    const auto api_client = apiClient_create_with_base_path(base_path_, ssl_config_, api_keys_);
+    if (!api_client) {
+      throw std::runtime_error("apiClient_create_with_base_path() failed");
+    }
+    return gsl::make_not_null(api_client);
+    }()) {
 }
 
-KubernetesControllerService::APIClient::~APIClient() {
-  if (api_client_) {
-    apiClient_free(api_client_);
-    api_client_ = nullptr;
-  }
-
+KubernetesControllerService::APIClient::~APIClient() noexcept {
+  apiClient_free(api_client_);
   free_client_config(base_path_, ssl_config_, api_keys_);
-  base_path_ = nullptr;
-  ssl_config_ = nullptr;
-  api_keys_ = nullptr;
-
   apiClient_unsetupGlobalEnv();
 }
 
@@ -94,8 +89,7 @@ const core::Property KubernetesControllerService::ContainerNameFilter{
 
 KubernetesControllerService::KubernetesControllerService(const std::string& name, const utils::Identifier& uuid)
   : AttributeProviderService(name, uuid),
-    logger_{core::logging::LoggerFactory<KubernetesControllerService>::getLogger()},
-    api_client_{std::make_unique<APIClient>(*logger_)} {
+    logger_{core::logging::LoggerFactory<KubernetesControllerService>::getLogger()} {
 }
 
 KubernetesControllerService::KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration)
@@ -114,6 +108,12 @@ void KubernetesControllerService::initialize() {
 }
 
 void KubernetesControllerService::onEnable() {
+  try {
+    api_client_ = std::make_unique<APIClient>();
+  } catch (const std::runtime_error& ex) {
+    logger_->log_error("Could not create the API client in the Kubernetes Controller Service: %s", ex.what());
+  }
+
   std::string namespace_filter;
   if (getProperty(NamespaceFilter.getName(), namespace_filter) && !namespace_filter.empty()) {
     namespace_filter_ = std::regex{namespace_filter};
@@ -157,12 +157,12 @@ v1_pod_list_unique_ptr getPods(gsl::not_null<apiClient_t*> api_client, core::log
 }  // namespace
 
 std::optional<std::vector<KubernetesControllerService::AttributeMap>> KubernetesControllerService::getAttributes() {
-  if (!api_client_->getClient()) {
+  if (!api_client_) {
     logger_->log_warn("The Kubernetes client is not valid, unable to call the Kubernetes API");
     return std::nullopt;
   }
 
-  const auto pod_list = getPods(gsl::make_not_null(api_client_->getClient()), *logger_);
+  const auto pod_list = getPods(api_client_->getClient(), *logger_);
   if (!pod_list) {
     logger_->log_warn("Could not find any Kubernetes pods");
     return std::nullopt;
