@@ -421,6 +421,7 @@ void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& conte
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
   }
 
+  // we drop ownership of the service here -- in the long term, getControllerService() should return a non-owning pointer or optional reference
   attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
   if (!attribute_provider_service_) {
     throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
