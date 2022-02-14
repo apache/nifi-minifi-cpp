@@ -182,7 +182,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
-  std::shared_ptr<state::response::ResponseNode> getAgentManifest() override;
+  std::shared_ptr<state::response::ResponseNode> getAgentManifest() const override;
 
   uint64_t getUptime() override;
 

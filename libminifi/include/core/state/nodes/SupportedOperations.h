@@ -39,7 +39,7 @@ class SupportedOperations : public DeviceInformation {
     monitor_ = monitor;
   }
 
-  void setUpdatePolicyController(const std::shared_ptr<controllers::UpdatePolicyControllerService>& update_policy_controller) {
+  void setUpdatePolicyController(const std::shared_ptr<const controllers::UpdatePolicyControllerService>& update_policy_controller) {
     update_policy_controller_ = update_policy_controller;
   }
 
@@ -64,7 +64,7 @@ class SupportedOperations : public DeviceInformation {
   Metadata buildUpdatePropertiesMetadata() const;
 
   std::shared_ptr<state::StateMonitor> monitor_;
-  std::shared_ptr<controllers::UpdatePolicyControllerService> update_policy_controller_;
+  std::shared_ptr<const controllers::UpdatePolicyControllerService> update_policy_controller_;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

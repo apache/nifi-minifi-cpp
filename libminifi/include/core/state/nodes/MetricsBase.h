@@ -207,7 +207,7 @@ class NodeReporter {
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
-  virtual std::shared_ptr<state::response::ResponseNode> getAgentManifest() = 0;
+  virtual std::shared_ptr<state::response::ResponseNode> getAgentManifest() const = 0;
 };
 
 /**

@@ -50,7 +50,7 @@ class ControllerServiceLookup {
    * @param identifier reference string for controller service.
    * @return controller service reference.
    */
-  virtual std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) = 0;
+  virtual std::shared_ptr<ControllerService> getControllerService(const std::string &identifier) const = 0;
 
   /**
    * Detects if controller service is enabled.
@@ -70,7 +70,7 @@ class ControllerServiceLookup {
    * Gets the controller service name for the provided reference identifier
    * @param identifier reference string for the controller service.
    */
-  virtual const std::string getControllerServiceName(const std::string &identifier) = 0;
+  virtual const std::string getControllerServiceName(const std::string &identifier) const = 0;
 };
 
 }  // namespace controller
