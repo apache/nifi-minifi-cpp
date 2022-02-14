@@ -1,0 +1,22 @@
+diff --git a/lib/CMakeLists.txt b/lib/CMakeLists.txt
+index c55c6198..5e401726 100644
+--- a/lib/CMakeLists.txt
++++ b/lib/CMakeLists.txt
+@@ -170,7 +170,7 @@ if (LWS_WITH_STATIC)
+ 	)
+ 	target_include_directories(websockets PRIVATE ${LWS_LIB_BUILD_INC_PATHS})
+ 	target_compile_definitions(websockets PRIVATE LWS_BUILDING_STATIC)
+-	target_include_directories(websockets PUBLIC ${LWS_PUBLIC_INCLUDES})
++	target_include_directories(websockets PUBLIC $<BUILD_INTERFACE:${LWS_PUBLIC_INCLUDES}>)
+ 	set(LWS_PUBLIC_INCLUDES ${LWS_PUBLIC_INCLUDES} PARENT_SCOPE)
+ 
+ 	if (WIN32)
+@@ -198,7 +198,7 @@ if (LWS_WITH_SHARED)
+ 	)
+ 	target_include_directories(websockets_shared PRIVATE ${LWS_LIB_BUILD_INC_PATHS})
+ 	target_compile_definitions(websockets_shared PRIVATE LWS_BUILDING_SHARED)
+-	target_include_directories(websockets_shared PUBLIC ${LWS_PUBLIC_INCLUDES})
++	target_include_directories(websockets_shared PUBLIC $<BUILD_INTERFACE:${LWS_PUBLIC_INCLUDES}>)
+ 	set(LWS_PUBLIC_INCLUDES ${LWS_PUBLIC_INCLUDES} PARENT_SCOPE)
+ 
+ 	# We want the shared lib to be named "libwebsockets"

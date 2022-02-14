@@ -31,20 +31,25 @@ set(LWS_WITHOUT_TEST_PING ON            CACHE BOOL "" FORCE)
 set(LWS_WITHOUT_TEST_CLIENT ON          CACHE BOOL "" FORCE)
 set(LWS_WITH_SHARED OFF                 CACHE BOOL "" FORCE)
 set(CMAKE_C_FLAGS "-fpic"               CACHE STRING "" FORCE)
+
+set(WEBSOCKETS_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/libwebsockets/fix-include-dirs.patch")
+set(WEBSOCKETS_PC ${Bash_EXECUTABLE} -c "set -x &&\
+        (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${WEBSOCKETS_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${WEBSOCKETS_PATCH_FILE})")
 FetchContent_Declare(websockets
         GIT_REPOSITORY  https://libwebsockets.org/repo/libwebsockets.git
-        GIT_TAG         43a1e83394bf06689b966402e7d4378685d05fbc  # v4.2-stable
+        GIT_TAG         v4.3.1
+        PATCH_COMMAND "${WEBSOCKETS_PC}"
 )
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/remove-findpackage.patch")
-set(PC ${Bash_EXECUTABLE} -c "set -x &&\
-        (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${PATCH_FILE})")
+set(K8S_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/remove-findpackage.patch")
+set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
+        (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${K8S_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${K8S_PATCH_FILE})")
 FetchContent_Declare(kubernetes
     GIT_REPOSITORY https://github.com/kubernetes-client/c
     GIT_TAG 9581cd9a8426a5ad7d543b146d5c5ede37cc32e0  # latest commit on master as of 2022-01-05
     SOURCE_SUBDIR kubernetes
-    PATCH_COMMAND "${PC}"
+    PATCH_COMMAND "${K8S_PC}"
 )
 
 FetchContent_MakeAvailable(yaml websockets kubernetes)
