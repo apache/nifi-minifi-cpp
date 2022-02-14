@@ -16,15 +16,11 @@
  */
 
 #include "ProcessStat.h"
-#include <stdio.h>
-#include <fstream>
-#include <algorithm>
 #include <sstream>
 
+namespace org::apache::nifi::minifi::extensions::procfs {
 
-namespace org::apache::nifi::minifi::procfs {
-
-std::optional<ProcessStatData> ProcessStatData::parseProcessStatFile(std::ifstream& stat_file) {
+std::optional<ProcessStatData> ProcessStatData::parseProcessStatFile(std::istream& stat_file) {
   std::stringstream stat_stream;
   copy(std::istreambuf_iterator<char>(stat_file),
        std::istreambuf_iterator<char>(),
@@ -55,45 +51,4 @@ std::optional<ProcessStatData> ProcessStatData::parseProcessStatFile(std::ifstre
 
   return process_stat_data;
 }
-
-void ProcessStat::addToJson(rapidjson::Value& root, rapidjson::Document::AllocatorType& alloc) const {
-  std::string pid_string = std::to_string(pid_);
-  rapidjson::Value process_pid(pid_string.c_str(), pid_string.size(), alloc);
-  root.AddMember(process_pid.Move(), rapidjson::kObjectType, alloc);
-  rapidjson::Value& process_json = root[pid_string.c_str()];
-  rapidjson::Value comm_json(comm_.c_str(), comm_.size(), alloc);
-  process_json.AddMember(COMM_STR, comm_json, alloc);
-  process_json.AddMember(MEMORY_STR, memory_, alloc);
-  process_json.AddMember(CPU_TIME_STR, cpu_time_, alloc);
-}
-
-void ProcessStatPeriod::addToJson(rapidjson::Value& root, rapidjson::Document::AllocatorType& alloc) const {
-  std::string pid_string = std::to_string(pid_);
-  rapidjson::Value process_pid(pid_string.c_str(), pid_string.size(), alloc);
-  root.AddMember(process_pid.Move(), rapidjson::kObjectType, alloc);
-  rapidjson::Value& process_json = root[pid_string.c_str()];
-  rapidjson::Value comm_json(comm_.c_str(), comm_.size(), alloc);
-  process_json.AddMember(COMM_STR, comm_json, alloc);
-  process_json.AddMember(MEMORY_STR, memory_, alloc);
-  process_json.AddMember(CPU_USAGE_STR, cpu_usage_, alloc);
-}
-
-std::optional<ProcessStatPeriod> ProcessStatPeriod::create(const ProcessStat& process_stat_start, const ProcessStat& process_stat_end, double cpu_period) {
-  if (cpu_period <= 0)
-    return std::nullopt;
-  if (process_stat_start.getComm() != process_stat_end.getComm())
-    return std::nullopt;
-  if (process_stat_start.getPid() != process_stat_end.getPid())
-    return std::nullopt;
-  if (!(process_stat_end.getCpuTime() >= process_stat_start.getCpuTime()))
-    return std::nullopt;
-  ProcessStatPeriod process_stat_period;
-  process_stat_period.comm_ = process_stat_start.getComm();
-  process_stat_period.pid_ = process_stat_end.getPid();
-  process_stat_period.memory_ = process_stat_end.getMemory();
-  process_stat_period.cpu_usage_ = static_cast<double>(process_stat_end.getCpuTime() - process_stat_start.getCpuTime()) / cpu_period;
-
-  return process_stat_period;
-}
-
-}  // namespace org::apache::nifi::minifi::procfs
+}  // namespace org::apache::nifi::minifi::extensions::procfs

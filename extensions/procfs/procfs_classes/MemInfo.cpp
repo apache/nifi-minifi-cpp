@@ -16,8 +16,9 @@
  */
 
 #include "MemInfo.h"
+#include <sstream>
 
-namespace org::apache::nifi::minifi::procfs {
+namespace org::apache::nifi::minifi::extensions::procfs {
 
 std::optional<MemInfo> MemInfo::parseMemInfoFile(std::ifstream& mem_info_file) {
   bool kb_memory_total_found = false;
@@ -59,12 +60,4 @@ std::optional<MemInfo> MemInfo::parseMemInfoFile(std::ifstream& mem_info_file) {
   }
   return std::nullopt;
 }
-
-void MemInfo::addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const {
-  body.AddMember("MemTotal", memory_total_, alloc);
-  body.AddMember("MemAvailable", memory_available_ , alloc);
-  body.AddMember("MemFree", memory_free_ , alloc);
-  body.AddMember("SwapTotal", swap_total_ , alloc);
-  body.AddMember("SwapFree", swap_free_ , alloc);
-}
-}  // namespace org::apache::nifi::minifi::procfs
+}  // namespace org::apache::nifi::minifi::extensions::procfs

@@ -15,49 +15,35 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
+#include "Catch.h"
 #include "ProcFs.h"
 
-using org::apache::nifi::minifi::procfs::ProcFs;
-using org::apache::nifi::minifi::procfs::ProcessStat;
-using org::apache::nifi::minifi::procfs::ProcessStatPeriod;
+using org::apache::nifi::minifi::extensions::procfs::ProcFs;
+using org::apache::nifi::minifi::extensions::procfs::ProcessStat;
 
 TEST_CASE("ProcFSTest process test with mock", "[procfsprocessmocktest]") {
-  ProcFs proc_fs("./mockprocfs_t0");
-  auto process_stats = proc_fs.getProcessStats();
-  REQUIRE(process_stats.size() == 1);
-  for (auto& process : process_stats) {
-    rapidjson::Document document(rapidjson::kObjectType);
-    process.second.addToJson(document, document.GetAllocator());
-  }
+  ProcFs proc_fs_t0("./mockprocfs_t0");
+  auto process_stats_t0 = proc_fs_t0.getProcessStats();
+  REQUIRE(process_stats_t0.size() == 1);
+  ProcFs proc_fs_t1("./mockprocfs_t0");
+  auto process_stats_t1 = proc_fs_t1.getProcessStats();
+  REQUIRE(process_stats_t1.size() == 1);
 }
 
 TEST_CASE("ProcFSTest process test", "[procfsprocesstest]") {
   ProcFs proc_fs;
-  auto process_stats = proc_fs.getProcessStats();
-  for (auto& process : process_stats) {
-    rapidjson::Document document(rapidjson::kObjectType);
-    process.second.addToJson(document, document.GetAllocator());
-  }
-}
-
-TEST_CASE("ProcFSTest process period test", "[procfsnetdevperiodtest]") {
-  ProcFs proc_fs;
   auto process_stats_t0 = proc_fs.getProcessStats();
-  auto cpu_stats_t0 = proc_fs.getCpuStats();
   sleep(1);
   auto process_stats_t1 = proc_fs.getProcessStats();
-  auto cpu_stats_t1 = proc_fs.getCpuStats();
-  double last_cpu_period = cpu_stats_t1[0].getData().getTotal()-cpu_stats_t0[0].getData().getTotal();
-  for (const auto& process_stat : process_stats_t1) {
-      auto last_stat_it = process_stats_t0.find(process_stat.first);
-      if (last_stat_it != process_stats_t0.end()) {
-        auto process_stat_period = ProcessStatPeriod::create(last_stat_it->second, process_stat.second, last_cpu_period);
-        if (process_stat_period.has_value()) {
-          rapidjson::Document document(rapidjson::kObjectType);
-          REQUIRE_NOTHROW(process_stat_period->addToJson(document, document.GetAllocator()));
-        }
-      }
+  size_t number_of_valid_measurements = 0;
+  for (const auto& [pid_t0, process_stat_t0] : process_stats_t0) {
+    if (process_stats_t1.contains(pid_t0)) {
+      auto& process_stat_t1 = process_stats_t1.at(pid_t0);
+      if (process_stat_t1.getComm() != process_stat_t0.getComm())
+        continue;
+      ++number_of_valid_measurements;
+      REQUIRE(process_stat_t1.getCpuTime() >= process_stat_t0.getCpuTime());
+    }
   }
+  REQUIRE(number_of_valid_measurements > 0);
 }
-

@@ -18,28 +18,22 @@
 #pragma once
 
 #include <string>
-#include <sstream>
 #include <fstream>
 #include <optional>
-#include "rapidjson/document.h"
 
-namespace org::apache::nifi::minifi::procfs {
+namespace org::apache::nifi::minifi::extensions::procfs {
 
 class MemInfo {
   MemInfo() = default;
 
  public:
-  MemInfo(const MemInfo& src) = default;
-  MemInfo(MemInfo&& src) noexcept = default;
   static std::optional<MemInfo> parseMemInfoFile(std::ifstream& mem_info_file);
 
-  void addToJson(rapidjson::Value& body, rapidjson::Document::AllocatorType& alloc) const;
-
-  uint64_t getTotalMemory() const { return memory_total_; }
-  uint64_t getFreeMemory() const { return memory_free_; }
-  uint64_t getAvailableMemory() const { return memory_available_; }
-  uint64_t getTotalSwap() const { return swap_total_; }
-  uint64_t getFreeSwap() const { return swap_free_; }
+  [[nodiscard]] uint64_t getTotalMemory() const noexcept { return memory_total_; }
+  [[nodiscard]] uint64_t getFreeMemory() const noexcept { return memory_free_; }
+  [[nodiscard]] uint64_t getAvailableMemory() const noexcept { return memory_available_; }
+  [[nodiscard]] uint64_t getTotalSwap() const noexcept { return swap_total_; }
+  [[nodiscard]] uint64_t getFreeSwap() const noexcept { return swap_free_; }
 
  private:
   uint64_t memory_total_;
@@ -48,4 +42,5 @@ class MemInfo {
   uint64_t swap_total_;
   uint64_t swap_free_;
 };
-}  // namespace org::apache::nifi::minifi::procfs
+
+}  // namespace org::apache::nifi::minifi::extensions::procfs

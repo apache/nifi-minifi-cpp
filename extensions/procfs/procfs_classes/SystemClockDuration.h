@@ -15,20 +15,20 @@
  * limitations under the License.
  */
 
-#include "Catch.h"
-#include "ProcFs.h"
+#pragma once
+#include <sys/param.h>
+#include <istream>
+#include <chrono>
 
-using org::apache::nifi::minifi::extensions::procfs::ProcFs;
-using org::apache::nifi::minifi::extensions::procfs::MemInfo;
+namespace org::apache::nifi::minifi::extensions::procfs {
 
-TEST_CASE("ProcFSTest meminfo test with mock", "[procfmeminfomocktest]") {
-  ProcFs proc_fs("./mockprocfs_t0");
-  auto mem_info = proc_fs.getMemInfo();
-  REQUIRE(mem_info);
+typedef std::chrono::duration<uint64_t, std::ratio<1, HZ>> SystemClockDuration;
+
+inline std::istream& operator>>(std::istream& iss, SystemClockDuration& system_duration) {
+  uint64_t value;
+  iss >> value;
+  system_duration = SystemClockDuration(value);
+  return iss;
 }
 
-TEST_CASE("ProcFSTest meminfo test", "[procfsmeminfotest]") {
-  ProcFs proc_fs;
-  auto mem_info = proc_fs.getMemInfo();
-  REQUIRE(mem_info);
-}
+}  // namespace org::apache::nifi::minifi::extensions::procfs

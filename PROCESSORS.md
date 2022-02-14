@@ -1350,24 +1350,25 @@ In the list below, the names of required properties appear in bold. Any other pr
 ## ProcFsMonitor
 
 ### Description
-This linux only processor can create FlowFiles populated with performance data with the help of the proc pseudo-filesystem.
+This processor can create FlowFiles with various performance data through the proc pseudo-filesystem. (Linux only)
+
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-|**Output Format**|JSON|JSON<br>OpenTelemetry|The output format of the new flowfile|
-|**OutputCompactness**|Pretty|Pretty<br>Compact|The output format of the new flowfile|
-|**ResultRelativeness**|Absolute|Absolute<br>Relative|Absolute returns the current procfs values, relative calculates the usage between triggers|
-|Round to decimal places||integers|The number of decimal places to round the values to (blank for no rounding)|
+| Name                    | Default Value | Allowable Values      | Description                                                                                |
+|-------------------------|---------------|-----------------------|--------------------------------------------------------------------------------------------|
+| **Output Format**       | JSON          | JSON<br>OpenTelemetry | The output format of the new flowfile                                                      |
+| **Output Compactness**  | Pretty        | Pretty<br>Compact     | The output type of the new flowfile                                                        |
+| **Result Type**         | Absolute      | Absolute<br>Relative  | Absolute returns the current procfs values, relative calculates the usage between triggers |
+| Round to decimal places |               | integers              | The number of decimal places to round the values to (blank for no rounding)                |
 
 
 ### Relationships
 
-| Name | Description |
-| - | - |
-|success|All files are routed to success|
+| Name    | Description                     |
+|---------|---------------------------------|
+| success | All files are routed to success |
 
 
 ## PublishKafka

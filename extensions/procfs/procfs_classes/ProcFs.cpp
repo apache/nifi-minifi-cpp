@@ -16,8 +16,9 @@
  */
 
 #include "ProcFs.h"
+#include <istream>
 
-namespace org::apache::nifi::minifi::procfs {
+namespace org::apache::nifi::minifi::extensions::procfs {
 
 namespace {
 bool is_number(const std::string& s) {
@@ -31,16 +32,16 @@ std::unordered_map<pid_t, ProcessStat> ProcFs::getProcessStats() const {
     if (entry.is_directory() && is_number(entry.path().filename())) {
       auto stat_file_path = entry.path() / STAT_FILE;
       std::ifstream stat_file(stat_file_path);
-      auto process_stat_data = ProcessStatData::parseProcessStatFile(stat_file);
-      if (process_stat_data.has_value())
-        process_stats.emplace(process_stat_data->getPid(), ProcessStat(process_stat_data.value(), page_size_));
+      if (auto process_stat_data = ProcessStatData::parseProcessStatFile(stat_file)) {
+        process_stats.emplace(process_stat_data->getPid(), ProcessStat(*process_stat_data, page_size_));
+      }
     }
   }
   return process_stats;
 }
 
-std::vector<CpuStat> ProcFs::getCpuStats() const {
-  std::vector<CpuStat> cpu_stats;
+std::unordered_map<std::string, CpuStatData> ProcFs::getCpuStats() const {
+  std::unordered_map<std::string, CpuStatData> cpu_stats;
   auto stat_file_path = root_path_ / STAT_FILE;
   std::ifstream stat_file;
   stat_file.open(stat_file_path);
@@ -49,10 +50,9 @@ std::vector<CpuStat> ProcFs::getCpuStats() const {
     std::istringstream iss(line);
     std::string entry_name;
     iss >> entry_name;
-    if (entry_name.find("cpu") != entry_name.npos) {
-      auto cpu_stat = CpuStatData::parseCpuStatLine(iss);
-      if (cpu_stat.has_value())
-        cpu_stats.emplace_back(entry_name, cpu_stat.value());
+    if (entry_name.starts_with("cpu")) {
+      if (auto cpu_stat_data = CpuStatData::parseCpuStatLine(iss))
+        cpu_stats.emplace(entry_name, *cpu_stat_data);
     }
   }
   return cpu_stats;
@@ -64,8 +64,8 @@ std::optional<MemInfo> ProcFs::getMemInfo() const {
   return MemInfo::parseMemInfoFile(mem_info_file);
 }
 
-std::vector<NetDev> ProcFs::getNetDevs() const {
-  std::vector<NetDev> net_devs;
+std::unordered_map<std::string, NetDevData> ProcFs::getNetDevs() const {
+  std::unordered_map<std::string, NetDevData>net_devs;
   auto stat_file_path = root_path_ / NET_DEV_FILE;
   std::ifstream stat_file;
   stat_file.open(stat_file_path);
@@ -79,26 +79,24 @@ std::vector<NetDev> ProcFs::getNetDevs() const {
     if (iss.fail())
       continue;
     entry_name.pop_back();
-    auto net_dev_data = NetDevData::parseNetDevLine(iss);
-    if (net_dev_data.has_value())
-      net_devs.emplace_back(entry_name, net_dev_data.value(), std::chrono::steady_clock::now());
+    if (auto net_dev_data = NetDevData::parseNetDevLine(iss))
+      net_devs.emplace(entry_name, *net_dev_data);
   }
   return net_devs;
 }
 
-std::vector<DiskStat> ProcFs::getDiskStats() const {
-  std::vector<DiskStat> disk_stats;
+std::unordered_map<std::string, DiskStatData> ProcFs::getDiskStats() const {
+  std::unordered_map<std::string, DiskStatData> disk_stats;
   auto disk_stats_file_path = root_path_ / DISK_STATS_FILE;
   std::ifstream stat_file;
   stat_file.open(disk_stats_file_path);
   std::string line;
   while (std::getline(stat_file, line)) {
     std::istringstream iss(line);
-    auto disk_stat_data = DiskStatData::parseDiskStatLine(iss);
-    if (disk_stat_data.has_value())
-      disk_stats.emplace_back(disk_stat_data.value(), std::chrono::steady_clock::now());
+    if (auto disk_stat = DiskStatData::parseDiskStatLine(iss))
+      disk_stats.emplace(disk_stat->first, disk_stat->second);
   }
   return disk_stats;
 }
 
-}  // namespace org::apache::nifi::minifi::procfs
+}  // namespace org::apache::nifi::minifi::extensions::procfs

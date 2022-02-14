@@ -19,7 +19,6 @@
 
 #include <unistd.h>
 
-#include <vector>
 #include <unordered_map>
 #include <utility>
 #include <string>
@@ -32,7 +31,7 @@
 #include "NetDev.h"
 #include "DiskStat.h"
 
-namespace org::apache::nifi::minifi::procfs {
+namespace org::apache::nifi::minifi::extensions::procfs {
 
 class ProcFs {
   static constexpr const char* DEFAULT_ROOT_PATH = "/proc";
@@ -41,20 +40,20 @@ class ProcFs {
   static constexpr const char* NET_DEV_FILE = "net/dev";
   static constexpr const char* DISK_STATS_FILE = "diskstats";
  public:
-  explicit ProcFs(std::string path = DEFAULT_ROOT_PATH)
+  explicit ProcFs(std::filesystem::path path = DEFAULT_ROOT_PATH)
       : root_path_(std::move(path)) {
   }
 
-  std::unordered_map<pid_t, ProcessStat> getProcessStats() const;
-  std::vector<CpuStat> getCpuStats() const;
-  std::optional<MemInfo> getMemInfo() const;
-  std::vector<NetDev> getNetDevs() const;
-  std::vector<DiskStat> getDiskStats() const;
+  [[nodiscard]] std::unordered_map<pid_t, ProcessStat> getProcessStats() const;
+  [[nodiscard]] std::unordered_map<std::string, CpuStatData> getCpuStats() const;
+  [[nodiscard]] std::optional<MemInfo> getMemInfo() const;
+  [[nodiscard]] std::unordered_map<std::string, NetDevData> getNetDevs() const;
+  [[nodiscard]] std::unordered_map<std::string, DiskStatData> getDiskStats() const;
 
  private:
   std::filesystem::path root_path_;
-  int page_size_ = sysconf(_SC_PAGESIZE);
+  uint64_t page_size_ = sysconf(_SC_PAGESIZE);
 };
 
 
-}  // namespace org::apache::nifi::minifi::procfs
+}  // namespace org::apache::nifi::minifi::extensions::procfs

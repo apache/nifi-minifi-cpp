@@ -15,57 +15,43 @@
  * limitations under the License.
  */
 
-#include "TestBase.h"
+#include "Catch.h"
 #include "ProcFs.h"
 #include "DiskStat.h"
 
-using org::apache::nifi::minifi::procfs::ProcFs;
-using org::apache::nifi::minifi::procfs::DiskStat;
-using org::apache::nifi::minifi::procfs::DiskStatPeriod;
+using org::apache::nifi::minifi::extensions::procfs::ProcFs;
 
-void test_disk_stats(const ProcFs& proc_fs) {
-  auto disk_stats = proc_fs.getDiskStats();
-  REQUIRE(disk_stats.size() > 0);
-  for (const auto& disk_stat : disk_stats) {
-    rapidjson::Document document(rapidjson::kObjectType);
-    REQUIRE_NOTHROW(disk_stat.addToJson(document, document.GetAllocator()));
-  }
-}
-
-TEST_CASE("ProcFSTest disk stat test with mock", "[procfsdiskstatmocktest]") {
-  ProcFs proc_fs("./mockprocfs_t0");
-  test_disk_stats(proc_fs);
-}
-
-TEST_CASE("ProcFSTest disk stat test", "[procfsdiskstattest]") {
-  ProcFs proc_fs;
-  test_disk_stats(proc_fs);
-}
-
-void test_net_dev_period(const std::vector<DiskStat>& disk_stats_start, const std::vector<DiskStat>& disk_stats_end) {
-  REQUIRE(disk_stats_start.size() == disk_stats_end.size());
-  REQUIRE(disk_stats_start.size() > 0);
-  for (uint32_t i = 0; i < disk_stats_start.size(); ++i) {
-    rapidjson::Document document(rapidjson::kObjectType);
-    auto disk_stat_period = DiskStatPeriod::create(disk_stats_start[i], disk_stats_end[i]);
-    REQUIRE(disk_stat_period.has_value());
-    REQUIRE_NOTHROW(disk_stat_period.value().addToJson(document, document.GetAllocator()));
-  }
-}
-
-TEST_CASE("ProcFSTest disk stat period test with mock", "[procfsdiskstatperiodmocktest]") {
+TEST_CASE("ProcFSTest DiskStat with mock", "[procfsdiskstatmocktest]") {
   ProcFs proc_fs_t0("./mockprocfs_t0");
-  std::vector<DiskStat> disk_stats_t0 = proc_fs_t0.getDiskStats();
-  sleep(1);
+  auto disk_stats_t0 = proc_fs_t0.getDiskStats();
+  REQUIRE(disk_stats_t0.size() == 17);
+
   ProcFs proc_fs_t1("./mockprocfs_t1");
-  std::vector<DiskStat> disk_stats_t1 = proc_fs_t1.getDiskStats();
-  test_net_dev_period(disk_stats_t0, disk_stats_t1);
+  auto disk_stats_t1 = proc_fs_t1.getDiskStats();
+  REQUIRE(disk_stats_t1.size() == 17);
+
+  for (auto& [disk_name_t0, disk_stat_t0] : disk_stats_t0) {
+    REQUIRE(disk_stats_t1.contains(disk_name_t0));
+    auto& disk_stat_t1 = disk_stats_t1.at(disk_name_t0);
+    REQUIRE(disk_stat_t0.getMinorDeviceNumber() == disk_stat_t1.getMinorDeviceNumber());
+    REQUIRE(disk_stat_t0.getMajorDeviceNumber() == disk_stat_t1.getMajorDeviceNumber());
+    REQUIRE(disk_stat_t1.getMonotonicIncreasingMembers() >= disk_stat_t0.getMonotonicIncreasingMembers());
+  }
 }
 
-TEST_CASE("ProcFSTest disk stat period test", "[procfsdiskstatperiodtest]") {
+TEST_CASE("ProcFSTest DiskStat", "[procfsdiskstatmocktest]") {
   ProcFs proc_fs;
-  std::vector<DiskStat> disk_stats_t0 = proc_fs.getDiskStats();
+  auto disk_stats_t0 = proc_fs.getDiskStats();
   sleep(1);
-  std::vector<DiskStat> disk_stats_t1 = proc_fs.getDiskStats();
-  test_net_dev_period(disk_stats_t0, disk_stats_t1);
+  auto disk_stats_t1 = proc_fs.getDiskStats();
+
+  REQUIRE(disk_stats_t1.size() == disk_stats_t0.size());
+
+  for (auto& [disk_name_t0, disk_stat_t0] : disk_stats_t0) {
+    REQUIRE(disk_stats_t1.contains(disk_name_t0));
+    auto& disk_stat_t1 = disk_stats_t1.at(disk_name_t0);
+    REQUIRE(disk_stat_t0.getMinorDeviceNumber() == disk_stat_t1.getMinorDeviceNumber());
+    REQUIRE(disk_stat_t0.getMajorDeviceNumber() == disk_stat_t1.getMajorDeviceNumber());
+    REQUIRE(disk_stat_t1.getMonotonicIncreasingMembers() >= disk_stat_t0.getMonotonicIncreasingMembers());
+  }
 }

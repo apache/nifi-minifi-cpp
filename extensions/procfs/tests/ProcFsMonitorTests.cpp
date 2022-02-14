@@ -15,152 +15,143 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <memory>
-#include <string>
-#include <vector>
-#include <functional>
 
-#include "TestBase.h"
-#include "processors/PutFile.h"
-#include "utils/file/FileUtils.h"
-#include "utils/TestUtils.h"
-#include "ProcFsMonitor.h"
-#include "rapidjson/filereadstream.h"
+#include "SingleInputTestController.h"
+#include "Catch.h"
+#include "processors/ProcFsMonitor.h"
 
-using org::apache::nifi::minifi::processors::PutFile;
-using org::apache::nifi::minifi::procfs::processors::ProcFsMonitor;
+using org::apache::nifi::minifi::extensions::procfs::ProcFsMonitor;
 
-class ProcFsMonitorTester {
- public:
-  ProcFsMonitorTester() {
-    LogTestController::getInstance().setTrace<TestPlan>();
-    dir_ = test_controller_.createTempDirectory();
-    plan_ = test_controller_.createPlan();
-    procfs_monitor_ = plan_->addProcessor("ProcFsMonitor", "procfsmonitor");
-    putfile_ = plan_->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
-    plan_->setProperty(putfile_, PutFile::Directory.getName(), dir_);
+TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
+  std::shared_ptr<ProcFsMonitor> proc_fs_monitor = std::make_shared<ProcFsMonitor>("ProcFsMonitor");
+  org::apache::nifi::minifi::test::SingleInputTestController test_controller_{proc_fs_monitor};
+
+  SECTION("Absolute JSON") {
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Absolute");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "JSON");
+    const auto& result = test_controller_.trigger(std::nullopt);
+
+    REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
+    auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+
+    rapidjson::Document document;
+    auto content = test_controller_.plan->getContent(result_flow_file);
+    document.Parse(content.c_str());
+    REQUIRE(document.IsObject());
+    REQUIRE(document.HasMember("CPU"));
+    CHECK(document["CPU"].HasMember("cpu"));
+    CHECK(document.HasMember("Disk"));
+    CHECK(document.HasMember("Network"));
+    CHECK(document.HasMember("Process"));
+    CHECK(document.HasMember("Memory"));
   }
 
-  void setProcFsMonitorProperty(const core::Property& property, const std::string& value) {
-    plan_->setProperty(procfs_monitor_, property.getName(), value);
+  SECTION("Absolute OpenTelemetry")  {
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Absolute");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "OpenTelemetry");
+    const auto& result = test_controller_.trigger(std::nullopt);
+
+    REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
+    auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+
+    rapidjson::Document document;
+    auto content = test_controller_.plan->getContent(result_flow_file);
+    document.Parse(content.c_str());
+    REQUIRE(document.IsObject());
+    REQUIRE(document.HasMember("Body"));
+    REQUIRE(document["Body"].HasMember("CPU"));
+    CHECK(document["Body"]["CPU"].HasMember("cpu"));
+    CHECK(document["Body"].HasMember("Disk"));
+    CHECK(document["Body"].HasMember("Network"));
+    CHECK(document["Body"].HasMember("Process"));
+    CHECK(document["Body"].HasMember("Memory"));
   }
 
-  bool runWithRetries(std::function<bool()>&& assertions, uint32_t max_tries = 10) {
-    for (uint32_t tries = 0; tries < max_tries; ++tries) {
-      test_controller_.runSession(plan_);
-      if (assertions()) {
-        return true;
-      }
-      plan_->reset();
-      LogTestController::getInstance().reset();
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  SECTION("Relative JSON") {
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "JSON");
+    {
+      const auto& result = test_controller_.trigger(std::nullopt);
+
+      REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
+      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+
+      rapidjson::Document document;
+      auto content = test_controller_.plan->getContent(result_flow_file);
+      document.Parse(content.c_str());
+      REQUIRE(document.IsObject());
+      // First trigger has not enough information for relative output
+      CHECK_FALSE(document.HasMember("CPU"));
+      CHECK_FALSE(document.HasMember("Disk"));
+      CHECK_FALSE(document.HasMember("Network"));
+      CHECK_FALSE(document.HasMember("Process"));
+      CHECK(document.HasMember("Memory"));
     }
-    return false;
+    sleep(1);
+    {
+      const auto& result = test_controller_.trigger(std::nullopt);
+
+      REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
+      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+
+      rapidjson::Document document;
+      auto content = test_controller_.plan->getContent(result_flow_file);
+      document.Parse(content.c_str());
+      REQUIRE(document.IsObject());
+      CHECK(document.HasMember("CPU"));
+      CHECK(document.HasMember("Disk"));
+      CHECK(document.HasMember("Network"));
+      CHECK(document.HasMember("Process"));
+      CHECK(document.HasMember("Memory"));
+    }
   }
 
-  TestController test_controller_;
-  std::string dir_;
-  std::shared_ptr<TestPlan> plan_;
-  std::shared_ptr<core::Processor> procfs_monitor_;
-  std::shared_ptr<core::Processor> putfile_;
-};
+  SECTION("Relative OpenTelemetry") {
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "OpenTelemetry");
+    {
+      const auto& result = test_controller_.trigger(std::nullopt);
 
-TEST_CASE("ProcFsMonitorAbsoluteTest", "[procfsmonitorabsolutetest]") {
-  ProcFsMonitorTester tester;
-  tester.setProcFsMonitorProperty(ProcFsMonitor::ResultRelativenessProperty, toString(ProcFsMonitor::ResultRelativeness::ABSOLUTE));
+      REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
+      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
-  const auto assertions = [&tester]() {
-    bool ff_contains_all_data = false;
-    const auto lambda = [&ff_contains_all_data](const std::string& path, const std::string& filename) -> bool {
-      FILE* fp = fopen((path + utils::file::FileUtils::get_separator() + filename).c_str(), "r");
-      REQUIRE(fp != nullptr);
-      char readBuffer[50000];
-      rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
       rapidjson::Document document;
-      document.ParseStream(is);
-      fclose(fp);
-      ff_contains_all_data =
-          document.IsObject() &&
-          document.HasMember("CPU") &&
-          document["CPU"].HasMember("cpu") &&
-          document.HasMember("Process") &&
-          document.HasMember("Memory") &&
-          document.HasMember("Network") &&
-          document.HasMember("Disk");
-      return !ff_contains_all_data;
-    };
+      auto content = test_controller_.plan->getContent(result_flow_file);
+      document.Parse(content.c_str());
+      REQUIRE(document.IsObject());
+      REQUIRE(document.HasMember("Body"));
+      // First trigger has not enough information for relative output
+      CHECK_FALSE(document["Body"].HasMember("CPU"));
+      CHECK_FALSE(document["Body"].HasMember("Disk"));
+      CHECK_FALSE(document["Body"].HasMember("Network"));
+      CHECK_FALSE(document["Body"].HasMember("Process"));
+      CHECK(document["Body"].HasMember("Memory"));
+    }
+    sleep(1);
+    {
+      const auto& result = test_controller_.trigger(std::nullopt);
 
-    utils::file::FileUtils::list_dir(tester.dir_, lambda, tester.plan_->getLogger(), false);
-    return ff_contains_all_data;
-  };
+      REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
+      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
-  REQUIRE(tester.runWithRetries(assertions));
-}
-
-TEST_CASE("ProcFsMonitorRelativeTest Json", "[procfsmonitorrelativetestjson]") {
-  ProcFsMonitorTester tester;
-  tester.setProcFsMonitorProperty(ProcFsMonitor::ResultRelativenessProperty, toString(ProcFsMonitor::ResultRelativeness::RELATIVE));
-  tester.setProcFsMonitorProperty(ProcFsMonitor::OutputFormatProperty, toString(ProcFsMonitor::OutputFormat::JSON));
-  tester.setProcFsMonitorProperty(ProcFsMonitor::DecimalPlaces, "3");
-  const auto assertions = [&tester]() {
-    bool ff_contains_all_data = false;
-    const auto lambda = [&ff_contains_all_data](const std::string& path, const std::string& filename) -> bool {
-      FILE* fp = fopen((path + utils::file::FileUtils::get_separator() + filename).c_str(), "r");
-      REQUIRE(fp != nullptr);
-      char readBuffer[50000];
-      rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
       rapidjson::Document document;
-      document.ParseStream(is);
-      fclose(fp);
-      ff_contains_all_data =
-          document.IsObject() &&
-          document.HasMember("CPU") &&
-          document["CPU"].HasMember("cpu") &&
-          document.HasMember("Process") &&
-          document.HasMember("Memory") &&
-          document.HasMember("Network") &&
-          document.HasMember("Disk");
-      return !ff_contains_all_data;
-    };
+      auto content = test_controller_.plan->getContent(result_flow_file);
+      document.Parse(content.c_str());
+      REQUIRE(document.IsObject());
+      REQUIRE(document.HasMember("Body"));
+      CHECK(document["Body"].HasMember("CPU"));
+      CHECK(document["Body"].HasMember("Disk"));
+      CHECK(document["Body"].HasMember("Network"));
+      CHECK(document["Body"].HasMember("Process"));
+      CHECK(document["Body"].HasMember("Memory"));
+    }
+  }
 
-    utils::file::FileUtils::list_dir(tester.dir_, lambda, tester.plan_->getLogger(), false);
-    return ff_contains_all_data;
-  };
-
-  REQUIRE(tester.runWithRetries(assertions));
+  SECTION("Relative without wait") {
+    test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
+    const auto& result1 = test_controller_.trigger(std::nullopt);
+    REQUIRE(result1.at(ProcFsMonitor::Success).size() == 1);
+    const auto& result2 = test_controller_.trigger(std::nullopt);
+    REQUIRE(result2.at(ProcFsMonitor::Success).size() == 1);
+  }
 }
-
-TEST_CASE("ProcFsMonitorRelativeTest OpenTelemetry", "[procfsmonitorrelativetestopentelemetry]") {
-  ProcFsMonitorTester tester;
-  tester.setProcFsMonitorProperty(ProcFsMonitor::ResultRelativenessProperty, toString(ProcFsMonitor::ResultRelativeness::RELATIVE));
-  tester.setProcFsMonitorProperty(ProcFsMonitor::OutputFormatProperty, toString(ProcFsMonitor::OutputFormat::OPENTELEMETRY));
-  tester.setProcFsMonitorProperty(ProcFsMonitor::DecimalPlaces, "3");
-  const auto assertions = [&tester]() {
-    bool ff_contains_all_data = false;
-    const auto lambda = [&ff_contains_all_data](const std::string& path, const std::string& filename) -> bool {
-      FILE* fp = fopen((path + utils::file::FileUtils::get_separator() + filename).c_str(), "r");
-      REQUIRE(fp != nullptr);
-      char readBuffer[50000];
-      rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-      rapidjson::Document document;
-      document.ParseStream(is);
-      fclose(fp);
-      ff_contains_all_data =
-          document.IsObject() &&
-          document.HasMember("Body") &&
-          document["Body"].HasMember("CPU") &&
-          document["Body"]["CPU"].HasMember("cpu") &&
-          document["Body"].HasMember("Process") &&
-          document["Body"].HasMember("Memory") &&
-          document["Body"].HasMember("Network") &&
-          document["Body"].HasMember("Disk");
-      return !ff_contains_all_data;
-    };
-
-    utils::file::FileUtils::list_dir(tester.dir_, lambda, tester.plan_->getLogger(), false);
-    return ff_contains_all_data;
-  };
-
-  REQUIRE(tester.runWithRetries(assertions));
-}
-
