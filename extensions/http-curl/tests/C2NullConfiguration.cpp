@@ -33,6 +33,8 @@
 #include "HTTPIntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
 
+namespace org::apache::nifi::minifi {
+
 class VerifyC2Server : public HTTPIntegrationBase {
  public:
   explicit VerifyC2Server(bool isSecure)
@@ -42,11 +44,11 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
   void testSetup() override {
     LogTestController::getInstance().setDebug<utils::HTTPClient>();
-    LogTestController::getInstance().setDebug<minifi::processors::InvokeHTTP>();
-    LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
-    LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
-    LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();
-    LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
+    LogTestController::getInstance().setDebug<processors::InvokeHTTP>();
+    LogTestController::getInstance().setDebug<c2::RESTReceiver>();
+    LogTestController::getInstance().setDebug<c2::C2Agent>();
+    LogTestController::getInstance().setDebug<processors::LogAttribute>();
+    LogTestController::getInstance().setDebug<core::ProcessSession>();
     std::fstream file;
     ss << dir << "/" << "tstFile.ext";
     file.open(ss.str(), std::ios::out);
@@ -55,8 +57,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
   }
 
   void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
+    assert(utils::verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         "C2Agent] [error] Could not instantiate null",
         "Class is RESTSender"));
   }
@@ -69,19 +70,19 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
     assert(inv != nullptr);
     std::string url;
-    inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
+    inv->getProperty(processors::InvokeHTTP::URL.getName(), url);
 
     std::string port, scheme, path;
     parse_http_components(url, port, scheme, path);
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "true");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_class, "test");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url, "");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_url_ack, "");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_reporter_classes, "null");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_port, "null");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "null");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_heartbeat_rooturi, "null");
+    configuration->set(Configuration::nifi_c2_enable, "true");
+    configuration->set(Configuration::nifi_c2_agent_class, "test");
+    configuration->set(Configuration::nifi_c2_agent_protocol_class, "RESTSender");
+    configuration->set(Configuration::nifi_c2_rest_url, "");
+    configuration->set(Configuration::nifi_c2_rest_url_ack, "");
+    configuration->set(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "null");
+    configuration->set(Configuration::nifi_c2_rest_listener_port, "null");
+    configuration->set(Configuration::nifi_c2_agent_heartbeat_period, "null");
+    configuration->set(Configuration::nifi_c2_rest_listener_heartbeat_rooturi, "null");
   }
 
  protected:
@@ -91,11 +92,13 @@ class VerifyC2Server : public HTTPIntegrationBase {
   TestController testController;
 };
 
+}  // namespace org::apache::nifi::minifi
+
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv);
   const bool isSecure = args.isUrlSecure();
 
-  VerifyC2Server harness(isSecure);
+  org::apache::nifi::minifi::VerifyC2Server harness(isSecure);
   harness.setKeyDir(args.key_dir);
   harness.run(args.test_file);
   return 0;
