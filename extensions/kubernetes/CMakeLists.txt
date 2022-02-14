@@ -19,7 +19,6 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp" "controllerservice/*.cpp")
 add_library(minifi-kubernetes-extensions SHARED ${SOURCES})
-target_include_directories(minifi-kubernetes PRIVATE ${K8S_CLIENT_DIR})
 target_link_libraries(minifi-kubernetes-extensions ${LIBMINIFI} kubernetes CURL::libcurl)
 
 set(KUBERNETES-EXTENSIONS minifi-kubernetes-extensions PARENT_SCOPE)

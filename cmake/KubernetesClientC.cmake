@@ -54,6 +54,4 @@ FetchContent_Declare(kubernetes
 
 FetchContent_MakeAvailable(yaml websockets kubernetes)
 
-set(K8S_CLIENT_DIR "${kubernetes_SOURCE_DIR}/kubernetes" CACHE STRING "" FORCE)
-
 add_dependencies(websockets CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
