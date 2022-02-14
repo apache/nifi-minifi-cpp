@@ -18,11 +18,9 @@
 
 #pragma once
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+#include "utils/gsl.h"
+
+namespace org::apache::nifi::minifi::io {
 
 constexpr size_t STREAM_ERROR = static_cast<size_t>(-1);
 
@@ -42,7 +40,7 @@ class Stream {
     throw std::runtime_error("Seek is not supported");
   }
 
-  virtual size_t tell() const {
+  [[nodiscard]] virtual size_t tell() const {
     throw std::runtime_error("Tell is not supported");
   }
 
@@ -50,15 +48,11 @@ class Stream {
     return 1;
   }
 
-  virtual const uint8_t* getBuffer() const {
+  [[nodiscard]] virtual gsl::span<const std::byte> getBuffer() const {
     throw std::runtime_error("Not a buffered stream");
   }
 
   virtual ~Stream() = default;
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::io

@@ -473,18 +473,18 @@ size_t Socket::write(const uint8_t *value, size_t size) {
   return bytes;
 }
 
-size_t Socket::read(uint8_t *buf, size_t buflen, bool retrieve_all_bytes) {
+size_t Socket::read(gsl::span<std::byte> buf, bool retrieve_all_bytes) {
   size_t total_read = 0;
-  while (buflen) {
+  while (!buf.empty()) {
     int16_t fd = select_descriptor(1000);
     if (fd < 0) {
       if (listeners_ <= 0) {
-        logger_->log_debug("fd %d close %i", fd, buflen);
+        logger_->log_debug("fd %d close %i", fd, buf.size());
         utils::file::FileUtils::close(socket_file_descriptor_);
       }
       return STREAM_ERROR;
     }
-    const auto bytes_read = recv(fd, reinterpret_cast<char*>(buf), buflen, 0);
+    const auto bytes_read = recv(fd, reinterpret_cast<char*>(buf.data()), buf.size(), 0);
     logger_->log_trace("Recv call %d", bytes_read);
     if (bytes_read <= 0) {
       if (bytes_read == 0) {
@@ -508,8 +508,7 @@ size_t Socket::read(uint8_t *buf, size_t buflen, bool retrieve_all_bytes) {
       }
       return STREAM_ERROR;
     }
-    buflen -= gsl::narrow<size_t>(bytes_read);
-    buf += bytes_read;
+    buf = buf.subspan(gsl::narrow<size_t>(bytes_read));
     total_read += gsl::narrow<size_t>(bytes_read);
     if (!retrieve_all_bytes) {
       break;

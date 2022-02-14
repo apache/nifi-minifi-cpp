@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
       }
     }
 
-    if ((IsNullOrEmpty(host) && port == -1)) {
+    if ((minifi::IsNullOrEmpty(host) && port == -1)) {
       std::cout << "MiNiFi Controller is disabled" << std::endl;
       exit(0);
     }

@@ -601,7 +601,7 @@ std::string TestPlan::getContent(const minifi::core::FlowFile& file) const {
   auto content_stream = content_repo_->read(*content_claim);
   auto output_stream = std::make_shared<minifi::io::BufferStream>();
   minifi::InputStreamPipe{output_stream}.process(content_stream);
-  return {reinterpret_cast<const char*>(output_stream->getBuffer()), output_stream->size()};
+  return utils::span_to<std::string>(output_stream->getBuffer().as_span<const char>());
 }
 
 TestController::TestController()

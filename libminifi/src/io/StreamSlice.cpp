@@ -26,9 +26,9 @@ StreamSlice::StreamSlice(std::shared_ptr<io::BaseStream>& stream, size_t offset,
     throw std::invalid_argument("StreamSlice is bigger than the Stream");
 }
 
-size_t StreamSlice::read(uint8_t *value, size_t len) {
-  const size_t max_size = std::min(len, size() - tell());
-  return stream_->read(value, max_size);
+size_t StreamSlice::read(gsl::span<std::byte> out_buffer) {
+  const size_t max_size = std::min(out_buffer.size(), size() - tell());
+  return stream_->read(out_buffer.subspan(0, max_size));
 }
 
 void StreamSlice::seek(size_t offset) {
@@ -39,9 +39,8 @@ size_t StreamSlice::tell() const {
   return stream_->tell() - slice_offset_;
 }
 
-const uint8_t* StreamSlice::getBuffer() const {
-  const uint8_t* buffer = stream_->getBuffer();
-  return buffer + slice_offset_;
+gsl::span<const std::byte> StreamSlice::getBuffer() const {
+  return stream_->getBuffer().subspan(slice_offset_, slice_size_);
 }
 
 }  // namespace org::apache::nifi::minifi::io

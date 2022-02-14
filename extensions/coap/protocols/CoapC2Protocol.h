@@ -86,11 +86,12 @@ class CoapProtocol : public minifi::c2::RESTSender {
   // Supported Properties
 
  protected:
-  bool isRegistrationMessage(controllers::CoapResponse &response) {
-    if (LIKELY(response.getSize() != 8)) {
+  static bool isRegistrationMessage(controllers::CoapResponse &response) {
+    const auto response_data = response.getData();
+    if (LIKELY(response_data.size() != 8)) {
       return false;
     }
-    return response.getCode() == COAP_RESPONSE_400 && !memcmp(response.getData(), REGISTRATION_MSG, response.getSize());
+    return response.getCode() == COAP_RESPONSE_400 && !memcmp(response_data.data(), REGISTRATION_MSG, response_data.size());
   }
 
   /**

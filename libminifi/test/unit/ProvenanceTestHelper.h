@@ -84,7 +84,8 @@ class TestRepository : public org::apache::nifi::minifi::core::Repository {
 
   bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<org::apache::nifi::minifi::io::BufferStream>>>& data) override {
     for (const auto& item : data) {
-      if (!Put(item.first, item.second->getBuffer(), item.second->size())) {
+      const auto buf = item.second->getBuffer().as_span<const uint8_t>();
+      if (!Put(item.first, buf.data(), buf.size())) {
         return false;
       }
     }
@@ -124,7 +125,7 @@ class TestRepository : public org::apache::nifi::minifi::core::Repository {
         break;
       }
       const auto eventRead = store.at(max_size);
-      eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length());
+      eventRead->DeSerialize(gsl::make_span(entry.second).as_span<const std::byte>());
       ++max_size;
     }
     return true;
@@ -137,11 +138,11 @@ class TestRepository : public org::apache::nifi::minifi::core::Repository {
   bool DeSerialize(const std::shared_ptr<org::apache::nifi::minifi::core::SerializableComponent> &store) override {
     std::string value;
     Get(store->getUUIDStr(), value);
-    store->DeSerialize(reinterpret_cast<const uint8_t*>(value.c_str()), value.size());
+    store->DeSerialize(gsl::make_span(value).as_span<const std::byte>());
     return true;
   }
 
-  bool DeSerialize(const uint8_t* /*buffer*/, const size_t /*bufferSize*/) override {
+  bool DeSerialize(gsl::span<const std::byte>) override {
     return false;
   }
 
@@ -157,7 +158,7 @@ class TestRepository : public org::apache::nifi::minifi::core::Repository {
         break;
       const auto eventRead = std::make_shared<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>();
 
-      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length())) {
+      if (eventRead->DeSerialize(gsl::make_span(entry.second).as_span<const std::byte>())) {
         records.push_back(eventRead);
       }
     }
@@ -220,7 +221,7 @@ class TestFlowRepository : public org::apache::nifi::minifi::core::Repository {
         break;
       const auto eventRead = std::make_shared<org::apache::nifi::minifi::provenance::ProvenanceEventRecord>();
 
-      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t*>(entry.second.data()), entry.second.length())) {
+      if (eventRead->DeSerialize(gsl::make_span(entry.second).as_span<const std::byte>())) {
         records.push_back(eventRead);
       }
     }

@@ -56,7 +56,7 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(const std::string& k
     logger_->log_error("NiFi FlowFile Store event %s can not found", key);
     return nullptr;
   }
-  io::BufferStream stream((const uint8_t*) value.data(), value.length());
+  io::BufferStream stream(value);
 
   auto record = DeSerialize(stream, content_repo, container);
 
@@ -163,7 +163,7 @@ bool FlowFileRecord::Persist(const std::shared_ptr<core::Repository>& flowReposi
     return false;
   }
 
-  if (flowRepository->Put(getUUIDStr(), const_cast<uint8_t*>(outStream.getBuffer()), outStream.size())) {
+  if (flowRepository->Put(getUUIDStr(), reinterpret_cast<uint8_t*>(const_cast<std::byte*>(outStream.getBuffer().data())), outStream.size())) {
     logger_->log_debug("NiFi FlowFile Store event %s size " "%" PRIu64 " success", getUUIDStr(), outStream.size());
     // on behalf of the persisted record instance
     if (claim_) claim_->increaseFlowFileRecordOwnedCount();

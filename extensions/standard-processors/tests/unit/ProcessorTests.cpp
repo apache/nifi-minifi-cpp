@@ -456,7 +456,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
   for (auto entry : repo->getRepoMap()) {
     minifi::provenance::ProvenanceEventRecord newRecord;
-    newRecord.DeSerialize(reinterpret_cast<uint8_t*>(const_cast<char*>(entry.second.data())), entry.second.length());
+    newRecord.DeSerialize(gsl::make_span(entry.second).as_span<const std::byte>());
 
     bool found = false;
     for (auto provRec : records) {

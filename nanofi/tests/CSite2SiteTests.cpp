@@ -54,7 +54,7 @@ struct S2SReceivedData {
   std::string magic_string;
   uint32_t attr_num = 0;
   std::map<std::string, std::string> attributes;
-  std::vector<uint8_t> payload;
+  std::vector<std::byte> payload;
 };
 
 // This struct is used to sync between simulated clients and servers
@@ -123,7 +123,7 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
     uint64_t content_size = 0;
     stream->read(content_size);
     s2s_data.payload.resize(content_size);
-    stream->read(s2s_data.payload, content_size);
+    stream->read(s2s_data.payload);
   } else {
     s2s_data.request_type_ok = false;
   }
@@ -132,9 +132,8 @@ void accept_transfer(minifi::io::BaseStream* stream, const std::string& crcstr, 
 
 void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfer_state, S2SReceivedData& s2s_data) {
   // Verify the magic string
-  char c_array[4];
-  stream->read((uint8_t*)c_array, 4);
-  s2s_data.magic_string = std::string(c_array, 4);
+  s2s_data.magic_string.resize(4);
+  stream->read(gsl::make_span(s2s_data.magic_string).as_span<std::byte>());
   uint8_t success = 0x14;
   stream->write(&success, 1);
   send_response_code(stream, 0x1);
@@ -143,14 +142,14 @@ void sunny_path_bootstrap(minifi::io::BaseStream* stream, TransferState& transfe
   // just consume handshake data
   bool found_codec = false;
   size_t read_len = 0;
+  std::array<std::byte, 1000> handshake_data{};
   while (!found_codec) {
-    uint8_t handshake_data[1000];
-    const auto actual_len = stream->read(handshake_data+read_len, 1000-read_len);
+    const auto actual_len = stream->read(gsl::make_span(handshake_data).subspan(read_len));
     if(actual_len == 0 || minifi::io::isError(actual_len)) {
       continue;
     }
     read_len += actual_len;
-    const std::string incoming_data(reinterpret_cast<const char *>(handshake_data), read_len);
+    const std::string incoming_data(reinterpret_cast<const char *>(handshake_data.data()), read_len);
     const auto it = std::search(incoming_data.begin(), incoming_data.end(), CODEC_NAME.begin(), CODEC_NAME.end());
     if(it != incoming_data.end()){
       const auto idx = gsl::narrow<size_t>(std::distance(incoming_data.begin(), it));

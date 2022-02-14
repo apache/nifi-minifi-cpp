@@ -146,8 +146,9 @@ class RouteText::ReadCallback : public InputStreamCallback {
     : segmentation_(segmentation), file_size_(file_size), fn_(std::move(fn)) {}
 
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    std::vector<uint8_t> buffer;
-    size_t ret = stream->read(buffer, file_size_);
+    std::vector<std::byte> buffer;
+    buffer.resize(file_size_);
+    size_t ret = stream->read(buffer);
     if (io::isError(ret)) {
       return -1;
     }

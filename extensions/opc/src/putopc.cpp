@@ -18,32 +18,19 @@
  */
 
 #include <list>
-#include <map>
 #include <memory>
 #include <string>
-#include <optional>
-#include <thread>
 
 #include "opc.h"
 #include "putopc.h"
-#include "utils/ByteArrayCallback.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
 #include "core/Property.h"
 #include "core/Resource.h"
 #include "controllers/SSLContextService.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "utils/Id.h"
 #include "utils/StringUtils.h"
-#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
   core::Property PutOPCProcessor::ParentNodeID(
       core::PropertyBuilder::createProperty("Parent node ID")
@@ -262,13 +249,7 @@ namespace processors {
       targetNodeExists = connection_->exists(targetnode);
     }
 
-    ReadCallback cb(logger_);
-    session->read(flowFile, &cb);
-
-    const auto &vec = cb.getContent();
-
-    std::string contentstr(reinterpret_cast<const char *>(vec.data()), vec.size());
-
+    const auto contentstr = to_string(session->readBuffer(flowFile));
     if (targetNodeExists) {
       logger_->log_trace("Node exists, trying to update it");
       try {
@@ -415,28 +396,6 @@ namespace processors {
     }
   }
 
-  int64_t PutOPCProcessor::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-    buf_.clear();
-    buf_.resize(stream->size());
-
-    uint64_t size = 0;
-
-    do {
-      const auto read = stream->read(buf_.data() + size, 1024);
-      if (io::isError(read)) return -1;
-      if (read == 0) break;
-      size += read;
-    } while (size < stream->size());
-
-    logger_->log_trace("Read %llu bytes from flowfile content to buffer", stream->size());
-
-    return gsl::narrow<int64_t>(size);
-  }
-
 REGISTER_RESOURCE(PutOPCProcessor, "Creates/updates  OPC nodes");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

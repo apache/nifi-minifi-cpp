@@ -70,8 +70,7 @@ std::optional<Bytes> EncryptionManager::readKey(const std::string& key_name) con
   bootstrap_conf.setHome(key_dir_);
   bootstrap_conf.loadConfigureFile(DEFAULT_NIFI_BOOTSTRAP_FILE);
   return bootstrap_conf.getString(key_name)
-         | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); })
-         | utils::map(&utils::crypto::stringToBytes);
+         | utils::map([](const std::string &encryption_key_hex) { return utils::StringUtils::from_hex(encryption_key_hex); });
 }
 
 bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) const {

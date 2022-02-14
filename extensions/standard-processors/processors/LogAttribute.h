@@ -104,7 +104,7 @@ class LogAttribute : public core::Processor {
     }
     int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
       if (buffer_.empty()) return 0U;
-      const auto ret = stream->read(buffer_.data(), buffer_.size());
+      const auto ret = stream->read(buffer_);
       if (ret != buffer_.size()) {
         logger_->log_error("%zu bytes were requested from the stream but %zu bytes were read. Rolling back.", buffer_.size(), size_t{ret});
         throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
@@ -112,7 +112,7 @@ class LogAttribute : public core::Processor {
       return gsl::narrow<int64_t>(buffer_.size());
     }
     std::shared_ptr<core::logging::Logger> logger_;
-    std::vector<uint8_t> buffer_;
+    std::vector<std::byte> buffer_;
   };
 
  public:

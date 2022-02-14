@@ -71,8 +71,7 @@ bool operator!=(const  ConfigFile& left, const  ConfigFile& right) { return !(le
 }  // namespace org
 
 TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-config][encryptSensitivePropertiesInFile]") {
-  utils::crypto::Bytes KEY = utils::crypto::stringToBytes(utils::StringUtils::from_base64(
-      "6q9u8LEDy1/CdmSBm8oSqPS/Ds5UOD2nRouP8yUoK10="));
+  utils::crypto::Bytes KEY = utils::StringUtils::from_base64("6q9u8LEDy1/CdmSBm8oSqPS/Ds5UOD2nRouP8yUoK10=");
 
   SECTION("default properties") {
     ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};

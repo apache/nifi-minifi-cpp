@@ -236,7 +236,7 @@ class HTTPRequestResponse {
         if (len <= 0) {
           return 0;
         }
-        char *ptr = callback->ptr->getBuffer(callback->getPos());
+        auto *ptr = callback->ptr->getBuffer(callback->getPos());
 
         if (ptr == nullptr) {
           return 0;

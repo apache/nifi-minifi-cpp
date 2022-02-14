@@ -16,105 +16,57 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_IO_VALIDATION_H_
-#define LIBMINIFI_INCLUDE_IO_VALIDATION_H_
-#include <functional>
+#pragma once
 #include <type_traits>
 #include <string>
-#include <cstring>
 #include <memory>
 
-/**
- * A checker that will, at compile time, tell us
- * if the declared type has a size method.
- */
+#include "utils/meta/detected.h"
+
+namespace org::apache::nifi::minifi {
+namespace detail {
 template<typename T>
-class empty_function_functor_checker {
-  typedef char hasit;
-  typedef long doesnothaveit; // NOLINT
-
-  // look for the declared type
-  template<typename O> static hasit test(decltype(&O::empty));
-  template<typename O> static doesnothaveit test(...);
-
- public:
-  enum {
-    has_empty_function = sizeof(test<T>(0)) == sizeof(char)
-  };
-};
+concept emptiness_checkable = requires(T t) {  // NOLINT
+  { t.empty() };  // NOLINT
+};  // NOLINT
 
 template<typename T>
-class size_function_functor_checker {
-  typedef char hasit;
-  typedef long doesnothaveit; // NOLINT
+concept size_checkable = requires(T t) {  // NOLINT
+  { t.size() };  // NOLINT
+};  // NOLINT
 
-  // look for the declared type
-  template<typename O> static hasit test(decltype(&O::size));
-  template<typename O> static doesnothaveit test(...);
+template<typename T>
+concept only_size_checkable = !emptiness_checkable<T> && size_checkable<T>;
 
- public:
-  enum {
-    has_size_function = sizeof(test<T>(0)) == sizeof(char)
-  };
-};
+template<typename T>
+concept not_size_or_emptiness_checkable = !emptiness_checkable<T> && !size_checkable<T>;
 
-
-
-#ifdef WIN32
-
-static auto IsNullOrEmpty(std::string object) {
-  return object.empty();
-}
+}  // namespace detail
 
 /**
 * Determines if the variable is null or ::empty()
 */
-template<typename T>
-static auto IsNullOrEmpty(T *object) {
-  return (nullptr == object);
-}
-
-
-/**
-* Determines if the variable is null or ::empty()
-*/
-template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object) {
-  return (nullptr == object || nullptr == object.get());
-}
-
-
-#else
-
-/**
-* Determines if the variable is null or ::empty()
-*/
-template<typename T>
-static auto IsNullOrEmpty(T &object) -> typename std::enable_if<empty_function_functor_checker<T>::has_empty_function == 1, bool>::type {
+static bool IsNullOrEmpty(detail::emptiness_checkable auto& object) {
   return object.empty();
 }
 /**
  * Determines if the variable is null or ::empty()
  */
-template<typename T>
-static auto IsNullOrEmpty(T *object) -> typename std::enable_if<empty_function_functor_checker<T>::has_empty_function == 1, bool>::type {
+static bool IsNullOrEmpty(detail::emptiness_checkable auto* object) {
   return (nullptr == object || object->empty());
 }
 
 /**
  * Determines if the variable is null or ::size() == 0
  */
-template<typename T>
-static auto IsNullOrEmpty(T *object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1 , bool>::type {
+static bool IsNullOrEmpty(detail::only_size_checkable auto* object) {
   return (nullptr == object || object->size() == 0);
 }
-
 
 /**
  * Determines if the variable is null
  */
-template<typename T>
-static auto IsNullOrEmpty(T *object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function && !size_function_functor_checker<T>::has_size_function , bool>::type {
+static bool IsNullOrEmpty(detail::not_size_or_emptiness_checkable auto* object) {
   return (nullptr == object);
 }
 
@@ -122,16 +74,17 @@ static auto IsNullOrEmpty(T *object) -> typename std::enable_if<!empty_function_
 * Determines if the variable is null or ::empty()
 */
 template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function, bool>::type {
+requires (!detail::emptiness_checkable<T>)  // NOLINT
+static bool IsNullOrEmpty(std::shared_ptr<T> object) {
   return (nullptr == object || nullptr == object.get());
 }
 
-template<typename T>
-static auto IsNullOrEmpty(std::shared_ptr<T> object) -> typename std::enable_if<!empty_function_functor_checker<T>::has_empty_function && size_function_functor_checker<T>::has_size_function == 1, bool>::type { // NOLINT
+template<detail::only_size_checkable T>
+static bool IsNullOrEmpty(std::shared_ptr<T> object) {
   return (nullptr == object || nullptr == object.get() || object->size() == 0);
 }
 
+}  // namespace org::apache::nifi::minifi
 
-#endif
-
-#endif  // LIBMINIFI_INCLUDE_IO_VALIDATION_H_
+// TODO(szaszm): clean up this file
+using org::apache::nifi::minifi::IsNullOrEmpty;

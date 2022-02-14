@@ -256,14 +256,13 @@ void ListenHTTP::processIncomingFlowFile(core::ProcessSession *session) {
 
   if (type == "response_body" && handler_) {
     ResponseBody response;
-    ResponseBodyReadCallback cb(&response.body);
     flow_file->getAttribute("filename", response.uri);
     flow_file->getAttribute("mime.type", response.mime_type);
     if (response.mime_type.empty()) {
       logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s", response.uri);
       response.mime_type = "application/octet-stream";
     }
-    session->read(flow_file, &cb);
+    response.body = to_string(session->readBuffer(flow_file));
     handler_->setResponseBody(std::move(response));
   }
 
@@ -510,7 +509,7 @@ ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> reque
 }
 
 int64_t ListenHTTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  const auto write_ret = stream->write(request_content_->getBuffer(), request_content_->size());
+  const auto write_ret = stream->write(request_content_->getBuffer());
   return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 

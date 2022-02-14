@@ -40,8 +40,8 @@ class LineByLineInputOutputStreamCallback : public InputOutputStreamCallback {
   [[nodiscard]] bool isLastLine() const { return !next_line_.has_value(); }
 
   CallbackType callback_;
-  std::vector<uint8_t> input_;
-  std::vector<uint8_t>::iterator current_pos_{};
+  std::vector<std::byte> input_;
+  std::vector<std::byte>::iterator current_pos_{};
   std::optional<std::string> current_line_;
   std::optional<std::string> next_line_;
 };

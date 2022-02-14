@@ -142,7 +142,7 @@ EncryptionKeys EncryptConfig::getEncryptionKeys() const {
 
 std::string EncryptConfig::hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const {
   // Note: from_hex() allows [and skips] non-hex characters
-  std::string binary_key = utils::StringUtils::from_hex(key);
+  std::string binary_key = utils::StringUtils::from_hex(key, utils::as_string);
   if (binary_key.size() == utils::crypto::EncryptionType::keyLength()) {
     return binary_key;
   } else {

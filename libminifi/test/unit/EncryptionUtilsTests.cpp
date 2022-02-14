@@ -22,11 +22,9 @@
 namespace utils = org::apache::nifi::minifi::utils;
 
 namespace {
-const utils::crypto::Bytes SECRET_KEY = utils::crypto::stringToBytes(utils::StringUtils::from_hex(
-    "aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab"));
+const utils::crypto::Bytes SECRET_KEY = utils::StringUtils::from_hex("aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab");
 
-const utils::crypto::Bytes NONCE = utils::crypto::stringToBytes(utils::StringUtils::from_base64(
-    "RBrWo9lv7xNA6JJWHCa9avnT42CCr1bn"));
+const utils::crypto::Bytes NONCE = utils::StringUtils::from_base64("RBrWo9lv7xNA6JJWHCa9avnT42CCr1bn");
 }  // namespace
 
 TEST_CASE("EncryptionUtils can do a simple encryption", "[encryptRaw]") {
@@ -39,8 +37,7 @@ TEST_CASE("EncryptionUtils can do a simple encryption", "[encryptRaw]") {
 }
 
 TEST_CASE("EncryptionUtils can do a simple decryption", "[decryptRaw]") {
-  utils::crypto::Bytes ciphertext_plus_mac = utils::crypto::stringToBytes(utils::StringUtils::from_base64(
-      "x3WIHJGb+7hGlfIQd3gz8zw11EP0uFh9Ml1XBEAPCX5OTKqWcY+o+Q=="));
+  utils::crypto::Bytes ciphertext_plus_mac = utils::StringUtils::from_base64("x3WIHJGb+7hGlfIQd3gz8zw11EP0uFh9Ml1XBEAPCX5OTKqWcY+o+Q==");
 
   utils::crypto::Bytes output = utils::crypto::decryptRaw(ciphertext_plus_mac, SECRET_KEY, NONCE);
 
@@ -62,7 +59,7 @@ TEST_CASE("EncryptionUtils can generate random bytes", "[randomBytes][generateKe
 
   // the following assertions will fail about once in every hundred and fifteen quattuorvigintillion runs,
   // which is much less likely than a test failure caused by a meteor strike destroying your computer
-  auto is_zero = [](unsigned char byte) { return byte == 0; };
+  auto is_zero = [](std::byte b) { return static_cast<uint8_t>(b) == 0; };
   REQUIRE_FALSE(std::all_of(random_bytes.begin(), random_bytes.end(), is_zero));
 
   utils::crypto::Bytes different_random_bytes = randomFunction();

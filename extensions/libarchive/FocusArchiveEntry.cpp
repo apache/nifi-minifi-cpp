@@ -24,6 +24,7 @@
 
 #include <string.h>
 
+#include <array>
 #include <string>
 #include <set>
 
@@ -140,18 +141,18 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 typedef struct {
   std::shared_ptr<io::BaseStream> stream;
   core::Processor *processor;
-  char buf[8196];
+  std::array<std::byte, 8196> buf;
 } FocusArchiveEntryReadData;
 
 // Read callback which reads from the flowfile stream
 la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d, const void **buf) {
   auto data = static_cast<FocusArchiveEntryReadData *>(d);
-  *buf = data->buf;
+  *buf = data->buf.data();
   size_t read = 0;
   size_t last_read = 0;
 
   do {
-    last_read = data->stream->read(reinterpret_cast<uint8_t *>(data->buf), 8196 - read);
+    last_read = data->stream->read(data->buf);
     read += last_read;
   } while (data->processor->isRunning() && last_read > 0 && !io::isError(last_read) && read < 8196);
 

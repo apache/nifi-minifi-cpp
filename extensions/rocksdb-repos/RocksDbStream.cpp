@@ -79,15 +79,14 @@ size_t RocksDbStream::write(const uint8_t *value, size_t size) {
   }
 }
 
-size_t RocksDbStream::read(uint8_t *buf, size_t buflen) {
+size_t RocksDbStream::read(gsl::span<std::byte> buf) {
   // The check have to be in this order for RocksDBStreamTest "Read zero bytes" to succeed
   if (!exists_) return STREAM_ERROR;
-  if (buflen == 0) return 0;
-  if (IsNullOrEmpty(buf)) return STREAM_ERROR;
+  if (buf.empty()) return 0;
   if (offset_ >= value_.size()) return 0;
 
-  const auto amtToRead = std::min(buflen, value_.size() - offset_);
-  std::memcpy(buf, value_.data() + offset_, amtToRead);
+  const auto amtToRead = std::min(buf.size(), value_.size() - offset_);
+  std::memcpy(buf.data(), value_.data() + offset_, amtToRead);
   offset_ += amtToRead;
   return amtToRead;
 }

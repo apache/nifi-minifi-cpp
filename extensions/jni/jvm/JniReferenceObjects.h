@@ -119,16 +119,10 @@ class JniByteOutStream : public minifi::OutputStreamCallback {
 class JniByteInputStream : public minifi::InputStreamCallback {
  public:
   explicit JniByteInputStream(uint64_t size)
-      : stream_(nullptr),
+      : buffer_(size),
         read_size_(0) {
-    buffer_size_ = size;
-    buffer_ = new uint8_t[buffer_size_];
   }
-  ~JniByteInputStream() {
-    if (buffer_)
-      delete[] buffer_;
-  }
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
     stream_ = stream;
     return 0;
   }
@@ -140,12 +134,12 @@ class JniByteInputStream : public minifi::InputStreamCallback {
     }
 
     // seek to offset
-    uint64_t remaining = gsl::narrow<uint64_t>(size);
+    auto remaining = gsl::narrow<uint64_t>(size);
     int writtenOffset = 0;
     int read = 0;
     do {
       // JNI takes size as int, there's not much we can do here to support 2GB+ sizes
-      int actual = static_cast<int>(stream_->read(buffer_, std::min(remaining, buffer_size_)));
+      int actual = static_cast<int>(stream_->read(gsl::make_span(buffer_).subspan(0, std::min(remaining, buffer_.size()))));
       if (actual <= 0) {
         if (read == 0) {
           stream_ = nullptr;
@@ -155,7 +149,7 @@ class JniByteInputStream : public minifi::InputStreamCallback {
       }
 
       read += actual;
-      env->SetByteArrayRegion(arr, offset + writtenOffset, actual, reinterpret_cast<jbyte*>(buffer_));
+      env->SetByteArrayRegion(arr, offset + writtenOffset, actual, reinterpret_cast<jbyte*>(buffer_.data()));
       writtenOffset += actual;
 
       remaining -= actual;
@@ -164,13 +158,12 @@ class JniByteInputStream : public minifi::InputStreamCallback {
     return read;
   }
 
-  int64_t read(char &arr) {
+  int64_t read(uint8_t &arr) {
     return stream_->read(arr);
   }
 
   std::shared_ptr<minifi::io::BaseStream> stream_;
-  uint8_t *buffer_;
-  uint64_t buffer_size_;
+  std::vector<std::byte> buffer_;
   uint64_t read_size_;
 };
 
@@ -192,7 +185,7 @@ class JniInputStream : public core::WeakReference {
     }
   }
 
-  int64_t read(char &arr) {
+  int64_t read(uint8_t &arr) {
     if (!removed_) {
       return jbi_->read(arr);
     }

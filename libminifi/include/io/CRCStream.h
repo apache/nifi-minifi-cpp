@@ -84,10 +84,10 @@ class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStr
  public:
   using InputStream::read;
 
-  size_t read(uint8_t *buf, size_t buflen) override {
-    const auto ret = child_stream_->read(buf, buflen);
+  size_t read(gsl::span<std::byte> buf) override {
+    const auto ret = child_stream_->read(buf);
     if (ret > 0 && !io::isError(ret)) {
-      crc_ = crc32(crc_, buf, ret);
+      crc_ = crc32(crc_, reinterpret_cast<const unsigned char*>(buf.data()), ret);
     }
     return ret;
   }

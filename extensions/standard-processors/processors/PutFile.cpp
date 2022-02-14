@@ -19,6 +19,7 @@
  */
 
 #include "PutFile.h"
+#include <array>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -317,15 +318,15 @@ int64_t PutFile::ReadCallback::process(const std::shared_ptr<io::BaseStream>& st
   // Copy file contents into tmp file
   write_succeeded_ = false;
   size_t size = 0;
-  uint8_t buffer[1024];
+  std::array<std::byte, 1024> buffer{};
 
   std::ofstream tmp_file_os(tmp_file_, std::ios::out | std::ios::binary);
 
   do {
-    const auto read = stream->read(buffer, 1024);
+    const auto read = stream->read(buffer);
     if (io::isError(read)) return -1;
     if (read == 0) break;
-    tmp_file_os.write(reinterpret_cast<char *>(buffer), gsl::narrow<std::streamsize>(read));
+    tmp_file_os.write(reinterpret_cast<char *>(buffer.data()), gsl::narrow<std::streamsize>(read));
     size += read;
   } while (size < stream->size());
 

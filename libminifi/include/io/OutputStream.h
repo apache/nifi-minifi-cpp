@@ -40,12 +40,16 @@ namespace io {
 class OutputStream : public virtual Stream {
  public:
   /**
-   * write valueto stream
+   * write buffer to stream
    * @param value non encoded value
    * @param len length of value
    * @return resulting write size
    **/
   virtual size_t write(const uint8_t *value, size_t len) = 0;
+
+  size_t write(const gsl::span<const std::byte> buffer) {
+    return write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
+  }
 
   /**
    * write: resolve nullptr ambiguity
@@ -99,7 +103,7 @@ class OutputStream : public virtual Stream {
   * @param value to write
   * @return resulting write size
   **/
-  template<typename Integral, typename = std::enable_if<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
+  template<typename Integral, typename = std::enable_if_t<std::is_unsigned<Integral>::value && !std::is_same<Integral, bool>::value>>
   size_t write(Integral value) {
     uint8_t buffer[sizeof(Integral)]{};
 

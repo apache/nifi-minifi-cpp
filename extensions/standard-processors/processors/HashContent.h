@@ -25,8 +25,8 @@
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 
-#include <stdint.h>
-
+#include <array>
+#include <cstdint>
 #include <iomanip>
 #include <map>
 #include <memory>
@@ -50,23 +50,23 @@ namespace { // NOLINT
   HashReturnType MD5Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
     HashReturnType ret_val;
     ret_val.second = 0;
-    uint8_t buffer[HASH_BUFFER_SIZE];
+    std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
     MD5_CTX context;
     MD5_Init(&context);
 
     size_t ret = 0;
     do {
-      ret = stream->read(buffer, HASH_BUFFER_SIZE);
+      ret = stream->read(buffer);
       if (ret > 0) {
-        MD5_Update(&context, buffer, ret);
+        MD5_Update(&context, buffer.data(), ret);
         ret_val.second += ret;
       }
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      unsigned char digest[MD5_DIGEST_LENGTH];
-      MD5_Final(digest, &context);
-      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, MD5_DIGEST_LENGTH, true /*uppercase*/);
+      std::array<std::byte, MD5_DIGEST_LENGTH> digest{};
+      MD5_Final(reinterpret_cast<unsigned char*>(digest.data()), &context);
+      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -74,23 +74,23 @@ namespace { // NOLINT
   HashReturnType SHA1Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
     HashReturnType ret_val;
     ret_val.second = 0;
-    uint8_t buffer[HASH_BUFFER_SIZE];
+    std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
     SHA_CTX context;
     SHA1_Init(&context);
 
     size_t ret = 0;
     do {
-      ret = stream->read(buffer, HASH_BUFFER_SIZE);
+      ret = stream->read(buffer);
       if (ret > 0) {
-        SHA1_Update(&context, buffer, ret);
+        SHA1_Update(&context, buffer.data(), ret);
         ret_val.second += ret;
       }
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      unsigned char digest[SHA_DIGEST_LENGTH];
-      SHA1_Final(digest, &context);
-      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, SHA_DIGEST_LENGTH, true /*uppercase*/);
+      std::array<std::byte, SHA_DIGEST_LENGTH> digest{};
+      SHA1_Final(reinterpret_cast<unsigned char*>(digest.data()), &context);
+      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
   }
@@ -98,34 +98,30 @@ namespace { // NOLINT
   HashReturnType SHA256Hash(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream>& stream) {
     HashReturnType ret_val;
     ret_val.second = 0;
-    uint8_t buffer[HASH_BUFFER_SIZE];
+    std::array<std::byte, HASH_BUFFER_SIZE> buffer{};
     SHA256_CTX context;
     SHA256_Init(&context);
 
     size_t ret;
     do {
-      ret = stream->read(buffer, HASH_BUFFER_SIZE);
+      ret = stream->read(buffer);
       if (ret > 0) {
-        SHA256_Update(&context, buffer, ret);
+        SHA256_Update(&context, buffer.data(), ret);
         ret_val.second += ret;
       }
     } while (ret > 0);
 
     if (ret_val.second > 0) {
-      unsigned char digest[SHA256_DIGEST_LENGTH];
-      SHA256_Final(digest, &context);
-      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, SHA256_DIGEST_LENGTH, true /*uppercase*/);
+      std::array<std::byte, SHA256_DIGEST_LENGTH> digest{};
+      SHA256_Final(reinterpret_cast<unsigned char*>(digest.data()), &context);
+      ret_val.first = org::apache::nifi::minifi::utils::StringUtils::to_hex(digest, true /*uppercase*/);
     }
     return ret_val;
   }
 }  // namespace
 
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 static const std::map<std::string, const std::function<HashReturnType(const std::shared_ptr<io::BaseStream>&)>> HashAlgos =
   { {"MD5",  MD5Hash}, {"SHA1", SHA1Hash}, {"SHA256", SHA256Hash} };
@@ -177,14 +173,10 @@ class HashContent : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HashContent>::getLogger();
   std::string algoName_;
   std::string attrKey_;
-  bool failOnEmpty_;
+  bool failOnEmpty_{};
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors
 
 #endif  // OPENSSL_SUPPORT
 

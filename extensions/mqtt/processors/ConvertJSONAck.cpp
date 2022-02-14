@@ -17,26 +17,15 @@
  */
 #include "ConvertJSONAck.h"
 
-#include <stdio.h>
-#include <algorithm>
 #include <memory>
+#include <sstream>
 #include <string>
-#include <map>
-#include <set>
-#include "utils/TimeUtil.h"
-#include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "c2/PayloadSerializer.h"
-#include "utils/ByteArrayCallback.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
+namespace org::apache::nifi::minifi::processors {
 
 std::string ConvertJSONAck::parseTopicName(const std::string &json) {
   std::string topic;
@@ -63,7 +52,6 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     return;
   }
   auto flow = session->get();
-
   if (!flow) {
     return;
   }
@@ -76,31 +64,21 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   {
     // expect JSON response from InvokeHTTP and thus we expect a heartbeat and then the output from the HTTP
     c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true);
-    ReadCallback callback;
-    session->read(flow, &callback);
-
-    topic = parseTopicName(std::string(callback.buffer_.data(), callback.buffer_.size()));
-
+    const auto read_result = session->readBuffer(flow);
+    topic = parseTopicName(to_string(read_result));
     session->transfer(flow, Success);
   }
   flow = session->get();
-
   if (!flow) {
     return;
   }
 
   if (!topic.empty()) {
-    ReadCallback callback;
-    session->read(flow, &callback);
-
+    const auto read_result = session->readBuffer(flow);
     c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true);
-
-    std::string str(callback.buffer_.data(), callback.buffer_.size());
-    auto payload = parseJsonResponse(response_payload, callback.buffer_);
-
+    auto payload = parseJsonResponse(response_payload, read_result.buffer);
     auto stream = c2::PayloadSerializer::serialize(1, payload);
-
-    mqtt_service_->send(topic, stream->getBuffer(), stream->size());
+    mqtt_service_->send(topic, stream->getBuffer());
   }
 
   session->transfer(flow, Success);
@@ -108,8 +86,4 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 
 REGISTER_INTERNAL_RESOURCE(ConvertJSONAck);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

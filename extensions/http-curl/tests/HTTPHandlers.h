@@ -53,7 +53,7 @@ struct FlowObj {
 
   uint64_t total_size{0};
   std::map<std::string, std::string> attributes;
-  std::vector<uint8_t> data;
+  std::vector<std::byte> data;
 };
 
 class SiteToSiteLocationResponder : public ServerAwareHandler {
@@ -256,7 +256,7 @@ class FlowFileResponder : public ServerAwareHandler {
       flow->total_size = total_size;
 
       {
-        const auto read = stream.read(flow->data.data(), length);
+        const auto read = stream.read(flow->data);
         if (!isServerRunning()) return false;
         (void)read;
         assert(read == length);
@@ -306,7 +306,7 @@ class FlowFileResponder : public ServerAwareHandler {
         }
         uint64_t length = flow->data.size();
         stream.write(length);
-        stream.write(flow->data.data(), gsl::narrow<size_t>(length));
+        stream.write(flow->data);
       }
     } else {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nConnection: "

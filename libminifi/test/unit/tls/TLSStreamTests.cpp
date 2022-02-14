@@ -19,6 +19,7 @@
 #undef LOAD_EXTENSIONS
 #undef NDEBUG
 
+#include <array>
 #include <cassert>
 
 #include "io/tls/TLSServerSocket.h"
@@ -67,8 +68,8 @@ int main(int argc, char** argv) {
   std::atomic_bool read_complete{false};
 
   std::thread read_thread{[&] {
-    std::vector<uint8_t> buffer;
-    auto read_count = client_socket.read(buffer, 10);
+    std::array<std::byte, 10> buffer{};
+    auto read_count = client_socket.read(buffer);
     assert(read_count == 0);
     read_complete = true;
   }};

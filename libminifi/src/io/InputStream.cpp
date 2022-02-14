@@ -27,20 +27,10 @@ namespace nifi {
 namespace minifi {
 namespace io {
 
-size_t InputStream::read(std::vector<uint8_t>& buffer, size_t len) {
-  if (buffer.size() < len) {
-    buffer.resize(len);
-  }
-  const auto ret = read(buffer.data(), len);
-  if (io::isError(ret)) return ret;
-  buffer.resize(ret);
-  return ret;
-}
-
 size_t InputStream::read(bool &value) {
   uint8_t buf = 0;
 
-  if (read(&buf, 1) != 1) {
+  if (read(buf) != 1) {
     return STREAM_ERROR;
   }
   value = buf;
@@ -81,8 +71,8 @@ size_t InputStream::read(std::string &str, bool widen) {
     return length_return;
   }
 
-  std::vector<uint8_t> buffer(string_length);
-  const auto read_return = read(buffer.data(), string_length);
+  std::vector<std::byte> buffer(string_length);
+  const auto read_return = read(buffer);
   if (read_return != string_length) {
     return read_return;
   }

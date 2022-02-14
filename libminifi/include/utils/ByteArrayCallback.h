@@ -26,11 +26,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 /**
  * General vector based uint8_t callback.
@@ -45,8 +41,7 @@ class ByteInputCallBack : public InputStreamCallback {
 
     if (stream->size() > 0) {
       vec.resize(stream->size());
-
-      stream->read(reinterpret_cast<uint8_t*>(vec.data()), stream->size());
+      stream->read(vec);
     }
 
     return gsl::narrow<int64_t>(vec.size());
@@ -55,10 +50,10 @@ class ByteInputCallBack : public InputStreamCallback {
   virtual void seek(size_t) { }
 
   virtual void write(std::string content) {
-    vec.assign(content.begin(), content.end());
+    vec = utils::span_to<std::vector>(gsl::make_span(content).as_span<std::byte>());
   }
 
-  virtual char *getBuffer(size_t pos) {
+  virtual std::byte* getBuffer(size_t pos) {
     gsl_Expects(pos <= vec.size());
     return vec.data() + pos;
   }
@@ -72,7 +67,7 @@ class ByteInputCallBack : public InputStreamCallback {
   }
 
  private:
-  std::vector<char> vec;
+  std::vector<std::byte> vec;
 };
 
 /**
@@ -151,10 +146,6 @@ class StreamOutputCallback : public ByteOutputCallback {
   virtual int64_t process(const std::shared_ptr<io::BaseStream>& stream);
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_BYTEARRAYCALLBACK_H_

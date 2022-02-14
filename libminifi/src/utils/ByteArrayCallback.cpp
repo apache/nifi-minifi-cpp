@@ -33,9 +33,10 @@ namespace utils {
 int64_t ByteOutputCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
   stream->seek(0);
   if (stream->size() > 0) {
-    std::unique_ptr<char> buffer = std::unique_ptr<char>(new char[stream->size()]);
-    readFully(buffer.get(), stream->size());
-    stream->read(reinterpret_cast<uint8_t*>(buffer.get()), stream->size());
+    std::vector<std::byte> buffer;
+    buffer.resize(stream->size());
+    readFully(reinterpret_cast<char*>(buffer.data()), stream->size());
+    stream->read(buffer);
     return gsl::narrow<int64_t>(stream->size());
   }
   return gsl::narrow<int64_t>(size_.load());

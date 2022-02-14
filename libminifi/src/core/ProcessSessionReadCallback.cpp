@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 #include "core/ProcessSessionReadCallback.h"
+#include <array>
 #include <cstdio>
 #include <memory>
 #include <string>
@@ -46,12 +47,12 @@ int64_t ProcessSessionReadCallback::process(const std::shared_ptr<io::BaseStream
   // Copy file contents into tmp file
   _writeSucceeded = false;
   size_t size = 0;
-  uint8_t buffer[8192];
+  std::array<std::byte, 8192> buffer{};
   do {
-    const auto read = stream->read(buffer, 8192);
+    const auto read = stream->read(buffer);
     if (io::isError(read)) return -1;
     if (read == 0) break;
-    if (!_tmpFileOs.write(reinterpret_cast<char*>(buffer), read)) {
+    if (!_tmpFileOs.write(reinterpret_cast<char*>(buffer.data()), read)) {
       return -1;
     }
     size += read;

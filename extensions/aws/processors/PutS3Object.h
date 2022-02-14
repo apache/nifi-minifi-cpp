@@ -92,12 +92,13 @@ class PutS3Object : public S3Processor {
       if (flow_size_ > MAX_SIZE) {
         return -1;
       }
-      std::vector<uint8_t> buffer;
+      std::vector<std::byte> buffer;
+      buffer.resize(BUFFER_SIZE);
       auto data_stream = std::make_shared<std::stringstream>();
       read_size_ = 0;
       while (read_size_ < flow_size_) {
         const auto next_read_size = (std::min)(flow_size_ - read_size_, BUFFER_SIZE);
-        const auto read_ret = stream->read(buffer, next_read_size);
+        const auto read_ret = stream->read(gsl::make_span(buffer).subspan(0, next_read_size));
         if (io::isError(read_ret)) {
           return -1;
         }

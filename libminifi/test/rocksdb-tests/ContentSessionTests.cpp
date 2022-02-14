@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <memory>
 #include <string>
 
@@ -52,12 +53,12 @@ const std::shared_ptr<minifi::io::BaseStream>& operator<<(const std::shared_ptr<
 
 const std::shared_ptr<minifi::io::BaseStream>& operator>>(const std::shared_ptr<minifi::io::BaseStream>& stream, std::string& str) {
   str = "";
-  uint8_t buffer[4096]{};
+  std::array<std::byte, 4096> buffer{};
   while (true) {
-    const auto ret = stream->read(buffer, sizeof(buffer));
+    const auto ret = stream->read(buffer);
     REQUIRE_FALSE(minifi::io::isError(ret));
     if (ret == 0) { break; }
-    str += std::string{reinterpret_cast<char*>(buffer), ret};
+    str += std::string{reinterpret_cast<char*>(buffer.data()), ret};
   }
   return stream;
 }

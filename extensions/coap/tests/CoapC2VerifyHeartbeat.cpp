@@ -140,8 +140,8 @@ class VerifyCoAPServer : public CoapIntegrationBase {
       stream.write("id");
       stream.write("operand");
 
-      auto data = std::unique_ptr<uint8_t[]>(new uint8_t[stream.size()]);
-      memcpy(data.get(), stream.getBuffer(), stream.size());
+      auto data = std::make_unique<uint8_t[]>(stream.size());
+      memcpy(data.get(), stream.getBuffer().data(), stream.getBuffer().size());
       minifi::coap::CoapResponse response(205, std::move(data), stream.size());
       responses.enqueue(std::move(response));
     }

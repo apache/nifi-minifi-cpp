@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <array>
 #include <memory>
 #include <string>
 #include <vector>
@@ -47,16 +48,17 @@ struct ReadUntilItCan : public minifi::InputStreamCallback {
 
   int64_t process(const std::shared_ptr<minifi::io::BaseStream> &stream) override {
     value_.clear();
-    std::vector<uint8_t> buffer;
+    std::array<std::byte, 1024> buffer{};
     size_t bytes_read = 0;
     while (true) {
-      size_t read_result = stream->read(buffer, 1024);
+      size_t read_result = stream->read(buffer);
       if (minifi::io::isError(read_result))
         return -1;
       if (read_result == 0)
         return bytes_read;
       bytes_read += read_result;
-      value_.append(buffer.begin(), buffer.end());
+      const auto char_view = gsl::make_span(buffer).subspan(0, read_result).as_span<const char>();
+      value_.append(std::begin(char_view), std::end(char_view));
     }
   }
 };

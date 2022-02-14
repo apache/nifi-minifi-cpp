@@ -24,11 +24,7 @@
 #include "utils/GeneralUtils.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 namespace views = ranges::views;
 
@@ -231,6 +227,63 @@ std::string StringUtils::replaceMap(std::string source_string, const std::map<st
   return result_string;
 }
 
+namespace {
+char nibble_to_hex(uint8_t nibble, bool uppercase) {
+  if (nibble < 10) {
+    return '0' + nibble;
+  } else {
+    return (uppercase ? 'A' : 'a') + nibble - 10;
+  }
+}
+
+void base64_digits_to_bytes(const uint8_t digits[4], std::byte* const bytes) {
+  bytes[0] = static_cast<std::byte>(digits[0] << 2 | digits[1] >> 4);
+  bytes[1] = static_cast<std::byte>((digits[1] & 0x0f) << 4 | digits[2] >> 2);
+  bytes[2] = static_cast<std::byte>((digits[2] & 0x03) << 6 | digits[3]);
+}
+
+constexpr uint8_t SKIP = 0xff;
+constexpr uint8_t ILGL = 0xfe;
+constexpr uint8_t PDNG = 0xfd;
+constexpr uint8_t hex_lut[128] =
+    {SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+     0x08, 0x09, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
+     SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP};
+
+constexpr const char base64_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+constexpr const char base64_url_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+constexpr uint8_t base64_dec_lut[128] =
+    {ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
+     ILGL, ILGL, SKIP, ILGL, ILGL, SKIP, ILGL, ILGL,
+     ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
+     ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
+     ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
+     ILGL, ILGL, ILGL, 0x3e, ILGL, 0x3e, ILGL, 0x3f,
+     0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b,
+     0x3c, 0x3d, ILGL, ILGL, ILGL, PDNG, ILGL, ILGL,
+     ILGL, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
+     0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+     0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
+     0x17, 0x18, 0x19, ILGL, ILGL, ILGL, ILGL, 0x3f,
+     ILGL, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
+     0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
+     0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
+     0x31, 0x32, 0x33, ILGL, ILGL, ILGL, ILGL, ILGL};
+}  // namespace
+
 bool StringUtils::from_hex(uint8_t ch, uint8_t& output) {
   if (ch > 127) {
     return false;
@@ -239,22 +292,22 @@ bool StringUtils::from_hex(uint8_t ch, uint8_t& output) {
   return output != SKIP;
 }
 
-bool StringUtils::from_hex(uint8_t* data, size_t* data_length, const char* hex, size_t hex_length) {
-  if (*data_length < hex_length / 2) {
+bool StringUtils::from_hex(std::byte* data, size_t* data_length, std::string_view hex) {
+  if (*data_length < hex.size() / 2) {
     return false;
   }
   uint8_t n1;
   bool found_first_nibble = false;
   *data_length = 0;
-  for (size_t i = 0; i < hex_length; i++) {
-    const uint8_t byte = static_cast<uint8_t>(hex[i]);
+  for (char c : hex) {
+    const auto byte = static_cast<uint8_t>(c);
     if (byte > 127) {
       continue;
     }
     uint8_t n = hex_lut[byte];
     if (n != SKIP) {
       if (found_first_nibble) {
-        data[(*data_length)++] = n1 << 4 | n;
+        data[(*data_length)++] = static_cast<std::byte>(n1 << 4 | n);
         found_first_nibble = false;
       } else {
         n1 = n;
@@ -268,38 +321,40 @@ bool StringUtils::from_hex(uint8_t* data, size_t* data_length, const char* hex, 
   return true;
 }
 
-std::vector<uint8_t> StringUtils::from_hex(const char* hex, size_t hex_length) {
-  std::vector<uint8_t> decoded(hex_length / 2);
+std::vector<std::byte> StringUtils::from_hex(std::string_view hex) {
+  std::vector<std::byte> decoded(hex.size() / 2);
   size_t data_length = decoded.size();
-  if (!from_hex(decoded.data(), &data_length, hex, hex_length)) {
-    throw std::invalid_argument("Hexencoded string is malformatted");
+  if (!from_hex(decoded.data(), &data_length, hex)) {
+    throw std::invalid_argument("Hexencoded string is malformed");
   }
   decoded.resize(data_length);
   return decoded;
 }
 
-size_t StringUtils::to_hex(char* hex, const uint8_t* data, size_t length, bool uppercase) {
-  if (length > std::numeric_limits<size_t>::max() / 2) {
+size_t StringUtils::to_hex(char* hex, gsl::span<const std::byte> data_to_be_transformed, bool uppercase) {
+  if (data_to_be_transformed.size() > std::numeric_limits<size_t>::max() / 2) {
     throw std::length_error("Data is too large to be hexencoded");
   }
-  for (size_t i = 0; i < length; i++) {
-    hex[i * 2] = nibble_to_hex(data[i] >> 4, uppercase);
-    hex[i * 2 + 1] = nibble_to_hex(data[i] & 0xf, uppercase);
+  for (size_t i = 0; i < data_to_be_transformed.size(); i++) {
+    hex[i * 2] = nibble_to_hex(static_cast<uint8_t>(data_to_be_transformed[i]) >> 4, uppercase);
+    hex[i * 2 + 1] = nibble_to_hex(static_cast<uint8_t>(data_to_be_transformed[i]) & 0xf, uppercase);
   }
-  return length * 2;
+  return data_to_be_transformed.size() * 2;
 }
 
-std::string StringUtils::to_hex(const uint8_t* data, size_t length, bool uppercase /*= false*/) {
-  if (length > (std::numeric_limits<size_t>::max() / 2 - 1)) {
+std::string StringUtils::to_hex(gsl::span<const std::byte> data_to_be_transformed, bool uppercase /*= false*/) {
+  if (data_to_be_transformed.size() > (std::numeric_limits<size_t>::max() / 2 - 1)) {
     throw std::length_error("Data is too large to be hexencoded");
   }
-  std::vector<char> buf(length * 2);
-  const size_t hex_length = to_hex(buf.data(), data, length, uppercase);
-  return std::string(buf.data(), hex_length);
+  std::string result;
+  result.resize(data_to_be_transformed.size() * 2);
+  const size_t hex_length = to_hex(result.data(), data_to_be_transformed, uppercase);
+  gsl_Assert(hex_length == result.size());
+  return result;
 }
 
-bool StringUtils::from_base64(uint8_t* data, size_t* data_length, const char* base64, size_t base64_length) {
-  if (*data_length < (base64_length / 4 + 1) * 3) {
+bool StringUtils::from_base64(std::byte* const data, size_t* const data_length, const std::string_view base64) {
+  if (*data_length < (base64.size() / 4 + 1) * 3) {
     return false;
   }
 
@@ -308,8 +363,8 @@ bool StringUtils::from_base64(uint8_t* data, size_t* data_length, const char* ba
   size_t decoded_size = 0U;
   size_t padding_counter = 0U;
   size_t i;
-  for (i = 0U; i < base64_length; i++) {
-    const uint8_t byte = static_cast<uint8_t>(base64[i]);
+  for (i = 0U; i < base64.size(); i++) {
+    const auto byte = static_cast<uint8_t>(base64[i]);
     if (byte > 127) {
       return false;
     }
@@ -351,7 +406,7 @@ bool StringUtils::from_base64(uint8_t* data, size_t* data_length, const char* ba
     case 3: {
       digits[3] = 0x00;
 
-      uint8_t bytes_temp[3];
+      std::byte bytes_temp[3];
       base64_digits_to_bytes(digits, bytes_temp);
       const size_t num_bytes = digit_counter - 1;
       memcpy(data + decoded_size, bytes_temp, num_bytes);
@@ -366,40 +421,42 @@ bool StringUtils::from_base64(uint8_t* data, size_t* data_length, const char* ba
   return true;
 }
 
-std::vector<uint8_t> StringUtils::from_base64(const char* base64, size_t base64_length) {
-  std::vector<uint8_t> decoded((base64_length / 4 + 1) * 3);
+std::vector<std::byte> StringUtils::from_base64(const std::string_view base64) {
+  std::vector<std::byte> decoded((base64.size() / 4 + 1) * 3);
   size_t data_length = decoded.size();
-  if (!from_base64(decoded.data(), &data_length, base64, base64_length)) {
-    throw std::invalid_argument("Base64 encoded string is malformatted");
+  if (!from_base64(decoded.data(), &data_length, base64)) {
+    throw std::invalid_argument("Base64 encoded string is malformed");
   }
   decoded.resize(data_length);
   return decoded;
 }
 
-size_t StringUtils::to_base64(char* base64, const uint8_t* data, size_t length, bool url, bool padded) {
-  if (length > std::numeric_limits<size_t>::max() * 3 / 4 - 3) {
+size_t StringUtils::to_base64(char* base64, const gsl::span<const std::byte> raw_data, bool url, bool padded) {
+  gsl_Expects(base64);
+  if (raw_data.size() > std::numeric_limits<size_t>::max() * 3 / 4 - 3) {
     throw std::length_error("Data is too large to be base64 encoded");
   }
+  constexpr auto null_byte = static_cast<std::byte>(0x00);
 
   const char* enc_lut = url ? base64_url_enc_lut : base64_enc_lut;
   size_t base64_length = 0U;
-  uint8_t bytes[3];
-  for (size_t i = 0U; i < length; i += 3U) {
-    const bool b1_present = i + 1 < length;
-    const bool b2_present = i + 2 < length;
-    bytes[0] = data[i];
-    bytes[1] = b1_present ? data[i + 1] : 0x00;
-    bytes[2] = b2_present ? data[i + 2] : 0x00;
+  std::byte bytes[3];
+  for (size_t i = 0U; i < raw_data.size(); i += 3U) {
+    const bool b1_present = i + 1 < raw_data.size();
+    const bool b2_present = i + 2 < raw_data.size();
+    bytes[0] = raw_data[i];
+    bytes[1] = b1_present ? raw_data[i + 1] : null_byte;
+    bytes[2] = b2_present ? raw_data[i + 2] : null_byte;
 
-    base64[base64_length++] = enc_lut[(bytes[0] & 0xfc) >> 2];
-    base64[base64_length++] = enc_lut[(bytes[0] & 0x03) << 4 | (bytes[1] & 0xf0) >> 4];
+    base64[base64_length++] = enc_lut[(static_cast<uint8_t>(bytes[0]) & 0xfc) >> 2];
+    base64[base64_length++] = enc_lut[(static_cast<uint8_t>(bytes[0]) & 0x03) << 4 | (static_cast<uint8_t>(bytes[1]) & 0xf0) >> 4];
     if (b1_present) {
-      base64[base64_length++] = enc_lut[(bytes[1] & 0x0f) << 2 | (bytes[2] & 0xc0) >> 6];
+      base64[base64_length++] = enc_lut[(static_cast<uint8_t>(bytes[1]) & 0x0f) << 2 | (static_cast<uint8_t>(bytes[2]) & 0xc0) >> 6];
     } else if (padded) {
       base64[base64_length++] = '=';
     }
     if (b2_present) {
-      base64[base64_length++] = enc_lut[bytes[2] & 0x3f];
+      base64[base64_length++] = enc_lut[static_cast<uint8_t>(bytes[2]) & 0x3f];
     } else if (padded) {
       base64[base64_length++] = '=';
     }
@@ -408,10 +465,13 @@ size_t StringUtils::to_base64(char* base64, const uint8_t* data, size_t length, 
   return base64_length;
 }
 
-std::string StringUtils::to_base64(const uint8_t* data, size_t length, bool url /*= false*/, bool padded /*= true*/) {
-  std::vector<char> buf((length / 3 + 1) * 4);
-  size_t base64_length = to_base64(buf.data(), data, length, url, padded);
-  return std::string(buf.data(), base64_length);
+std::string StringUtils::to_base64(const gsl::span<const std::byte> raw_data, bool url /*= false*/, bool padded /*= true*/) {
+  std::string buf;
+  buf.resize((raw_data.size() / 3 + 1) * 4);
+  size_t base64_length = to_base64(buf.data(), raw_data, url, padded);
+  gsl_Assert(base64_length <= buf.size());
+  buf.resize(base64_length);
+  return buf;
 }
 
 std::smatch StringUtils::getLastRegexMatch(const std::string& str, const std::regex& pattern) {
@@ -424,14 +484,4 @@ std::smatch StringUtils::getLastRegexMatch(const std::string& str, const std::re
   return last_match;
 }
 
-constexpr uint8_t StringUtils::SKIP;
-constexpr uint8_t StringUtils::hex_lut[128];
-constexpr const char StringUtils::base64_enc_lut[];
-constexpr const char StringUtils::base64_url_enc_lut[];
-constexpr uint8_t StringUtils::base64_dec_lut[128];
-
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

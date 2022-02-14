@@ -417,7 +417,7 @@ detail::ReadBufferResult ProcessSession::readBuffer(const std::shared_ptr<core::
     int64_t process(const std::shared_ptr<io::BaseStream>& inputStream) final {
       gsl_Expects(inputStream);
       result.buffer.resize(inputStream->size());
-      const auto read_status = inputStream->read(reinterpret_cast<uint8_t*>(result.buffer.data()), result.buffer.size());
+      const auto read_status = inputStream->read(result.buffer);
       if (read_status != result.buffer.size()) {
         session.logger_->log_error("readBuffer: %zu bytes were requested from the stream but %zu bytes were read. Rolling back.", result.buffer.size(), read_status);
         throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");
@@ -442,7 +442,7 @@ void ProcessSession::importFrom(io::InputStream&& stream, const std::shared_ptr<
 void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<core::FlowFile> &flow) {
   const std::shared_ptr<ResourceClaim> claim = content_session_->create();
   const auto max_read = gsl::narrow_cast<size_t>(getpagesize());
-  std::vector<uint8_t> charBuffer(max_read);
+  std::vector<std::byte> buffer(max_read);
 
   try {
     auto start_time = std::chrono::steady_clock::now();
@@ -455,9 +455,10 @@ void ProcessSession::importFrom(io::InputStream &stream, const std::shared_ptr<c
     const auto max_size = stream.size();
     while (position < max_size) {
       const auto read_size = std::min(max_read, max_size - position);
-      stream.read(charBuffer, read_size);
+      const auto subbuffer = gsl::make_span(buffer).subspan(0, read_size);
+      stream.read(subbuffer);
 
-      content_stream->write(charBuffer.data(), read_size);
+      content_stream->write(subbuffer);
       position += read_size;
     }
     // Open the source file and stream to the flow file

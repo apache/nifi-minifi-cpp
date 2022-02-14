@@ -33,16 +33,12 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class PutOPCProcessor : public BaseOPCProcessor {
  public:
   static constexpr char const* ProcessorName = "PutOPC";
-  // Supported Properties
+
   static core::Property ParentNodeIDType;
   static core::Property ParentNodeID;
   static core::Property ParentNameSpaceIndex;
@@ -53,7 +49,6 @@ class PutOPCProcessor : public BaseOPCProcessor {
   static core::Property TargetNodeBrowseName;
   static core::Property TargetNodeNameSpaceIndex;
 
-  // Supported Relationships
   static core::Relationship Success;
   static core::Relationship Failure;
 
@@ -63,39 +58,20 @@ class PutOPCProcessor : public BaseOPCProcessor {
   }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
-
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-
-  void initialize(void) override;
+  void initialize() override;
 
  private:
-  class ReadCallback : public InputStreamCallback {
-   public:
-    explicit ReadCallback(std::shared_ptr<core::logging::Logger> logger) : logger_(logger) {}
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-    const std::vector<uint8_t>& getContent() const { return buf_; }
-
-   private:
-    std::vector<uint8_t> buf_;
-    std::shared_ptr<core::logging::Logger> logger_;
-  };
-
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;
   }
 
   std::string nodeID_;
-  int32_t nameSpaceIdx_;
-  opc::OPCNodeIDType idType_;
-  UA_NodeId parentNodeID_;
-
-  bool parentExists_;
-
-  opc::OPCNodeDataType nodeDataType_;
+  int32_t nameSpaceIdx_{};
+  opc::OPCNodeIDType idType_{};
+  UA_NodeId parentNodeID_{};
+  bool parentExists_{};
+  opc::OPCNodeDataType nodeDataType_{};
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

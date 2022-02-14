@@ -35,11 +35,11 @@ size_t BufferStream::write(const uint8_t *value, size_t size) {
   return size;
 }
 
-size_t BufferStream::read(uint8_t *buf, size_t len) {
+size_t BufferStream::read(gsl::span<std::byte> buf) {
   const auto bytes_available_in_buffer = buffer_.size() - readOffset_;
-  const auto readlen = std::min(len, gsl::narrow<size_t>(bytes_available_in_buffer));
+  const auto readlen = std::min(buf.size(), gsl::narrow<size_t>(bytes_available_in_buffer));
   const auto begin = buffer_.begin() + gsl::narrow<decltype(buffer_)::difference_type>(readOffset_);
-  std::copy(begin, begin + gsl::narrow<decltype(buffer_)::difference_type>(readlen), buf);
+  std::copy(begin, begin + gsl::narrow<decltype(buffer_)::difference_type>(readlen), buf.data());
 
   // increase offset for the next read
   readOffset_ += readlen;

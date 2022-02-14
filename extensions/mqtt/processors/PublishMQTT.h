@@ -83,19 +83,19 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
       if (flow_size_ < max_seg_size_)
         max_seg_size_ = flow_size_;
       gsl_Expects(max_seg_size_ < gsl::narrow<uint64_t>(std::numeric_limits<int>::max()));
-      std::vector<unsigned char> buffer(max_seg_size_);
+      std::vector<std::byte> buffer(max_seg_size_);
       read_size_ = 0;
       status_ = 0;
       while (read_size_ < flow_size_) {
         // MQTTClient_message::payloadlen is int, so we can't handle 2GB+
-        const auto readRet = stream->read(&buffer[0], max_seg_size_);
+        const auto readRet = stream->read(buffer);
         if (io::isError(readRet)) {
           status_ = -1;
           return gsl::narrow<int64_t>(read_size_);
         }
         if (readRet > 0) {
           MQTTClient_message pubmsg = MQTTClient_message_initializer;
-          pubmsg.payload = &buffer[0];
+          pubmsg.payload = buffer.data();
           pubmsg.payloadlen = gsl::narrow<int>(readRet);
           pubmsg.qos = qos_;
           pubmsg.retained = retain_;

@@ -87,7 +87,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     REQUIRE(size_ + len <= capacity_);
     int total_read = 0;
     do {
-      const size_t ret{ input.read(end(), len) };
+      const size_t ret{input.read(gsl::make_span(end(), len).as_span<std::byte>())};
       if (ret == 0) break;
       if (minifi::io::isError(ret)) return -1;
       size_ += ret;
@@ -96,7 +96,7 @@ class FixedBuffer : public minifi::InputStreamCallback {
     } while (size_ != capacity_);
     return total_read;
   }
-  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) {
+  int64_t process(const std::shared_ptr<minifi::io::BaseStream>& stream) override {
     return write(*stream, capacity_);
   }
 
@@ -110,8 +110,8 @@ std::vector<FixedBuffer> read_archives(const FixedBuffer& input) {
   class ArchiveEntryReader {
    public:
     explicit ArchiveEntryReader(archive* arch) : arch(arch) {}
-    size_t read(uint8_t* out, std::size_t len) {
-      const auto ret = archive_read_data(arch, out, len);
+    size_t read(gsl::span<std::byte> out_buffer) {
+      const auto ret = archive_read_data(arch, out_buffer.data(), out_buffer.size());
       return ret < 0 ? minifi::io::STREAM_ERROR : gsl::narrow<size_t>(ret);
     }
    private:
@@ -706,7 +706,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   std::vector<std::shared_ptr<core::FlowFile>> files;
 
   for (const auto& content : std::vector<std::string>{"first ff content", "second ff content", "some other data"}) {
-    minifi::io::BufferStream contentStream{reinterpret_cast<const uint8_t*>(content.data()), static_cast<unsigned>(content.length())};
+    minifi::io::BufferStream contentStream{content};
     auto ff = session.create();
     ff->removeAttribute(core::SpecialFlowAttribute::FILENAME);
     ff->addAttribute("one", "banana");
@@ -749,7 +749,7 @@ TEST_CASE("FlowFile serialization", "[testFlowFileSerialization]") {
   }
   writeString(footer, result);
 
-  std::string expected{reinterpret_cast<const char*>(result->getBuffer()), result->size()};
+  const auto expected = utils::span_to<std::string>(result->getBuffer().as_span<const char>());
 
   auto factory = std::make_shared<core::ProcessSessionFactory>(context);
   processor->onSchedule(context, factory);

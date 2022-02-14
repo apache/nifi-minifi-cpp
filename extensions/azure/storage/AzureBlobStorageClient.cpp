@@ -58,10 +58,10 @@ bool AzureBlobStorageClient::createContainerIfNotExists(const PutAzureBlobStorag
   return container_client_->CreateIfNotExists().Value.Created;
 }
 
-Azure::Storage::Blobs::Models::UploadBlockBlobResult AzureBlobStorageClient::uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) {
+Azure::Storage::Blobs::Models::UploadBlockBlobResult AzureBlobStorageClient::uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) {
   resetClientIfNeeded(params.credentials, params.container_name);
   auto blob_client = container_client_->GetBlockBlobClient(params.blob_name);
-  return blob_client.UploadFrom(buffer.data(), buffer.size()).Value;
+  return blob_client.UploadFrom(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size()).Value;
 }
 
 std::string AzureBlobStorageClient::getUrl(const PutAzureBlobStorageParameters& params) {

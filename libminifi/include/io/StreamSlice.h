@@ -34,7 +34,7 @@ class StreamSlice : public BaseStream {  // TODO(MINIFICPP-1648) This should be 
 
   // from InputStream
   size_t size() const override { return slice_size_; }
-  size_t read(uint8_t *value, size_t len) override;
+  size_t read(gsl::span<std::byte> out_buffer) override;
 
   // from OutputStream
   size_t write(const uint8_t*, size_t) override { throw std::runtime_error("write is not supported in StreamSlice"); }
@@ -44,8 +44,8 @@ class StreamSlice : public BaseStream {  // TODO(MINIFICPP-1648) This should be 
   int initialize() override { return stream_->initialize(); }
 
   void seek(size_t offset) override;
-  size_t tell() const override;
-  const uint8_t* getBuffer() const override;
+  [[nodiscard]] size_t tell() const override;
+  [[nodiscard]] gsl::span<const std::byte> getBuffer() const override;
 
  private:
   const std::shared_ptr<io::BaseStream>& stream_;

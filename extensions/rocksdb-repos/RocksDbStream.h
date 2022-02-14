@@ -71,7 +71,7 @@ class RocksDbStream : public io::BaseStream {
    * @param buf buffer in which we extract data
    * @param buflen
    */
-  size_t read(uint8_t *buf, size_t buflen) override;
+  size_t read(gsl::span<std::byte> buf) override;
 
   /**
    * writes value to stream

@@ -42,11 +42,7 @@
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace provenance {
+namespace org::apache::nifi::minifi::provenance {
 // Provenance Event Record Serialization Seg Size
 #define PROVENANCE_EVENT_RECORD_SEG_SIZE 2048
 
@@ -351,40 +347,15 @@ class ProvenanceEventRecord : public core::SerializableComponent {
   bool Serialize(org::apache::nifi::minifi::io::BufferStream& outStream);
 
   // Serialize and Persistent to the repository
-  bool Serialize(const std::shared_ptr<core::SerializableComponent> &repo);
+  bool Serialize(const std::shared_ptr<core::SerializableComponent> &repo) override;
   // DeSerialize
-  bool DeSerialize(const uint8_t *buffer, const size_t bufferSize);
+  bool DeSerialize(gsl::span<const std::byte>) override;
   // DeSerialize
   bool DeSerialize(org::apache::nifi::minifi::io::BufferStream &stream) {
-    return DeSerialize(stream.getBuffer(), stream.size());
+    return DeSerialize(stream.getBuffer());
   }
   // DeSerialize
-  bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo);
-
-  uint64_t getEventTime(const uint8_t *buffer, const size_t bufferSize) {
-    const auto size = std::min<size_t>(72, bufferSize);
-    org::apache::nifi::minifi::io::BufferStream outStream(buffer, size);
-
-    std::string uuid;
-    const auto uuidret = outStream.read(uuid);
-    if (uuidret == 0 || io::isError(uuidret)) {
-      return 0;
-    }
-
-    uint32_t eventType;
-    const auto typeret = outStream.read(eventType);
-    if (typeret != 4) {
-      return 0;
-    }
-
-    uint64_t event_time;
-    const auto timeret = outStream.read(event_time);
-    if (timeret != 8) {
-      return 0;
-    }
-
-    return event_time;
-  }
+  bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo) override;
 
  protected:
   // Event type
@@ -537,10 +508,6 @@ class ProvenanceReporter {
 
 // Provenance Repository
 
-}  // namespace provenance
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::provenance
 
 #endif  // LIBMINIFI_INCLUDE_PROVENANCE_PROVENANCE_H_

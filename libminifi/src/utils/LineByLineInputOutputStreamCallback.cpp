@@ -49,7 +49,8 @@ int64_t LineByLineInputOutputStreamCallback::process(const std::shared_ptr<io::B
 }
 
 int64_t LineByLineInputOutputStreamCallback::readInput(io::InputStream& stream) {
-  const auto status = stream.read(input_, stream.size());
+  input_.resize(stream.size());
+  const auto status = stream.read(input_);
   if (io::isError(status)) { return -1; }
   current_pos_ = input_.begin();
   return gsl::narrow<int64_t>(input_.size());
@@ -62,11 +63,11 @@ void LineByLineInputOutputStreamCallback::readLine() {
     return;
   }
 
-  auto end_of_line = std::find(current_pos_, input_.end(), '\n');
+  auto end_of_line = std::find(current_pos_, input_.end(), static_cast<std::byte>('\n'));
   if (end_of_line != input_.end()) { ++end_of_line; }
 
   current_line_ = next_line_;
-  next_line_ = std::string(current_pos_, end_of_line);
+  next_line_ = utils::span_to<std::string>(gsl::make_span(&*current_pos_, &*end_of_line).as_span<char>());
   current_pos_ = end_of_line;
 }
 

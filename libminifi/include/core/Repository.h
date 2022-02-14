@@ -48,11 +48,7 @@
 #include <sys/stat.h>
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 #define REPOSITORY_DIRECTORY "./repo"
 #define MAX_REPOSITORY_STORAGE_SIZE (10*1024*1024)  // 10M
@@ -64,7 +60,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   /*
    * Constructor for the repository
    */
-  Repository(std::string repo_name = "Repository",
+  explicit Repository(std::string repo_name = "Repository",
              std::string directory = REPOSITORY_DIRECTORY,
              std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
              int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
@@ -82,7 +78,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   }
 
   // Destructor
-  virtual ~Repository() {
+  ~Repository() override {
     stop();
   }
 
@@ -112,7 +108,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
 
   virtual bool Delete(std::vector<std::shared_ptr<core::SerializableComponent>> &storedValues) {
     bool found = true;
-    for (auto storedValue : storedValues) {
+    for (const auto& storedValue : storedValues) {
       found &= Delete(storedValue->getName());
     }
     return found;
@@ -138,7 +134,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   /**
    * Since SerializableComponents represent a runnable object, we should return traces
    */
-  virtual BackTrace getTraces() {
+  BackTrace getTraces() override {
     return TraceResolver::getResolver().getBackTrace(getName(), thread_.native_handle());
   }
 
@@ -151,7 +147,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return repo_full_;
   }
   // whether the repo is enable
-  virtual bool isRunning() {
+  bool isRunning() override {
     return running_;
   }
 
@@ -200,25 +196,25 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   /**
    * Base implementation returns true;
    */
-  virtual bool Serialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) {
+  bool Serialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) override {
     return true;
   }
 
   /**
    * Base implementation returns true;
    */
-  virtual bool DeSerialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) {
+  bool DeSerialize(const std::shared_ptr<core::SerializableComponent>& /*store*/) override {
     return true;
   }
 
   /**
    * Base implementation returns true;
    */
-  virtual bool DeSerialize(const uint8_t* /*buffer*/, const size_t /*bufferSize*/) {
+  bool DeSerialize(gsl::span<const std::byte>) override {
     return true;
   }
 
-  virtual bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) {
+  bool Serialize(const std::string &key, const uint8_t *buffer, const size_t bufferSize) override {
     return Put(key, buffer, bufferSize);
   }
 
@@ -273,9 +269,5 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core
 #endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_H_

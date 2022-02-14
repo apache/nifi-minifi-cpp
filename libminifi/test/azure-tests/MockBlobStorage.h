@@ -34,13 +34,13 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return true;
   }
 
-  Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const minifi::azure::storage::PutAzureBlobStorageParameters& params, gsl::span<const uint8_t> buffer) override {
+  Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const minifi::azure::storage::PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) override {
     put_params_ = params;
     if (upload_fails_) {
       throw std::runtime_error("error");
     }
 
-    input_data_ = std::string(buffer.begin(), buffer.end());
+    input_data_ = utils::span_to<std::string>(buffer.as_span<const char>());
 
     Azure::Storage::Blobs::Models::UploadBlockBlobResult result;
     result.ETag = Azure::ETag{ETAG};

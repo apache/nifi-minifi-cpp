@@ -177,7 +177,7 @@ class PayloadSerializer {
 
   static state::response::ValueNode deserializeValueNode(io::BaseStream *stream) {
     uint8_t type = 0;
-    stream->read(&type, 1);
+    stream->read(type);
     state::response::ValueNode node;
     switch (type) {
       case 1: {
@@ -193,7 +193,7 @@ class PayloadSerializer {
         break;
       }
       case 3: {
-        stream->read(&type, 1);
+        stream->read(type);
         if (type == 1)
           node = true;
         else
@@ -209,7 +209,7 @@ class PayloadSerializer {
     }
     return node;
   }
-  static C2Payload deserialize(std::vector<uint8_t> data) {
+  static C2Payload deserialize(const std::vector<std::byte>& data) {
     C2Payload payload(Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE);
     if (deserialize(data, payload)) {
       return payload;
@@ -258,8 +258,8 @@ class PayloadSerializer {
     }
     return true;
   }
-  static bool deserialize(std::vector<uint8_t> data, C2Payload &payload) {
-    io::BufferStream stream(data.data(), gsl::narrow<unsigned int>(data.size()));
+  static bool deserialize(std::vector<std::byte> data, C2Payload &payload) {
+    io::BufferStream stream(data);
 
     uint8_t op = 0, st = 0;
     uint16_t version = 0;

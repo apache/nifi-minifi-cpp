@@ -42,17 +42,17 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
    public:
     explicit BufferedReader(std::shared_ptr<InputStream> input) : input_(std::move(input)) {}
 
-    std::optional<gsl::span<const uint8_t>> readChunk() {
-      size_t result = input_->read(buffer_.data(), buffer_.size());
+    std::optional<gsl::span<const std::byte>> readChunk() {
+      size_t result = input_->read(buffer_);
       if (io::isError(result)) {
         return std::nullopt;
       }
-      return gsl::span<const uint8_t>(buffer_.data(), result);
+      return gsl::make_span(buffer_).subspan(0, result);
     }
 
    private:
     std::shared_ptr<InputStream> input_;
-    std::array<uint8_t, 4096> buffer_;
+    std::array<std::byte, 4096> buffer_{};
   };
 
   archive_ptr createReadArchive();
@@ -66,7 +66,7 @@ class ReadArchiveStreamImpl : public ReadArchiveStream {
 
   using InputStream::read;
 
-  size_t read(uint8_t* buf, size_t len) override;
+  size_t read(gsl::span<std::byte> out_buffer) override;
 
  private:
   static la_ssize_t archive_read(struct archive* archive, void *context, const void **buff) {

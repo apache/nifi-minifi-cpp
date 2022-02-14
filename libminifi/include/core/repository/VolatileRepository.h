@@ -298,7 +298,7 @@ bool VolatileRepository<T>::Put(T key, const uint8_t *buf, size_t bufLen) {
 template<typename T>
 bool VolatileRepository<T>::MultiPut(const std::vector<std::pair<T, std::unique_ptr<io::BufferStream>>>& data) {
   for (const auto& item : data) {
-    if (!Put(item.first, item.second->getBuffer(), item.second->size())) {
+    if (!Put(item.first, item.second->getBuffer().template as_span<const uint8_t>().data(), item.second->size())) {
       return false;
     }
   }
@@ -354,11 +354,11 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
     if (ent->getValue(repo_value)) {
       std::shared_ptr<core::SerializableComponent> newComponent = lambda();
       // we've taken ownership of this repo value
-      newComponent->DeSerialize(repo_value.getBuffer(), repo_value.getBufferSize());
+      newComponent->DeSerialize(repo_value.getBuffer());
 
       store.push_back(newComponent);
 
-      current_size_ -= repo_value.getBufferSize();
+      current_size_ -= repo_value.getBuffer().size();
 
       if (max_size++ >= requested_batch) {
         break;
@@ -382,8 +382,8 @@ bool VolatileRepository<T>::DeSerialize(std::vector<std::shared_ptr<core::Serial
 
     if (ent->getValue(repo_value)) {
       // we've taken ownership of this repo value
-      store.at(max_size)->DeSerialize(repo_value.getBuffer(), repo_value.getBufferSize());
-      current_size_ -= repo_value.getBufferSize();
+      store.at(max_size)->DeSerialize(repo_value.getBuffer());
+      current_size_ -= repo_value.getBuffer().size();
       if (max_size++ >= store.size()) {
         break;
       }

@@ -54,28 +54,22 @@ TEST_CASE("TestSocketWriteTest1", "[TestSocket2]") {
 }
 
 TEST_CASE("TestSocketWriteTest2", "[TestSocket3]") {
-  std::vector<uint8_t> buffer;
-  buffer.push_back('a');
+  std::vector buffer = { static_cast<std::byte>('a') };
   std::shared_ptr<io::SocketContext> socket_context = std::make_shared<io::SocketContext>(std::make_shared<minifi::Configure>());
   io::ServerSocket server(socket_context, Socket::getMyHostName(), 9183, 1);
 
   REQUIRE(-1 != server.initialize());
 
   Socket client(socket_context, Socket::getMyHostName(), 9183);
-
   REQUIRE(-1 != client.initialize());
+  REQUIRE(1 == client.write(buffer));
 
-  REQUIRE(1 == client.write(buffer, 1));
-
-  std::vector<uint8_t> readBuffer;
+  std::vector<std::byte> readBuffer;
   readBuffer.resize(1);
-
-  REQUIRE(1 == server.read(readBuffer, 1));
-
+  REQUIRE(1 == server.read(readBuffer));
   REQUIRE(readBuffer == buffer);
 
   server.close();
-
   client.close();
 }
 
@@ -145,32 +139,22 @@ TEST_CASE("TestWriteEndian32", "[TestSocket6]") {
 }
 
 TEST_CASE("TestSocketWriteTestAfterClose", "[TestSocket7]") {
-  std::vector<uint8_t> buffer;
-  buffer.push_back('a');
-
+  std::vector buffer = {static_cast<std::byte>('a')};
   std::shared_ptr<io::SocketContext> socket_context = std::make_shared<io::SocketContext>(std::make_shared<minifi::Configure>());
-
   io::ServerSocket server(socket_context, Socket::getMyHostName(), 9183, 1);
-
   REQUIRE(-1 != server.initialize());
 
   Socket client(socket_context, Socket::getMyHostName(), 9183);
-
   REQUIRE(-1 != client.initialize());
+  REQUIRE(1 == client.write(buffer));
 
-  REQUIRE(1 == client.write(buffer, 1));
-
-  std::vector<uint8_t> readBuffer;
+  std::vector<std::byte> readBuffer;
   readBuffer.resize(1);
-
-  REQUIRE(1 == server.read(readBuffer, 1));
-
+  REQUIRE(1 == server.read(readBuffer));
   REQUIRE(readBuffer == buffer);
 
   client.close();
-
-  REQUIRE(io::isError(client.write(buffer, 1)));
-
+  REQUIRE(io::isError(client.write(buffer)));
   server.close();
 }
 

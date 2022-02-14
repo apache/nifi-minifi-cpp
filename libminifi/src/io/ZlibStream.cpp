@@ -97,7 +97,7 @@ size_t ZlibCompressStream::write(const uint8_t* value, size_t size, FlushMode mo
   do {
     logger_->log_trace("writeData has %u B of input data left", strm_.avail_in);
 
-    strm_.next_out = outputBuffer_.data();
+    strm_.next_out = reinterpret_cast<Bytef*>(outputBuffer_.data());
     strm_.avail_out = gsl::narrow<uInt>(outputBuffer_.size());
 
     logger_->log_trace("calling deflate with flush %d", mode);
@@ -110,7 +110,7 @@ size_t ZlibCompressStream::write(const uint8_t* value, size_t size, FlushMode mo
     }
     const auto output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("deflate produced %d B of output data", output_size);
-    if (output_->write(outputBuffer_.data(), output_size) != output_size) {
+    if (output_->write(gsl::make_span(outputBuffer_).subspan(0, output_size)) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
       return STREAM_ERROR;
@@ -169,7 +169,7 @@ size_t ZlibDecompressStream::write(const uint8_t* value, size_t size) {
   do {
     logger_->log_trace("writeData has %u B of input data left", strm_.avail_in);
 
-    strm_.next_out = outputBuffer_.data();
+    strm_.next_out = reinterpret_cast<Bytef*>(outputBuffer_.data());
     strm_.avail_out = gsl::narrow<uInt>(outputBuffer_.size());
 
     ret = inflate(&strm_, Z_NO_FLUSH);
@@ -183,7 +183,7 @@ size_t ZlibDecompressStream::write(const uint8_t* value, size_t size) {
     }
     const auto output_size = outputBuffer_.size() - strm_.avail_out;
     logger_->log_trace("deflate produced %d B of output data", output_size);
-    if (output_->write(outputBuffer_.data(), output_size) != output_size) {
+    if (output_->write(gsl::make_span(outputBuffer_).subspan(0, output_size)) != output_size) {
       logger_->log_error("Failed to write to underlying stream");
       state_ = ZlibStreamState::ERRORED;
       return STREAM_ERROR;

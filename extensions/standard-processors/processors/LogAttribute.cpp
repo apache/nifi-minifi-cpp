@@ -149,9 +149,9 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
       std::string printable_payload;
       if (hexencode_) {
-        printable_payload = utils::StringUtils::to_hex(callback.buffer_.data(), callback.buffer_.size());
+        printable_payload = utils::StringUtils::to_hex(callback.buffer_);
       } else {
-        printable_payload = std::string(reinterpret_cast<char*>(callback.buffer_.data()), callback.buffer_.size());
+        printable_payload = utils::span_to<std::string>(gsl::make_span(callback.buffer_).as_span<char>());
       }
 
       if (max_line_length_ == 0U) {

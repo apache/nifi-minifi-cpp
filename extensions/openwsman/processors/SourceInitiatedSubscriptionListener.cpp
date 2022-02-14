@@ -857,12 +857,12 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   }
   utils::tls::X509_unique_ptr ca_ptr{ca};
 
-  std::array<uint8_t, 20U> hash_buf;
-  int ret = X509_digest(ca, EVP_sha1(), hash_buf.data(), nullptr);
+  std::array<std::byte, 20U> hash_buf{};
+  int ret = X509_digest(ca, EVP_sha1(), gsl::make_span(hash_buf).as_span<unsigned char>().data(), nullptr);
   if (ret != 1) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to get fingerprint for CA specified by SSL Certificate Authority attribute");
   }
-  ssl_ca_cert_thumbprint_ = utils::StringUtils::to_hex(hash_buf.data(), hash_buf.size(), true /*uppercase*/);
+  ssl_ca_cert_thumbprint_ = utils::StringUtils::to_hex(hash_buf, true /*uppercase*/);
   logger_->log_debug("%s SHA-1 thumbprint is %s", ssl_ca_file.c_str(), ssl_ca_cert_thumbprint_.c_str());
 
   session_factory_ = sessionFactory;

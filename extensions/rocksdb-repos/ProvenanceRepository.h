@@ -131,7 +131,8 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
   bool MultiPut(const std::vector<std::pair<std::string, std::unique_ptr<minifi::io::BufferStream>>>& data) override {
     rocksdb::WriteBatch batch;
     for (const auto &item : data) {
-      rocksdb::Slice value((const char *) item.second->getBuffer(), item.second->size());
+      const auto buf = item.second->getBuffer().as_span<const char>();
+      rocksdb::Slice value(buf.data(), buf.size());
       if (!batch.Put(item.first, value).ok()) {
         return false;
       }
@@ -160,7 +161,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       std::string key = it->key().ToString();
       if (store.size() >= max_size)
         break;
-      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
+      if (eventRead->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
         store.push_back(std::dynamic_pointer_cast<core::CoreComponent>(eventRead));
       }
     }
@@ -176,7 +177,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
         break;
       std::shared_ptr<core::SerializableComponent> eventRead = lambda();
       std::string key = it->key().ToString();
-      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
+      if (eventRead->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
         max_size++;
         records.push_back(eventRead);
       }
@@ -192,7 +193,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       std::string key = it->key().ToString();
       if (records.size() >= (uint64_t)maxSize)
         break;
-      if (eventRead->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
+      if (eventRead->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
         records.push_back(eventRead);
       }
     }
@@ -205,7 +206,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
       std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
       std::string key = it->key().ToString();
 
-      if (store.at(max_size)->DeSerialize(reinterpret_cast<const uint8_t *>(it->value().data()), it->value().size())) {
+      if (store.at(max_size)->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
         max_size++;
       }
       if (store.size() >= max_size)

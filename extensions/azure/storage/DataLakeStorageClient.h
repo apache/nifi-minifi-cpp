@@ -70,7 +70,7 @@ struct ListAzureDataLakeStorageParameters : public AzureDataLakeStorageParameter
 class DataLakeStorageClient {
  public:
   virtual bool createFile(const PutAzureDataLakeStorageParameters& params) = 0;
-  virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const uint8_t> buffer) = 0;
+  virtual std::string uploadFile(const PutAzureDataLakeStorageParameters& params, gsl::span<const std::byte> buffer) = 0;
   virtual bool deleteFile(const DeleteAzureDataLakeStorageParameters& params) = 0;
   virtual std::unique_ptr<io::InputStream> fetchFile(const FetchAzureDataLakeStorageParameters& params) = 0;
   virtual std::vector<Azure::Storage::Files::DataLake::Models::PathItem> listDirectory(const ListAzureDataLakeStorageParameters& params) = 0;

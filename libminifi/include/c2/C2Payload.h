@@ -28,7 +28,7 @@
 #include "../core/state/Value.h"
 #include "core/state/UpdateController.h"
 #include "utils/Enum.h"
-#include "io/InputStream.h"
+#include "utils/gsl.h"
 
 namespace org {
 namespace apache {
@@ -166,13 +166,13 @@ class C2Payload : public state::Update {
    */
   void setRawData(const std::string&);
   void setRawData(const std::vector<char>&);
-  void setRawData(const std::vector<uint8_t>&);
+  void setRawData(gsl::span<const std::byte>);
 
   /**
    * Returns raw data.
    */
-  [[nodiscard]]
-  std::vector<char> getRawData() const { return raw_data_; }
+  [[nodiscard]] std::vector<std::byte> getRawData() const noexcept { return raw_data_; }
+  [[nodiscard]] std::string getRawDataAsString() const { return utils::span_to<std::string>(gsl::make_span(getRawData()).as_span<const char>()); }
 
   /**
    * Add a nested payload.
@@ -209,7 +209,7 @@ class C2Payload : public state::Update {
   std::vector<C2ContentResponse> content_;
   Operation op_;
   bool raw_{ false };
-  std::vector<char> raw_data_;
+  std::vector<std::byte> raw_data_;
   bool is_container_{ false };
   bool is_collapsible_{ true };
 };

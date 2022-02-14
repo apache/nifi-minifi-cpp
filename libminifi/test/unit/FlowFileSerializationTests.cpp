@@ -50,9 +50,7 @@ TEST_CASE("Payload Serializer", "[testPayload]") {
     return gsl::narrow<int>(cb->process(contentStream));
   });
   serializer.serialize(flowFile, result);
-
-  std::string serialized{reinterpret_cast<const char*>(result->getBuffer()), result->size()};
-
+  const auto serialized = utils::span_to<std::string>(result->getBuffer().as_span<const char>());
   REQUIRE(serialized == content);
 }
 
@@ -72,8 +70,7 @@ TEST_CASE("FFv3 Serializer", "[testFFv3]") {
     return gsl::narrow<int>(cb->process(contentStream));
   });
   serializer.serialize(flowFile, result);
-
-  std::string serialized{reinterpret_cast<const char*>(result->getBuffer()), result->size()};
+  const auto serialized = utils::span_to<std::string>(result->getBuffer().as_span<const char>());
 
   std::string expected = "NiFiFF3";
   expected += std::string("\x00\x02", 2);  // number of attributes

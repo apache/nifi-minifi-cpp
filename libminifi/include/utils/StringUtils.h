@@ -59,6 +59,9 @@ struct string_traits<wchar_t>{
   }
 };
 
+struct as_string_tag_t {};
+inline constexpr as_string_tag_t as_string;
+
 /**
  * Stateless String utility class.
  *
@@ -356,7 +359,7 @@ class StringUtils {
    * @param hex_length the length of hex
    * @return true on success
    */
-  static bool from_hex(uint8_t* data, size_t* data_length, const char* hex, size_t hex_length);
+  static bool from_hex(std::byte* data, size_t* data_length, std::string_view hex);
 
   /**
    * Hexdecodes a string
@@ -364,17 +367,11 @@ class StringUtils {
    * @param hex_length the length of hex
    * @return the vector containing the hexdecoded bytes
    */
-  static std::vector<uint8_t> from_hex(const char* hex, size_t hex_length);
-
-  /**
-   * Hexdecodes a string
-   * @param hex the hexencoded string
-   * @return the hexdecoded string
-   */
-  inline static std::string from_hex(const std::string& hex) {
-    auto data = from_hex(hex.data(), hex.length());
-    return std::string(reinterpret_cast<char*>(data.data()), data.size());
+  static std::vector<std::byte> from_hex(std::string_view hex);
+  static std::string from_hex(std::string_view hex, as_string_tag_t) {
+    return utils::span_to<std::string>(gsl::make_span(from_hex(hex)).as_span<const char>());
   }
+
 
   /**
    * Hexencodes bytes and writes the result to hex
@@ -384,7 +381,7 @@ class StringUtils {
    * @param uppercase whether the hexencoded string should be upper case
    * @return the size of hexencoded bytes
    */
-  static size_t to_hex(char* hex, const uint8_t* data, size_t length, bool uppercase);
+  static size_t to_hex(char* hex, gsl::span<const std::byte> data_to_be_transformed, bool uppercase);
 
   /**
    * Creates a hexencoded string from data
@@ -393,7 +390,7 @@ class StringUtils {
    * @param uppercase whether the hexencoded string should be upper case
    * @return the hexencoded string
    */
-  static std::string to_hex(const uint8_t* data, size_t length, bool uppercase = false);
+  static std::string to_hex(gsl::span<const std::byte> data_to_be_transformed, bool uppercase = false);
 
   /**
    * Hexencodes a string
@@ -401,18 +398,8 @@ class StringUtils {
    * @param uppercase whether the hexencoded string should be upper case
    * @return the hexencoded string
    */
-  inline static std::string to_hex(const std::string& str, bool uppercase = false) {
-    return to_hex(reinterpret_cast<const uint8_t*>(str.data()), str.length(), uppercase);
-  }
-
-  /**
-   * Hexencodes a vector of bytes
-   * @param data the vector of bytes to be hexencoded
-   * @param uppercase whether the hexencoded string should be upper case
-   * @return the hexencoded string
-   */
-  inline static std::string to_hex(const std::vector<uint8_t>& data, bool uppercase = false) {
-    return to_hex(data.data(), data.size(), uppercase);
+  inline static std::string to_hex(std::string_view str, bool uppercase = false) {
+    return to_hex(gsl::make_span(str).as_span<const std::byte>(), uppercase);
   }
 
   /**
@@ -423,7 +410,7 @@ class StringUtils {
    * @param base64_length the length of base64
    * @return true on success
    */
-  static bool from_base64(uint8_t* data, size_t* data_length, const char* base64, size_t base64_length);
+  static bool from_base64(std::byte* data, size_t* data_length, std::string_view base64);
 
   /**
    * Base64 decodes a string
@@ -431,38 +418,29 @@ class StringUtils {
    * @param base64_length the length of base64
    * @return the vector containing the decoded bytes
    */
-  static std::vector<uint8_t> from_base64(const char* base64, size_t base64_length);
-
-  /**
-   * Base64 decodes a string
-   * @param base64 the Base64 encoded string
-   * @return the decoded string
-   */
-  inline static std::string from_base64(const std::string& base64) {
-    auto data = from_base64(base64.data(), base64.length());
-    return std::string(reinterpret_cast<char*>(data.data()), data.size());
+  static std::vector<std::byte> from_base64(std::string_view base64);
+  static std::string from_base64(std::string_view base64, as_string_tag_t) {
+    return utils::span_to<std::string>(gsl::make_span(from_base64(base64)).as_span<const char>());
   }
 
   /**
    * Base64 encodes bytes and writes the result to base64
    * @param base64 the output buffer where the Base64 encoded bytes will be written. Must be at least (base64_length / 3 + 1) * 4 bytes long.
-   * @param data the bytes to be Base64 encoded
-   * @param length the length of data. Must not be larger than std::numeric_limits<size_t>::max() * 3 / 4 - 3
+   * @param raw_data the bytes to be Base64 encoded. Must not be larger than std::numeric_limits<size_t>::max() * 3 / 4 - 3
    * @param url if true, the URL-safe Base64 encoding will be used
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the size of Base64 encoded bytes
    */
-  static size_t to_base64(char* base64, const uint8_t* data, size_t length, bool url, bool padded);
+  static size_t to_base64(char* base64, gsl::span<const std::byte> data_to_be_transformed, bool url, bool padded);
 
   /**
    * Creates a Base64 encoded string from data
    * @param data the bytes to be Base64 encoded
-   * @param length the length of the data
    * @param url if true, the URL-safe Base64 encoding will be used
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the Base64 encoded string
    */
-  static std::string to_base64(const uint8_t* data, size_t length, bool url = false, bool padded = true);
+  static std::string to_base64(gsl::span<const std::byte> data_to_be_transformed, bool url = false, bool padded = true);
 
   /**
    * Base64 encodes a string
@@ -471,19 +449,8 @@ class StringUtils {
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the Base64 encoded string
    */
-  inline static std::string to_base64(const std::string& str, bool url = false, bool padded = true) {
-    return to_base64(reinterpret_cast<const uint8_t*>(str.data()), str.length(), url, padded);
-  }
-
-  /**
-   * Base64 encodes a string
-   * @param str the string to be Base64 encoded
-   * @param url if true, the URL-safe Base64 encoding will be used
-   * @param padded if true, padding is added to the Base64 encoded string
-   * @return the Base64 encoded string
-   */
-  inline static std::string to_base64(const std::vector<uint8_t>& str, bool url = false, bool padded = true) {
-    return to_base64(str.data(), str.size(), url, padded);
+  inline static std::string to_base64(std::string_view str, bool url = false, bool padded = true) {
+    return to_base64(gsl::make_span(str).as_span<const std::byte>(), url, padded);
   }
 
   static std::string replaceMap(std::string source_string, const std::map<std::string, std::string> &replace_map);
@@ -527,60 +494,6 @@ class StringUtils {
   static std::smatch getLastRegexMatch(const std::string& str, const std::regex& pattern);
 
  private:
-  inline static char nibble_to_hex(uint8_t nibble, bool uppercase) {
-    if (nibble < 10) {
-      return '0' + nibble;
-    } else {
-      return (uppercase ? 'A' : 'a') + nibble - 10;
-    }
-  }
-
-  inline static void base64_digits_to_bytes(const uint8_t digits[4], uint8_t* bytes) {
-    bytes[0] = digits[0] << 2 | digits[1] >> 4;
-    bytes[1] = (digits[1] & 0x0f) << 4 | digits[2] >> 2;
-    bytes[2] = (digits[2] & 0x03) << 6 | digits[3];
-  }
-
-  static constexpr uint8_t SKIP = 0xff;
-  static constexpr uint8_t ILGL = 0xfe;
-  static constexpr uint8_t PDNG = 0xfd;
-  static constexpr uint8_t hex_lut[128] =
-      {SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-       0x08, 0x09, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP,
-       SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP, SKIP};
-
-  static constexpr const char base64_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-  static constexpr const char base64_url_enc_lut[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-  static constexpr uint8_t base64_dec_lut[128] =
-      {ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
-       ILGL, ILGL, SKIP, ILGL, ILGL, SKIP, ILGL, ILGL,
-       ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
-       ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
-       ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL, ILGL,
-       ILGL, ILGL, ILGL, 0x3e, ILGL, 0x3e, ILGL, 0x3f,
-       0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b,
-       0x3c, 0x3d, ILGL, ILGL, ILGL, PDNG, ILGL, ILGL,
-       ILGL, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06,
-       0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
-       0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16,
-       0x17, 0x18, 0x19, ILGL, ILGL, ILGL, ILGL, 0x3f,
-       ILGL, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20,
-       0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28,
-       0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f, 0x30,
-       0x31, 0x32, 0x33, ILGL, ILGL, ILGL, ILGL, ILGL};
 };
 
 }  // namespace utils

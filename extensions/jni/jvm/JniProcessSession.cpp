@@ -103,7 +103,7 @@ JNIEXPORT jint JNICALL Java_org_apache_nifi_processor_JniInputStream_read(JNIEnv
     // this technically can't happen per JNI specs
     return -1;
   }
-  char value = 0;
+  uint8_t value = 0;
   if (jin->read(value) > 0)
     return value;
   else

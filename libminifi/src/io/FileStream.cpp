@@ -24,14 +24,9 @@
 #include "io/validation.h"
 #include "io/FileStream.h"
 #include "io/InputStream.h"
-#include "io/OutputStream.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 constexpr const char *FILE_OPENING_ERROR_MSG = "Error opening file: ";
 constexpr const char *READ_ERROR_MSG = "Error reading from file: ";
@@ -39,7 +34,6 @@ constexpr const char *WRITE_ERROR_MSG = "Error writing to file: ";
 constexpr const char *SEEK_ERROR_MSG = "Error seeking in file: ";
 constexpr const char *INVALID_FILE_STREAM_ERROR_MSG = "invalid file stream";
 constexpr const char *TELLG_CALL_ERROR_MSG = "tellg call on file stream failed";
-constexpr const char *INVALID_BUFFER_ERROR_MSG = "invalid buffer";
 constexpr const char *FLUSH_CALL_ERROR_MSG = "flush call on file stream failed";
 constexpr const char *WRITE_CALL_ERROR_MSG = "write call on file stream failed";
 constexpr const char *EMPTY_MESSAGE_ERROR_MSG = "empty message";
@@ -141,39 +135,32 @@ size_t FileStream::write(const uint8_t *value, size_t size) {
   return size;
 }
 
-size_t FileStream::read(uint8_t *buf, size_t buflen) {
-  if (buflen == 0) {
-    return 0;
+size_t FileStream::read(gsl::span<std::byte> buf) {
+  if (buf.empty()) { return 0; }
+  std::lock_guard<std::mutex> lock(file_lock_);
+  if (file_stream_ == nullptr || !file_stream_->is_open()) {
+    core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
+    return STREAM_ERROR;
   }
-  if (!IsNullOrEmpty(buf)) {
-    std::lock_guard<std::mutex> lock(file_lock_);
-    if (file_stream_ == nullptr || !file_stream_->is_open()) {
-      core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_FILE_STREAM_ERROR_MSG;
+  file_stream_->read(reinterpret_cast<char*>(buf.data()), gsl::narrow<std::streamsize>(buf.size()));
+  if (file_stream_->eof() || file_stream_->fail()) {
+    file_stream_->clear();
+    seekToEndOfFile(READ_ERROR_MSG);
+    auto tellg_result = file_stream_->tellg();
+    if (tellg_result == std::streampos(-1)) {
+      core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
       return STREAM_ERROR;
     }
-    file_stream_->read(reinterpret_cast<char*>(buf), gsl::narrow<std::streamsize>(buflen));
-    if (file_stream_->eof() || file_stream_->fail()) {
-      file_stream_->clear();
-      seekToEndOfFile(READ_ERROR_MSG);
-      auto tellg_result = file_stream_->tellg();
-      if (tellg_result == std::streampos(-1)) {
-        core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << TELLG_CALL_ERROR_MSG;
-        return STREAM_ERROR;
-      }
-      const auto len = gsl::narrow<size_t>(tellg_result);
-      size_t ret = len - offset_;
-      offset_ = len;
-      length_ = len;
-      core::logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
-      return ret;
-    } else {
-      offset_ += buflen;
-      file_stream_->seekp(gsl::narrow<std::streamoff>(offset_));
-      return buflen;
-    }
+    const auto len = gsl::narrow<size_t>(tellg_result);
+    size_t ret = len - offset_;
+    offset_ = len;
+    length_ = len;
+    core::logging::LOG_DEBUG(logger_) << path_ << " eof bit, ended at " << offset_;
+    return ret;
   } else {
-    core::logging::LOG_ERROR(logger_) << READ_ERROR_MSG << INVALID_BUFFER_ERROR_MSG;
-    return STREAM_ERROR;
+    offset_ += buf.size();
+    file_stream_->seekp(gsl::narrow<std::streamoff>(offset_));
+    return buf.size();
   }
 }
 
@@ -183,9 +170,6 @@ void FileStream::seekToEndOfFile(const char *caller_error_msg) {
   if (!file_stream_->seekp(0, file_stream_->end))
     core::logging::LOG_ERROR(logger_) << caller_error_msg << SEEKP_CALL_ERROR_MSG;
 }
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+
+}  // namespace org::apache::nifi::minifi::io
 

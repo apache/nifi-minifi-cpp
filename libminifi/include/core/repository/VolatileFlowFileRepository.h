@@ -51,7 +51,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
     content_repo_ = nullptr;
   }
 
-  virtual void run() {
+  void run() override {
     repo_full_ = false;
     while (running_) {
       std::this_thread::sleep_for(purge_period_);
@@ -60,13 +60,12 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
     flush();
   }
 
-  virtual void flush() {
+  void flush() override {
     if (purge_required_ && nullptr != content_repo_) {
       std::lock_guard<std::mutex> lock(purge_mutex_);
       for (auto purgeItem : purge_list_) {
         utils::Identifier containerId;
-        auto eventRead = FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t *>(purgeItem.data()), gsl::narrow<int>(purgeItem.size()),
-                                                     content_repo_, containerId);
+        auto eventRead = FlowFileRecord::DeSerialize(gsl::make_span(purgeItem).as_span<const std::byte>(), content_repo_, containerId);
         if (eventRead) {
           auto claim = eventRead->getResourceClaim();
           if (claim) claim->decreaseFlowFileRecordOwnedCount();
@@ -77,12 +76,12 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
     }
   }
 
-  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
+  void loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) override {
     content_repo_ = content_repo;
   }
 
  protected:
-  virtual void emplace(RepoValue<std::string> &old_value) {
+  void emplace(RepoValue<std::string> &old_value) override {
     std::string buffer;
     old_value.emplace(buffer);
     std::lock_guard<std::mutex> lock(purge_mutex_);
