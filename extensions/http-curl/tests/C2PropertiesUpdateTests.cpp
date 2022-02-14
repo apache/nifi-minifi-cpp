@@ -21,7 +21,7 @@
 #include "HTTPHandlers.h"
 #include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
-#include "EmpyFlow.h"
+#include "EmptyFlow.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/sinks/ostream_sink.h"

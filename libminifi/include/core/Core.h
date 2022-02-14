@@ -65,6 +65,7 @@
 
 #include "utils/Id.h"
 #include "properties/Configure.h"
+#include "utils/StringUtils.h"
 
 /**
  * namespace aliasing
@@ -85,9 +86,9 @@ static inline std::string getClassName() {
   const std::string_view class_prefix = "class ";
   const std::string_view struct_prefix = "struct ";
 
-  if (name.find(class_prefix) == 0) {
+  if (utils::StringUtils::startsWith(name, class_prefix)) {
     name.remove_prefix(class_prefix.length());
-  } else if (name.find(struct_prefix) == 0) {
+  } else if (utils::StringUtils::startsWith(name, struct_prefix)) {
     name.remove_prefix(struct_prefix.length());
   }
   return std::string{name};
