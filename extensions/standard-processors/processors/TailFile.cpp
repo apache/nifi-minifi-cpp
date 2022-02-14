@@ -33,7 +33,10 @@
 #include <regex>
 
 #include "range/v3/action/sort.hpp"
+#include "range/v3/range/conversion.hpp"
+#include "range/v3/view/transform.hpp"
 
+#include "FlowFileRecord.h"
 #include "io/CRCStream.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
@@ -53,20 +56,20 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property TailFile::FileName(
+const core::Property TailFile::FileName(
     core::PropertyBuilder::createProperty("File to Tail")
         ->withDescription("Fully-qualified filename of the file that should be tailed when using single file mode, or a file regex when using multifile mode")
         ->isRequired(true)
         ->build());
 
-core::Property TailFile::StateFile(
+const core::Property TailFile::StateFile(
     core::PropertyBuilder::createProperty("State File")
         ->withDescription("DEPRECATED. Only use it for state migration from the legacy state file.")
         ->isRequired(false)
         ->withDefaultValue<std::string>("TailFileState")
         ->build());
 
-core::Property TailFile::Delimiter(
+const core::Property TailFile::Delimiter(
     core::PropertyBuilder::createProperty("Input Delimiter")
         ->withDescription("Specifies the character that should be used for delimiting the data being tailed"
          "from the incoming file. If none is specified, data will be ingested as it becomes available.")
@@ -74,7 +77,7 @@ core::Property TailFile::Delimiter(
         ->withDefaultValue<std::string>("\\n")
         ->build());
 
-core::Property TailFile::TailMode(
+const core::Property TailFile::TailMode(
     core::PropertyBuilder::createProperty("tail-mode", "Tailing Mode")
         ->withDescription("Specifies the tail file mode. In 'Single file' mode only a single file will be watched. "
         "In 'Multiple file' mode a regex may be used. Note that in multiple file mode we will still continue to watch for rollover on the initial set of watched files. "
@@ -82,13 +85,15 @@ core::Property TailFile::TailMode(
         ->withAllowableValue<std::string>("Single file")->withAllowableValue("Multiple file")->withDefaultValue("Single file")
         ->build());
 
-core::Property TailFile::BaseDirectory(
+const core::Property TailFile::BaseDirectory(
     core::PropertyBuilder::createProperty("tail-base-directory", "Base Directory")
-        ->withDescription("Base directory used to look for files to tail. This property is required when using Multiple file mode.")
+        ->withDescription("Base directory used to look for files to tail. This property is required when using Multiple file mode. "
+                          "Can contain expression language placeholders if Attribute Provider Service is set.")
         ->isRequired(false)
+        ->supportsExpressionLanguage(true)
         ->build());
 
-core::Property TailFile::RecursiveLookup(
+const core::Property TailFile::RecursiveLookup(
     core::PropertyBuilder::createProperty("Recursive lookup")
         ->withDescription("When using Multiple file mode, this property determines whether files are tailed in "
         "child directories of the Base Directory or not.")
@@ -96,7 +101,7 @@ core::Property TailFile::RecursiveLookup(
         ->withDefaultValue<bool>(false)
         ->build());
 
-core::Property TailFile::LookupFrequency(
+const core::Property TailFile::LookupFrequency(
     core::PropertyBuilder::createProperty("Lookup frequency")
         ->withDescription("When using Multiple file mode, this property specifies the minimum duration "
         "the processor will wait between looking for new files to tail in the Base Directory.")
@@ -104,7 +109,7 @@ core::Property TailFile::LookupFrequency(
         ->withDefaultValue<core::TimePeriodValue>("10 min")
         ->build());
 
-core::Property TailFile::RollingFilenamePattern(
+const core::Property TailFile::RollingFilenamePattern(
     core::PropertyBuilder::createProperty("Rolling Filename Pattern")
         ->withDescription("If the file to tail \"rolls over\" as would be the case with log files, this filename pattern will be used to "
         "identify files that have rolled over so MiNiFi can read the remaining of the rolled-over file and then continue with the new log file. "
@@ -114,7 +119,7 @@ core::Property TailFile::RollingFilenamePattern(
         ->withDefaultValue<std::string>("${filename}.*")
         ->build());
 
-core::Property TailFile::InitialStartPosition(
+const core::Property TailFile::InitialStartPosition(
     core::PropertyBuilder::createProperty("Initial Start Position")
         ->withDescription("When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
                           "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.\n"
@@ -127,7 +132,14 @@ core::Property TailFile::InitialStartPosition(
         ->withAllowableValues(InitialStartPositions::values())
         ->build());
 
-core::Relationship TailFile::Success("success", "All files are routed to success");
+const core::Property TailFile::AttributeProviderService(
+    core::PropertyBuilder::createProperty("Attribute Provider Service")
+        ->withDescription("Provides a list of key-value pair records which can be used in the Base Directory property using Expression Language. "
+                          "Requires Multiple file mode.")
+        ->asType<minifi::controllers::AttributeProviderService>()
+        ->build());
+
+const core::Relationship TailFile::Success("success", "All files are routed to success");
 
 const char *TailFile::CURRENT_STR = "CURRENT.";
 const char *TailFile::POSITION_STR = "POSITION.";
@@ -315,25 +327,23 @@ class WholeFileReaderCallback : public OutputStreamCallback {
 }  // namespace
 
 void TailFile::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(FileName);
-  properties.insert(StateFile);
-  properties.insert(Delimiter);
-  properties.insert(TailMode);
-  properties.insert(BaseDirectory);
-  properties.insert(RecursiveLookup);
-  properties.insert(LookupFrequency);
-  properties.insert(RollingFilenamePattern);
-  properties.insert(InitialStartPosition);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties({
+    FileName,
+    StateFile,
+    Delimiter,
+    TailMode,
+    BaseDirectory,
+    RecursiveLookup,
+    LookupFrequency,
+    RollingFilenamePattern,
+    InitialStartPosition,
+    AttributeProviderService});
+  setSupportedRelationships({Success});
 }
 
 void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
+  gsl_Expects(context);
+
   tail_states_.clear();
 
   state_manager_ = context->getStateManager();
@@ -355,11 +365,13 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   if (mode == "Multiple file") {
     tail_mode_ = Mode::MULTIPLE;
 
+    parseAttributeProviderServiceProperty(*context);
+
     if (!context->getProperty(BaseDirectory.getName(), base_dir_)) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory is required for multiple tail mode.");
     }
 
-    if (!utils::file::is_directory(base_dir_)) {
+    if (!attribute_provider_service_ && !utils::file::is_directory(base_dir_)) {
       throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "Base directory does not exist or is not a directory");
     }
 
@@ -376,7 +388,7 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
 
     recoverState(context);
 
-    doMultifileLookup();
+    doMultifileLookup(*context);
 
   } else {
     tail_mode_ = Mode::SINGLE;
@@ -396,6 +408,24 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   context->getProperty(RollingFilenamePattern.getName(), rolling_filename_pattern_glob);
   rolling_filename_pattern_ = utils::file::globToRegex(rolling_filename_pattern_glob);
   initial_start_position_ = InitialStartPositions{utils::parsePropertyWithAllowableValuesOrThrow(*context, InitialStartPosition.getName(), InitialStartPositions::values())};
+}
+
+void TailFile::parseAttributeProviderServiceProperty(core::ProcessContext& context) {
+  const auto attribute_provider_service_name = context.getProperty(AttributeProviderService);
+  if (!attribute_provider_service_name || attribute_provider_service_name->empty()) {
+    return;
+  }
+
+  std::shared_ptr<core::controller::ControllerService> controller_service = context.getControllerService(*attribute_provider_service_name);
+  if (!controller_service) {
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' not found")};
+  }
+
+  // we drop ownership of the service here -- in the long term, getControllerService() should return a non-owning pointer or optional reference
+  attribute_provider_service_ = dynamic_cast<minifi::controllers::AttributeProviderService*>(controller_service.get());
+  if (!attribute_provider_service_) {
+    throw minifi::Exception{ExceptionType::PROCESS_SCHEDULE_EXCEPTION, utils::StringUtils::join_pack("Controller service '", *attribute_provider_service_name, "' is not an AttributeProviderService")};
+  }
 }
 
 void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const {
@@ -667,11 +697,13 @@ std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &stat
   return matched_files;
 }
 
-void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext> &, const std::shared_ptr<core::ProcessSession> &session) {
+void TailFile::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context && session);
+
   if (tail_mode_ == Mode::MULTIPLE) {
     if (last_multifile_lookup_ + lookup_frequency_ < std::chrono::steady_clock::now()) {
       logger_->log_debug("Lookup frequency %" PRId64 " ms have elapsed, doing new multifile lookup", int64_t{lookup_frequency_.count()});
-      doMultifileLookup();
+      doMultifileLookup(*context);
     } else {
       logger_->log_trace("Skipping multifile lookup");
     }
@@ -812,9 +844,9 @@ void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t c
   state.checksum_ = checksum;
 }
 
-void TailFile::doMultifileLookup() {
+void TailFile::doMultifileLookup(core::ProcessContext& context) {
   checkForRemovedFiles();
-  checkForNewFiles();
+  checkForNewFiles(context);
   last_multifile_lookup_ = std::chrono::steady_clock::now();
 }
 
@@ -836,7 +868,7 @@ void TailFile::checkForRemovedFiles() {
   }
 }
 
-void TailFile::checkForNewFiles() {
+void TailFile::checkForNewFiles(core::ProcessContext& context) {
   auto add_new_files_callback = [&](const std::string &path, const std::string &file_name) -> bool {
     std::string full_file_name = path + utils::file::get_separator() + file_name;
     std::regex file_to_tail_regex(file_to_tail_);
@@ -846,7 +878,33 @@ void TailFile::checkForNewFiles() {
     return true;
   };
 
-  utils::file::list_dir(base_dir_, add_new_files_callback, logger_, recursive_lookup_);
+  if (attribute_provider_service_) {
+    for (const auto& base_dir : getBaseDirectories(context)) {
+      utils::file::list_dir(base_dir, add_new_files_callback, logger_, recursive_lookup_);
+    }
+  } else {
+    utils::file::list_dir(base_dir_, add_new_files_callback, logger_, recursive_lookup_);
+  }
+}
+
+std::vector<std::string> TailFile::getBaseDirectories(core::ProcessContext& context) const {
+  gsl_Expects(attribute_provider_service_);
+
+  const auto attribute_maps = attribute_provider_service_->getAttributes();
+  if (!attribute_maps) {
+    logger_->log_error("Could not get attributes from the Attribute Provider Service");
+    return {};
+  }
+
+  return attribute_maps.value() |
+      ranges::views::transform([&context](const auto& attribute_map) {
+        auto flow_file = std::make_shared<FlowFileRecord>();
+        for (const auto& [key, value] : attribute_map) {
+          flow_file->setAttribute(key, value);
+        }
+        return context.getProperty(BaseDirectory, flow_file).value();
+      }) |
+      ranges::to<std::vector<std::string>>();
 }
 
 std::chrono::milliseconds TailFile::getLookupFrequency() const {

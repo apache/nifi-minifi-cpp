@@ -19,7 +19,7 @@
 script_directory="$(cd "$(dirname "$0")" && pwd)"
 
 CMAKE_GLOBAL_MIN_VERSION_MAJOR=3
-CMAKE_GLOBAL_MIN_VERSION_MINOR=16
+CMAKE_GLOBAL_MIN_VERSION_MINOR=17
 CMAKE_GLOBAL_MIN_VERSION_REVISION=0
 
 export RED='\033[0;101m'
@@ -289,6 +289,8 @@ add_dependency GPS_ENABLED "gpsd"
 add_disabled_option AWS_ENABLED ${FALSE} "ENABLE_AWS"
 
 add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA"
+
+add_disabled_option KUBERNETES_ENABLED ${FALSE} "ENABLE_KUBERNETES"
 
 add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 

@@ -392,6 +392,7 @@ show_supported_features() {
   echo "Y. Systemd Support .............$(print_feature_status SYSTEMD_ENABLED)"
   echo "Z. NanoFi Support ..............$(print_feature_status NANOFI_ENABLED)"
   echo "AA. Splunk Support .............$(print_feature_status SPLUNK_ENABLED)"
+  echo "AB. Kubernetes Support .........$(print_feature_status KUBERNETES_ENABLED)"
   echo "****************************************"
   echo "            Build Options."
   echo "****************************************"
@@ -414,7 +415,7 @@ show_supported_features() {
 
 read_feature_options(){
   local choice
-  echo -n "Enter choice [ A - Z or AA or 1-7] "
+  echo -n "Enter choice [A-Z or AA-AB or 1-7] "
   read -r choice
   choice=$(echo "${choice}" | tr '[:upper:]' '[:lower:]')
   case $choice in
@@ -447,6 +448,7 @@ read_feature_options(){
     y) ToggleFeature SYSTEMD_ENABLED ;;
     z) ToggleFeature NANOFI_ENABLED ;;
     aa) ToggleFeature SPLUNK_ENABLED ;;
+    ab) ToggleFeature KUBERNETES_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
@@ -465,7 +467,7 @@ read_feature_options(){
       fi
       ;;
     q) exit 0;;
-    *) echo -e "${RED}Please enter an option A-Z or AA or 1-7...${NO_COLOR}" && sleep 2
+    *) echo -e "${RED}Please enter an option A-Z or AA-AB or 1-7...${NO_COLOR}" && sleep 2
   esac
 }
 

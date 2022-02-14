@@ -27,6 +27,7 @@
 #include <vector>
 #include <set>
 
+#include "controllers/AttributeProviderService.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -91,18 +92,19 @@ class TailFile : public core::Processor {
   EXTENSIONAPI static constexpr char const* ProcessorName = "TailFile";
 
   // Supported Properties
-  EXTENSIONAPI static core::Property FileName;
-  EXTENSIONAPI static core::Property StateFile;
-  EXTENSIONAPI static core::Property Delimiter;
-  EXTENSIONAPI static core::Property TailMode;
-  EXTENSIONAPI static core::Property BaseDirectory;
-  EXTENSIONAPI static core::Property RecursiveLookup;
-  EXTENSIONAPI static core::Property LookupFrequency;
-  EXTENSIONAPI static core::Property RollingFilenamePattern;
-  EXTENSIONAPI static core::Property InitialStartPosition;
+  EXTENSIONAPI static const core::Property FileName;
+  EXTENSIONAPI static const core::Property StateFile;
+  EXTENSIONAPI static const core::Property Delimiter;
+  EXTENSIONAPI static const core::Property TailMode;
+  EXTENSIONAPI static const core::Property BaseDirectory;
+  EXTENSIONAPI static const core::Property RecursiveLookup;
+  EXTENSIONAPI static const core::Property LookupFrequency;
+  EXTENSIONAPI static const core::Property RollingFilenamePattern;
+  EXTENSIONAPI static const core::Property InitialStartPosition;
+  EXTENSIONAPI static const core::Property AttributeProviderService;
 
   // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
 
   /**
    * Function that's executed when the processor is scheduled.
@@ -143,6 +145,7 @@ class TailFile : public core::Processor {
     return true;
   }
 
+  void parseAttributeProviderServiceProperty(core::ProcessContext& context);
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
   void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
   void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states);
@@ -160,9 +163,10 @@ class TailFile : public core::Processor {
   bool getStateFromStateManager(std::map<std::string, TailState> &state) const;
   bool getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessContext>& context,
                                    std::map<std::string, TailState> &new_tail_states) const;
-  void doMultifileLookup();
+  void doMultifileLookup(core::ProcessContext& context);
   void checkForRemovedFiles();
-  void checkForNewFiles();
+  void checkForNewFiles(core::ProcessContext& context);
+  std::vector<std::string> getBaseDirectories(core::ProcessContext& context) const;
   void updateFlowFileAttributes(const std::string &full_file_name, const TailState &state, const std::string &fileName,
                                 const std::string &baseName, const std::string &extension,
                                 std::shared_ptr<core::FlowFile> &flow_file) const;
@@ -185,6 +189,7 @@ class TailFile : public core::Processor {
   std::string rolling_filename_pattern_;
   InitialStartPositions initial_start_position_;
   bool first_trigger_{true};
+  controllers::AttributeProviderService* attribute_provider_service_ = nullptr;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
 
