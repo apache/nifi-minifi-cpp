@@ -32,6 +32,7 @@
 #include "HTTPClient.h"
 #include "processors/GetTCP.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/StringUtils.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"

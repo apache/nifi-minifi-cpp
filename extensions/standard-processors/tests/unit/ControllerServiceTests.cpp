@@ -20,6 +20,7 @@
 #include <fstream>
 #include "FlowController.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "properties/Configure.h"
 #include "GetFile.h"
 #include "core/Core.h"

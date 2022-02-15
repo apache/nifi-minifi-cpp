@@ -21,6 +21,7 @@
 
 #include "c2/triggers/FileUpdateTrigger.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "io/ClientSocket.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"

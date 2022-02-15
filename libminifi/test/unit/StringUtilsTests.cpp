@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/Core.h"
 #include "utils/StringUtils.h"
 #include "utils/Environment.h"

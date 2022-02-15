@@ -23,6 +23,7 @@
 #include <regex>
 
 #include "TestBase.h"
+#include "Catch.h"
 
 #include "processors/GenerateFlowFile.h"
 #include "processors/UpdateAttribute.h"

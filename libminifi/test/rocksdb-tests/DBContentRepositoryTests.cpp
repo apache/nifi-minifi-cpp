@@ -25,6 +25,7 @@
 #include "properties/Configure.h"
 #include "provenance/Provenance.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../unit/ContentRepositoryDependentTests.h"
 

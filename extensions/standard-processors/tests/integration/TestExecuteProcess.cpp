@@ -42,6 +42,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "TestBase.h"
+#include "Catch.h"
 
 int main(int /*argc*/, char ** /*argv*/) {
 #ifndef WIN32

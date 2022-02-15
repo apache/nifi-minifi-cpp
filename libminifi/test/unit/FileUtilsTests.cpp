@@ -24,6 +24,7 @@
 #include <vector>
 #include <algorithm>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/Core.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"

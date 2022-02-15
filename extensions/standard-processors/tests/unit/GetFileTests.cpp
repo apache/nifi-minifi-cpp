@@ -22,6 +22,7 @@
 #include <chrono>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "utils/file/FileUtils.h"

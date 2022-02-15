@@ -26,6 +26,7 @@
 #include "protocols/RESTSender.h"
 #include "ServerAwareHandler.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/IntegrationTestUtils.h"
 #include "TestServer.h"
 

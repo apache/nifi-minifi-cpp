@@ -21,6 +21,7 @@
 #include "MockSplunkHEC.h"
 #include "SplunkAttributes.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "processors/UpdateAttribute.h"
 #include "ReadFromFlowFileTestProcessor.h"
 #include "WriteToFlowFileTestProcessor.h"

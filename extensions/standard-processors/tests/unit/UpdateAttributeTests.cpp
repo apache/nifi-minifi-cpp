@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "TestBase.h"
+#include "Catch.h"
 #include <memory>
 #include "LogAttribute.h"
 #include "UpdateAttribute.h"

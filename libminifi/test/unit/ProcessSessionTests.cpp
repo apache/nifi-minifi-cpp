@@ -21,6 +21,7 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "ContentRepositoryDependentTests.h"
 #include "Processor.h"
 

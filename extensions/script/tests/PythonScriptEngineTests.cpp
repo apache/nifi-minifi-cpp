@@ -16,6 +16,7 @@
  */
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "Utils.h"
 #include "python/PythonScriptEngine.h"
 

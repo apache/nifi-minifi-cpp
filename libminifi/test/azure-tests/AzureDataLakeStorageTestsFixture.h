@@ -25,6 +25,7 @@
 
 #include "MockDataLakeStorageClient.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/TestUtils.h"
 #include "utils/IntegrationTestUtils.h"
 #include "core/Processor.h"

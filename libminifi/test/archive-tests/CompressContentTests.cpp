@@ -27,6 +27,7 @@
 #include <iostream>
 #include "FlowController.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/Core.h"
 #include "../../include/core/FlowFile.h"
 #include "../unit/ProvenanceTestHelper.h"

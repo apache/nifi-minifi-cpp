@@ -20,6 +20,7 @@
 #include <future>
 #include <memory>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/BackTrace.h"
 #include "utils/Monitors.h"
 #include "utils/ThreadPool.h"

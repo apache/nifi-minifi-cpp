@@ -17,6 +17,7 @@
  */
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "MockDataLakeStorageClient.h"
 #include "utils/IntegrationTestUtils.h"
 #include "processors/LogAttribute.h"

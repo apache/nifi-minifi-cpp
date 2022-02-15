@@ -25,6 +25,7 @@
 #include "processors/ListenHTTP.h"
 #include "processors/LogAttribute.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "FlowController.h"

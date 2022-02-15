@@ -22,6 +22,7 @@
 #include "utils/SystemCpuUsageTracker.h"
 #include "utils/ProcessCpuUsageTracker.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 
 using namespace std::literals::chrono_literals;
 using steady_clock = std::chrono::steady_clock;

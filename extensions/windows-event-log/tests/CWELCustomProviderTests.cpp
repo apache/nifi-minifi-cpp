@@ -23,6 +23,7 @@
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
 #include "wel/UniqueEvtHandle.h"

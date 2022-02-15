@@ -23,6 +23,7 @@
 #include <fstream>
 #include "unit/ProvenanceTestHelper.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "RandomServerSocket.h"
 #include "Scheduling.h"
 #include "LogAttribute.h"

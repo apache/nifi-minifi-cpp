@@ -18,6 +18,7 @@
 
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "Exception.h"
 
 TEST_CASE("Test general exception .what()", "[testi general what]") {

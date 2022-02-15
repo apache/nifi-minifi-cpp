@@ -24,6 +24,7 @@
 #include <set>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/gsl.h"
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/StringUtils.h"

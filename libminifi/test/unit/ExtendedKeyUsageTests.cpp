@@ -20,7 +20,7 @@
 
 #include "utils/gsl.h"
 #include "utils/tls/ExtendedKeyUsage.h"
-#include "TestUtils.h"
+#include "../Catch.h"
 
 namespace utils = org::apache::nifi::minifi::utils;
 

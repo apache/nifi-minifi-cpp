@@ -23,6 +23,7 @@
 #include "ConfigFileEncryptor.h"
 
 #include "TestBase.h"
+#include "Catch.h"
 
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
 using org::apache::nifi::minifi::encrypt_config::encryptSensitivePropertiesInFile;

@@ -26,6 +26,7 @@
 #include "integration/IntegrationBase.h"
 #include "ProcessContextExpr.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/IntegrationTestUtils.h"
 
 class TestHarness : public IntegrationBase {

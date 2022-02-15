@@ -21,6 +21,7 @@
 #include "processors/LogAttribute.h"
 #include "processors/PutFile.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/TestUtils.h"
 #include "utils/file/FileUtils.h"
 
@@ -383,8 +384,8 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Raw correctly", "[onTri
             "children": [{
               "name": "Data",
               "text": "Event one"
-            }] 
-          }      
+            }]
+          }
         ]
       }
     ]

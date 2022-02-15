@@ -17,6 +17,7 @@
 #include "Connection.h"
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "ProvenanceTestHelper.h"
 
 TEST_CASE("Connection::poll() works correctly", "[poll]") {

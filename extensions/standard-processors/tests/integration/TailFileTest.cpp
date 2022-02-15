@@ -26,6 +26,7 @@
 #include "core/logging/Logger.h"
 #include "FlowController.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "processors/TailFile.h"
 #include "processors/LogAttribute.h"
 #include "state/ProcessorController.h"

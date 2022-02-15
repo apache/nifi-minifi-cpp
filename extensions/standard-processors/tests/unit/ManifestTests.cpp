@@ -20,6 +20,7 @@
 #include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/AgentInformation.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "core/ClassLoader.h"
 
 // Include some processor headers to make sure they are part of the manifest

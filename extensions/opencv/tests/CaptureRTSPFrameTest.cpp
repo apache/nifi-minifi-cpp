@@ -29,6 +29,7 @@
 #include "FlowFile.h"
 #include "core/Core.h"
 #include "../../../libminifi/test/TestBase.h"
+#include "../../../libminifi/test/Catch.h"
 #include "FlowController.h"
 #include "core/Processor.h"
 #include "core/ProcessorNode.h"

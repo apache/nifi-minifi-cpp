@@ -21,6 +21,7 @@
 #include <set>
 
 #include "TestBase.h"
+#include "Catch.h"
 
 #include <ExecuteScript.h>
 #include "processors/LogAttribute.h"

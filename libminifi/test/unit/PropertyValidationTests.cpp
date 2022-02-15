@@ -17,6 +17,7 @@
  */
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/ConfigurableComponent.h"
 #include "utils/PropertyErrors.h"
 #include "core/PropertyValidation.h"

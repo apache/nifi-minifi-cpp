@@ -31,6 +31,7 @@
 #endif /* WIN32 */
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "LogAttribute.h"
 #include "GetFile.h"
 #include "unit/ProvenanceTestHelper.h"

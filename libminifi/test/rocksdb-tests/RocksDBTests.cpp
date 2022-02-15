@@ -18,6 +18,7 @@
 #include <fstream>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "../../extensions/rocksdb-repos/database/RocksDatabase.h"
 #include "../../extensions/rocksdb-repos/database/RocksDbInstance.h"
 #include "../../extensions/rocksdb-repos/database/ColumnHandle.h"

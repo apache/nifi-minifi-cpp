@@ -19,6 +19,7 @@
 #include "FlowFileQueue.h"
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/IntegrationTestUtils.h"
 
 namespace core = minifi::core;

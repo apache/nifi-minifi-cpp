@@ -18,6 +18,7 @@
 #define EXTENSION_LIST ""
 #include <string_view>
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/expected.h"
 #include "utils/gsl.h"
 

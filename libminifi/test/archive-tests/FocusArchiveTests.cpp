@@ -33,6 +33,7 @@
 #include "processors/PutFile.h"
 #include "UnfocusArchiveEntry.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "repository/VolatileContentRepository.h"
 #include "../unit/ProvenanceTestHelper.h"
 

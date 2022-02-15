@@ -22,6 +22,7 @@
 #include <string>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/MapUtils.h"
 
 namespace MapUtils = org::apache::nifi::minifi::utils::MapUtils;

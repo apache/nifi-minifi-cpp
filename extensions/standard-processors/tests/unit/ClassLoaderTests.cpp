@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 #include "TestBase.h"
+#include "Catch.h"
 #include "core/ClassLoader.h"
 
 TEST_CASE("TestLoader", "[TestLoader]") {

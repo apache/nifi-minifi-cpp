@@ -17,6 +17,7 @@
  */
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "WriteToFlowFileTestProcessor.h"
 #include "ReadFromFlowFileTestProcessor.h"
 #include "UpdateAttribute.h"

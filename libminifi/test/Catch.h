@@ -18,4 +18,26 @@
 #pragma once
 
 #define CATCH_CONFIG_FAST_COMPILE
+#include <optional>
+#include <string>
 #include "catch.hpp"
+
+
+namespace Catch {
+template<typename T>
+struct StringMaker<std::optional<T>> {
+  static std::string convert(const std::optional<T>& val) {
+    if (val) {
+      return "std::optional(" + StringMaker<T>::convert(val.value()) + ")";
+    }
+    return "std::nullopt";
+  }
+};
+
+template<>
+struct StringMaker<std::nullopt_t> {
+  static std::string convert(const std::nullopt_t& /*val*/) {
+    return "std::nullopt";
+  }
+};
+}  // namespace Catch

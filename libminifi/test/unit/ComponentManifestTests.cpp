@@ -18,6 +18,7 @@
 
 #undef LOAD_EXTENSIONS
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "core/ConfigurableComponent.h"
 #include "core/controller/ControllerService.h"
 #include "core/Resource.h"

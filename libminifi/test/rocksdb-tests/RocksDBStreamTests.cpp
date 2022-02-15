@@ -17,6 +17,7 @@
  */
 
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "../../extensions/rocksdb-repos/RocksDbStream.h"
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "../../extensions/rocksdb-repos/database/StringAppender.h"

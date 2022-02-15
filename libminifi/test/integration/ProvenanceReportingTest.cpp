@@ -38,6 +38,7 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 #include "utils/IntegrationTestUtils.h"
 
 int main(int argc, char **argv) {

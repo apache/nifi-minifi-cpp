@@ -21,6 +21,7 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include "TestBase.h"
+#include "Catch.h"
 #include "utils/TestUtils.h"
 #include "AttributesToJSON.h"
 #include "GetFile.h"

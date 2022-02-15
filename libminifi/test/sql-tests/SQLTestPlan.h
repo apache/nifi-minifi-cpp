@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 
 #ifdef USE_REAL_ODBC_TEST_DRIVER
 static const std::string ODBC_SERVICE = "ODBCService";

@@ -29,6 +29,7 @@
 #include "provenance/Provenance.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
+#include "../Catch.h"
 
 namespace provenance = minifi::provenance;
 using namespace std::literals::chrono_literals;

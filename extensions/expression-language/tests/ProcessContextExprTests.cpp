@@ -24,6 +24,7 @@
 #include "Processor.h"
 #include "Property.h"
 #include "TestBase.h"
+#include "Catch.h"
 
 namespace org::apache::nifi::minifi {
 
