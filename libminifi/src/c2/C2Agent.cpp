@@ -529,10 +529,10 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
     update_sink_->drainRepositories();
   } else if (resp.name == "corecomponentstate") {
     for (const auto& corecomponent : resp.operation_arguments) {
-      std::vector<std::shared_ptr<state::StateController>> components = update_sink_->getComponents(corecomponent.second.to_string());
+      std::vector<state::StateController*> components = update_sink_->getComponents(corecomponent.second.to_string());
       auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
       if (state_manager_provider != nullptr) {
-        for (auto &component : components) {
+        for (auto* component : components) {
           logger_->log_debug("Clearing state for component %s", component->getComponentName());
           auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
           if (state_manager != nullptr) {

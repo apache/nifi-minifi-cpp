@@ -613,7 +613,8 @@ if (ENABLE_KUBERNETES)
 endif()
 
 ## Add the test-processors extension
-if (ENABLE_ALL OR NOT SKIP_TESTS OR ENABLE_TEST_PROCESSORS)
+# ENABLE_TEST_PROCESSORS option is to only build test processors but not unit tests in docker integration tests.
+if (NOT SKIP_TESTS OR ENABLE_TEST_PROCESSORS)
 	createExtension(TEST-PROCESSORS-EXTENSION "TEST-PROCESSORS EXTENSION" "This enables processors purely for testing purposes" "extensions/test-processors")
 endif()
 
