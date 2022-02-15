@@ -138,7 +138,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   std::string clazz, heartbeat_period, device;
 
   if (!reconfigure) {
-    if (!configure->get(minifi::Configuration::nifi_c2_agent_protocol_class, "c2.agent.protocol.class", clazz)) {
+    if (!configure->get(Configuration::nifi_c2_agent_protocol_class, "c2.agent.protocol.class", clazz)) {
       clazz = "RESTSender";
     }
     logger_->log_info("Class is %s", clazz);
@@ -150,7 +150,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
       if (!protocol) {
         const char* errmsg = "Attempted to load RESTSender. To enable C2, please specify an active protocol for this agent.";
         logger_->log_error(errmsg);
-        throw minifi::Exception{ minifi::GENERAL_EXCEPTION, errmsg };
+        throw Exception{ GENERAL_EXCEPTION, errmsg };
       }
 
       logger_->log_info("Class is RESTSender");
@@ -164,7 +164,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
     protocol_.load()->update(configure);
   }
 
-  if (configure->get(minifi::Configuration::nifi_c2_agent_heartbeat_period, "c2.agent.heartbeat.period", heartbeat_period)) {
+  if (configure->get(Configuration::nifi_c2_agent_heartbeat_period, "c2.agent.heartbeat.period", heartbeat_period)) {
     try {
       if (auto heartbeat_period_ms = utils::timeutils::StringToDuration<std::chrono::milliseconds>(heartbeat_period)) {
         heart_beat_period_ = *heartbeat_period_ms;
@@ -181,7 +181,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string heartbeat_reporters;
-  if (configure->get(minifi::Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
+  if (configure->get(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "c2.agent.heartbeat.reporter.classes", heartbeat_reporters)) {
     std::vector<std::string> reporters = utils::StringUtils::splitAndTrim(heartbeat_reporters, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& reporter : reporters) {
@@ -196,7 +196,7 @@ void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconf
   }
 
   std::string trigger_classes;
-  if (configure->get(minifi::Configuration::nifi_c2_agent_trigger_classes, "c2.agent.trigger.classes", trigger_classes)) {
+  if (configure->get(Configuration::nifi_c2_agent_trigger_classes, "c2.agent.trigger.classes", trigger_classes)) {
     std::vector<std::string> triggers = utils::StringUtils::splitAndTrim(trigger_classes, ",");
     std::lock_guard<std::mutex> lock(heartbeat_mutex);
     for (const auto& trigger : triggers) {
@@ -826,7 +826,7 @@ std::optional<std::string> C2Agent::resolveFlowUrl(const std::string& url) const
     return url;
   }
   std::string base;
-  if (configuration_->get(minifi::Configure::nifi_c2_flow_base_url, base)) {
+  if (configuration_->get(Configure::nifi_c2_flow_base_url, base)) {
     base = utils::StringUtils::trim(base);
     if (!utils::StringUtils::endsWith(base, "/")) {
       base += "/";

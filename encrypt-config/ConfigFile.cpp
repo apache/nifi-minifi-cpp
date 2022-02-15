@@ -25,10 +25,6 @@
 #include "utils/StringUtils.h"
 #include "properties/Configuration.h"
 
-namespace {
-
-}  // namespace
-
 namespace org {
 namespace apache {
 namespace nifi {
