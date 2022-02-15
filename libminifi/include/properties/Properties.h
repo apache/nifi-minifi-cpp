@@ -45,7 +45,7 @@ class Properties {
   struct PropertyValue {
     std::string persisted_value;
     std::string active_value;
-    bool changed{false};  // persisted_value should be written to disk if requested
+    bool need_to_persist_new_value{false};
   };
 
  public:
@@ -75,7 +75,7 @@ class Properties {
       it->second.active_value = active_value;
       if (should_persist) {
         it->second.persisted_value = value;
-        it->second.changed = true;
+        it->second.need_to_persist_new_value = true;
       }
     } else {
       // brand new property

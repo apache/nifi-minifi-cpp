@@ -324,6 +324,8 @@ void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex
 }
 
 std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRotatingFileSink(const std::string& appender_key, const std::shared_ptr<LoggerProperties>& properties) {
+  // there is no apparent synchronization to safe-guard using multiple rotating file sinks
+  // (possibly with conflicting properties) operating on the same directory
   static std::map<std::filesystem::path, std::shared_ptr<spdlog::sinks::rotating_file_sink_mt>> rotating_file_sinks;
   static std::mutex sink_map_mtx;
 

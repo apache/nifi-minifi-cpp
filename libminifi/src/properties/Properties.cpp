@@ -120,7 +120,7 @@ bool Properties::commitChanges() {
 
   PropertiesFile current_content{file};
   for (const auto& prop : properties_) {
-    if (!prop.second.changed) {
+    if (!prop.second.need_to_persist_new_value) {
       continue;
     }
     if (current_content.hasValue(prop.first)) {
