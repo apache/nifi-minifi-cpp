@@ -36,55 +36,37 @@ std::string SupportedOperations::getName() const {
 }
 
 void SupportedOperations::addProperty(SerializedResponseNode& properties, const std::string& operand, const Metadata& metadata) {
-  SerializedResponseNode child;
-  child.name = "properties";
-
   SerializedResponseNode operand_node;
-  operand_node.name = "operand";
-  operand_node.value = operand;
+  operand_node.name = operand;
+  operand_node.keep_empty = true;
+  operand_node.collapsible = false;
 
-  SerializedResponseNode metadata_node;
-  metadata_node.name = "metaData";
-  metadata_node.array = true;
+  for (const auto& [key, value_array] : metadata) {
+    SerializedResponseNode metadata_item;
+    metadata_item.collapsible = false;
+    metadata_item.name = key;
+    metadata_item.array = true;
 
-  for (const auto& metadata_item : metadata) {
-    SerializedResponseNode metadata_child;
-    metadata_child.name = "metaData";
-
-    for (const auto& [key, value_array] : metadata_item) {
-      SerializedResponseNode key_node;
-      key_node.name = "key";
-      key_node.value = key;
-
-      SerializedResponseNode value_node;
-      value_node.name = "value";
-      value_node.array = true;
-      for (const auto& value_object : value_array) {
-        SerializedResponseNode value_child;
-        value_child.name = "value";
-        for (const auto& pair: value_object) {
-          SerializedResponseNode object_element;
-          object_element.name = pair.first;
-          object_element.value = pair.second;
-          value_child.children.push_back(object_element);
-        }
-        value_node.children.push_back(value_child);
+    for (const auto& value_object : value_array) {
+      SerializedResponseNode value_child;
+      value_child.collapsible = false;
+      for (const auto& pair: value_object) {
+        SerializedResponseNode object_element;
+        object_element.collapsible = false;
+        object_element.name = pair.first;
+        object_element.value = pair.second;
+        value_child.children.push_back(object_element);
       }
-
-      metadata_child.children.push_back(key_node);
-      metadata_child.children.push_back(value_node);
+      metadata_item.children.push_back(value_child);
     }
 
-    metadata_node.children.push_back(metadata_child);
+    operand_node.children.push_back(metadata_item);
   }
 
-  child.children.push_back(operand_node);
-  child.children.push_back(metadata_node);
-  properties.children.push_back(child);
+  properties.children.push_back(operand_node);
 }
 
 SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata() const {
-  Metadata result;
   std::vector<std::unordered_map<std::string, std::string>> supported_config_updates;
   for (const auto& config_property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
     if (!update_policy_controller_ ||
@@ -95,10 +77,9 @@ SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata
       supported_config_updates.push_back(property);
     }
   }
-  MetadataItem available_properties;
+  Metadata available_properties;
   available_properties.emplace("availableProperties", supported_config_updates);
-  result.push_back(available_properties);
-  return result;
+  return available_properties;
 }
 
 void SupportedOperations::fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const {
@@ -152,7 +133,7 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
 
     SerializedResponseNode properties;
     properties.name = "properties";
-    properties.array = true;
+    properties.collapsible = false;
 
     fillProperties(properties, minifi::c2::Operation::parse(operation.c_str()));
 

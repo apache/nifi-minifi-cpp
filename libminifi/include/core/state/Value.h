@@ -555,6 +555,7 @@ struct SerializedResponseNode {
   ValueNode value;
   bool array;
   bool collapsible;
+  bool keep_empty = false;
   std::vector<SerializedResponseNode> children;
 
   SerializedResponseNode(bool collapsible = true) // NOLINT

@@ -44,8 +44,7 @@ class SupportedOperations : public DeviceInformation {
   }
 
  private:
-  using MetadataItem = std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>;
-  using Metadata = std::vector<MetadataItem>;
+  using Metadata = std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>;
 
   template<typename T>
   static void serializeProperty(SerializedResponseNode& properties, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
