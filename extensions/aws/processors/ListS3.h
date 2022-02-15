@@ -33,7 +33,6 @@ namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
-
 namespace aws {
 namespace processors {
 
