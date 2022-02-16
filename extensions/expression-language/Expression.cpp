@@ -636,7 +636,7 @@ Value expr_toDate(const std::vector<Value> &args) {
   auto utc = date::locate_zone("UTC");
   auto utct = date::make_zoned(utc, t);
   auto zt = date::make_zoned(zone, utct.get_local_time());
-  return Value(std::chrono::duration_cast<std::chrono::milliseconds>(zt.get_sys_time().time_since_epoch()).count());
+  return Value(int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(zt.get_sys_time().time_since_epoch()).count()});
 }
 
 #else
@@ -686,7 +686,7 @@ Value expr_toDate(const std::vector<Value>&) {
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 Value expr_now(const std::vector<Value>& /*args*/) {
-  return Value(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
+  return Value(int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()});
 }
 
 Value expr_unescapeCsv(const std::vector<Value> &args) {

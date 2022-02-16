@@ -43,22 +43,19 @@ struct is_optional<std::optional<T>, void> : std::true_type {};
 namespace detail {
 // map implementation
 template<typename SourceType, typename F>
-auto operator|(const std::optional<SourceType>& o, map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *o)))
-    -> std::optional<typename std::decay<decltype(std::invoke(std::forward<F>(f.function), *o))>::type> {
-  if (o.has_value()) {
-    return std::make_optional(std::invoke(std::forward<F>(f.function), *o));
+auto operator|(std::optional<SourceType> o, map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *std::move(o)))) {
+  using cb_result = std::decay_t<std::invoke_result_t<F, SourceType>>;
+  if constexpr(std::is_same_v<cb_result, void>) {
+    if (o.has_value()) {
+      std::invoke(std::forward<F>(f.function), *std::move(o));
+    }
   } else {
-    return std::nullopt;
-  }
-}
-
-template<typename SourceType, typename F>
-auto operator|(std::optional<SourceType>&& o, map_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), std::move(*o))))
-    -> std::optional<typename std::decay<decltype(std::invoke(std::forward<F>(f.function), std::move(*o)))>::type> {
-  if (o.has_value()) {
-    return std::make_optional(std::invoke(std::forward<F>(f.function), std::move(*o)));
-  } else {
-    return std::nullopt;
+    using return_type = std::optional<cb_result>;
+    if (o.has_value()) {
+      return return_type{std::make_optional(std::invoke(std::forward<F>(f.function), *std::move(o)))};
+    } else {
+      return return_type{std::nullopt};
+    }
   }
 }
 

@@ -89,7 +89,7 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
 time_t to_time_t(const std::filesystem::file_time_type file_time) {
 #if defined(WIN32)
   return std::chrono::system_clock::to_time_t(std::chrono::utc_clock::to_sys(std::chrono::file_clock::to_utc(file_time)));
-#elif defined(__APPLE__)
+#elif defined(_LIBCPP_VERSION)
   return std::chrono::file_clock::to_time_t(file_time);
 #else
   return std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(file_time));

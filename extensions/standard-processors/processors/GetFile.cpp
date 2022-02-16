@@ -40,11 +40,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 core::Property GetFile::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of files to pull in each iteration")->withDefaultValue<uint32_t>(10)->build());
@@ -133,7 +129,9 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     core::Property::StringToInt(value, request_.minSize);
   }
 
-  context->getProperty(PollInterval.getName(), request_.pollInterval);
+  if (const auto poll_interval = context->getProperty<core::TimePeriodValue>(PollInterval)) {
+    request_.pollInterval = poll_interval->getMilliseconds();
+  }
 
   if (context->getProperty(Recurse.getName(), value)) {
     request_.recursive = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
@@ -291,8 +289,4 @@ int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::Res
 
 REGISTER_RESOURCE(GetFile, "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.");
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

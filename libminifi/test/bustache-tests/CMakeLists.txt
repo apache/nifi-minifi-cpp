@@ -19,7 +19,6 @@
 
 file(GLOB BUSTACHE_INTEGRATION_TESTS "*.cpp")
 SET(BUSTACHE-EXTENSIONS_TEST_COUNT 0)
-find_package(Boost COMPONENTS iostreams REQUIRED)
 FOREACH(testfile ${BUSTACHE_INTEGRATION_TESTS})
   get_filename_component(testfilename "${testfile}" NAME_WE)
   add_executable("${testfilename}" "${testfile}")
@@ -32,7 +31,6 @@ FOREACH(testfile ${BUSTACHE_INTEGRATION_TESTS})
 
   createTests("${testfilename}")
   target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
-  target_link_libraries(${testfilename} ${Boost_IOSTREAMS_LIBRARY})
   MATH(EXPR BUSTACHE-EXTENSIONS_TEST_COUNT "${BUSTACHE-EXTENSIONS_TEST_COUNT}+1")
   add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
 ENDFOREACH()
