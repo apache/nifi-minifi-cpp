@@ -16,9 +16,6 @@
 # under the License.
 
 function(use_bundled_bustache SOURCE_DIR BINARY_DIR)
-    # Find Boost
-    find_package(Boost COMPONENTS system filesystem iostreams REQUIRED)
-
     # Define byproducts
     if (WIN32)
         set(BYPRODUCT "lib/bustache.lib")
@@ -57,6 +54,5 @@ function(use_bundled_bustache SOURCE_DIR BINARY_DIR)
     set_target_properties(BUSTACHE::libbustache PROPERTIES IMPORTED_LOCATION "${BUSTACHE_LIBRARY}")
     add_dependencies(BUSTACHE::libbustache bustache-external)
     file(MAKE_DIRECTORY ${BUSTACHE_INCLUDE_DIR})
-    set_property(TARGET BUSTACHE::libbustache APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BUSTACHE_INCLUDE_DIR} ${Boost_INCLUDE_DIRS})
-    set_property(TARGET BUSTACHE::libbustache APPEND PROPERTY INTERFACE_LINK_LIBRARIES ${Boost_LIBRARIES})
+    set_property(TARGET BUSTACHE::libbustache APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${BUSTACHE_INCLUDE_DIR})
 endfunction(use_bundled_bustache)

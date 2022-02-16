@@ -22,7 +22,7 @@ jobs:
       - id: install_dependencies
         run: |
           brew update
-          brew install ossp-uuid boost flex lua ccache sqliteodbc automake autoconf
+          brew install ossp-uuid flex lua ccache sqliteodbc automake autoconf
       - id: setup_env
         name: setup enviroment
         run: |
@@ -147,7 +147,7 @@ jobs:
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev
+          sudo apt install -y ccache libfl-dev libpcap-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build

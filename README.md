@@ -205,12 +205,13 @@ dnf install cmake \
   automake \
   libtool \
   libuuid libuuid-devel \
-  boost-devel \
   openssl-devel \
   bzip2-devel \
   xz-devel \
   doxygen \
   zlib-devel
+# (Optional) for building OpenCV support
+dnf install boost-devel
 # (Optional) for building Python support
 dnf install python36-devel
 # (Optional) for building Lua support
@@ -242,10 +243,12 @@ apt install cmake \
   libtool \
   libcurl4-openssl-dev \
   uuid-dev uuid \
-  libboost-all-dev libssl-dev \
+  libssl-dev \
   libbz2-dev liblzma-dev \
   doxygen \
   zlib1g-dev
+# (Optional) for building OpenCV support
+apt install libboost-all-dev
 # (Optional) for building Python support
 apt install libpython3-dev
 # (Optional) for building Lua support
@@ -272,7 +275,6 @@ brew install cmake \
   automake \
   libtool \
   ossp-uuid \
-  boost \
   openssl \
   python \
   lua \
@@ -282,6 +284,8 @@ brew install cmake \
   zlib
 brew install curl
 brew link curl --force
+# (Optional) for building OpenCV support
+brew install boost
 # (Optional) for building USB Camera support
 brew install libusb libpng
 # (Optional) for building docker image/running system integration tests
@@ -299,9 +303,13 @@ sudo brew install libpcap
 
 ### Bootstrapping
 
-- MiNiFi C++ offers a bootstrap script in the root of our github repo that will boot strap the cmake and build process for you without the need to install dependencies yourself. To use this process, please run the command `boostrap.sh` from the root of the MiNiFi C++ source tree.
+- MiNiFi C++ offers a bootstrap script in the root of our github repo that will bootstrap the cmake and build process for you without the need to install dependencies yourself. To use this
+  process, please run the command `bootstrap.sh` from the root of the MiNiFi C++ source tree.
 
-- Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features you wish to build, enter P to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts ( including the package installation prompts ) and -b to automatically run make once the cmake process is complete. Alternatively, you may include the package argument to boostrap, -p, which will run make package.
+- Per the table, below, you will be presented with a menu guided bootstrap process. You may enable and disable extensions ( further defined below ). Once you are finished selecting the features
+  you wish to build, enter P to continue with the process. CMAKE dependencies will be resolved for your distro. You may enter command line options -n to force yes to all prompts
+  (including the package installation prompts ) and -b to automatically run make once the cmake process is complete. Alternatively, you may include the package argument to bootstrap, -p,
+  which will run make package.
 
 - If you provide -b or -p to bootstrap.sh, you do not need to follow the Building section, below. If you do not provide these arguments you may skip the cmake .. section from Building.
 
@@ -357,7 +365,7 @@ sudo brew install libpcap
     Enter choice [ A - Z or 1-7 ]
   ```
 
-- Boostrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change
+- Bootstrap now saves state between runs. State will automatically be saved. Provide -c or --clear to clear this state. The -i option provides a guided menu install with the ability to change
 advanced features.
 
 ### Building

@@ -25,13 +25,7 @@
 #include "MetricsBase.h"
 #include "core/ProcessorConfig.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
-
+namespace org::apache::nifi::minifi::state::response {
 
 class SchedulingDefaults : public DeviceInformation {
  public:
@@ -61,13 +55,13 @@ class SchedulingDefaults : public DeviceInformation {
 
     SerializedResponseNode defaultSchedulingPeriod;
     defaultSchedulingPeriod.name = "defaultSchedulingPeriodMillis";
-    defaultSchedulingPeriod.value = core::DEFAULT_SCHEDULING_PERIOD_MILLIS.count();
+    defaultSchedulingPeriod.value = int64_t{core::DEFAULT_SCHEDULING_PERIOD_MILLIS.count()};
 
     schedulingDefaults.children.push_back(defaultSchedulingPeriod);
 
     SerializedResponseNode defaultRunDuration;
     defaultRunDuration.name = "defaultRunDurationNanos";
-    defaultRunDuration.value = core::DEFAULT_RUN_DURATION.count();
+    defaultRunDuration.value = int64_t{core::DEFAULT_RUN_DURATION.count()};
 
     schedulingDefaults.children.push_back(defaultRunDuration);
 
@@ -79,7 +73,7 @@ class SchedulingDefaults : public DeviceInformation {
 
     SerializedResponseNode yieldDuration;
     yieldDuration.name = "yieldDurationMillis";
-    yieldDuration.value = std::chrono::milliseconds(core::DEFAULT_YIELD_PERIOD_SECONDS).count();
+    yieldDuration.value = int64_t{std::chrono::milliseconds(core::DEFAULT_YIELD_PERIOD_SECONDS).count()};
 
     schedulingDefaults.children.push_back(yieldDuration);
 
@@ -95,12 +89,6 @@ class SchedulingDefaults : public DeviceInformation {
   }
 };
 
-
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state::response
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_SCHEDULINGNODES_H_

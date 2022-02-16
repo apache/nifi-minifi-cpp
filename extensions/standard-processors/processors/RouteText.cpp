@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <set>
 
-#ifdef __APPLE__
+#if __cpp_lib_boyer_moore_searcher < 201603L
 #include <experimental/functional>
 template<typename It, typename Hash, typename Eq>
 using boyer_moore_searcher = std::experimental::boyer_moore_searcher<It, Hash, Eq>;
