@@ -23,6 +23,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "BlobStorageClient.h"
 #include "azure/storage/blobs.hpp"
@@ -38,6 +39,7 @@ class AzureBlobStorageClient : public BlobStorageClient {
   Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) override;
   std::string getUrl(const PutAzureBlobStorageParameters& params) override;
   bool deleteBlob(const DeleteAzureBlobStorageParameters& params) override;
+  std::unique_ptr<io::InputStream> fetchBlob(const FetchAzureBlobStorageParameters& params) override;
 
  private:
   void resetClientIfNeeded(const AzureStorageCredentials& credentials, const std::string &container_name);

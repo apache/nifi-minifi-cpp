@@ -22,6 +22,7 @@
 - [ExecuteSQL](#executesql)
 - [ExecuteScript](#executescript)
 - [ExtractText](#extracttext)
+- [FetchAzureBlobStorage](#fetchazureblobstorage)
 - [FetchAzureDataLakeStorage](#fetchazuredatalakestorage)
 - [FetchOPCProcessor](#fetchopcprocessor)
 - [FetchS3Object](#fetchs3object)
@@ -537,6 +538,37 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|success operational on the flow record|
+
+
+## FetchAzureBlobStorage
+
+### Description
+
+Retrieves contents of an Azure Storage Blob, writing the contents to the content of the FlowFile
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|Azure Storage Credentials Service|||Name of the Azure Storage Credentials Service used to retrieve the connection string from.|
+|**Blob**|||The filename of the blob. If left empty the filename attribute will be used by default.<br/>**Supports Expression Language: true**|
+|Common Storage Account Endpoint Suffix|||Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a different suffix in certain circumstances (like Azure Stack or non-public Azure regions).<br/>**Supports Expression Language: true**|
+|Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|**Container Name**|||Name of the Azure storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.<br/>**Supports Expression Language: true**|
+|Range Length|||The number of bytes to download from the blob, starting from the Range Start. An empty value or a value that extends beyond the end of the blob will read to the end of the blob.<br/>**Supports Expression Language: true**|
+|Range Start|||The byte position at which to start reading from the blob. An empty value or a value of zero will start reading at the beginning of the blob.<br/>**Supports Expression Language: true**|
+|SAS Token|||Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.<br/>**Supports Expression Language: true**|
+|Storage Account Key|||The storage account key. This is an admin-like password providing access to every container in this account. It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.<br/>**Supports Expression Language: true**|
+|Storage Account Name|||The storage account name.<br/>**Supports Expression Language: true**|
+|**Use Managed Identity Credentials**|false||If true Managed Identity credentials will be used together with the Storage Account Name for authentication.|
+
+### Relationships
+
+| Name | Description |
+| - | - |
+|failure|Unsuccessful operations will be transferred to the failure relationship|
+|success|All successfully processed FlowFiles are routed to this relationship|
 
 
 ## FetchAzureDataLakeStorage

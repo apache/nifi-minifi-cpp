@@ -25,6 +25,7 @@
 
 #include "azure/identity.hpp"
 #include "AzureBlobStorageClient.h"
+#include "io/StreamPipe.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -71,6 +72,16 @@ bool AzureBlobStorage::deleteBlob(const DeleteAzureBlobStorageParameters& params
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while deleting blob: %s", ex.what());
     return false;
+  }
+}
+
+std::optional<uint64_t> AzureBlobStorage::fetchBlob(const FetchAzureBlobStorageParameters& params, io::BaseStream& stream) {
+  try {
+    auto fetch_res = blob_storage_client_->fetchBlob(params);
+    return internal::pipe(fetch_res.get(), &stream);
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while fetching blob '%s' of container '%s': %s", params.blob_name, params.container_name, ex.what());
+    return std::nullopt;
   }
 }
 

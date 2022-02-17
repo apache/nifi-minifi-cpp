@@ -20,12 +20,35 @@
 
 #include "AzureBlobStorageClient.h"
 
+#include <utility>
+
 #include "azure/identity.hpp"
 #include "azure/storage/blobs/blob_options.hpp"
 
 #include "utils/AzureSdkLogger.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
+
+namespace {
+class AzureBlobStorageInputStream : public io::InputStream {
+ public:
+  explicit AzureBlobStorageInputStream(Azure::Storage::Blobs::Models::DownloadBlobResult&& result)
+    : result_(std::move(result)) {
+  }
+
+  size_t size() const override {
+    return result_.BodyStream->Length();
+  }
+
+  size_t read(gsl::span<std::byte> buffer) override {
+    const auto uint8_t_view = buffer.as_span<uint8_t>();
+    return result_.BodyStream->Read(uint8_t_view.data(), uint8_t_view.size());
+  }
+
+ private:
+  Azure::Storage::Blobs::Models::DownloadBlobResult result_;
+};
+}  // namespace
 
 AzureBlobStorageClient::AzureBlobStorageClient() {
   utils::AzureSdkLogger::initialize();
@@ -79,6 +102,25 @@ bool AzureBlobStorageClient::deleteBlob(const DeleteAzureBlobStorageParameters& 
   }
   auto response = container_client_->DeleteBlob(params.blob_name, delete_options);
   return response.Value.Deleted;
+}
+
+std::unique_ptr<io::InputStream> AzureBlobStorageClient::fetchBlob(const FetchAzureBlobStorageParameters& params) {
+  resetClientIfNeeded(params.credentials, params.container_name);
+  auto blob_client = container_client_->GetBlobClient(params.blob_name);
+  Azure::Storage::Blobs::DownloadBlobOptions options;
+  if (params.range_start || params.range_length) {
+    Azure::Core::Http::HttpRange range;
+    if (params.range_start) {
+      range.Offset = *params.range_start;
+    }
+
+    if (params.range_length) {
+      range.Length = *params.range_length;
+    }
+    options.Range = range;
+  }
+  auto result = blob_client.Download(options);
+  return std::make_unique<AzureBlobStorageInputStream>(std::move(result.Value));
 }
 
 }  // namespace org::apache::nifi::minifi::azure::storage

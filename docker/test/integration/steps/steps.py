@@ -606,14 +606,24 @@ def step_impl(context):
 
 
 # Azure
+@when("test blob \"{blob_name}\" with the content \"{content}\" is created on Azure blob storage")
+def step_impl(context, blob_name, content):
+    context.test.add_test_blob(blob_name, content, False)
+
+
+@when("test blob \"{blob_name}\" with the content \"{content}\" and a snapshot is created on Azure blob storage")
+def step_impl(context, blob_name, content):
+    context.test.add_test_blob(blob_name, content, True)
+
+
 @when("test blob \"{blob_name}\" is created on Azure blob storage")
 def step_impl(context, blob_name):
-    context.test.add_test_blob(blob_name, False)
+    context.test.add_test_blob(blob_name, "", False)
 
 
 @when("test blob \"{blob_name}\" is created on Azure blob storage with a snapshot")
 def step_impl(context, blob_name):
-    context.test.add_test_blob(blob_name, True)
+    context.test.add_test_blob(blob_name, "", True)
 
 
 @then("the object on the Azure storage server is \"{object_data}\"")
