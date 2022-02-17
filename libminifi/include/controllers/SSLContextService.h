@@ -189,7 +189,7 @@ class SSLContextService : public core::controller::ControllerService {
   virtual void initializeProperties();
 
   std::mutex initialization_mutex_;
-  std::atomic<bool> initialized_;
+  bool initialized_;
   std::atomic<bool> valid_;
   std::string certificate_;
   std::string private_key_;

@@ -47,12 +47,12 @@ core::Property CoapConnectorService::MaxQueueSize(
     core::PropertyBuilder::createProperty("Max Queue Size")->withDescription("Max queue size for received data ")->withDefaultValue<uint64_t>(1000)->isRequired(false)->build());
 
 void CoapConnectorService::initialize() {
-  if (initialized_)
+  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  if (initialized_) {
     return;
+  }
 
   CoapMessaging::getInstance();
-
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
 
   ControllerService::initialize();
 

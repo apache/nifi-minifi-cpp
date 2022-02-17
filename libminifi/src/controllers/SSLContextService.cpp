@@ -119,10 +119,10 @@ const core::Property SSLContextService::ClientCertKeyUsage(
 #endif  // WIN32
 
 void SSLContextService::initialize() {
-  if (initialized_)
-    return;
-
   std::lock_guard<std::mutex> lock(initialization_mutex_);
+  if (initialized_) {
+    return;
+  }
 
   ControllerService::initialize();
 

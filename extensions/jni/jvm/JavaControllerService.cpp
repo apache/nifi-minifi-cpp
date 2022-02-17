@@ -59,10 +59,10 @@ core::Property JavaControllerService::NarDocumentDirectory(
     core::PropertyBuilder::createProperty("Nar Document Directory")->withDescription("Directory in which documents will be deployed")->isRequired(true)->supportsExpressionLanguage(false)->build());
 
 void JavaControllerService::initialize() {
-  if (initialized_)
-    return;
-
   std::lock_guard<std::mutex> lock(initialization_mutex_);
+  if (initialized_) {
+    return;
+  }
 
   ControllerService::initialize();
 

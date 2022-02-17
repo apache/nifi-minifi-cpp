@@ -70,8 +70,11 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
 
   configuration_->setFallbackAgentIdentifier(getControllerUUID().to_string());
 
-  if (initialized_ && !flow_update_) {
-    return;
+  {
+    std::lock_guard<std::mutex> lock(initialization_mutex_);
+    if (initialized_ && !flow_update_) {
+      return;
+    }
   }
 
   // root_response_nodes_ was not cleared before, it is unclear if that was intentional
@@ -123,6 +126,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
 
   loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
 
+  std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (!initialized_) {
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart

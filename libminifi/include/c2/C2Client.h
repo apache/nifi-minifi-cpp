@@ -73,7 +73,8 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
  private:
   std::unique_ptr<C2Agent> c2_agent_;
-  std::atomic_bool initialized_{false};
+  std::mutex initialization_mutex_;
+  bool initialized_ = false;
   std::shared_ptr<core::logging::Logger> logger_;
 
   mutable std::mutex metrics_mutex_;
