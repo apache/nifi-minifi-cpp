@@ -39,20 +39,16 @@ void SupportedOperations::addProperty(SerializedResponseNode& properties, const 
   SerializedResponseNode operand_node;
   operand_node.name = operand;
   operand_node.keep_empty = true;
-  operand_node.collapsible = false;
 
   for (const auto& [key, value_array] : metadata) {
     SerializedResponseNode metadata_item;
-    metadata_item.collapsible = false;
     metadata_item.name = key;
     metadata_item.array = true;
 
     for (const auto& value_object : value_array) {
       SerializedResponseNode value_child;
-      value_child.collapsible = false;
       for (const auto& pair: value_object) {
         SerializedResponseNode object_element;
-        object_element.collapsible = false;
         object_element.name = pair.first;
         object_element.value = pair.second;
         value_child.children.push_back(object_element);
@@ -133,7 +129,6 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
 
     SerializedResponseNode properties;
     properties.name = "properties";
-    properties.collapsible = false;
 
     fillProperties(properties, minifi::c2::Operation::parse(operation.c_str()));
 
