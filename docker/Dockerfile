@@ -162,7 +162,7 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
     if [ "$ENABLE_JNI" = "ON" ]; then apk add --no-cache openjdk8-jre-base; fi && \
     if [ "$ENABLE_PCAP" = "ON" ]; then apk add --no-cache libpcap; fi && \
     if [ "$ENABLE_USB_CAMERA" = "ON" ]; then apk add --no-cache libpng libusb; fi && \
-    if [ "$ENABLE_OPENCV" = "ON" ]; then apk add --no-cache boost; fi && \
+    if [ "$ENABLE_OPENCV" = "ON" ] || [ "$ENABLE_BUSTACHE" = "ON" ]; then apk add --no-cache boost; fi && \
     if [ "$ENABLE_SCRIPTING" = "ON" ] && [ -n "$ENABLE_LUA_SCRIPTING" ]; then apk add --no-cache lua; fi && \
     if [ "$ENABLE_SCRIPTING" = "ON" ] && [ -z "$DISABLE_PYTHON_SCRIPTING" ]; then apk add --no-cache python3; fi
 

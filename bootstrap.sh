@@ -318,6 +318,7 @@ add_disabled_option OPENWSMAN_ENABLED ${FALSE} "ENABLE_OPENWSMAN"
 
 # Since the following extensions have limitations on
 add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
+add_dependency BUSTACHE_ENABLED "boost"
 
 ## currently need to limit on certain platforms
 add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW" "2.6" ${TRUE}
