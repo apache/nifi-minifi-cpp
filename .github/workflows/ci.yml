@@ -156,6 +156,7 @@ jobs:
           cd build
           export CC=clang
           export CXX=clang++
+          export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
           cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DFAIL_ON_WARNINGS=ON ..
           cmake --build . --parallel $(nproc)
       - name: test
