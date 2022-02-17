@@ -571,6 +571,8 @@ struct SerializedResponseNode {
   }
 };
 
+std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes);
+
 }  // namespace response
 }  // namespace state
 }  // namespace minifi
