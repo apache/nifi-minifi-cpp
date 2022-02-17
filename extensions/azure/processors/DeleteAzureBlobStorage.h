@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "core/Property.h"
-#include "AzureBlobStorageBlobProcessorBase.h"
+#include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
 
 template<typename T>
@@ -35,7 +35,7 @@ class AzureBlobStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class DeleteAzureBlobStorage final : public AzureBlobStorageBlobProcessorBase {
+class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase {
  public:
   // Supported Properties
   static const core::Property DeleteSnapshotsOption;
@@ -64,7 +64,7 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageBlobProcessorBase {
   }
 
   explicit DeleteAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageBlobProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+    : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
   std::optional<storage::DeleteAzureBlobStorageParameters> buildDeleteAzureBlobStorageParameters(

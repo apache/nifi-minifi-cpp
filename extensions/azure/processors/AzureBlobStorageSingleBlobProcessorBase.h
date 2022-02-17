@@ -1,6 +1,6 @@
 /**
- * @file AzureBlobStorageBlobProcessorBase.h
- * AzureBlobStorageBlobProcessorBase class declaration
+ * @file AzureBlobStorageSingleBlobProcessorBase.h
+ * AzureBlobStorageSingleBlobProcessorBase class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -29,17 +29,17 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class AzureBlobStorageBlobProcessorBase : public AzureBlobStorageProcessorBase {
+class AzureBlobStorageSingleBlobProcessorBase : public AzureBlobStorageProcessorBase {
  public:
   // Supported Properties
   EXTENSIONAPI static const core::Property Blob;
 
-  explicit AzureBlobStorageBlobProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
-    : AzureBlobStorageBlobProcessorBase(name, uuid, logger, nullptr) {
+  explicit AzureBlobStorageSingleBlobProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
+    : AzureBlobStorageSingleBlobProcessorBase(name, uuid, logger, nullptr) {
   }
 
  protected:
-  explicit AzureBlobStorageBlobProcessorBase(
+  explicit AzureBlobStorageSingleBlobProcessorBase(
     const std::string& name,
     const minifi::utils::Identifier& uuid,
     const std::shared_ptr<core::logging::Logger>& logger,

@@ -28,7 +28,7 @@
 
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "AzureBlobStorageBlobProcessorBase.h"
+#include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "io/StreamPipe.h"
 
 template<typename T>
@@ -36,7 +36,7 @@ class AzureBlobStorageTestsFixture;
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class PutAzureBlobStorage final : public AzureBlobStorageBlobProcessorBase {
+class PutAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase {
  public:
   // Supported Properties
   static const core::Property CreateContainer;
@@ -88,7 +88,7 @@ class PutAzureBlobStorage final : public AzureBlobStorageBlobProcessorBase {
   friend class ::AzureBlobStorageTestsFixture<PutAzureBlobStorage>;
 
   explicit PutAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
-    : AzureBlobStorageBlobProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+    : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
   }
 
   std::optional<storage::PutAzureBlobStorageParameters> buildPutAzureBlobStorageParameters(core::ProcessContext &context, const std::shared_ptr<core::FlowFile> &flow_file);

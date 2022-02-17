@@ -1,6 +1,6 @@
 /**
- * @file AzureBlobStorageBlobProcessorBase.cpp
- * AzureBlobStorageBlobProcessorBase class implementation
+ * @file AzureBlobStorageSingleBlobProcessorBase.cpp
+ * AzureBlobStorageSingleBlobProcessorBase class implementation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,18 +18,18 @@
  * limitations under the License.
  */
 
-#include "AzureBlobStorageBlobProcessorBase.h"
+#include "AzureBlobStorageSingleBlobProcessorBase.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property AzureBlobStorageBlobProcessorBase::Blob(
+const core::Property AzureBlobStorageSingleBlobProcessorBase::Blob(
   core::PropertyBuilder::createProperty("Blob")
     ->withDescription("The filename of the blob. If left empty the filename attribute will be used by default.")
     ->supportsExpressionLanguage(true)
     ->build());
 
 
-bool AzureBlobStorageBlobProcessorBase::setBlobOperationParameters(
+bool AzureBlobStorageSingleBlobProcessorBase::setBlobOperationParameters(
     storage::AzureBlobStorageBlobOperationParameters& params,
     core::ProcessContext &context,
     const std::shared_ptr<core::FlowFile> &flow_file) {
