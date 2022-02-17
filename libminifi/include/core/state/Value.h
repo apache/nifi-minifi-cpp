@@ -58,6 +58,10 @@ class Value {
     return string_value;
   }
 
+  const char* c_str() const {
+    return string_value.c_str();
+  }
+
   template<typename T>
   bool convertValue(T &ref) {
     return convertValueImpl<typename std::common_type<T>::type>(ref);

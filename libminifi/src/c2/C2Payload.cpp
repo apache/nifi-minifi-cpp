@@ -20,6 +20,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include "utils/StringUtils.h"
 
 namespace org {
 namespace apache {
@@ -78,6 +79,73 @@ void C2Payload::setRawData(gsl::span<const std::byte> data) {
 
 void C2Payload::addPayload(C2Payload &&payload) {
   payloads_.push_back(std::move(payload));
+}
+
+template<typename T>
+static std::ostream& operator<<(std::ostream& out, const std::vector<T>& items) {
+  out << "[";
+  bool first = true;
+  for (auto& item : items) {
+    if (!first) out << ", ";
+    first = false;
+    out << item;
+  }
+  out << "]";
+  return out;
+}
+
+template<typename K, typename V>
+static std::ostream& operator<<(std::ostream& out, const std::map<K, V>& items) {
+  out << "{";
+  bool first = true;
+  for (auto& item : items) {
+    if (!first) out << ", ";
+    first = false;
+    out << item.first << ": " << item.second;
+  }
+  out << "}";
+  return out;
+}
+
+std::ostream& operator<<(std::ostream& out, const C2Payload& payload) {
+  using utils::operator<<;
+  out << std::boolalpha;
+  return out << "{"
+    << "ident: \"" << payload.ident_ << "\", "
+    << "label: \"" << payload.label_ << "\", "
+    << "payloads: " << payload.payloads_ << ", "
+    << "contents: " << payload.content_ << ", "
+    << "op: " << payload.op_.toStringOr("<invalid operation>") << ", "
+    << "raw: " << payload.raw_ << ", "
+    << "data: \"" << gsl::make_span(payload.raw_data_) << "\", "
+    << "is_container: " << payload.is_container_ << ", "
+    << "is_collapsible: " << payload.is_collapsible_
+    << "}";
+}
+
+std::ostream& operator<<(std::ostream& out, const C2ContentResponse& response) {
+  out << std::boolalpha;
+  return out << "{"
+    << "op: " << response.op.toStringOr("<invalid operation>") << ", "
+    << "required: " << response.required << ", "
+    << "ident: \"" << response.ident << "\", "
+    << "delay: " << response.delay << ", "
+    << "ttl: " << response.ttl << ", "
+    << "name: \"" << response.name << "\", "
+    << "args: " << response.operation_arguments
+    << "}";
+}
+
+std::ostream& operator<<(std::ostream& out, const AnnotatedValue& val) {
+  if (val.value_) {
+    out << '"' << val.value_->c_str() << '"';
+  } else {
+    out << "<null>";
+  }
+  if (!val.annotations.empty()) {
+    out << val.annotations;
+  }
+  return out;
 }
 
 } /* namespace c2 */

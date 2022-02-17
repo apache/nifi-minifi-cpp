@@ -72,6 +72,8 @@ struct AnnotatedValue : state::response::ValueNode {
     return std::cref(it->second);
   }
 
+  friend std::ostream& operator<<(std::ostream& out, const AnnotatedValue& val);
+
   std::map<std::string, AnnotatedValue> annotations;
 };
 
@@ -91,6 +93,8 @@ struct C2ContentResponse {
   }
 
   bool operator!=(const C2ContentResponse &rhs) const { return !(*this == rhs); }
+
+  friend std::ostream& operator<<(std::ostream& out, const C2ContentResponse& response);
 
   Operation op;
   // determines if the operation is required
@@ -201,6 +205,14 @@ class C2Payload : public state::Update {
   }
 
   bool operator!=(const C2Payload &rhs) const { return !(*this == rhs); }
+
+  friend std::ostream& operator<<(std::ostream& out, const C2Payload& payload);
+
+  std::string str() const {
+    std::stringstream ss;
+    ss << *this;
+    return std::move(ss).str();
+  }
 
  protected:
   std::string ident_;  // identifier for this payload.

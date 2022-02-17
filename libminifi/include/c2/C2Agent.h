@@ -120,9 +120,7 @@ class C2Agent : public state::UpdateController {
   /**
    * Enqueues a C2 server response for us to evaluate and parse.
    */
-  void enqueue_c2_server_response(C2Payload &&resp) {
-    responses.enqueue(std::move(resp));
-  }
+  void enqueue_c2_server_response(C2Payload &&resp);
 
   /**
    * Enqueues a c2 payload for a response to the C2 server.

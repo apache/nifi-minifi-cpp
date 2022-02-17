@@ -243,7 +243,7 @@ void C2Agent::performHeartBeat() {
       payload.addPayload(std::move(child_metric_payload));
     }
   }
-  C2Payload && response = protocol_.load()->consumePayload(payload);
+  C2Payload&& response = protocol_.load()->consumePayload(payload);
 
   enqueue_c2_server_response(std::move(response));
 
@@ -855,6 +855,12 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
   }
 
   return true;
+}
+
+void C2Agent::enqueue_c2_server_response(C2Payload &&resp) {
+  logger_->log_trace("Server response: %s", resp);
+
+  responses.enqueue(std::move(resp));
 }
 
 }  // namespace c2

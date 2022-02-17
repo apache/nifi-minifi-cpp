@@ -496,6 +496,8 @@ class StringUtils {
  private:
 };
 
+std::ostream& operator<<(std::ostream& out, const gsl::span<const std::byte>& data);
+
 }  // namespace utils
 }  // namespace org::apache::nifi::minifi
 

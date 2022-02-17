@@ -106,6 +106,13 @@ class PropertyValue : public state::response::ValueNode {
     return convertImpl<bool>("bool");
   }
 
+  const char* c_str() const {
+    if (!isValueUsable()) {
+      throw utils::internal::InvalidValueException("Cannot convert invalid value");
+    }
+    return value_ ? value_->c_str() : "";
+  }
+
   operator std::string() const {
     if (!isValueUsable()) {
       throw utils::internal::InvalidValueException("Cannot convert invalid value");

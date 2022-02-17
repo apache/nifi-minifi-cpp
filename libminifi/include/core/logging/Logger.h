@@ -31,6 +31,7 @@
 #include "spdlog/logger.h"
 #include "utils/gsl.h"
 #include "utils/SmallString.h"
+#include "utils/meta/detected.h"
 
 namespace org {
 namespace apache {
@@ -53,28 +54,80 @@ class LoggerControl {
   std::atomic<bool> is_enabled_;
 };
 
-inline char const* conditional_conversion(std::string const& str) {
-  return str.c_str();
+template<typename Arg>
+using has_const_c_str_method = decltype(std::declval<const Arg&>().c_str());
+
+template<typename Arg>
+using has_str_method = decltype(std::declval<Arg>().str());
+
+template<typename Arg, typename = void>
+struct StringConverter {
+  decltype(auto) operator()(Arg&& val) const {
+    return std::forward<Arg>(val);
+  }
+};
+
+template<typename Arg>
+struct StringConverter<Arg, std::enable_if_t<
+    !utils::meta::is_detected_v<has_const_c_str_method, Arg> &&
+    utils::meta::is_detected_v<has_str_method, Arg>
+  >> {
+
+  decltype(auto) operator()(Arg&& val) const {
+    return std::forward<Arg>(val).str();
+  }
+};
+
+template<typename Arg>
+struct StringConverter<Arg, std::enable_if_t<
+    !utils::meta::is_detected_v<has_const_c_str_method, Arg> &&
+    !utils::meta::is_detected_v<has_str_method, Arg> &&
+    std::is_invocable_v<Arg>
+  >> {
+
+  decltype(auto) operator()(Arg&& val) const {
+    return std::forward<Arg>(val)();
+  }
+};
+
+template<typename Arg, typename = void>
+struct CStringConverter;
+
+template<typename Arg>
+struct CStringConverter<Arg, std::enable_if_t<
+    std::is_same_v<decltype(std::declval<const Arg&>().c_str()), const char*>
+  >> {
+
+  const char* operator()(const Arg& val) {
+    return val.c_str();
+  }
+};
+
+template<typename Arg>
+struct CStringConverter<Arg, std::enable_if_t<
+    std::is_scalar_v<std::decay_t<Arg>>
+  >> {
+
+  const Arg& operator()(const Arg& val) {
+    return val;
+  }
+};
+
+template<typename Arg>
+inline decltype(auto) conditional_stringify(Arg&& arg) {
+  return StringConverter<Arg>{}(std::forward<Arg>(arg));
 }
 
-template<size_t N>
-inline char const* conditional_conversion(const utils::SmallString<N>& arr) {
-  return arr.c_str();
+template<typename Arg>
+inline decltype(auto) conditional_convert(Arg& val) {
+  return CStringConverter<Arg>{}(val);
 }
 
-template<typename T, typename = typename std::enable_if<
-    std::is_arithmetic<T>::value ||
-    std::is_enum<T>::value ||
-    std::is_pointer<T>::value>::type>
-inline T conditional_conversion(T t) {
-  return t;
-}
-
-template<typename ... Args>
-std::string format_string(int max_size, char const* format_str, Args&&... args) {
+template<typename ...Args>
+std::string format_string(int max_size, char const* format_str, const Args& ...args) {
   // try to use static buffer
   char buf[LOG_BUFFER_SIZE + 1];
-  int result = std::snprintf(buf, LOG_BUFFER_SIZE + 1, format_str, conditional_conversion(std::forward<Args>(args))...);
+  int result = std::snprintf(buf, LOG_BUFFER_SIZE + 1, format_str, conditional_convert(args)...);
   if (result < 0) {
     return "Error while formatting log message";
   }
@@ -89,7 +142,7 @@ std::string format_string(int max_size, char const* format_str, Args&&... args) 
   // try to use dynamic buffer
   size_t dynamic_buffer_size = max_size < 0 ? gsl::narrow<size_t>(result) : gsl::narrow<size_t>(std::min(result, max_size));
   std::vector<char> buffer(dynamic_buffer_size + 1);  // extra '\0' character
-  result = std::snprintf(buffer.data(), buffer.size(), format_str, conditional_conversion(std::forward<Args>(args))...);
+  result = std::snprintf(buffer.data(), buffer.size(), format_str, conditional_convert(args)...);
   if (result < 0) {
     return "Error while formatting log message";
   }
@@ -153,9 +206,9 @@ class Logger : public BaseLogger {
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  template<typename ... Args>
-  void log_error(const char * const format, const Args& ... args) {
-    log(spdlog::level::err, format, args...);
+  template<typename ...Args>
+  void log_error(const char * const format, Args&& ...args) {
+    log(spdlog::level::err, format, std::forward<Args>(args)...);
   }
 
   /**
@@ -163,9 +216,9 @@ class Logger : public BaseLogger {
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  template<typename ... Args>
-  void log_warn(const char * const format, const Args& ... args) {
-    log(spdlog::level::warn, format, args...);
+  template<typename ...Args>
+  void log_warn(const char * const format, Args&& ...args) {
+    log(spdlog::level::warn, format, std::forward<Args>(args)...);
   }
 
   /**
@@ -173,9 +226,9 @@ class Logger : public BaseLogger {
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  template<typename ... Args>
-  void log_info(const char * const format, const Args& ... args) {
-    log(spdlog::level::info, format, args...);
+  template<typename ...Args>
+  void log_info(const char * const format, Args&& ...args) {
+    log(spdlog::level::info, format, std::forward<Args>(args)...);
   }
 
   /**
@@ -183,9 +236,9 @@ class Logger : public BaseLogger {
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  template<typename ... Args>
-  void log_debug(const char * const format, const Args& ... args) {
-    log(spdlog::level::debug, format, args...);
+  template<typename ...Args>
+  void log_debug(const char * const format, Args&& ...args) {
+    log(spdlog::level::debug, format, std::forward<Args>(args)...);
   }
 
   /**
@@ -193,9 +246,9 @@ class Logger : public BaseLogger {
    * @param format format string ('man printf' for syntax)
    * @warning does not check @p log or @p format for null. Caller must ensure parameters and format string lengths match
    */
-  template<typename ... Args>
-  void log_trace(const char * const format, const Args& ... args) {
-    log(spdlog::level::trace, format, args...);
+  template<typename ...Args>
+  void log_trace(const char * const format, Args&& ...args) {
+    log(spdlog::level::trace, format, std::forward<Args>(args)...);
   }
 
   void set_max_log_size(int size) {
@@ -218,15 +271,15 @@ class Logger : public BaseLogger {
   std::mutex mutex_;
 
  private:
-  template<typename ... Args>
-  inline void log(spdlog::level::level_enum level, const char * const format, const Args& ... args) {
+  template<typename ...Args>
+  inline void log(spdlog::level::level_enum level, const char* const format, Args&& ...args) {
     if (controller_ && !controller_->is_enabled())
          return;
     std::lock_guard<std::mutex> lock(mutex_);
     if (!delegate_->should_log(level)) {
       return;
     }
-    const auto str = format_string(max_log_size_.load(), format, conditional_conversion(args)...);
+    const auto str = format_string(max_log_size_.load(), format, conditional_stringify(std::forward<Args>(args))...);
     delegate_->log(level, str);
   }
 
