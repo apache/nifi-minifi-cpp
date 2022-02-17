@@ -162,11 +162,11 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   }
   cv::Mat frame;
 
-  session->read(flow_file, [&frame](const std::shared_ptr<io::BaseStream>& inputStream) -> int64_t {
+  session->read(flow_file, [&frame](const std::shared_ptr<io::BaseStream>& input_stream) -> int64_t {
     std::vector<uchar> image_buf;
-    image_buf.resize(inputStream->size());
-    const auto ret = inputStream->read(gsl::make_span(image_buf).as_span<std::byte>());
-    if (io::isError(ret) || static_cast<std::size_t>(ret) != inputStream->size()) {
+    image_buf.resize(input_stream->size());
+    const auto ret = input_stream->read(gsl::make_span(image_buf).as_span<std::byte>());
+    if (io::isError(ret) || ret != input_stream->size()) {
       throw std::runtime_error("ImageReadCallback failed to fully read flow file input stream");
     }
     frame = cv::imdecode(image_buf, -1);
@@ -201,10 +201,10 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 
   session->putAttribute(flow_file, "filename", filename);
 
-  session->write(flow_file, [&frame, this](const auto& outputStream) -> int64_t {
+  session->write(flow_file, [&frame, this](const auto& output_stream) -> int64_t {
     std::vector<uchar> image_buf;
     imencode(image_encoding_, frame, image_buf);
-    const auto ret = outputStream->write(gsl::make_span(image_buf).as_span<std::byte>());
+    const auto ret = output_stream->write(image_buf.data(), image_buf.size());
     return io::isError(ret) ? -1 : gsl::narrow<int64_t>(ret);
   });
   session->transfer(flow_file, Success);

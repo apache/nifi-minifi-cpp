@@ -109,19 +109,17 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
     flow_file->getAttribute("filename", flow_file_name);
     cb_data->logger->log_info("Created flow file: %s", flow_file_name);
 
-    if (cb_data->format != "PNG" && cb_data->format != "RAW") {
-      cb_data->logger->log_warn("Invalid format specified (%s); defaulting to PNG", cb_data->format);
-    }
-
-    if (cb_data->format != "RAW") {
-      // PNG or invalid format defaulting to PNG
-      session->write(flow_file, GetUSBCamera::PNGWriteCallback{cb_data->png_write_mtx,
+    if (cb_data->format == "RAW") {
+      session->writeBuffer(flow_file, gsl::make_span(static_cast<const std::byte*>(cb_data->frame_buffer->data), cb_data->frame_buffer->data_bytes));
+    } else {
+      if (cb_data->format != "PNG") {
+        cb_data->logger->log_warn("Invalid format specified (%s); defaulting to PNG", cb_data->format);
+      }
+      session->write(flow_file, GetUSBCamera::PNGWriteCallback{
+          cb_data->png_write_mtx,
           cb_data->frame_buffer,
           cb_data->device_width,
           cb_data->device_height});
-    } else {
-      // RAW
-      session->writeBuffer(flow_file, gsl::make_span(static_cast<const std::byte*>(cb_data->frame_buffer->data), cb_data->frame_buffer->data_bytes));
     }
     session->transfer(flow_file, GetUSBCamera::Success);
     session->commit();

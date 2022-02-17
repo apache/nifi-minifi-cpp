@@ -238,7 +238,6 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, const io
       || _addedFlowFiles.contains(flow->getUUID())
       || std::any_of(_clonedFlowFiles.begin(), _clonedFlowFiles.end(), flow_file_equality_checker));
 
-
   std::shared_ptr<ResourceClaim> claim = content_session_->create();
 
   try {
@@ -270,13 +269,13 @@ void ProcessSession::write(const std::shared_ptr<core::FlowFile> &flow, const io
 }
 
 void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) {
-  write(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& outputStream) {
-    const auto write_status = outputStream->write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
-    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
-  });
+  writeBuffer(flow_file, buffer.as_span<const std::byte>());
 }
 void ProcessSession::writeBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const std::byte> buffer) {
-  writeBuffer(flow_file, gsl::make_span(reinterpret_cast<const char*>(buffer.data()), buffer.size()));
+  write(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& output_stream) {
+    const auto write_status = output_stream->write(buffer);
+    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
+  });
 }
 
 void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const io::OutputStreamCallback& callback) {
@@ -322,13 +321,13 @@ void ProcessSession::append(const std::shared_ptr<core::FlowFile> &flow, const i
   }
 }
 void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const char> buffer) {
-  append(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& outputStream) {
-    const auto write_status = outputStream->write(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size());
-    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
-  });
+  appendBuffer(flow_file, buffer.as_span<const std::byte>());
 }
 void ProcessSession::appendBuffer(const std::shared_ptr<core::FlowFile>& flow_file, gsl::span<const std::byte> buffer) {
-  appendBuffer(flow_file, gsl::make_span(reinterpret_cast<const char*>(buffer.data()), buffer.size()));
+  append(flow_file, [buffer](const std::shared_ptr<io::BaseStream>& output_stream) {
+    const auto write_status = output_stream->write(buffer);
+    return io::isError(write_status) ? -1 : gsl::narrow<int64_t>(write_status);
+  });
 }
 
 int64_t ProcessSession::read(const std::shared_ptr<core::FlowFile> &flow, const io::InputStreamCallback& callback) {
@@ -417,9 +416,9 @@ int64_t ProcessSession::readWrite(const std::shared_ptr<core::FlowFile> &flow, c
 
 detail::ReadBufferResult ProcessSession::readBuffer(const std::shared_ptr<core::FlowFile>& flow) {
   detail::ReadBufferResult result;
-  result.status = read(flow, [&result, this](const std::shared_ptr<io::BaseStream>& inputStream) {
-    result.buffer.resize(inputStream->size());
-    const auto read_status = inputStream->read(result.buffer);
+  result.status = read(flow, [&result, this](const std::shared_ptr<io::BaseStream>& input_stream) {
+    result.buffer.resize(input_stream->size());
+    const auto read_status = input_stream->read(result.buffer);
     if (read_status != result.buffer.size()) {
       logger_->log_error("readBuffer: %zu bytes were requested from the stream but %zu bytes were read. Rolling back.", result.buffer.size(), read_status);
       throw Exception(PROCESSOR_EXCEPTION, "Failed to read the entire FlowFile.");

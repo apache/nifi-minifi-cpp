@@ -25,8 +25,8 @@ class BaseStream;
 
 // FlowFile IO Callback functions for input and output
 // throw exception for error
-using InputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& inputStream)>;
-using OutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& outputStream)>;
-using InputOutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& inputStream, const std::shared_ptr<BaseStream>& outputStream)>;
+using InputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& input_stream)>;
+using OutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& output_stream)>;
+using InputOutputStreamCallback = std::function<int64_t(const std::shared_ptr<BaseStream>& input_stream, const std::shared_ptr<BaseStream>& output_stream)>;
 
 }  // namespace org::apache::nifi::minifi::io

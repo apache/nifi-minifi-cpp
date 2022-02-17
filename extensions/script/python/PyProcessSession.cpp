@@ -80,8 +80,8 @@ void PyProcessSession::read(std::shared_ptr<script::ScriptFlowFile> script_flow_
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->read(flow_file, [&input_stream_callback](const std::shared_ptr<io::BaseStream>& inputStream) -> int64_t {
-    return input_stream_callback.attr("process")(std::make_shared<PyBaseStream>(inputStream)).cast<int64_t>();
+  session_->read(flow_file, [&input_stream_callback](const std::shared_ptr<io::BaseStream>& input_stream) -> int64_t {
+    return input_stream_callback.attr("process")(std::make_shared<PyBaseStream>(input_stream)).cast<int64_t>();
   });
 }
 
@@ -97,8 +97,8 @@ void PyProcessSession::write(std::shared_ptr<script::ScriptFlowFile> script_flow
     throw std::runtime_error("Access of FlowFile after it has been released");
   }
 
-  session_->write(flow_file, [&output_stream_callback](const std::shared_ptr<io::BaseStream>& outputStream) -> int64_t {
-    return output_stream_callback.attr("process")(std::make_shared<PyBaseStream>(outputStream)).cast<int64_t>();
+  session_->write(flow_file, [&output_stream_callback](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+    return output_stream_callback.attr("process")(std::make_shared<PyBaseStream>(output_stream)).cast<int64_t>();
   });
 }
 

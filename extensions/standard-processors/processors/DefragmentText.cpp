@@ -235,8 +235,8 @@ void DefragmentText::Buffer::append(core::ProcessSession* session, const gsl::no
   };
   PayloadSerializer serializer(flowFileReader);
   session->add(buffered_flow_file_);
-  session->append(buffered_flow_file_, [&serializer, &flow_file_to_append](const auto& outputStream) -> int64_t {
-    return serializer.serialize(flow_file_to_append, outputStream);
+  session->append(buffered_flow_file_, [&serializer, &flow_file_to_append](const auto& output_stream) -> int64_t {
+    return serializer.serialize(flow_file_to_append, output_stream);
   });
   updateAppendedAttributes(*buffered_flow_file_);
   session->transfer(buffered_flow_file_, Self);

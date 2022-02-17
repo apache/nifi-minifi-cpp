@@ -175,10 +175,6 @@ ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::
   return parameters;
 }
 
-namespace {
-
-}  // namespace
-
 void ReplaceText::replaceTextInEntireFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session, const Parameters& parameters) const {
   gsl_Expects(flow_file);
   gsl_Expects(session);

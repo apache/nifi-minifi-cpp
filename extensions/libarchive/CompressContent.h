@@ -104,18 +104,18 @@ class CompressContent : public core::Processor {
     std::shared_ptr<core::ProcessSession> session_;
     bool success_{false};
 
-    int64_t operator()(const std::shared_ptr<io::BaseStream>& outputStream) {
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& output_stream) {
       std::shared_ptr<io::ZlibBaseStream> filterStream;
       if (compress_mode_ == CompressionMode::Compress) {
-        filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
+        filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
-        filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(outputStream.get()), io::ZlibCompressionFormat::GZIP);
+        filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP);
       }
-      session_->read(flow_, [this, &filterStream](const std::shared_ptr<io::BaseStream>& inputStream) -> int64_t {
+      session_->read(flow_, [this, &filterStream](const std::shared_ptr<io::BaseStream>& input_stream) -> int64_t {
         std::vector<std::byte> buffer(16 * 1024U);
         size_t read_size = 0;
         while (read_size < flow_->getSize()) {
-          const auto ret = inputStream->read(buffer);
+          const auto ret = input_stream->read(buffer);
           if (io::isError(ret)) {
             return -1;
           } else if (ret == 0) {

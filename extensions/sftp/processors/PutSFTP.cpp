@@ -424,7 +424,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
           stream->size() /*expected_size*/)) {
         throw utils::SFTPException{client->getLastError()};
       }
-      return stream->size();
+      return gsl::narrow<int64_t>(stream->size());
     });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug(ex.what());

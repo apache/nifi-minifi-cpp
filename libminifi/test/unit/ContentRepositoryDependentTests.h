@@ -76,12 +76,10 @@ class Fixture {
 
   core::ProcessSession &processSession() { return *process_session_; }
 
-
   void transferAndCommit(const std::shared_ptr<core::FlowFile>& flow_file) {
     process_session_->transfer(flow_file, Success);
     process_session_->commit();
   }
-
 
   void writeToFlowFile(const std::shared_ptr<core::FlowFile>& flow_file, const std::string content) {
     process_session_->writeBuffer(flow_file, content);

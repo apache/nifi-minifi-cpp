@@ -471,8 +471,8 @@ int16_t SiteToSiteClient::send(const utils::Identifier &transactionID, DataPacke
       return -1;
     }
     if (flowFile->getSize() > 0) {
-      session->read(flowFile, [packet](const std::shared_ptr<io::BaseStream>& inputStream) -> int64_t {
-        const auto result = internal::pipe(*inputStream, packet->transaction_->getStream());
+      session->read(flowFile, [packet](const std::shared_ptr<io::BaseStream>& input_stream) -> int64_t {
+        const auto result = internal::pipe(*input_stream, packet->transaction_->getStream());
         if (result == -1) return -1;
         packet->_size = gsl::narrow<size_t>(result);
         return result;
@@ -698,8 +698,8 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
       }
 
       if (packet._size > 0) {
-        session->write(flowFile, [&packet](const std::shared_ptr<io::BaseStream>& outputStream) -> int64_t {
-          return internal::pipe(packet.transaction_->getStream(), *outputStream);
+        session->write(flowFile, [&packet](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+          return internal::pipe(packet.transaction_->getStream(), *output_stream);
         });
         if (flowFile->getSize() != packet._size) {
           std::stringstream message;
