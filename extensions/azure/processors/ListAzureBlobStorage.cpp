@@ -84,7 +84,7 @@ void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext
 
 std::optional<storage::ListAzureBlobStorageParameters> ListAzureBlobStorage::buildListAzureBlobStorageParameters(core::ProcessContext &context) {
   storage::ListAzureBlobStorageParameters params;
-  if (!setCommonStorageParameters(params, *context, nullptr)) {
+  if (!setCommonStorageParameters(params, context, nullptr)) {
     return std::nullopt;
   }
 
