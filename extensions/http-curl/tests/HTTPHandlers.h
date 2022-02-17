@@ -426,6 +426,13 @@ class HeartbeatHandler : public ServerAwareHandler {
     assert(root.HasMember("agentInfo"));
     assert(root["agentInfo"].HasMember("agentManifest"));
     assert(root["agentInfo"]["agentManifest"].HasMember("bundles"));
+    assert(root["agentInfo"].HasMember("agentManifestHash"));
+    const std::string manifestHash = root["agentInfo"]["agentManifestHash"].GetString();
+    assert(manifestHash.length() == 128);
+
+    // throws if not a valid hexadecimal hash
+    const auto hashVec = utils::StringUtils::from_hex(manifestHash);
+    assert(hashVec.size() == 64);
 
     for (auto &bundle : root["agentInfo"]["agentManifest"]["bundles"].GetArray()) {
       assert(bundle.HasMember("artifact"));

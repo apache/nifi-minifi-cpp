@@ -600,12 +600,8 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
-  AgentManifest(const std::string& name, const utils::Identifier& uuid)
-      : DeviceInformation(name, uuid) {
-  }
-
-  AgentManifest(const std::string &name) // NOLINT
-      : DeviceInformation(name) {
+  explicit AgentManifest(std::string name)
+      : DeviceInformation(std::move(name)) {
   }
 
   std::string getName() const {
@@ -710,6 +706,11 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
       serialized.push_back(agentClass);
     }
 
+    SerializedResponseNode agentManifestHash;
+    agentManifestHash.name = "agentManifestHash";
+    agentManifestHash.value = getAgentManifestHash();
+    serialized.push_back(agentManifestHash);
+
     return serialized;
   }
 
@@ -718,6 +719,14 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     agentManifest.name = "agentManifest";
     agentManifest.children = AgentManifest{"manifest"}.serialize();
     return std::vector<SerializedResponseNode>{ agentManifest };
+  }
+
+  std::string getAgentManifestHash() {
+    if (!agentManifestHash_.has_value()) {
+      agentManifestHash_ = hashResponseNodes(getAgentManifest());
+    }
+
+    return *agentManifestHash_;
   }
 
   std::vector<SerializedResponseNode> getAgentStatus() const {
@@ -736,6 +745,9 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     serialized.push_back(agentStatus);
     return serialized;
   }
+
+ private:
+  std::optional<std::string> agentManifestHash_;
 };
 
 /**

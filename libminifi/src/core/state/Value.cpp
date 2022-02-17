@@ -17,6 +17,7 @@
  */
 
 #include "core/state/Value.h"
+#include <openssl/sha.h>
 #include <utility>
 #include <string>
 
@@ -34,6 +35,28 @@ const std::type_index Value::INT_TYPE = std::type_index(typeid(int));
 const std::type_index Value::BOOL_TYPE = std::type_index(typeid(bool));
 const std::type_index Value::DOUBLE_TYPE = std::type_index(typeid(double));
 const std::type_index Value::STRING_TYPE = std::type_index(typeid(std::string));
+
+void hashNode(const SerializedResponseNode& node, SHA512_CTX& ctx) {
+  SHA512_Update(&ctx, node.name.c_str(), node.name.length());
+  const auto valueStr = node.value.to_string();
+  SHA512_Update(&ctx, valueStr.c_str(), valueStr.length());
+  SHA512_Update(&ctx, &node.array, sizeof(node.array));
+  SHA512_Update(&ctx, &node.collapsible, sizeof(node.collapsible));
+  for (const auto& child : node.children) {
+    hashNode(child, ctx);
+  }
+}
+
+std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes) {
+  SHA512_CTX ctx;
+  SHA512_Init(&ctx);
+  for (const auto& node : nodes) {
+    hashNode(node, ctx);
+  }
+  std::array<std::byte, SHA512_DIGEST_LENGTH> digest{};
+  SHA512_Final(reinterpret_cast<unsigned char*>(digest.data()), &ctx);
+  return utils::StringUtils::to_hex(digest, true /*uppercase*/);
+}
 
 } /* namespace response */
 } /* namespace state */
