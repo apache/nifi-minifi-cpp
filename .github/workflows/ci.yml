@@ -147,15 +147,15 @@ jobs:
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev
+          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev clang-12 libc++-12-dev libc++abi-12-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
         run: |
           ./bootstrap.sh -e -t
           cd build
-          export CC=clang
-          export CXX=clang++
+          export CC=clang-12
+          export CXX=clang++-12
           export CXXFLAGS="${CXXFLAGS} -stdlib=libc++"
           export LDFLAGS="${LDFLAGS} -stdlib=libc++"
           cmake -DUSE_SHARED_LIBS= -DCMAKE_BUILD_TYPE=Release -DENABLE_MQTT=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DFAIL_ON_WARNINGS=ON ..
