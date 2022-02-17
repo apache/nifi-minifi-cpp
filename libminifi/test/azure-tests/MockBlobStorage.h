@@ -86,7 +86,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     }
 
     buffer_.assign(FETCHED_DATA.begin() + range_start, FETCHED_DATA.begin() + range_start + size);
-    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(buffer_.data(), buffer_.size());
+    return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(gsl::make_span(buffer_).as_span<const std::byte>());
   }
 
   minifi::azure::storage::PutAzureBlobStorageParameters getPassedPutParams() const {

@@ -40,8 +40,9 @@ class AzureBlobStorageInputStream : public io::InputStream {
     return result_.BodyStream->Length();
   }
 
-  size_t read(uint8_t *value, size_t len) override {
-    return result_.BodyStream->Read(value, len);
+  size_t read(gsl::span<std::byte> buffer) override {
+    const auto uint8_t_view = buffer.as_span<uint8_t>();
+    return result_.BodyStream->Read(uint8_t_view.data(), uint8_t_view.size());
   }
 
  private:
