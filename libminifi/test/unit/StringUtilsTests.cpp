@@ -543,3 +543,15 @@ TEST_CASE("StringUtils::getLastRegexMatch works correctly", "[getLastRegexMatch]
     CHECK(last_match.position(0) == 21);
   }
 }
+
+// ignore terminating \0 character
+template<size_t N>
+gsl::span<const std::byte> from_cstring(const char (&str)[N]) {
+  return gsl::span<const char>(str, N-1).as_span<const std::byte>();
+}
+
+TEST_CASE("StringUtils::escapeAscii", "[escapeAscii]") {
+  REQUIRE(StringUtils::escapeAscii(from_cstring("abcd")) == "abcd");
+  REQUIRE(StringUtils::escapeAscii(from_cstring("ab\n\r\t\v\fde")) == "ab\\n\\r\\t\\v\\fde");
+  REQUIRE(StringUtils::escapeAscii(from_cstring("ab\x00""c\x01""d")) == "ab\\x00c\\x01d");
+}
