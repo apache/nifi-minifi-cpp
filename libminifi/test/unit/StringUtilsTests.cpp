@@ -550,8 +550,8 @@ gsl::span<const std::byte> from_cstring(const char (&str)[N]) {
   return gsl::span<const char>(str, N-1).as_span<const std::byte>();
 }
 
-TEST_CASE("StringUtils::escapeAscii", "[escapeAscii]") {
-  REQUIRE(StringUtils::escapeAscii(from_cstring("abcd")) == "abcd");
-  REQUIRE(StringUtils::escapeAscii(from_cstring("ab\n\r\t\v\fde")) == "ab\\n\\r\\t\\v\\fde");
-  REQUIRE(StringUtils::escapeAscii(from_cstring("ab\x00""c\x01""d")) == "ab\\x00c\\x01d");
+TEST_CASE("StringUtils::escapeUnprintableBytes", "[escapeUnprintableBytes]") {
+  REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("abcd")) == "abcd");
+  REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("ab\n\r\t\v\fde")) == "ab\\n\\r\\t\\v\\fde");
+  REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("ab\x00""c\x01""d")) == "ab\\x00c\\x01d");
 }

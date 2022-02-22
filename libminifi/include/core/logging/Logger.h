@@ -60,59 +60,24 @@ using has_const_c_str_method = decltype(std::declval<const Arg&>().c_str());
 template<typename Arg>
 using has_str_method = decltype(std::declval<Arg>().str());
 
-template<typename Arg, typename = void>
-struct StringConverter {
-  decltype(auto) operator()(Arg&& val) const {
-    return std::forward<Arg>(val);
-  }
-};
-
-template<typename Arg>
-struct StringConverter<Arg, std::enable_if_t<
-    !utils::meta::is_detected_v<has_const_c_str_method, Arg> &&
-    utils::meta::is_detected_v<has_str_method, Arg>>> {
-  decltype(auto) operator()(Arg&& val) const {
-    return std::forward<Arg>(val).str();
-  }
-};
-
-template<typename Arg>
-struct StringConverter<Arg, std::enable_if_t<
-    !utils::meta::is_detected_v<has_const_c_str_method, Arg> &&
-    !utils::meta::is_detected_v<has_str_method, Arg> &&
-    std::is_invocable_v<Arg>>> {
-  decltype(auto) operator()(Arg&& val) const {
-    return std::forward<Arg>(val)();
-  }
-};
-
-template<typename Arg, typename = void>
-struct CStringConverter;
-
-template<typename Arg>
-struct CStringConverter<Arg, std::enable_if_t<
-    std::is_same_v<decltype(std::declval<const Arg&>().c_str()), const char*>>> {
-  const char* operator()(const Arg& val) {
-    return val.c_str();
-  }
-};
-
-template<typename Arg>
-struct CStringConverter<Arg, std::enable_if_t<
-    std::is_scalar_v<std::decay_t<Arg>>>> {
-  const Arg& operator()(const Arg& val) {
-    return val;
-  }
-};
-
 template<typename Arg>
 inline decltype(auto) conditional_stringify(Arg&& arg) {
-  return StringConverter<Arg>{}(std::forward<Arg>(arg));
+  if constexpr (utils::meta::is_detected_v<has_const_c_str_method, Arg> || std::is_scalar_v<std::decay_t<Arg>>) {
+    return std::forward<Arg>(arg);
+  } else if constexpr (utils::meta::is_detected_v<has_str_method, Arg>) {
+    return std::forward<Arg>(arg).str();
+  } else if constexpr (std::is_invocable_v<Arg>) {
+    return std::forward<Arg>(arg)();
+  }
 }
 
 template<typename Arg>
 inline decltype(auto) conditional_convert(Arg& val) {
-  return CStringConverter<Arg>{}(val);
+  if constexpr (std::is_scalar_v<std::decay_t<Arg>>) {
+    return val;
+  } else if constexpr (std::is_same_v<decltype(std::declval<const Arg&>().c_str()), const char*>) {
+    return val.c_str();
+  }
 }
 
 template<typename ...Args>

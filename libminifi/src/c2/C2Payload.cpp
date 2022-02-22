@@ -116,7 +116,7 @@ std::ostream& operator<<(std::ostream& out, const C2Payload& payload) {
     << "contents: " << payload.content_ << ", "
     << "op: " << payload.op_.toStringOr("<invalid operation>") << ", "
     << "raw: " << payload.raw_ << ", "
-    << "data: \"" << utils::StringUtils::escapeAscii(payload.raw_data_) << "\", "
+    << "data: \"" << utils::StringUtils::escapeUnprintableBytes(payload.raw_data_) << "\", "
     << "is_container: " << payload.is_container_ << ", "
     << "is_collapsible: " << payload.is_collapsible_
     << "}";

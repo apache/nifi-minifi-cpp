@@ -484,7 +484,7 @@ std::smatch StringUtils::getLastRegexMatch(const std::string& str, const std::re
   return last_match;
 }
 
-std::string StringUtils::escapeAscii(gsl::span<const std::byte> data) {
+std::string StringUtils::escapeUnprintableBytes(gsl::span<const std::byte> data) {
   constexpr const char* hex_digits = "0123456789abcdef";
   std::string result;
   for (auto byte : data) {
