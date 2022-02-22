@@ -493,10 +493,10 @@ class StringUtils {
    */
   static std::smatch getLastRegexMatch(const std::string& str, const std::regex& pattern);
 
+  static std::string escapeAscii(gsl::span<const std::byte> data);
+
  private:
 };
-
-std::ostream& operator<<(std::ostream& out, const gsl::span<const std::byte>& data);
 
 }  // namespace utils
 }  // namespace org::apache::nifi::minifi

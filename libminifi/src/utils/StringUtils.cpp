@@ -484,27 +484,30 @@ std::smatch StringUtils::getLastRegexMatch(const std::string& str, const std::re
   return last_match;
 }
 
-std::ostream& operator<<(std::ostream& out, const gsl::span<const std::byte>& data) {
+std::string StringUtils::escapeAscii(gsl::span<const std::byte> data) {
   constexpr const char* hex_digits = "0123456789abcdef";
+  std::string result;
   for (auto byte : data) {
     char ch = static_cast<char>(byte);
     if (std::isprint(static_cast<unsigned char>(ch))) {
-      out << ch;
-    } else if (ch == '\n'){
-      out << "\\n";
-    } else if (ch == '\t'){
-      out << "\\t";
-    } else if (ch == '\r'){
-      out << "\\r";
-    } else if (ch == '\v'){
-      out << "\\v";
-    } else if (ch == '\f'){
-      out << "\\f";
+      result += ch;
+    } else if (ch == '\n') {
+      result += "\\n";
+    } else if (ch == '\t') {
+      result += "\\t";
+    } else if (ch == '\r') {
+      result += "\\r";
+    } else if (ch == '\v') {
+      result += "\\v";
+    } else if (ch == '\f') {
+      result += "\\f";
     } else {
-      out << "\\x" << hex_digits[(std::to_integer<int>(byte) >> 4) & 0xf] << hex_digits[std::to_integer<int>(byte) & 0xf];
+      result += "\\x";
+      result += hex_digits[(std::to_integer<int>(byte) >> 4) & 0xf];
+      result += hex_digits[std::to_integer<int>(byte) & 0xf];
     }
   }
-  return out;
+  return result;
 }
 
 }  // namespace org::apache::nifi::minifi::utils

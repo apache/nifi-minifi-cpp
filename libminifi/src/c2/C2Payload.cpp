@@ -108,7 +108,6 @@ static std::ostream& operator<<(std::ostream& out, const std::map<K, V>& items) 
 }
 
 std::ostream& operator<<(std::ostream& out, const C2Payload& payload) {
-  using utils::operator<<;
   out << std::boolalpha;
   return out << "{"
     << "ident: \"" << payload.ident_ << "\", "
@@ -117,7 +116,7 @@ std::ostream& operator<<(std::ostream& out, const C2Payload& payload) {
     << "contents: " << payload.content_ << ", "
     << "op: " << payload.op_.toStringOr("<invalid operation>") << ", "
     << "raw: " << payload.raw_ << ", "
-    << "data: \"" << gsl::make_span(payload.raw_data_) << "\", "
+    << "data: \"" << utils::StringUtils::escapeAscii(payload.raw_data_) << "\", "
     << "is_container: " << payload.is_container_ << ", "
     << "is_collapsible: " << payload.is_collapsible_
     << "}";

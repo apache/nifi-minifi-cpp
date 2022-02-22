@@ -70,9 +70,7 @@ struct StringConverter {
 template<typename Arg>
 struct StringConverter<Arg, std::enable_if_t<
     !utils::meta::is_detected_v<has_const_c_str_method, Arg> &&
-    utils::meta::is_detected_v<has_str_method, Arg>
-  >> {
-
+    utils::meta::is_detected_v<has_str_method, Arg>>> {
   decltype(auto) operator()(Arg&& val) const {
     return std::forward<Arg>(val).str();
   }
@@ -82,9 +80,7 @@ template<typename Arg>
 struct StringConverter<Arg, std::enable_if_t<
     !utils::meta::is_detected_v<has_const_c_str_method, Arg> &&
     !utils::meta::is_detected_v<has_str_method, Arg> &&
-    std::is_invocable_v<Arg>
-  >> {
-
+    std::is_invocable_v<Arg>>> {
   decltype(auto) operator()(Arg&& val) const {
     return std::forward<Arg>(val)();
   }
@@ -95,9 +91,7 @@ struct CStringConverter;
 
 template<typename Arg>
 struct CStringConverter<Arg, std::enable_if_t<
-    std::is_same_v<decltype(std::declval<const Arg&>().c_str()), const char*>
-  >> {
-
+    std::is_same_v<decltype(std::declval<const Arg&>().c_str()), const char*>>> {
   const char* operator()(const Arg& val) {
     return val.c_str();
   }
@@ -105,9 +99,7 @@ struct CStringConverter<Arg, std::enable_if_t<
 
 template<typename Arg>
 struct CStringConverter<Arg, std::enable_if_t<
-    std::is_scalar_v<std::decay_t<Arg>>
-  >> {
-
+    std::is_scalar_v<std::decay_t<Arg>>>> {
   const Arg& operator()(const Arg& val) {
     return val;
   }

@@ -161,12 +161,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
     logger_->log_debug("Response code '" "%" PRId64 "' from '%s'", respCode, url);
   }
   const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
-  logger_->log_trace("Received response: \"%s\"", [&] () -> std::string {
-    using utils::operator<<;
-    std::stringstream ss;
-    ss << response_body_bytes;
-    return std::move(ss).str();
-  });
+  logger_->log_trace("Received response: \"%s\"", [&] {return utils::StringUtils::escapeAscii(response_body_bytes);});
   if (isOkay && respCode) {
     if (payload.isRaw()) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
