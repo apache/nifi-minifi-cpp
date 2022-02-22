@@ -38,7 +38,7 @@ namespace {
 class WriteCallback : public OutputStreamCallback {
  public:
   WriteCallback(std::filesystem::path templateFile, const core::FlowFile& flow_file)
-      :template_file_{std::move(templateFile)}, flow_file_{std::move(flow_file)}
+      :template_file_{std::move(templateFile)}, flow_file_{flow_file}
   {}
   int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
     logger_->log_info("ApplyTemplate reading template file from %s", template_file_);
