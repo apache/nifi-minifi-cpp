@@ -91,4 +91,4 @@ Feature: Sending data from MiNiFi-C++ to an Azure storage server
 
     Then the Minifi logs contain the following message: "key:azure.blobname value:test_1" in less than 60 seconds
     Then the Minifi logs contain the following message: "key:azure.blobname value:test_2" in less than 60 seconds
-    And the Minifi logs do not contain the following message: "key:azure.blobname value:other_test"
+    And the Minifi logs do not contain the following message: "key:azure.blobname value:other_test" after 0 seconds

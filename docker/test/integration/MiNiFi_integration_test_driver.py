@@ -244,7 +244,8 @@ class MiNiFi_integration_test():
                     return
         assert False
 
-    def check_minifi_log_does_not_contain(self, line):
+    def check_minifi_log_does_not_contain(self, line, wait_time_seconds):
+        time.sleep(wait_time_seconds)
         for container in self.cluster.containers.values():
             if container.get_engine() == "minifi-cpp":
                 _, logs = self.cluster.get_app_log(container)

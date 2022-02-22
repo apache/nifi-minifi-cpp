@@ -746,9 +746,9 @@ def step_impl(context, log_message, count, seconds):
     context.test.check_minifi_log_contents(log_message, 1, count)
 
 
-@then("the Minifi logs do not contain the following message: \"{log_message}\"")
-def step_impl(context, log_message):
-    context.test.check_minifi_log_does_not_contain(log_message)
+@then("the Minifi logs do not contain the following message: \"{log_message}\" after {seconds:d} seconds")
+def step_impl(context, log_message, seconds):
+    context.test.check_minifi_log_does_not_contain(log_message, seconds)
 
 
 @then("the Minifi logs match the following regex: \"{regex}\" in less than {duration}")
