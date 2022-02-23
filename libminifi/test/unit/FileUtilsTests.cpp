@@ -500,6 +500,19 @@ TEST_CASE("FileUtils::set_permissions and get_permissions", "[TestSetPermissions
   REQUIRE(FileUtils::get_permissions(path, perms));
   REQUIRE(perms == 0644);
 }
+
+TEST_CASE("FileUtils::get_permission_string", "[TestGetPermissionString]") {
+  TestController testController;
+
+  auto dir = testController.createTempDirectory();
+  auto path = dir + FileUtils::get_separator() + "test_file.txt";
+  std::ofstream outfile(path, std::ios::out | std::ios::binary);
+
+  REQUIRE(FileUtils::set_permissions(path, 0644) == 0);
+  std::string perms;
+  REQUIRE(true == FileUtils::get_permission_string(path, perms));
+  REQUIRE(perms == "rw-r--r--");
+}
 #endif
 
 TEST_CASE("FileUtils::exists", "[TestExists]") {
@@ -580,4 +593,14 @@ TEST_CASE("FileUtils::contains", "[utils][file][contains]") {
     REQUIRE(utils::file::contains(file_path, "banana"));
     REQUIRE(utils::file::contains(file_path, "ABC"));
   }
+}
+
+TEST_CASE("FileUtils::get_relative_path", "[TestGetRelativePath]") {
+  TestController test_controller;
+  const auto base_path = test_controller.createTempDirectory();
+  std::string path = "/random/non-existent/dir";
+  REQUIRE(FileUtils::get_relative_path(path, base_path) == std::nullopt);
+  path = base_path + FileUtils::get_separator() + "subdir/file.log";
+  REQUIRE(*FileUtils::get_relative_path(path, base_path) == "subdir/file.log");
+  REQUIRE(*FileUtils::get_relative_path(path, base_path + FileUtils::get_separator()) == "subdir/file.log");
 }

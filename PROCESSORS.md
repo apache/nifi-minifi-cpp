@@ -39,6 +39,7 @@
 - [ListAzureDataLakeStorage](#listazuredatalakestorage)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
+- [ListenFile](#listfile)
 - [ListS3](#lists3)
 - [ListSFTP](#listsftp)
 - [LogAttribute](#logattribute)
@@ -1023,6 +1024,33 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |invalid|SysLog message format invalid|
 |success|All files are routed to success|
+
+
+## ListFile
+
+### Description
+
+Retrieves a listing of files from the local filesystem. For each file that is listed, creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Input Directory**|||The input directory from which files to pull files|
+|**Recurse Subdirectories**|true||Indicates whether to list files from subdirectories of the directory|
+|File Filter|||Only files whose names match the given regular expression will be picked up|
+|Path Filter|||When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned|
+|**Minimum File Age**|0 sec||The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored|
+|Maximum File Age|||The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored|
+|**Minimum File Size**|0 B||The minimum size that a file must be in order to be pulled|
+|Maximum File Size|||The maximum size that a file can be in order to be pulled|
+|**Ignore Hidden Files**|true||Indicates whether or not hidden files should be ignored|
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|All FlowFiles that are received are routed to success|
 
 
 ## ListS3
