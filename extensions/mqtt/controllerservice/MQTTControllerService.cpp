@@ -45,10 +45,10 @@ core::Property MQTTControllerService::Topic("Topic", "The topic to publish the m
 core::Property MQTTControllerService::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
 
 void MQTTControllerService::initialize() {
-  if (initialized_)
-    return;
-
   std::lock_guard<std::mutex> lock(initialization_mutex_);
+  if (initialized_) {
+    return;
+  }
 
   ControllerService::initialize();
 

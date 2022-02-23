@@ -97,7 +97,7 @@ class CoapConnectorService : public core::controller::ControllerService {
   // initialization mutex.
   std::mutex initialization_mutex_;
 
-  std::atomic<bool> initialized_{ false };
+  bool initialized_ = false;
 
  private:
   // host connecting to.

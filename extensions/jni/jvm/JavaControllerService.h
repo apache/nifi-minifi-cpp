@@ -48,12 +48,10 @@ class JavaControllerService : public core::controller::ControllerService, public
  public:
   explicit JavaControllerService(const std::string &name, const utils::Identifier &uuid = {})
       : ControllerService(name, uuid) {
-    initialized_ = false;
   }
 
   explicit JavaControllerService(const std::string &name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(name) {
-    initialized_ = false;
     setConfiguration(configuration);
     initialize();
   }
@@ -144,7 +142,7 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   std::mutex initialization_mutex_;
 
-  std::atomic<bool> initialized_;
+  bool initialized_ = false;
 
   std::vector<std::string> classpaths_;
 

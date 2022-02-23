@@ -43,8 +43,9 @@ core::Property DatabaseService::ConnectionString(core::PropertyBuilder::createPr
 void DatabaseService::initialize() {
   std::lock_guard<std::recursive_mutex> lock(initialization_mutex_);
 
-  if (initialized_)
+  if (initialized_) {
     return;
+  }
 
   ControllerService::initialize();
 
