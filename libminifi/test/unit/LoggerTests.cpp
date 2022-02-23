@@ -87,20 +87,12 @@ struct CStringConvertible {
   std::string data;
 };
 
-struct StringConvertible {
-  std::string str() {
-    return data;
-  }
-
-  std::string data;
-};
-
 TEST_CASE("Test log custom string formatting", "[ttl6]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
-  logger->log_trace("%s %s %s %s", "one", std::string{"two"}, StringConvertible{"three"}, CStringConvertible{"four"});
+  logger->log_trace("%s %s %s", "one", std::string{"two"}, CStringConvertible{"three"});
 
-  REQUIRE(LogTestController::getInstance().contains("[trace] one two three four", 0s));
+  REQUIRE(LogTestController::getInstance().contains("[trace] one two three", 0s));
   LogTestController::getInstance().reset();
 }
 

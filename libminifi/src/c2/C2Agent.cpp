@@ -858,7 +858,7 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
 }
 
 void C2Agent::enqueue_c2_server_response(C2Payload &&resp) {
-  logger_->log_trace("Server response: %s", resp);
+  logger_->log_trace("Server response: %s", [&] {return resp.str();});
 
   responses.enqueue(std::move(resp));
 }
