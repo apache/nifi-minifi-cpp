@@ -90,27 +90,27 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
 
     for (const std::string& clazz : classes) {
       auto instance = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-      auto response_node = dynamic_cast<state::response::ResponseNode*>(instance.get());
+      auto response_node = utils::dynamic_unique_cast<state::response::ResponseNode>(std::move(instance));
       if (nullptr == response_node) {
         logger_->log_error("No metric defined for %s", clazz);
         continue;
       }
-      auto identifier = dynamic_cast<state::response::AgentIdentifier*>(response_node);
+      auto identifier = dynamic_cast<state::response::AgentIdentifier*>(response_node.get());
       if (identifier != nullptr) {
         identifier->setAgentIdentificationProvider(configuration_);
       }
-      auto monitor = dynamic_cast<state::response::AgentMonitor*>(response_node);
+      auto monitor = dynamic_cast<state::response::AgentMonitor*>(response_node.get());
       if (monitor != nullptr) {
         monitor->addRepository(provenance_repo_);
         monitor->addRepository(flow_file_repo_);
         monitor->setStateMonitor(update_sink);
       }
-      auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node);
+      auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
       if (configuration_checksums) {
         configuration_checksums->addChecksumCalculator(configuration_->getChecksumCalculator());
         configuration_checksums->addChecksumCalculator(flow_configuration_->getChecksumCalculator());
       }
-      auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node);
+      auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
       if (flowMonitor != nullptr) {
         for (auto &con : connections) {
           flowMonitor->addConnection(con.second);
@@ -118,9 +118,9 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         flowMonitor->setStateMonitor(update_sink);
         flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
       }
+      const auto responseNodeName = response_node->getName();
       std::lock_guard<std::mutex> guard(metrics_mutex_);
-      std::unique_ptr<state::response::ResponseNode> responseNodeToStore{dynamic_cast<state::response::ResponseNode*>(instance.release())};
-      root_response_nodes_[responseNodeToStore->getName()] = std::move(responseNodeToStore);
+      root_response_nodes_[responseNodeName] = std::move(response_node);
     }
   }
 

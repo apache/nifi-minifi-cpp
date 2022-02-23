@@ -249,7 +249,7 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
 
   ~TestFlowController() override = default;
 
-  void load(std::unique_ptr<org::apache::nifi::minifi::core::ProcessGroup>&& /*root*/ = nullptr, bool /*reload*/ = false) override {
+  void load(std::unique_ptr<org::apache::nifi::minifi::core::ProcessGroup> /*root*/ = nullptr, bool /*reload*/ = false) override {
   }
 
   int16_t start() override {

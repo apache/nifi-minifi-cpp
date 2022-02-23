@@ -1039,7 +1039,8 @@ std::shared_ptr<core::FlowFile> ProcessSession::get() {
 
   auto current = dynamic_cast<Connection*>(first);
   if (!current) {
-    logger_->log_error("Get could not find current Connection for %s", process_context_->getProcessorNode()->getName());
+    logger_->log_error("The incoming connection [%s] of the processor [%s] \"%s\" is not actually a Connection.",
+                       first->getUUIDStr(), process_context_->getProcessorNode()->getUUIDStr(), process_context_->getProcessorNode()->getName());
     return {};
   }
 

@@ -271,7 +271,7 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   return root;
 }
 
-void FlowController::load(std::unique_ptr<core::ProcessGroup>&& root, bool reload) {
+void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload) {
   std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
   if (running_) {
     stop();

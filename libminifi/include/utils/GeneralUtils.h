@@ -40,7 +40,7 @@ constexpr T intdiv_ceil(T numerator, T denominator) {
  * if conversion fails, an empty unique_ptr is returned
  */
 template <typename T_To, typename T_From>
-std::unique_ptr<T_To> dynamic_unique_cast(std::unique_ptr<T_From>&& obj) {
+std::unique_ptr<T_To> dynamic_unique_cast(std::unique_ptr<T_From> obj) {
   return std::unique_ptr<T_To>{dynamic_cast<T_To*>(obj.get()) ? dynamic_cast<T_To*>(obj.release()) : nullptr};
 }
 

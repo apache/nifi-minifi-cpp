@@ -96,7 +96,8 @@ bool ProcessGroup::isRemoteProcessGroup() {
 }
 
 
-void ProcessGroup::addProcessor(std::unique_ptr<Processor>&& processor) {
+void ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
+  gsl_Expects(processor);
   const auto name = processor->getName();
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   processors_.insert(std::move(processor));

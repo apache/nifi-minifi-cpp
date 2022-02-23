@@ -92,7 +92,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   }
 
   // Load flow xml from disk, after that, create the root process group and its children, initialize the flows
-  virtual void load(std::unique_ptr<core::ProcessGroup>&& root = nullptr, bool reload = false);
+  virtual void load(std::unique_ptr<core::ProcessGroup> root = nullptr, bool reload = false);
 
   // Whether the Flow Controller is start running
   bool isRunning() override {

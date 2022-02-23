@@ -21,6 +21,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace org::apache::nifi::minifi::processors {
@@ -59,11 +60,12 @@ class ProcessorUtils {
     if (ptr == nullptr) {
       return nullptr;
     }
-    if (dynamic_cast<core::Processor*>(ptr.get()) == nullptr) {
+
+    auto returnPtr = utils::dynamic_unique_cast<core::Processor>(std::move(ptr));
+    if (!returnPtr) {
       throw std::runtime_error("Invalid return from the classloader");
     }
 
-    auto returnPtr = std::unique_ptr<core::Processor>{dynamic_cast<core::Processor*>(ptr.release())};
     returnPtr->initialize();
     returnPtr->setStreamFactory(stream_factory);
     return returnPtr;

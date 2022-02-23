@@ -57,7 +57,7 @@ class QueueMetrics : public ResponseNode {
     return "QueueMetrics";
   }
 
-  void addConnection(std::unique_ptr<minifi::Connection>&& connection) {
+  void addConnection(std::unique_ptr<minifi::Connection> connection) {
     if (nullptr != connection) {
       connections.insert(std::make_pair(connection->getName(), std::move(connection)));
     }

@@ -175,7 +175,7 @@ class ProcessGroup : public CoreComponent {
     return parent_process_group_;
   }
   // Add processor
-  void addProcessor(std::unique_ptr<Processor>&& processor);
+  void addProcessor(std::unique_ptr<Processor> processor);
   // Add child processor group
   void addProcessGroup(std::unique_ptr<ProcessGroup> child);
   // ! Add connections
