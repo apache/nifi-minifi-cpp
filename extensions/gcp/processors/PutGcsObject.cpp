@@ -23,7 +23,7 @@
 #include "core/Resource.h"
 #include "core/FlowFile.h"
 #include "utils/OptionalUtils.h"
-#include "../utils/GCPAttributes.h"
+#include "../GCPAttributes.h"
 
 namespace gcs = ::google::cloud::storage;
 
@@ -128,24 +128,24 @@ class UploadToGCSCallback : public InputStreamCallback {
     return result_;
   }
 
-  void setHashValue(std::optional<std::string> hash_value_str) {
-    hash_value_ = hash_value_str ? gcs::MD5HashValue(*hash_value_str) : gcs::MD5HashValue();
+  void setHashValue(const std::string& hash_value_str) {
+    hash_value_ = gcs::MD5HashValue(hash_value_str);
   }
 
-  void setCrc32CChecksumValue(std::optional<std::string> crc32c_checksum_str) {
-    crc32c_checksum_ = crc32c_checksum_str ? gcs::Crc32cChecksumValue(*crc32c_checksum_str) : gcs::Crc32cChecksumValue();
+  void setCrc32CChecksumValue(const std::string& crc32c_checksum_str) {
+    crc32c_checksum_ = gcs::Crc32cChecksumValue(crc32c_checksum_str);
   }
 
   void setEncryptionKey(const gcs::EncryptionKey& encryption_key) {
     encryption_key_ = encryption_key;
   }
 
-  void setPredefinedAcl(std::optional<PutGcsObject::PredefinedAcl> predefined_acl) {
-    predefined_acl_ = predefined_acl ? gcs::PredefinedAcl(predefined_acl->toString()) : gcs::PredefinedAcl();
+  void setPredefinedAcl(PutGcsObject::PredefinedAcl predefined_acl) {
+    predefined_acl_ = gcs::PredefinedAcl(predefined_acl.toString());
   }
 
-  void setContentType(std::optional<std::string> content_type_str) {
-    content_type_ = content_type_str ? gcs::ContentType(*content_type_str) : gcs::ContentType();
+  void setContentType(const std::string& content_type_str) {
+    content_type_ = gcs::ContentType(content_type_str);
   }
 
   void setIfGenerationMatch(std::optional<bool> overwrite) {
@@ -172,7 +172,7 @@ class UploadToGCSCallback : public InputStreamCallback {
 };
 
 [[nodiscard]] std::optional<std::string> getContentType(const core::ProcessContext& context, const core::FlowFile& flow_file) {
-  return context.getProperty(PutGcsObject::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
+  return context.getProperty(PutGcsObject::ContentType) | utils::orElse([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
 
 void setAttributesFromObjectMetadata(core::FlowFile& flow_file, const gcs::ObjectMetadata& object_metadata) {
@@ -196,6 +196,13 @@ void setAttributesFromObjectMetadata(core::FlowFile& flow_file, const gcs::Objec
     flow_file.setAttribute(GCS_OWNER_ENTITY_ATTR, object_metadata.owner().entity);
     flow_file.setAttribute(GCS_OWNER_ENTITY_ID_ATTR, object_metadata.owner().entity_id);
   }
+}
+
+std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) {
+  std::string service_name;
+  if (context.getProperty(PutGcsObject::GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name))
+    return std::dynamic_pointer_cast<const GcpCredentialsControllerService>(context.getControllerService(service_name))->getCredentials();
+  return nullptr;
 }
 }  // namespace
 
@@ -228,35 +235,27 @@ void PutGcsObject::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
-      logger_->log_error("%s is not in base64: %s", EncryptionKey.getName(), *encryption_key);
+      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, EncryptionKey.getName() + " is not in base64: " + *encryption_key);
     }
   }
+  gcp_credentials_ = getCredentials(*context);
 }
 
 void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session);
 
-  auto gcp_credentials_controller_service = getGCPCredentialsControllerService(*context);
-  if (!gcp_credentials_controller_service) {
-    logger_->log_error("Invalid or missing Google Cloud Platform Credentials Controller Service");
-    context->yield();
-    return;
-  }
-
-  auto credentials = gcp_credentials_controller_service->getCredentials();
-  if (!credentials) {
+  if (!gcp_credentials_) {
     logger_->log_error("Invalid or missing credentials from Google Cloud Platform Credentials Controller Service");
     context->yield();
     return;
   }
 
-  auto ff = session->get();
-  if (!ff) {
+  auto flow_file = session->get();
+  if (!flow_file) {
     context->yield();
     return;
   }
 
-  auto flow_file = gsl::not_null(std::move(ff));
   auto bucket = context->getProperty(Bucket, flow_file) | utils::orElse([&flow_file] {return flow_file->getAttribute(GCS_BUCKET_ATTR);});
   if (!bucket) {
     logger_->log_error("Missing bucket name");
@@ -270,14 +269,26 @@ void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     return;
   }
 
-  gcs::Client client = getClient(gcs::ClientOptions(credentials));
+  gcs::Client client = getClient(gcs::ClientOptions(gcp_credentials_));
   UploadToGCSCallback callback(client, *bucket, *object_name);
-  if (auto crc32_checksum_location = context->getProperty(Crc32cChecksumLocation, flow_file))
-    callback.setCrc32CChecksumValue(flow_file->getAttribute(*crc32_checksum_location));
-  if (auto md5_hash_location = context->getProperty(MD5HashLocation, flow_file))
-    callback.setHashValue(flow_file->getAttribute(*md5_hash_location));
-  callback.setContentType(getContentType(*context, *flow_file));
-  callback.setPredefinedAcl(context->getProperty<PredefinedAcl>(ObjectACL));
+
+  if (auto crc32_checksum_location = context->getProperty(Crc32cChecksumLocation, flow_file)) {
+    if (auto crc32_checksum = flow_file->getAttribute(*crc32_checksum_location)) {
+      callback.setCrc32CChecksumValue(*crc32_checksum);
+    }
+  }
+
+  if (auto md5_hash_location = context->getProperty(MD5HashLocation, flow_file)) {
+    if (auto md5_hash = flow_file->getAttribute(*md5_hash_location)) {
+      callback.setHashValue(*md5_hash_location);
+    }
+  }
+
+  if (auto content_type = getContentType(*context, *flow_file))
+    callback.setContentType(*content_type);
+
+  if (auto predefined_acl = context->getProperty<PredefinedAcl>(ObjectACL))
+    callback.setPredefinedAcl(*predefined_acl);
   callback.setIfGenerationMatch(context->getProperty<bool>(OverwriteObject));
 
   callback.setEncryptionKey(encryption_key_);
@@ -293,13 +304,6 @@ void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     setAttributesFromObjectMetadata(*flow_file, *result);
     session->transfer(flow_file, Success);
   }
-}
-
-std::shared_ptr<GcpCredentialsControllerService> PutGcsObject::getGCPCredentialsControllerService(core::ProcessContext& context) {
-  std::string service_name;
-  if (context.getProperty(GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name))
-    return std::dynamic_pointer_cast<GcpCredentialsControllerService>(context.getControllerService(service_name));
-  return nullptr;
 }
 
 REGISTER_RESOURCE(PutGcsObject, "Puts flow files to a Google Cloud Storage Bucket.");

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "../processors/PutGcsObject.h"
-#include "../utils/GCPAttributes.h"
+#include "GCPAttributes.h"
 #include "core/Resource.h"
 #include "SingleInputTestController.h"
 #include "google/cloud/storage/testing/mock_client.h"
@@ -254,25 +254,11 @@ TEST_F(PutGcsObjectTests, ValidServerSideEncryptionTest) {
 }
 
 TEST_F(PutGcsObjectTests, InvalidServerSideEncryptionTest) {
-  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
-      .WillOnce([](const ResumableUploadRequest& request) {
-        EXPECT_FALSE(request.HasOption<gcs::EncryptionKey>());
-        auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
-        EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
-        EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
-        EXPECT_CALL(*mock_upload_session, UploadChunk).WillRepeatedly(return_upload_in_progress());
-        EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
-        return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
-      });
+  EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGcsObject::EncryptionKey.getName(), "not_base64_key"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGcsObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGcsObject::ObjectName.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world");
-  ASSERT_EQ(1, result.at(PutGcsObject::Success).size());
-  EXPECT_EQ(0, result.at(PutGcsObject::Failure).size());
-  EXPECT_EQ(std::nullopt, result.at(PutGcsObject::Success)[0]->getAttribute(minifi_gcp::GCS_ENCRYPTION_SHA256_ATTR));
-  EXPECT_EQ(std::nullopt, result.at(PutGcsObject::Success)[0]->getAttribute(minifi_gcp::GCS_ENCRYPTION_ALGORITHM_ATTR));
-  EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGcsObject::Success)[0]));
+  EXPECT_THROW(test_controller_.trigger("hello world"), minifi::Exception);
 }
 
 TEST_F(PutGcsObjectTests, NoContentType) {

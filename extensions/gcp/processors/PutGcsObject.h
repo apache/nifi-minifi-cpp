@@ -53,9 +53,7 @@ class PutGcsObject : public core::Processor {
   EXTENSIONAPI static const core::Property GCPCredentials;
   EXTENSIONAPI static const core::Property Bucket;
   EXTENSIONAPI static const core::Property ObjectName;
-
   EXTENSIONAPI static const core::Property NumberOfRetries;
-
   EXTENSIONAPI static const core::Property ContentType;
   EXTENSIONAPI static const core::Property MD5HashLocation;
   EXTENSIONAPI static const core::Property Crc32cChecksumLocation;
@@ -84,7 +82,7 @@ class PutGcsObject : public core::Processor {
   google::cloud::storage::RetryPolicyOption::Type retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(6);
   google::cloud::storage::EncryptionKey encryption_key_;
 
-  static std::shared_ptr<GcpCredentialsControllerService> getGCPCredentialsControllerService(core::ProcessContext& context);
+  std::shared_ptr<google::cloud::storage::oauth2::Credentials> gcp_credentials_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutGcsObject>::getLogger();
 };
 
