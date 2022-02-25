@@ -103,6 +103,8 @@ class KindProxy:
         kubectl_logs_output = subprocess.run(['docker', 'exec', 'kind-control-plane', 'kubectl', '-n', namespace, 'logs', pod_name], capture_output=True)
         if kubectl_logs_output.returncode == 0:
             return kubectl_logs_output.stdout
+        else:
+            return None
 
     def cleanup(self):
         # cleanup gets called multiple times, also after the temp directories had been removed

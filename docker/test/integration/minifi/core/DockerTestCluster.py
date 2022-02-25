@@ -39,6 +39,8 @@ class DockerTestCluster(SingleNodeDockerCluster):
             return self.__get_app_log_from_docker_container(container_name)
         elif type == 'direct':
             return self.containers[container_name].get_app_log()
+        else:
+            raise Exception("Unexpected container type '%s'" % type)
 
     def __get_app_log_from_docker_container(self, container_name):
         try:

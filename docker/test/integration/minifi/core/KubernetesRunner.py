@@ -28,12 +28,6 @@ class KubernetesRunner(MinifiContainer):
         test_dir = os.environ['TEST_DIRECTORY']
         shutil.copy(os.path.join(test_dir, 'resources', 'kubernetes', 'minifi-conf', 'minifi-log.properties'), self.config_dir)
 
-    def type(self):
-        return 'direct'
-
-    def get_app_log(self):
-        return 'OK', self.kind.get_logs('daemon', 'log-collector')
-
     def deploy(self):
         if not self.set_deployed():
             return
@@ -49,6 +43,12 @@ class KubernetesRunner(MinifiContainer):
         self.kind.create_objects()
 
         logging.info('Finished setting up container: %s', self.name)
+
+    def type(self):
+        return 'direct'
+
+    def get_app_log(self):
+        return 'OK', self.kind.get_logs('daemon', 'log-collector')
 
     def cleanup(self):
         logging.info('Cleaning up container: %s', self.name)

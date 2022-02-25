@@ -34,7 +34,7 @@ def __create_processor(context, processor_type, processor_name, property_name, p
     container = context.test.acquire_container(container_name, engine)
     processor = locate("minifi.processors." + processor_type + "." + processor_type)()
     processor.set_name(processor_name)
-    if property_name:
+    if property_name is not None:
         processor.set_property(property_name, property_value)
     context.test.add_node(processor)
     # Assume that the first node declared is primary unless specified otherwise
