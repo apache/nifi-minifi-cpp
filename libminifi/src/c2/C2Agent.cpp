@@ -243,7 +243,7 @@ void C2Agent::performHeartBeat() {
       payload.addPayload(std::move(child_metric_payload));
     }
   }
-  C2Payload&& response = protocol_.load()->consumePayload(payload);
+  C2Payload response = protocol_.load()->consumePayload(payload);
 
   enqueue_c2_server_response(std::move(response));
 
