@@ -16,13 +16,13 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include <memory>
 #include <string>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Processor.h"
-
-#pragma once
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -33,7 +33,7 @@ class LogOnDestructionProcessor : public core::Processor {
   }
 
   ~LogOnDestructionProcessor() override {
-    logger_->log_error("LogOnDestructionProcessor is being destructed");
+    logger_->log_info("LogOnDestructionProcessor is being destructed");
   }
 
  private:

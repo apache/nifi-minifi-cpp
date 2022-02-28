@@ -50,10 +50,10 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
   }
 
  protected:
-  void updateProperties(std::unique_ptr<minifi::FlowController>& flow_controller) override {
-    dynamic_cast<minifi::state::ProcessorController*>(flow_controller->getComponents("TailFile1")[0])
+  void updateProperties(minifi::FlowController& flow_controller) override {
+    dynamic_cast<minifi::state::ProcessorController*>(flow_controller.getComponents("TailFile1")[0])
         ->getProcessor()->setProperty(minifi::processors::TailFile::FileName, test_file_1_);
-    dynamic_cast<minifi::state::ProcessorController*>(flow_controller->getComponents("TailFile2")[0])
+    dynamic_cast<minifi::state::ProcessorController*>(flow_controller.getComponents("TailFile2")[0])
         ->getProcessor()->setProperty(minifi::processors::TailFile::FileName, test_file_2_);
   }
 

@@ -34,26 +34,19 @@ namespace core = org::apache::nifi::minifi::core;
 
 PythonProcessor::PythonProcessor(core::Processor* proc) {
   processor_ = dynamic_cast<python::processors::ExecutePythonProcessor*>(proc);
+  gsl_Expects(processor_);
 }
 
 void PythonProcessor::setSupportsDynamicProperties() {
-  if (!processor_) {
-    throw std::runtime_error("Access of Processor after it has been released");
-  }
-
-  dynamic_cast<python::processors::ExecutePythonProcessor*>(processor_)->setSupportsDynamicProperties();
+  processor_->setSupportsDynamicProperties();
 }
 
 void PythonProcessor::setDecription(const std::string &desc) {
-  if (!processor_) {
-    throw std::runtime_error("Access of Processor after it has been released");
-  }
-
-  dynamic_cast<python::processors::ExecutePythonProcessor*>(processor_)->setDescription(desc);
+  processor_->setDescription(desc);
 }
 
 void PythonProcessor::addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el) {
-  dynamic_cast<python::processors::ExecutePythonProcessor*>(processor_)->addProperty(name, description, defaultvalue, required, el);
+  processor_->addProperty(name, description, defaultvalue, required, el);
 }
 
 } /* namespace python */

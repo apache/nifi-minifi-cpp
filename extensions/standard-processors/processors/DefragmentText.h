@@ -50,7 +50,7 @@ class DefragmentText : public core::Processor {
   void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) override;
   void onTrigger(core::ProcessContext* context, core::ProcessSession* session) override;
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
-  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) const override;
+  std::set<core::Connectable*> getOutGoingConnections(const std::string &relationship) override;
 
   SMART_ENUM(PatternLocation,
              (END_OF_MESSAGE, "End of Message"),

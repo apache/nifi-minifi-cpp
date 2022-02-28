@@ -79,7 +79,7 @@ class IntegrationBase {
   virtual void configureFullHeartbeat() {
   }
 
-  virtual void updateProperties(std::unique_ptr<minifi::FlowController>& /*fc*/) {
+  virtual void updateProperties(minifi::FlowController& /*fc*/) {
   }
 
   void configureSecurity();
@@ -154,7 +154,7 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
 
   flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME);
   flowController_->load();
-  updateProperties(flowController_);
+  updateProperties(*flowController_);
   flowController_->start();
 
   runAssertions();

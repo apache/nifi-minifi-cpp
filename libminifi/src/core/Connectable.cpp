@@ -141,7 +141,7 @@ void Connectable::notifyWork() {
   }
 }
 
-std::set<Connectable*> Connectable::getOutGoingConnections(const std::string &relationship) const {
+std::set<Connectable*> Connectable::getOutGoingConnections(const std::string &relationship) {
   const auto it = outgoing_connections_.find(relationship);
   if (it != outgoing_connections_.end()) {
     return it->second;

@@ -179,7 +179,7 @@ class ProcessGroup : public CoreComponent {
   // Add child processor group
   void addProcessGroup(std::unique_ptr<ProcessGroup> child);
   // ! Add connections
-  void addConnection(std::unique_ptr<Connection>&& connection);
+  void addConnection(std::unique_ptr<Connection> connection);
   // Generic find
   template <typename Fun>
   Processor* findProcessor(Fun condition, Traverse traverse) const {
@@ -203,13 +203,7 @@ class ProcessGroup : public CoreComponent {
   // findProcessor based on name
   Processor* findProcessorByName(const std::string &processorName, Traverse traverse = Traverse::IncludeChildren) const;
 
-  void getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
-    const std::function<std::unique_ptr<state::ProcessorController>(Processor&)>& controllerFactory);
-
   void getAllProcessors(std::vector<Processor*>& processor_vec) const;
-
-  void getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
-    const std::function<std::unique_ptr<state::ProcessorController>(Processor&)>& controllerFactory);
 
   /**
    * Add controller service
@@ -250,7 +244,6 @@ class ProcessGroup : public CoreComponent {
   // Processors (ProcessNode) inside this process group which include Input/Output Port, Remote Process Group input/Output port
   std::set<std::unique_ptr<Processor>> processors_;
   std::set<Processor*> failed_processors_;
-  std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
   std::set<std::unique_ptr<ProcessGroup>> child_process_groups_;
   // Connections between the processor inside the group;
   std::set<std::unique_ptr<Connection>> connections_;

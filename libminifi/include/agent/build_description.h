@@ -139,9 +139,7 @@ class BuildDescription {
         auto obj = core::ClassLoader::getDefaultClassLoader().instantiate(class_name, class_name);
 
         std::unique_ptr<core::ConfigurableComponent> component{
-          dynamic_cast<core::ConfigurableComponent*>(obj.get()) ?
-          dynamic_cast<core::ConfigurableComponent*>(obj.release()) :
-          nullptr
+          utils::dynamic_unique_cast<core::ConfigurableComponent>(std::move(obj))
         };
 
         std::string classDescriptionName = clazz;

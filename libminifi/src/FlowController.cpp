@@ -443,8 +443,7 @@ std::vector<state::StateController*> FlowController::getAllComponents() {
     auto controllerFactory = [this] (core::Processor& p) {
       return createController(p);
     };
-
-    root_->getAllProcessorControllers(vec, controllerFactory);
+    getAllProcessorControllers(vec, controllerFactory);
   }
   return vec;
 }
@@ -458,7 +457,7 @@ std::vector<state::StateController*> FlowController::getComponents(const std::st
     auto controllerFactory = [this] (core::Processor& p) {
       return createController(p);
     };
-    root_->getProcessorController(name, vec, controllerFactory);
+    getProcessorController(name, vec, controllerFactory);
   }
 
   return vec;
@@ -504,6 +503,33 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
   debug_info["minifi.properties"] = std::make_unique<io::FileStream>(configuration_->getFilePath(), 0, false);
 
   return debug_info;
+}
+
+void FlowController::getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
+                                              const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  std::vector<core::Processor*> processorVec;
+  root_->getAllProcessors(processorVec);
+
+  for (const auto& processor : processorVec) {
+    // find controller for processor, if it doesn't exist, create one
+    auto& controller = processor_to_controller_[processor->getUUID()];
+    if (!controller) {
+      controller = controllerFactory(*processor);
+    }
+    controllerVec.push_back(controller.get());
+  }
+}
+
+void FlowController::getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
+                                          const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+  auto* processor = root_->findProcessorByName(name);
+  auto& controller = processor_to_controller_[processor->getUUID()];
+  if (!controller) {
+    controller = controllerFactory(*processor);
+  }
+  controllerVec.push_back(controller.get());
 }
 
 }  // namespace minifi

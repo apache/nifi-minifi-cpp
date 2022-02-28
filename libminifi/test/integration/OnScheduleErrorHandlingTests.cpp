@@ -75,8 +75,8 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
 /*Verify that event driven processors without incoming connections are not scheduled*/
 class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
  public:
-  void updateProperties(std::unique_ptr<minifi::FlowController>& fc) override {
-    auto controller_vec = fc->getAllComponents();
+  void updateProperties(minifi::FlowController& fc) override {
+    auto controller_vec = fc.getAllComponents();
     /* This tests depends on a configuration that contains only one KamikazeProcessor named kamikaze
      * (See testOnScheduleRetry.yml)
      * In this case there are two components in the flowcontroller: first is the controller itself,

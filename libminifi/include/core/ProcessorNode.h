@@ -227,7 +227,7 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  std::set<Connectable*> getOutGoingConnections(const std::string& relationship) const override {
+  std::set<Connectable*> getOutGoingConnections(const std::string& relationship) override {
     return processor_->getOutGoingConnections(relationship);
   }
 

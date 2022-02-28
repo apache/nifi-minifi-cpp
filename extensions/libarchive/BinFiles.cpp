@@ -346,10 +346,10 @@ void BinFiles::restore(const std::shared_ptr<core::FlowFile>& flowFile) {
   file_store_.put(flowFile);
 }
 
-std::set<core::Connectable*> BinFiles::getOutGoingConnections(const std::string &relationship) const {
+std::set<core::Connectable*> BinFiles::getOutGoingConnections(const std::string &relationship) {
   auto result = core::Connectable::getOutGoingConnections(relationship);
   if (relationship == Self.getName()) {
-    result.insert(const_cast<BinFiles*>(this));
+    result.insert(this);
   }
   return result;
 }

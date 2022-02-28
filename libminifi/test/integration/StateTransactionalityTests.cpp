@@ -55,8 +55,8 @@ class StatefulIntegrationTest : public IntegrationBase {
     logger_->log_info("Running test case \"%s\"", test_case_);
   }
 
-  void updateProperties(std::unique_ptr<minifi::FlowController>& fc) override {
-    const auto controllerVec = fc->getAllComponents();
+  void updateProperties(minifi::FlowController& fc) override {
+    const auto controllerVec = fc.getAllComponents();
     /* This tests depends on a configuration that contains only one StatefulProcessor named statefulProcessor
      * (See TestStateTransactionality.yml)
      * In this case there are two components in the flowcontroller: first is the controller itself,

@@ -234,6 +234,12 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::chrono::steady_clock::time_point start_time_;
 
  private:
+  void getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
+                              const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+
+  void getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
+                                  const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+
   std::unique_ptr<state::ProcessorController> createController(core::Processor& processor);
 
   std::chrono::milliseconds shutdown_check_interval_{1000};
@@ -242,6 +248,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
+  std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
 };
 
 }  // namespace minifi

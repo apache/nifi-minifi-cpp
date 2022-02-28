@@ -29,6 +29,10 @@ namespace nifi {
 namespace minifi {
 namespace python {
 
+namespace processors {
+class ExecutePythonProcessor;
+}
+
 namespace py = pybind11;
 
 /**
@@ -45,7 +49,7 @@ class PythonProcessor {
   void addProperty(const std::string &name, const std::string &description, const std::string &defaultvalue, bool required, bool el);
 
  private:
-  core::Processor* processor_;
+  python::processors::ExecutePythonProcessor* processor_;
 };
 
 } /* namespace python */

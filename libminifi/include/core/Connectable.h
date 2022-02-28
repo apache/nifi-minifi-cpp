@@ -82,7 +82,7 @@ class Connectable : public CoreComponent {
    * Get outgoing connection based on relationship
    * @return set of outgoing connections.
    */
-  virtual std::set<Connectable*> getOutGoingConnections(const std::string &relationship) const;
+  virtual std::set<Connectable*> getOutGoingConnections(const std::string &relationship);
 
   virtual void put(const std::shared_ptr<FlowFile>& /*flow*/) {
   }

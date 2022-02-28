@@ -100,8 +100,12 @@ void ProcessGroup::addProcessor(std::unique_ptr<Processor> processor) {
   gsl_Expects(processor);
   const auto name = processor->getName();
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  processors_.insert(std::move(processor));
-  logger_->log_debug("Add processor %s into process group %s", name, name_);
+  const auto [iter, inserted] = processors_.insert(std::move(processor));
+  if (inserted) {
+    logger_->log_debug("Add processor %s into process group %s", name, name_);
+  } else {
+    logger_->log_debug("Not adding processor %s into process group %s, as it is already there", name, name_);
+  }
 }
 
 void ProcessGroup::addProcessGroup(std::unique_ptr<ProcessGroup> child) {
@@ -276,36 +280,6 @@ void ProcessGroup::getAllProcessors(std::vector<Processor*>& processor_vec) cons
   }
 }
 
-void ProcessGroup::getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
-    const std::function<std::unique_ptr<state::ProcessorController>(Processor&)>& controllerFactory) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-  for (const auto& processor : processors_) {
-    // find controller for processor, if it doesn't exist, create one
-    auto& controller = processor_to_controller_[processor->getUUID()];
-    if (!controller) {
-      controller = controllerFactory(*processor);
-    }
-    controllerVec.push_back(controller.get());
-  }
-
-  for (const auto& processGroup : child_process_groups_) {
-    processGroup->getAllProcessorControllers(controllerVec, controllerFactory);
-  }
-}
-
-void ProcessGroup::getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
-    const std::function<std::unique_ptr<state::ProcessorController>(Processor&)>& controllerFactory) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
-  auto processor = findProcessorByName(name);
-  auto& controller = processor_to_controller_[processor->getUUID()];
-  if (!controller) {
-    controller = controllerFactory(*processor);
-  }
-  controllerVec.push_back(controller.get());
-}
-
 void ProcessGroup::updatePropertyValue(const std::string& processorName, const std::string& propertyName, const std::string& propertyValue) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto& processor : processors_) {
@@ -352,7 +326,7 @@ void ProcessGroup::getFlowFileContainers(std::map<std::string, Connectable*>& co
   }
 }
 
-void ProcessGroup::addConnection(std::unique_ptr<Connection>&& connection) {
+void ProcessGroup::addConnection(std::unique_ptr<Connection> connection) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   auto [insertPos, inserted] = connections_.insert(std::move(connection));

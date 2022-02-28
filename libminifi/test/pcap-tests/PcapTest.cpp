@@ -77,8 +77,8 @@ class PcapTestHarness : public IntegrationBase {
         "because it matches .*"));
   }
 
-  void updateProperties(std::unique_ptr<minifi::FlowController>& fc) override {
-    auto components = fc->getComponents("pcap");
+  void updateProperties(minifi::FlowController& fc) override {
+    auto components = fc.getComponents("pcap");
     for (const auto& component : components) {
       auto proccontroller = dynamic_cast<minifi::state::ProcessorController*>(component);
       if (proccontroller) {
