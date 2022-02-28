@@ -170,10 +170,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
 // GetTCP Class
 class GetTCP : public core::Processor, public state::response::MetricsNodeSource {
  public:
-// Constructor
-  /*!
-   * Create a new processor
-   */
   explicit GetTCP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         running_(false),
@@ -185,8 +181,12 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
         ssl_service_(nullptr) {
     metrics_ = std::make_shared<GetTCPMetrics>();
   }
-// Destructor
-  ~GetTCP() override = default;
+
+  ~GetTCP() override {
+    // thread pool must be shut down first before members it is using are destructed, otherwise segfault is possible
+    client_thread_pool_.shutdown();
+  }
+
 // Processor Name
   EXTENSIONAPI static constexpr char const* ProcessorName = "GetTCP";
 
@@ -270,7 +270,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger();
 
-  // thread pool must be the last, as it is first to be destructed before other members, otherwise segfault is possible
   utils::ThreadPool<int> client_thread_pool_;
 };
 
