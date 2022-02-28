@@ -19,7 +19,7 @@
 
 option(ENABLE_AWS "Enables AWS support." OFF)
 
-if (NOT (ENABLE_ALL OR NOT ENABLE_AWS))
+if (NOT (ENABLE_ALL OR ENABLE_AWS))
   return()
 endif()
 
