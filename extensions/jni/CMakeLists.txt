@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if(NOT (ENABLE_ALL OR ENABLE_JNI))
+	return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
@@ -107,8 +111,5 @@ else()
 	target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
 endif()
 
-
-
-SET (JNI-EXTENSION minifi-jni PARENT_SCOPE)
-register_extension(minifi-jni)
+register_extension(minifi-jni "JNI EXTENSIONS" JNI-EXTENSION "Enables JNI capabilities to support loading Java Classes." "${TEST_DIR}/jni-tests")
 register_extension_linter(minifi-jni-linter)

@@ -17,6 +17,15 @@
 # under the License.
 #
 
+option(ENABLE_AWS "Enables AWS support." OFF)
+
+if (NOT (ENABLE_ALL OR NOT ENABLE_AWS))
+  return()
+endif()
+
+include(BundledAwsSdkCpp)
+use_bundled_libaws(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(controllerservices processors s3 ${CMAKE_SOURCE_DIR}/extensions/aws)
 
@@ -27,13 +36,13 @@ add_library(minifi-aws SHARED ${SOURCES})
 target_link_libraries(minifi-aws PUBLIC ${LIBMINIFI} Threads::Threads)
 
 target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3)
-target_include_directories(minifi-aws INTERFACE $<TARGET_PROPERTY:AWS::aws-cpp-sdk-s3,INTERFACE_INCLUDE_DIRECTORIES>)
+get_target_property(AWS_SDK_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUDE_DIRECTORIES)
+target_include_directories(minifi-aws INTERFACE ${AWS_SDK_INCLUDE_DIRS})
 if(WIN32)
   target_compile_definitions(minifi-aws INTERFACE "AWS_CORE_API=__declspec(dllimport)")
   target_compile_definitions(minifi-aws INTERFACE "AWS_S3_API=__declspec(dllimport)")
 endif()
 
-SET (AWS-EXTENSION minifi-aws PARENT_SCOPE)
-register_extension(minifi-aws)
+register_extension(minifi-aws "AWS EXTENSIONS" AWS-EXTENSIONS "This enables AWS support" "${TEST_DIR}/aws-tests")
 
 register_extension_linter(minifi-aws-extensions-linter)

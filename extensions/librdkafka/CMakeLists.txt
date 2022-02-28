@@ -17,6 +17,13 @@
 # under the License.
 #
 
+if (NOT (ENABLE_ALL OR ENABLE_LIBRDKAFKA))
+  return()
+endif()
+
+include(BundledLibRdKafka)
+use_bundled_librdkafka(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
@@ -26,8 +33,6 @@ add_library(minifi-rdkafka-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-rdkafka-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-rdkafka-extensions librdkafka)
 
-SET (RDKAFKA-EXTENSIONS minifi-rdkafka-extensions PARENT_SCOPE)
-
-register_extension(minifi-rdkafka-extensions)
+register_extension(minifi-rdkafka-extensions "RDKAFKA EXTENSIONS" RDKAFKA-EXTENSIONS "This Enables librdkafka functionality including PublishKafka" "extensions/librdkafka/tests")
 
 register_extension_linter(minifi-rdkafka-extensions-linter)

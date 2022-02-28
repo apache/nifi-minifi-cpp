@@ -17,6 +17,12 @@
 # under the License.
 #
 
+if (NOT (ENABLE_ALL OR ENABLE_COAP STREQUAL "ON"))
+  return()
+endif()
+
+include(BundledLibCoAP)
+use_bundled_libcoap(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(protocols nanofi controllerservice server)
@@ -32,6 +38,5 @@ target_link_libraries(nanofi-coap-c COAP::libcoap Threads::Threads)
 target_link_libraries(minifi-coap ${LIBMINIFI})
 target_link_libraries(minifi-coap nanofi-coap-c Threads::Threads COAP::libcoap minifi-http-curl)
 
-SET (COAP-EXTENSION minifi-coap PARENT_SCOPE)
-register_extension(minifi-coap)
+register_extension(minifi-coap "COAP EXTENSIONS" COAP-EXTENSION "Enables LibCOAP Functionality." "extensions/coap/tests/")
 register_extension_linter(minifi-coap-extensions-linter)

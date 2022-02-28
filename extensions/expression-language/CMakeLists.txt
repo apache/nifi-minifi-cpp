@@ -16,6 +16,15 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
+
+if (DISABLE_EXPRESSION_LANGUAGE)
+	return()
+endif()
+
+message("minifi-expression-language-extensions will depend on curl-external")
+
 if(WIN32)
 	include(FetchContent)
 
@@ -101,7 +110,5 @@ add_library(minifi-expression-language-extensions SHARED ${SOURCES} ${BISON_el-p
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
 target_link_libraries(minifi-expression-language-extensions date::tz RapidJSON CURL::libcurl)
 
-SET (EXPRESSION-LANGUAGE-EXTENSIONS minifi-expression-language-extensions PARENT_SCOPE)
-
-register_extension(minifi-expression-language-extensions)
+register_extension(minifi-expression-language-extensions "EXPRESSION LANGUAGE EXTENSIONS" EXPRESSION-LANGUAGE-EXTENSIONS "This enables NiFi expression language" "extensions/expression-language/tests")
 register_extension_linter(minifi-expression-language-extensions-linter)

@@ -88,12 +88,6 @@ if (WIN32)
 	option(ENABLE_PDH "Enables PDH support." OFF)
 endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	option(ENABLE_SYSTEMD "Enables the systemd extension." ON)
-endif()
-
-option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
-option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 option(DISABLE_ROCKSDB "Disables the RocksDB extension." OFF)
 option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)
 option(DISABLE_LZMA "Disables the liblzma build" OFF)
@@ -108,12 +102,10 @@ option(ENABLE_SCRIPTING "Enables the scripting extensions." OFF)
 option(ENABLE_SENSORS "Enables the Sensors package." OFF)
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
 option(ENABLE_TENSORFLOW "Enables the TensorFlow extensions." OFF)  ## Disabled by default because TF can be complex/environment-specific to build
-option(ENABLE_AWS "Enables AWS support." OFF)
 option(ENABLE_OPENCV "Enables the OpenCV extensions." OFF)
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 option(ENABLE_SFTP "Enables SFTP support." OFF)
 option(ENABLE_OPENWSMAN "Enables the Openwsman extensions." OFF)
-option(ENABLE_AZURE "Enables Azure support." OFF)
 option(ENABLE_ENCRYPT_CONFIG "Enables build of encrypt-config binary." ON)
 option(ENABLE_SPLUNK "Enable Splunk support" OFF)
 option(ENABLE_GCP "Enable Google Cloud support" OFF)
@@ -404,173 +396,52 @@ SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 include(Extensions)
 
 add_subdirectory(libminifi)
+add_subdirectory("extensions/standard-processors")
+add_subdirectory("extensions/http-curl")
 
-createExtension(STANDARD-PROCESSORS "STANDARD PROCESSORS" "Provides standard processors" "extensions/standard-processors" "extensions/standard-processors/tests/")
+add_subdirectory("extensions/expression-language")
 
-if ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET)
-	createExtension(HTTP-CURL "HTTP CURL" "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl" "extensions/http-curl/tests/")
-	message("minifi-http-curl will depend on curl-external")
-endif()
+add_subdirectory("extensions/civetweb")
 
-if (NOT DISABLE_EXPRESSION_LANGUAGE)
-	createExtension(EXPRESSION-LANGUAGE-EXTENSIONS "EXPRESSION LANGUAGE EXTENSIONS" "This enables NiFi expression language" "extensions/expression-language" "extensions/expression-language/tests")
+add_subdirectory("extensions/rocksdb-repos")
 
-	message("minifi-expression-language-extensions will depend on curl-external")
-endif()
+add_subdirectory("extensions/libarchive")
 
-if (NOT DISABLE_CIVET)
-	include(BundledCivetWeb)
-	use_bundled_civetweb(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
+add_subdirectory("extensions/gps")
 
-	createExtension(CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb" "extensions/civetweb/tests")
-endif()
+add_subdirectory("extensions/coap")
 
-## Add the rocks DB extension
-if (NOT DISABLE_ROCKSDB)
-	if (BUILD_ROCKSDB)
-		include(BundledRocksDB)
-		use_bundled_rocksdb(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	else()
-		list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/rocksdb/sys")
-		find_package(RocksDB REQUIRED)
-	endif()
-	createExtension(ROCKSDB-REPOS "ROCKSDB REPOS" "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "extensions/rocksdb-repos" "${TEST_DIR}/rocksdb-tests")
-endif()
+add_subdirectory("extensions/windows-event-log")
 
-## Create LibArchive Extension
-if (NOT DISABLE_LIBARCHIVE)
-	if (NOT DISABLE_LZMA)
-		include(BundledLibLZMA)
-		use_bundled_liblzma(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-		list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/liblzma/dummy")
-	endif()
+add_subdirectory("extensions/sql")
 
-	if (NOT DISABLE_BZIP2)
-		include(BundledBZip2)
-		use_bundled_bzip2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-		list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
-	endif()
+add_subdirectory("extensions/mqtt")
 
-	include(BundledLibArchive)
-	use_bundled_libarchive(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+add_subdirectory("extensions/jni")
 
-	createExtension(ARCHIVE-EXTENSIONS "ARCHIVE EXTENSIONS" "This Enables libarchive functionality including MergeContent, CompressContent, (Un)FocusArchiveEntry and ManipulateArchive." "extensions/libarchive" "${TEST_DIR}/archive-tests")
-endif()
+add_subdirectory("extensions/pcap")
 
-if (ENABLE_ALL OR ENABLE_GPS)
-	createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
-endif()
+add_subdirectory("extensions/librdkafka")
 
-if (ENABLE_ALL OR ENABLE_COAP STREQUAL "ON")
-	include(BundledLibCoAP)
-	use_bundled_libcoap(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(COAP-EXTENSION "COAP EXTENSIONS" "Enables LibCOAP Functionality." "extensions/coap" "extensions/coap/tests/")
-endif()
+add_subdirectory("extensions/script")
 
-if (WIN32 AND (ENABLE_ALL OR ENABLE_WEL))
-	include(BundledPugiXml)
-	use_bundled_pugixml(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(WEL-EXTENSION "WEL EXTENSIONS" "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log" "extensions/windows-event-log/tests")
-endif()
+add_subdirectory("extensions/sensors")
 
-if (ENABLE_ALL OR ENABLE_SQL)
-	createExtension(SQL-EXTENSIONS "SQL EXTENSIONS" "Enables the SQL Suite of Tools" "extensions/sql" "${TEST_DIR}/sql-tests")
-endif()
+add_subdirectory("extensions/usb-camera")
 
-## Create MQTT Extension
-if(ENABLE_ALL OR ENABLE_MQTT)
-		createExtension(MQTT-EXTENSIONS "MQTT EXTENSIONS" "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "extensions/mqtt" "${TEST_DIR}/mqtt-tests")
-endif()
+add_subdirectory("extensions/tensorflow")
 
-# Create JNI Extension
-if(ENABLE_ALL OR ENABLE_JNI)
-	createExtension(JNI-EXTENSION "JNI EXTENSIONS" "Enables JNI capabilities to support loading Java Classes." "extensions/jni" "${TEST_DIR}/jni-tests")
-endif()
+add_subdirectory("extensions/aws")
 
-# Create PCAP Extension
-if(ENABLE_ALL OR ENABLE_PCAP)
-	createExtension(PCAP-EXTENSION "PCAP EXTENSIONS" "Enables libPCAP Functionality and the PacketCapture processor." "extensions/pcap" "${TEST_DIR}/pcap-tests")
-endif()
+add_subdirectory("extensions/pdh")
 
-## Create LibRdKafka Extension
-if (ENABLE_ALL OR ENABLE_LIBRDKAFKA)
-	include(BundledLibRdKafka)
-	use_bundled_librdkafka(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(RDKAFKA-EXTENSIONS "RDKAFKA EXTENSIONS" "This Enables librdkafka functionality including PublishKafka" "extensions/librdkafka" "extensions/librdkafka/tests")
-endif()
+add_subdirectory("extensions/opencv")
 
-## Scripting extensions
-if (ENABLE_ALL OR ENABLE_SCRIPTING)
-	include(Sol2)
-	createExtension(SCRIPTING-EXTENSIONS "SCRIPTING EXTENSIONS" "This enables scripting" "extensions/script" "extensions/script/tests")
-endif()
+add_subdirectory("extensions/bustache")
 
-# Sensors extensions
-if(ENABLE_ALL OR ENABLE_SENSORS)
-	include(BundledRTIMULib)
-	use_bundled_rtimulib(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(SENSOR-EXTENSIONS "SENSOR EXTENSIONS" "Enables the package of sensor extensions." "extensions/sensors" "${TEST_DIR}/sensors-tests")
-endif()
+add_subdirectory("extensions/opc")
 
-## USB camera extensions
-if (ENABLE_ALL OR ENABLE_USB_CAMERA)
-	include(BundledLibUvc)
-	use_bundled_libuvc(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(USB-CAMERA-EXTENSIONS "USB CAMERA EXTENSIONS" "This enables USB camera support" "extensions/usb-camera" "${TEST_DIR}/usb-camera-tests")
-endif()
-
-## TensorFlow extensions
-if (ENABLE_TENSORFLOW)
-	createExtension(TENSORFLOW-EXTENSIONS "TENSORFLOW EXTENSIONS" "This enables TensorFlow support" "extensions/tensorflow" "${TEST_DIR}/tensorflow-tests")
-endif()
-
-## AWS Extensions
-if (ENABLE_ALL OR ENABLE_AWS)
-	include(BundledAwsSdkCpp)
-	use_bundled_libaws(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(AWS-EXTENSIONS "AWS EXTENSIONS" "This enables AWS support" "extensions/aws" "${TEST_DIR}/aws-tests")
-endif()
-
-## PDH Extentsions
-if (WIN32 AND ENABLE_PDH)
-	createExtension(PDH-EXTENSIONS "PDH EXTENSIONS" "This enables PDH support" "extensions/pdh" "extensions/pdh/tests")
-endif()
-
-## OpenCV Extensions
-if (ENABLE_OPENCV)
-	include(BundledOpenCV)
-	use_bundled_opencv(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(OPENCV-EXTENSIONS "OPENCV EXTENSIONS" "This enables OpenCV support" "extensions/opencv" "extensions/opencv/tests")
-endif()
-
-## Bustache/template extensions
-if (ENABLE_BUSTACHE)
-	include(BundledBustache)
-	use_bundled_bustache(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(BUSTACHE-EXTENSIONS "BUSTACHE EXTENSIONS" "This enables bustache functionality including ApplyTemplate." "extensions/bustache" "${TEST_DIR}/bustache-tests")
-endif()
-
-## OPC Extensions
-if (ENABLE_OPC)
-	include(BundledMbedTLS)
-	use_bundled_mbedtls(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/mbedtls/dummy")
-
-	include(BundledOpen62541)
-	use_bundled_open62541(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-
-	createExtension(OPC-EXTENSIONS "OPC EXTENSIONS" "This enables OPC-UA support" "extensions/opc")
-endif()
-
-## SFTP extensions
-if ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL)
-	include(BundledLibSSH2)
-	use_bundled_libssh2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libssh2/dummy")
-
-	createExtension(SFTP "SFTP EXTENSIONS" "This enables SFTP support" "extensions/sftp" "extensions/sftp/tests")
-endif()
+add_subdirectory("extensions/sftp")
 
 if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
 	include(BundledLibXml2)
@@ -578,36 +449,16 @@ if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL 
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
 endif()
 
-## Openwsman Extensions
-if (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL)
-	include(BundledOpenWSMAN)
-	use_bundled_openwsman(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-
-	createExtension(OPENWSMAN-EXTENSIONS "OPENWSMAN EXTENSIONS" "This enables Openwsman support" "extensions/openwsman")
-endif()
+add_subdirectory("extensions/openwsman")
 
 ## Azure Extensions
-if (ENABLE_ALL OR ENABLE_AZURE)
-	include(BundledAzureSdkCpp)
-	use_bundled_libazure(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
-	createExtension(AZURE-EXTENSIONS "AZURE EXTENSIONS" "This enables Azure support" "extensions/azure" "${TEST_DIR}/azure-tests")
-endif()
+add_subdirectory("extensions/azure")
 
-## Add the systemd extension
-if (ENABLE_SYSTEMD)
-	createExtension(SYSTEMD-EXTENSIONS "SYSTEMD EXTENSIONS" "Enabled log collection from journald" "extensions/systemd" "extensions/systemd/tests")
-endif()
+add_subdirectory("extensions/systemd")
 
-## Add the splunk extension
-if (ENABLE_ALL OR ENABLE_SPLUNK)
-	createExtension(SPLUNK-EXTENSIONS "SPLUNK EXTENSIONS" "This enables Splunk support" "extensions/splunk" "extensions/splunk/tests")
-endif()
+add_subdirectory("extensions/splunk")
 
-## Kubernetes Extensions
-if (ENABLE_KUBERNETES)
-  include(KubernetesClientC)
-  createExtension(KUBERNETES-EXTENSIONS "KUBERNETES EXTENSIONS" "This enables Kubernetes support" "extensions/kubernetes")
-endif()
+add_subdirectory("extensions/kubernetes")
 
 ## Add the test-processors extension
 # ENABLE_TEST_PROCESSORS option is to only build test processors but not unit tests in docker integration tests.

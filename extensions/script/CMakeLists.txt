@@ -17,6 +17,12 @@
 # under the License.
 #
 
+if (NOT (ENABLE_ALL OR ENABLE_SCRIPTING))
+    return()
+endif()
+
+include(Sol2)
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "ExecuteScript.cpp" "ScriptFlowFile.cpp" "ScriptProcessContext.cpp")
@@ -60,7 +66,5 @@ if (ENABLE_LUA_SCRIPTING)
     target_compile_features(minifi-script-extensions PUBLIC cxx_std_14)
 endif()
 
-SET (SCRIPTING-EXTENSIONS minifi-script-extensions PARENT_SCOPE)
-
-register_extension(minifi-script-extensions)
+register_extension(minifi-script-extensions "SCRIPTING EXTENSIONS" SCRIPTING-EXTENSIONS "This enables scripting" "extensions/script/tests")
 register_extension_linter(minifi-script-extensions-linter)

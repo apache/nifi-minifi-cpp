@@ -17,6 +17,14 @@
 # under the License.
 #
 
+if (NOT ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL))
+  return()
+endif()
+
+include(BundledLibSSH2)
+use_bundled_libssh2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libssh2/dummy")
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(client processors)
 
@@ -27,6 +35,5 @@ add_library(minifi-sftp SHARED ${SOURCES})
 target_link_libraries(minifi-sftp ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-sftp CURL::libcurl libssh2 RapidJSON)
 
-SET (SFTP minifi-sftp PARENT_SCOPE)
-register_extension(minifi-sftp)
+register_extension(minifi-sftp "SFTP EXTENSIONS" SFTP "This enables SFTP support" "extensions/sftp/tests")
 register_extension_linter(minifi-sftp-linter)

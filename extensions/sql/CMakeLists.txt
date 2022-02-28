@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if (NOT (ENABLE_ALL OR ENABLE_SQL))
+	return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 include_directories(SYSTEM ../../thirdparty/rapidjson-1.1.0/include/ ../../thirdparty/rapidjson-1.1.0/include/rapidjson)
@@ -169,5 +173,4 @@ target_link_libraries(minifi-sql SOCI::libsoci_odbc SOCI::libsoci_core)
 
 target_link_libraries(minifi-sql ${LIBMINIFI} Threads::Threads)
 
-SET (SQL-EXTENSION minifi-sql PARENT_SCOPE)
-register_extension(minifi-sql)
+register_extension(minifi-sql "SQL EXTENSIONS" SQL-EXTENSIONS "Enables the SQL Suite of Tools" "${TEST_DIR}/sql-tests")

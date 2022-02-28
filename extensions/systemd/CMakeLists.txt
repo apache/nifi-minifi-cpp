@@ -17,12 +17,19 @@
 # under the License.
 #
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  option(ENABLE_SYSTEMD "Enables the systemd extension." ON)
+endif()
+
+if (NOT ENABLE_SYSTEMD)
+  return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 add_library(minifi-systemd SHARED ConsumeJournald.cpp libwrapper/LibWrapper.cpp libwrapper/DlopenWrapper.cpp)
 
 target_link_libraries(minifi-systemd ${LIBMINIFI} Threads::Threads date::date)
 
-set(SYSTEMD-EXTENSION minifi-systemd PARENT_SCOPE)
-register_extension(minifi-systemd)
+register_extension(minifi-systemd "SYSTEMD EXTENSIONS" SYSTEMD-EXTENSIONS "Enabled log collection from journald" "extensions/systemd/tests")
 register_extension_linter(minifi-systemd-extension-linter)

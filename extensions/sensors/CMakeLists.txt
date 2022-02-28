@@ -17,6 +17,13 @@
 # under the License.
 #
 
+if(NOT (ENABLE_ALL OR ENABLE_SENSORS))
+  return()
+endif()
+
+include(BundledRTIMULib)
+use_bundled_rtimulib(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
@@ -28,7 +35,5 @@ target_link_libraries(minifi-sensors ${LIBMINIFI} Threads::Threads)
 add_dependencies(minifi-sensors RTIMULib::RTIMULib)
 target_link_libraries(minifi-sensors RTIMULib::RTIMULib)
 
-SET (SENSOR-EXTENSIONS minifi-sensors PARENT_SCOPE)
-
-register_extension(minifi-sensors)
+register_extension(minifi-sensors "SENSOR EXTENSIONS" SENSOR-EXTENSIONS "Enables the package of sensor extensions." "${TEST_DIR}/sensors-tests")
 register_extension_linter(minifi-sensors-linter)

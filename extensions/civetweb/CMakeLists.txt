@@ -17,6 +17,16 @@
 # under the License.
 #
 
+option(DISABLE_CIVET "Disables CivetWeb components." OFF)
+
+if (DISABLE_CIVET)
+  return()
+endif()
+
+include(BundledCivetWeb)
+use_bundled_civetweb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
@@ -30,7 +40,5 @@ add_library(minifi-civet-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-civet-extensions CIVETWEB::c-library CIVETWEB::civetweb-cpp)
 
-SET (civet-EXTENSIONS minifi-civet-extensions PARENT_SCOPE)
-
-register_extension(minifi-civet-extensions)
+register_extension(minifi-civet-extensions CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb/tests")
 register_extension_linter(minifi-civet-extensions-linter)

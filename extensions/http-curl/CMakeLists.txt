@@ -17,6 +17,12 @@
 # under the License.
 #
 
+if (NOT ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET))
+  return()
+endif()
+
+message("minifi-http-curl will depend on curl-external")
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(protocols client processors sitetosite)
 
@@ -27,6 +33,5 @@ add_library(minifi-http-curl SHARED ${SOURCES})
 target_link_libraries(minifi-http-curl ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-http-curl CURL::libcurl RapidJSON)
 
-SET (HTTP-CURL minifi-http-curl PARENT_SCOPE)
-register_extension(minifi-http-curl)
+register_extension(minifi-http-curl "HTTP CURL" HTTP-CURL "This enables RESTProtocol, InvokeHTTP, and the HTTPClient for Site to Site" "extensions/http-curl/tests/")
 register_extension_linter(minifi-http-curl-linter)

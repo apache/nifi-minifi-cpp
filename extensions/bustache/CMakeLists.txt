@@ -17,6 +17,12 @@
 # under the License.
 #
 
+if (NOT ENABLE_BUSTACHE)
+  return()
+endif()
+
+include(BundledBustache)
+use_bundled_bustache(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 cmake_minimum_required(VERSION 2.6)
@@ -28,8 +34,5 @@ add_library(minifi-bustache-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-bustache-extensions ${LIBMINIFI})
 target_link_libraries(minifi-bustache-extensions BUSTACHE::libbustache)
 
-
-SET (BUSTACHE-EXTENSIONS minifi-bustache-extensions PARENT_SCOPE)
-
-register_extension(minifi-bustache-extensions)
+register_extension(minifi-bustache-extensions "BUSTACHE EXTENSIONS" BUSTACHE-EXTENSIONS "This enables bustache functionality including ApplyTemplate." "${TEST_DIR}/bustache-tests")
 register_extension_linter(minifi-bustache-extensions-linter)

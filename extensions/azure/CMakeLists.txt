@@ -17,6 +17,15 @@
 # under the License.
 #
 
+option(ENABLE_AZURE "Enables Azure support." OFF)
+
+if (NOT (ENABLE_ALL OR ENABLE_AZURE))
+  return()
+endif()
+
+include(BundledAzureSdkCpp)
+use_bundled_libazure(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp" "storage/*.cpp" "controllerservices/*.cpp" "processors/*.cpp" "utils/*.cpp")
@@ -38,7 +47,6 @@ if (WIN32)
   target_link_libraries(minifi-azure crypt32.lib bcrypt.lib)
 endif()
 
-SET (AZURE-EXTENSION minifi-azure PARENT_SCOPE)
-register_extension(minifi-azure)
+register_extension(minifi-azure "AZURE EXTENSIONS" AZURE-EXTENSIONS "This enables Azure support" "${TEST_DIR}/azure-tests")
 
 register_extension_linter(minifi-azure-extensions-linter)

@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if (NOT (WIN32 AND ENABLE_PDH))
+  return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
@@ -25,7 +29,6 @@ add_library(minifi-pdh SHARED ${SOURCES})
 
 target_link_libraries(minifi-pdh ${LIBMINIFI} pdh)
 
-SET(PDH-EXTENSION minifi-pdh PARENT_SCOPE)
-register_extension(minifi-pdh)
+register_extension(minifi-pdh "PDH EXTENSIONS" PDH-EXTENSIONS "This enables PDH support" "extensions/pdh/tests")
 
 register_extension_linter(minifi-pdh-extensions-linter)

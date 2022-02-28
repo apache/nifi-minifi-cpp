@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if (NOT (ENABLE_ALL OR ENABLE_GPS))
+  return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 find_package(LibGPS REQUIRED)
@@ -31,8 +35,5 @@ add_library(minifi-gps SHARED ${SOURCES})
 target_link_libraries(minifi-gps ${LIBMINIFI} )
 target_link_libraries(minifi-gps ${LIBGPS_LIBRARIES})
 
-
-SET (GPS-EXTENSION minifi-gps PARENT_SCOPE)
-
-register_extension(minifi-gps)
+register_extension(minifi-gps "GPS EXTENSIONS" GPS-EXTENSION "Enables LibGPS Functionality and the GetGPS processor." "${TEST_DIR}/gps-tests")
 register_extension_linter(minifi-gps-linter)

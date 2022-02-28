@@ -17,6 +17,13 @@
 # under the License.
 #
 
+if (NOT ENABLE_OPENCV)
+  return()
+endif()
+
+include(BundledOpenCV)
+use_bundled_opencv(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
@@ -26,6 +33,5 @@ add_library(minifi-opencv SHARED ${SOURCES})
 target_link_libraries(minifi-opencv ${LIBMINIFI})
 target_link_libraries(minifi-opencv OPENCV::libopencv)
 
-SET (OPENCV-EXTENSION minifi-opencv PARENT_SCOPE)
-register_extension(minifi-opencv)
+register_extension(minifi-opencv "OPENCV EXTENSIONS" OPENCV-EXTENSIONS "This enables OpenCV support" "extensions/opencv/tests")
 register_extension_linter(minifi-opencv-linter)

@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if(NOT (ENABLE_ALL OR ENABLE_PCAP))
+	return()
+endif()
+
 find_package(PCAP REQUIRED)
 
 include(FetchContent)
@@ -69,6 +73,5 @@ endif ()
 
 target_link_libraries(minifi-pcap ${LIBMINIFI} Threads::Threads)
 
-SET (PCAP-EXTENSION minifi-pcap PARENT_SCOPE)
-register_extension(minifi-pcap)
+register_extension(minifi-pcap "PCAP EXTENSIONS" PCAP-EXTENSION "Enables libPCAP Functionality and the PacketCapture processor." "${TEST_DIR}/pcap-tests")
 register_extension_linter(minifi-pcap-linter)
