@@ -46,10 +46,10 @@ class ProcessorUtils {
       if (ptr == nullptr) {
         ptr = core::ClassLoader::getDefaultClassLoader().instantiate("ExecuteJavaClass", uuid);
         if (ptr != nullptr) {
-          if (dynamic_cast<core::Processor*>(ptr.get()) == nullptr) {
+          auto processor = utils::dynamic_unique_cast<core::Processor>(std::move(ptr));
+          if (processor == nullptr) {
             throw std::runtime_error("Invalid return from the classloader");
           }
-          auto processor = std::unique_ptr<core::Processor>{dynamic_cast<core::Processor*>(ptr.release())};
           processor->initialize();
           processor->setProperty("NiFi Processor", canonicalName);
           processor->setStreamFactory(stream_factory);

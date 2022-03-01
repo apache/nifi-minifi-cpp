@@ -689,21 +689,11 @@ PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo
     if (defaultType == typeid(int64_t)) {
       coercedValue = propertyValueNode.as<int64_t>();
     } else if (defaultType == typeid(uint64_t)) {
-      const auto uValue = propertyValueNode.as<uint64_t>(0);
-
-      // parsing uint64_t may have failed
-      if (uValue == 0) {
-        const auto sValue = propertyValueNode.as<std::string>();
-
-        // parsing uint64_t did not fail, the node was a 0
-        if (sValue == "0") {
-          coercedValue = uValue;
-        } else {
-          // parsing uint64_t really failed
-          coercedValue = sValue;
-        }
+      uint64_t integer_value;
+      if (YAML::convert<uint64_t>::decode(propertyValueNode, integer_value)) {
+        coercedValue = integer_value;
       } else {
-        coercedValue = uValue;
+        coercedValue = propertyValueNode.as<std::string>();
       }
     } else if (defaultType == typeid(int)) {
       coercedValue = propertyValueNode.as<int>();
