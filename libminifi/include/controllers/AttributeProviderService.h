@@ -35,6 +35,7 @@ class AttributeProviderService : public core::controller::ControllerService {
 
   using AttributeMap = std::unordered_map<std::string, std::string>;
   virtual std::optional<std::vector<AttributeMap>> getAttributes() = 0;
+  virtual std::string_view name() const = 0;
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

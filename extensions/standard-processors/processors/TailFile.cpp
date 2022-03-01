@@ -833,9 +833,20 @@ void TailFile::updateFlowFileAttributes(const std::string &full_file_name, const
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, state.path_);
   flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, full_file_name);
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, logName);
+
   flow_file->setAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, baseName);
   flow_file->setAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, extension);
   flow_file->setAttribute(textfragmentutils::OFFSET_ATTRIBUTE, std::to_string(state.position_));
+
+  if (extra_attributes_.contains(state.path_)) {
+    std::string prefix;
+    if (attribute_provider_service_) {
+      prefix = std::string(attribute_provider_service_->name()) + ".";
+    }
+    for (const auto& [key, value] : extra_attributes_.at(state.path_)) {
+      flow_file->setAttribute(prefix + key, value);
+    }
+  }
 }
 
 void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const {
@@ -878,33 +889,30 @@ void TailFile::checkForNewFiles(core::ProcessContext& context) {
     return true;
   };
 
-  if (attribute_provider_service_) {
-    for (const auto& base_dir : getBaseDirectories(context)) {
-      utils::file::list_dir(base_dir, add_new_files_callback, logger_, recursive_lookup_);
-    }
-  } else {
+  if (!attribute_provider_service_) {
     utils::file::list_dir(base_dir_, add_new_files_callback, logger_, recursive_lookup_);
+    return;
   }
-}
-
-std::vector<std::string> TailFile::getBaseDirectories(core::ProcessContext& context) const {
-  gsl_Expects(attribute_provider_service_);
 
   const auto attribute_maps = attribute_provider_service_->getAttributes();
   if (!attribute_maps) {
     logger_->log_error("Could not get attributes from the Attribute Provider Service");
-    return {};
+    return;
   }
 
-  return attribute_maps.value() |
-      ranges::views::transform([&context](const auto& attribute_map) {
-        auto flow_file = std::make_shared<FlowFileRecord>();
-        for (const auto& [key, value] : attribute_map) {
-          flow_file->setAttribute(key, value);
-        }
-        return context.getProperty(BaseDirectory, flow_file).value();
-      }) |
-      ranges::to<std::vector<std::string>>();
+  for (const auto& attribute_map : *attribute_maps) {
+    std::string base_dir = baseDirectoryFromAttributes(attribute_map, context);
+    extra_attributes_[base_dir] = attribute_map;
+    utils::file::list_dir(base_dir, add_new_files_callback, logger_, recursive_lookup_);
+  }
+}
+
+std::string TailFile::baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context) const {
+  auto flow_file = std::make_shared<FlowFileRecord>();
+  for (const auto& [key, value] : attribute_map) {
+    flow_file->setAttribute(key, value);
+  }
+  return context.getProperty(BaseDirectory, flow_file).value();
 }
 
 std::chrono::milliseconds TailFile::getLookupFrequency() const {

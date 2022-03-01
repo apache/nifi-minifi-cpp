@@ -24,6 +24,7 @@
 #include <memory>
 #include <utility>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include <set>
 
@@ -166,7 +167,7 @@ class TailFile : public core::Processor {
   void doMultifileLookup(core::ProcessContext& context);
   void checkForRemovedFiles();
   void checkForNewFiles(core::ProcessContext& context);
-  std::vector<std::string> getBaseDirectories(core::ProcessContext& context) const;
+  std::string baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context) const;
   void updateFlowFileAttributes(const std::string &full_file_name, const TailState &state, const std::string &fileName,
                                 const std::string &baseName, const std::string &extension,
                                 std::shared_ptr<core::FlowFile> &flow_file) const;
@@ -190,6 +191,7 @@ class TailFile : public core::Processor {
   InitialStartPositions initial_start_position_;
   bool first_trigger_{true};
   controllers::AttributeProviderService* attribute_provider_service_ = nullptr;
+  std::unordered_map<std::string, controllers::AttributeProviderService::AttributeMap> extra_attributes_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailFile>::getLogger();
 };
 

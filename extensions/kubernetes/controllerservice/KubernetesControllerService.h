@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "controllers/AttributeProviderService.h"
@@ -38,6 +39,7 @@ class KubernetesControllerService : public AttributeProviderService {
   void initialize() final;
   void onEnable() override;
   std::optional<std::vector<AttributeMap>> getAttributes() override;
+  std::string_view name() const override { return "kubernetes"; }
 
  private:
   class APIClient;

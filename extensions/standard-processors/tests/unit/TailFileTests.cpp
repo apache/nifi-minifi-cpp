@@ -1777,6 +1777,7 @@ class TestAttributeProviderService : public minifi::controllers::AttributeProvid
     return std::vector<AttributeMap>{AttributeMap{{"color", "red"}, {"fruit", "apple"}, {"uid", "001"}, {"animal", "dog"}},
                                      AttributeMap{{"color", "yellow"}, {"fruit", "banana"}, {"uid", "004"}, {"animal", "dolphin"}}};
   }
+  std::string_view name() const override { return "test"; }
 };
 REGISTER_RESOURCE(TestAttributeProviderService, "An attribute provider service which provides a constant set of records.");
 
@@ -1813,6 +1814,21 @@ TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderSer
   CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (temp_directory / "my_red_apple_001" / "dog" / "0.log").string()));
   CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (temp_directory / "my_red_apple_001" / "dog" / "1.log").string()));
   CHECK(LogTestController::getInstance().contains("key:absolute.path value:" + (temp_directory / "my_yellow_banana_004" / "dolphin" / "0.log").string()));
+
+  CHECK(LogTestController::getInstance().contains("key:test.color value:red"));
+  CHECK(LogTestController::getInstance().contains("key:test.color value:yellow"));
+  CHECK(LogTestController::getInstance().contains("key:test.fruit value:apple"));
+  CHECK(LogTestController::getInstance().contains("key:test.fruit value:banana"));
+  CHECK(LogTestController::getInstance().contains("key:test.uid value:001"));
+  CHECK(LogTestController::getInstance().contains("key:test.uid value:004"));
+  CHECK(LogTestController::getInstance().contains("key:test.animal value:dog"));
+  CHECK(LogTestController::getInstance().contains("key:test.animal value:dolphin"));
+
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.fruit value:strawberry"));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.uid value:002"));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.uid value:003"));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.animal value:elephant"));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.animal value:horse"));
 
   LogTestController::getInstance().reset();
 }

@@ -56,3 +56,18 @@ Feature: TailFile can collect logs from Kubernetes pods
     And the "success" relationship of the TailFile processor is connected to the PutFile
     When the MiNiFi instance starts up
     Then one flowfile with the contents "Hello again, World!" is placed in the monitored directory in less than 30 seconds
+
+  Scenario: Pod name etc are added as flow file attributes
+    Given a TailFile processor in a Kubernetes cluster
+    And the "tail-mode" property of the TailFile processor is set to "Multiple file"
+    And the "tail-base-directory" property of the TailFile processor is set to "/var/log/pods/${namespace}_${pod}_${uid}/${container}"
+    And the "File to Tail" property of the TailFile processor is set to ".*\.log"
+    And the "Lookup frequency" property of the TailFile processor is set to "1s"
+    And the TailFile processor has an Attribute Provider Service which is a Kubernetes Controller Service with the "Pod Name Filter" property set to ".*one"
+    And a LogAttribute processor in the Kubernetes cluster
+    And the "success" relationship of the TailFile processor is connected to the LogAttribute
+    When the MiNiFi instance starts up
+    Then the Minifi logs contain the following message: "key:kubernetes.namespace value:default" in less than 30 seconds
+    And the Minifi logs contain the following message: "key:kubernetes.pod value:hello-world-one" in less than 1 second
+    And the Minifi logs contain the following message: "key:kubernetes.uid value:" in less than 1 second
+    And the Minifi logs contain the following message: "key:kubernetes.container value:echo-one" in less than 1 second
