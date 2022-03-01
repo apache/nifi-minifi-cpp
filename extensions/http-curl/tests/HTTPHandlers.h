@@ -41,6 +41,7 @@
 #include "agent/build_description.h"
 #include "c2/C2Payload.h"
 #include "properties/Configuration.h"
+#include "range/v3/algorithm/find.hpp"
 
 static std::atomic<int> transaction_id;
 static std::atomic<int> transaction_id_output;
@@ -528,7 +529,7 @@ class HeartbeatHandler : public ServerAwareHandler {
         std::vector<std::unordered_map<std::string, std::string>> config_properties;
         for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
           std::unordered_map<std::string, std::string> config_property;
-          if (std::ranges::find(disallowed_properties, property.name) == disallowed_properties.end()) {
+          if (ranges::find(disallowed_properties, property.name) == ranges::end(disallowed_properties)) {
             config_property.emplace("propertyName", property.name);
             config_property.emplace("validator", property.validator->getName());
             config_properties.push_back(config_property);
