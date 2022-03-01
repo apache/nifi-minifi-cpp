@@ -30,7 +30,6 @@
 #include <regex>
 
 #include "utils/StringUtils.h"
-#include "utils/OptionalUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
@@ -130,9 +129,9 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
     core::Property::StringToInt(value, request_.minSize);
   }
 
-  context->getProperty<core::TimePeriodValue>(PollInterval)
-      | utils::map(&core::TimePeriodValue::getMilliseconds)
-      | utils::map([this](std::chrono::milliseconds ms) { request_.pollInterval = ms; });
+  if (const auto poll_interval = context->getProperty<core::TimePeriodValue>(PollInterval)) {
+    request_.pollInterval = poll_interval->getMilliseconds();
+  }
 
   if (context->getProperty(Recurse.getName(), value)) {
     request_.recursive = org::apache::nifi::minifi::utils::StringUtils::toBool(value).value_or(true);
