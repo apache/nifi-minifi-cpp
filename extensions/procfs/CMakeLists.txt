@@ -22,9 +22,6 @@ include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 file(GLOB SOURCES "*.cpp" "processors/*.cpp" "utils/*.cpp" "procfs_classes/*.cpp")
 
 add_library(minifi-procfs SHARED ${SOURCES})
-
-target_include_directories(minifi-procfs BEFORE PRIVATE processors)
-target_include_directories(minifi-procfs BEFORE PRIVATE procfs_classes)
 target_link_libraries(minifi-procfs ${LIBMINIFI})
 
 SET(PROCFS-EXTENSION minifi-procfs PARENT_SCOPE)
