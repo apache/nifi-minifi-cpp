@@ -28,18 +28,13 @@
 #include "core/Processor.h"
 
 namespace org::apache::nifi::minifi::test {
-class SingleInputTestController : public TestController {
+class SingleProcessorTestController : public TestController {
  public:
-  explicit SingleInputTestController(const std::shared_ptr<core::Processor>& processor)
+  explicit SingleProcessorTestController(const std::shared_ptr<core::Processor>& processor)
       : processor_{plan->addProcessor(processor, processor->getName())}
   {}
 
-  std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>
-  trigger(const std::optional<std::string_view> input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
-    if (input_flow_file_content) {
-      const auto new_flow_file = createFlowFile(*input_flow_file_content, std::move(input_flow_file_attributes));
-      input_->put(new_flow_file);
-    }
+  auto trigger() {
     plan->runProcessor(processor_);
     std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
     for (const auto& [relationship, connection]: outgoing_connections_) {
@@ -54,6 +49,12 @@ class SingleInputTestController : public TestController {
       result.insert_or_assign(relationship, std::move(output_flow_files));
     }
     return result;
+  }
+
+  auto trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
+    const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
+    input_->put(new_flow_file);
+    return trigger();
   }
 
   core::Relationship addDynamicRelationship(std::string name) {

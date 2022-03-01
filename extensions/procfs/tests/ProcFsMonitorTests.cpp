@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "SingleInputTestController.h"
+#include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "processors/ProcFsMonitor.h"
 
@@ -24,12 +24,12 @@ using org::apache::nifi::minifi::extensions::procfs::ProcFsMonitor;
 
 TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   std::shared_ptr<ProcFsMonitor> proc_fs_monitor = std::make_shared<ProcFsMonitor>("ProcFsMonitor");
-  org::apache::nifi::minifi::test::SingleInputTestController test_controller_{proc_fs_monitor};
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{proc_fs_monitor};
 
   SECTION("Absolute JSON") {
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Absolute");
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "JSON");
-    const auto& result = test_controller_.trigger(std::nullopt);
+    const auto& result = test_controller_.trigger();
 
     REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
     auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
@@ -49,7 +49,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   SECTION("Absolute OpenTelemetry")  {
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Absolute");
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "OpenTelemetry");
-    const auto& result = test_controller_.trigger(std::nullopt);
+    const auto& result = test_controller_.trigger();
 
     REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
     auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
@@ -71,7 +71,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "JSON");
     {
-      const auto& result = test_controller_.trigger(std::nullopt);
+      const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
       auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
@@ -89,7 +89,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
     }
     sleep(1);
     {
-      const auto& result = test_controller_.trigger(std::nullopt);
+      const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
       auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
@@ -110,7 +110,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::OutputFormatProperty.getName(), "OpenTelemetry");
     {
-      const auto& result = test_controller_.trigger(std::nullopt);
+      const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
       auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
@@ -129,7 +129,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
     }
     sleep(1);
     {
-      const auto& result = test_controller_.trigger(std::nullopt);
+      const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
       auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
@@ -149,9 +149,9 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
 
   SECTION("Relative without wait") {
     test_controller_.plan->setProperty(proc_fs_monitor, ProcFsMonitor::ResultRelativenessProperty.getName(), "Relative");
-    const auto& result1 = test_controller_.trigger(std::nullopt);
+    const auto& result1 = test_controller_.trigger();
     REQUIRE(result1.at(ProcFsMonitor::Success).size() == 1);
-    const auto& result2 = test_controller_.trigger(std::nullopt);
+    const auto& result2 = test_controller_.trigger();
     REQUIRE(result2.at(ProcFsMonitor::Success).size() == 1);
   }
 }
