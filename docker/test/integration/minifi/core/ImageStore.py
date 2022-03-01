@@ -1,4 +1,3 @@
-from .KindProxy import KindProxy
 from .NifiContainer import NifiContainer
 from .MinifiContainer import MinifiContainer
 import logging
@@ -94,10 +93,7 @@ class ImageStore:
                 CMD ["/bin/sh", "-c", "cp /tmp/minifi_config/config.yml /tmp/minifi_config/minifi-log.properties ./conf/ && ./bin/minifi.sh run"]
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION))
 
-        image = self.__build_image(dockerfile)
-        image.tag(repository=KindProxy.REPOSITORY, tag=KindProxy.TAG)
-
-        return image
+        return self.__build_image(dockerfile)
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""FROM {base_image}

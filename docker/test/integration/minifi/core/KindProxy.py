@@ -23,9 +23,6 @@ from textwrap import dedent
 
 
 class KindProxy:
-    REPOSITORY = 'minifi-kubernetes-test'
-    TAG = 'v1'
-
     def __init__(self, temp_directory):
         self.temp_directory = temp_directory
         self.kind_binary_path = os.path.join(self.temp_directory, 'kind')
@@ -64,9 +61,10 @@ class KindProxy:
             raise Exception("Could not start the kind cluster")
 
     def load_docker_image(self, image_store):
-        image_store.get_image('minifi-cpp-in-kubernetes')
+        image = image_store.get_image('minifi-cpp-in-kubernetes')
+        image.tag(repository='minifi-kubernetes-test', tag='v1')
 
-        if subprocess.run([self.kind_binary_path, 'load', 'docker-image', KindProxy.REPOSITORY + ':' + KindProxy.TAG]).returncode != 0:
+        if subprocess.run([self.kind_binary_path, 'load', 'docker-image', 'minifi-kubernetes-test:v1']).returncode != 0:
             raise Exception("Could not load the minifi docker image into the kind cluster")
 
     def create_objects(self):
