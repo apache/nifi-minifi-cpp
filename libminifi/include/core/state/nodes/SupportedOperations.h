@@ -35,12 +35,12 @@ class SupportedOperations : public DeviceInformation {
 
   std::string getName() const override;
   std::vector<SerializedResponseNode> serialize() override;
-  void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
-    monitor_ = monitor;
+  void setStateMonitor(std::shared_ptr<state::StateMonitor> monitor) {
+    monitor_ = std::move(monitor);
   }
 
-  void setUpdatePolicyController(const std::shared_ptr<const controllers::UpdatePolicyControllerService>& update_policy_controller) {
-    update_policy_controller_ = update_policy_controller;
+  void setUpdatePolicyController(std::shared_ptr<const controllers::UpdatePolicyControllerService> update_policy_controller) {
+    update_policy_controller_ = std::move(update_policy_controller);
   }
 
  private:

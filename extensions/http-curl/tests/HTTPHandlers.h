@@ -480,7 +480,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     std::set<std::string> operands;
     assert(operation_node.HasMember("properties"));
     const auto& properties_node = operation_node["properties"];
-    for (auto it = properties_node.MemberBegin(); it < properties_node.MemberEnd(); ++it) {
+    for (auto it = properties_node.MemberBegin(); it != properties_node.MemberEnd(); ++it) {
       operands.insert(it->name.GetString());
     }
     return operands;
@@ -489,16 +489,16 @@ class HeartbeatHandler : public ServerAwareHandler {
   void verifyMetadata(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata) {
     std::unordered_map<std::string, Metadata> operand_with_metadata_found;
     const auto& properties_node = operation_node["properties"];
-    for (auto prop_it = properties_node.MemberBegin(); prop_it < properties_node.MemberEnd(); ++prop_it) {
+    for (auto prop_it = properties_node.MemberBegin(); prop_it != properties_node.MemberEnd(); ++prop_it) {
       if (prop_it->value.ObjectEmpty()) {
         continue;
       }
       Metadata metadata_item;
-      for (auto metadata_it = prop_it->value.MemberBegin(); metadata_it < prop_it->value.MemberEnd(); ++metadata_it) {
+      for (auto metadata_it = prop_it->value.MemberBegin(); metadata_it != prop_it->value.MemberEnd(); ++metadata_it) {
         std::vector<std::unordered_map<std::string, std::string>> values;
         for (const auto& value : metadata_it->value.GetArray()) {
           std::unordered_map<std::string, std::string> value_item;
-          for (auto value_it = value.MemberBegin(); value_it < value.MemberEnd(); ++value_it) {
+          for (auto value_it = value.MemberBegin(); value_it != value.MemberEnd(); ++value_it) {
             value_item.emplace(value_it->name.GetString(), value_it->value.GetString());
           }
           values.push_back(value_item);
@@ -528,7 +528,7 @@ class HeartbeatHandler : public ServerAwareHandler {
         std::vector<std::unordered_map<std::string, std::string>> config_properties;
         for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
           std::unordered_map<std::string, std::string> config_property;
-          if (std::find(disallowed_properties.begin(), disallowed_properties.end(), property.name) == disallowed_properties.end()) {
+          if (std::ranges::find(disallowed_properties, property.name) == disallowed_properties.end()) {
             config_property.emplace("propertyName", property.name);
             config_property.emplace("validator", property.validator->getName());
             config_properties.push_back(config_property);
