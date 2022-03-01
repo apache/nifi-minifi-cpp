@@ -1,6 +1,8 @@
 import docker
 import logging
 
+from .LogSource import LogSource
+
 
 class Container:
     def __init__(self, name, engine, vols, network, image_store, command):
@@ -41,8 +43,8 @@ class Container:
     def deploy(self):
         raise NotImplementedError()
 
-    def type(self):
-        return 'docker container'
+    def log_source(self):
+        return LogSource.FROM_DOCKER_CONTAINER
 
     def get_startup_finished_log_entry(self):
         raise NotImplementedError()

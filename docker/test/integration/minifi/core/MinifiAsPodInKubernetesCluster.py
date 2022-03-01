@@ -17,7 +17,9 @@
 import logging
 import os
 import shutil
+
 from .KindProxy import KindProxy
+from .LogSource import LogSource
 from .MinifiContainer import MinifiContainer
 
 
@@ -44,8 +46,8 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
 
         logging.info('Finished setting up container: %s', self.name)
 
-    def type(self):
-        return 'direct'
+    def log_source(self):
+        return LogSource.FROM_GET_APP_LOG_METHOD
 
     def get_app_log(self):
         return 'OK', self.kind.get_logs('daemon', 'log-collector')

@@ -9,6 +9,7 @@ import tarfile
 import io
 import tempfile
 
+from .LogSource import LogSource
 from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
 from azure.storage.blob import BlobServiceClient
@@ -34,13 +35,13 @@ class DockerTestCluster(SingleNodeDockerCluster):
         return encoding
 
     def get_app_log(self, container_name):
-        type = self.containers[container_name].type()
-        if type == 'docker container':
+        log_source = self.containers[container_name].log_source()
+        if log_source == LogSource.FROM_DOCKER_CONTAINER:
             return self.__get_app_log_from_docker_container(container_name)
-        elif type == 'direct':
+        elif log_source == LogSource.FROM_GET_APP_LOG_METHOD:
             return self.containers[container_name].get_app_log()
         else:
-            raise Exception("Unexpected container type '%s'" % type)
+            raise Exception("Unexpected log source '%s'" % log_source)
 
     def __get_app_log_from_docker_container(self, container_name):
         try:
