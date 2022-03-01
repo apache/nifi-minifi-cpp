@@ -17,8 +17,6 @@
 # under the License.
 #
 
-option(ENABLE_AZURE "Enables Azure support." OFF)
-
 if (NOT (ENABLE_ALL OR ENABLE_AZURE))
   return()
 endif()

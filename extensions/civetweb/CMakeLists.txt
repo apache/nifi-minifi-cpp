@@ -17,8 +17,6 @@
 # under the License.
 #
 
-option(DISABLE_CIVET "Disables CivetWeb components." OFF)
-
 if (DISABLE_CIVET)
   return()
 endif()

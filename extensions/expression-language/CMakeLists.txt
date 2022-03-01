@@ -17,8 +17,6 @@
 # under the License.
 #
 
-option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
-
 if (DISABLE_EXPRESSION_LANGUAGE)
 	return()
 endif()

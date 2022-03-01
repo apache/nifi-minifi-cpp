@@ -88,6 +88,12 @@ if (WIN32)
 	option(ENABLE_PDH "Enables PDH support." OFF)
 endif()
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	option(ENABLE_SYSTEMD "Enables the systemd extension." ON)
+endif()
+
+option(DISABLE_EXPRESSION_LANGUAGE "Disables the scripting extensions." OFF)
+option(DISABLE_CIVET "Disables CivetWeb components." OFF)
 option(DISABLE_ROCKSDB "Disables the RocksDB extension." OFF)
 option(DISABLE_LIBARCHIVE "Disables the lib archive extensions." OFF)
 option(DISABLE_LZMA "Disables the liblzma build" OFF)
@@ -102,10 +108,12 @@ option(ENABLE_SCRIPTING "Enables the scripting extensions." OFF)
 option(ENABLE_SENSORS "Enables the Sensors package." OFF)
 option(ENABLE_USB_CAMERA "Enables USB camera support." OFF)
 option(ENABLE_TENSORFLOW "Enables the TensorFlow extensions." OFF)  ## Disabled by default because TF can be complex/environment-specific to build
+option(ENABLE_AWS "Enables AWS support." OFF)
 option(ENABLE_OPENCV "Enables the OpenCV extensions." OFF)
 option(ENABLE_BUSTACHE "Enables Bustache (ApplyTemplate) support." OFF)
 option(ENABLE_SFTP "Enables SFTP support." OFF)
 option(ENABLE_OPENWSMAN "Enables the Openwsman extensions." OFF)
+option(ENABLE_AZURE "Enables Azure support." OFF)
 option(ENABLE_ENCRYPT_CONFIG "Enables build of encrypt-config binary." ON)
 option(ENABLE_SPLUNK "Enable Splunk support" OFF)
 option(ENABLE_GCP "Enable Google Cloud support" OFF)
@@ -396,52 +404,6 @@ SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 include(Extensions)
 
 add_subdirectory(libminifi)
-add_subdirectory("extensions/standard-processors")
-add_subdirectory("extensions/http-curl")
-
-add_subdirectory("extensions/expression-language")
-
-add_subdirectory("extensions/civetweb")
-
-add_subdirectory("extensions/rocksdb-repos")
-
-add_subdirectory("extensions/libarchive")
-
-add_subdirectory("extensions/gps")
-
-add_subdirectory("extensions/coap")
-
-add_subdirectory("extensions/windows-event-log")
-
-add_subdirectory("extensions/sql")
-
-add_subdirectory("extensions/mqtt")
-
-add_subdirectory("extensions/jni")
-
-add_subdirectory("extensions/pcap")
-
-add_subdirectory("extensions/librdkafka")
-
-add_subdirectory("extensions/script")
-
-add_subdirectory("extensions/sensors")
-
-add_subdirectory("extensions/usb-camera")
-
-add_subdirectory("extensions/tensorflow")
-
-add_subdirectory("extensions/aws")
-
-add_subdirectory("extensions/pdh")
-
-add_subdirectory("extensions/opencv")
-
-add_subdirectory("extensions/bustache")
-
-add_subdirectory("extensions/opc")
-
-add_subdirectory("extensions/sftp")
 
 if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL OR ENABLE_AZURE)
 	include(BundledLibXml2)
@@ -449,16 +411,13 @@ if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL 
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
 endif()
 
-add_subdirectory("extensions/openwsman")
-
-## Azure Extensions
-add_subdirectory("extensions/azure")
-
-add_subdirectory("extensions/systemd")
-
-add_subdirectory("extensions/splunk")
-
-add_subdirectory("extensions/kubernetes")
+## Add extensions
+file(GLOB extension-directories "extensions/*")
+foreach(extension-dir ${extension-directories})
+	if (IS_DIRECTORY ${extension-dir} AND EXISTS ${extension-dir}/CMakeLists.txt)
+		add_subdirectory(${extension-dir})
+	endif()
+endforeach()
 
 ## Add the test-processors extension
 # ENABLE_TEST_PROCESSORS option is to only build test processors but not unit tests in docker integration tests.

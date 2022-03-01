@@ -39,7 +39,6 @@ function(get_build_id_variable_name extension-name output)
 endfunction()
 
 macro(register_extension extension-name extension-display-name extension-guard description)
-  message(WARNING "Registering extension: ${extension-name}")
   set(${extension-guard} ${extension-name} PARENT_SCOPE)
   get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
   set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
@@ -75,8 +74,8 @@ macro(register_extension extension-name extension-display-name extension-guard d
 
   ADD_FEATURE_INFO("${extension-display-name}" ${extension-guard} "${description}")
   mark_as_advanced(${extension-guard})
+  # check for test directory
   if (${ARGC} GREATER 4)
-    message(WARNING "Registering tests: ${ARGV4}")
     register_extension_test(${ARGV4})
   endif()
 endmacro()
