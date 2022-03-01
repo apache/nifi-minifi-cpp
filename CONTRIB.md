@@ -103,22 +103,29 @@ are contributing a custom Processor or Controller Service, the mechanism to regi
 
 To use this include REGISTER_RESOURCE(YourClassName); in your header file. The default class loader will make instances of YourClassName available for inclusion.  
 
-The extensions sub-directory allows you to contribute conditionally built extensions. An example of the GPS extension will provide an example. In this a conditional
-allows flags to specify that your extension is to be include or excluded by default. In this example -DENABLE_GPS=ON must be specified by the builder to  include it.
-The function call will then create an extension that will automatically be while main is built. The first argument of createExtension will be the target
-reference that is automatically used for documentation and linking. The second and third arguments are used for printing information on what was built or linked in
-the consumer's build. The last two argument represent where the extension and tests exist. 
+The extensions sub-directory allows you to contribute conditionally built extensions. The system adds all subdirectories in `extensions/*` that contain
+a `CMakeLists.txt` file. It is up to the extension creator's discretion how they handle cmake flags.
+It is important that `register_extension` be called at the end of the setup, for the extension to be made available to other stages of the build process.
 
-	if (ENABLE_ALL OR ENABLE_GPS)
-		createExtension(GPS-EXTENSION "GPS EXTENSIONS" "Enables LibGPS Functionality and the GetGPS processor." "extensions/gps" "${TEST_DIR}/gps-tests")
-	endif()
+```
+# extensions/gps/CMakeLists.txt
 
-	
-Once the createExtension target is made in the root CMakeLists.txt , you may load your dependencies and build your targets. Once you are finished defining your build
-and link commands, you must set your target reference to a target within your build. In this case, the previously mentioned GPS-EXTENSION will be assigned to minifi-gps.
-The next call register_extension will ensure that minifi-gps is linked appropriately for inclusion into the final binary.  
-	
-	SET (GPS-EXTENSION minifi-gps PARENT_SCOPE)
-	register_extension(minifi-gps)
-	
-	
+# the author chooses to look for the explicit compilation request
+if (NOT ENABLE_GPS)
+  return()
+endif()
+
+#
+# extension definition goes here
+#
+
+# at the end we should announce our extension
+register_extension(minifi-gps "GPS EXTENSIONS" GPS-EXTENSION "Enables LibGPS Functionality and the GetGPS processor." "${TEST_DIR}/gps-tests")
+# the first argument should be the extension target
+# the next three arguments are used for documentation purposes
+# the fifth optional argument designates the directory of the extension's tests
+
+# we could optionally enforce a coding style by registering a linter target
+register_extension_linter(minifi-gps-linter)
+```
+
