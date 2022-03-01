@@ -21,7 +21,7 @@ from .KindProxy import KindProxy
 from .MinifiContainer import MinifiContainer
 
 
-class KubernetesRunner(MinifiContainer):
+class MinifiAsPodInKubernetesCluster(MinifiContainer):
     def __init__(self, config_dir, name, vols, network, image_store, command=None):
         super().__init__(config_dir, name, vols, network, image_store, command)
 

@@ -14,7 +14,7 @@ from .PostgreSQLServerContainer import PostgreSQLServerContainer
 from .MqttBrokerContainer import MqttBrokerContainer
 from .OPCUAServerContainer import OPCUAServerContainer
 from .SplunkContainer import SplunkContainer
-from .KubernetesRunner import KubernetesRunner
+from .MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
 
 
 class SingleNodeDockerCluster(Cluster):
@@ -70,7 +70,7 @@ class SingleNodeDockerCluster(Cluster):
         elif engine == 'minifi-cpp':
             return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'kubernetes':
-            return self.containers.setdefault(name, KubernetesRunner(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(name, MinifiAsPodInKubernetesCluster(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'kafka-broker':
             if 'zookeeper' not in self.containers:
                 self.containers.setdefault('zookeeper', ZookeeperContainer('zookeeper', self.vols, self.network, self.image_store, command))
