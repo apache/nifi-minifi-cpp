@@ -15,5 +15,5 @@
 
 
 class LogSource:
-  FROM_DOCKER_CONTAINER = "from docker container"
-  FROM_GET_APP_LOG_METHOD = "from get_app_log() method"
+    FROM_DOCKER_CONTAINER = "from docker container"
+    FROM_GET_APP_LOG_METHOD = "from get_app_log() method"
