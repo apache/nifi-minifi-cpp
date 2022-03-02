@@ -38,7 +38,9 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
 
         self._create_config()
 
-        self.kind = KindProxy(self.config_dir)
+        resources_directory = os.path.join(os.environ['TEST_DIRECTORY'], 'resources', 'kubernetes', 'pods-etc')
+
+        self.kind = KindProxy(self.config_dir, resources_directory, 'minifi-cpp-in-kubernetes', 'minifi-kubernetes-test', 'v1')
         self.kind.create_config(self.vols)
         self.kind.start_cluster()
         self.kind.load_docker_image(self.image_store)
