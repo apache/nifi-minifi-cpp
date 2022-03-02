@@ -54,3 +54,15 @@ class MinifiContainer(FlowContainer):
             entrypoint=self.command,
             volumes=self.vols)
         logging.info('Added container \'%s\'', self.name)
+
+    def stop(self):
+        logging.info('Stopping minifi docker container "%s"...', self.name)
+        self.client.containers.get(self.name).stop()
+        logging.info('Successfully stopped minifi docker container "%s"', self.name)
+        self.deployed = False
+
+    def restart(self):
+        logging.info('Restarting minifi docker container "%s"...', self.name)
+        self.client.containers.get(self.name).restart()
+        logging.info('Successfully restarted minifi docker container "%s"', self.name)
+        self.deployed = True

@@ -42,7 +42,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
   explicit ConsumeMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
-    isSubscriber_ = true;
     maxQueueSize_ = 100;
     maxSegSize_ = ULLONG_MAX;
   }
@@ -99,6 +98,14 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   bool getCleanSession() const override {
     return cleanSession_;
   }
+
+  void onMessageReceived(MQTTClient_message* message) override {
+    if (!enqueueReceiveMQTTMsg(message)) {
+      MQTTClient_freeMessage(&message);
+    }
+  }
+
+  bool startupClient() override;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
   std::mutex mutex_;

@@ -160,15 +160,18 @@ bool AbstractMQTTProcessor::reconnect() {
     logger_->log_error("Failed to connect to MQTT broker %s (%d)", uri_, ret);
     return false;
   }
-  if (isSubscriber_) {
-    ret = MQTTClient_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_));
-    if (ret != MQTTCLIENT_SUCCESS) {
-      logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
-      return false;
-    }
-    logger_->log_debug("Successfully subscribed to MQTT topic: %s", topic_);
+  if (!startupClient()) {
+    return false;
   }
   return true;
 }
+
+  void AbstractMQTTProcessor::notifyStop() {
+    if (client_ && MQTTClient_isConnected(client_)) {
+      MQTTClient_disconnect(client_, std::chrono::milliseconds{connectionTimeout_}.count());
+    }
+    if (client_)
+    MQTTClient_destroy(&client_);
+  }
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -62,5 +62,11 @@ class Container:
     def log_source(self):
         return LogSource.FROM_DOCKER_CONTAINER
 
+    def stop(self):
+        raise NotImplementedError()
+
+    def restart(self):
+        raise NotImplementedError()
+
     def get_startup_finished_log_entry(self):
         raise NotImplementedError()

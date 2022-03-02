@@ -145,3 +145,15 @@ class SingleNodeDockerCluster(Cluster):
     def deploy_flow(self):
         for container in self.containers.values():
             container.deploy()
+
+    def stop_flow(self, container_name):
+        if container_name not in self.containers:
+            logging.info('Could not stop container because it is not found: \'%s\'', container_name)
+            return
+        self.containers[container_name].stop()
+
+    def restart_flow(self, container_name):
+        if container_name not in self.containers:
+            logging.info('Could not stop restart because it is not found: \'%s\'', container_name)
+            return
+        self.containers[container_name].restart()

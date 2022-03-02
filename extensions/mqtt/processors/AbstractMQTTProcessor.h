@@ -40,17 +40,6 @@ class AbstractMQTTProcessor : public core::Processor {
       : core::Processor(name, uuid) {
   }
 
-  ~AbstractMQTTProcessor() override {
-    if (isSubscriber_) {
-      MQTTClient_unsubscribe(client_, topic_.c_str());
-    }
-    if (client_ && MQTTClient_isConnected(client_)) {
-      MQTTClient_disconnect(client_, std::chrono::milliseconds{connectionTimeout_}.count());
-    }
-    if (client_)
-      MQTTClient_destroy(&client_);
-  }
-
   EXTENSIONAPI static const core::Property BrokerURI;
   EXTENSIONAPI static const core::Property ClientID;
   EXTENSIONAPI static const core::Property Username;
@@ -84,7 +73,9 @@ class AbstractMQTTProcessor : public core::Processor {
   }
 
  public:
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& factory) override;
+
+  void notifyStop() override;
 
   // MQTT async callbacks
   static void msgDelivered(void *context, MQTTClient_deliveryToken dt) {
@@ -93,12 +84,7 @@ class AbstractMQTTProcessor : public core::Processor {
   }
   static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTClient_message *message) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    if (processor->isSubscriber_) {
-      if (!processor->enqueueReceiveMQTTMsg(message))
-        MQTTClient_freeMessage(&message);
-    } else {
-      MQTTClient_freeMessage(&message);
-    }
+    processor->onMessageReceived(message);
     MQTTClient_free(topicName);
     return 1;
   }
@@ -122,10 +108,11 @@ class AbstractMQTTProcessor : public core::Processor {
   std::string clientID_;
   std::string username_;
   std::string password_;
-  bool isSubscriber_ = false;
 
  private:
   virtual bool getCleanSession() const = 0;
+  virtual void onMessageReceived(MQTTClient_message*) = 0;
+  virtual bool startupClient() = 0;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
   MQTTClient_SSLOptions sslOpts_ = MQTTClient_SSLOptions_initializer;

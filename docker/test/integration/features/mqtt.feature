@@ -105,15 +105,30 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     | test/#                 |
     | test/+/topic           |
 
-    Scenario: Subscription and publishing with disconnecting clients in durable sessions
-      #GetFile->PublishMQTT
-      #ConsumeMQTT->PutFile
-      #startup both clients in the same MiNiFi instance
-      #ConsumeMQTT: SUBSCRIBE to testtopic
-      #ConsumeMQTT: DISCONNECT
-      #TODO how to do this?
-      #check disconnection in broker
-      #place file in GetFile's watched dir
-      #wait for publishing in broker
-      #ConsumeMQTT: reCONNECT
-      #wait for file appearing in PutFile's output dir
+  Scenario: Subscription and publishing with disconnecting clients in durable sessions
+    # publishing MQTT client
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "publisher-client" flow
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishMQTT processor in the "publisher-client" flow
+    And the "Quality of Service" property of the PublishMQTT processor is set to "1"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+
+    # consuming MQTT client
+    And a ConsumeMQTT processor in the "consumer-client" flow
+    And the "Quality of Service" property of the ConsumeMQTT processor is set to "1"
+    And the "Clean Session" property of the ConsumeMQTT processor is set to "false"
+    And the "Client ID" property of the ConsumeMQTT processor is set to "consumer-client"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "consumer-client" flow
+    And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+
+    And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
+
+    When all instances start up
+    And "consumer-client" flow is stopped
+    Then the MQTT broker has a log line matching "Received DISCONNECT from consumer-client"
+
+    And a file with the content "test" is placed in "/tmp/input"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+
+    And "consumer-client" flow is restarted
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds

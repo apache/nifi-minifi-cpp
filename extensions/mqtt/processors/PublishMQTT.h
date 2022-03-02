@@ -137,6 +137,15 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     return true;
   }
 
+  void onMessageReceived(MQTTClient_message* message) override {
+    MQTTClient_freeMessage(&message);
+  }
+
+  bool startupClient() override {
+    // there is no need to do anything like subscribe on the beginning
+    return true;
+  }
+
   uint64_t max_seg_size_;
   bool retain_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();

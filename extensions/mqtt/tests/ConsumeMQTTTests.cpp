@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include "Catch.h"
 #include "TestBase.h"
 #include "../processors/ConsumeMQTT.h"
 

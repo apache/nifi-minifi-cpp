@@ -122,6 +122,16 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 }
 
+bool ConsumeMQTT::startupClient() {
+  const int ret = MQTTClient_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_));
+  if (ret != MQTTCLIENT_SUCCESS) {
+    logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
+    return false;
+  }
+  logger_->log_debug("Successfully subscribed to MQTT topic: %s", topic_);
+  return true;
+}
+
 REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
 
 }  // namespace org::apache::nifi::minifi::processors

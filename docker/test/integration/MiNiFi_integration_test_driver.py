@@ -93,6 +93,14 @@ class MiNiFi_integration_test:
         for container_name in self.cluster.containers:
             assert self.wait_for_container_startup_to_finish(container_name)
 
+    def stop(self, container_name):
+        logging.info("Stopping container %s", container_name)
+        self.cluster.stop_flow(container_name)
+
+    def restart(self, container_name):
+        logging.info("Restarting container %s", container_name)
+        self.cluster.restart_flow(container_name)
+
     def add_node(self, processor):
         if processor.get_name() in (elem.get_name() for elem in self.connectable_nodes):
             raise Exception("Trying to register processor with an already registered name: \"%s\"" % processor.get_name())
