@@ -14,6 +14,7 @@
 # limitations under the License.
 
 
+import docker
 import glob
 import os
 import stat
@@ -33,6 +34,7 @@ class KindProxy:
         self.kind_binary_path = os.path.join(self.temp_directory, 'kind')
         self.kind_config_path = os.path.join(self.temp_directory, 'kind-config.yml')
         self.__download_kind()
+        self.docker_client = docker.from_env()
 
     def __download_kind(self):
         if subprocess.run(['curl', '-Lo', self.kind_binary_path, 'https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64']).returncode != 0:
@@ -84,25 +86,35 @@ class KindProxy:
 
     def __wait_for_default_service_account(self, namespace):
         for _ in range(120):
-            if subprocess.run(['docker', 'exec', 'kind-control-plane', 'kubectl', '-n', namespace, 'get', 'serviceaccount', 'default']).returncode == 0:
+            (code, output) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', '-n', namespace, 'get', 'serviceaccount', 'default'])
+            if code == 0:
                 return
             time.sleep(1)
         raise Exception("Default service account for namespace '%s' not found" % namespace)
 
     def __create_objects_of_type(self, directory, type):
         found_objects = []
-        for file_name in glob.iglob(os.path.join(directory, f'*.{type}.yml')):
-            file_handle = os.open(file_name, os.O_RDONLY)
-            if subprocess.run(['docker', 'exec', '-i', 'kind-control-plane', 'kubectl', 'apply', '-f', '-'], stdin=file_handle).returncode != 0:
-                raise Exception("Could not create kubernetes object from file '%s'" % file_name)
-            object_name = os.path.basename(file_name).replace(f'.{type}.yml', '')
+        for full_file_name in glob.iglob(os.path.join(directory, f'*.{type}.yml')):
+            file_name = os.path.basename(full_file_name)
+            file_name_in_container = os.path.join('/var/tmp', file_name)
+            self.__copy_file_to_container(full_file_name, 'kind-control-plane', file_name_in_container)
+
+            (code, output) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', 'apply', '-f', file_name_in_container])
+            if code != 0:
+                raise Exception("Could not create kubernetes object from file '%s'" % full_file_name)
+
+            object_name = file_name.replace(f'.{type}.yml', '')
             found_objects.append(object_name)
         return found_objects
 
+    def __copy_file_to_container(self, host_file, container_name, container_file):
+        if subprocess.run(['docker', 'cp', host_file, container_name + ':' + container_file]).returncode != 0:
+            raise Exception("Could not copy file '%s' into container '%s' as '%s'" % (host_file, container_name, container_file))
+
     def get_logs(self, namespace, pod_name):
-        kubectl_logs_output = subprocess.run(['docker', 'exec', 'kind-control-plane', 'kubectl', '-n', namespace, 'logs', pod_name], capture_output=True)
-        if kubectl_logs_output.returncode == 0:
-            return kubectl_logs_output.stdout
+        (code, output) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', '-n', namespace, 'logs', pod_name])
+        if code == 0:
+            return output
         else:
             return None
 
