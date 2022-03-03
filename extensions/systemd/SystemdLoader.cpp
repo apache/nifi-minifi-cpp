@@ -14,8 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#include <memory>
+#include <optional>
+#include "agent/MainHelper.h"
+#include "core/extension/Extension.h"
+#include "libwrapper/LibWrapper.h"
+#include "sigslot/signal.hpp"
 
 namespace org::apache::nifi::minifi::extensions::systemd {
-enum class JournalType { User, System, Both };
+struct SystemdLoader {
+  std::unique_ptr<libwrapper::LibWrapper> libwrapper_ = libwrapper::createLibWrapper();
+  sigslot::scoped_connection on_started_handler = service_started.connect_scoped([this] {
+    libwrapper_->notify(false, "READY=1");
+  });
+  sigslot::scoped_connection on_stopping_handler = service_stopping.connect_scoped([this] {
+    libwrapper_->notify(true, "STOPPING=1");
+  });
+};
+
+namespace {
+std::optional<SystemdLoader> loader;
+bool init(const core::extension::ExtensionConfig&) try {
+  loader.emplace();
+  return true;
+} catch(...) {
+  return false;
+}
+void deinit() { loader.reset(); }
+}  // namespace
+
+REGISTER_EXTENSION("SystemdExtension", init, deinit);
 }  // namespace org::apache::nifi::minifi::extensions::systemd

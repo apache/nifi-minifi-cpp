@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "MainHelper.h"
-
+#include "agent/MainHelper.h"
+#include "Defaults.h"
 #include "utils/Environment.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "core/logging/LoggerConfiguration.h"
 
 #ifdef WIN32
 FILE* __cdecl _imp____iob_func() {
@@ -40,13 +40,13 @@ FILE* __cdecl _imp____iob_func() {
   static char initialized = 0;
 
   if (!initialized) {
-    bufs[0]._ptr = (char*)stdin->_Placeholder;
-    bufs[1]._ptr = (char*)stdout->_Placeholder;
-    bufs[2]._ptr = (char*)stderr->_Placeholder;
+    bufs[0]._ptr = reinterpret_cast<char*>(stdin->_Placeholder);
+    bufs[1]._ptr = reinterpret_cast<char*>(stdout->_Placeholder);
+    bufs[2]._ptr = reinterpret_cast<char*>(stderr->_Placeholder);
     initialized = 1;
   }
 
-  return (FILE*)&bufs;
+  return reinterpret_cast<FILE*>(&bufs);
 }
 
 FILE* __cdecl __imp___iob_func() {
@@ -59,27 +59,29 @@ FILE* __cdecl __imp___iob_func() {
     int   _charbuf;
     int   _bufsiz;
     char *_tmpfname;
-};
+  };
   // VS2015 has FILE = struct {void* _Placeholder}
 
   static struct _iobuf_VS2012 bufs[3];
   static char initialized = 0;
 
   if (!initialized) {
-    bufs[0]._ptr = (char*)stdin->_Placeholder;
-    bufs[1]._ptr = (char*)stdout->_Placeholder;
-    bufs[2]._ptr = (char*)stderr->_Placeholder;
+    bufs[0]._ptr = reinterpret_cast<char*>(stdin->_Placeholder);
+    bufs[1]._ptr = reinterpret_cast<char*>(stdout->_Placeholder);
+    bufs[2]._ptr = reinterpret_cast<char*>(stderr->_Placeholder);
     initialized = 1;
   }
 
-  return (FILE*)&bufs;
+  return reinterpret_cast<FILE*>(&bufs);
 }
-
 #endif
 
 namespace minifi = org::apache::nifi::minifi;
 namespace utils = minifi::utils;
 namespace logging = minifi::core::logging;
+
+MINIFIAPI sigslot::signal<> service_started;
+MINIFIAPI sigslot::signal<> service_stopping;
 
 bool validHome(const std::string &home_path) {
   const std::string properties_file_path = utils::file::concat_path(home_path, DEFAULT_NIFI_PROPERTIES_FILE);
@@ -147,7 +149,7 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
 
     std::string minifiHomeWithoutBin, binDir;
     std::tie(minifiHomeWithoutBin, binDir) = minifi::utils::file::split_path(minifiHome);
-    if (minifiHomeWithoutBin != "" && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::get_separator())) {
+    if (!minifiHomeWithoutBin.empty() && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::get_separator())) {
       if (validHome(minifiHomeWithoutBin)) {
         logger->log_info("%s is a valid " MINIFI_HOME_ENV_KEY ", falling back to it.", minifiHomeWithoutBin);
         minifiHomeValid = true;

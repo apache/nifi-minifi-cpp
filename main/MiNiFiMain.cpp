@@ -17,8 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -34,21 +32,22 @@
   #pragma comment(lib, "jvm.lib")
 #endif
 #include <direct.h>
-
 #endif
 
 #include <fcntl.h>
-#include <stdio.h>
+#include <cstdio>
 #include <semaphore.h>
-#include <signal.h>
+#include <csignal>
 #include <sodium.h>
 
 #include <cstdlib>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <vector>
 
 #include "ResourceClaim.h"
+#include "Defaults.h"
 #include "core/Core.h"
 #include "core/FlowConfiguration.h"
 #include "core/ConfigurationFactory.h"
@@ -60,16 +59,15 @@
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
 #include "FlowController.h"
-#include "AgentDocs.h"
-#include "MainHelper.h"
+#include "agent/AgentDocs.h"
+#include "agent/MainHelper.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
 namespace utils = minifi::utils;
 
- // Variables that allow us to avoid a timed wait.
+// Variables that allow us to avoid a timed wait.
 sem_t *running;
-//! Flow Controller
 
 /**
  * Removed the stop command from the signal handler so that we could trigger
@@ -111,11 +109,11 @@ void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std
   }
 
   minifi::docs::AgentDocs docsCreator;
-
   docsCreator.generate(dir, out);
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, const char* const* const argv) {
+  using namespace std::literals::chrono_literals;
 #ifdef WIN32
   RunAsServiceIfNeeded();
 
@@ -127,12 +125,10 @@ int main(int argc, char **argv) {
 
   utils::Environment::setRunningAsService(isStartedByService);
 #endif
-
   if (utils::Environment::isRunningAsService()) {
     setSyslogLogger();
   }
   const auto logger = core::logging::LoggerConfiguration::getConfiguration().getLogger("main");
-
 #ifdef WIN32
   if (isStartedByService) {
     if (!CreateServiceTerminationThread(logger, terminationEventHandler)) {
@@ -148,7 +144,8 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  uint16_t stop_wait_time = STOP_WAIT_TIME_MS;
+  //! Main thread stop wait time
+  std::chrono::milliseconds stop_wait_time = 30s;
 
   std::string graceful_shutdown_seconds;
   std::string prov_repo_class = "provenancerepository";
@@ -249,7 +246,7 @@ int main(int argc, char **argv) {
 
   if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {
     try {
-      stop_wait_time = std::stoi(graceful_shutdown_seconds);
+      stop_wait_time = std::chrono::seconds{std::stoi(graceful_shutdown_seconds)};
     }
     catch (const std::out_of_range &e) {
       logger->log_error("%s is out of range. %s", minifi::Configure::nifi_graceful_shutdown_seconds, e.what());
@@ -259,8 +256,7 @@ int main(int argc, char **argv) {
     }
   }
   else {
-    logger->log_debug("%s not set, defaulting to %d", minifi::Configure::nifi_graceful_shutdown_seconds,
-      STOP_WAIT_TIME_MS);
+    logger->log_debug("%s not set, defaulting to %d ms", minifi::Configure::nifi_graceful_shutdown_seconds, stop_wait_time.count());
   }
 
   configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
@@ -273,18 +269,14 @@ int main(int argc, char **argv) {
   }
 
   configure->get(minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
-
   std::shared_ptr<core::Repository> flow_repo = core::createRepository(flow_repo_class, true, "flowfile");
-
   if (!flow_repo->initialize(configure)) {
     logger->log_error("Flow file repository failed to initialize, exiting..");
     exit(1);
   }
 
   configure->get(minifi::Configure::nifi_content_repository_class_name, content_repo_class);
-
   std::shared_ptr<core::ContentRepository> content_repo = core::createContentRepository(content_repo_class, true, "content");
-
   if (!content_repo->initialize(configure)) {
     logger->log_error("Content repository failed to initialize, exiting..");
     exit(1);
@@ -377,9 +369,8 @@ int main(int argc, char **argv) {
 
   // Start Processing the flow
   controller->start();
-
   if (disk_space_watchdog) { disk_space_watchdog->start(); }
-
+  service_started();
   logger->log_info("MiNiFi started");
 
   /**
@@ -390,6 +381,8 @@ int main(int argc, char **argv) {
   int ret_val;
   while ((ret_val = sem_wait(running)) == -1 && errno == EINTR);
   if (ret_val == -1) perror("sem_wait");
+  service_stopping();
+  logger->log_info("MiNiFi stopping");
 
   while ((ret_val = sem_close(running)) == -1 && errno == EINTR);
   if (ret_val == -1) perror("sem_close");
@@ -398,18 +391,11 @@ int main(int argc, char **argv) {
   if (ret_val == -1) perror("sem_unlink");
 
   disk_space_watchdog = nullptr;
-
-  /**
-   * Trigger unload -- wait stop_wait_time
-   */
-  controller->waitUnload(stop_wait_time);
-
+  // Trigger unload -- wait stop_wait_time
+  controller->waitUnload(std::chrono::milliseconds{stop_wait_time}.count());
   controller->stopC2();
-
   flow_repo = nullptr;
-
   prov_repo = nullptr;
-
   logger->log_info("MiNiFi exit");
 
 #ifdef WIN32

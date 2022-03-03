@@ -45,10 +45,8 @@ struct JournalEntry final {
     fields.push_back(utils::StringUtils::join_pack("MESSAGE=", message));
     fields.push_back(utils::StringUtils::join_pack("SYSLOG_IDENTIFIER=", identifier));
     if (pid != 0) {
-      // The intention of the long expression below is a simple pseudo-random to test both branches equally
-      // without having to pull in complex random logic
-      const char* const pid_key =
-          (int{message[0]} + int{identifier[0]} + static_cast<int>(extra_fields.size()) + pid + int{hostname[0]}) % 2 == 0 ? "_PID" : "SYSLOG_PID";
+      // The intention of the long expression below is a simple pseudo-random to test both branches equally without having to pull in complex random logic
+      const char* const pid_key = (int{message[0]} + int{identifier[0]} + static_cast<int>(fields.size()) + pid + int{hostname[0]}) % 2 == 0 ? "_PID" : "SYSLOG_PID";
       fields.push_back(utils::StringUtils::join_pack(pid_key, "=", std::to_string(pid)));
     }
     fields.push_back(utils::StringUtils::join_pack("_HOSTNAME=", hostname));
@@ -135,29 +133,29 @@ struct TestLibWrapper final : libwrapper::LibWrapper {
     return std::make_unique<TestJournal>(journal);
   }
 
+  int notify(bool, const char*) override { return 0; }
+
   std::vector<JournalEntry> journal;
 };
 }  // namespace
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
+namespace org::apache::nifi::minifi::extensions::systemd {
 struct ConsumeJournaldTestAccessor {
   FIELD_ACCESSOR(state_manager_);
 };
-}}}}}}  // namespace org::apache::nifi::minifi::extensions::systemd
-using org::apache::nifi::minifi::extensions::systemd::ConsumeJournaldTestAccessor;
 
 TEST_CASE("ConsumeJournald", "[consumejournald]") {
   TestController test_controller;
   LogTestController::getInstance().setTrace<ConsumeJournald>();
   const auto plan = test_controller.createPlan();
-  auto libwrapper = std::make_unique<TestLibWrapper>(TestLibWrapper{{
+  auto libwrapper = std::make_unique<TestLibWrapper>(std::vector<JournalEntry>{
       {"kernel", "Linux version 5.10.12-gentoo-x86_64 (root@test-pc.test.local) (x86_64-pc-linux-gnu-gcc (Gentoo 10.2.0-r5 p6) 10.2.0, GNU ld (Gentoo 2.35.2 p1) 2.35.2) #1 SMP Sat Feb 20 03:13:45 CET 2021"},  // NOLINT
       {"kernel", "NX (Execute Disable) protection: active"},
       {"kernel", "ACPI: Local APIC address 0xfee00000"},
       {"kernel", "HugeTLB registered 1.00 GiB page size, pre-allocated 0 pages"},
       {"kernel", "SCSI subsystem initialized"},
       {"systemd", "Starting Rule-based Manager for Device Events and Files...", 1},
-  }});
+  });
   auto* const libwrapper_observer = libwrapper.get();
   const auto consume_journald = plan->addProcessor(std::make_shared<ConsumeJournald>("ConsumeJournald", utils::Identifier{},
       std::move(libwrapper)), "ConsumeJournald");
@@ -294,3 +292,4 @@ TEST_CASE("ConsumeJournald", "[consumejournald]") {
     REQUIRE_THROWS(plan->scheduleProcessor(consume_journald));
   }
 }
+}  // namespace org::apache::nifi::minifi::extensions::systemd

@@ -19,25 +19,20 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-include_directories(../libminifi/include)
-
 if(WIN32)
 	add_definitions(-DWIN32_LEAN_AND_MEAN)
-	include_directories(../libminifi/opsys/win)
-else()
-	include_directories(../libminifi/opsys/posix)
 endif()
-
 
 include(CppVersion)
 set_cpp_version()
 
-set(MINIFIEXE_SOURCES MiNiFiMain.cpp MainHelper.cpp MiNiFiWindowsService.cpp AgentDocs.cpp)
+set(MINIFIEXE_SOURCES MiNiFiMain.cpp MiNiFiWindowsService.cpp)
 if(WIN32)
 	set_source_files_properties("${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc" PROPERTIES GENERATED TRUE)
 	list(APPEND MINIFIEXE_SOURCES "${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc")
 endif()
 add_executable(minifiexe ${MINIFIEXE_SOURCES})
+target_link_libraries(minifiexe minifi::core)
 
 if (NOT USE_SHARED_LIBS)
 	if (LIBC_STATIC)
@@ -52,8 +47,7 @@ if(NOT WIN32 AND ENABLE_JNI AND NOT DISABLE_JEMALLOC)
 endif()
 
 if (WIN32)
-	include_directories(SYSTEM "../thirdparty/Simple-Windows-Posix-Semaphore")
-  	target_link_libraries(minifiexe semaphore)
+  	target_link_libraries(minifiexe Simple-Windows-Posix-Semaphore::semaphore)
 endif()
 
 get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)

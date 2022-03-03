@@ -16,9 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-
-
-add_library(
-    semaphore
-    semaphore.c
-)
+cmake_minimum_required(VERSION 3.14)
+project(Simple-Windows-Posix-Semaphore)
+add_library(semaphore semaphore.c)
+target_include_directories(semaphore PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+add_library(Simple-Windows-Posix-Semaphore::semaphore ALIAS semaphore)

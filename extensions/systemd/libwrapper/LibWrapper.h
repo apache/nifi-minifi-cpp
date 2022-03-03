@@ -22,10 +22,18 @@
 
 #include "../Common.h"
 #include "utils/gsl.h"
+#include "range/v3/algorithm/transform.hpp"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd { namespace libwrapper {
+namespace org::apache::nifi::minifi::extensions::systemd::libwrapper {
 
 struct Journal {
+  Journal() = default;
+  Journal(const Journal&) = delete;
+  Journal(Journal&&) = delete;
+  Journal& operator=(const Journal&) = delete;
+  Journal& operator=(Journal&&) = delete;
+  virtual ~Journal() = default;
+
   virtual int seekHead() noexcept = 0;
   virtual int seekTail() noexcept = 0;
   virtual int seekCursor(const char*) noexcept = 0;
@@ -36,22 +44,21 @@ struct Journal {
   virtual int enumerateData(const void** data_out, size_t* size_out) noexcept = 0;
 
   virtual int getRealtimeUsec(uint64_t* usec_out) noexcept = 0;
-
-  virtual ~Journal() = default;
 };
 
 
 struct LibWrapper {
-  virtual std::unique_ptr<Journal> openJournal(JournalType) = 0;
+  LibWrapper() = default;
+  LibWrapper(const LibWrapper&) = delete;
+  LibWrapper(LibWrapper&&) = delete;
+  LibWrapper& operator=(const LibWrapper&) = delete;
+  LibWrapper& operator=(LibWrapper&&) = delete;
   virtual ~LibWrapper() = default;
+
+  virtual std::unique_ptr<Journal> openJournal(JournalType) = 0;
+  virtual int notify(bool unset_environment, const char* state) = 0;
 };
 
 std::unique_ptr<LibWrapper> createLibWrapper();
 
-}  // namespace libwrapper
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd::libwrapper

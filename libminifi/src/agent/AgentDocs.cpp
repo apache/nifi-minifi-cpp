@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include "AgentDocs.h"
+#include "agent/AgentDocs.h"
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -38,13 +38,9 @@
 #include "agent/agent_docs.h"
 #include "agent/agent_version.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace docs {
+namespace org::apache::nifi::minifi::docs {
 
-std::string AgentDocs::extractClassName(const std::string &processor) const {
+std::string AgentDocs::extractClassName(const std::string &processor) {
   auto positionOfLastDot = processor.find_last_of(".");
   if (positionOfLastDot != std::string::npos) {
     return processor.substr(positionOfLastDot + 1);
@@ -79,9 +75,8 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     }
 
     outfile << "### Properties " << std::endl << std::endl;
-    outfile
-        << "In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language."
-        << std::endl<< std::endl;
+    outfile << "In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and "
+        "whether a property supports the NiFi Expression Language.\n\n";
 
     outfile << "| Name | Default Value | Allowable Values | Description | " << std::endl << "| - | - | - | - | " << std::endl;
     for (const auto &prop : processor.second.class_properties_) {
@@ -99,10 +94,9 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
       std::copy(allowableValues.begin(), allowableValues.end(), std::ostream_iterator<std::string>(s, "<br>"));
       outfile << "|";
       const auto defaultValue = prop.second.getDefaultValue().to_string();
-      if (defaultValue.size() == 1 && (int)defaultValue.c_str()[0] == 0x0a) {
+      if (defaultValue.size() == 1 && defaultValue.c_str()[0] == 0x0a) {
         outfile << "\\n";
-      }
-      else {
+      } else {
         outfile << defaultValue;
       }
       std::string description = prop.second.getDescription();
@@ -165,8 +159,4 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   }
 }
 
-} /* namespace docs */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::docs

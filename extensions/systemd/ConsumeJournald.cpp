@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "ConsumeJournald.h"
 
 #include <algorithm>
@@ -28,11 +27,10 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
+namespace org::apache::nifi::minifi::extensions::systemd {
 
 namespace chr = std::chrono;
 
-constexpr const char* ConsumeJournald::CURSOR_KEY;
 const core::Relationship ConsumeJournald::Success("success", "Successfully consumed journal messages.");
 
 const core::Property ConsumeJournald::BatchSize = core::PropertyBuilder::createProperty("Batch Size")
@@ -73,7 +71,7 @@ const core::Property ConsumeJournald::TimestampFormat = core::PropertyBuilder::c
     ->isRequired(true)
     ->build();
 
-ConsumeJournald::ConsumeJournald(const std::string &name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper>&& libwrapper)
+ConsumeJournald::ConsumeJournald(const std::string &name, const utils::Identifier &id, std::unique_ptr<libwrapper::LibWrapper> libwrapper)
     :core::Processor{name, id}, libwrapper_{std::move(libwrapper)}
 {}
 
@@ -270,9 +268,4 @@ std::string ConsumeJournald::getCursor() const {
 REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages. Creates one flow file per message."
     "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute.");
 
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd

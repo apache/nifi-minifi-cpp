@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
 #include <future>
@@ -23,17 +22,14 @@
 
 #include "utils/MinifiConcurrentQueue.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
-
+namespace org::apache::nifi::minifi::extensions::systemd {
 namespace detail {
 class WorkerThread final {
  public:
   WorkerThread();
-
   WorkerThread(const WorkerThread&) = delete;
   WorkerThread(WorkerThread&&) = delete;
   WorkerThread& operator=(WorkerThread) = delete;
-
   ~WorkerThread();
 
   template<typename... Args>
@@ -63,10 +59,4 @@ class Worker final {
  private:
   detail::WorkerThread worker_thread_;
 };
-
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd

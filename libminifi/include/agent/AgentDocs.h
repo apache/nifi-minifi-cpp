@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,30 +14,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MAIN_AGENTDOCS_H_
-#define MAIN_AGENTDOCS_H_
+#pragma once
 
 #include <iostream>
+#include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace docs {
-
+namespace org::apache::nifi::minifi::docs {
 class AgentDocs {
  public:
   AgentDocs() = default;
   ~AgentDocs() = default;
   void generate(const std::string &docsdir, std::ostream &genStream);
  private:
-  inline std::string extractClassName(const std::string &processor) const;
+  [[nodiscard]] static std::string extractClassName(const std::string &processor);
 };
-
-} /* namespace docs */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // MAIN_AGENTDOCS_H_
+}  // namespace org::apache::nifi::minifi::docs

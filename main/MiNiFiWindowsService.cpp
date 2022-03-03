@@ -24,7 +24,7 @@
 #include <tuple>
 #include <tlhelp32.h>
 
-#include "MainHelper.h"
+#include "agent/MainHelper.h"
 #include "core/FlowConfiguration.h"
 
 namespace minifi = org::apache::nifi::minifi;

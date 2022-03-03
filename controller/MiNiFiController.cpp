@@ -15,28 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <fcntl.h>
-#include <stdio.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <vector>
-#include <queue>
-#include <map>
-#include <iostream>
-#include "io/BaseStream.h"
-
-#include "core/Core.h"
-
-#include "core/FlowConfiguration.h"
-#include "core/ConfigurationFactory.h"
-#include "core/RepositoryFactory.h"
-#include "FlowController.h"
-#include "MainHelper.h"
-#include "properties/Configure.h"
+#include "agent/MainHelper.h"
 #include "Controller.h"
-#include "c2/ControllerSocketProtocol.h"
+#include "core/RepositoryFactory.h"
+#include "Defaults.h"
+#include "io/StreamFactory.h"
+#include "properties/Configure.h"
 
 #include "cxxopts.hpp"
+
+#include <iostream>
+#include <map>
+#include <vector>
 
 namespace minifi = org::apache::nifi::minifi;
 

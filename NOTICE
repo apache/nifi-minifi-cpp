@@ -67,6 +67,7 @@ This software includes third party software subject to the following copyrights:
 - nlohmann json - Copyright (c) 2013-2022 Niels Lohmann
 - abseil-cpp - Google Inc.
 - crc32c - Google Inc., Fangming Fang, Vadim Skipin, Rodrigo Tobar, Harry Mallon
+- palacaze/sigslot - Copyright (c) 2017 Pierre-Antoine Lacaze
 
 The licenses for these third party components are included in LICENSE.txt
 

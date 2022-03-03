@@ -15,41 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MAIN_MAINHELPER_H_
-#define MAIN_MAINHELPER_H_
+#pragma once
 
+#include <memory>
 #include <string>
-
-#include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
-#include "Defaults.h"
+#include "utils/Export.h"
+#include "sigslot/signal.hpp"
 
 #ifdef WIN32
 extern "C" {
   FILE* __cdecl _imp____iob_func();
-
   FILE* __cdecl __imp___iob_func();
 }
-#endif
-
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-
- //! Main thread sleep interval 1 second
-#define SLEEP_INTERVAL 1
-//! Main thread stop wait time
-#define STOP_WAIT_TIME_MS 30*1000
-//! Default YAML location
-
-//! Define home environment variable
-#define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
-
-#ifdef _MSC_VER
 #ifndef PATH_MAX
 #define PATH_MAX 260
 #endif
 #endif
+
+//! Define home environment variable
+#define MINIFI_HOME_ENV_KEY "MINIFI_HOME"
 
 /**
  * Validates a MINIFI_HOME value.
@@ -69,6 +57,6 @@ void setSyslogLogger();
  */
 std::string determineMinifiHome(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
-
-
-#endif /* MAIN_MAINHELPER_H_ */
+//! Service status signals, can be used to report state changes to a service manager
+MINIFIAPI extern sigslot::signal<> service_started;
+MINIFIAPI extern sigslot::signal<> service_stopping;

@@ -1,0 +1,12 @@
+[Unit]
+AssertPathExists=/opt/nifi-minifi-cpp
+
+[Service]
+Type=notify
+Restart=always
+WorkingDirectory=/opt/nifi-minifi-cpp
+EnvironmentFile=/opt/nifi-minifi-cpp/envfile
+ExecStart=/opt/nifi-minifi-cpp/bin/minifi
+
+[Install]
+WantedBy=multi-user.target
