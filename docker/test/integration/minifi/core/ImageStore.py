@@ -1,3 +1,19 @@
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from .NifiContainer import NifiContainer
 from .MinifiContainer import MinifiContainer
 import logging
@@ -29,6 +45,8 @@ class ImageStore:
 
         if container_engine == "minifi-cpp":
             image = self.__build_minifi_cpp_image()
+        elif container_engine == "minifi-cpp-in-kubernetes":
+            image = self.__build_simple_minifi_cpp_image_with_root()
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
         elif container_engine == "nifi":
@@ -81,6 +99,15 @@ class ImageStore:
                 USER minificpp
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
                            minifi_root=MinifiContainer.MINIFI_ROOT))
+
+        return self.__build_image(dockerfile)
+
+    def __build_simple_minifi_cpp_image_with_root(self):
+        dockerfile = dedent(r"""\
+                FROM {base_image}
+                USER root
+                CMD ["/bin/sh", "-c", "cp /tmp/minifi_config/config.yml /tmp/minifi_config/minifi-log.properties ./conf/ && ./bin/minifi.sh run"]
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION))
 
         return self.__build_image(dockerfile)
 
