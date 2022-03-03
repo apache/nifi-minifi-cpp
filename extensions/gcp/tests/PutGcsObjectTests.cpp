@@ -62,7 +62,7 @@ class PutGcsObjectTests : public ::testing::Test {
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 
   static auto return_upload_in_progress() {
-    return testing::Return(google::cloud::make_status_or(ResumableUploadResponse{"fake-url", 0, {}, ResumableUploadResponse::kInProgress, {}}));
+    return testing::Return(google::cloud::make_status_or(ResumableUploadResponse{"fake-url", ResumableUploadResponse::kInProgress, 0, {}, {}}));
   }
 
   static auto return_upload_done(const ResumableUploadRequest& request) {
@@ -75,9 +75,9 @@ class PutGcsObjectTests : public ::testing::Test {
       metadata_json["customerEncryption"]["encryptionAlgorithm"] = "AES256";
       metadata_json["customerEncryption"]["keySha256"] = "zkeXIcAB56dkHp0z1023TQZ+mzm+fZ5JRVgmAQ3bEVE=";
     }
-    return testing::Return(google::cloud::make_status_or(ResumableUploadResponse{"fake-url", 0,
-                                                                                 *ObjectMetadataParser::FromJson(metadata_json),
-                                                                                 ResumableUploadResponse::kDone, {}}));
+    return testing::Return(google::cloud::make_status_or(ResumableUploadResponse{"fake-url",
+                                                                                 ResumableUploadResponse::kDone, 0,
+                                                                                 *ObjectMetadataParser::FromJson(metadata_json), {}}));
   }
 };
 

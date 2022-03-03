@@ -93,9 +93,16 @@ const core::Property PutGcsObject::ObjectACL(
 
 const core::Property PutGcsObject::OverwriteObject(
     core::PropertyBuilder::createProperty("Overwrite Object")
-    ->withDescription("If false, the upload to GCS will succeed only if the object does not exist.")
-    ->withDefaultValue<bool>(true)
-    ->build());
+        ->withDescription("If false, the upload to GCS will succeed only if the object does not exist.")
+        ->withDefaultValue<bool>(true)
+        ->build());
+
+const core::Property PutGcsObject::EndpointOverrideURL(
+    core::PropertyBuilder::createProperty("Endpoint Override URL")
+        ->withDescription("Overrides the default Google Cloud Storage endpoints")
+        ->isRequired(false)
+        ->supportsExpressionLanguage(true)
+        ->build());
 
 const core::Relationship PutGcsObject::Success("success", "Files that have been successfully written to Google Cloud Storage are transferred to this relationship");
 const core::Relationship PutGcsObject::Failure("failure", "Files that could not be written to Google Cloud Storage for some reason are transferred to this relationship");
@@ -175,29 +182,6 @@ class UploadToGCSCallback : public InputStreamCallback {
   return context.getProperty(PutGcsObject::ContentType) | utils::orElse([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
 
-void setAttributesFromObjectMetadata(core::FlowFile& flow_file, const gcs::ObjectMetadata& object_metadata) {
-  flow_file.setAttribute(GCS_BUCKET_ATTR, object_metadata.bucket());
-  flow_file.setAttribute(GCS_OBJECT_NAME_ATTR, object_metadata.name());
-  flow_file.setAttribute(GCS_SIZE_ATTR, std::to_string(object_metadata.size()));
-  flow_file.setAttribute(GCS_CRC32C_ATTR, object_metadata.crc32c());
-  flow_file.setAttribute(GCS_MD5_ATTR, object_metadata.md5_hash());
-  flow_file.setAttribute(GCS_CREATE_TIME_ATTR, std::to_string(object_metadata.time_created().time_since_epoch().count()));
-  flow_file.setAttribute(GCS_UPDATE_TIME_ATTR, std::to_string(object_metadata.updated().time_since_epoch().count()));
-  flow_file.setAttribute(GCS_MEDIA_LINK_ATTR, object_metadata.media_link());
-  flow_file.setAttribute(GCS_SELF_LINK_ATTR, object_metadata.self_link());
-  flow_file.setAttribute(GCS_ETAG_ATTR, object_metadata.etag());
-  flow_file.setAttribute(GCS_GENERATED_ID, object_metadata.id());
-  flow_file.setAttribute(GCS_GENERATION, std::to_string(object_metadata.generation()));
-  if (object_metadata.has_customer_encryption()) {
-    flow_file.setAttribute(GCS_ENCRYPTION_ALGORITHM_ATTR, object_metadata.customer_encryption().encryption_algorithm);
-    flow_file.setAttribute(GCS_ENCRYPTION_SHA256_ATTR, object_metadata.customer_encryption().key_sha256);
-  }
-  if (object_metadata.has_owner()) {
-    flow_file.setAttribute(GCS_OWNER_ENTITY_ATTR, object_metadata.owner().entity);
-    flow_file.setAttribute(GCS_OWNER_ENTITY_ID_ATTR, object_metadata.owner().entity_id);
-  }
-}
-
 std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) {
   std::string service_name;
   if (context.getProperty(PutGcsObject::GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name))
@@ -217,7 +201,8 @@ void PutGcsObject::initialize() {
                           Crc32cChecksumLocation,
                           EncryptionKey,
                           ObjectACL,
-                          OverwriteObject});
+                          OverwriteObject,
+                          EndpointOverrideURL});
   setSupportedRelationships({Success, Failure});
 }
 
@@ -269,7 +254,13 @@ void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     return;
   }
 
-  gcs::Client client = getClient(gcs::ClientOptions(gcp_credentials_));
+  auto options = gcs::ClientOptions(gcp_credentials_);
+  if (auto endpoint_override_url = context->getProperty(EndpointOverrideURL)) {
+    options.set_endpoint(*endpoint_override_url);
+    logger_->log_debug("Endpoint override url %s", *endpoint_override_url);
+  }
+
+  gcs::Client client = getClient(options);
   UploadToGCSCallback callback(client, *bucket, *object_name);
 
   if (auto crc32_checksum_location = context->getProperty(Crc32cChecksumLocation, flow_file)) {
@@ -298,7 +289,7 @@ void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
   if (!result.ok()) {
     flow_file->setAttribute(GCS_ERROR_REASON, result.status().error_info().reason());
     flow_file->setAttribute(GCS_ERROR_DOMAIN, result.status().error_info().domain());
-    logger_->log_error("Failed to upload to Google Cloud Storage %s", result.status().error_info().reason());
+    logger_->log_error("Failed to upload to Google Cloud Storage %s %s", result.status().message(), result.status().error_info().reason());
     session->transfer(flow_file, Failure);
   } else {
     setAttributesFromObjectMetadata(*flow_file, *result);

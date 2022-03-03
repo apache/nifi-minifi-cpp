@@ -60,6 +60,7 @@ class PutGcsObject : public core::Processor {
   EXTENSIONAPI static const core::Property EncryptionKey;
   EXTENSIONAPI static const core::Property ObjectACL;
   EXTENSIONAPI static const core::Property OverwriteObject;
+  EXTENSIONAPI static const core::Property EndpointOverrideURL;
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;

@@ -56,8 +56,8 @@ set(GOOGLE_CLOUD_CPP_ENABLE storage CACHE INTERNAL storage-api)
 set(GOOGLE_CLOUD_CPP_ENABLE_MACOS_OPENSSL_CHECK OFF CACHE INTERNAL macos-openssl-check)
 set(BUILD_TESTING OFF CACHE INTERNAL testing-off)
 FetchContent_Declare(google-cloud-cpp
-        URL      https://github.com/googleapis/google-cloud-cpp/archive/refs/tags/v1.35.0.tar.gz
-        URL_HASH SHA256=e4e9eac1e7999eff195db270bc2a719004660b3730ebb5d2f444f2d2057e49b2
+        URL      https://github.com/googleapis/google-cloud-cpp/archive/refs/tags/v1.37.0.tar.gz
+        URL_HASH SHA256=a7269b21d5e95bebff7833ebb602bcd5bcc79e82a59449cc5d5b350ff2f50bbc
         PATCH_COMMAND "${PC}")
 add_compile_definitions(_SILENCE_CXX20_REL_OPS_DEPRECATION_WARNING _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING CURL_STATICLIB)
 FetchContent_MakeAvailable(google-cloud-cpp)

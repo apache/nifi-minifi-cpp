@@ -1,25 +1,11 @@
-diff --git a/google/cloud/CMakeLists.txt b/google/cloud/CMakeLists.txt
-index 305506c34..a7300a0af 100644
---- a/google/cloud/CMakeLists.txt
-+++ b/google/cloud/CMakeLists.txt
-@@ -14,8 +14,6 @@
- # limitations under the License.
- # ~~~
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	(revision 334e481f49c78c9e22aa48e59d044f6051ce99a7)
++++ b/CMakeLists.txt	(date 1646227181483)
+@@ -251,7 +251,6 @@
+ # Each subproject adds dependencies to this target to have their docs generated.
+ add_custom_target(doxygen-docs)
 
 -find_package(absl CONFIG REQUIRED)
--
- # Generate the version information from the CMake values.
- configure_file(internal/version_info.h.in
-                ${CMAKE_CURRENT_SOURCE_DIR}/internal/version_info.h)
-diff --git a/google/cloud/storage/CMakeLists.txt b/google/cloud/storage/CMakeLists.txt
-index cd53fd997..b5ab508c6 100644
---- a/google/cloud/storage/CMakeLists.txt
-+++ b/google/cloud/storage/CMakeLists.txt
-@@ -14,7 +14,6 @@
- # limitations under the License.
- # ~~~
-
--find_package(absl CONFIG REQUIRED)
-
- include(GoogleapisConfig)
- set(DOXYGEN_PROJECT_NAME "Google Cloud Storage C++ Client")
+ if (${GOOGLE_CLOUD_CPP_ENABLE_GRPC})
+     find_package(gRPC REQUIRED QUIET)
+     find_package(ProtobufWithTargets REQUIRED QUIET)
