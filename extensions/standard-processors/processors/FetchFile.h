@@ -80,8 +80,8 @@ class FetchFile : public core::Processor {
   void logWithLevel(LogLevelOption log_level, const std::string& message) const;
   std::string getMoveAbsolutePath(const std::string& file_name) const;
   bool moveDestinationConflicts(const std::string& file_name) const;
-  bool moveFailsWithDestinationconflict(const std::string& file_name) const;
-  void executeMoveCompletionStrategy(const std::string& file_to_fetch_path, const std::string& file_name);
+  bool moveWouldFailWithDestinationconflict(const std::string& file_name) const;
+  void executeMoveConflictStrategy(const std::string& file_to_fetch_path, const std::string& file_name);
   void processMoveCompletion(const std::string& file_to_fetch_path, const std::string& file_name);
   void executeCompletionStrategy(const std::string& file_to_fetch_path, const std::string& file_name);
 

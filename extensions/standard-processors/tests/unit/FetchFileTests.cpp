@@ -17,6 +17,7 @@
  */
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 #include "TestBase.h"
 #include "core/Property.h"
@@ -35,15 +36,15 @@ class FetchFileTestFixture {
  public:
   FetchFileTestFixture();
   ~FetchFileTestFixture();
-  std::vector<std::string> getSuccessfulFlowFileContents() const;
-  std::vector<std::string> getFailedFlowFileContents() const;
-  std::vector<std::string> getNotFoundFlowFileContents() const;
+  std::unordered_multiset<std::string> getSuccessfulFlowFileContents() const;
+  std::unordered_multiset<std::string> getFailedFlowFileContents() const;
+  std::unordered_multiset<std::string> getNotFoundFlowFileContents() const;
 #ifndef WIN32
-  std::vector<std::string> getPermissionDeniedFlowFileContents() const;
+  std::unordered_multiset<std::string> getPermissionDeniedFlowFileContents() const;
 #endif
 
  protected:
-  std::vector<std::string> getDirContents(const std::string& dir_path) const;
+  std::unordered_multiset<std::string> getDirContents(const std::string& dir_path) const;
 
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
@@ -120,12 +121,12 @@ FetchFileTestFixture::~FetchFileTestFixture() {
 #endif
 }
 
-std::vector<std::string> FetchFileTestFixture::getDirContents(const std::string& dir_path) const {
-  std::vector<std::string> file_contents;
+std::unordered_multiset<std::string> FetchFileTestFixture::getDirContents(const std::string& dir_path) const {
+  std::unordered_multiset<std::string> file_contents;
 
   auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
     std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
-    file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
+    file_contents.insert(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
     return true;
   };
 
@@ -133,20 +134,20 @@ std::vector<std::string> FetchFileTestFixture::getDirContents(const std::string&
   return file_contents;
 }
 
-std::vector<std::string> FetchFileTestFixture::getSuccessfulFlowFileContents() const {
+std::unordered_multiset<std::string> FetchFileTestFixture::getSuccessfulFlowFileContents() const {
   return getDirContents(success_output_dir_);
 }
 
-std::vector<std::string> FetchFileTestFixture::getFailedFlowFileContents() const {
+std::unordered_multiset<std::string> FetchFileTestFixture::getFailedFlowFileContents() const {
   return getDirContents(failure_output_dir_);
 }
 
-std::vector<std::string> FetchFileTestFixture::getNotFoundFlowFileContents() const {
+std::unordered_multiset<std::string> FetchFileTestFixture::getNotFoundFlowFileContents() const {
   return getDirContents(not_found_output_dir_);
 }
 
 #ifndef WIN32
-std::vector<std::string> FetchFileTestFixture::getPermissionDeniedFlowFileContents() const {
+std::unordered_multiset<std::string> FetchFileTestFixture::getPermissionDeniedFlowFileContents() const {
   return getDirContents(permission_denied_output_dir_);
 }
 #endif
@@ -155,8 +156,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Test fetching file with default but non-
   plan_->setProperty(update_attribute_processor_, "filename", "non_existent.file", true);
   test_controller_.runSession(plan_);
   auto file_contents = getNotFoundFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].empty());
+  std::unordered_multiset<std::string> expected{""};
+  REQUIRE(file_contents == expected);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "[error] File to fetch was not found"));
 }
@@ -166,8 +167,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "FileToFetch property set to a non-existe
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::LogLevelWhenFileNotFound.getName(), "INFO");
   test_controller_.runSession(plan_);
   auto file_contents = getNotFoundFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].empty());
+  std::unordered_multiset<std::string> expected{""};
+  REQUIRE(file_contents == expected);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "[info] File to fetch was not found"));
 }
@@ -179,8 +180,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Permission denied to read file", "[testF
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::LogLevelWhenPermissionDenied.getName(), "WARN");
   test_controller_.runSession(plan_);
   auto file_contents = getPermissionDeniedFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].empty());
+  std::unordered_multiset<std::string> expected{""};
+  REQUIRE(file_contents == expected);
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "[warning] Read permission denied for file"));
 }
@@ -189,8 +190,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Permission denied to read file", "[testF
 TEST_CASE_METHOD(FetchFileTestFixture, "Test fetching file with default file path", "[testFetchFile]") {
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 }
 
@@ -201,8 +202,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Test fetching file from a custom path", 
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::FileToFetch.getName(), file_path);
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(utils::file::FileUtils::exists(file_path));
 }
 
@@ -219,11 +220,12 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Flow fails due to move conflict", "[test
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy.getName(), "Fail");
   test_controller_.runSession(plan_);
   auto file_contents = getFailedFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0].empty());
+  std::unordered_multiset<std::string> expected{""};
+  REQUIRE(file_contents == expected);
 
   std::ifstream is(move_dir + utils::file::FileUtils::get_separator() + input_file_name_, std::ifstream::binary);
   REQUIRE(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()) == "old content");
+  REQUIRE(utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 }
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Move specific properties are ignored when completion strategy is not move file", "[testFetchFile]") {
@@ -233,8 +235,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move specific properties are ignored whe
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy.getName(), "Fail");
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
 }
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved with replace file", "[testFetchFile]") {
@@ -245,8 +247,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved wi
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy.getName(), "Replace File");
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(!utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 
   std::ifstream is(move_dir + utils::file::FileUtils::get_separator() + input_file_name_, std::ifstream::binary);
@@ -261,17 +263,14 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved wi
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy.getName(), "Rename");
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(!utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 
 
   auto move_dir_contents = getDirContents(move_dir);
-  REQUIRE(move_dir_contents.size() == 2);
-  REQUIRE(move_dir_contents[0] != move_dir_contents[1]);
-  for (const auto& content : move_dir_contents) {
-    REQUIRE((content == file_content_ || content == "old content"));
-  }
+  expected = {"old content", file_content_};
+  REQUIRE(move_dir_contents == expected);
 }
 
 TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved with deleting the new file and keeping the old one", "[testFetchFile]") {
@@ -282,8 +281,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move destination conflict is resolved wi
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveConflictStrategy.getName(), "Keep Existing");
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(!utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 
   std::ifstream is(move_dir + utils::file::FileUtils::get_separator() + input_file_name_, std::ifstream::binary);
@@ -296,8 +295,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Fetched file is moved to a new directory
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory.getName(), move_dir);
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(!utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 
   std::ifstream is(move_dir + utils::file::FileUtils::get_separator() + input_file_name_, std::ifstream::binary);
@@ -311,8 +310,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "After flow completion the fetched file i
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory.getName(), move_dir);
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(!utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 
   std::ifstream is(move_dir + utils::file::FileUtils::get_separator() + input_file_name_, std::ifstream::binary);
@@ -327,8 +326,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Move completion strategy failure due to 
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::MoveDestinationDirectory.getName(), move_dir);
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
   using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
   REQUIRE(verifyLogLinePresenceInPollTime(1s, "completion strategy failed"));
@@ -340,8 +339,8 @@ TEST_CASE_METHOD(FetchFileTestFixture, "Fetched file is deleted after flow compl
   plan_->setProperty(fetch_file_processor_, org::apache::nifi::minifi::processors::FetchFile::CompletionStrategy.getName(), "Delete File");
   test_controller_.runSession(plan_);
   auto file_contents = getSuccessfulFlowFileContents();
-  REQUIRE(file_contents.size() == 1);
-  REQUIRE(file_contents[0] == file_content_);
+  std::unordered_multiset<std::string> expected{file_content_};
+  REQUIRE(file_contents == expected);
   REQUIRE(!utils::file::FileUtils::exists(input_dir_ + utils::file::FileUtils::get_separator() + input_file_name_));
 }
 
