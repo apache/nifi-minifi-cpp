@@ -20,6 +20,7 @@
 #include <unordered_set>
 
 #include "TestBase.h"
+#include "Catch.h"
 #include "core/Property.h"
 #include "core/Processor.h"
 #include "processors/GenerateFlowFile.h"
