@@ -27,7 +27,6 @@ MiNiFi is a child project effort of Apache NiFi.  This repository is for a nativ
   - [System Requirements](#system-requirements)
   - [Bootstrapping](#bootstrapping)
   - [Building For Other Distros](#building-for-other-distros)
-  - [Snapcraft](#snapcraft)
   - [Installation](#installation)
   - [Configuring](#configuring)
   - [Running](#running)
@@ -477,16 +476,6 @@ provides the command to build your distro and the output file in your build dire
 | Ubuntu 20.04 (focal)   | make u20          | nifi-minifi-cpp-focal-$VERSION.tar.gz
 
 You can avoid the requirement of an up-to-date compiler when generating the build system by adding `-DDOCKER_BUILD_ONLY=ON` to the cmake command line. This disables all cmake targets except the docker build and test ones.
-
-### Snapcraft
-
-Snapcraft builds are supported. As per Snapcraft's official recommendations, we recommend using Ubuntu 16.04 as a build system when building the Snap. To build the snap, run
-
-```
-$ snapcraft
-```
-
-from the project directory. Further instructions are available in the [Snapcraft documentation](https://docs.snapcraft.io/build-snaps/).
 
 ### Installation
 After [building](#building) MiNiFi C++, extract the generated binary package 'nifi-minifi-cpp-$VERSION.tar.gz' at your desired installation path.
