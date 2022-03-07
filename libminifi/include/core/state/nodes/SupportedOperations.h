@@ -44,6 +44,10 @@ class SupportedOperations : public DeviceInformation {
     update_policy_controller_ = update_policy_controller;
   }
 
+  void setConfigurationReader(ConfigurationReader* configuration_reader) {
+    configuration_reader_ = configuration_reader;
+  }
+
  private:
   using Metadata = std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>;
 
@@ -65,6 +69,7 @@ class SupportedOperations : public DeviceInformation {
 
   state::StateMonitor* monitor_ = nullptr;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
+  ConfigurationReader* configuration_reader_ = nullptr;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

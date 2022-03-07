@@ -25,6 +25,10 @@
 
 class DescribeManifestHandler: public HeartbeatHandler {
  public:
+  explicit DescribeManifestHandler(std::shared_ptr<minifi::Configure> configuration)
+    : HeartbeatHandler(std::move(configuration)) {
+  }
+
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "manifest", "889345", conn);
   }
@@ -38,7 +42,7 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
   VerifyC2Describe harness;
   harness.setKeyDir(args.key_dir);
-  DescribeManifestHandler responder;
+  DescribeManifestHandler responder(harness.getConfiguration());
   harness.setUrl(args.url, &responder);
   harness.run(args.test_file);
 }

@@ -388,6 +388,8 @@ std::string readPayload(struct mg_connection *conn) {
 
 class HeartbeatHandler : public ServerAwareHandler {
  public:
+  explicit HeartbeatHandler(std::shared_ptr<minifi::Configure> configuration) : configuration_(std::move(configuration)) {}
+
   virtual void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) {
     verifyJsonHasAgentManifest(root);
   }
@@ -531,6 +533,9 @@ class HeartbeatHandler : public ServerAwareHandler {
           std::unordered_map<std::string, std::string> config_property;
           if (ranges::find(disallowed_properties, property.name) == ranges::end(disallowed_properties)) {
             config_property.emplace("propertyName", property.name);
+            if (auto value = configuration_->get(std::string(property.name))) {
+              config_property.emplace("propertyValue", *value);
+            }
             config_property.emplace("validator", property.validator->getName());
             config_properties.push_back(config_property);
           }
@@ -600,6 +605,8 @@ class HeartbeatHandler : public ServerAwareHandler {
       }
     }
   }
+
+  std::shared_ptr<minifi::Configure> configuration_;
 };
 
 class C2FlowProvider : public ServerAwareHandler {

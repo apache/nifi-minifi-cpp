@@ -434,6 +434,7 @@ std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest(
   auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
   agentInfo->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)).get());
   agentInfo->setAgentIdentificationProvider(configuration_);
+  agentInfo->setConfigurationReader(configuration_.get());
   agentInfo->includeAgentStatus(false);
   return agentInfo;
 }

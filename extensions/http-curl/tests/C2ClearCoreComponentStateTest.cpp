@@ -65,7 +65,9 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
 
 class ClearCoreComponentStateHandler: public HeartbeatHandler {
  public:
-  explicit ClearCoreComponentStateHandler(std::atomic_bool& component_cleared_successfully) : component_cleared_successfully_(component_cleared_successfully) {
+  explicit ClearCoreComponentStateHandler(std::atomic_bool& component_cleared_successfully, std::shared_ptr<minifi::Configure> configuration)
+    : HeartbeatHandler(std::move(configuration)),
+      component_cleared_successfully_(component_cleared_successfully) {
   }
 
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
@@ -145,7 +147,7 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "api/heartbeat");
   VerifyC2ClearCoreComponentState harness(component_cleared_successfully);
   harness.setKeyDir(args.key_dir);
-  ClearCoreComponentStateHandler handler(component_cleared_successfully);
+  ClearCoreComponentStateHandler handler(component_cleared_successfully, harness.getConfiguration());
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);
   return 0;

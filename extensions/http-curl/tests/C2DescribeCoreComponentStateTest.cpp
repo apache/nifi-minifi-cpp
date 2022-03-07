@@ -57,6 +57,10 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
 
 class DescribeCoreComponentStateHandler: public HeartbeatHandler {
  public:
+  explicit DescribeCoreComponentStateHandler(std::shared_ptr<minifi::Configure> configuration)
+    : HeartbeatHandler(std::move(configuration)) {
+  }
+
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889345", conn);
   }
@@ -84,7 +88,7 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "api/heartbeat");
   VerifyC2DescribeCoreComponentState harness;
   harness.setKeyDir(args.key_dir);
-  DescribeCoreComponentStateHandler handler;
+  DescribeCoreComponentStateHandler handler(harness.getConfiguration());
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);
   return 0;

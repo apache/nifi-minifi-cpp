@@ -32,6 +32,10 @@
 
 class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
  public:
+  explicit ResourceConsumptionInHeartbeatHandler(std::shared_ptr<minifi::Configure> configuration)
+    : HeartbeatHandler(std::move(configuration)) {
+  }
+
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
     verifySystemResourceConsumption(root, (calls_ == 0));
     verifyProcessResourceConsumption(root, (calls_ == 0));
@@ -97,10 +101,6 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
 
 class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
  public:
-  explicit VerifyResourceConsumptionInHeartbeat(std::function<bool()> event_to_wait_for) :
-      VerifyC2Base(), event_to_wait_for_(event_to_wait_for) {
-  }
-
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
@@ -118,18 +118,23 @@ class VerifyResourceConsumptionInHeartbeat : public VerifyC2Base {
     configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "false");
   }
 
+  void setEventToWaitFor(std::function<bool()> event_to_wait_for) {
+    event_to_wait_for_ = event_to_wait_for;
+  }
+
   std::function<bool()> event_to_wait_for_;
 };
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
-
-  ResourceConsumptionInHeartbeatHandler responder;
+  VerifyResourceConsumptionInHeartbeat harness;
+  ResourceConsumptionInHeartbeatHandler responder(harness.getConfiguration());
   auto event_to_wait_for = [&responder] {
     return responder.getNumberOfHandledHeartBeats() >= 3;
   };
-  VerifyResourceConsumptionInHeartbeat harness(event_to_wait_for);
+
   harness.setUrl(args.url, &responder);
+  harness.setEventToWaitFor(event_to_wait_for);
   harness.run(args.test_file);
 
   return 0;
