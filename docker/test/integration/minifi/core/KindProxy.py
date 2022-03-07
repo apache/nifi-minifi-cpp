@@ -24,12 +24,9 @@ from textwrap import dedent
 
 
 class KindProxy:
-    def __init__(self, temp_directory, resources_directory, image_name, image_repository, image_tag):
+    def __init__(self, temp_directory, resources_directory):
         self.temp_directory = temp_directory
         self.resources_directory = resources_directory
-        self.image_name = image_name
-        self.image_repository = image_repository
-        self.image_tag = image_tag
 
         self.kind_binary_path = os.path.join(self.temp_directory, 'kind')
         self.kind_config_path = os.path.join(self.temp_directory, 'kind-config.yml')
@@ -67,12 +64,9 @@ class KindProxy:
         if subprocess.run([self.kind_binary_path, 'create', 'cluster', '--config=' + self.kind_config_path]).returncode != 0:
             raise Exception("Could not start the kind cluster")
 
-    def load_docker_image(self, image_store):
-        image = image_store.get_image(self.image_name)
-        image.tag(repository=self.image_repository, tag=self.image_tag)
-
-        if subprocess.run([self.kind_binary_path, 'load', 'docker-image', self.image_repository + ':' + self.image_tag]).returncode != 0:
-            raise Exception("Could not load the %s docker image (%s:%s) into the kind cluster" % (self.image_name, self.image_repository, self.image_tag))
+    def load_docker_image(self, image_name, image_tag):
+        if subprocess.run([self.kind_binary_path, 'load', 'docker-image', image_name + ':' + image_tag]).returncode != 0:
+            raise Exception("Could not load the %s docker image into the kind cluster" % image_name)
 
     def create_objects(self):
         self.__wait_for_default_service_account('default')

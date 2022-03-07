@@ -45,8 +45,6 @@ class ImageStore:
 
         if container_engine == "minifi-cpp" or container_engine == "transient-minifi":
             image = self.__build_minifi_cpp_image()
-        elif container_engine == "minifi-cpp-in-kubernetes":
-            image = self.__build_simple_minifi_cpp_image_with_root()
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
         elif container_engine == "nifi":
@@ -99,15 +97,6 @@ class ImageStore:
                 USER minificpp
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
                            minifi_root=MinifiContainer.MINIFI_ROOT))
-
-        return self.__build_image(dockerfile)
-
-    def __build_simple_minifi_cpp_image_with_root(self):
-        dockerfile = dedent(r"""\
-                FROM {base_image}
-                USER root
-                CMD ["/bin/sh", "-c", "cp /tmp/minifi_config/config.yml /tmp/minifi_config/minifi-log.properties ./conf/ && ./bin/minifi.sh run"]
-                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION))
 
         return self.__build_image(dockerfile)
 
