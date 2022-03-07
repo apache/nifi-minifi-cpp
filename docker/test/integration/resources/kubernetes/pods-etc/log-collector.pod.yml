@@ -4,16 +4,20 @@ metadata:
   namespace: daemon
   name: log-collector
 spec:
+  securityContext:
+    runAsUser: 0
   containers:
   - name: minifi
-    image: minifi-kubernetes-test:v1
+    image: apacheminificpp:docker_test
     imagePullPolicy: Never
+    securityContext:
+      allowPrivilegeEscalation: false
     volumeMounts:
     - name: var-log-pods
       mountPath: /var/log/pods
       readOnly: true
     - name: tmp-minifi-config
-      mountPath: /tmp/minifi_config
+      mountPath: /opt/minifi/minifi-current/conf
       readOnly: true
     - name: tmp-output
       mountPath: /tmp/output

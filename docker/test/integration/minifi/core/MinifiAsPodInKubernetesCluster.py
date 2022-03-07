@@ -14,6 +14,7 @@
 # limitations under the License.
 
 
+import docker
 import logging
 import os
 import shutil
@@ -24,11 +25,22 @@ from .MinifiContainer import MinifiContainer
 
 
 class MinifiAsPodInKubernetesCluster(MinifiContainer):
+    MINIFI_IMAGE_NAME = 'apacheminificpp'
+    MINIFI_IMAGE_TAG = 'docker_test'
+
     def __init__(self, config_dir, name, vols, network, image_store, command=None):
         super().__init__(config_dir, name, vols, network, image_store, command)
 
+        resources_directory = os.path.join(os.environ['TEST_DIRECTORY'], 'resources', 'kubernetes', 'pods-etc')
+        self.kind = KindProxy(self.config_dir, resources_directory)
+
         test_dir = os.environ['TEST_DIRECTORY']
+        shutil.copy(os.path.join(test_dir, os.pardir, os.pardir, os.pardir, 'conf', 'minifi.properties'), self.config_dir)
         shutil.copy(os.path.join(test_dir, 'resources', 'kubernetes', 'minifi-conf', 'minifi-log.properties'), self.config_dir)
+
+        docker_client = docker.from_env()
+        minifi_image = docker_client.images.get(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME + ':' + os.environ['MINIFI_VERSION'])
+        minifi_image.tag(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
 
     def deploy(self):
         if not self.set_deployed():
@@ -38,12 +50,9 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
 
         self._create_config()
 
-        resources_directory = os.path.join(os.environ['TEST_DIRECTORY'], 'resources', 'kubernetes', 'pods-etc')
-
-        self.kind = KindProxy(self.config_dir, resources_directory, 'minifi-cpp-in-kubernetes', 'minifi-kubernetes-test', 'v1')
         self.kind.create_config(self.vols)
         self.kind.start_cluster()
-        self.kind.load_docker_image(self.image_store)
+        self.kind.load_docker_image(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
         self.kind.create_objects()
 
         logging.info('Finished setting up container: %s', self.name)
