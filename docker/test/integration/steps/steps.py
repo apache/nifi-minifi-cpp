@@ -573,7 +573,7 @@ def step_impl(context):
     context.test.start()
 
 
-@when("\"{container_name}\" flow is stopped")
+@then("\"{container_name}\" flow is stopped")
 def step_impl(context, container_name):
     context.test.stop(container_name)
 

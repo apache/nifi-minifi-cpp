@@ -108,7 +108,6 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
   Scenario: Subscription and publishing with disconnecting clients in durable sessions
     # publishing MQTT client
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "publisher-client" flow
-    And a file with the content "test" is present in "/tmp/input"
     And a PublishMQTT processor in the "publisher-client" flow
     And the "Quality of Service" property of the PublishMQTT processor is set to "1"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
@@ -124,11 +123,12 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
     When all instances start up
+    Then the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
     And "consumer-client" flow is stopped
-    Then the MQTT broker has a log line matching "Received DISCONNECT from consumer-client"
+    And the MQTT broker has a log line matching "Received DISCONNECT from consumer-client"
 
     And a file with the content "test" is placed in "/tmp/input"
     And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
 
     And "consumer-client" flow is restarted
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
