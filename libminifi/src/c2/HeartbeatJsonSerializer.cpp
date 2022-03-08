@@ -47,6 +47,8 @@ static void serializeOperationInfo(rapidjson::Value& target, const C2Payload& pa
         return "PARTIALLY_APPLIED";
       case state::UpdateState::READ_ERROR:
         return "OPERATION_NOT_UNDERSTOOD";
+      case state::UpdateState::NO_OPERATION:
+        return "NO_OPERATION";
       case state::UpdateState::SET_ERROR:
       default:
         return "NOT_APPLIED";

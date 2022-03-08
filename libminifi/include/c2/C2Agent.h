@@ -150,10 +150,16 @@ class C2Agent : public state::UpdateController {
    */
   void handle_describe(const C2ContentResponse &resp);
 
+
+  enum class UpdateResult {
+    NO_UPDATE,
+    UPDATE_SUCCESFUL,
+    UPDATE_FAILED
+  };
   /**
    * Updates a property
    */
-  bool update_property(const std::string &property_name, const std::string &property_value,  PropertyChangeLifetime lifetime);
+  UpdateResult update_property(const std::string &property_name, const std::string &property_value,  PropertyChangeLifetime lifetime);
 
   void handle_transfer(const C2ContentResponse &resp);
 
@@ -169,6 +175,7 @@ class C2Agent : public state::UpdateController {
   utils::TaskRescheduleInfo consume();
 
   bool handleConfigurationUpdate(const C2ContentResponse &resp);
+  void handlePropertyUpdate(const C2ContentResponse &resp);
 
   std::optional<std::string> resolveFlowUrl(const std::string& url) const;
 

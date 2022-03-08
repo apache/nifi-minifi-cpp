@@ -43,7 +43,6 @@ class C2HeartbeatHandler : public ServerAwareHandler {
                       "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
                 response_->length());
       mg_printf(conn, "%s", response_->c_str());
-      response_.reset();
     } else {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
                       "text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
@@ -150,6 +149,8 @@ int main() {
 
   VerifyPropertyUpdate harness([&] {
     assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.isAcknowledged("79");}));
+    assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.getApplyCount("FULLY_APPLIED") == 1;}));
+    assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.getApplyCount("NO_OPERATION") > 0;}));
     // update operation acknowledged
     {
       // verify final log levels
