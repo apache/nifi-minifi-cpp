@@ -105,9 +105,9 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         monitor->addRepository(flow_file_repo_);
         monitor->setStateMonitor(update_sink);
       }
-      auto agent_node = std::dynamic_pointer_cast<state::response::AgentNode>(response_node);
+      auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
       if (agent_node != nullptr && controller != nullptr) {
-        agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller->getControllerService(C2Agent::UPDATE_NAME)));
+        agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller->getControllerService(C2Agent::UPDATE_NAME)).get());
       }
       auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
       if (configuration_checksums) {

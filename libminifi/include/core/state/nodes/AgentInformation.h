@@ -593,7 +593,7 @@ class AgentMonitor {
 
  protected:
   std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
-  state::StateMonitor* monitor_;
+  state::StateMonitor* monitor_ = nullptr;
 };
 
 /**
@@ -613,11 +613,11 @@ class AgentManifest : public DeviceInformation {
     return "agentManifest";
   }
 
-  void setStateMonitor(const std::shared_ptr<state::StateMonitor> &monitor) {
+  void setStateMonitor(state::StateMonitor* monitor) {
     monitor_ = monitor;
   }
 
-  void setUpdatePolicyController(const std::shared_ptr<const controllers::UpdatePolicyControllerService>& update_policy_controller) {
+  void setUpdatePolicyController(controllers::UpdatePolicyControllerService* update_policy_controller) {
     update_policy_controller_ = update_policy_controller;
   }
 
@@ -696,8 +696,8 @@ class AgentManifest : public DeviceInformation {
   }
 
  private:
-  std::shared_ptr<state::StateMonitor> monitor_;
-  std::shared_ptr<const controllers::UpdatePolicyControllerService> update_policy_controller_;
+  state::StateMonitor* monitor_ = nullptr;
+  controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
 };
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
@@ -712,7 +712,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     setArray(false);
   }
 
-  void setUpdatePolicyController(const std::shared_ptr<const controllers::UpdatePolicyControllerService>& update_policy_controller) {
+  void setUpdatePolicyController(controllers::UpdatePolicyControllerService* update_policy_controller) {
     update_policy_controller_ = update_policy_controller;
   }
 
@@ -779,7 +779,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
 
  private:
   std::optional<std::string> agentManifestHash_;
-  std::shared_ptr<const controllers::UpdatePolicyControllerService> update_policy_controller_;
+  controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
 };
 
 /**

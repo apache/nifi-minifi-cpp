@@ -36,12 +36,12 @@ class SupportedOperations : public DeviceInformation {
 
   std::string getName() const override;
   std::vector<SerializedResponseNode> serialize() override;
-  void setStateMonitor(std::shared_ptr<state::StateMonitor> monitor) {
-    monitor_ = std::move(monitor);
+  void setStateMonitor(state::StateMonitor* monitor) {
+    monitor_ = monitor;
   }
 
-  void setUpdatePolicyController(std::shared_ptr<const controllers::UpdatePolicyControllerService> update_policy_controller) {
-    update_policy_controller_ = std::move(update_policy_controller);
+  void setUpdatePolicyController(controllers::UpdatePolicyControllerService* update_policy_controller) {
+    update_policy_controller_ = update_policy_controller;
   }
 
  private:
@@ -63,8 +63,8 @@ class SupportedOperations : public DeviceInformation {
   void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const;
   Metadata buildUpdatePropertiesMetadata() const;
 
-  std::shared_ptr<state::StateMonitor> monitor_;
-  std::shared_ptr<const controllers::UpdatePolicyControllerService> update_policy_controller_;
+  state::StateMonitor* monitor_ = nullptr;
+  controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response
