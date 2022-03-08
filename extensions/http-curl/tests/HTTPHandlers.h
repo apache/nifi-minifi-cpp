@@ -468,7 +468,7 @@ class HeartbeatHandler : public ServerAwareHandler {
  private:
   using Metadata = std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>;
 
-  void sendStopOperation(struct mg_connection *conn) {
+  static void sendStopOperation(struct mg_connection *conn) {
     std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
         "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
@@ -477,7 +477,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     mg_printf(conn, "%s", resp.c_str());
   }
 
-  std::set<std::string> getOperandsofProperties(const rapidjson::Value& operation_node) {
+  static std::set<std::string> getOperandsOfProperties(const rapidjson::Value& operation_node) {
     std::set<std::string> operands;
     assert(operation_node.HasMember("properties"));
     const auto& properties_node = operation_node["properties"];
@@ -487,7 +487,7 @@ class HeartbeatHandler : public ServerAwareHandler {
     return operands;
   }
 
-  void verifyMetadata(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata) {
+  static void verifyMetadata(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata) {
     std::unordered_map<std::string, Metadata> operand_with_metadata_found;
     const auto& properties_node = operation_node["properties"];
     for (auto prop_it = properties_node.MemberBegin(); prop_it != properties_node.MemberEnd(); ++prop_it) {
@@ -513,7 +513,7 @@ class HeartbeatHandler : public ServerAwareHandler {
 
   template<typename T>
   void verifyOperands(const rapidjson::Value& operation_node, const std::unordered_map<std::string, Metadata>& operand_with_metadata = {}) {
-    auto operands = getOperandsofProperties(operation_node);
+    auto operands = getOperandsOfProperties(operation_node);
     assert(operands == T::values());
     verifyMetadata(operation_node, operand_with_metadata);
   }
@@ -552,7 +552,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       }
       case minifi::c2::Operation::START:
       case minifi::c2::Operation::STOP: {
-        auto operands = getOperandsofProperties(operation_node);
+        auto operands = getOperandsOfProperties(operation_node);
         assert(operands.find("c2") != operands.end());
         assert(operands.find("FlowController") != operands.end());
         for (const auto& component : verify_components) {
