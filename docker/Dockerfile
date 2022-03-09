@@ -93,7 +93,9 @@ RUN apk --no-cache add gcc \
   boost-dev \
   doxygen \
   ccache \
-  lua-dev
+  lua-dev \
+  libexecinfo \
+  libexecinfo-dev
 
 ENV USER minificpp
 ENV MINIFI_BASE_DIR /opt/minifi
