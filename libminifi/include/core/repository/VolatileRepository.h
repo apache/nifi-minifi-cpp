@@ -51,9 +51,7 @@ namespace repository {
  * Design: Extends Repository and implements the run function, using RocksDB as the primary substrate.
  */
 template<typename T>
-class VolatileRepository : public core::Repository, public utils::EnableSharedFromThis<VolatileRepository<T>> {
-  using utils::EnableSharedFromThis<VolatileRepository<T>>::sharedFromThis;
-
+class VolatileRepository : public core::Repository {
  public:
   static const char *volatile_repo_max_count;
   static const char *volatile_repo_max_bytes;
@@ -397,7 +395,7 @@ void VolatileRepository<T>::start() {
   if (running_)
     return;
   running_ = true;
-  thread_ = std::thread(&VolatileRepository<T>::run, sharedFromThis());
+  thread_ = std::thread(&VolatileRepository<T>::run, this);
   logger_->log_debug("%s Repository Monitor Thread Start", name_);
 }
 #if defined(__clang__)

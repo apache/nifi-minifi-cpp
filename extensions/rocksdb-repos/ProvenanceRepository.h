@@ -42,7 +42,7 @@ namespace provenance {
 constexpr auto MAX_PROVENANCE_ENTRY_LIFE_TIME = std::chrono::minutes(1);
 constexpr auto PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
-class ProvenanceRepository : public core::Repository, public std::enable_shared_from_this<ProvenanceRepository> {
+class ProvenanceRepository : public core::Repository {
  public:
   ProvenanceRepository(const std::string& name, const utils::Identifier& /*uuid*/)
       : ProvenanceRepository(name) {
@@ -72,7 +72,7 @@ class ProvenanceRepository : public core::Repository, public std::enable_shared_
     if (running_)
       return;
     running_ = true;
-    thread_ = std::thread(&ProvenanceRepository::run, shared_from_this());
+    thread_ = std::thread(&ProvenanceRepository::run, this);
     logger_->log_debug("%s Repository Monitor Thread Start", name_);
   }
 
