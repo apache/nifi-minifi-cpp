@@ -62,6 +62,7 @@
 #include "FlowController.h"
 #include "AgentDocs.h"
 #include "MainHelper.h"
+#include "backward.hpp"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -116,6 +117,7 @@ void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std
 }
 
 int main(int argc, char **argv) {
+  [[maybe_unused]] const backward::SignalHandling signal_handling_registrar;
 #ifdef WIN32
   RunAsServiceIfNeeded();
 

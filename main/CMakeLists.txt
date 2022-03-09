@@ -32,12 +32,15 @@ endif()
 include(CppVersion)
 set_cpp_version()
 
+include(BackwardCpp)
+
 set(MINIFIEXE_SOURCES MiNiFiMain.cpp MainHelper.cpp MiNiFiWindowsService.cpp AgentDocs.cpp)
 if(WIN32)
 	set_source_files_properties("${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc" PROPERTIES GENERATED TRUE)
 	list(APPEND MINIFIEXE_SOURCES "${CMAKE_BINARY_DIR}/libminifi/src/core/logging/WindowsMessageTextFile.rc")
 endif()
-add_executable(minifiexe ${MINIFIEXE_SOURCES})
+add_executable(minifiexe ${MINIFIEXE_SOURCES} ${BACKWARD_ENABLE})
+add_backward(minifiexe)
 
 if (NOT USE_SHARED_LIBS)
 	if (LIBC_STATIC)
