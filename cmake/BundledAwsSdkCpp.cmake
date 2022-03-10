@@ -67,8 +67,16 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             -DBUILD_ONLY=s3
             -DENABLE_TESTING=OFF
             -DBUILD_SHARED_LIBS=OFF
-            -DPLATFORM_LIBS=execinfo  # workaround missing linking to libexecinfo on Alpine/musl
             -DENABLE_UNITY_BUILD=${AWS_ENABLE_UNITY_BUILD})
+
+    if(NOT WIN32 AND NOT APPLE)
+        include(CheckSymbolExists)
+        check_symbol_exists(backtrace "execinfo.h" HAVE_BACKTRACE)  # musl libc doesn't implement backtrace, so we need to link to execinfo on Alpine
+        if(NOT HAVE_BACKTRACE)
+            # alpine/musl libc doesn't have backtrace in libc, so we need to link aws-c-common to the execinfo library
+            list(APPEND AWS_SDK_CPP_CMAKE_ARGS "-DPLATFORM_LIBS=execinfo")
+        endif()
+    endif()
 
     if(WIN32)
         list(APPEND AWS_SDK_CPP_CMAKE_ARGS -DFORCE_EXPORT_CORE_API=ON -DFORCE_EXPORT_S3_API=ON)
