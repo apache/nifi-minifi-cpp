@@ -376,6 +376,9 @@ include(Date)
 # expected-lite
 include(ExpectedLite)
 
+# backward-cpp
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/backward-cpp")
+
 # Update passthrough args used in configurations in patch commands
 if (WIN32)
 	set(PASSTHROUGH_CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
