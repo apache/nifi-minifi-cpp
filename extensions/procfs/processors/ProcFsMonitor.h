@@ -25,6 +25,8 @@
 
 #include "../ProcFs.h"
 #include "core/Processor.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/Logger.h"
 #include "utils/Enum.h"
 
 #include "rapidjson/stream.h"

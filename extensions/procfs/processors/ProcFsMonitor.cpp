@@ -25,6 +25,8 @@
 #include <unordered_map>
 
 #include "core/Resource.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "../ProcFsJsonSerialization.h"
 #include "utils/JsonCallback.h"
 #include "utils/OpenTelemetryLogDataModelUtils.h"
