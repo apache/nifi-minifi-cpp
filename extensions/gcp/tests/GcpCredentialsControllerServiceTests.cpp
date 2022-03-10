@@ -21,6 +21,7 @@
 #include "../controllerservices/GcpCredentialsControllerService.h"
 #include "core/Resource.h"
 #include "core/Processor.h"
+#include "core/controller/ControllerServiceNode.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stream.h"
 #include "rapidjson/writer.h"

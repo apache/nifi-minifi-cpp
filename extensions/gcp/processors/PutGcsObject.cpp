@@ -22,6 +22,9 @@
 
 #include "core/Resource.h"
 #include "core/FlowFile.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "io/StreamPipe.h"
 #include "utils/OptionalUtils.h"
 #include "../GCPAttributes.h"
 

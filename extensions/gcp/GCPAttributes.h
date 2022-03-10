@@ -18,6 +18,7 @@
 #pragma once
 
 #include "google/cloud/storage/object_metadata.h"
+#include "core/FlowFile.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
