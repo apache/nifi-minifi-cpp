@@ -59,6 +59,10 @@ class ImageStore:
             image = self.__build_mqtt_broker_image()
         elif container_engine == "splunk":
             image = self.__build_splunk_image()
+        elif container_engine == "syslog-udp-client":
+            image = self.__build_syslog_udp_client_image()
+        elif container_engine == "syslog-tcp-client":
+            image = self.__build_syslog_tcp_client_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
@@ -180,6 +184,12 @@ class ImageStore:
 
     def __build_splunk_image(self):
         return self.__build_image_by_path(self.test_dir + "/resources/splunk-hec", 'minifi-splunk')
+
+    def __build_syslog_udp_client_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/syslog-client/udp", 'syslog-udp-client')
+
+    def __build_syslog_tcp_client_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/syslog-client/tcp", 'syslog-tcp-client')
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()

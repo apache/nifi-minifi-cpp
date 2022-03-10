@@ -1,4 +1,4 @@
-<!--Licensed to the Apache Software Foundation (ASF) under one or morecontributor license agreements.  See the NOTICE file distributed withthis work for additional information regarding copyright ownership.The ASF licenses this file to You under the Apache License, Version 2.0(the "License"); you may not use this file except in compliance withthe License.  You may obtain a copy of the License at    http://www.apache.org/licenses/LICENSE-2.0Unless required by applicable law or agreed to in writing, softwaredistributed under the License is distributed on an "AS IS" BASIS,WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.See the License for the specific language governing permissions andlimitations under the License.-->
+<!--Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements.  See the NOTICE file distributed withthis work for additional information regarding copyright ownership.The ASF licenses this file to You under the Apache License, Version 2.0(the "License"); you may not use this file except in compliance withthe License.  You may obtain a copy of the License at    http://www.apache.org/licenses/LICENSE-2.0Unless required by applicable law or agreed to in writing, softwaredistributed under the License is distributed on an "AS IS" BASIS,WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.See the License for the specific language governing permissions andlimitations under the License.-->
 # Processors
 
 ## Table of Contents
@@ -1002,27 +1002,52 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 ### Description
 
-Listens for Syslog messages being sent to a given port over TCP or UDP. Incoming messages are checked against regular expressions for RFC5424 and RFC3164 formatted messages. The format of each message is: (<PRIORITY>)(VERSION )(TIMESTAMP) (HOSTNAME) (BODY) where version is optional. The timestamp can be an RFC5424 timestamp with a format of "yyyy-MM-dd'T'HH:mm:ss.SZ" or "yyyy-MM-dd'T'HH:mm:ss.S+hh:mm", or it can be an RFC3164 timestamp with a format of "MMM d HH:mm:ss". If an incoming messages matches one of these patterns, the message will be parsed and the individual pieces will be placed in FlowFile attributes, with the original message in the content of the FlowFile. If an incoming message does not match one of these patterns it will not be parsed and the syslog.valid attribute will be set to false with the original message in the content of the FlowFile. Valid messages will be transferred on the success relationship, and invalid messages will be transferred on the invalid relationship.
+Listens for Syslog messages being sent to a given port over TCP or UDP.
+Incoming messages are optionally checked against regular expressions for RFC5424 and RFC3164 formatted messages.
+With parsing enabled the individual parts of the message will be placed as FlowFile attributes and valid messages will be transferred to success relationship, while invalid messages will be transferred to invalid relationship.
+With parsing disabled all message will be routed to the success relationship, but they will only contain the sender, protocol, and port attributes.
+
+
 ### Properties
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name | Default Value | Allowable Values | Description |
-| - | - | - | - |
-|Max Batch Size|1||The maximum number of Syslog events to add to a single FlowFile.|
-|Max Number of TCP Connections|2||The maximum number of concurrent connections to accept Syslog messages in TCP mode.|
-|Max Size of Socket Buffer|1 MB||The maximum size of the socket buffer that should be used.|
-|Message Delimiter|\n||Specifies the delimiter to place between Syslog messages when multiple messages are bundled together (see <Max Batch Size> core::Property).|
-|Parse Messages|false||Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only.|
-|Port|514||The port for Syslog communication|
-|Protocol|UDP|UDP<br>TCP<br>|The protocol for Syslog communication.|
-|Receive Buffer Size|65507 B||The size of each buffer used to receive Syslog messages.|
+| Name                      | Default Value | Allowable Values | Description                                                                                                                                                                                          |
+|---------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Listening Port            | 514           |                  | The port for Syslog communication.                                                                                                                                                                   |
+| Protocol                  | UDP           | UDP<br>TCP<br>   | The protocol for Syslog communication.                                                                                                                                                               |
+| Parse Messages            | false         | false<br>true    | Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.                 |
+| Max Batch Size            | 500           |                  | The maximum number of Syslog events to process at a time.                                                                                                                                            |
+| Max Size of Message Queue | 0             |                  | Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. If the buffer full, the message is ignored. If set to zero the buffer is unlimited. |
+
 ### Relationships
 
-| Name | Description |
-| - | - |
-|invalid|SysLog message format invalid|
-|success|All files are routed to success|
+| Name    | Description                                                                                                                                                                                   |
+|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| invalid | Incoming messages that do not match the expected format when parsing will be sent to this relationship.                                                                                       |
+| success | Incoming messages that match the expected format when parsing will be sent to this relationship. When Parse Messages is set to false, all incoming message will be sent to this relationship. |
+
+
+### Output Attributes
+
+| Attribute                | Description                                                        | Requirements           |
+|--------------------------|--------------------------------------------------------------------|------------------------|
+| _syslog.protocol_        | The protocol over which the Syslog message was received.           | -                      |
+| _syslog.port_            | The port over which the Syslog message was received.               | -                      |
+| _syslog.sender_          | The hostname of the Syslog server that sent the message.           | -                      |
+| _syslog.valid_           | An indicator of whether this message matched the expected formats. | Parsing enabled        |
+| _syslog.priority_        | The priority of the Syslog message.                                | Parsed RFC5424/RFC3164 |
+| _syslog.severity_        | The severity of the Syslog message.                                | Parsed RFC5424/RFC3164 |
+| _syslog.facility_        | The facility of the Syslog message.                                | Parsed RFC5424/RFC3164 |
+| _syslog.timestamp_       | The timestamp of the Syslog message.                               | Parsed RFC5424/RFC3164 |
+| _syslog.hostname_        | The hostname of the Syslog message.                                | Parsed RFC5424/RFC3164 |
+| _syslog.msg_             | The free-form message of the Syslog message.                       | Parsed RFC5424/RFC3164 |
+| _syslog.version_         | The version of the Syslog message.                                 | Parsed RFC5424         |
+| _syslog.app_name_        | The app name of the Syslog message.                                | Parsed RFC5424         |
+| _syslog.proc_id_         | The proc id of the Syslog message.                                 | Parsed RFC5424         |
+| _syslog.msg_id_          | The message id of the Syslog message.                              | Parsed RFC5424         |
+| _syslog.structured_data_ | The structured data of the Syslog message.                         | Parsed RFC5424         |
+
 
 
 ## ListS3

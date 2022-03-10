@@ -389,6 +389,11 @@ def step_impl(context):
 def step_impl(context):
     context.test.acquire_container("azure-storage-server", "azure-storage-server")
 
+# syslog client
+@given(u'a Syslog client with {protocol} protocol is setup to send logs to minifi')
+def step_impl(context, protocol):
+    client_name = "syslog-" + protocol.lower() + "-client"
+    context.test.acquire_container(client_name, client_name)
 
 # google cloud storage setup
 @given("a Google Cloud storage server is set up with some test data")
@@ -619,6 +624,11 @@ def step_impl(context, num_flowfiles, duration):
         context.execute_steps("""no files are placed in the monitored directory in {duration} of running time""".format(duration=duration))
         return
     context.test.check_for_num_files_generated(int(num_flowfiles), timeparse(duration))
+
+
+@then("at least one flowfile is placed in the monitored directory in less than {duration}")
+def step_impl(context, duration):
+    context.test.check_for_num_files_generated(1, timeparse(duration))
 
 
 @then("one flowfile with the contents \"{content}\" is placed in the monitored directory in less than {duration}")

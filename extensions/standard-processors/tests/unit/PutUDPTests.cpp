@@ -20,7 +20,7 @@
 #include <new>
 #include <random>
 #include <string>
-#include "SingleInputTestController.h"
+#include "SingleProcessorTestController.h"
 #include "Catch.h"
 #include "PutUDP.h"
 #include "core/ProcessContext.h"
@@ -77,7 +77,7 @@ TEST_CASE("PutUDP", "[putudp]") {
   const auto port = std::uniform_int_distribution<uint16_t>{10000, 32768 - 1}(random_engine);
   const auto port_str = std::to_string(port);
 
-  test::SingleInputTestController controller{putudp};
+  test::SingleProcessorTestController controller{putudp};
   LogTestController::getInstance().setTrace<PutUDP>();
   LogTestController::getInstance().setTrace<core::ProcessContext>();
   LogTestController::getInstance().setLevelByClassName(spdlog::level::trace, "org::apache::nifi::minifi::core::ProcessContextExpr");
@@ -88,7 +88,8 @@ TEST_CASE("PutUDP", "[putudp]") {
 
   {
     const char* const message = "first message: hello";
-    const auto result = controller.trigger(message);
+    controller.enqueueFlowFile(message);
+    const auto result = controller.trigger();
     const auto& success_flow_files = result.at(PutUDP::Success);
     REQUIRE(success_flow_files.size() == 1);
     REQUIRE(result.at(PutUDP::Failure).empty());
@@ -100,7 +101,8 @@ TEST_CASE("PutUDP", "[putudp]") {
 
   {
     const char* const message = "longer message AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";  // NOLINT
-    const auto result = controller.trigger(message);
+    controller.enqueueFlowFile(message);
+    const auto result = controller.trigger();
     const auto& success_flow_files = result.at(PutUDP::Success);
     REQUIRE(success_flow_files.size() == 1);
     REQUIRE(result.at(PutUDP::Failure).empty());
