@@ -69,7 +69,7 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
 
     /* Translate the address to symbolic information */
     Dl_info dl_info{};
-#ifdef __linux__
+#ifdef __GLIBC__
     struct link_map* l_map = nullptr;
     int res = dladdr1(stack_buffer[i], &dl_info, reinterpret_cast<void**>(&l_map), RTLD_DL_LINKMAP);
 #else
@@ -103,7 +103,7 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
       base_address = reinterpret_cast<uintptr_t>(dl_info.dli_saddr);
     } else {
       /* Otherwise we will display our offset from base address of the shared object */
-#ifdef __linux__
+#ifdef __GLIBC__
       /*
        * glibc uses l_addr from the link map instead of dli_fbase in backtrace_symbols for calculating this offset.
        * I could not find a difference between the two in my limited measurements, but we will use it too, just to be sure.
