@@ -731,6 +731,11 @@ def step_impl(context, log_pattern):
     context.test.wait_for_container_logs('mqtt-broker', log_pattern, 30, count=1)
 
 
+@then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")
+def step_impl(context, minifi_container_name, log_pattern, duration):
+    context.test.wait_for_container_logs(minifi_container_name, log_pattern, timeparse(duration), count=1)
+
+
 @then("an MQTT broker is deployed in correspondence with the PublishMQTT")
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")

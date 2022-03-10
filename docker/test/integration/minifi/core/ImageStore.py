@@ -45,6 +45,8 @@ class ImageStore:
 
         if container_engine == "minifi-cpp" or container_engine == "transient-minifi":
             image = self.__build_minifi_cpp_image()
+        if container_engine == "minifi-cpp-with-provenance-repo":
+            image = self.__build_minifi_cpp_image_with_provenance_repo()
         elif container_engine == "minifi-cpp-in-kubernetes":
             image = self.__build_simple_minifi_cpp_image_with_root()
         elif container_engine == "http-proxy":
@@ -110,6 +112,22 @@ class ImageStore:
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION))
 
         return self.__build_image(dockerfile)
+
+    def __build_minifi_cpp_image_with_provenance_repo(self):
+        dockerfile = dedent("""FROM {base_image}
+                USER root
+                COPY minifi.properties {minifi_root}/conf/minifi.properties
+                USER minificpp
+                """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
+                           minifi_root=MinifiContainer.MINIFI_ROOT))
+
+        properties_path = self.test_dir + "/resources/minifi_cpp_with_provenance_repo/minifi.properties"
+        properties_context = {'name': 'minifi.properties', 'size': os.path.getsize(properties_path)}
+
+        with open(properties_path, 'rb') as properties_file:
+            properties_context['file_obj'] = properties_file
+            image = self.__build_image(dockerfile, [properties_context])
+        return image
 
     def __build_http_proxy_image(self):
         dockerfile = dedent("""FROM {base_image}

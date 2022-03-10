@@ -24,10 +24,10 @@ class MinifiContainer(FlowContainer):
     MINIFI_VERSION = os.environ['MINIFI_VERSION']
     MINIFI_ROOT = '/opt/minifi/nifi-minifi-cpp-' + MINIFI_VERSION
 
-    def __init__(self, config_dir, name, vols, network, image_store, command=None):
+    def __init__(self, config_dir, name, vols, network, image_store, command=None, engine='minifi-cpp'):
         if not command:
             command = ["/bin/sh", "-c", "cp /tmp/minifi_config/config.yml " + MinifiContainer.MINIFI_ROOT + "/conf && /opt/minifi/minifi-current/bin/minifi.sh run"]
-        super().__init__(config_dir, name, 'minifi-cpp', vols, network, image_store, command)
+        super().__init__(config_dir, name, engine, vols, network, image_store, command)
 
     def get_startup_finished_log_entry(self):
         return "Starting Flow Controller"
