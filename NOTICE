@@ -59,6 +59,7 @@ This software includes third party software subject to the following copyrights:
 - date (HowardHinnant/date) - notices below
 - range-v3 - Eric Niebler and other contributors
 - expected-lite - Copyright (C) 2016-2020 Martin Moene.
+- asio - Copyright (c) 2003-2022 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 - TartanLlama/expected - public domain, thanks to Sy Brand
 - libyaml - Copyright (c) 2006-2016 Kirill Simonov, Copyright (c) 2017-2020 Ingy döt Net
 - libwebsockets - Copyright (C) 2010 - 2020 Andy Green <andy@warmcat.com>

@@ -392,6 +392,8 @@ void TestPlan::reset(bool reschedule) {
     while (proc->getActiveTasks() > 0) {
       proc->decrementActiveTask();
     }
+    if (reschedule)
+      proc->onUnSchedule();
   }
 }
 

@@ -17,7 +17,7 @@
 #include "../processors/PutGCSObject.h"
 #include "GCPAttributes.h"
 #include "core/Resource.h"
-#include "SingleInputTestController.h"
+#include "SingleProcessorTestController.h"
 #include "ProcessContextExpr.h"
 #include "google/cloud/storage/testing/mock_client.h"
 #include "google/cloud/storage/internal/object_metadata_parser.h"
@@ -59,7 +59,7 @@ class PutGCSObjectTests : public ::testing::Test {
                                        "gcp_credentials_controller_service");
   }
   std::shared_ptr<PutGCSObjectMocked> put_gcs_object_ = std::make_shared<PutGCSObjectMocked>("PutGCSObjectMocked");
-  org::apache::nifi::minifi::test::SingleInputTestController test_controller_{put_gcs_object_};
+  org::apache::nifi::minifi::test::SingleProcessorTestController test_controller_{put_gcs_object_};
   std::shared_ptr<minifi::core::controller::ControllerServiceNode>  gcp_credentials_node_;
 
   static auto return_upload_in_progress() {
@@ -85,7 +85,8 @@ class PutGCSObjectTests : public ::testing::Test {
 TEST_F(PutGCSObjectTests, MissingBucket) {
   EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), ""));
-  const auto& result = test_controller_.trigger("hello world");
+  test_controller_.enqueueFlowFile("hello world");
+  const auto& result = test_controller_.trigger();
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
   EXPECT_EQ(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
@@ -106,7 +107,8 @@ TEST_F(PutGCSObjectTests, BucketFromAttribute) {
         return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "${gcs.bucket}"));
-  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
+  test_controller_.enqueueFlowFile("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
+  const auto& result = test_controller_.trigger();
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Success)[0]));
@@ -125,7 +127,8 @@ TEST_F(PutGCSObjectTests, ServerGivesTransientErrors) {
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::NumberOfRetries.getName(), "2"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world");
+  test_controller_.enqueueFlowFile("hello world");
+  const auto& result = test_controller_.trigger();
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
   EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
@@ -143,7 +146,8 @@ TEST_F(PutGCSObjectTests, ServerGivesPermaError) {
       .WillOnce(return_permanent_error);
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world");
+  test_controller_.enqueueFlowFile("hello world");
+  const auto& result = test_controller_.trigger();
   EXPECT_EQ(0, result.at(PutGCSObject::Success).size());
   ASSERT_EQ(1, result.at(PutGCSObject::Failure).size());
   EXPECT_NE(std::nullopt, result.at(PutGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
@@ -167,7 +171,8 @@ TEST_F(PutGCSObjectTests, NonRequiredPropertiesAreMissing) {
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world");
+  test_controller_.enqueueFlowFile("hello world");
+  const auto& result = test_controller_.trigger();
   EXPECT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
 }
@@ -190,7 +195,8 @@ TEST_F(PutGCSObjectTests, Crc32cMD5LocationTest) {
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Crc32cChecksum.getName(), "${crc32c}"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world", {{"crc32c", "yZRlqg=="}, {"md5", "XrY7u+Ae7tCTyyK7j1rNww=="}});
+  test_controller_.enqueueFlowFile("hello world", {{"crc32c", "yZRlqg=="}, {"md5", "XrY7u+Ae7tCTyyK7j1rNww=="}});
+  const auto& result = test_controller_.trigger();
   EXPECT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
 }
@@ -209,7 +215,8 @@ TEST_F(PutGCSObjectTests, DontOverwriteTest) {
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::OverwriteObject.getName(), "false"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world", {{"crc32c", "yZRlqg=="}, {"md5", "XrY7u+Ae7tCTyyK7j1rNww=="}});
+  test_controller_.enqueueFlowFile("hello world", {{"crc32c", "yZRlqg=="}, {"md5", "XrY7u+Ae7tCTyyK7j1rNww=="}});
+  const auto& result = test_controller_.trigger();
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Success)[0]));
@@ -229,7 +236,8 @@ TEST_F(PutGCSObjectTests, ValidServerSideEncryptionTest) {
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::EncryptionKey.getName(), "ZW5jcnlwdGlvbl9rZXk="));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world");
+  test_controller_.enqueueFlowFile("hello world");
+  const auto& result = test_controller_.trigger();
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
   EXPECT_NE(std::nullopt, result.at(PutGCSObject::Success)[0]->getAttribute(minifi_gcp::GCS_ENCRYPTION_SHA256_ATTR));
@@ -242,7 +250,8 @@ TEST_F(PutGCSObjectTests, InvalidServerSideEncryptionTest) {
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::EncryptionKey.getName(), "not_base64_key"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  EXPECT_THROW(test_controller_.trigger("hello world"), minifi::Exception);
+  test_controller_.enqueueFlowFile("hello world");
+  EXPECT_THROW(test_controller_.trigger(), minifi::Exception);
 }
 
 TEST_F(PutGCSObjectTests, NoContentType) {
@@ -258,7 +267,8 @@ TEST_F(PutGCSObjectTests, NoContentType) {
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world");
+  test_controller_.enqueueFlowFile("hello world");
+  const auto& result = test_controller_.trigger();
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Success)[0]));
@@ -278,7 +288,8 @@ TEST_F(PutGCSObjectTests, ContentTypeFromAttribute) {
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
-  const auto& result = test_controller_.trigger("hello world", {{"mime.type", "text/attribute"}});
+  test_controller_.enqueueFlowFile("hello world", {{"mime.type", "text/attribute"}});
+  const auto& result = test_controller_.trigger();
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Success)[0]));
@@ -299,7 +310,8 @@ TEST_F(PutGCSObjectTests, ObjectACLTest) {
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::ObjectACL.getName(), toString(PutGCSObject::PredefinedAcl::AUTHENTICATED_READ)));
-  const auto& result = test_controller_.trigger("hello world");
+  test_controller_.enqueueFlowFile("hello world");
+  const auto& result = test_controller_.trigger();
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
   EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(PutGCSObject::Success)[0]));
