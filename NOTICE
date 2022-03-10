@@ -64,6 +64,7 @@ This software includes third party software subject to the following copyrights:
 - libwebsockets - Copyright (C) 2010 - 2020 Andy Green <andy@warmcat.com>
 - kubernetes-client/c - Brendan Burns, Hui Yu and other contributors
 - backward-cpp - Copyright 2013 Google Inc. All Rights Reserved.
+- libexecinfo - Copyright (c) 2003 Maxim Sobolev <sobomax@FreeBSD.org>
 
 The licenses for these third party components are included in LICENSE.txt
 
