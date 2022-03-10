@@ -45,7 +45,7 @@ class ImageStore:
 
         if container_engine == "minifi-cpp" or container_engine == "transient-minifi":
             image = self.__build_minifi_cpp_image()
-        if container_engine == "minifi-cpp-with-provenance-repo":
+        elif container_engine == "minifi-cpp-with-provenance-repo":
             image = self.__build_minifi_cpp_image_with_provenance_repo()
         elif container_engine == "minifi-cpp-in-kubernetes":
             image = self.__build_simple_minifi_cpp_image_with_root()
