@@ -17,23 +17,10 @@
 # under the License.
 #
 include(FetchContent)
-set(NLOHMANN_JSON_INCLUDE_DIR "${CMAKE_BINARY_DIR}/_deps/nlohmann/" CACHE STRING "" FORCE)
-if(NOT EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp")
-    file(DOWNLOAD "https://github.com/nlohmann/json/releases/download/v3.10.5/json.hpp" "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp"
-            EXPECTED_HASH SHA256=e832d339d9e0c042e7dff807754769d778cf5d6ae9730ce21eed56de99cb5e86)
-endif()
+include(Nlohmann)
+include(Abseil)
+
 set(GOOGLE_CLOUD_CPP_NLOHMANN_JSON_HEADER ${NLOHMANN_JSON_INCLUDE_DIR})
-
-set(ABSL_PROPAGATE_CXX_STD ON CACHE INTERNAL absl-propagate-cxx)
-set(ABSL_ENABLE_INSTALL ON CACHE INTERNAL "")
-FetchContent_Declare(
-        absl
-        URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz
-        URL_HASH SHA256=dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4
-)
-FetchContent_MakeAvailable(absl)
-
-
 set(CRC32C_USE_GLOG OFF CACHE INTERNAL crc32c-glog-off)
 set(CRC32C_BUILD_TESTS OFF CACHE INTERNAL crc32c-gtest-off)
 set(CRC32C_BUILD_BENCHMARKS OFF CACHE INTERNAL crc32-benchmarks-off)
@@ -48,9 +35,9 @@ add_library(Crc32c::crc32c ALIAS crc32c)
 
 set(PATCH_FILE_1 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/remove-find_package.patch")
 set(PATCH_FILE_2 "${CMAKE_SOURCE_DIR}/thirdparty/google-cloud-cpp/nlohmann_lib_as_interface.patch")
-set(PC ${Bash_EXECUTABLE} -c "set -x &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -R -p1 -s -f --dry-run -i ${PATCH_FILE_1} || \\\"${Patch_EXECUTABLE}\\\" -p1 -i ${PATCH_FILE_1}) &&\
-        (\\\"${Patch_EXECUTABLE}\\\" -R -p1 -s -f --dry-run -i ${PATCH_FILE_2} || \\\"${Patch_EXECUTABLE}\\\" -p1 -i ${PATCH_FILE_2})")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_1}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_1}\\\") &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE_2}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE_2}\\\")")
 
 set(GOOGLE_CLOUD_CPP_ENABLE storage CACHE INTERNAL storage-api)
 set(GOOGLE_CLOUD_CPP_ENABLE_MACOS_OPENSSL_CHECK OFF CACHE INTERNAL macos-openssl-check)

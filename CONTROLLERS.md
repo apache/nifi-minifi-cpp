@@ -19,7 +19,7 @@
 
 - [AWSCredentialsService](#AWSCredentialsService)
 - [AzureStorageCredentialsService](#AzureStorageCredentialsService)
-- [GcpCredentialsControllerService](#GcpCredentialsControllerService)
+- [GCPCredentialsControllerService](#GCPCredentialsControllerService)
 - [KubernetesControllerService](#kubernetesControllerService)
 
 ## AWSCredentialsService
@@ -64,7 +64,7 @@ properties (not in bold) are considered optional.
 |Connection String|||Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.|
 |**Use Managed Identity Credentials**|false||Connection string used to connect to Azure Storage service. This overrides all other set credential properties.|
 
-## GcpCredentialsControllerService
+## GCPCredentialsControllerService
 
 ### Description
 

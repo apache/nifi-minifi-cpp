@@ -23,14 +23,14 @@
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "../controllerservices/GcpCredentialsControllerService.h"
+#include "../controllerservices/GCPCredentialsControllerService.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
 #include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class PutGcsObject : public core::Processor {
+class PutGCSObject : public core::Processor {
  public:
   SMART_ENUM(PredefinedAcl,
              (AUTHENTICATED_READ, "authenticatedRead"),
@@ -41,22 +41,22 @@ class PutGcsObject : public core::Processor {
              (PUBLIC_READ_ONLY, "publicRead"),
              (PUBLIC_READ_WRITE, "publicReadWrite"));
 
-  explicit PutGcsObject(const std::string& name, const utils::Identifier& uuid = {})
+  explicit PutGCSObject(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
   }
-  PutGcsObject(const PutGcsObject&) = delete;
-  PutGcsObject(PutGcsObject&&) = delete;
-  PutGcsObject& operator=(const PutGcsObject&) = delete;
-  PutGcsObject& operator=(PutGcsObject&&) = delete;
-  ~PutGcsObject() override = default;
+  PutGCSObject(const PutGCSObject&) = delete;
+  PutGCSObject(PutGCSObject&&) = delete;
+  PutGCSObject& operator=(const PutGCSObject&) = delete;
+  PutGCSObject& operator=(PutGCSObject&&) = delete;
+  ~PutGCSObject() override = default;
 
   EXTENSIONAPI static const core::Property GCPCredentials;
   EXTENSIONAPI static const core::Property Bucket;
-  EXTENSIONAPI static const core::Property ObjectName;
+  EXTENSIONAPI static const core::Property Key;
   EXTENSIONAPI static const core::Property NumberOfRetries;
   EXTENSIONAPI static const core::Property ContentType;
-  EXTENSIONAPI static const core::Property MD5HashLocation;
-  EXTENSIONAPI static const core::Property Crc32cChecksumLocation;
+  EXTENSIONAPI static const core::Property MD5Hash;
+  EXTENSIONAPI static const core::Property Crc32cChecksum;
   EXTENSIONAPI static const core::Property EncryptionKey;
   EXTENSIONAPI static const core::Property ObjectACL;
   EXTENSIONAPI static const core::Property OverwriteObject;
@@ -84,7 +84,7 @@ class PutGcsObject : public core::Processor {
   google::cloud::storage::EncryptionKey encryption_key_;
 
   std::shared_ptr<google::cloud::storage::oauth2::Credentials> gcp_credentials_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutGcsObject>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutGCSObject>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp

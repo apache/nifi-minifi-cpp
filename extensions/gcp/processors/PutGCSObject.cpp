@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "PutGcsObject.h"
+#include "PutGCSObject.h"
 
 #include <vector>
 #include <utility>
@@ -31,26 +31,28 @@
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-const core::Property PutGcsObject::GCPCredentials(
+const core::Property PutGCSObject::GCPCredentials(
     core::PropertyBuilder::createProperty("GCP Credentials Provider Service")
         ->withDescription("The Controller Service used to obtain Google Cloud Platform credentials.")
         ->isRequired(true)
-        ->asType<GcpCredentialsControllerService>()
+        ->asType<GCPCredentialsControllerService>()
         ->build());
 
-const core::Property PutGcsObject::Bucket(
-    core::PropertyBuilder::createProperty("Bucket Name")
-        ->withDescription("The name of the Bucket to upload to. If left empty the gcs.bucket attribute will be used by default.")
+const core::Property PutGCSObject::Bucket(
+    core::PropertyBuilder::createProperty("Bucket")
+        ->withDescription("Bucket of the object.")
+        ->withDefaultValue("${gcs.bucket}")
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property PutGcsObject::ObjectName(
-    core::PropertyBuilder::createProperty("Object Name")
-        ->withDescription("The name of the object to be uploaded. If left empty the filename attribute will be used by default.")
+const core::Property PutGCSObject::Key(
+    core::PropertyBuilder::createProperty("Name of the object.")
+        ->withDescription("Name of the object.")
+        ->withDefaultValue("${filename}")
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property PutGcsObject::NumberOfRetries(
+const core::Property PutGCSObject::NumberOfRetries(
     core::PropertyBuilder::createProperty("Number of retries")
         ->withDescription("How many retry attempts should be made before routing to the failure relationship.")
         ->withDefaultValue<uint64_t>(6)
@@ -58,57 +60,57 @@ const core::Property PutGcsObject::NumberOfRetries(
         ->supportsExpressionLanguage(false)
         ->build());
 
-const core::Property PutGcsObject::ContentType(
+const core::Property PutGCSObject::ContentType(
     core::PropertyBuilder::createProperty("Content Type")
-        ->withDescription("The Content Type of the uploaded object. If not set, \"mime.type\" flow file attribute will be used. "
-                          "In case of neither of them is specified, this information will not be sent to the server.")
+        ->withDescription("Content Type for the file, i.e. text/plain ")
+        ->isRequired(false)
+        ->withDefaultValue("${mime.type}")
+        ->supportsExpressionLanguage(true)
+        ->build());
+
+const core::Property PutGCSObject::MD5Hash(
+    core::PropertyBuilder::createProperty("MD5 Hash")
+        ->withDescription("MD5 Hash (encoded in Base64) of the file for server-side validation.")
         ->isRequired(false)
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property PutGcsObject::MD5HashLocation(
-    core::PropertyBuilder::createProperty("MD5 Hash location")
-        ->withDescription("The name of the attribute where the md5 hash is stored for server-side validation.")
+const core::Property PutGCSObject::Crc32cChecksum(
+    core::PropertyBuilder::createProperty("CRC32C Checksum")
+        ->withDescription("CRC32C Checksum (encoded in Base64, big-Endian order) of the file for server-side validation.")
         ->isRequired(false)
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property PutGcsObject::Crc32cChecksumLocation(
-    core::PropertyBuilder::createProperty("CRC32 Checksum location")
-        ->withDescription("The name of the attribute where the crc32 checksum is stored for server-side validation.")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGcsObject::EncryptionKey(
+const core::Property PutGCSObject::EncryptionKey(
     core::PropertyBuilder::createProperty("Server Side Encryption Key")
         ->withDescription("An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.")
         ->isRequired(false)
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property PutGcsObject::ObjectACL(
+const core::Property PutGCSObject::ObjectACL(
     core::PropertyBuilder::createProperty("Object ACL")
         ->withDescription("Access Control to be attached to the object uploaded. Not providing this will revert to bucket defaults.")
         ->isRequired(false)
         ->withAllowableValues(PredefinedAcl::values())
         ->build());
 
-const core::Property PutGcsObject::OverwriteObject(
+const core::Property PutGCSObject::OverwriteObject(
     core::PropertyBuilder::createProperty("Overwrite Object")
         ->withDescription("If false, the upload to GCS will succeed only if the object does not exist.")
         ->withDefaultValue<bool>(true)
         ->build());
 
-const core::Property PutGcsObject::EndpointOverrideURL(
+const core::Property PutGCSObject::EndpointOverrideURL(
     core::PropertyBuilder::createProperty("Endpoint Override URL")
         ->withDescription("Overrides the default Google Cloud Storage endpoints")
         ->isRequired(false)
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Relationship PutGcsObject::Success("success", "Files that have been successfully written to Google Cloud Storage are transferred to this relationship");
-const core::Relationship PutGcsObject::Failure("failure", "Files that could not be written to Google Cloud Storage for some reason are transferred to this relationship");
+const core::Relationship PutGCSObject::Success("success", "Files that have been successfully written to Google Cloud Storage are transferred to this relationship");
+const core::Relationship PutGCSObject::Failure("failure", "Files that could not be written to Google Cloud Storage for some reason are transferred to this relationship");
 
 
 namespace {
@@ -150,7 +152,7 @@ class UploadToGCSCallback : public InputStreamCallback {
     encryption_key_ = encryption_key;
   }
 
-  void setPredefinedAcl(PutGcsObject::PredefinedAcl predefined_acl) {
+  void setPredefinedAcl(PutGCSObject::PredefinedAcl predefined_acl) {
     predefined_acl_ = gcs::PredefinedAcl(predefined_acl.toString());
   }
 
@@ -181,27 +183,23 @@ class UploadToGCSCallback : public InputStreamCallback {
   google::cloud::StatusOr<gcs::ObjectMetadata> result_;
 };
 
-[[nodiscard]] std::optional<std::string> getContentType(const core::ProcessContext& context, const core::FlowFile& flow_file) {
-  return context.getProperty(PutGcsObject::ContentType) | utils::orElse([&flow_file] {return flow_file.getAttribute("mime.type");});
-}
-
 std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) {
   std::string service_name;
-  if (context.getProperty(PutGcsObject::GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name))
-    return std::dynamic_pointer_cast<const GcpCredentialsControllerService>(context.getControllerService(service_name))->getCredentials();
+  if (context.getProperty(PutGCSObject::GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name))
+    return std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name))->getCredentials();
   return nullptr;
 }
 }  // namespace
 
 
-void PutGcsObject::initialize() {
+void PutGCSObject::initialize() {
   setSupportedProperties({GCPCredentials,
                           Bucket,
-                          ObjectName,
+                          Key,
                           NumberOfRetries,
                           ContentType,
-                          MD5HashLocation,
-                          Crc32cChecksumLocation,
+                          MD5Hash,
+                          Crc32cChecksum,
                           EncryptionKey,
                           ObjectACL,
                           OverwriteObject,
@@ -209,12 +207,12 @@ void PutGcsObject::initialize() {
   setSupportedRelationships({Success, Failure});
 }
 
-gcs::Client PutGcsObject::getClient(const gcs::ClientOptions& options) const {
+gcs::Client PutGCSObject::getClient(const gcs::ClientOptions& options) const {
   return gcs::Client(options, *retry_policy_);
 }
 
 
-void PutGcsObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
+void PutGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
   if (auto number_of_retries = context->getProperty<uint64_t>(NumberOfRetries)) {
     retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(*number_of_retries);
@@ -223,20 +221,17 @@ void PutGcsObject::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
-      throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, EncryptionKey.getName() + " is not in base64: " + *encryption_key);
+      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, EncryptionKey.getName() + " is not in base64: " + *encryption_key);
     }
   }
   gcp_credentials_ = getCredentials(*context);
+  if (!gcp_credentials_) {
+    throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Missing GCP Credentials");
+  }
 }
 
-void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session);
-
-  if (!gcp_credentials_) {
-    logger_->log_error("Invalid or missing credentials from Google Cloud Platform Credentials Controller Service");
-    context->yield();
-    return;
-  }
+void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context && session && gcp_credentials_);
 
   auto flow_file = session->get();
   if (!flow_file) {
@@ -244,14 +239,14 @@ void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     return;
   }
 
-  auto bucket = context->getProperty(Bucket, flow_file) | utils::orElse([&flow_file] {return flow_file->getAttribute(GCS_BUCKET_ATTR);});
-  if (!bucket) {
+  auto bucket = context->getProperty(Bucket, flow_file);
+  if (!bucket || bucket->empty()) {
     logger_->log_error("Missing bucket name");
     session->transfer(flow_file, Failure);
     return;
   }
-  auto object_name = context->getProperty(ObjectName, flow_file) | utils::orElse([&flow_file] {return flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME);});
-  if (!object_name) {
+  auto object_name = context->getProperty(Key, flow_file);
+  if (!object_name || object_name->empty()) {
     logger_->log_error("Missing object name");
     session->transfer(flow_file, Failure);
     return;
@@ -266,19 +261,16 @@ void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
   gcs::Client client = getClient(options);
   UploadToGCSCallback callback(client, *bucket, *object_name);
 
-  if (auto crc32_checksum_location = context->getProperty(Crc32cChecksumLocation, flow_file)) {
-    if (auto crc32_checksum = flow_file->getAttribute(*crc32_checksum_location)) {
-      callback.setCrc32CChecksumValue(*crc32_checksum);
-    }
+  if (auto crc32_checksum = context->getProperty(Crc32cChecksum, flow_file)) {
+    callback.setCrc32CChecksumValue(*crc32_checksum);
   }
 
-  if (auto md5_hash_location = context->getProperty(MD5HashLocation, flow_file)) {
-    if (auto md5_hash = flow_file->getAttribute(*md5_hash_location)) {
-      callback.setHashValue(*md5_hash_location);
-    }
+  if (auto md5_hash = context->getProperty(MD5Hash, flow_file)) {
+    callback.setHashValue(*md5_hash);
   }
 
-  if (auto content_type = getContentType(*context, *flow_file))
+  auto content_type = context->getProperty(ContentType, flow_file);
+  if (content_type && !content_type->empty())
     callback.setContentType(*content_type);
 
   if (auto predefined_acl = context->getProperty<PredefinedAcl>(ObjectACL))
@@ -300,5 +292,5 @@ void PutGcsObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
   }
 }
 
-REGISTER_RESOURCE(PutGcsObject, "Puts flow files to a Google Cloud Storage Bucket.");
+REGISTER_RESOURCE(PutGCSObject, "Puts flow files to a Google Cloud Storage Bucket.");
 }  // namespace org::apache::nifi::minifi::extensions::gcp

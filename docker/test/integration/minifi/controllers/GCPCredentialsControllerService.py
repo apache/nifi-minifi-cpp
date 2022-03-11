@@ -1,11 +1,11 @@
 from ..core.ControllerService import ControllerService
 
 
-class GcpCredentialsControllerService(ControllerService):
+class GCPCredentialsControllerService(ControllerService):
     def __init__(self, name=None, credentials_location=None, json_path=None, raw_json=None):
-        super(GcpCredentialsControllerService, self).__init__(name=name)
+        super(GCPCredentialsControllerService, self).__init__(name=name)
 
-        self.service_class = 'GcpCredentialsControllerService'
+        self.service_class = 'GCPCredentialsControllerService'
 
         if credentials_location is not None:
             self.properties['Credentials Location'] = credentials_location

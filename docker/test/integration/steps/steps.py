@@ -20,7 +20,7 @@ from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback, make_ca, 
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
-from minifi.controllers.GcpCredentialsControllerService import GcpCredentialsControllerService
+from minifi.controllers.GCPCredentialsControllerService import GCPCredentialsControllerService
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 
@@ -425,17 +425,17 @@ def step_impl(context):
     context.test.cluster.enable_splunk_hec_ssl('splunk', dump_certificate(splunk_cert), dump_privatekey(splunk_key), dump_certificate(root_ca_cert))
 
 
-@given(u'{processor_one} processor is set up with a GcpCredentialsControllerService to communicate with the Google Cloud storage server')
+@given(u'{processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
 def step_impl(context, processor_one):
-    gcp_controller_service = GcpCredentialsControllerService(credentials_location="Use Anonymous credentials")
+    gcp_controller_service = GCPCredentialsControllerService(credentials_location="Use Anonymous credentials")
     p1 = context.test.get_node_by_name(processor_one)
     p1.controller_services.append(gcp_controller_service)
     p1.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
 
 
-@given(u'{processor_one} processor and {processor_two} processor are set up with a GcpCredentialsControllerService to communicate with the Google Cloud storage server')
+@given(u'{processor_one} processor and {processor_two} processor are set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
 def step_impl(context, processor_one, processor_two):
-    gcp_controller_service = GcpCredentialsControllerService(credentials_location="Use Anonymous credentials")
+    gcp_controller_service = GCPCredentialsControllerService(credentials_location="Use Anonymous credentials")
     p1 = context.test.get_node_by_name(processor_one)
     p2 = context.test.get_node_by_name(processor_two)
     p1.controller_services.append(gcp_controller_service)

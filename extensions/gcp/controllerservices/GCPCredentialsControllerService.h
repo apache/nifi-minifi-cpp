@@ -29,7 +29,7 @@
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class GcpCredentialsControllerService : public core::controller::ControllerService {
+class GCPCredentialsControllerService : public core::controller::ControllerService {
  public:
   SMART_ENUM(CredentialsLocation,
              (USE_DEFAULT_CREDENTIALS, "Google Application Default Credentials"),
@@ -42,19 +42,7 @@ class GcpCredentialsControllerService : public core::controller::ControllerServi
   EXTENSIONAPI static const core::Property JsonFilePath;
   EXTENSIONAPI static const core::Property JsonContents;
 
-  explicit GcpCredentialsControllerService(const std::string& name, const minifi::utils::Identifier& uuid = {})
-      : ControllerService(name, uuid) {
-  }
-
-  explicit GcpCredentialsControllerService(const std::string& name, const std::shared_ptr<Configure>& /*configuration*/)
-      : ControllerService(name) {
-  }
-
-  GcpCredentialsControllerService(const GcpCredentialsControllerService&) = delete;
-  GcpCredentialsControllerService(GcpCredentialsControllerService&&) = delete;
-  GcpCredentialsControllerService& operator=(const GcpCredentialsControllerService&) = delete;
-  GcpCredentialsControllerService& operator=(GcpCredentialsControllerService&&) = delete;
-  ~GcpCredentialsControllerService() override = default;
+  using ControllerService::ControllerService;
 
   void initialize() override;
 
@@ -80,6 +68,6 @@ class GcpCredentialsControllerService : public core::controller::ControllerServi
 
 
   std::shared_ptr<google::cloud::storage::oauth2::Credentials> credentials_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GcpCredentialsControllerService>::getLogger();
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GCPCredentialsControllerService>::getLogger();
 };
 }  // namespace org::apache::nifi::minifi::extensions::gcp
