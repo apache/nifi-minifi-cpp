@@ -56,6 +56,9 @@ class ConfigurableComponent {
   ConfigurableComponent& operator=(const ConfigurableComponent &other) = delete;
   ConfigurableComponent& operator=(ConfigurableComponent &&other) = delete;
 
+  template<typename T = std::string, typename = std::enable_if_t<std::is_default_constructible_v<T>>>
+  std::optional<T> getProperty(const Property& property) const;
+
   /**
    * Get property using the provided name.
    * @param name property name.
@@ -241,6 +244,15 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
     logger_->log_warn("Could not find property %s", name);
     return false;
   }
+}
+
+template<typename T, typename>
+std::optional<T> ConfigurableComponent::getProperty(const Property& property) const {
+  T value;
+  if (getProperty(property.getName(), value)) {
+    return value;
+  }
+  return std::nullopt;
 }
 
 }  // namespace core
