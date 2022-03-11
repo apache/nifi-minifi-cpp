@@ -68,7 +68,8 @@ class ImageStore:
         return image
 
     def __build_minifi_cpp_image(self):
-        dockerfile = dedent("""FROM {base_image}
+        dockerfile = dedent("""\
+                FROM {base_image}
                 USER root
                 RUN apk --update --no-cache add psqlodbc
                 RUN echo "[PostgreSQL ANSI]" > /odbcinst.ini.template && \
@@ -114,7 +115,8 @@ class ImageStore:
         return self.__build_image(dockerfile)
 
     def __build_minifi_cpp_image_with_provenance_repo(self):
-        dockerfile = dedent("""FROM {base_image}
+        dockerfile = dedent("""\
+                FROM {base_image}
                 USER root
                 COPY minifi.properties {minifi_root}/conf/minifi.properties
                 USER minificpp
@@ -130,7 +132,8 @@ class ImageStore:
         return image
 
     def __build_http_proxy_image(self):
-        dockerfile = dedent("""FROM {base_image}
+        dockerfile = dedent("""\
+                FROM {base_image}
                 RUN apt -y update && apt install -y apache2-utils
                 RUN htpasswd -b -c /etc/squid/.squid_users {proxy_username} {proxy_password}
                 RUN echo 'auth_param basic program /usr/lib/squid3/basic_ncsa_auth /etc/squid/.squid_users'  > /etc/squid/squid.conf && \
@@ -144,7 +147,8 @@ class ImageStore:
         return self.__build_image(dockerfile)
 
     def __build_nifi_image(self):
-        dockerfile = dedent(r"""FROM {base_image}
+        dockerfile = dedent(r"""\
+                FROM {base_image}
                 USER root
                 RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties
                 RUN sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\1=5000/' {nifi_root}/conf/nifi.properties
@@ -156,7 +160,8 @@ class ImageStore:
         return self.__build_image(dockerfile)
 
     def __build_postgresql_server_image(self):
-        dockerfile = dedent("""FROM {base_image}
+        dockerfile = dedent("""\
+                FROM {base_image}
                 RUN mkdir -p /docker-entrypoint-initdb.d
                 RUN echo "#!/bin/bash" > /docker-entrypoint-initdb.d/init-user-db.sh && \
                     echo "set -e" >> /docker-entrypoint-initdb.d/init-user-db.sh && \
@@ -176,7 +181,8 @@ class ImageStore:
         return self.__build_image_by_path(self.test_dir + "/resources/kafka_broker", 'minifi-kafka')
 
     def __build_mqtt_broker_image(self):
-        dockerfile = dedent("""FROM {base_image}
+        dockerfile = dedent("""\
+            FROM {base_image}
             RUN echo 'log_dest stderr' >> /mosquitto-no-auth.conf
             CMD ["/usr/sbin/mosquitto", "--verbose", "--config-file", "/mosquitto-no-auth.conf"]
             """.format(base_image='eclipse-mosquitto:2.0.12'))
