@@ -248,7 +248,7 @@ class MiNiFi_integration_test():
         time.sleep(wait_time_seconds)
         for container in self.cluster.containers.values():
             if container.get_engine() == "minifi-cpp":
-                _, logs = self.cluster.get_app_log(container)
+                _, logs = self.cluster.get_app_log(container.get_name())
                 if logs is not None and 1 <= logs.decode("utf-8").count(line):
                     assert False
 

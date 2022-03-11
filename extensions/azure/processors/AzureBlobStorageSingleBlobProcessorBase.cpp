@@ -20,6 +20,8 @@
 
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
 
+#include "core/ProcessContext.h"
+
 namespace org::apache::nifi::minifi::azure::processors {
 
 const core::Property AzureBlobStorageSingleBlobProcessorBase::Blob(
