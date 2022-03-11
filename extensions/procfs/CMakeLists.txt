@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND (ENABLE_ALL OR ENABLE_PROCFS)))
+  return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "*.cpp" "processors/*.cpp" "utils/*.cpp")
@@ -24,7 +28,6 @@ file(GLOB SOURCES "*.cpp" "processors/*.cpp" "utils/*.cpp")
 add_library(minifi-procfs SHARED ${SOURCES})
 target_link_libraries(minifi-procfs ${LIBMINIFI})
 
-SET(PROCFS-EXTENSION minifi-procfs PARENT_SCOPE)
-register_extension(minifi-procfs)
+register_extension(minifi-procfs "PROCFS EXTENSIONS" PROCFS-EXTENSIONS "Enabled metrics collection from procfs" "extensions/procfs/tests")
 
 register_extension_linter(minifi-procfs-extensions-linter)

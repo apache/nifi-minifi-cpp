@@ -17,8 +17,6 @@
 # under the License.
 #
 
-ADD_FEATURE_INFO("STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors")
-mark_as_advanced(STANDARD-PROCESSORS)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 

@@ -122,6 +122,10 @@ option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Idea
 option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." OFF)
 option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
 
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	option(ENABLE_PROCFS "Enables the procfs extension." OFF)
+endif()
+
 ## Keep all option definitions above this line
 
 include(DockerConfig)
@@ -418,25 +422,6 @@ foreach(extension-dir ${extension-directories})
 		add_subdirectory(${extension-dir})
 	endif()
 endforeach()
-
-## Add the test-processors extension
-# ENABLE_TEST_PROCESSORS option is to only build test processors but not unit tests in docker integration tests.
-if (NOT SKIP_TESTS OR ENABLE_TEST_PROCESSORS)
-	createExtension(TEST-PROCESSORS-EXTENSION "TEST-PROCESSORS EXTENSION" "This enables processors purely for testing purposes" "extensions/test-processors")
-endif()
-
-## Google Cloud Platform Extension
-if (ENABLE_ALL OR ENABLE_GCP)
-	createExtension(GCP-EXTENSIONS "GCP EXTENSIONS" "This enables Google Cloud Platform support" "extensions/gcp" "extensions/gcp/tests")
-endif()
-
-## Add the procfs extension
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-	option(ENABLE_PROCFS "Enables the procfs extension." OFF)
-	if (ENABLE_ALL OR ENABLE_PROCFS)
-		createExtension(PROCFS-EXTENSIONS "PROCFS EXTENSIONS" "Enabled metrics collection from procfs" "extensions/procfs" "extensions/procfs/tests")
-	endif()
-endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
 add_subdirectory(main)

@@ -16,6 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 #
+
+if (NOT (ENABLE_ALL OR ENABLE_GCP))
+  return()
+endif()
+
 include(GoogleCloudCpp)
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 file(GLOB SOURCES "*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
@@ -25,6 +30,6 @@ add_library(minifi-gcp SHARED ${SOURCES})
 target_link_libraries(minifi-gcp ${LIBMINIFI} google-cloud-cpp::storage)
 target_include_directories(minifi-gcp PUBLIC ${google-cloud-cpp_INCLUDE_DIRS})
 
-register_extension(minifi-gcp)
+register_extension(minifi-gcp "GCP EXTENSIONS" GCP-EXTENSIONS "This enables Google Cloud Platform support" "extensions/gcp/tests")
 
 register_extension_linter(minifi-gcp-extensions-linter)
