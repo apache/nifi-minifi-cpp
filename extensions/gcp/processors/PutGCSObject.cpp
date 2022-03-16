@@ -221,7 +221,7 @@ void PutGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
     try {
       encryption_key_ = gcs::EncryptionKey::FromBase64Key(*encryption_key);
     } catch (const google::cloud::RuntimeStatusError&) {
-      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, EncryptionKey.getName() + " is not in base64: " + *encryption_key);
+      throw minifi::Exception(ExceptionType::PROCESS_SCHEDULE_EXCEPTION, "Could not decode the base64-encoded encryption key from property " + EncryptionKey.getName());
     }
   }
   gcp_credentials_ = getCredentials(*context);
