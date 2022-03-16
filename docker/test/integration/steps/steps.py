@@ -425,23 +425,12 @@ def step_impl(context):
     context.test.cluster.enable_splunk_hec_ssl('splunk', dump_certificate(splunk_cert), dump_privatekey(splunk_key), dump_certificate(root_ca_cert))
 
 
-@given(u'{processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
+@given(u'the {processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
 def step_impl(context, processor_one):
     gcp_controller_service = GCPCredentialsControllerService(credentials_location="Use Anonymous credentials")
     p1 = context.test.get_node_by_name(processor_one)
     p1.controller_services.append(gcp_controller_service)
     p1.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
-
-
-@given(u'{processor_one} processor and {processor_two} processor are set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
-def step_impl(context, processor_one, processor_two):
-    gcp_controller_service = GCPCredentialsControllerService(credentials_location="Use Anonymous credentials")
-    p1 = context.test.get_node_by_name(processor_one)
-    p2 = context.test.get_node_by_name(processor_two)
-    p1.controller_services.append(gcp_controller_service)
-    p1.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
-    p2.controller_services.append(gcp_controller_service)
-    p2.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
 
 
 @given("the kafka broker is started")
@@ -765,7 +754,7 @@ def step_impl(context):
 
 
 # Google Cloud Storage
-@then('object with the content \"{content}\" is present in the Google Cloud storage')
+@then('an object with the content \"{content}\" is present in the Google Cloud storage')
 def step_imp(context, content):
     context.test.check_google_cloud_storage("fake-gcs-server", content)
 

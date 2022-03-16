@@ -176,7 +176,9 @@ TEST_F(PutGCSObjectTests, Crc32cMD5LocationTest) {
   EXPECT_CALL(*put_gcs_object_->mock_client_, CreateResumableSession)
       .WillOnce([](const ResumableUploadRequest& request) {
         EXPECT_TRUE(request.HasOption<gcs::Crc32cChecksumValue>());
+        EXPECT_EQ("yZRlqg==", request.GetOption<gcs::Crc32cChecksumValue>().value());
         EXPECT_TRUE(request.HasOption<gcs::MD5HashValue>());
+        EXPECT_EQ("XrY7u+Ae7tCTyyK7j1rNww==", request.GetOption<gcs::MD5HashValue>().value());
         auto mock_upload_session = std::make_unique<gcs::testing::MockResumableUploadSession>();
         EXPECT_CALL(*mock_upload_session, done()).WillRepeatedly(testing::Return(false));
         EXPECT_CALL(*mock_upload_session, next_expected_byte()).WillRepeatedly(testing::Return(0));
@@ -184,8 +186,8 @@ TEST_F(PutGCSObjectTests, Crc32cMD5LocationTest) {
         EXPECT_CALL(*mock_upload_session, UploadFinalChunk).WillOnce(return_upload_done(request));
         return google::cloud::make_status_or(std::unique_ptr<gcs::internal::ResumableUploadSession>(std::move(mock_upload_session)));
       });
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::MD5Hash.getName(), "md5"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Crc32cChecksum.getName(), "crc32c"));
+  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::MD5Hash.getName(), "${md5}"));
+  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Crc32cChecksum.getName(), "${crc32c}"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket.getName(), "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key.getName(), "object-name-from-property"));
   const auto& result = test_controller_.trigger("hello world", {{"crc32c", "yZRlqg=="}, {"md5", "XrY7u+Ae7tCTyyK7j1rNww=="}});

@@ -77,14 +77,16 @@ class PutGCSObject : public core::Processor {
     return true;
   }
 
- protected:
+ private:
   virtual google::cloud::storage::Client getClient(const google::cloud::storage::ClientOptions& options) const;
 
-  google::cloud::storage::RetryPolicyOption::Type retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(6);
   google::cloud::storage::EncryptionKey encryption_key_;
 
   std::shared_ptr<google::cloud::storage::oauth2::Credentials> gcp_credentials_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutGCSObject>::getLogger();
+
+ protected:
+  google::cloud::storage::RetryPolicyOption::Type retry_policy_ = std::make_shared<google::cloud::storage::LimitedErrorCountRetryPolicy>(6);
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::gcp

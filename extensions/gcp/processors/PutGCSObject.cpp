@@ -185,8 +185,12 @@ class UploadToGCSCallback : public InputStreamCallback {
 
 std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) {
   std::string service_name;
-  if (context.getProperty(PutGCSObject::GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name))
-    return std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name))->getCredentials();
+  if (context.getProperty(PutGCSObject::GCPCredentials.getName(), service_name) && !IsNullOrEmpty(service_name)) {
+    auto gcp_credentials_controller_service = std::dynamic_pointer_cast<const GCPCredentialsControllerService>(context.getControllerService(service_name));
+    if (!gcp_credentials_controller_service)
+      return nullptr;
+    return gcp_credentials_controller_service->getCredentials();
+  }
   return nullptr;
 }
 }  // namespace

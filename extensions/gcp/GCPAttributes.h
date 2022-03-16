@@ -56,9 +56,9 @@ inline void setAttributesFromObjectMetadata(core::FlowFile& flow_file, const ::g
   flow_file.setAttribute(GCS_CONTENT_ENCODING_ATTR, object_metadata.content_encoding());
   flow_file.setAttribute(GCS_CONTENT_LANGUAGE_ATTR, object_metadata.content_language());
   flow_file.setAttribute(GCS_CONTENT_DISPOSITION_ATTR, object_metadata.content_disposition());
-  flow_file.setAttribute(GCS_CREATE_TIME_ATTR, std::to_string(object_metadata.time_created().time_since_epoch().count()));
-  flow_file.setAttribute(GCS_UPDATE_TIME_ATTR, std::to_string(object_metadata.updated().time_since_epoch().count()));
-  flow_file.setAttribute(GCS_DELETE_TIME_ATTR, std::to_string(object_metadata.time_deleted().time_since_epoch().count()));
+  flow_file.setAttribute(GCS_CREATE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.time_created().time_since_epoch()).count()));
+  flow_file.setAttribute(GCS_UPDATE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.updated().time_since_epoch()).count()));
+  flow_file.setAttribute(GCS_DELETE_TIME_ATTR, std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(object_metadata.time_deleted().time_since_epoch()).count()));
   flow_file.setAttribute(GCS_MEDIA_LINK_ATTR, object_metadata.media_link());
   flow_file.setAttribute(GCS_SELF_LINK_ATTR, object_metadata.self_link());
   flow_file.setAttribute(GCS_ETAG_ATTR, object_metadata.etag());
