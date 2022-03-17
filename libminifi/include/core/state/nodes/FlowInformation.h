@@ -228,11 +228,10 @@ class FlowInformation : public FlowMonitor {
     }
 
     if (nullptr != monitor_) {
-      auto components = monitor_->getAllComponents();
       SerializedResponseNode componentsNode(false);
       componentsNode.name = "components";
 
-      for (auto component : components) {
+      monitor_->executeOnAllComponents([&componentsNode](StateController* component){
         SerializedResponseNode componentNode(false);
         componentNode.name = component->getComponentName();
 
@@ -247,7 +246,7 @@ class FlowInformation : public FlowMonitor {
         componentNode.children.push_back(componentStatusNode);
         componentNode.children.push_back(uuidNode);
         componentsNode.children.push_back(componentNode);
-      }
+      });
       serialized.push_back(componentsNode);
     }
 

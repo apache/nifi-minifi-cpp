@@ -441,6 +441,20 @@ std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest(
   return agentInfo;
 }
 
+void FlowController::executeOnAllComponents(std::function<void(state::StateController*)> func) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  for (auto* component: getAllComponents()) {
+    func(component);
+  }
+}
+
+void FlowController::executeOnComponents(const std::string &name, std::function<void(state::StateController*)> func) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  for (auto* component: getComponents(name)) {
+    func(component);
+  }
+}
+
 std::vector<state::StateController*> FlowController::getAllComponents() {
   std::vector<state::StateController*> vec{this};
   if (root_) {
@@ -511,8 +525,6 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
 
 void FlowController::getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
                                               const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
   std::vector<core::Processor*> processorVec;
   root_->getAllProcessors(processorVec);
 

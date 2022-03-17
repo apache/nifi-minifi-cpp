@@ -56,23 +56,32 @@ class StatefulIntegrationTest : public IntegrationBase {
   }
 
   void updateProperties(minifi::FlowController& fc) override {
-    const auto controllerVec = fc.getAllComponents();
     /* This tests depends on a configuration that contains only one StatefulProcessor named statefulProcessor
      * (See TestStateTransactionality.yml)
      * In this case there are two components in the flowcontroller: first is the controller itself,
      * second is the processor that the test uses.
      * Added here some assertions to make it clear. In case any of these fail without changing the corresponding yml file,
      * that most probably means a breaking change. */
-    assert(controllerVec.size() == 2);
-    assert(controllerVec[0]->getComponentName() == "FlowController");
-    assert(controllerVec[1]->getComponentName() == "statefulProcessor");
+    size_t controllerVecIdx = 0;
 
-    // set hooks
-    const auto processController = dynamic_cast<ProcessorController*>(controllerVec[1]);
-    assert(processController != nullptr);
-    stateful_processor_ = dynamic_cast<StatefulProcessor*>(processController->getProcessor());
-    assert(stateful_processor_ != nullptr);
-    stateful_processor_->setHooks(on_schedule_hook_, on_trigger_hooks_);
+    fc.executeOnAllComponents([this, &controllerVecIdx](org::apache::nifi::minifi::state::StateController* component){
+      if (controllerVecIdx == 0) {
+        assert(component->getComponentName() == "FlowController");
+      } else if (controllerVecIdx == 1) {
+        assert(component->getComponentName() == "statefulProcessor");
+        // set hooks
+        const auto processController = dynamic_cast<ProcessorController*>(component);
+        assert(processController != nullptr);
+        stateful_processor_ = dynamic_cast<StatefulProcessor*>(processController->getProcessor());
+        assert(stateful_processor_ != nullptr);
+        stateful_processor_->setHooks(on_schedule_hook_, on_trigger_hooks_);
+      }
+
+      ++controllerVecIdx;
+    });
+
+    // check controller vector size
+    assert(controllerVecIdx == 2);
   }
 
   void runAssertions() override {

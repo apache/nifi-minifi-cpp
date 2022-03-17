@@ -139,18 +139,13 @@ class StateController : public Pausable {
  */
 class StateMonitor : public StateController {
  public:
-  virtual ~StateMonitor() = default;
+  ~StateMonitor() override = default;
 
-  std::atomic<bool> &isStateMonitorRunning() {
-    return controller_running_;
-  }
+  // Iterate on given components, execute callback func safely while locking mutex_, preventing concurrent flow update
+  virtual void executeOnComponents(const std::string &name, std::function<void(state::StateController*)> func) = 0;
 
-  virtual std::vector<StateController*> getComponents(const std::string &name) = 0;
-
-  virtual std::vector<StateController*> getAllComponents() = 0;
-  /**
-   * Operational controllers
-   */
+  // Iterate on all components, execute callback func safely while locking mutex_, preventing concurrent flow update
+  virtual void executeOnAllComponents(std::function<void(state::StateController*)> func) = 0;
 
   /**
    * Drain repositories

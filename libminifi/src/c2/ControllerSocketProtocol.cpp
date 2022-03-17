@@ -97,10 +97,9 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           std::string componentStr;
           const auto size = stream->read(componentStr);
           if (!io::isError(size)) {
-            auto components = update_sink_->getComponents(componentStr);
-            for (const auto& component : components) {
+            update_sink_->executeOnComponents(componentStr, [](state::StateController* component) {
               component->start();
-            }
+            });
           } else {
             logger_->log_debug("Connection broke");
           }
@@ -111,10 +110,9 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           std::string componentStr;
           const auto size = stream->read(componentStr);
           if (!io::isError(size)) {
-            auto components = update_sink_->getComponents(componentStr);
-            for (const auto& component : components) {
+            update_sink_->executeOnComponents(componentStr, [](state::StateController* component) {
               component->stop();
-            }
+            });
           } else {
             logger_->log_debug("Connection broke");
           }
@@ -180,14 +178,18 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
             resp.write(response.str());
             stream->write(resp.getBuffer());
           } else if (what == "components") {
+            std::vector<std::pair<std::string, bool>> components;
+            update_sink_->executeOnAllComponents([&components](state::StateController* component){
+              components.emplace_back(component->getComponentName(), component->isRunning());
+            });
             io::BufferStream resp;
             resp.write(&head, 1);
-            const auto size_ = gsl::narrow<uint16_t>(update_sink_->getAllComponents().size());
-            resp.write(size_);
-            for (const auto &component : update_sink_->getAllComponents()) {
-              resp.write(component->getComponentName());
-              resp.write(component->isRunning() ? "true" : "false");
+            resp.write(gsl::narrow<uint16_t>(gsl::narrow<uint16_t>(components.size())));
+            for (const auto& [name, isRunning] : components) {
+              resp.write(name);
+              resp.write(isRunning ? "true" : "false");
             }
+
             stream->write(resp.getBuffer());
           } else if (what == "jstack") {
             io::BufferStream resp;

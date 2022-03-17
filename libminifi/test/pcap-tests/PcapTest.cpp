@@ -78,15 +78,14 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void updateProperties(minifi::FlowController& fc) override {
-    auto components = fc.getComponents("pcap");
-    for (const auto& component : components) {
+    fc.executeOnComponents("pcap", [this] (minifi::state::StateController* component) {
       auto proccontroller = dynamic_cast<minifi::state::ProcessorController*>(component);
       if (proccontroller) {
         auto processor = proccontroller->getProcessor();
         processor->setProperty(minifi::processors::CapturePacket::BaseDir.getName(), dir);
         processor->setProperty(minifi::processors::CapturePacket::NetworkControllers.getName(), ".*");
       }
-    }
+    });
   }
 
  protected:

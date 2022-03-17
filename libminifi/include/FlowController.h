@@ -114,9 +114,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return -1;
   }
 
-  std::vector<state::StateController*> getComponents(const std::string &name) override;
-
-  std::vector<state::StateController*> getAllComponents() override;
+  void executeOnComponents(const std::string &name, std::function<void(state::StateController*)> func) override;
+  void executeOnAllComponents(std::function<void(state::StateController*)> func) override;
 
   int16_t clearConnection(const std::string &connection) override;
 
@@ -234,6 +233,10 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::chrono::steady_clock::time_point start_time_;
 
  private:
+  std::vector<state::StateController*> getAllComponents();
+
+  std::vector<state::StateController*> getComponents(const std::string &name);
+
   void getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
                               const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
 

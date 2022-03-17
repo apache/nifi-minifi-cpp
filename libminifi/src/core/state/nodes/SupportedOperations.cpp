@@ -107,9 +107,9 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
     case minifi::c2::Operation::STOP: {
       addProperty(properties, "c2");
       if (monitor_) {
-        for (const auto& component: monitor_->getAllComponents()) {
+        monitor_->executeOnAllComponents([this, &properties](StateController* component){
           addProperty(properties, component->getComponentName());
-        }
+        });
       }
       break;
     }

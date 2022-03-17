@@ -79,15 +79,16 @@ class TestUpdateSink : public minifi::state::StateMonitor {
   explicit TestUpdateSink(std::shared_ptr<StateController> controller)
       : is_running(true),
         clear_calls(0),
-        controller(controller),
+        controller(std::move(controller)),
         update_calls(0) {
   }
-  std::vector<StateController*> getComponents(const std::string& /*name*/) override {
-    return std::vector<StateController*>{ controller.get() };
+
+  void executeOnComponents(const std::string&, std::function<void(minifi::state::StateController*)> func) override {
+    func(controller.get());
   }
 
-  std::vector<StateController*> getAllComponents() override {
-    return std::vector<StateController*>{ controller.get() };
+  void executeOnAllComponents(std::function<void(minifi::state::StateController*)> func) override {
+    func(controller.get());
   }
 
   std::string getComponentName() const override {

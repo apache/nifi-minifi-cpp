@@ -71,13 +71,13 @@ class TailFileTestHarness : public IntegrationBase {
 
  protected:
   void updateProperties(minifi::FlowController& fc) override {
-    for (auto comp : fc.getComponents("tf")) {
-      auto proc = dynamic_cast<minifi::state::ProcessorController*>(comp);
+    fc.executeOnComponents("tf", [this] (minifi::state::StateController* component) {
+      auto proc = dynamic_cast<minifi::state::ProcessorController*>(component);
       if (nullptr != proc) {
         proc->getProcessor()->setProperty(minifi::processors::TailFile::FileName, ss.str());
         proc->getProcessor()->setProperty(minifi::processors::TailFile::StateFile, statefile);
       }
-    }
+    });
   }
 
   std::string statefile;
