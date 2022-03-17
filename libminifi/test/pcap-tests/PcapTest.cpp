@@ -78,7 +78,7 @@ class PcapTestHarness : public IntegrationBase {
   }
 
   void updateProperties(minifi::FlowController& fc) override {
-    fc.executeOnComponents("pcap", [this] (minifi::state::StateController* component) {
+    fc.executeOnComponent("pcap", [this] (minifi::state::StateController* component) {
       auto proccontroller = dynamic_cast<minifi::state::ProcessorController*>(component);
       if (proccontroller) {
         auto processor = proccontroller->getProcessor();

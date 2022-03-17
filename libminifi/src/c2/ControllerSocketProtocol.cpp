@@ -97,7 +97,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           std::string componentStr;
           const auto size = stream->read(componentStr);
           if (!io::isError(size)) {
-            update_sink_->executeOnComponents(componentStr, [](state::StateController* component) {
+            update_sink_->executeOnComponent(componentStr, [](state::StateController* component) {
               component->start();
             });
           } else {
@@ -110,7 +110,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           std::string componentStr;
           const auto size = stream->read(componentStr);
           if (!io::isError(size)) {
-            update_sink_->executeOnComponents(componentStr, [](state::StateController* component) {
+            update_sink_->executeOnComponent(componentStr, [](state::StateController* component) {
               component->stop();
             });
           } else {

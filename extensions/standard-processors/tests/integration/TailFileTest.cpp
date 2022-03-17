@@ -71,7 +71,7 @@ class TailFileTestHarness : public IntegrationBase {
 
  protected:
   void updateProperties(minifi::FlowController& fc) override {
-    fc.executeOnComponents("tf", [this] (minifi::state::StateController* component) {
+    fc.executeOnComponent("tf", [this] (minifi::state::StateController* component) {
       auto proc = dynamic_cast<minifi::state::ProcessorController*>(component);
       if (nullptr != proc) {
         proc->getProcessor()->setProperty(minifi::processors::TailFile::FileName, ss.str());

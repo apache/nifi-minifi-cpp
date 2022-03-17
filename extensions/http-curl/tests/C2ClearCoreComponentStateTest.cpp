@@ -51,20 +51,14 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
 
  protected:
   void updateProperties(minifi::FlowController& flow_controller) override {
-    size_t componentIdx = 0;
-    auto setFileName = [&componentIdx] (const std::string& fileName, minifi::state::StateController* component){
-      if (componentIdx == 0) {
-        auto* processor = dynamic_cast<minifi::state::ProcessorController*>(component)->getProcessor();
-        processor->setProperty(minifi::processors::TailFile::FileName, fileName);
-      }
-      ++componentIdx;
+    auto setFileName = [] (const std::string& fileName, minifi::state::StateController* component){
+      auto* processor = dynamic_cast<minifi::state::ProcessorController*>(component)->getProcessor();
+      processor->setProperty(minifi::processors::TailFile::FileName, fileName);
     };
 
-    flow_controller.executeOnComponents("TailFile1",
+    flow_controller.executeOnComponent("TailFile1",
       [&](minifi::state::StateController* component) {setFileName(test_file_1_, component);});
-    // reset index counter
-    componentIdx = 0;
-    flow_controller.executeOnComponents("TailFile2",
+    flow_controller.executeOnComponent("TailFile2",
       [&](minifi::state::StateController* component) {setFileName(test_file_2_, component);});
   }
 

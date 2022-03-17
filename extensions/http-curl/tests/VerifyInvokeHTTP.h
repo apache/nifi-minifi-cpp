@@ -64,21 +64,17 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
   }
 
   void setProperty(const std::string& property, const std::string& value) {
-    size_t componentIdx = 0;
-    flowController_->executeOnComponents("InvokeHTTP", [&](minifi::state::StateController* component) {
-      if (componentIdx == 0) {
-        assert(component);
-        const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(component);
-        assert(processorController);
-        auto proc = processorController->getProcessor();
-        proc->setProperty(property, value);
-      }
-
-      ++componentIdx;
+    bool executed = false;
+    flowController_->executeOnComponent("InvokeHTTP", [&](minifi::state::StateController* component) {
+      assert(component);
+      const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(component);
+      assert(processorController);
+      auto proc = processorController->getProcessor();
+      proc->setProperty(property, value);
+      executed = true;
     });
 
-    // check against components emptiness
-    assert(componentIdx > 0);
+    assert(executed);
   }
 
   virtual void setupFlow(const std::optional<std::string>& flow_yml_path) {

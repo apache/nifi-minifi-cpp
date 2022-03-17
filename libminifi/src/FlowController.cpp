@@ -448,9 +448,9 @@ void FlowController::executeOnAllComponents(std::function<void(state::StateContr
   }
 }
 
-void FlowController::executeOnComponents(const std::string &name, std::function<void(state::StateController*)> func) {
+void FlowController::executeOnComponent(const std::string &name, std::function<void(state::StateController*)> func) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  for (auto* component: getComponents(name)) {
+  if (auto* component = getComponent(name); component != nullptr) {
     func(component);
   }
 }
@@ -466,19 +466,19 @@ std::vector<state::StateController*> FlowController::getAllComponents() {
   return vec;
 }
 
-std::vector<state::StateController*> FlowController::getComponents(const std::string& name) {
-  std::vector<state::StateController*> vec;
+state::StateController* FlowController::getComponent(const std::string& name) {
+  state::StateController* ret = nullptr;
 
   if (name == "FlowController") {
-    vec.push_back(this);
+    return this;
   } else if (root_) {
     auto controllerFactory = [this] (core::Processor& p) {
       return createController(p);
     };
-    getProcessorController(name, vec, controllerFactory);
+    getProcessorController(name, ret, controllerFactory);
   }
 
-  return vec;
+  return ret;
 }
 
 std::unique_ptr<state::ProcessorController> FlowController::createController(core::Processor& processor) {
@@ -538,14 +538,14 @@ void FlowController::getAllProcessorControllers(std::vector<state::StateControll
   }
 }
 
-void FlowController::getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
+void FlowController::getProcessorController(const std::string& name, state::StateController*& controller,
                                           const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
   auto* processor = root_->findProcessorByName(name);
-  auto& controller = processor_to_controller_[processor->getUUID()];
-  if (!controller) {
-    controller = controllerFactory(*processor);
+  auto& foundController = processor_to_controller_[processor->getUUID()];
+  if (!foundController) {
+    foundController = controllerFactory(*processor);
   }
-  controllerVec.push_back(controller.get());
+  controller = foundController.get();
 }
 
 }  // namespace minifi

@@ -359,7 +359,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
 
       // stop all referenced components.
-      update_sink_->executeOnComponents(resp.name, [this, &resp] (state::StateController* component) {
+      update_sink_->executeOnComponent(resp.name, [this, &resp] (state::StateController* component) {
         logger_->log_debug("Stopping component %s", component->getComponentName());
         if (resp.op == Operation::STOP) {
           component->stop();
@@ -454,7 +454,7 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
       for (const auto& corecomponent : resp.operation_arguments) {
         auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
         if (state_manager_provider != nullptr) {
-          update_sink_->executeOnComponents(corecomponent.second.to_string(), [this, &state_manager_provider] (state::StateController* component) {
+          update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_manager_provider] (state::StateController* component) {
             logger_->log_debug("Clearing state for component %s", component->getComponentName());
             auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
             if (state_manager != nullptr) {
