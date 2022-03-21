@@ -217,12 +217,12 @@ void ProcFsMonitor::processNetworkInformation(const std::unordered_map<std::stri
     return;
 
   rapidjson::Value network_root{rapidjson::kObjectType};
-  for (const auto& [net_dev_name, net_dev] : current_net_devs) {
+  for (const auto& [interface_name, net_dev] : current_net_devs) {
     if (result_relativeness_ == ResultRelativeness::ABSOLUTE) {
-      addNetDevToJson(net_dev_name, net_dev, network_root, alloc);
+      addNetDevToJson(interface_name, net_dev, network_root, alloc);
     } else if (result_relativeness_ == ResultRelativeness::RELATIVE) {
-      if (last_net_devs_.contains(net_dev_name) && last_trigger) {
-        addNetDevPerSecToJson(net_dev_name, net_dev-last_net_devs_.at(net_dev_name), std::chrono::steady_clock::now()-*last_trigger, network_root, alloc);
+      if (last_net_devs_.contains(interface_name) && last_trigger) {
+        addNetDevPerSecToJson(interface_name, net_dev - last_net_devs_.at(interface_name), std::chrono::steady_clock::now() - *last_trigger, network_root, alloc);
       }
     } else {
       throw Exception(GENERAL_EXCEPTION, "Invalid result relativeness");
