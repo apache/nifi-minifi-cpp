@@ -134,6 +134,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
+  processor_to_controller_.clear();
   initialized_ = false;
   bool started = false;
   try {
@@ -191,7 +192,7 @@ int16_t FlowController::stop() {
     thread_pool_.shutdown();
     /* STOP! Before you change it, consider the following:
      * -Stopping the schedulers doesn't actually quit the onTrigger functions of processors
-     * -They only guarantee that the processors are not scheduled any more
+     * -They only guarantee that the processors are not scheduled anymore
      * -After the threadpool is stopped we can make sure that processors don't need repos and controllers anymore */
     if (this->root_) {
       this->root_->drainConnections();
@@ -284,6 +285,7 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     if (root) {
       logger_->log_info("Load Flow Controller from provided root");
       this->root_ = std::move(root);
+      processor_to_controller_.clear();
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = loadInitialFlow();
