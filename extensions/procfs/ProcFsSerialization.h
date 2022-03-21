@@ -87,11 +87,10 @@ void SerializeDiskStatDataPerSec(const DiskStatData& disk_stat_data,
 void SerializeMemInfo(const MemInfo& mem_info,
                       std::invocable<const char(&)[], const uint64_t> auto serializer) {
   serializer("MemTotal", mem_info.getTotalMemory());
-  serializer("MemFree", mem_info.getAvailableMemory());
-  serializer("MemAvailable", mem_info.getFreeMemory());
-  serializer("MemFree", mem_info.getAvailableMemory());
-  serializer("SwapFree", mem_info.getFreeSwap());
+  serializer("MemFree", mem_info.getFreeMemory());
+  serializer("MemAvailable", mem_info.getAvailableMemory());
   serializer("SwapTotal", mem_info.getTotalSwap());
+  serializer("SwapFree", mem_info.getFreeSwap());
 }
 
 void SerializeNetDevData(const NetDevData& net_dev_data,
