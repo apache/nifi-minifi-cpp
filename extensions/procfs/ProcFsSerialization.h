@@ -16,7 +16,9 @@
  */
 
 #pragma once
+#include <stdint.h>
 #include <concepts>
+#include <string_view>
 
 #include "CpuStat.h"
 #include "DiskStat.h"
@@ -164,7 +166,7 @@ void SerializeProcessStat(const ProcessStat& process_stat,
 template<class Serializer>
 requires std::invocable<Serializer, const char*, double> &&
          std::invocable<Serializer, const char*, uint64_t> &&
-         std::invocable<Serializer, const char*, const std::string_view&>
+         std::invocable<Serializer, const char*, std::string_view>
 void SerializeNormalizedProcessStat(const ProcessStat& process_stat_start,
                                     const ProcessStat& process_stat_end,
                                     const std::chrono::duration<double> all_cpu_time,

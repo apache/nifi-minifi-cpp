@@ -38,7 +38,7 @@ class Serializer {
   void operator()(const char* key, double value) {
     json_.AddMember(rapidjson::StringRef(key), value, alloc_);
   }
-  void operator()(const char* key, const std::string_view& value) {
+  void operator()(const char* key, std::string_view value) {
     rapidjson::Value value_json(value.data(), value.size(), alloc_);
     json_.AddMember(rapidjson::StringRef(key), value_json, alloc_);
   }
