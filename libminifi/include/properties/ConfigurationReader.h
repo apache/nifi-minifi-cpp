@@ -27,6 +27,7 @@ class ConfigurationReader {
   virtual bool get(const std::string& key, std::string& value) const = 0;
   virtual bool get(const std::string& key, const std::string& alternate_key, std::string& value) const = 0;
   virtual std::optional<std::string> get(const std::string& key) const = 0;
+  virtual ~ConfigurationReader() = default;
 };
 
 }  // namespace org::apache::nifi::minifi
