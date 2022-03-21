@@ -153,7 +153,7 @@ class C2Agent : public state::UpdateController {
 
   enum class UpdateResult {
     NO_UPDATE,
-    UPDATE_SUCCESFUL,
+    UPDATE_SUCCESSFUL,
     UPDATE_FAILED
   };
   /**

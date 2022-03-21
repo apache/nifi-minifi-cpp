@@ -634,7 +634,7 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
   state::UpdateState result = state::UpdateState::NO_OPERATION;
   auto changeUpdateState = [&result](UpdateResult update_result) {
     if (result == state::UpdateState::NO_OPERATION) {
-      if (update_result == UpdateResult::UPDATE_SUCCESFUL) {
+      if (update_result == UpdateResult::UPDATE_SUCCESSFUL) {
         result = state::UpdateState::FULLY_APPLIED;
       } else if (update_result == UpdateResult::UPDATE_FAILED) {
         result = state::UpdateState::PARTIALLY_APPLIED;
@@ -674,7 +674,7 @@ C2Agent::UpdateResult C2Agent::update_property(const std::string &property_name,
   }
 
   configuration_->set(property_name, property_value, lifetime);
-  return UpdateResult::UPDATE_SUCCESFUL;
+  return UpdateResult::UPDATE_SUCCESSFUL;
 }
 
 C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
