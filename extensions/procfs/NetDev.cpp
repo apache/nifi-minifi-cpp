@@ -21,16 +21,31 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::extensions::procfs {
 
-std::optional<NetDevData> NetDevData::parseNetDevLine(std::istream& iss) {
+std::optional<std::pair<std::string, NetDevData>> NetDevData::parseNetDevLine(std::istream& iss) {
   NetDevData net_dev_data;
-  iss >> net_dev_data.bytes_received_ >> net_dev_data.packets_received_ >> net_dev_data.errs_received_ >> net_dev_data.drop_errors_received_
-      >> net_dev_data.fifo_errors_received_ >> net_dev_data.frame_errors_received_ >> net_dev_data.compressed_packets_received_
-      >> net_dev_data.multicast_frames_received_>> net_dev_data.bytes_transmitted_ >> net_dev_data.packets_transmitted_
-      >> net_dev_data.errs_transmitted_ >> net_dev_data.drop_errors_transmitted_ >> net_dev_data.fifo_errors_transmitted_
-      >> net_dev_data.collisions_transmitted_ >> net_dev_data.carrier_losses_transmitted_ >> net_dev_data.compressed_packets_transmitted_;
+  std::string entry_name;
+  iss >> entry_name
+      >> net_dev_data.bytes_received_
+      >> net_dev_data.packets_received_
+      >> net_dev_data.errs_received_
+      >> net_dev_data.drop_errors_received_
+      >> net_dev_data.fifo_errors_received_
+      >> net_dev_data.frame_errors_received_
+      >> net_dev_data.compressed_packets_received_
+      >> net_dev_data.multicast_frames_received_
+      >> net_dev_data.bytes_transmitted_
+      >> net_dev_data.packets_transmitted_
+      >> net_dev_data.errs_transmitted_
+      >> net_dev_data.drop_errors_transmitted_
+      >> net_dev_data.fifo_errors_transmitted_
+      >> net_dev_data.collisions_transmitted_
+      >> net_dev_data.carrier_losses_transmitted_
+      >> net_dev_data.compressed_packets_transmitted_;
   if (iss.fail())
     return std::nullopt;
-  return net_dev_data;
+  if (!entry_name.empty())
+    entry_name.pop_back();  // remove the ':' from the end of 'eth0:' etc
+  return std::make_pair(entry_name, net_dev_data);
 }
 
 NetDevData NetDevData::operator-(const NetDevData& rhs) const {

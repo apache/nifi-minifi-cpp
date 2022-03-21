@@ -16,6 +16,7 @@
  */
 
 #include "MemInfo.h"
+#include <string>
 #include <sstream>
 
 namespace org::apache::nifi::minifi::extensions::procfs {

@@ -34,6 +34,8 @@ std::unordered_map<pid_t, ProcessStat> ProcFs::getProcessStats() const {
       std::ifstream stat_file(stat_file_path);
       if (auto process_stat_data = ProcessStatData::parseProcessStatFile(stat_file)) {
         process_stats.emplace(process_stat_data->getPid(), ProcessStat(*process_stat_data, page_size_));
+      } else {
+        logger_->log_error("Failed to parse %s", entry.path());
       }
     }
   }
@@ -51,8 +53,11 @@ std::unordered_map<std::string, CpuStatData> ProcFs::getCpuStats() const {
     std::string entry_name;
     iss >> entry_name;
     if (entry_name.starts_with("cpu")) {
-      if (auto cpu_stat_data = CpuStatData::parseCpuStatLine(iss))
+      if (auto cpu_stat_data = CpuStatData::parseCpuStatLine(iss)) {
         cpu_stats.emplace(entry_name, *cpu_stat_data);
+      } else {
+        logger_->log_error("Failed to parse %s from %s", entry_name, stat_file_path);
+      }
     }
   }
   return cpu_stats;
@@ -65,22 +70,22 @@ std::optional<MemInfo> ProcFs::getMemInfo() const {
 }
 
 std::unordered_map<std::string, NetDevData> ProcFs::getNetDevs() const {
-  std::unordered_map<std::string, NetDevData>net_devs;
+  std::unordered_map<std::string, NetDevData> net_devs;
   auto stat_file_path = root_path_ / NET_DEV_FILE;
   std::ifstream stat_file;
   stat_file.open(stat_file_path);
   std::string line;
+  std::getline(stat_file, line);  // The first two lines are headers
   std::getline(stat_file, line);
-  std::getline(stat_file, line);
+  int line_num = 0;
   while (std::getline(stat_file, line)) {
+    ++line_num;
     std::istringstream iss(line);
-    std::string entry_name;
-    iss >> entry_name;
-    if (iss.fail())
-      continue;
-    entry_name.pop_back();
-    if (auto net_dev_data = NetDevData::parseNetDevLine(iss))
-      net_devs.emplace(entry_name, *net_dev_data);
+    if (auto net_dev = NetDevData::parseNetDevLine(iss)) {
+      net_devs.emplace(net_dev->first, net_dev->second);
+    } else {
+      logger_->log_error("Failed to parse line %d from %s", line_num, stat_file_path);
+    }
   }
   return net_devs;
 }
@@ -91,10 +96,15 @@ std::unordered_map<std::string, DiskStatData> ProcFs::getDiskStats() const {
   std::ifstream stat_file;
   stat_file.open(disk_stats_file_path);
   std::string line;
+  int line_num = 0;
   while (std::getline(stat_file, line)) {
+    ++line_num;
     std::istringstream iss(line);
-    if (auto disk_stat = DiskStatData::parseDiskStatLine(iss))
+    if (auto disk_stat = DiskStatData::parseDiskStatLine(iss)) {
       disk_stats.emplace(disk_stat->first, disk_stat->second);
+    } else {
+      logger_->log_error("Failed to parse line %d from %s", line_num, disk_stats_file_path);
+    }
   }
   return disk_stats;
 }

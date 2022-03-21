@@ -17,13 +17,14 @@
 
 #pragma once
 
-#include <string>
+#include <stdint.h>
 #include <fstream>
 #include <optional>
 
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 class MemInfo {
+ private:
   MemInfo() = default;
 
  public:

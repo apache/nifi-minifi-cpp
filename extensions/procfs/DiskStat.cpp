@@ -30,7 +30,7 @@ DiskStatData::MonotonicIncreasingMembers DiskStatData::MonotonicIncreasingMember
   diff.sectors_read_ = sectors_read_ - rhs.sectors_read_;
   diff.milliseconds_spent_reading_ = milliseconds_spent_reading_ - rhs.milliseconds_spent_reading_;
   diff.writes_completed_ = writes_completed_ - rhs.writes_completed_;
-  diff.writes_merges_ = writes_merges_ - rhs.writes_merges_;
+  diff.writes_merged_ = writes_merged_ - rhs.writes_merged_;
   diff.sectors_written_ = sectors_written_ - rhs.sectors_written_;
   diff.milliseconds_spent_writing_ = milliseconds_spent_writing_ - rhs.milliseconds_spent_writing_;
   diff.milliseconds_spent_io_ = milliseconds_spent_io_ - rhs.milliseconds_spent_io_;
@@ -41,14 +41,20 @@ DiskStatData::MonotonicIncreasingMembers DiskStatData::MonotonicIncreasingMember
 std::optional<std::pair<std::string, DiskStatData>> DiskStatData::parseDiskStatLine(std::istream& iss) {
   DiskStatData disk_stat_data;
   std::string disk_name;
-  iss >> disk_stat_data.major_device_number_ >> disk_stat_data.minor_device_number_ >> disk_name >> disk_stat_data.monotonic_increasing_members_.reads_completed_
-      >> disk_stat_data.monotonic_increasing_members_.reads_merged_ >> disk_stat_data.monotonic_increasing_members_.sectors_read_
-      >> disk_stat_data.monotonic_increasing_members_.milliseconds_spent_reading_ >> disk_stat_data.monotonic_increasing_members_.writes_completed_
-      >> disk_stat_data.monotonic_increasing_members_.writes_merges_ >> disk_stat_data.monotonic_increasing_members_.sectors_written_
-      >> disk_stat_data.monotonic_increasing_members_.milliseconds_spent_reading_ >> disk_stat_data.monotonic_increasing_members_.writes_completed_
-      >> disk_stat_data.monotonic_increasing_members_.writes_merges_ >> disk_stat_data.monotonic_increasing_members_.sectors_written_
-      >> disk_stat_data.monotonic_increasing_members_.milliseconds_spent_writing_ >> disk_stat_data.ios_in_progress_ >> disk_stat_data.ios_in_progress_
-      >> disk_stat_data.monotonic_increasing_members_.milliseconds_spent_io_ >> disk_stat_data.monotonic_increasing_members_.weighted_milliseconds_spent_io_;
+  iss >> disk_stat_data.major_device_number_
+      >> disk_stat_data.minor_device_number_
+      >> disk_name
+      >> disk_stat_data.monotonic_increasing_members_.reads_completed_
+      >> disk_stat_data.monotonic_increasing_members_.reads_merged_
+      >> disk_stat_data.monotonic_increasing_members_.sectors_read_
+      >> disk_stat_data.monotonic_increasing_members_.milliseconds_spent_reading_
+      >> disk_stat_data.monotonic_increasing_members_.writes_completed_
+      >> disk_stat_data.monotonic_increasing_members_.writes_merged_
+      >> disk_stat_data.monotonic_increasing_members_.sectors_written_
+      >> disk_stat_data.monotonic_increasing_members_.milliseconds_spent_writing_
+      >> disk_stat_data.ios_in_progress_
+      >> disk_stat_data.monotonic_increasing_members_.milliseconds_spent_io_
+      >> disk_stat_data.monotonic_increasing_members_.weighted_milliseconds_spent_io_;
 
   if (iss.fail())
     return std::nullopt;

@@ -27,38 +27,18 @@
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 namespace details {
-class UInt64Serializer {
+class Serializer {
  public:
-  UInt64Serializer(rapidjson::Value& json, rapidjson::Document::AllocatorType& alloc) :
+  Serializer(rapidjson::Value& json, rapidjson::Document::AllocatorType& alloc) :
       json_(json), alloc_(alloc) {
   }
-  void operator()(const char(&key)[], const uint64_t value) {
+  void operator()(const char* key, uint64_t value) {
     json_.AddMember(rapidjson::StringRef(key), value, alloc_);
   }
- private:
-  rapidjson::Value& json_;
-  rapidjson::Document::AllocatorType& alloc_;
-};
-
-class DoubleSerializer {
- public:
-  DoubleSerializer(rapidjson::Value& json, rapidjson::Document::AllocatorType& alloc) :
-      json_(json), alloc_(alloc) {
-  }
-  void operator()(const char(&key)[], const double value) {
+  void operator()(const char* key, double value) {
     json_.AddMember(rapidjson::StringRef(key), value, alloc_);
   }
- private:
-  rapidjson::Value& json_;
-  rapidjson::Document::AllocatorType& alloc_;
-};
-
-class StringSerializer {
- public:
-  StringSerializer(rapidjson::Value& json, rapidjson::Document::AllocatorType& alloc) :
-      json_(json), alloc_(alloc) {
-  }
-  void operator()(const char(&key)[], const std::string_view& value) {
+  void operator()(const char* key, const std::string_view& value) {
     rapidjson::Value value_json(value.data(), value.size(), alloc_);
     json_.AddMember(rapidjson::StringRef(key), value_json, alloc_);
   }
@@ -76,7 +56,7 @@ void addCPUStatToJson(const std::string& cpu_name,
   cpu_root.AddMember(cpu_key.Move(), rapidjson::kObjectType, alloc);
   rapidjson::Value& cpu_stat_json = cpu_root[cpu_name.c_str()];
   SerializeCPUStatData(cpu_stat,
-                       details::UInt64Serializer(cpu_stat_json, alloc));
+                       details::Serializer(cpu_stat_json, alloc));
 }
 
 void addCPUStatPeriodToJson(const std::string& cpu_name,
@@ -88,7 +68,7 @@ void addCPUStatPeriodToJson(const std::string& cpu_name,
   cpu_root.AddMember(cpu_key.Move(), rapidjson::kObjectType, alloc);
   rapidjson::Value& cpu_stat_json = cpu_root[cpu_name.c_str()];
   SerializeNormalizedCPUStat(end-start,
-                             details::DoubleSerializer(cpu_stat_json, alloc));
+                             details::Serializer(cpu_stat_json, alloc));
 }
 
 void addDiskStatToJson(const std::string& disk_name,
@@ -99,7 +79,7 @@ void addDiskStatToJson(const std::string& disk_name,
   disk_root.AddMember(disk_key.Move(), rapidjson::kObjectType, alloc);
   rapidjson::Value& disk_json = disk_root[disk_name.c_str()];
   SerializeDiskStatData(disk_stat,
-                        details::UInt64Serializer(disk_json, alloc));
+                        details::Serializer(disk_json, alloc));
 }
 
 void addDiskStatPerSecToJson(const std::string& disk_name,
@@ -112,32 +92,32 @@ void addDiskStatPerSecToJson(const std::string& disk_name,
   rapidjson::Value& disk_json = disk_root[disk_name.c_str()];
   SerializeDiskStatDataPerSec(disk_stat,
                               duration,
-                              details::DoubleSerializer(disk_json, alloc));
+                              details::Serializer(disk_json, alloc));
 }
 
 
-void addNetDevToJson(const std::string& net_name,
+void addNetDevToJson(const std::string& interface_name,
                      const NetDevData& net_dev,
                      rapidjson::Value& net_root,
                      rapidjson::Document::AllocatorType& alloc) {
-  rapidjson::Value net_key(net_name.c_str(), net_name.length(), alloc);
+  rapidjson::Value net_key(interface_name.c_str(), interface_name.length(), alloc);
   net_root.AddMember(net_key.Move(), rapidjson::kObjectType, alloc);
-  rapidjson::Value& net_dev_json = net_root[net_name.c_str()];
+  rapidjson::Value& net_dev_json = net_root[interface_name.c_str()];
   SerializeNetDevData(net_dev,
-                      details::UInt64Serializer(net_dev_json, alloc));
+                      details::Serializer(net_dev_json, alloc));
 }
 
-void addNetDevPerSecToJson(const std::string& net_name,
+void addNetDevPerSecToJson(const std::string& interface_name,
                            const NetDevData net_dev,
                            const std::chrono::duration<double> duration,
                            rapidjson::Value& net_root,
                            rapidjson::Document::AllocatorType& alloc) {
-  rapidjson::Value net_key(net_name.c_str(), net_name.length(), alloc);
+  rapidjson::Value net_key(interface_name.c_str(), interface_name.length(), alloc);
   net_root.AddMember(net_key.Move(), rapidjson::kObjectType, alloc);
-  rapidjson::Value& net_dev_json = net_root[net_name.c_str()];
+  rapidjson::Value& net_dev_json = net_root[interface_name.c_str()];
   SerializeNetDevDataPerSec(net_dev,
                             duration,
-                            details::DoubleSerializer(net_dev_json, alloc));
+                            details::Serializer(net_dev_json, alloc));
 }
 
 
@@ -149,8 +129,7 @@ void addProcessStatToJson(const std::string& pid,
   process_root.AddMember(process_key.Move(), rapidjson::kObjectType, alloc);
   rapidjson::Value& process_json = process_root[pid.c_str()];
   SerializeProcessStat(process_stat,
-                       details::UInt64Serializer(process_json, alloc),
-                       details::StringSerializer(process_json, alloc));
+                       details::Serializer(process_json, alloc));
 }
 
 void addNormalizedProcessStatToJson(const std::string& pid,
@@ -165,15 +144,13 @@ void addNormalizedProcessStatToJson(const std::string& pid,
   SerializeNormalizedProcessStat(process_stat_start,
                                  process_stat_end,
                                  duration,
-                                 details::UInt64Serializer(process_json, alloc),
-                                 details::StringSerializer(process_json, alloc),
-                                 details::DoubleSerializer(process_json, alloc));
+                                 details::Serializer(process_json, alloc));
 }
 
 void addMemInfoToJson(const MemInfo& mem_info,
                       rapidjson::Value& memory_root,
                       rapidjson::Document::AllocatorType& alloc) {
-  SerializeMemInfo(mem_info, details::UInt64Serializer(memory_root, alloc));
+  SerializeMemInfo(mem_info, details::Serializer(memory_root, alloc));
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::procfs

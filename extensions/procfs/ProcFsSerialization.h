@@ -27,8 +27,10 @@
 
 namespace org::apache::nifi::minifi::extensions::procfs {
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeCPUStatData(const CpuStatData& cpu_stat_data,
-                          std::invocable<const char(&)[], const uint64_t> auto serializer) {
+                          Serializer serializer) {
   serializer("user time", cpu_stat_data.getUser().count());
   serializer("nice time", cpu_stat_data.getNice().count());
   serializer("system time", cpu_stat_data.getSystem().count());
@@ -41,8 +43,10 @@ void SerializeCPUStatData(const CpuStatData& cpu_stat_data,
   serializer("guest nice time", cpu_stat_data.getGuestNice().count());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, double>
 void SerializeNormalizedCPUStat(const CpuStatData& cpu_stat_data,
-                                std::invocable<const char(&)[], const double> auto serializer) {
+                                Serializer serializer) {
   gsl_Expects(cpu_stat_data.getTotal() > 0ms);
   serializer("user time %", cpu_stat_data.getUser()/cpu_stat_data.getTotal());
   serializer("nice time %", cpu_stat_data.getNice()/cpu_stat_data.getTotal());
@@ -56,8 +60,10 @@ void SerializeNormalizedCPUStat(const CpuStatData& cpu_stat_data,
   serializer("guest nice time %", cpu_stat_data.getGuestNice()/cpu_stat_data.getTotal());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeDiskStatData(const DiskStatData& disk_stat_data,
-                           std::invocable<const char(&)[], const uint64_t> auto serializer) {
+                           Serializer serializer) {
   serializer("Major Device Number", disk_stat_data.getMajorDeviceNumber());
   serializer("Minor Device Number", disk_stat_data.getMinorDeviceNumber());
   serializer("Reads Completed", disk_stat_data.getReadsCompleted());
@@ -66,12 +72,14 @@ void SerializeDiskStatData(const DiskStatData& disk_stat_data,
   serializer("Writes Completed", disk_stat_data.getWritesCompleted());
   serializer("Writes Merged", disk_stat_data.getWritesMerged());
   serializer("Sectors Written", disk_stat_data.getSectorsWritten());
-  serializer("IO-s in progress", disk_stat_data.getIosInProgress());
+  serializer("IOs in progress", disk_stat_data.getIosInProgress());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, double>
 void SerializeDiskStatDataPerSec(const DiskStatData& disk_stat_data,
                                  const std::chrono::duration<double> duration,
-                                 std::invocable<const char(&)[], const double> auto serializer) {
+                                 Serializer serializer) {
   gsl_Expects(duration > 0ms);
   serializer("Major Device Number", disk_stat_data.getMajorDeviceNumber());
   serializer("Minor Device Number", disk_stat_data.getMinorDeviceNumber());
@@ -81,11 +89,13 @@ void SerializeDiskStatDataPerSec(const DiskStatData& disk_stat_data,
   serializer("Writes Completed/sec", disk_stat_data.getWritesCompleted()/duration.count());
   serializer("Writes Merged/sec", disk_stat_data.getWritesMerged()/duration.count());
   serializer("Sectors Written/sec", disk_stat_data.getSectorsWritten()/duration.count());
-  serializer("IO-s in progress", disk_stat_data.getIosInProgress()/duration.count());
+  serializer("IOs in progress", disk_stat_data.getIosInProgress()/duration.count());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeMemInfo(const MemInfo& mem_info,
-                      std::invocable<const char(&)[], const uint64_t> auto serializer) {
+                      Serializer serializer) {
   serializer("MemTotal", mem_info.getTotalMemory());
   serializer("MemFree", mem_info.getFreeMemory());
   serializer("MemAvailable", mem_info.getAvailableMemory());
@@ -93,8 +103,10 @@ void SerializeMemInfo(const MemInfo& mem_info,
   serializer("SwapFree", mem_info.getFreeSwap());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, uint64_t>
 void SerializeNetDevData(const NetDevData& net_dev_data,
-                         std::invocable<const char(&)[], const uint64_t> auto serializer) {
+                         Serializer serializer) {
   serializer("Bytes Received", net_dev_data.getBytesReceived());
   serializer("Packets Received", net_dev_data.getPacketsReceived());
   serializer("Receive Errors", net_dev_data.getReceiveErrors());
@@ -114,9 +126,11 @@ void SerializeNetDevData(const NetDevData& net_dev_data,
   serializer("Compressed Packets Transmitted", net_dev_data.getCompressedPacketsTransmitted());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, double>
 void SerializeNetDevDataPerSec(const NetDevData& net_dev_data,
                                const std::chrono::duration<double> duration,
-                               std::invocable<const char(&)[], const double> auto serializer) {
+                               Serializer serializer) {
   gsl_Expects(duration > 0ms);
   serializer("Bytes Received/sec", net_dev_data.getBytesReceived()/duration.count());
   serializer("Packets Received/sec", net_dev_data.getPacketsReceived()/duration.count());
@@ -137,27 +151,31 @@ void SerializeNetDevDataPerSec(const NetDevData& net_dev_data,
   serializer("Compressed Packets Transmitted/sec", net_dev_data.getCompressedPacketsTransmitted()/duration.count());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const  char*, uint64_t> &&
+         std::invocable<Serializer, const char*, std::string_view>
 void SerializeProcessStat(const ProcessStat& process_stat,
-                          std::invocable<const char(&)[], const uint64_t> auto uint64_t_serializer,
-                          std::invocable<const char(&)[], const std::string_view&> auto string_serializer) {
-  string_serializer("COMM", process_stat.getComm());
-  uint64_t_serializer("RES", process_stat.getMemory());
-  uint64_t_serializer("CPUTIME", process_stat.getCpuTime().count());
+                          Serializer serializer) {
+  serializer("COMM", process_stat.getComm());
+  serializer("RES", process_stat.getMemory());
+  serializer("CPUTIME", process_stat.getCpuTime().count());
 }
 
+template<class Serializer>
+requires std::invocable<Serializer, const char*, double> &&
+         std::invocable<Serializer, const char*, uint64_t> &&
+         std::invocable<Serializer, const char*, const std::string_view&>
 void SerializeNormalizedProcessStat(const ProcessStat& process_stat_start,
                                     const ProcessStat& process_stat_end,
                                     const std::chrono::duration<double> all_cpu_time,
-                                    std::invocable<const char(&)[], const uint64_t> auto uint64_t_serializer,
-                                    std::invocable<const char(&)[], const std::string_view&> auto string_serializer,
-                                    std::invocable<const char(&)[], const double> auto double_serializer) {
+                                    Serializer serializer) {
   gsl_Expects(all_cpu_time > 0ms);
   gsl_Expects(process_stat_start.getComm() == process_stat_end.getComm());
   gsl_Expects(process_stat_end.getCpuTime() >= process_stat_start.getCpuTime());
   auto cpu_time_diff = process_stat_end.getCpuTime()-process_stat_end.getCpuTime();
-  string_serializer("COMM", process_stat_start.getComm());
-  uint64_t_serializer("RES", process_stat_end.getMemory());
-  double_serializer("CPU%", cpu_time_diff/all_cpu_time);
+  serializer("COMM", process_stat_start.getComm());
+  serializer("RES", process_stat_end.getMemory());
+  serializer("CPU%", cpu_time_diff/all_cpu_time);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::procfs

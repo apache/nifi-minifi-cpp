@@ -28,6 +28,7 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 class CpuStatData {
+ private:
   CpuStatData() = default;
 
  public:

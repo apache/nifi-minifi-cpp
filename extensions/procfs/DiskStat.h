@@ -28,6 +28,7 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 class DiskStatData {
+ private:
   DiskStatData() = default;
 
  public:
@@ -37,7 +38,7 @@ class DiskStatData {
     uint64_t sectors_read_;
     uint64_t milliseconds_spent_reading_;
     uint64_t writes_completed_;
-    uint64_t writes_merges_;
+    uint64_t writes_merged_;
     uint64_t sectors_written_;
     uint64_t milliseconds_spent_writing_;
     uint64_t milliseconds_spent_io_;
@@ -62,7 +63,7 @@ class DiskStatData {
   [[nodiscard]] uint64_t getSectorsRead() const noexcept { return monotonic_increasing_members_.sectors_read_; }
   [[nodiscard]] uint64_t getMillisecondsSpentReading() const noexcept { return monotonic_increasing_members_.milliseconds_spent_reading_; }
   [[nodiscard]] uint64_t getWritesCompleted() const noexcept { return monotonic_increasing_members_.writes_completed_; }
-  [[nodiscard]] uint64_t getWritesMerged() const noexcept { return monotonic_increasing_members_.writes_merges_; }
+  [[nodiscard]] uint64_t getWritesMerged() const noexcept { return monotonic_increasing_members_.writes_merged_; }
   [[nodiscard]] uint64_t getSectorsWritten() const noexcept { return monotonic_increasing_members_.sectors_written_; }
   [[nodiscard]] uint64_t getMillisecondsSpentWriting() const noexcept { return monotonic_increasing_members_.milliseconds_spent_writing_; }
   [[nodiscard]] uint64_t getIosInProgress() const noexcept { return ios_in_progress_; }

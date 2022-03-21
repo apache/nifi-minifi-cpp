@@ -28,10 +28,11 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 class NetDevData {
+ private:
   NetDevData() = default;
 
  public:
-  static std::optional<NetDevData> parseNetDevLine(std::istream& iss);
+  static std::optional<std::pair<std::string, NetDevData>> parseNetDevLine(std::istream& iss);
 
   auto operator<=>(const NetDevData& rhs) const = default;
   NetDevData operator-(const NetDevData& rhs) const;

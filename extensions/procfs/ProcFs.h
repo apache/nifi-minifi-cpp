@@ -24,12 +24,16 @@
 #include <string>
 #include <optional>
 #include <filesystem>
+#include <memory>
 
 #include "ProcessStat.h"
 #include "MemInfo.h"
 #include "CpuStat.h"
 #include "NetDev.h"
 #include "DiskStat.h"
+
+#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/Logger.h"
 
 namespace org::apache::nifi::minifi::extensions::procfs {
 
@@ -53,6 +57,7 @@ class ProcFs {
  private:
   std::filesystem::path root_path_;
   uint64_t page_size_ = sysconf(_SC_PAGESIZE);
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProcFs>::getLogger();
 };
 
 

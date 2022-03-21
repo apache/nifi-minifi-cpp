@@ -29,6 +29,7 @@
 namespace org::apache::nifi::minifi::extensions::procfs {
 
 class ProcessStatData {
+ private:
   ProcessStatData() = default;
 
  public:
