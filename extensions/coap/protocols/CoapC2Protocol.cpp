@@ -65,6 +65,7 @@ int CoapProtocol::writeAcknowledgement(io::BaseStream *stream, const minifi::c2:
     case state::UpdateState::INITIATE:
     case state::UpdateState::FULLY_APPLIED:
     case state::UpdateState::READ_COMPLETE:
+    case state::UpdateState::NO_OPERATION:
       payloadState = 0;
       break;
     case state::UpdateState::NOT_APPLIED:

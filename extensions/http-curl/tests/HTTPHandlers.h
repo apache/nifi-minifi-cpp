@@ -792,20 +792,36 @@ class C2AcknowledgeHandler : public ServerAwareHandler {
     rapidjson::Document root;
     root.Parse(req.data(), req.size());
     if (root.IsObject() && root.HasMember("operationId")) {
-      std::lock_guard<std::mutex> guard(mtx_);
+      std::lock_guard<std::mutex> guard(ack_operations_mtx_);
       acknowledged_operations_.insert(root["operationId"].GetString());
     }
+
+    if (root.IsObject() && root.HasMember("operationState")) {
+      if (root["operationState"].IsObject() && root["operationState"].HasMember("state")) {
+        std::lock_guard<std::mutex> guard(apply_count_mtx_);
+        auto result_state = root["operationState"]["state"].GetString();
+        ++apply_count_[result_state];
+      }
+    }
+
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
                     "text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
     return true;
   }
 
   bool isAcknowledged(const std::string& operation_id) const {
-    std::lock_guard<std::mutex> guard(mtx_);
+    std::lock_guard<std::mutex> guard(ack_operations_mtx_);
     return acknowledged_operations_.count(operation_id) > 0;
   }
 
+  uint32_t getApplyCount(const std::string& result_state) const {
+    std::lock_guard<std::mutex> guard(apply_count_mtx_);
+    return apply_count_.find(result_state) != apply_count_.end() ? apply_count_.at(result_state) : 0;
+  }
+
  private:
-  mutable std::mutex mtx_;
+  mutable std::mutex ack_operations_mtx_;
+  mutable std::mutex apply_count_mtx_;
   std::set<std::string> acknowledged_operations_;
+  std::unordered_map<std::string, uint32_t> apply_count_;
 };

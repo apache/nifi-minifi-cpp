@@ -40,7 +40,8 @@ enum class UpdateState {
   NOT_APPLIED,
   SET_ERROR,
   READ_ERROR,
-  NESTED  // multiple updates embedded into one
+  NESTED,  // multiple updates embedded into one
+  NO_OPERATION
 };
 
 /**
@@ -100,49 +101,6 @@ class Update {
 
  protected:
   UpdateStatus status_;
-};
-
-/**
- * Justification and Purpose: Update Runner reflects the post execution functors that determine if
- * a given function that is running within a thread pool worker needs to end.
- *
- * Design: Simply implements isFinished and isCancelled, which it receives by way of the AfterExecute
- * class.
- */
-class UpdateRunner : public utils::AfterExecute<Update> {
- public:
-  explicit UpdateRunner(std::atomic<bool> &running, const int64_t &delay)
-      : running_(&running),
-        delay_(delay) {
-  }
-
-  UpdateRunner(const UpdateRunner &other) = delete;
-  UpdateRunner(UpdateRunner &&other) = delete;
-
-  ~UpdateRunner() = default;
-
-  UpdateRunner& operator=(const UpdateRunner &other) = delete;
-  UpdateRunner& operator=(UpdateRunner &&other) = delete;
-
-  virtual bool isFinished(const Update &result) {
-    if ((result.getStatus().getState() == UpdateState::FULLY_APPLIED || result.getStatus().getState() == UpdateState::READ_COMPLETE) && *running_) {
-      return false;
-    } else {
-      return true;
-    }
-  }
-  virtual bool isCancelled(const Update& /*result*/) {
-    return !*running_;
-  }
-
-  virtual std::chrono::milliseconds wait_time() {
-    return delay_;
-  }
-
- protected:
-  std::atomic<bool> *running_;
-
-  std::chrono::milliseconds delay_;
 };
 
 class Pausable {

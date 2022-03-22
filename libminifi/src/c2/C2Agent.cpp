@@ -313,6 +313,9 @@ void C2Agent::extractPayload(const C2Payload &resp) {
     case state::UpdateState::READ_ERROR:
       logger_->log_debug("Received read error event from protocol");
       break;
+    case state::UpdateState::NO_OPERATION:
+      logger_->log_debug("Received no operation event from protocol");
+      break;
     default:
       logger_->log_error("Received unknown event (%d) from protocol", static_cast<int>(resp.getStatus().getState()));
       break;
@@ -601,23 +604,7 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       break;
     }
     case UpdateOperand::PROPERTIES: {
-      state::UpdateState result = state::UpdateState::FULLY_APPLIED;
-      for (auto entry : resp.operation_arguments) {
-        bool persist = (
-            entry.second.getAnnotation("persist")
-            | utils::map(&AnnotatedValue::to_string)
-            | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
-        PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
-        if (!update_property(entry.first, entry.second.to_string(), lifetime)) {
-          result = state::UpdateState::PARTIALLY_APPLIED;
-        }
-      }
-      // apply changes and persist properties requested to be persisted
-      if (!configuration_->commitChanges()) {
-        result = state::UpdateState::PARTIALLY_APPLIED;
-      }
-      C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
-      enqueue_c2_response(std::move(response));
+      handlePropertyUpdate(resp);
       break;
     } case UpdateOperand::C2: {
       // prior configuration options were already in place. thus
@@ -643,15 +630,51 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
   }
 }
 
+void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
+  state::UpdateState result = state::UpdateState::NO_OPERATION;
+  auto changeUpdateState = [&result](UpdateResult update_result) {
+    if (result == state::UpdateState::NO_OPERATION) {
+      if (update_result == UpdateResult::UPDATE_SUCCESSFUL) {
+        result = state::UpdateState::FULLY_APPLIED;
+      } else if (update_result == UpdateResult::UPDATE_FAILED) {
+        result = state::UpdateState::PARTIALLY_APPLIED;
+      }
+    } else if (result == state::UpdateState::FULLY_APPLIED && update_result == UpdateResult::UPDATE_FAILED) {
+      result = state::UpdateState::PARTIALLY_APPLIED;
+    }
+  };
+
+  for (auto entry : resp.operation_arguments) {
+    bool persist = (
+        entry.second.getAnnotation("persist")
+        | utils::map(&AnnotatedValue::to_string)
+        | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+    PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
+    changeUpdateState(update_property(entry.first, entry.second.to_string(), lifetime));
+  }
+  // apply changes and persist properties requested to be persisted
+  if (result != state::UpdateState::NO_OPERATION && !configuration_->commitChanges()) {
+    result = state::UpdateState::PARTIALLY_APPLIED;
+  }
+  C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
+  enqueue_c2_response(std::move(response));
+}
+
 /**
  * Updates a property
  */
-bool C2Agent::update_property(const std::string &property_name, const std::string &property_value, PropertyChangeLifetime lifetime) {
+C2Agent::UpdateResult C2Agent::update_property(const std::string &property_name, const std::string &property_value, PropertyChangeLifetime lifetime) {
   if (update_service_ && !update_service_->canUpdate(property_name)) {
-    return false;
+    return UpdateResult::UPDATE_FAILED;
   }
+
+  std::string value;
+  if (configuration_->get(property_name, value) && value == property_value) {
+    return UpdateResult::NO_UPDATE;
+  }
+
   configuration_->set(property_name, property_value, lifetime);
-  return true;
+  return UpdateResult::UPDATE_SUCCESSFUL;
 }
 
 C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::InputStream>>& files) {
