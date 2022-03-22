@@ -800,11 +800,7 @@ class C2AcknowledgeHandler : public ServerAwareHandler {
       if (root["operationState"].IsObject() && root["operationState"].HasMember("state")) {
         std::lock_guard<std::mutex> guard(apply_count_mtx_);
         auto result_state = root["operationState"]["state"].GetString();
-        if (apply_count_.find(result_state) != apply_count_.end()) {
-          ++apply_count_[result_state];
-        } else {
-          apply_count_[result_state] = 1;
-        }
+        ++apply_count_[result_state];
       }
     }
 
