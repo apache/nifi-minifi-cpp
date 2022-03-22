@@ -63,7 +63,6 @@
 #include "core/AgentIdentificationProvider.h"
 #include "utils/Export.h"
 #include "SupportedOperations.h"
-#include "properties/ConfigurationReader.h"
 
 namespace org {
 namespace apache {
@@ -622,7 +621,7 @@ class AgentManifest : public DeviceInformation {
     update_policy_controller_ = update_policy_controller;
   }
 
-  void setConfigurationReader(ConfigurationReader* configuration_reader) {
+  void setConfigurationReader(std::function<std::optional<std::string>(const std::string&)> configuration_reader) {
     configuration_reader_ = configuration_reader;
   }
 
@@ -704,7 +703,7 @@ class AgentManifest : public DeviceInformation {
  private:
   state::StateMonitor* monitor_ = nullptr;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
-  ConfigurationReader* configuration_reader_ = nullptr;
+  std::function<std::optional<std::string>(const std::string&)> configuration_reader_;
 };
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
@@ -723,7 +722,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     update_policy_controller_ = update_policy_controller;
   }
 
-  void setConfigurationReader(ConfigurationReader* configuration_reader) {
+  void setConfigurationReader(std::function<std::optional<std::string>(const std::string&)> configuration_reader) {
     configuration_reader_ = configuration_reader;
   }
 
@@ -792,7 +791,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
  private:
   std::optional<std::string> agentManifestHash_;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
-  ConfigurationReader* configuration_reader_;
+  std::function<std::optional<std::string>(const std::string&)> configuration_reader_;
 };
 
 /**

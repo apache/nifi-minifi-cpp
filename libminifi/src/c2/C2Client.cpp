@@ -110,7 +110,9 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller->getControllerService(C2Agent::UPDATE_NAME)).get());
       }
       if (agent_node != nullptr) {
-        agent_node->setConfigurationReader(configuration_.get());
+        agent_node->setConfigurationReader([this](const std::string& key){
+          return configuration_->get(key);
+        });
       }
       auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
       if (configuration_checksums) {

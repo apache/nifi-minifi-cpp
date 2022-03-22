@@ -71,7 +71,7 @@ SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata
       property.emplace("propertyName", config_property.name);
       property.emplace("validator", config_property.validator->getName());
       if (configuration_reader_) {
-        if (auto property_value = configuration_reader_->get(std::string(config_property.name))) {
+        if (auto property_value = configuration_reader_(std::string(config_property.name))) {
           property.emplace("propertyValue", *property_value);
         }
       }

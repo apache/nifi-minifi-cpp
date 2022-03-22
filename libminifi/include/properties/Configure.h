@@ -25,7 +25,6 @@
 #include "properties/Decryptor.h"
 #include "core/AgentIdentificationProvider.h"
 #include "core/logging/LoggerProperties.h"
-#include "ConfigurationReader.h"
 
 struct ConfigTestAccessor;
 
@@ -34,15 +33,15 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-class Configure : public Configuration, public core::AgentIdentificationProvider, public ConfigurationReader {
+class Configure : public Configuration, public core::AgentIdentificationProvider {
   friend struct ::ConfigTestAccessor;
  public:
   explicit Configure(std::optional<Decryptor> decryptor = std::nullopt, std::shared_ptr<core::logging::LoggerProperties> logger_properties = {})
       : Configuration{}, decryptor_(std::move(decryptor)), logger_properties_(std::move(logger_properties)) {}
 
-  bool get(const std::string& key, std::string& value) const override;
-  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const override;
-  std::optional<std::string> get(const std::string& key) const override;
+  bool get(const std::string& key, std::string& value) const;
+  bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
+  std::optional<std::string> get(const std::string& key) const;
 
   std::optional<std::string> getAgentClass() const override;
   std::string getAgentIdentifier() const override;
