@@ -40,7 +40,7 @@ class VerifyC2Heartbeat : public VerifyC2Base {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
-    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(120000),
+    assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         "Received Ack from Server",
         "C2Agent] [debug] Stopping component invoke",
         "C2Agent] [debug] Stopping component FlowController"));
