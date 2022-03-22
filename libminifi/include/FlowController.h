@@ -237,11 +237,11 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
 
   state::StateController* getComponent(const std::string &name);
 
-  void getProcessorController(const std::string& name, state::StateController*& controller,
-                              const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+  state::StateController* getProcessorController(const std::string& name,
+                                                 const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
 
-  void getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
-                                  const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+  std::vector<state::StateController*> getAllProcessorControllers(
+          const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
 
   std::unique_ptr<state::ProcessorController> createController(core::Processor& processor);
 

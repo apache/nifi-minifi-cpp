@@ -184,7 +184,7 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
             });
             io::BufferStream resp;
             resp.write(&head, 1);
-            resp.write(gsl::narrow<uint16_t>(gsl::narrow<uint16_t>(components.size())));
+            resp.write(gsl::narrow<uint16_t>(components.size()));
             for (const auto& [name, isRunning] : components) {
               resp.write(name);
               resp.write(isRunning ? "true" : "false");
