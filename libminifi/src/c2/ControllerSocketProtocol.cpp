@@ -97,8 +97,8 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           std::string componentStr;
           const auto size = stream->read(componentStr);
           if (!io::isError(size)) {
-            update_sink_->executeOnComponent(componentStr, [](state::StateController* component) {
-              component->start();
+            update_sink_->executeOnComponent(componentStr, [](state::StateController& component) {
+              component.start();
             });
           } else {
             logger_->log_debug("Connection broke");
@@ -110,8 +110,8 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           std::string componentStr;
           const auto size = stream->read(componentStr);
           if (!io::isError(size)) {
-            update_sink_->executeOnComponent(componentStr, [](state::StateController* component) {
-              component->stop();
+            update_sink_->executeOnComponent(componentStr, [](state::StateController& component) {
+              component.stop();
             });
           } else {
             logger_->log_debug("Connection broke");
@@ -179,8 +179,8 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
             stream->write(resp.getBuffer());
           } else if (what == "components") {
             std::vector<std::pair<std::string, bool>> components;
-            update_sink_->executeOnAllComponents([&components](state::StateController* component){
-              components.emplace_back(component->getComponentName(), component->isRunning());
+            update_sink_->executeOnAllComponents([&components](state::StateController& component){
+              components.emplace_back(component.getComponentName(), component.isRunning());
             });
             io::BufferStream resp;
             resp.write(&head, 1);

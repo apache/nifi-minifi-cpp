@@ -435,17 +435,17 @@ std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest(
   return agentInfo;
 }
 
-void FlowController::executeOnAllComponents(std::function<void(state::StateController*)> func) {
+void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto* component: getAllComponents()) {
-    func(component);
+    func(*component);
   }
 }
 
-void FlowController::executeOnComponent(const std::string &name, std::function<void(state::StateController*)> func) {
+void FlowController::executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (auto* component = getComponent(name); component != nullptr) {
-    func(component);
+    func(*component);
   } else {
     logger_->log_error("Could not get execute requested callback for component \"%s\", because component was not found", name);
   }
@@ -458,6 +458,7 @@ std::vector<state::StateController*> FlowController::getAllComponents() {
     };
     return getAllProcessorControllers(controllerFactory);
   }
+
   return {this};
 }
 
@@ -538,6 +539,7 @@ state::StateController* FlowController::getProcessorController(const std::string
   auto* processor = root_->findProcessorByName(name);
   if (processor == nullptr) {
     logger_->log_error("Could not get processor controller for requested name \"%s\", because processor was not found either", name);
+    return nullptr;
   }
 
   // reference to the existing or newly created controller

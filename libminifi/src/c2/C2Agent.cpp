@@ -359,12 +359,12 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       }
 
       // stop all referenced components.
-      update_sink_->executeOnComponent(resp.name, [this, &resp] (state::StateController* component) {
-        logger_->log_debug("Stopping component %s", component->getComponentName());
+      update_sink_->executeOnComponent(resp.name, [this, &resp] (state::StateController& component) {
+        logger_->log_debug("Stopping component %s", component.getComponentName());
         if (resp.op == Operation::STOP) {
-          component->stop();
+          component.stop();
         } else {
-          component->start();
+          component.start();
         }
       });
 
@@ -454,16 +454,16 @@ void C2Agent::handle_clear(const C2ContentResponse &resp) {
       for (const auto& corecomponent : resp.operation_arguments) {
         auto state_manager_provider = core::ProcessContext::getStateManagerProvider(logger_, controller_, configuration_);
         if (state_manager_provider != nullptr) {
-          update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_manager_provider] (state::StateController* component) {
-            logger_->log_debug("Clearing state for component %s", component->getComponentName());
-            auto state_manager = state_manager_provider->getCoreComponentStateManager(component->getComponentUUID());
+          update_sink_->executeOnComponent(corecomponent.second.to_string(), [this, &state_manager_provider] (state::StateController& component) {
+            logger_->log_debug("Clearing state for component %s", component.getComponentName());
+            auto state_manager = state_manager_provider->getCoreComponentStateManager(component.getComponentUUID());
             if (state_manager != nullptr) {
-              component->stop();
+              component.stop();
               state_manager->clear();
               state_manager->persist();
-              component->start();
+              component.start();
             } else {
-              logger_->log_warn("Failed to get StateManager for component %s", component->getComponentUUID().to_string());
+              logger_->log_warn("Failed to get StateManager for component %s", component.getComponentUUID().to_string());
             }
           });
         } else {

@@ -84,13 +84,13 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
      * that most probably means a breaking change. */
     size_t controllerVecIdx = 0;
 
-    fc.executeOnAllComponents([&controllerVecIdx](org::apache::nifi::minifi::state::StateController* component){
+    fc.executeOnAllComponents([&controllerVecIdx](org::apache::nifi::minifi::state::StateController& component){
       if (controllerVecIdx == 0) {
-        assert(component->getComponentName() == "FlowController");
+        assert(component.getComponentName() == "FlowController");
       } else if (controllerVecIdx == 1) {
-        assert(component->getComponentName() == "kamikaze");
+        assert(component.getComponentName() == "kamikaze");
 
-        auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(component);
+        auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(&component);
         assert(process_controller != nullptr);
 
         process_controller->getProcessor()->setSchedulingStrategy(org::apache::nifi::minifi::core::SchedulingStrategy::EVENT_DRIVEN);

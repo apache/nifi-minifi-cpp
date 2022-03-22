@@ -114,8 +114,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return -1;
   }
 
-  void executeOnComponent(const std::string &name, std::function<void(state::StateController*)> func) override;
-  void executeOnAllComponents(std::function<void(state::StateController*)> func) override;
+  void executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) override;
+  void executeOnAllComponents(std::function<void(state::StateController&)> func) override;
 
   int16_t clearConnection(const std::string &connection) override;
 

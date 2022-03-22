@@ -142,10 +142,10 @@ class StateMonitor : public StateController {
   ~StateMonitor() override = default;
 
   // Execute callback func on the named component. Thread safe, locking mutex_, preventing concurrent flow update
-  virtual void executeOnComponent(const std::string &name, std::function<void(state::StateController*)> func) = 0;
+  virtual void executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) = 0;
 
   // Execute callback func on the all components. Thread safe, locking mutex_, preventing concurrent flow update
-  virtual void executeOnAllComponents(std::function<void(state::StateController*)> func) = 0;
+  virtual void executeOnAllComponents(std::function<void(state::StateController&)> func) = 0;
 
   /**
    * Drain repositories

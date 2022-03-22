@@ -231,17 +231,17 @@ class FlowInformation : public FlowMonitor {
       SerializedResponseNode componentsNode(false);
       componentsNode.name = "components";
 
-      monitor_->executeOnAllComponents([&componentsNode](StateController* component){
+      monitor_->executeOnAllComponents([&componentsNode](StateController& component){
         SerializedResponseNode componentNode(false);
-        componentNode.name = component->getComponentName();
+        componentNode.name = component.getComponentName();
 
         SerializedResponseNode uuidNode;
         uuidNode.name = "uuid";
-        uuidNode.value = std::string{component->getComponentUUID().to_string()};
+        uuidNode.value = std::string{component.getComponentUUID().to_string()};
 
         SerializedResponseNode componentStatusNode;
         componentStatusNode.name = "running";
-        componentStatusNode.value = component->isRunning();
+        componentStatusNode.value = component.isRunning();
 
         componentNode.children.push_back(componentStatusNode);
         componentNode.children.push_back(uuidNode);

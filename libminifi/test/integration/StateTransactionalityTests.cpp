@@ -64,13 +64,13 @@ class StatefulIntegrationTest : public IntegrationBase {
      * that most probably means a breaking change. */
     size_t controllerVecIdx = 0;
 
-    fc.executeOnAllComponents([this, &controllerVecIdx](org::apache::nifi::minifi::state::StateController* component){
+    fc.executeOnAllComponents([this, &controllerVecIdx](org::apache::nifi::minifi::state::StateController& component){
       if (controllerVecIdx == 0) {
-        assert(component->getComponentName() == "FlowController");
+        assert(component.getComponentName() == "FlowController");
       } else if (controllerVecIdx == 1) {
-        assert(component->getComponentName() == "statefulProcessor");
+        assert(component.getComponentName() == "statefulProcessor");
         // set hooks
-        const auto processController = dynamic_cast<ProcessorController*>(component);
+        const auto processController = dynamic_cast<ProcessorController*>(&component);
         assert(processController != nullptr);
         stateful_processor_ = dynamic_cast<StatefulProcessor*>(processController->getProcessor());
         assert(stateful_processor_ != nullptr);

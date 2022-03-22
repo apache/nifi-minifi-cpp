@@ -83,12 +83,12 @@ class TestUpdateSink : public minifi::state::StateMonitor {
         update_calls(0) {
   }
 
-  void executeOnComponent(const std::string&, std::function<void(minifi::state::StateController*)> func) override {
-    func(controller.get());
+  void executeOnComponent(const std::string&, std::function<void(minifi::state::StateController&)> func) override {
+    func(*controller);
   }
 
-  void executeOnAllComponents(std::function<void(minifi::state::StateController*)> func) override {
-    func(controller.get());
+  void executeOnAllComponents(std::function<void(minifi::state::StateController&)> func) override {
+    func(*controller);
   }
 
   std::string getComponentName() const override {
