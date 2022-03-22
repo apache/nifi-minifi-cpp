@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (SKIP_TESTS OR NOT ENABLE_TEST_PROCESSORS)
+if (SKIP_TESTS AND NOT ENABLE_TEST_PROCESSORS)
   return()
 endif()
 
