@@ -621,6 +621,10 @@ class AgentManifest : public DeviceInformation {
     update_policy_controller_ = update_policy_controller;
   }
 
+  void setConfigurationReader(std::function<std::optional<std::string>(const std::string&)> configuration_reader) {
+    configuration_reader_ = configuration_reader;
+  }
+
   std::vector<SerializedResponseNode> serialize() {
     static std::vector<SerializedResponseNode> serialized;
     if (serialized.empty()) {
@@ -688,6 +692,7 @@ class AgentManifest : public DeviceInformation {
       SupportedOperations supported_operations("supportedOperations");
       supported_operations.setStateMonitor(monitor_);
       supported_operations.setUpdatePolicyController(update_policy_controller_);
+      supported_operations.setConfigurationReader(configuration_reader_);
       for (const auto& operation : supported_operations.serialize()) {
         serialized.push_back(operation);
       }
@@ -698,6 +703,7 @@ class AgentManifest : public DeviceInformation {
  private:
   state::StateMonitor* monitor_ = nullptr;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
+  std::function<std::optional<std::string>(const std::string&)> configuration_reader_;
 };
 
 class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIdentifier {
@@ -714,6 +720,10 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
 
   void setUpdatePolicyController(controllers::UpdatePolicyControllerService* update_policy_controller) {
     update_policy_controller_ = update_policy_controller;
+  }
+
+  void setConfigurationReader(std::function<std::optional<std::string>(const std::string&)> configuration_reader) {
+    configuration_reader_ = configuration_reader;
   }
 
  protected:
@@ -748,6 +758,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
     AgentManifest manifest{"manifest"};
     manifest.setStateMonitor(monitor_);
     manifest.setUpdatePolicyController(update_policy_controller_);
+    manifest.setConfigurationReader(configuration_reader_);
     agentManifest.children = manifest.serialize();
     return std::vector<SerializedResponseNode>{ agentManifest };
   }
@@ -780,6 +791,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
  private:
   std::optional<std::string> agentManifestHash_;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
+  std::function<std::optional<std::string>(const std::string&)> configuration_reader_;
 };
 
 /**

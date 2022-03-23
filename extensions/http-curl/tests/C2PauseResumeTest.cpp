@@ -55,7 +55,9 @@ class PauseResumeHandler: public HeartbeatHandler {
   static const uint32_t PAUSE_SECONDS = 3;
   static const uint32_t INITIAL_GET_INVOKE_COUNT = 2;
 
-  explicit PauseResumeHandler(std::atomic_bool& flow_resumed_successfully) : HeartbeatHandler(), flow_resumed_successfully_(flow_resumed_successfully) {}
+  explicit PauseResumeHandler(std::atomic_bool& flow_resumed_successfully, std::shared_ptr<minifi::Configure> configuration)
+    : HeartbeatHandler(std::move(configuration)), flow_resumed_successfully_(flow_resumed_successfully) {
+  }
   bool handleGet(CivetServer* /*server*/, struct mg_connection* conn) override {
     assert(flow_state_ != FlowState::PAUSED);
     ++get_invoke_count_;
@@ -113,7 +115,7 @@ int main(int argc, char **argv) {
   std::atomic_bool flow_resumed_successfully{false};
   VerifyC2PauseResume harness{flow_resumed_successfully};
   harness.setKeyDir(args.key_dir);
-  PauseResumeHandler responder{flow_resumed_successfully};
+  PauseResumeHandler responder{flow_resumed_successfully, harness.getConfiguration()};
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();

@@ -73,7 +73,7 @@ class VerifyLogC2Heartbeat : public VerifyC2Base {
 
 int main() {
   VerifyLogC2Heartbeat harness;
-  HeartbeatHandler responder;
+  HeartbeatHandler responder(harness.getConfiguration());
   harness.setUrl("https://localhost:0/heartbeat", &responder);
   harness.run();
 }

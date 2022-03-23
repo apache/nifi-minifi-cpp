@@ -70,6 +70,11 @@ SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata
       std::unordered_map<std::string, std::string> property;
       property.emplace("propertyName", config_property.name);
       property.emplace("validator", config_property.validator->getName());
+      if (configuration_reader_) {
+        if (auto property_value = configuration_reader_(std::string(config_property.name))) {
+          property.emplace("propertyValue", *property_value);
+        }
+      }
       supported_config_updates.push_back(property);
     }
   }

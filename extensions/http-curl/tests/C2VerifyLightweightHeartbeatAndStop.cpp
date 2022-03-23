@@ -28,7 +28,26 @@
 #include "utils/IntegrationTestUtils.h"
 #include "properties/Configuration.h"
 
-class VerifyC2Heartbeat : public VerifyC2Base {
+class LightWeightC2Handler : public HeartbeatHandler {
+ public:
+  explicit LightWeightC2Handler(std::shared_ptr<minifi::Configure> configuration)
+    : HeartbeatHandler(std::move(configuration)) {
+  }
+
+  void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
+    if (calls_ == 0) {
+      verifyJsonHasAgentManifest(root);
+    } else {
+      assert(root.HasMember("agentInfo"));
+      assert(!root["agentInfo"].HasMember("agentManifest"));
+    }
+    calls_++;
+  }
+ private:
+  std::atomic<size_t> calls_{0};
+};
+
+class VerifyLightWeightC2Heartbeat : public VerifyC2Base {
  public:
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
@@ -47,15 +66,15 @@ class VerifyC2Heartbeat : public VerifyC2Base {
   }
 
   void configureFullHeartbeat() override {
-    configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "true");
+    configuration->set(minifi::Configuration::nifi_c2_full_heartbeat, "false");
   }
 };
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
-  VerifyC2Heartbeat harness;
+  VerifyLightWeightC2Heartbeat harness;
   harness.setKeyDir(args.key_dir);
-  HeartbeatHandler responder(harness.getConfiguration());
+  LightWeightC2Handler responder(harness.getConfiguration());
   harness.setUrl(args.url, &responder);
   harness.run(args.test_file);
 
