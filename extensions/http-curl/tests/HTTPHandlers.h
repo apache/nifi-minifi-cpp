@@ -404,31 +404,54 @@ class HeartbeatHandler : public ServerAwareHandler {
   }
 
  protected:
-  void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operationId, struct mg_connection * conn,
-      const std::unordered_map<std::string, std::string>& args = {}) {
-    std::string resp_args;
-    if (!args.empty()) {
-      resp_args = ", \"args\": {";
-      auto it = args.begin();
-      while (it != args.end()) {
-        resp_args += "\"" + it->first + "\": \"" + it->second + "\"";
-        ++it;
-        if (it != args.end()) {
-          resp_args += ", ";
-        }
-      }
-      resp_args += "}";
-    }
-    std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [  {"
-          "\"operation\" : \"" + operation + "\","
-          "\"operationid\" : \"" + operationId + "\","
-          "\"operand\": \"" + operand + "\"" +
-          resp_args + "}]}";
+  struct C2Operation {
+    std::string operation;
+    std::string operand;
+    std::string operation_id;
+    std::unordered_map<std::string, std::string> args;
+  };
 
-      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-                "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-                heartbeat_response.length());
-      mg_printf(conn, "%s", heartbeat_response.c_str());
+  void sendHeartbeatResponse(const std::string& operation, const std::string& operand, const std::string& operation_id, struct mg_connection* conn,
+      const std::unordered_map<std::string, std::string>& args = {}) {
+    sendHeartbeatResponse({{operation, operand, operation_id, args}}, conn);
+  }
+
+  void sendHeartbeatResponse(const std::vector<C2Operation>& operations, struct mg_connection * conn) {
+    std::string operation_jsons;
+    for (const auto& c2_operation : operations) {
+      std::string resp_args;
+      if (!c2_operation.args.empty()) {
+        resp_args = ", \"args\": {";
+        auto it = c2_operation.args.begin();
+        while (it != c2_operation.args.end()) {
+          resp_args += "\"" + it->first + "\": \"" + it->second + "\"";
+          ++it;
+          if (it != c2_operation.args.end()) {
+            resp_args += ", ";
+          }
+        }
+        resp_args += "}";
+      }
+
+      std::string operation_json = "{"
+        "\"operation\" : \"" + c2_operation.operation + "\","
+        "\"operationid\" : \"" + c2_operation.operation_id + "\","
+        "\"operand\": \"" + c2_operation.operand + "\"" +
+        resp_args + "}";
+
+      if (operation_jsons.empty()) {
+        operation_jsons += operation_json;
+      } else {
+        operation_jsons += ", " + operation_json;
+      }
+    }
+
+    std::string heartbeat_response = "{\"operation\" : \"heartbeat\",\"requested_operations\": [ " + operation_jsons + " ]}";
+
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              heartbeat_response.length());
+    mg_printf(conn, "%s", heartbeat_response.c_str());
   }
 
   void verifyJsonHasAgentManifest(const rapidjson::Document& root, const std::vector<std::string>& verify_components = {}, const std::vector<std::string>& disallowed_properties = {}) {
