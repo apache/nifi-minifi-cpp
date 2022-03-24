@@ -76,7 +76,8 @@ void ProcFsMonitor::onSchedule(const std::shared_ptr<core::ProcessContext>& cont
 
 namespace {
 size_t number_of_cores(const std::unordered_map<std::string, CpuStatData>& cpu_stat) {
-  return cpu_stat.size() > 1 ? cpu_stat.size() - 1 :  1;
+  gsl_Expects(cpu_stat.size() > 1);
+  return cpu_stat.size() - 1;
 }
 
 bool cpu_stats_are_valid(const std::unordered_map<std::string, CpuStatData>& cpu_stat) {
