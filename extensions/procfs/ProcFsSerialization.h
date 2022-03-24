@@ -177,7 +177,7 @@ void SerializeNormalizedProcessStat(const ProcessStat& process_stat_start,
   auto cpu_time_diff = process_stat_end.getCpuTime()-process_stat_start.getCpuTime();
   serializer("COMM", process_stat_start.getComm());
   serializer("RES", process_stat_end.getMemory());
-  serializer("CPU%", cpu_time_diff/all_cpu_time);
+  serializer("CPU%", 100*(cpu_time_diff/all_cpu_time));
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::procfs
