@@ -312,6 +312,11 @@ def step_impl(context, source_name):
         container.add_start_node(source)
 
 
+@given("a NiFi flow with the name \"{flow_name}\" is set up")
+def step_impl(context, flow_name):
+    context.test.acquire_container(flow_name, 'nifi')
+
+
 # HTTP proxy setup
 @given("the http proxy server is set up")
 @given("a http proxy server is set up accordingly")

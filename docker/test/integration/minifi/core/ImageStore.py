@@ -14,7 +14,6 @@
 # limitations under the License.
 
 
-from .NifiContainer import NifiContainer
 from .MinifiContainer import MinifiContainer
 import logging
 import tarfile
@@ -49,8 +48,6 @@ class ImageStore:
             image = self.__build_minifi_cpp_image_with_provenance_repo()
         elif container_engine == "http-proxy":
             image = self.__build_http_proxy_image()
-        elif container_engine == "nifi":
-            image = self.__build_nifi_image()
         elif container_engine == "postgresql-server":
             image = self.__build_postgresql_server_image()
         elif container_engine == "kafka-broker":
@@ -132,19 +129,6 @@ class ImageStore:
                     echo 'http_port {proxy_port}' >> /etc/squid/squid.conf
                 ENTRYPOINT ["/sbin/entrypoint.sh"]
                 """.format(base_image='sameersbn/squid:3.5.27-2', proxy_username='admin', proxy_password='test101', proxy_port='3128'))
-
-        return self.__build_image(dockerfile)
-
-    def __build_nifi_image(self):
-        dockerfile = dedent(r"""\
-                FROM {base_image}
-                USER root
-                RUN sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties
-                RUN sed -i -e 's/^\(nifi.remote.input.socket.port\)=.*/\1=5000/' {nifi_root}/conf/nifi.properties
-                USER nifi
-                """.format(name='nifi',
-                           base_image='apache/nifi:' + NifiContainer.NIFI_VERSION,
-                           nifi_root=NifiContainer.NIFI_ROOT))
 
         return self.__build_image(dockerfile)
 

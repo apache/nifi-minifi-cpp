@@ -183,7 +183,7 @@ class Nifi_flow_xml_serializer:
                     continue
                 proc_property.append(proc_property_name)
                 proc_property_value = Element('value')
-                proc_property_value.text = property_value
+                proc_property_value.text = str(property_value)
                 proc_property.append(proc_property_value)
                 conn_destination.append(proc_property)
 
