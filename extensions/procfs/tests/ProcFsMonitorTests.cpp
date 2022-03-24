@@ -32,7 +32,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
     const auto& result = test_controller_.trigger();
 
     REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
-    auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+    const auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
     rapidjson::Document document;
     auto content = test_controller_.plan->getContent(result_flow_file);
@@ -52,7 +52,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
     const auto& result = test_controller_.trigger();
 
     REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
-    auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+    const auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
     rapidjson::Document document;
     auto content = test_controller_.plan->getContent(result_flow_file);
@@ -74,7 +74,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
       const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
-      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+      const auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
       rapidjson::Document document;
       auto content = test_controller_.plan->getContent(result_flow_file);
@@ -92,7 +92,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
       const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
-      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+      const auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
       rapidjson::Document document;
       auto content = test_controller_.plan->getContent(result_flow_file);
@@ -113,7 +113,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
       const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
-      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+      const auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
       rapidjson::Document document;
       auto content = test_controller_.plan->getContent(result_flow_file);
@@ -132,7 +132,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
       const auto& result = test_controller_.trigger();
 
       REQUIRE(result.at(ProcFsMonitor::Success).size() == 1);
-      auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
+      const auto& result_flow_file = result.at(ProcFsMonitor::Success)[0];
 
       rapidjson::Document document;
       auto content = test_controller_.plan->getContent(result_flow_file);

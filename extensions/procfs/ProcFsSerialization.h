@@ -174,7 +174,7 @@ void SerializeNormalizedProcessStat(const ProcessStat& process_stat_start,
   gsl_Expects(all_cpu_time > 0ms);
   gsl_Expects(process_stat_start.getComm() == process_stat_end.getComm());
   gsl_Expects(process_stat_end.getCpuTime() >= process_stat_start.getCpuTime());
-  auto cpu_time_diff = process_stat_end.getCpuTime()-process_stat_end.getCpuTime();
+  auto cpu_time_diff = process_stat_end.getCpuTime()-process_stat_start.getCpuTime();
   serializer("COMM", process_stat_start.getComm());
   serializer("RES", process_stat_end.getMemory());
   serializer("CPU%", cpu_time_diff/all_cpu_time);

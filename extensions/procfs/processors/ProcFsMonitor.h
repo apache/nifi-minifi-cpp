@@ -124,7 +124,7 @@ class ProcFsMonitor : public core::Processor {
   std::unordered_map<std::string, NetDevData> last_net_devs_;
   std::unordered_map<std::string, DiskStatData> last_disk_stats_;
   std::unordered_map<pid_t, ProcessStat> last_process_stats_;
-  std::optional<std::chrono::steady_clock::time_point> last_trigger;
+  std::optional<std::chrono::steady_clock::time_point> last_trigger_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::procfs

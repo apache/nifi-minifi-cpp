@@ -157,13 +157,16 @@ void ProcFsMonitor::setupDecimalPlacesFromProperties(const core::ProcessContext&
     return;
   }
 
-  if (auto decimal_places = context.getProperty<int64_t>(DecimalPlaces)) {
-    if (*decimal_places > std::numeric_limits<uint8_t>::max())
-      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "ProcFsMonitor Decimal Places is out of range");
-    decimal_places_ = *decimal_places;
-  }
-  if (decimal_places_)
+  try {
+    uint32_t decimal_places = std::stoul(decimal_places_str);
+    if (decimal_places > std::numeric_limits<uint8_t>::max() || decimal_places == 0)
+      throw std::out_of_range("");
+    decimal_places_ = decimal_places;
     logger_->log_trace("Rounding is enabled with %d decimal places", decimal_places_.value());
+  } catch (const std::exception&) {
+    logger_->log_error("ProcFsMonitor Decimal Places property is invalid or out of range: %s", decimal_places_str);
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "ProcFsMonitor Decimal Places property is invalid or out of range");
+  }
 }
 
 void ProcFsMonitor::processCPUInformation(const std::unordered_map<std::string, CpuStatData>& current_cpu_stats,
@@ -173,7 +176,7 @@ void ProcFsMonitor::processCPUInformation(const std::unordered_map<std::string, 
     return;
 
   rapidjson::Value cpu_root{rapidjson::kObjectType};
-  for (auto& [cpu_name, cpu_stat] : current_cpu_stats) {
+  for (const auto& [cpu_name, cpu_stat] : current_cpu_stats) {
     if (result_relativeness_ == ResultRelativeness::ABSOLUTE) {
       addCPUStatToJson(cpu_name, cpu_stat, cpu_root, alloc);
     } else if (result_relativeness_ == ResultRelativeness::RELATIVE) {
@@ -200,8 +203,8 @@ void ProcFsMonitor::processDiskInformation(const std::unordered_map<std::string,
     if (result_relativeness_ == ResultRelativeness::ABSOLUTE) {
       addDiskStatToJson(disk_name, disk_stat, disk_root, alloc);
     } else if (result_relativeness_ == ResultRelativeness::RELATIVE) {
-      if (last_disk_stats_.contains(disk_name) && last_trigger) {
-        addDiskStatPerSecToJson(disk_name, disk_stat-last_disk_stats_.at(disk_name), std::chrono::steady_clock::now()-*last_trigger, disk_root, alloc);
+      if (last_disk_stats_.contains(disk_name) && last_trigger_) {
+        addDiskStatPerSecToJson(disk_name, disk_stat-last_disk_stats_.at(disk_name), std::chrono::steady_clock::now()-*last_trigger_, disk_root, alloc);
       }
     } else {
       throw Exception(GENERAL_EXCEPTION, "Invalid result relativeness");
@@ -222,8 +225,8 @@ void ProcFsMonitor::processNetworkInformation(const std::unordered_map<std::stri
     if (result_relativeness_ == ResultRelativeness::ABSOLUTE) {
       addNetDevToJson(interface_name, net_dev, network_root, alloc);
     } else if (result_relativeness_ == ResultRelativeness::RELATIVE) {
-      if (last_net_devs_.contains(interface_name) && last_trigger) {
-        addNetDevPerSecToJson(interface_name, net_dev - last_net_devs_.at(interface_name), std::chrono::steady_clock::now() - *last_trigger, network_root, alloc);
+      if (last_net_devs_.contains(interface_name) && last_trigger_) {
+        addNetDevPerSecToJson(interface_name, net_dev - last_net_devs_.at(interface_name), std::chrono::steady_clock::now() - *last_trigger_, network_root, alloc);
       }
     } else {
       throw Exception(GENERAL_EXCEPTION, "Invalid result relativeness");
@@ -275,7 +278,7 @@ void ProcFsMonitor::refreshMembers(std::unordered_map<std::string, CpuStatData>&
   last_net_devs_ = std::move(current_net_devs);
   last_disk_stats_ = std::move(current_disk_stats);
   last_process_stats_ = std::move(current_process_stats);
-  last_trigger = std::chrono::steady_clock::now();
+  last_trigger_ = std::chrono::steady_clock::now();
 }
 
 REGISTER_RESOURCE(ProcFsMonitor, "This processor can create FlowFiles with various performance data through the proc pseudo-filesystem. (Linux only)");
