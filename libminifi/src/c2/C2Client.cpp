@@ -347,6 +347,7 @@ void C2Client::updateResponseNodeConnections() {
   for (auto& [_, responseNode] : root_response_nodes_) {
     auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(responseNode.get());
     if (flowMonitor != nullptr) {
+      flowMonitor->clearConnections();
       for (const auto &con: connections) {
         flowMonitor->updateConnection(con.second);
       }
