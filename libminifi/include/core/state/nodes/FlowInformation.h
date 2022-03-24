@@ -154,6 +154,7 @@ class FlowMonitor : public StateMonitorNode {
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
     flow_version_ = std::move(flow_version);
   }
+
  protected:
   std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::map<std::string, minifi::Connection*> connections_;
