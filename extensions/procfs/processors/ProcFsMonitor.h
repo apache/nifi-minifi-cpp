@@ -86,7 +86,6 @@ class ProcFsMonitor : public core::Processor {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
- protected:
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
 
   void setupDecimalPlacesFromProperties(const core::ProcessContext& context);

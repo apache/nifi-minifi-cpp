@@ -58,7 +58,7 @@ const core::Property ProcFsMonitor::ResultRelativenessProperty(
     core::PropertyBuilder::createProperty("Result Type")->
         withDescription("Absolute returns the current procfs values, relative calculates the usage between triggers")->
         withAllowableValues<std::string>(ResultRelativeness::values())->
-        withDefaultValue(toString(ResultRelativeness::RELATIVE))->build());
+        withDefaultValue(toString(ResultRelativeness::ABSOLUTE))->build());
 
 
 void ProcFsMonitor::initialize() {
