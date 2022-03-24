@@ -122,7 +122,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
       auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
       if (flowMonitor != nullptr) {
         for (auto &con : connections) {
-          flowMonitor->addConnection(con.second);
+          flowMonitor->updateConnection(con.second);
         }
         flowMonitor->setStateMonitor(update_sink);
         flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
@@ -325,6 +325,7 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbe
   const bool include = include_manifest || fullHb == "true";
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
+  nodes.reserve(root_response_nodes_.size());
   std::lock_guard<std::mutex> lock(metrics_mutex_);
   for (const auto &entry : root_response_nodes_) {
     auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
@@ -334,6 +335,23 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbe
     nodes.push_back(entry.second);
   }
   return nodes;
+}
+
+void C2Client::updateResponseNodeConnections() {
+  std::map<std::string, Connection*> connections;
+  if (root_ != nullptr) {
+    root_->getConnections(connections);
+  }
+
+  std::lock_guard<std::mutex> lock(metrics_mutex_);
+  for (auto& [_, responseNode] : root_response_nodes_) {
+    auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(responseNode.get());
+    if (flowMonitor != nullptr) {
+      for (const auto &con: connections) {
+        flowMonitor->updateConnection(con.second);
+      }
+    }
+  }
 }
 
 }  // namespace c2

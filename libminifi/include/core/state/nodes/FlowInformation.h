@@ -141,14 +141,14 @@ class FlowMonitor : public StateMonitorNode {
       : StateMonitorNode(name) {
   }
 
-  void addConnection(minifi::Connection* connection) {
+  void updateConnection(minifi::Connection* connection) {
     if (nullptr != connection) {
-      connections_.insert(std::make_pair(connection->getUUIDStr(), connection));
+      connections_[connection->getUUIDStr()] = connection;
     }
   }
 
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
-    flow_version_ = flow_version;
+    flow_version_ = std::move(flow_version);
   }
  protected:
   std::shared_ptr<state::response::FlowVersion> flow_version_;
