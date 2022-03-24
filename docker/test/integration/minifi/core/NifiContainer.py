@@ -23,12 +23,13 @@ import os
 
 
 class NifiContainer(FlowContainer):
-    NIFI_VERSION = '1.7.0'
+    NIFI_VERSION = '1.16.0'
     NIFI_ROOT = '/opt/nifi/nifi-' + NIFI_VERSION
 
     def __init__(self, config_dir, name, vols, network, image_store, command=None):
         if not command:
             entry_command = (r"sed -i -e 's/^\(nifi.remote.input.host\)=.*/\1={name}/' {nifi_root}/conf/nifi.properties && "
+                             r"sed -i -e 's/^\(nifi.sensitive.props.key\)=.*/\1=secret_key_12345/' {nifi_root}/conf/nifi.properties && "
                              r"cp /tmp/nifi_config/flow.xml.gz {nifi_root}/conf && /opt/nifi/scripts/start.sh").format(name=name, nifi_root=NifiContainer.NIFI_ROOT)
             command = ["/bin/sh", "-c", entry_command]
         super().__init__(config_dir, name, 'nifi', vols, network, image_store, command)
@@ -54,11 +55,12 @@ class NifiContainer(FlowContainer):
         logging.info('Creating and running nifi docker container...')
         self.__create_config()
         self.client.containers.run(
-            self.image_store.get_image(self.get_engine()),
+            "apache/nifi:" + NifiContainer.NIFI_VERSION,
             detach=True,
             name=self.name,
             hostname=self.name,
             network=self.network.name,
             entrypoint=self.command,
+            environment=["NIFI_WEB_HTTP_PORT=8080"],
             volumes=self.vols)
         logging.info('Added container \'%s\'', self.name)

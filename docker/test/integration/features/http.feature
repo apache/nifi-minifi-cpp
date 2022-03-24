@@ -77,3 +77,19 @@ Feature: Sending data using InvokeHTTP to a receiver using ListenHTTP
 
     When both instances start up
     Then at least one empty flowfile is placed in the monitored directory in less than 120 seconds
+
+  Scenario: A MiNiFi instance transfers data to a NiFi instance with message body
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And the "Keep Source File" property of the GetFile processor is set to "true"
+    And a file with the content "test" is present in "/tmp/input"
+    And a InvokeHTTP processor with the "Remote URL" property set to "http://nifi:8081/contentListener"
+    And the "HTTP Method" property of the InvokeHTTP processor is set to "POST"
+    And the "success" relationship of the GetFile processor is connected to the InvokeHTTP
+
+    And a NiFi flow with the name "nifi" is set up
+    And a ListenHTTP processor with the "Listening Port" property set to "8081" in the "nifi" flow
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "nifi" flow
+    And the "success" relationship of the ListenHTTP processor is connected to the PutFile
+
+    When both instances start up
+    Then at least one flowfile with the content "test" is placed in the monitored directory in less than 120 seconds
