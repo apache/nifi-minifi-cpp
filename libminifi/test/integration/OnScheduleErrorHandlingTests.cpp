@@ -76,21 +76,31 @@ class KamikazeErrorHandlingTests : public IntegrationBase {
 class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
  public:
   void updateProperties(minifi::FlowController& fc) override {
-    auto controller_vec = fc.getAllComponents();
     /* This tests depends on a configuration that contains only one KamikazeProcessor named kamikaze
      * (See testOnScheduleRetry.yml)
      * In this case there are two components in the flowcontroller: first is the controller itself,
      * second is the processor that the test uses.
      * Added here some assertions to make it clear. In case any of these fail without changing the corresponding yml file,
      * that most probably means a breaking change. */
-    assert(controller_vec.size() == 2);
-    assert(controller_vec[0]->getComponentName() == "FlowController");
-    assert(controller_vec[1]->getComponentName() == "kamikaze");
+    size_t controllerVecIdx = 0;
 
-    auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(controller_vec[1]);
-    assert(process_controller != nullptr);
+    fc.executeOnAllComponents([&controllerVecIdx](org::apache::nifi::minifi::state::StateController& component){
+      if (controllerVecIdx == 0) {
+        assert(component.getComponentName() == "FlowController");
+      } else if (controllerVecIdx == 1) {
+        assert(component.getComponentName() == "kamikaze");
 
-    process_controller->getProcessor()->setSchedulingStrategy(org::apache::nifi::minifi::core::SchedulingStrategy::EVENT_DRIVEN);
+        auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(&component);
+        assert(process_controller != nullptr);
+
+        process_controller->getProcessor()->setSchedulingStrategy(org::apache::nifi::minifi::core::SchedulingStrategy::EVENT_DRIVEN);
+      }
+
+      ++controllerVecIdx;
+    });
+
+    // check controller vector size
+    assert(controllerVecIdx == 2);
   }
 
   void runAssertions() override {

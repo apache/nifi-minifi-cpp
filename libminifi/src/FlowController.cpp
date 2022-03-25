@@ -17,7 +17,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <time.h>
 #include <vector>
 #include <map>
 #include <chrono>
@@ -29,18 +28,12 @@
 
 #include "FlowController.h"
 #include "core/state/nodes/AgentInformation.h"
-#include "core/state/nodes/BuildInformation.h"
-#include "core/state/nodes/DeviceInformation.h"
 #include "core/state/nodes/FlowInformation.h"
-#include "core/state/nodes/ProcessMetrics.h"
-#include "core/state/nodes/QueueMetrics.h"
 #include "core/state/nodes/RepositoryMetrics.h"
-#include "core/state/nodes/SystemMetrics.h"
 #include "core/state/ProcessorController.h"
 #include "c2/C2Agent.h"
 #include "core/ProcessGroup.h"
 #include "core/Core.h"
-#include "core/ClassLoader.h"
 #include "SchedulingAgent.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ForwardingControllerServiceProvider.h"
@@ -50,7 +43,6 @@
 #include "utils/file/FileSystem.h"
 #include "utils/HTTPClient.h"
 #include "io/NetworkPrioritizer.h"
-#include "io/validation.h"
 #include "io/FileStream.h"
 
 namespace org {
@@ -134,6 +126,8 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   controller_map_->clear();
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
+  processor_to_controller_.clear();
+  updateResponseNodeConnections();
   initialized_ = false;
   bool started = false;
   try {
@@ -191,7 +185,7 @@ int16_t FlowController::stop() {
     thread_pool_.shutdown();
     /* STOP! Before you change it, consider the following:
      * -Stopping the schedulers doesn't actually quit the onTrigger functions of processors
-     * -They only guarantee that the processors are not scheduled any more
+     * -They only guarantee that the processors are not scheduled anymore
      * -After the threadpool is stopped we can make sure that processors don't need repos and controllers anymore */
     if (this->root_) {
       this->root_->drainConnections();
@@ -284,6 +278,8 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     if (root) {
       logger_->log_info("Load Flow Controller from provided root");
       this->root_ = std::move(root);
+      processor_to_controller_.clear();
+      updateResponseNodeConnections();
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = loadInitialFlow();
@@ -441,30 +437,44 @@ std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest(
   return agentInfo;
 }
 
+void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  for (auto* component: getAllComponents()) {
+    func(*component);
+  }
+}
+
+void FlowController::executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);
+  if (auto* component = getComponent(name); component != nullptr) {
+    func(*component);
+  } else {
+    logger_->log_error("Could not get execute requested callback for component \"%s\", because component was not found", name);
+  }
+}
+
 std::vector<state::StateController*> FlowController::getAllComponents() {
-  std::vector<state::StateController*> vec{this};
   if (root_) {
     auto controllerFactory = [this] (core::Processor& p) {
       return createController(p);
     };
-    getAllProcessorControllers(vec, controllerFactory);
+    return getAllProcessorControllers(controllerFactory);
   }
-  return vec;
+
+  return {this};
 }
 
-std::vector<state::StateController*> FlowController::getComponents(const std::string& name) {
-  std::vector<state::StateController*> vec;
-
+state::StateController* FlowController::getComponent(const std::string& name) {
   if (name == "FlowController") {
-    vec.push_back(this);
+    return this;
   } else if (root_) {
     auto controllerFactory = [this] (core::Processor& p) {
       return createController(p);
     };
-    getProcessorController(name, vec, controllerFactory);
+    return getProcessorController(name, controllerFactory);
   }
 
-  return vec;
+  return nullptr;
 }
 
 std::unique_ptr<state::ProcessorController> FlowController::createController(core::Processor& processor) {
@@ -509,31 +519,37 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
   return debug_info;
 }
 
-void FlowController::getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
-                                              const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
-  std::lock_guard<std::recursive_mutex> lock(mutex_);
-
+std::vector<state::StateController*> FlowController::getAllProcessorControllers(
+        const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+  std::vector<state::StateController*> controllerVec{this};
   std::vector<core::Processor*> processorVec;
   root_->getAllProcessors(processorVec);
 
   for (const auto& processor : processorVec) {
-    // find controller for processor, if it doesn't exist, create one
+    // reference to the existing or newly created controller
     auto& controller = processor_to_controller_[processor->getUUID()];
     if (!controller) {
       controller = controllerFactory(*processor);
     }
     controllerVec.push_back(controller.get());
   }
+
+  return controllerVec;
 }
 
-void FlowController::getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
-                                          const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+state::StateController* FlowController::getProcessorController(const std::string& name, const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
   auto* processor = root_->findProcessorByName(name);
-  auto& controller = processor_to_controller_[processor->getUUID()];
-  if (!controller) {
-    controller = controllerFactory(*processor);
+  if (processor == nullptr) {
+    logger_->log_error("Could not get processor controller for requested name \"%s\", because processor was not found either", name);
+    return nullptr;
   }
-  controllerVec.push_back(controller.get());
+
+  // reference to the existing or newly created controller
+  auto& foundController = processor_to_controller_[processor->getUUID()];
+  if (!foundController) {
+    foundController = controllerFactory(*processor);
+  }
+  return foundController.get();
 }
 
 }  // namespace minifi

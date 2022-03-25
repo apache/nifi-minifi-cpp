@@ -141,15 +141,20 @@ class FlowMonitor : public StateMonitorNode {
       : StateMonitorNode(name) {
   }
 
-  void addConnection(minifi::Connection* connection) {
+  void updateConnection(minifi::Connection* connection) {
     if (nullptr != connection) {
-      connections_.insert(std::make_pair(connection->getUUIDStr(), connection));
+      connections_[connection->getUUIDStr()] = connection;
     }
   }
 
-  void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
-    flow_version_ = flow_version;
+  void clearConnections() {
+    connections_.clear();
   }
+
+  void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
+    flow_version_ = std::move(flow_version);
+  }
+
  protected:
   std::shared_ptr<state::response::FlowVersion> flow_version_;
   std::map<std::string, minifi::Connection*> connections_;
@@ -228,26 +233,25 @@ class FlowInformation : public FlowMonitor {
     }
 
     if (nullptr != monitor_) {
-      auto components = monitor_->getAllComponents();
       SerializedResponseNode componentsNode(false);
       componentsNode.name = "components";
 
-      for (auto component : components) {
+      monitor_->executeOnAllComponents([&componentsNode](StateController& component){
         SerializedResponseNode componentNode(false);
-        componentNode.name = component->getComponentName();
+        componentNode.name = component.getComponentName();
 
         SerializedResponseNode uuidNode;
         uuidNode.name = "uuid";
-        uuidNode.value = std::string{component->getComponentUUID().to_string()};
+        uuidNode.value = std::string{component.getComponentUUID().to_string()};
 
         SerializedResponseNode componentStatusNode;
         componentStatusNode.name = "running";
-        componentStatusNode.value = component->isRunning();
+        componentStatusNode.value = component.isRunning();
 
         componentNode.children.push_back(componentStatusNode);
         componentNode.children.push_back(uuidNode);
         componentsNode.children.push_back(componentNode);
-      }
+      });
       serialized.push_back(componentsNode);
     }
 

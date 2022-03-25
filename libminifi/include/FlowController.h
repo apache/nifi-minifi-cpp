@@ -114,9 +114,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return -1;
   }
 
-  std::vector<state::StateController*> getComponents(const std::string &name) override;
-
-  std::vector<state::StateController*> getAllComponents() override;
+  void executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) override;
+  void executeOnAllComponents(std::function<void(state::StateController&)> func) override;
 
   int16_t clearConnection(const std::string &connection) override;
 
@@ -234,11 +233,15 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::chrono::steady_clock::time_point start_time_;
 
  private:
-  void getProcessorController(const std::string& name, std::vector<state::StateController*>& controllerVec,
-                              const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+  std::vector<state::StateController*> getAllComponents();
 
-  void getAllProcessorControllers(std::vector<state::StateController*>& controllerVec,
-                                  const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+  state::StateController* getComponent(const std::string &name);
+
+  state::StateController* getProcessorController(const std::string& name,
+                                                 const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+
+  std::vector<state::StateController*> getAllProcessorControllers(
+          const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
 
   std::unique_ptr<state::ProcessorController> createController(core::Processor& processor);
 

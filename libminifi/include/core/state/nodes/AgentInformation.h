@@ -502,24 +502,22 @@ class AgentStatus : public StateMonitorNode {
     SerializedResponseNode components_node(false);
     components_node.name = "components";
     if (monitor_ != nullptr) {
-      auto components = monitor_->getAllComponents();
-
-      for (const auto& component : components) {
+      monitor_->executeOnAllComponents([&components_node](StateController& component){
         SerializedResponseNode component_node(false);
-        component_node.name = component->getComponentName();
+        component_node.name = component.getComponentName();
 
         SerializedResponseNode uuid_node;
         uuid_node.name = "uuid";
-        uuid_node.value = std::string{component->getComponentUUID().to_string()};
+        uuid_node.value = std::string{component.getComponentUUID().to_string()};
 
         SerializedResponseNode component_status_node;
         component_status_node.name = "running";
-        component_status_node.value = component->isRunning();
+        component_status_node.value = component.isRunning();
 
         component_node.children.push_back(component_status_node);
         component_node.children.push_back(uuid_node);
         components_node.children.push_back(component_node);
-      }
+      });
     }
     return components_node;
   }

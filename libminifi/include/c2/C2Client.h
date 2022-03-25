@@ -61,6 +61,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
  protected:
   bool isC2Enabled() const;
   std::optional<std::string> fetchFlow(const std::string& uri) const;
+  void updateResponseNodeConnections();
 
  private:
   void initializeComponentMetrics();
