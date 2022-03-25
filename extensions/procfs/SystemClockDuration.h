@@ -16,7 +16,7 @@
  */
 
 #pragma once
-#include <sys/param.h>
+#include <asm-generic/param.h>
 #include <istream>
 #include <chrono>
 
