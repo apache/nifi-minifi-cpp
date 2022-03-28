@@ -219,6 +219,12 @@ class MiNiFi_integration_test():
     def check_splunk_event_with_attributes(self, splunk_container_name, query, attributes):
         assert self.cluster.check_splunk_event_with_attributes(splunk_container_name, query, attributes)
 
+    def check_google_cloud_storage(self, gcs_container_name, content):
+        assert self.cluster.check_google_cloud_storage(gcs_container_name, content)
+
+    def check_empty_gcs_bucket(self, gcs_container_name):
+        assert self.cluster.is_gcs_bucket_empty(gcs_container_name)
+
     def check_minifi_log_contents(self, line, timeout_seconds=60, count=1):
         self.check_container_log_contents("minifi-cpp", line, timeout_seconds, count)
 

@@ -27,6 +27,7 @@ from .ZookeeperContainer import ZookeeperContainer
 from .KafkaBrokerContainer import KafkaBrokerContainer
 from .S3ServerContainer import S3ServerContainer
 from .AzureStorageServerContainer import AzureStorageServerContainer
+from .FakeGcsServerContainer import FakeGcsServerContainer
 from .HttpProxyContainer import HttpProxyContainer
 from .PostgreSQLServerContainer import PostgreSQLServerContainer
 from .MqttBrokerContainer import MqttBrokerContainer
@@ -103,6 +104,8 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, S3ServerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'azure-storage-server':
             return self.containers.setdefault(name, AzureStorageServerContainer(name, self.vols, self.network, self.image_store, command))
+        elif engine == 'fake-gcs-server':
+            return self.containers.setdefault(name, FakeGcsServerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'postgresql-server':
             return self.containers.setdefault(name, PostgreSQLServerContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'mqtt-broker':

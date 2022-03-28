@@ -264,6 +264,16 @@ class DockerTestCluster(SingleNodeDockerCluster):
                                                                               "-auth", "admin:splunkadmin"])
         return code == 0
 
+    @retry_check()
+    def check_google_cloud_storage(self, gcs_container_name, content):
+        (code, output) = self.client.containers.get(gcs_container_name).exec_run(["grep", "-r", content, "/storage"])
+        return code == 0
+
+    @retry_check()
+    def is_gcs_bucket_empty(self, container_name):
+        (code, output) = self.client.containers.get(container_name).exec_run(["ls", "/storage/test-bucket"])
+        return code == 0 and output == b''
+
     def query_postgres_server(self, postgresql_container_name, query, number_of_rows):
         (code, output) = self.client.containers.get(postgresql_container_name).exec_run(["psql", "-U", "postgres", "-c", query])
         output = output.decode(self.get_stdout_encoding())

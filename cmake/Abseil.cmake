@@ -1,4 +1,4 @@
-#!/bin/bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,8 +15,13 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
-set -euo pipefail
-
-directory=${1:-.}
-flake8 --exclude venv,thirdparty,build,cmake-build-* --builtins log,REL_SUCCESS,REL_FAILURE,raw_input --ignore E501,W503 --per-file-ignores="steps.py:F811" "${directory}"
+#
+include(FetchContent)
+set(ABSL_PROPAGATE_CXX_STD ON CACHE INTERNAL absl-propagate-cxx)
+set(ABSL_ENABLE_INSTALL ON CACHE INTERNAL "")
+FetchContent_Declare(
+        absl
+        URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz
+        URL_HASH SHA256=dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4
+)
+FetchContent_MakeAvailable(absl)

@@ -1,0 +1,13 @@
+diff --git a/cmake/IncludeNlohmannJson.cmake b/cmake/IncludeNlohmannJson.cmake
+index db8056ae0..613f18b97 100644
+--- a/cmake/IncludeNlohmannJson.cmake
++++ b/cmake/IncludeNlohmannJson.cmake
+@@ -23,7 +23,7 @@ function (find_nlohmann_json)
+     # library that is all we need.
+     find_path(GOOGLE_CLOUD_CPP_NLOHMANN_JSON_HEADER "nlohmann/json.hpp"
+               REQUIRED)
+-    add_library(nlohmann_json::nlohmann_json UNKNOWN IMPORTED)
++    add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
+     set_property(
+         TARGET nlohmann_json::nlohmann_json
+         APPEND

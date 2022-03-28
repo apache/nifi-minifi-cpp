@@ -1,4 +1,4 @@
-#!/bin/bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,8 +15,10 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
 
-set -euo pipefail
-
-directory=${1:-.}
-flake8 --exclude venv,thirdparty,build,cmake-build-* --builtins log,REL_SUCCESS,REL_FAILURE,raw_input --ignore E501,W503 --per-file-ignores="steps.py:F811" "${directory}"
+set(NLOHMANN_JSON_INCLUDE_DIR "${CMAKE_BINARY_DIR}/_deps/nlohmann/" CACHE STRING "" FORCE)
+if(NOT EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp")
+    file(DOWNLOAD "https://github.com/nlohmann/json/releases/download/v3.10.5/json.hpp" "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp"
+            EXPECTED_HASH SHA256=e832d339d9e0c042e7dff807754769d778cf5d6ae9730ce21eed56de99cb5e86)
+endif()

@@ -20,6 +20,7 @@ from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback, make_ca, 
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
+from minifi.controllers.GCPCredentialsControllerService import GCPCredentialsControllerService
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 
@@ -389,6 +390,13 @@ def step_impl(context):
     context.test.acquire_container("azure-storage-server", "azure-storage-server")
 
 
+# google cloud storage setup
+@given("a Google Cloud storage server is set up with some test data")
+@given("a Google Cloud storage server is set up")
+def step_impl(context):
+    context.test.acquire_container("fake-gcs-server", "fake-gcs-server")
+
+
 # splunk hec
 @given("a Splunk HEC is set up and running")
 def step_impl(context):
@@ -415,6 +423,14 @@ def step_impl(context):
     query_splunk_indexing_status.controller_services.append(ssl_context_service)
     query_splunk_indexing_status.set_property("SSL Context Service", ssl_context_service.name)
     context.test.cluster.enable_splunk_hec_ssl('splunk', dump_certificate(splunk_cert), dump_privatekey(splunk_key), dump_certificate(root_ca_cert))
+
+
+@given(u'the {processor_one} processor is set up with a GCPCredentialsControllerService to communicate with the Google Cloud storage server')
+def step_impl(context, processor_one):
+    gcp_controller_service = GCPCredentialsControllerService(credentials_location="Use Anonymous credentials")
+    p1 = context.test.get_node_by_name(processor_one)
+    p1.controller_services.append(gcp_controller_service)
+    p1.set_property("GCP Credentials Provider Service", gcp_controller_service.name)
 
 
 @given("the kafka broker is started")
@@ -740,6 +756,17 @@ def step_impl(context, minifi_container_name, log_pattern, duration):
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")
     context.test.start()
+
+
+# Google Cloud Storage
+@then('an object with the content \"{content}\" is present in the Google Cloud storage')
+def step_imp(context, content):
+    context.test.check_google_cloud_storage("fake-gcs-server", content)
+
+
+@then("the test bucket of Google Cloud Storage is empty")
+def step_impl(context):
+    context.test.check_empty_gcs_bucket("fake-gcs-server")
 
 
 # Splunk

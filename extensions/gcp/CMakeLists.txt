@@ -1,4 +1,4 @@
-#!/bin/bash
+#
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,8 +15,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+include(GoogleCloudCpp)
+include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
+file(GLOB SOURCES "*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 
-set -euo pipefail
+add_library(minifi-gcp SHARED ${SOURCES})
 
-directory=${1:-.}
-flake8 --exclude venv,thirdparty,build,cmake-build-* --builtins log,REL_SUCCESS,REL_FAILURE,raw_input --ignore E501,W503 --per-file-ignores="steps.py:F811" "${directory}"
+target_link_libraries(minifi-gcp ${LIBMINIFI} google-cloud-cpp::storage)
+target_include_directories(minifi-gcp PUBLIC ${google-cloud-cpp_INCLUDE_DIRS})
+
+register_extension(minifi-gcp)
+
+register_extension_linter(minifi-gcp-extensions-linter)

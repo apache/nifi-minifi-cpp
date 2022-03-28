@@ -1,0 +1,11 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	(revision 334e481f49c78c9e22aa48e59d044f6051ce99a7)
++++ b/CMakeLists.txt	(date 1646227181483)
+@@ -251,7 +251,6 @@
+ # Each subproject adds dependencies to this target to have their docs generated.
+ add_custom_target(doxygen-docs)
+
+-find_package(absl CONFIG REQUIRED)
+ if (${GOOGLE_CLOUD_CPP_ENABLE_GRPC})
+     find_package(gRPC REQUIRED QUIET)
+     find_package(ProtobufWithTargets REQUIRED QUIET)
