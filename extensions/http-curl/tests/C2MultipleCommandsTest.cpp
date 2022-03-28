@@ -18,6 +18,9 @@
 
 #undef NDEBUG
 #include <string>
+#include <vector>
+#include <functional>
+
 #include "TestBase.h"
 #include "Catch.h"
 #include "HTTPIntegrationBase.h"
@@ -26,18 +29,41 @@
 class AckAuditor {
  public:
   void addAck(const std::string& ack) {
-    std::lock_guard<std::mutex> guard(mutex_);
+    std::lock_guard<std::mutex> guard(acknowledged_operations_mutex_);
     acknowledged_operations_.insert(ack);
   }
 
   bool isAcknowledged(const std::string& operation_id) const {
-    std::lock_guard<std::mutex> guard(mutex_);
+    std::lock_guard<std::mutex> guard(acknowledged_operations_mutex_);
     return acknowledged_operations_.count(operation_id) > 0;
   }
 
+  void addVerifier(std::function<void(const rapidjson::Document&)> verifier) {
+    std::lock_guard<std::mutex> guard(verify_ack_mutex_);
+    ack_verifiers_.push_back(std::move(verifier));
+  }
+
+  void verifyAck(const rapidjson::Document& root) {
+    std::lock_guard<std::mutex> guard(verify_ack_mutex_);
+    if (ack_verifiers_.empty()) {
+      assert(false);
+    }
+
+    if (next_verifier_index_ >= ack_verifiers_.size()) {
+      ack_verifiers_[0](root);
+      next_verifier_index_ = 1;
+    } else {
+      ack_verifiers_[next_verifier_index_](root);
+      ++next_verifier_index_;
+    }
+  }
+
  private:
-  mutable std::mutex mutex_;
+  mutable std::mutex acknowledged_operations_mutex_;
+  mutable std::mutex verify_ack_mutex_;
   std::unordered_set<std::string> acknowledged_operations_;
+  std::vector<std::function<void(const rapidjson::Document&)>> ack_verifiers_;
+  uint32_t next_verifier_index_ = 0;
 };
 
 class MultipleC2CommandHandler: public HeartbeatHandler {
@@ -49,17 +75,17 @@ class MultipleC2CommandHandler: public HeartbeatHandler {
 
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
     std::vector<C2Operation> operations{{"DESCRIBE", "manifest", "889345", {}}, {"DESCRIBE", "corecomponentstate", "889346", {}}};
+    ack_auditor_.addVerifier([this](const rapidjson::Document& root) {
+      verifyJsonHasAgentManifest(root);
+    });
+    ack_auditor_.addVerifier([](const rapidjson::Document& root) {
+      assert(root.HasMember("corecomponentstate"));
+    });
     sendHeartbeatResponse(operations, conn);
   }
 
   void handleAcknowledge(const rapidjson::Document& root) override {
-    if (is_odd_ack) {
-      verifyJsonHasAgentManifest(root);
-      is_odd_ack = false;
-    } else {
-      assert(root.HasMember("corecomponentstate"));
-      is_odd_ack = true;
-    }
+    ack_auditor_.verifyAck(root);
     if (root.IsObject() && root.HasMember("operationId")) {
       ack_auditor_.addAck(root["operationId"].GetString());
     }
@@ -67,7 +93,6 @@ class MultipleC2CommandHandler: public HeartbeatHandler {
 
  private:
   AckAuditor& ack_auditor_;
-  bool is_odd_ack = true;
 };
 
 class VerifyC2MultipleCommands : public VerifyC2Base {
