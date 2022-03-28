@@ -493,6 +493,8 @@ class StringUtils {
    */
   static std::smatch getLastRegexMatch(const std::string& str, const std::regex& pattern);
 
+  static std::string escapeUnprintableBytes(gsl::span<const std::byte> data);
+
  private:
 };
 

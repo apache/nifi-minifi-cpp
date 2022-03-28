@@ -27,6 +27,8 @@
 #include "StreamPipe.h"
 #include "utils/IntegrationTestUtils.h"
 
+using std::chrono_literals::operator""s;
+
 TEST_CASE("Test log Levels", "[ttl1]") {
   LogTestController::getInstance().setTrace<logging::Logger>();
   std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
@@ -77,6 +79,43 @@ TEST_CASE("Test log Levels change", "[ttl5]") {
   LogTestController::getInstance().reset();
 }
 
+struct CStringConvertible {
+  const char* c_str() const {
+    return data.c_str();
+  }
+
+  std::string data;
+};
+
+TEST_CASE("Test log custom string formatting", "[ttl6]") {
+  LogTestController::getInstance().setTrace<logging::Logger>();
+  std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
+  logger->log_trace("%s %s %s", "one", std::string{"two"}, CStringConvertible{"three"});
+
+  REQUIRE(LogTestController::getInstance().contains("[trace] one two three", 0s));
+  LogTestController::getInstance().reset();
+}
+
+TEST_CASE("Test log lazy string generation", "[ttl7]") {
+  LogTestController::getInstance().setDebug<logging::Logger>();
+  std::shared_ptr<logging::Logger> logger = logging::LoggerFactory<logging::Logger>::getLogger();
+  int call_count = 0;
+
+  logger->log_trace("%s", [&] {
+    ++call_count;
+    return std::string{"hello trace"};
+  });
+
+  logger->log_debug("%s", [&] {
+    ++call_count;
+    return std::string{"hello debug"};
+  });
+
+  REQUIRE(LogTestController::getInstance().contains("[debug] hello debug", 0s));
+  REQUIRE(call_count == 1);
+  LogTestController::getInstance().reset();
+}
+
 namespace single {
 class TestClass {
 };
@@ -85,7 +124,7 @@ class TestClass {
 class TestClass2 {
 };
 
-TEST_CASE("Test ShortenNames", "[ttl6]") {
+TEST_CASE("Test ShortenNames", "[ttl8]") {
   std::shared_ptr<logging::LoggerProperties> props = std::make_shared<logging::LoggerProperties>();
 
   props->set("spdlog.shorten_names", "true");
@@ -122,7 +161,7 @@ std::string decompress(const std::shared_ptr<InputStream>& input) {
   return utils::span_to<std::string>(output->getBuffer().as_span<const char>());
 }
 
-TEST_CASE("Test Compression", "[ttl7]") {
+TEST_CASE("Test Compression", "[ttl9]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
   std::string className;
@@ -161,7 +200,7 @@ class LoggerTestAccessor {
   }
 };
 
-TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl8]") {
+TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl10]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
   properties->set(logging::internal::CompressionManager::compression_cached_log_max_size_, "10 KB");
@@ -180,7 +219,7 @@ TEST_CASE("Test Compression cache overflow is discarded intermittently", "[ttl8]
   REQUIRE(cache_shrunk);
 }
 
-TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "[ttl9]") {
+TEST_CASE("Setting either properties to 0 disables in-memory compressed logs", "[ttl11]") {
   auto& log_config = logging::LoggerConfiguration::getConfiguration();
   auto properties = std::make_shared<logging::LoggerProperties>();
   bool is_nullptr = false;
