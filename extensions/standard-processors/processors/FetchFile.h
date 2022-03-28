@@ -76,11 +76,13 @@ class FetchFile : public core::Processor {
   }
 
  private:
-  std::string getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
-  void logWithLevel(LogLevelOption log_level, const std::string& message) const;
+  template<typename... Args>
+  void logWithLevel(LogLevelOption log_level, Args&&... args) const;
+
+  std::filesystem::path getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
   std::string getMoveAbsolutePath(const std::string& file_name) const;
   bool moveDestinationConflicts(const std::string& file_name) const;
-  bool moveWouldFailWithDestinationconflict(const std::string& file_name) const;
+  bool moveWouldFailWithDestinationConflict(const std::string& file_name) const;
   void executeMoveConflictStrategy(const std::string& file_to_fetch_path, const std::string& file_name);
   void processMoveCompletion(const std::string& file_to_fetch_path, const std::string& file_name);
   void executeCompletionStrategy(const std::string& file_to_fetch_path, const std::string& file_name);
