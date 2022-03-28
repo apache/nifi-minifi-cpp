@@ -61,6 +61,10 @@ class IntegrationBase {
     return configuration;
   }
 
+  void setConfiguration(std::shared_ptr<minifi::Configure> configuration) {
+    this->configuration = configuration;
+  }
+
   virtual void cleanup() {
     if (!state_dir.empty()) {
       utils::file::delete_dir(state_dir);

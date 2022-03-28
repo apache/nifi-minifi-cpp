@@ -111,7 +111,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
       }
       if (agent_node != nullptr) {
         agent_node->setConfigurationReader([this](const std::string& key){
-          return configuration_->get(key);
+          return configuration_->getString(key);
         });
       }
       auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());

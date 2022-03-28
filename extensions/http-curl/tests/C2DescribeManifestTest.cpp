@@ -22,6 +22,7 @@
 #include "Catch.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
+#include "properties/Configuration.h"
 
 class DescribeManifestHandler: public HeartbeatHandler {
  public:
@@ -41,8 +42,17 @@ class DescribeManifestHandler: public HeartbeatHandler {
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
   VerifyC2Describe harness;
+  utils::crypto::Bytes encryption_key = utils::StringUtils::from_hex("4024b327fdc987ce3eb43dd1f690b9987e4072e0020e3edf4349ce1ad91a4e38");
+  minifi::Decryptor decryptor{utils::crypto::EncryptionProvider{encryption_key}};
+  std::string encrypted_value = "l3WY1V27knTiPa6jVX0jrq4qjmKsySOu||ErntqZpHP1M+6OkA14p5sdnqJhuNHWHDVUU5EyMloTtSytKk9a5xNKo=";
+
+  harness.setConfiguration(std::make_shared<minifi::Configure>(decryptor));
   harness.setKeyDir(args.key_dir);
   DescribeManifestHandler responder(harness.getConfiguration());
+
+  harness.getConfiguration()->set(minifi::Configuration::nifi_rest_api_password, encrypted_value);
+  harness.getConfiguration()->set(std::string(minifi::Configuration::nifi_rest_api_password) + ".protected", utils::crypto::EncryptionType::name());
+
   harness.setUrl(args.url, &responder);
   harness.run(args.test_file);
 }
