@@ -62,7 +62,7 @@ class IntegrationBase {
   }
 
   void setConfiguration(std::shared_ptr<minifi::Configure> configuration) {
-    this->configuration = configuration;
+    this->configuration = std::move(configuration);
   }
 
   virtual void cleanup() {
