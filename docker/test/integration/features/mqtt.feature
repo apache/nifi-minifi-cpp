@@ -33,7 +33,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
 
   Scenario: If the MQTT broker does not exist, then no flow files are processed
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -60,7 +60,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     And an MQTT broker is deployed in correspondence with the PublishMQTT
     And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
 
   Scenario: A MiNiFi instance publishes and consumes data to/from an MQTT broker
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -77,5 +77,5 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
     And the MQTT broker has a log line matching "Received SUBSCRIBE from"
