@@ -25,6 +25,7 @@
 #include "FlowController.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
+#include "StubShutdownAgent.h"
 
 class TestControllerWithFlow: public TestController{
  public:
@@ -60,7 +61,8 @@ class TestControllerWithFlow: public TestController{
     controller_ = std::make_shared<minifi::FlowController>(
         prov_repo, ff_repo, configuration_,
         std::move(flow),
-        content_repo, DEFAULT_ROOT_GROUP_NAME);
+        content_repo, DEFAULT_ROOT_GROUP_NAME,
+        std::make_shared<utils::file::FileSystem>(), std::make_unique<minifi::test::StubShutdownAgent>());
     controller_->load(std::move(root));
   }
 

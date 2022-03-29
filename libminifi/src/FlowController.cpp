@@ -53,10 +53,11 @@ namespace minifi {
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                                std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
                                std::shared_ptr<core::ContentRepository> content_repo, const std::string /*name*/,
-                               std::shared_ptr<utils::file::FileSystem> filesystem)
+                               std::shared_ptr<utils::file::FileSystem> filesystem, std::unique_ptr<ShutdownAgent> shutdown_agent)
     : core::controller::ForwardingControllerServiceProvider(core::getClassName<FlowController>()),
       c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo),
-                   std::move(content_repo), std::move(flow_configuration), std::move(filesystem)),
+                   std::move(content_repo), std::move(flow_configuration), std::move(filesystem),
+                   core::logging::LoggerFactory<c2::C2Client>::getLogger(), std::move(shutdown_agent)),
       running_(false),
       updating_(false),
       initialized_(false),
@@ -76,9 +77,10 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem)
+                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem,
+                 std::unique_ptr<ShutdownAgent> shutdown_agent)
       : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration),
-                       std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, std::move(filesystem)) {}
+                       std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, std::move(filesystem), std::move(shutdown_agent)) {}
 
 std::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
   std::string shutdown_timeout_str;

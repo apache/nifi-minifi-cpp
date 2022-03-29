@@ -34,6 +34,7 @@
 #include "../Catch.h"
 #include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
+#include "../StubShutdownAgent.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -290,7 +291,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
 
   auto flowConfig = std::make_unique<core::FlowConfiguration>(prov_repo, ff_repository, content_repo, nullptr, config, "");
   auto flowController = std::make_shared<minifi::FlowController>(
-      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "");
+      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", std::make_shared<utils::file::FileSystem>(), std::make_unique<minifi::test::StubShutdownAgent>());
 
   std::string data = "banana";
   minifi::io::BufferStream content(data);

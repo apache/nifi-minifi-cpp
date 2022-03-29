@@ -44,6 +44,7 @@
 #include "utils/StringUtils.h"
 #include "io/ArchiveStream.h"
 #include "io/StreamPipe.h"
+#include "ProcessShutdownAgent.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -57,7 +58,8 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
                  state::Pausable *pause_handler,
                  state::StateMonitor* updateSink,
                  const std::shared_ptr<Configure> &configuration,
-                 const std::shared_ptr<utils::file::FileSystem> &filesystem)
+                 const std::shared_ptr<utils::file::FileSystem> &filesystem,
+                 std::unique_ptr<ShutdownAgent> shutdown_agent)
     : heart_beat_period_(3s),
       max_c2_responses(5),
       update_sink_(updateSink),
@@ -67,7 +69,8 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
       configuration_(configuration),
       filesystem_(filesystem),
       protocol_(nullptr),
-      thread_pool_(2, false, nullptr, "C2 threadpool") {
+      thread_pool_(2, false, nullptr, "C2 threadpool"),
+      shutdown_agent_(std::move(shutdown_agent)) {
   manifest_sent_ = false;
 
   last_run_ = std::chrono::steady_clock::now();
@@ -78,6 +81,10 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
 
   if (update_service_ == nullptr) {
     // create a stubbed service for updating the flow identifier
+  }
+
+  if (shutdown_agent_ == nullptr) {
+    shutdown_agent_ = std::make_unique<ProcessShutdownAgent>();
   }
 
   configure(configuration, false);

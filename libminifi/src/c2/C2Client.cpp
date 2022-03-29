@@ -41,11 +41,12 @@ C2Client::C2Client(
     std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
     std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
-    std::shared_ptr<core::logging::Logger> logger)
+    std::shared_ptr<core::logging::Logger> logger, std::unique_ptr<ShutdownAgent> shutdown_agent)
     : core::Flow(std::move(provenance_repo), std::move(flow_file_repo), std::move(content_repo), std::move(flow_configuration)),
       configuration_(std::move(configuration)),
       filesystem_(std::move(filesystem)),
-      logger_(std::move(logger)) {}
+      logger_(std::move(logger)),
+      shutdown_agent_(std::move(shutdown_agent)) {}
 
 void C2Client::stopC2() {
   if (c2_agent_) {
@@ -141,7 +142,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   if (!initialized_) {
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart
-    c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_);
+    c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_, std::move(shutdown_agent_));
     c2_agent_->start();
     initialized_ = true;
   }

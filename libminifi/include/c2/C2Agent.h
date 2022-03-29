@@ -42,6 +42,7 @@
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/ThreadPool.h"
 #include "utils/file/FileSystem.h"
+#include "ShutdownAgent.h"
 
 namespace org {
 namespace apache {
@@ -69,7 +70,8 @@ class C2Agent : public state::UpdateController {
           state::Pausable *pause_handler,
           state::StateMonitor* updateSink,
           const std::shared_ptr<Configure> &configure,
-          const std::shared_ptr<utils::file::FileSystem> &filesystem = std::make_shared<utils::file::FileSystem>());
+          const std::shared_ptr<utils::file::FileSystem> &filesystem = std::make_shared<utils::file::FileSystem>(),
+          std::unique_ptr<ShutdownAgent> shutdown_agent = nullptr);
 
   ~C2Agent() noexcept override {
     delete protocol_.load();
@@ -246,6 +248,8 @@ class C2Agent : public state::UpdateController {
   bool manifest_sent_;
 
   const uint64_t C2RESPONSE_POLL_MS = 100;
+
+  std::unique_ptr<ShutdownAgent> shutdown_agent_;
 };
 
 }  // namespace c2
