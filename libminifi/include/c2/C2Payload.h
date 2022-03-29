@@ -230,7 +230,7 @@ class C2Payload : public state::Update {
 
   friend std::ostream& operator<<(std::ostream& out, const C2Payload& payload);
 
-  std::string str() const {
+  [[nodiscard]] std::string str() const {
     std::stringstream ss;
     ss << *this;
     return std::move(ss).str();

@@ -607,11 +607,13 @@ inline std::error_code hide_file(const char* const file_name) {
 
 uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position);
 
-inline std::string get_file_content(const std::string &file_name) {
-  std::ifstream file(file_name);
+inline std::string get_content(const std::string &file_name) {
+  std::ifstream file(file_name, std::ifstream::binary);
   std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
   return content;
 }
+
+void put_content(const std::filesystem::path& filename, std::string_view new_contents);
 
 bool contains(const std::filesystem::path& file_path, std::string_view text_to_search);
 

@@ -47,6 +47,10 @@ class HTTPIntegrationBase : public IntegrationBase {
       : IntegrationBase(waitTime),
         server(nullptr) {
   }
+  HTTPIntegrationBase(const HTTPIntegrationBase&) = delete;
+  HTTPIntegrationBase(HTTPIntegrationBase&&) = default;
+  HTTPIntegrationBase& operator=(const HTTPIntegrationBase&) = delete;
+  HTTPIntegrationBase& operator=(HTTPIntegrationBase&&) = default;
 
   virtual void setUrl(const std::string &url, ServerAwareHandler *handler);
 

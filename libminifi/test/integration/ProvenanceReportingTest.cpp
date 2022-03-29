@@ -20,17 +20,11 @@
 #undef NDEBUG
 #include <cassert>
 #include <chrono>
-#include <fstream>
-#include <utility>
 #include <memory>
+#include <utility>
 #include <string>
 #include <thread>
-#include <type_traits>
-#include <vector>
 #include "utils/file/FileUtils.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
 #include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
@@ -38,7 +32,6 @@
 #include "../unit/ProvenanceTestHelper.h"
 #include "io/StreamFactory.h"
 #include "../TestBase.h"
-#include "../Catch.h"
 #include "utils/IntegrationTestUtils.h"
 
 int main(int argc, char **argv) {
@@ -63,12 +56,13 @@ int main(int argc, char **argv) {
   configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location);
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location));
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(
+      test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(
-      test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME);
+  const auto controller = std::make_shared<minifi::FlowController>(
+      test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
+      std::make_shared<utils::file::FileSystem>(), []{});
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location);
 

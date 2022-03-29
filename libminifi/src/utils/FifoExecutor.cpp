@@ -14,22 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MAIN_AGENTDOCS_H_
-#define MAIN_AGENTDOCS_H_
 
-#include <iostream>
-#include "agent/build_description.h"
+#include "utils/FifoExecutor.h"
 
-namespace org::apache::nifi::minifi::docs {
+namespace org::apache::nifi::minifi::utils::detail {
+WorkerThread::WorkerThread()
+    : thread_{&WorkerThread::run, this} {}
 
-class AgentDocs {
- public:
-  void generate(const std::string &docsdir, std::ostream &genStream);
- private:
-  [[nodiscard]] inline std::string extractClassName(const std::string &processor) const;
-  BuildDescription build_description_;
-};
+WorkerThread::~WorkerThread() {
+  task_queue_.stop();
+  thread_.join();
+}
 
-}  // namespace org::apache::nifi::minifi::docs
-
-#endif  // MAIN_AGENTDOCS_H_
+void WorkerThread::run() noexcept {
+  while (task_queue_.isRunning()) {
+    task_queue_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
+  }
+}
+}  // namespace org::apache::nifi::minifi::utils::detail

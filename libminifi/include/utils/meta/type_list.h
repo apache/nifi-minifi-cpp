@@ -14,30 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
+#include <type_traits>
 
-#include "WorkerThread.h"
-
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
-
-namespace detail {
-WorkerThread::WorkerThread()
-    : thread_{&WorkerThread::run, this} {}
-
-WorkerThread::~WorkerThread() {
-  task_queue_.stop();
-  thread_.join();
-}
-
-void WorkerThread::run() noexcept {
-  while (task_queue_.isRunning()) {
-    task_queue_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
+namespace org::apache::nifi::minifi::utils::meta {
+template<typename... Types>
+struct type_list {
+  template<typename T>
+  [[nodiscard]] constexpr static bool contains() noexcept {
+    return (std::is_same_v<T, Types> || ...);
   }
-}
-}  // namespace detail
-
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+};
+}  // namespace org::apache::nifi::minifi::utils::meta

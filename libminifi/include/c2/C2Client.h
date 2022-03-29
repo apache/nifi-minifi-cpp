@@ -36,11 +36,7 @@
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 class C2Client : public core::Flow, public state::response::NodeReporter {
  public:
@@ -48,6 +44,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
       std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
       std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
       std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
+      std::function<void()> request_restart,
       std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger());
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
@@ -84,10 +81,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
  protected:
   std::atomic<bool> flow_update_{false};
+  std::function<void()> request_restart_;
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

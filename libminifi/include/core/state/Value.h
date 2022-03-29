@@ -24,18 +24,15 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 #include <typeinfo>
 #include "utils/ValueParser.h"
 #include "utils/ValueCaster.h"
 #include "utils/Export.h"
+#include "utils/meta/type_list.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 /**
  * Purpose: Represents an AST value
@@ -48,17 +45,18 @@ class Value {
   using ParseException = utils::internal::ParseException;
 
  public:
-  explicit Value(const std::string &value)
-      : string_value(value),
+  explicit Value(std::string value)
+      : string_value(std::move(value)),
         type_id(std::type_index(typeid(std::string))) {
   }
 
   virtual ~Value() = default;
-  std::string getStringValue() const {
+
+  [[nodiscard]] std::string getStringValue() const {
     return string_value;
   }
 
-  const char* c_str() const {
+  [[nodiscard]] const char* c_str() const {
     return string_value.c_str();
   }
 
@@ -67,7 +65,7 @@ class Value {
     return convertValueImpl<typename std::common_type<T>::type>(ref);
   }
 
-  bool empty() {
+  [[nodiscard]] bool empty() const noexcept {
     return string_value.empty();
   }
 
@@ -178,7 +176,7 @@ class UInt32Value : public Value {
     setTypeId<uint32_t>();
   }
 
-  uint32_t getValue() const {
+  [[nodiscard]] uint32_t getValue() const {
     return value;
   }
 
@@ -210,7 +208,7 @@ class UInt32Value : public Value {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  uint32_t value;
+  uint32_t value{};
 };
 
 class IntValue : public Value {
@@ -225,7 +223,7 @@ class IntValue : public Value {
       : Value(strvalue) {
     utils::internal::ValueParser(strvalue).parse(value).parseEnd();
   }
-  int getValue() const {
+  [[nodiscard]] int getValue() const {
     return value;
   }
 
@@ -256,7 +254,7 @@ class IntValue : public Value {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  int value;
+  int value{};
 };
 
 class BoolValue : public Value {
@@ -272,7 +270,7 @@ class BoolValue : public Value {
     utils::internal::ValueParser(strvalue).parse(value).parseEnd();
   }
 
-  bool getValue() const {
+  [[nodiscard]] bool getValue() const {
     return value;
   }
 
@@ -302,7 +300,7 @@ class BoolValue : public Value {
     return true;
   }
 
-  bool value;
+  bool value{};
 
  private:
   template<typename T>
@@ -329,7 +327,7 @@ class UInt64Value : public Value {
     setTypeId<uint64_t>();
   }
 
-  uint64_t getValue() const {
+  [[nodiscard]] uint64_t getValue() const {
     return value;
   }
 
@@ -358,7 +356,7 @@ class UInt64Value : public Value {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  uint64_t value;
+  uint64_t value{};
 };
 
 class Int64Value : public Value {
@@ -374,7 +372,7 @@ class Int64Value : public Value {
     setTypeId<int64_t>();
   }
 
-  int64_t getValue() {
+  [[nodiscard]] int64_t getValue() const {
     return value;
   }
 
@@ -404,7 +402,7 @@ class Int64Value : public Value {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  int64_t value;
+  int64_t value{};
 };
 
 class DoubleValue : public Value {
@@ -420,37 +418,37 @@ class DoubleValue : public Value {
     setTypeId<double>();
   }
 
-  double getValue() {
+  [[nodiscard]] double getValue() const {
     return value;
   }
 
  protected:
-  virtual bool getValue(int& ref) {
+  bool getValue(int& ref) override {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(uint32_t& ref) {
+  bool getValue(uint32_t& ref) override {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(int64_t& ref ) {
+  bool getValue(int64_t& ref) override {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(uint64_t& ref) {
+  bool getValue(uint64_t& ref) override {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  virtual bool getValue(bool&) {
+  bool getValue(bool&) override {
     return false;
   }
 
-  virtual bool getValue(double& ref) {
+  bool getValue(double& ref) override {
     ref = value;
     return true;
   }
 
-  double value;
+  double value{};
 };
 
 static inline std::shared_ptr<Value> createValue(const bool &object) {
@@ -497,56 +495,50 @@ static inline std::shared_ptr<Value> createValue(const double &object) {
  * Purpose: ValueNode is the AST container for a value
  */
 class ValueNode {
- public:
-  ValueNode()
-      : value_(nullptr) {
-  }
+  using supported_types = utils::meta::type_list<int, uint32_t, size_t, int64_t, uint64_t, bool, char*, const char*, double, std::string>;
 
-  ValueNode(ValueNode &&vn) = default;
-  ValueNode(const ValueNode &vn) = default;
+ public:
+  ValueNode() = default;
+
+  template<typename T>
+  requires (supported_types::contains<T>())  // NOLINT
+  /* implicit, because it doesn't change the meaning, and it simplifies construction of maps */
+  ValueNode(const T value)  // NOLINT
+      :value_{createValue(value)}
+  {}
 
   /**
    * Define the representations and eventual storage relationships through
    * createValue
    */
   template<typename T>
-  auto operator=(const T ref) -> typename std::enable_if<std::is_same<T, int >::value ||
-  std::is_same<T, uint32_t >::value ||
-  std::is_same<T, size_t >::value ||
-  std::is_same<T, int64_t>::value ||
-  std::is_same<T, uint64_t >::value ||
-  std::is_same<T, bool >::value ||
-  std::is_same<T, char* >::value ||
-  std::is_same<T, const char* >::value ||
-  std::is_same<T, double>::value ||
-  std::is_same<T, std::string>::value, ValueNode&>::type {
+  requires (supported_types::contains<T>())  // NOLINT
+  ValueNode& operator=(const T ref) {
     value_ = createValue(ref);
     return *this;
   }
-
-  ValueNode &operator=(const ValueNode &ref) = default;
 
   inline bool operator==(const ValueNode &rhs) const {
     return to_string() == rhs.to_string();
   }
 
-  inline bool operator==(const char*rhs) const {
+  inline bool operator==(const char* rhs) const {
     return to_string() == rhs;
   }
 
-  friend bool operator==(const char *lhs, const ValueNode& rhs) {
+  friend bool operator==(const char* lhs, const ValueNode& rhs) {
     return lhs == rhs.to_string();
   }
 
-  std::string to_string() const {
+  [[nodiscard]] std::string to_string() const {
     return value_ ? value_->getStringValue() : "";
   }
 
-  std::shared_ptr<Value> getValue() const {
+  [[nodiscard]] std::shared_ptr<Value> getValue() const {
     return value_;
   }
 
-  bool empty() const {
+  [[nodiscard]] bool empty() const noexcept {
     return value_ == nullptr || value_->empty();
   }
 
@@ -556,33 +548,23 @@ class ValueNode {
 
 struct SerializedResponseNode {
   std::string name;
-  ValueNode value;
-  bool array;
-  bool collapsible;
+  ValueNode value{};
+  bool array = false;
+  bool collapsible = true;
   bool keep_empty = false;
-  std::vector<SerializedResponseNode> children;
+  std::vector<SerializedResponseNode> children{};
 
-  SerializedResponseNode(bool collapsible = true) // NOLINT
-      : array(false),
-        collapsible(collapsible) {
-  }
-
-  SerializedResponseNode(const SerializedResponseNode &other) = default;
-
-  SerializedResponseNode &operator=(const SerializedResponseNode &other) = default;
-
-  bool empty() const {
+  [[nodiscard]] bool empty() const noexcept {
     return value.empty() && children.empty();
   }
+
+  [[nodiscard]] std::string to_string() const;
 };
+
+inline std::string to_string(const SerializedResponseNode& node) { return node.to_string(); }
 
 std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes);
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state::response
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_VALUE_H_

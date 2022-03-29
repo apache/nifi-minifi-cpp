@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#include <filesystem>
 #include <memory>
 #include <map>
 #include "c2/C2Client.h"
@@ -30,22 +31,20 @@
 #include "c2/C2Agent.h"
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
+#include "utils/file/FileUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 C2Client::C2Client(
     std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
     std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
-    std::shared_ptr<core::logging::Logger> logger)
+    std::function<void()> request_restart, std::shared_ptr<core::logging::Logger> logger)
     : core::Flow(std::move(provenance_repo), std::move(flow_file_repo), std::move(content_repo), std::move(flow_configuration)),
       configuration_(std::move(configuration)),
       filesystem_(std::move(filesystem)),
-      logger_(std::move(logger)) {}
+      logger_(std::move(logger)),
+      request_restart_(std::move(request_restart)) {}
 
 void C2Client::stopC2() {
   if (c2_agent_) {
@@ -68,7 +67,14 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     logger_->log_info("Agent class is not predefined");
   }
 
-  configuration_->setFallbackAgentIdentifier(getControllerUUID().to_string());
+  // Set a persistent fallback agent id. This is needed so that the C2 server can identify the same agent after a restart, even if nifi.c2.agent.identifier is not specified.
+  if (auto id = configuration_->get(Configuration::nifi_c2_agent_identifier_fallback)) {
+    configuration_->setFallbackAgentIdentifier(*id);
+  } else {
+    const auto agent_id = getControllerUUID().to_string();
+    configuration_->setFallbackAgentIdentifier(agent_id);
+    configuration_->set(Configuration::nifi_c2_agent_identifier_fallback, agent_id, PropertyChangeLifetime::PERSISTENT);
+  }
 
   {
     std::lock_guard<std::mutex> lock(initialization_mutex_);
@@ -141,7 +147,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   if (!initialized_) {
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart
-    c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_);
+    c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_, request_restart_);
     c2_agent_->start();
     initialized_ = true;
   }
@@ -355,8 +361,4 @@ void C2Client::updateResponseNodeConnections() {
   }
 }
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

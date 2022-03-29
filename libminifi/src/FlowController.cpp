@@ -45,18 +45,16 @@
 #include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                                std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                               std::shared_ptr<core::ContentRepository> content_repo, const std::string /*name*/,
-                               std::shared_ptr<utils::file::FileSystem> filesystem)
+                               std::shared_ptr<core::ContentRepository> content_repo, const std::string& /*name*/,
+                               std::shared_ptr<utils::file::FileSystem> filesystem, std::function<void()> request_restart)
     : core::controller::ForwardingControllerServiceProvider(core::getClassName<FlowController>()),
       c2::C2Client(std::move(configure), std::move(provenance_repo), std::move(flow_file_repo),
-                   std::move(content_repo), std::move(flow_configuration), std::move(filesystem)),
+                   std::move(content_repo), std::move(flow_configuration), std::move(filesystem),
+                   std::move(request_restart), core::logging::LoggerFactory<c2::C2Client>::getLogger()),
       running_(false),
       updating_(false),
       initialized_(false),
@@ -76,9 +74,10 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem)
+                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem,
+                 std::function<void()> request_restart)
       : FlowController(std::move(provenance_repo), std::move(flow_file_repo), std::move(configure), std::move(flow_configuration),
-                       std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, std::move(filesystem)) {}
+                       std::move(content_repo), DEFAULT_ROOT_GROUP_NAME, std::move(filesystem), std::move(request_restart)) {}
 
 std::optional<std::chrono::milliseconds> FlowController::loadShutdownTimeoutFromConfiguration() {
   std::string shutdown_timeout_str;
@@ -426,13 +425,14 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() const {
+std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() {
   auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
   agentInfo->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)).get());
   agentInfo->setAgentIdentificationProvider(configuration_);
   agentInfo->setConfigurationReader([this](const std::string& key){
     return configuration_->getString(key);
   });
+  agentInfo->setStateMonitor(this);
   agentInfo->includeAgentStatus(false);
   return agentInfo;
 }
@@ -552,7 +552,4 @@ state::StateController* FlowController::getProcessorController(const std::string
   return foundController.get();
 }
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

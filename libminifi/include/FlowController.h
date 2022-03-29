@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -57,10 +58,7 @@
 #include "utils/Id.h"
 #include "utils/file/FileSystem.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 namespace state {
 class ProcessorController;
@@ -77,12 +75,14 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
  public:
   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 std::shared_ptr<core::ContentRepository> content_repo, std::string name = DEFAULT_ROOT_GROUP_NAME,
-                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>());
+                 std::shared_ptr<core::ContentRepository> content_repo, const std::string& name = DEFAULT_ROOT_GROUP_NAME,
+                 std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(),
+                 std::function<void()> request_restart = []{});
 
   FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
                  std::shared_ptr<Configure> configure, std::unique_ptr<core::FlowConfiguration> flow_configuration,
-                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem);
+                 std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<utils::file::FileSystem> filesystem,
+                 std::function<void()> request_restart = []{});
 
   ~FlowController() override;
 
@@ -181,7 +181,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
-  std::shared_ptr<state::response::ResponseNode> getAgentManifest() const override;
+  std::shared_ptr<state::response::ResponseNode> getAgentManifest() override;
 
   uint64_t getUptime() override;
 
@@ -254,9 +254,6 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
 
 #endif  // LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_

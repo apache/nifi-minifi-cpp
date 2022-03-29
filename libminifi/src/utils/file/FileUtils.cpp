@@ -106,6 +106,13 @@ std::chrono::time_point<std::chrono::system_clock> to_sys_time_point(const std::
 #endif
 }
 
+void put_content(const std::filesystem::path& filename, std::string_view new_contents) {
+  std::ofstream ofs;
+  ofs.exceptions(std::ofstream::badbit | std::ofstream::failbit);
+  ofs.open(filename, std::ofstream::binary);
+  ofs.write(new_contents.data(), gsl::narrow<std::streamsize>(new_contents.size()));
+}
+
 }  // namespace file
 }  // namespace utils
 }  // namespace minifi

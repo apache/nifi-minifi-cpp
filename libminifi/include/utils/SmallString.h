@@ -34,6 +34,10 @@ class SmallString : public std::array<char, N + 1> {
     return {c_str()};
   }
 
+  [[nodiscard]] std::string_view view() const noexcept {
+    return std::string_view{this->data(), N};
+  }
+
   constexpr size_t length() const noexcept {
     return N;
   }

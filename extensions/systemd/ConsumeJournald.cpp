@@ -81,7 +81,7 @@ void ConsumeJournald::initialize() {
   setSupportedProperties({BatchSize, PayloadFormat, IncludeTimestamp, JournalType, ProcessOldMessages, TimestampFormat});
   setSupportedRelationships({Success});
 
-  worker_ = std::make_unique<Worker>();
+  worker_ = std::make_unique<utils::FifoExecutor>();
 }
 
 void ConsumeJournald::notifyStop() {

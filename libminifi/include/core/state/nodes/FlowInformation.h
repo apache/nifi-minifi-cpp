@@ -194,11 +194,13 @@ class FlowInformation : public FlowMonitor {
     serialized.push_back(uri);
 
     if (!connections_.empty()) {
-      SerializedResponseNode queues(false);
+      SerializedResponseNode queues;
+      queues.collapsible = false;
       queues.name = "queues";
 
       for (auto &queue : connections_) {
-        SerializedResponseNode repoNode(false);
+        SerializedResponseNode repoNode;
+        repoNode.collapsible = false;
         repoNode.name = queue.second->getName();
 
         SerializedResponseNode queueUUIDNode;
@@ -233,11 +235,13 @@ class FlowInformation : public FlowMonitor {
     }
 
     if (nullptr != monitor_) {
-      SerializedResponseNode componentsNode(false);
+      SerializedResponseNode componentsNode;
+      componentsNode.collapsible = false;
       componentsNode.name = "components";
 
       monitor_->executeOnAllComponents([&componentsNode](StateController& component){
-        SerializedResponseNode componentNode(false);
+        SerializedResponseNode componentNode;
+        componentNode.collapsible = false;
         componentNode.name = component.getComponentName();
 
         SerializedResponseNode uuidNode;

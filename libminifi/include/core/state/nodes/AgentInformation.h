@@ -64,12 +64,7 @@
 #include "utils/Export.h"
 #include "SupportedOperations.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 #define GROUP_STR "org.apache.nifi.minifi"
 
@@ -91,7 +86,7 @@ class ComponentManifest : public DeviceInformation {
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode resp;
     resp.name = "componentManifest";
-    struct Components group = BuildDescription::getClassDescriptions(getName());
+    struct Components group = build_description_.getClassDescriptions(getName());
     serializeClassDescription(group.processors_, "processors", resp);
     serializeClassDescription(group.controller_services_, "controllerServices", resp);
     serialized.push_back(resp);
@@ -316,6 +311,9 @@ class ComponentManifest : public DeviceInformation {
       response.children.push_back(type);
     }
   }
+
+ private:
+  BuildDescription build_description_;
 };
 
 class ExternalManifest : public ComponentManifest {
@@ -499,11 +497,13 @@ class AgentStatus : public StateMonitorNode {
   }
 
   SerializedResponseNode serializeComponents() const {
-    SerializedResponseNode components_node(false);
+    SerializedResponseNode components_node;
+    components_node.collapsible = false;
     components_node.name = "components";
     if (monitor_ != nullptr) {
       monitor_->executeOnAllComponents([&components_node](StateController& component){
-        SerializedResponseNode component_node(false);
+        SerializedResponseNode component_node;
+        component_node.collapsible = false;
         component_node.name = component.getComponentName();
 
         SerializedResponseNode uuid_node;
@@ -585,7 +585,7 @@ class AgentMonitor {
     }
   }
 
-  void setStateMonitor(state::StateMonitor* &monitor) {
+  void setStateMonitor(state::StateMonitor* monitor) {
     monitor_ = monitor;
   }
 
@@ -599,15 +599,15 @@ class AgentMonitor {
  */
 class AgentManifest : public DeviceInformation {
  public:
-  AgentManifest(std::string name, const utils::Identifier& uuid)
-    : DeviceInformation(std::move(name), uuid) {
+  AgentManifest(const std::string& name, const utils::Identifier& uuid)
+    : DeviceInformation(name, uuid) {
   }
 
-  explicit AgentManifest(std::string name)
-    : DeviceInformation(std::move(name)) {
+  explicit AgentManifest(const std::string& name)
+    : DeviceInformation(name) {
   }
 
-  std::string getName() const {
+  std::string getName() const override {
     return "agentManifest";
   }
 
@@ -620,80 +620,38 @@ class AgentManifest : public DeviceInformation {
   }
 
   void setConfigurationReader(std::function<std::optional<std::string>(const std::string&)> configuration_reader) {
-    configuration_reader_ = configuration_reader;
+    configuration_reader_ = std::move(configuration_reader);
   }
 
-  std::vector<SerializedResponseNode> serialize() {
-    static std::vector<SerializedResponseNode> serialized;
-    if (serialized.empty()) {
-      SerializedResponseNode ident;
-
-      ident.name = "identifier";
-      ident.value = AgentBuild::BUILD_IDENTIFIER;
-
-      SerializedResponseNode type;
-
-      type.name = "agentType";
-      type.value = "cpp";
-
-      SerializedResponseNode version;
-
-      version.name = "version";
-      version.value = AgentBuild::VERSION;
-
-      SerializedResponseNode buildInfo;
-      buildInfo.name = "buildInfo";
-
-      SerializedResponseNode build_version;
-      build_version.name = "version";
-      build_version.value = AgentBuild::VERSION;
-
-      SerializedResponseNode build_rev;
-      build_rev.name = "revision";
-      build_rev.value = AgentBuild::BUILD_REV;
-
-      SerializedResponseNode build_date;
-      build_date.name = "timestamp";
-      build_date.value = (uint64_t) std::stoull(AgentBuild::BUILD_DATE);
-
-      SerializedResponseNode compiler_command;
-      compiler_command.name = "compiler";
-      compiler_command.value = AgentBuild::COMPILER;
-
-      SerializedResponseNode compiler_flags;
-      compiler_flags.name = "flags";
-      compiler_flags.value = AgentBuild::COMPILER_FLAGS;
-
-      buildInfo.children.push_back(compiler_flags);
-      buildInfo.children.push_back(compiler_command);
-
-      buildInfo.children.push_back(build_version);
-      buildInfo.children.push_back(build_rev);
-      buildInfo.children.push_back(build_date);
-
-      Bundles bundles("bundles");
-
-      serialized.push_back(ident);
-      serialized.push_back(type);
-      serialized.push_back(buildInfo);
-      // serialize the bundle information.
-      for (auto bundle : bundles.serialize()) {
-        serialized.push_back(bundle);
-      }
-
-      SchedulingDefaults defaults("schedulingDefaults");
-
-      for (auto defaultNode : defaults.serialize()) {
-        serialized.push_back(defaultNode);
-      }
-
-      SupportedOperations supported_operations("supportedOperations");
-      supported_operations.setStateMonitor(monitor_);
-      supported_operations.setUpdatePolicyController(update_policy_controller_);
-      supported_operations.setConfigurationReader(configuration_reader_);
-      for (const auto& operation : supported_operations.serialize()) {
-        serialized.push_back(operation);
-      }
+  std::vector<SerializedResponseNode> serialize() override {
+    std::vector<SerializedResponseNode> serialized = {
+        {.name = "identifier", .value = AgentBuild::BUILD_IDENTIFIER},
+        {.name = "agentType", .value = "cpp"},
+        {.name = "buildInfo", .children = {
+            {.name = "flags", .value = AgentBuild::COMPILER_FLAGS},
+            {.name = "compiler", .value = AgentBuild::COMPILER},
+            {.name = "version", .value = AgentBuild::VERSION},
+            {.name = "revision", .value = AgentBuild::BUILD_REV},
+            {.name = "timestamp", .value = static_cast<uint64_t>(std::stoull(AgentBuild::BUILD_DATE))}
+        }}
+    };
+    {
+      auto bundles = Bundles{"bundles"}.serialize();
+      std::move(std::begin(bundles), std::end(bundles), std::back_inserter(serialized));
+    }
+    {
+      auto schedulingDefaults = SchedulingDefaults{"schedulingDefaults"}.serialize();
+      std::move(std::begin(schedulingDefaults), std::end(schedulingDefaults), std::back_inserter(serialized));
+    }
+    {
+      auto supportedOperations = [this]() {
+        SupportedOperations supported_operations("supportedOperations");
+        supported_operations.setStateMonitor(monitor_);
+        supported_operations.setUpdatePolicyController(update_policy_controller_);
+        supported_operations.setConfigurationReader(configuration_reader_);
+        return supported_operations.serialize();
+      }();
+      std::move(std::begin(supportedOperations), std::end(supportedOperations), std::back_inserter(serialized));
     }
     return serialized;
   }
@@ -721,52 +679,42 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   }
 
   void setConfigurationReader(std::function<std::optional<std::string>(const std::string&)> configuration_reader) {
-    configuration_reader_ = configuration_reader;
+    configuration_reader_ = std::move(configuration_reader);
   }
 
  protected:
-  std::vector<SerializedResponseNode> serialize() {
-    std::vector<SerializedResponseNode> serialized;
-
-    SerializedResponseNode ident;
-
-    ident.name = "identifier";
-    ident.value = provider_->getAgentIdentifier();
-    serialized.push_back(ident);
+  std::vector<SerializedResponseNode> serialize() override {
+    std::vector<SerializedResponseNode> serialized = {
+        {.name = "identifier", .value = provider_->getAgentIdentifier()},
+    };
 
     const auto agent_class = provider_->getAgentClass();
     if (agent_class) {
-      SerializedResponseNode agentClass;
-      agentClass.name = "agentClass";
-      agentClass.value = *agent_class;
-      serialized.push_back(agentClass);
+      serialized.push_back({.name = "agentClass", .value = *agent_class});
     }
 
-    SerializedResponseNode agentManifestHash;
-    agentManifestHash.name = "agentManifestHash";
-    agentManifestHash.value = getAgentManifestHash();
-    serialized.push_back(agentManifestHash);
-
+    serialized.push_back({.name = "agentManifestHash", .value = getAgentManifestHash()});
     return serialized;
   }
 
   std::vector<SerializedResponseNode> getAgentManifest() const {
-    SerializedResponseNode agentManifest;
-    agentManifest.name = "agentManifest";
-    AgentManifest manifest{"manifest"};
-    manifest.setStateMonitor(monitor_);
-    manifest.setUpdatePolicyController(update_policy_controller_);
-    manifest.setConfigurationReader(configuration_reader_);
-    agentManifest.children = manifest.serialize();
-    return std::vector<SerializedResponseNode>{ agentManifest };
+    if (agent_manifest_cache_) { return std::vector{*agent_manifest_cache_}; }
+    agent_manifest_cache_ = {.name = "agentManifest", .children = [this] {
+      AgentManifest manifest{"manifest"};
+      manifest.setStateMonitor(monitor_);
+      manifest.setUpdatePolicyController(update_policy_controller_);
+      manifest.setConfigurationReader(configuration_reader_);
+      return manifest.serialize();
+    }()};
+    agent_manifest_hash_cache_.clear();
+    return std::vector{ *agent_manifest_cache_ };
   }
 
-  std::string getAgentManifestHash() {
-    if (!agentManifestHash_.has_value()) {
-      agentManifestHash_ = hashResponseNodes(getAgentManifest());
+  std::string getAgentManifestHash() const {
+    if (agent_manifest_hash_cache_.empty()) {
+      agent_manifest_hash_cache_ = hashResponseNodes(getAgentManifest());
     }
-
-    return *agentManifestHash_;
+    return agent_manifest_hash_cache_;
   }
 
   std::vector<SerializedResponseNode> getAgentStatus() const {
@@ -787,9 +735,11 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   }
 
  private:
-  std::optional<std::string> agentManifestHash_;
+  mutable std::optional<SerializedResponseNode> agent_manifest_cache_;
+  mutable std::string agent_manifest_hash_cache_;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
   std::function<std::optional<std::string>(const std::string&)> configuration_reader_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AgentNode>::getLogger();
 };
 
 /**
@@ -811,7 +761,7 @@ class AgentInformation : public AgentNode {
     setArray(false);
   }
 
-  std::string getName() const {
+  std::string getName() const override {
     return "agentInfo";
   }
 
@@ -819,7 +769,7 @@ class AgentInformation : public AgentNode {
     include_agent_status_ = include;
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized(AgentNode::serialize());
     if (include_agent_manifest_) {
       auto manifest = getAgentManifest();
@@ -837,11 +787,6 @@ class AgentInformation : public AgentNode {
   bool include_agent_status_;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state::response
 
 #endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_

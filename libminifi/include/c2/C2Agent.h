@@ -68,8 +68,9 @@ class C2Agent : public state::UpdateController {
   C2Agent(core::controller::ControllerServiceProvider *controller,
           state::Pausable *pause_handler,
           state::StateMonitor* updateSink,
-          const std::shared_ptr<Configure> &configure,
-          const std::shared_ptr<utils::file::FileSystem> &filesystem = std::make_shared<utils::file::FileSystem>());
+          std::shared_ptr<Configure> configure,
+          std::shared_ptr<utils::file::FileSystem> filesystem,
+          std::function<void()> request_restart);
 
   ~C2Agent() noexcept override {
     delete protocol_.load();
@@ -93,8 +94,6 @@ class C2Agent : public state::UpdateController {
   std::optional<std::string> fetchFlow(const std::string& uri) const;
 
  protected:
-  void restart_agent();
-
   /**
    * Check the collection of triggers for any updates that need to be handled.
    * This is an optional step
@@ -246,6 +245,9 @@ class C2Agent : public state::UpdateController {
   bool manifest_sent_;
 
   const uint64_t C2RESPONSE_POLL_MS = 100;
+
+  std::atomic<bool> restart_needed_ = false;
+  std::function<void()> request_restart_;
 };
 
 }  // namespace c2

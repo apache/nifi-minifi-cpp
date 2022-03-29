@@ -32,10 +32,7 @@
 #include "core/Annotation.h"
 #include "io/validation.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class ClassDescription {
  public:
@@ -71,6 +68,10 @@ struct Components {
   std::vector<ClassDescription> processors_;
   std::vector<ClassDescription> controller_services_;
   std::vector<ClassDescription> other_components_;
+
+  [[nodiscard]] bool empty() const noexcept {
+    return processors_.empty() && controller_services_.empty() && other_components_.empty();
+  }
 };
 
 struct BundleDetails {
@@ -121,13 +122,8 @@ class ExternalBuildDescription {
 
 class BuildDescription {
  public:
-  static struct Components getClassDescriptions(const std::string& group = "minifi-system") {
-    static std::map<std::string, struct Components> class_mappings;
-#ifndef WIN32
-    if (UNLIKELY(IsNullOrEmpty(class_mappings[group].processors_) && IsNullOrEmpty(class_mappings[group].processors_))) {
-#else
-      if (class_mappings[group].processors_.empty()) {
-#endif
+  struct Components getClassDescriptions(const std::string& group = "minifi-system") {
+    if (class_mappings_[group].empty()) {
       for (const auto& clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
         std::string class_name = clazz;
         auto lastOfIdx = clazz.find_last_of("::");
@@ -158,22 +154,22 @@ class BuildDescription {
             description.inputRequirement_ = processor->getInputRequirementAsString();
             description.isSingleThreaded_ = processor->isSingleThreaded();
             description.class_relationships_ = processor->getSupportedRelationships();
-            class_mappings[group].processors_.emplace_back(description);
+            class_mappings_[group].processors_.emplace_back(description);
           } else if (is_controller_service) {
-            class_mappings[group].controller_services_.emplace_back(description);
+            class_mappings_[group].controller_services_.emplace_back(description);
           } else {
-            class_mappings[group].other_components_.emplace_back(description);
+            class_mappings_[group].other_components_.emplace_back(description);
           }
         }
       }
     }
-    return class_mappings[group];
+    return class_mappings_[group];
   }
-}; // NOLINT
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+ private:
+  std::map<std::string, struct Components> class_mappings_;
+};
+
+}  // namespace org::apache::nifi::minifi
 
 #endif  // LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_

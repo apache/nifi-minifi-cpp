@@ -19,6 +19,7 @@
 
 #define DEFAULT_WAITTIME_MSECS 3000
 
+#include <future>
 #include <memory>
 #include <optional>
 #include <string>
@@ -34,6 +35,7 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "HTTPUtils.h"
+#include "utils/FifoExecutor.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -42,7 +44,30 @@ namespace utils = minifi::utils;
 class IntegrationBase {
  public:
   explicit IntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS));
-
+  IntegrationBase(const IntegrationBase&) = delete;
+  IntegrationBase(IntegrationBase&& other) noexcept
+      :configuration{std::move(other.configuration)},
+      flowController_{std::move(other.flowController_)},
+      wait_time_{other.wait_time_},
+      port{std::move(other.port)},
+      scheme{std::move(other.scheme)},
+      key_dir{std::move(other.key_dir)},
+      state_dir{std::move(other.state_dir)},
+      restart_requested_count_{other.restart_requested_count_.load()}
+  {}
+  IntegrationBase& operator=(const IntegrationBase&) = delete;
+  IntegrationBase& operator=(IntegrationBase&& other) noexcept {
+    if (&other == this) return *this;
+    configuration = std::move(other.configuration);
+    flowController_ = std::move(other.flowController_);
+    wait_time_ = other.wait_time_;
+    port = std::move(other.port);
+    scheme = std::move(other.scheme);
+    key_dir = std::move(other.key_dir);
+    state_dir = std::move(other.state_dir);
+    restart_requested_count_ = other.restart_requested_count_.load();
+    return *this;
+  }
   virtual ~IntegrationBase() = default;
 
   virtual void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& home_path = {});
@@ -93,6 +118,7 @@ class IntegrationBase {
   std::string port, scheme;
   std::string key_dir;
   std::string state_dir;
+  std::atomic<int> restart_requested_count_{0};
 };
 
 IntegrationBase::IntegrationBase(std::chrono::milliseconds waitTime)
@@ -111,6 +137,7 @@ void IntegrationBase::configureSecurity() {
 }
 
 void IntegrationBase::run(const std::optional<std::string>& test_file_location, const std::optional<std::string>& home_path) {
+  using namespace std::literals::chrono_literals;
   testSetup();
 
   std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
@@ -126,46 +153,67 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
-  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
 
-  bool should_encrypt_flow_config = (configuration->get(minifi::Configure::nifi_flow_configuration_encrypt)
-                                     | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+  std::atomic<bool> running = true;
+  utils::FifoExecutor assertion_runner;
+  std::future<void> assertions_done;
+  while (running) {
+    running = false;  // Stop running after this iteration, unless restart is explicitly requested
 
-  std::shared_ptr<utils::file::FileSystem> filesystem;
-  if (home_path) {
-    filesystem = std::make_shared<utils::file::FileSystem>(
-        should_encrypt_flow_config,
-        utils::crypto::EncryptionProvider::create(*home_path));
-  } else {
-    filesystem = std::make_shared<utils::file::FileSystem>();
+    std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
+
+    bool should_encrypt_flow_config = (configuration->get(minifi::Configure::nifi_flow_configuration_encrypt)
+        | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+
+    std::shared_ptr<utils::file::FileSystem> filesystem;
+    if (home_path) {
+      filesystem = std::make_shared<utils::file::FileSystem>(
+          should_encrypt_flow_config,
+          utils::crypto::EncryptionProvider::create(*home_path));
+    } else {
+      filesystem = std::make_shared<utils::file::FileSystem>();
+    }
+
+    auto flow_config = std::make_unique<core::YamlConfiguration>(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem);
+
+    auto controller_service_provider = flow_config->getControllerServiceProvider();
+    char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
+    state_dir = utils::file::create_temp_directory(state_dir_name_template);
+    if (!configuration->get(minifi::Configure::nifi_state_management_provider_local_path)) {
+      configuration->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir);
+    }
+    core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider.get(), configuration);
+
+    std::shared_ptr<core::ProcessGroup> pg(flow_config->getRoot());
+    queryRootProcessGroup(pg);
+
+    std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+
+    const auto request_restart = [&, this] {
+      ++restart_requested_count_;
+      running = true;
+    };
+    flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME,
+        std::make_shared<utils::file::FileSystem>(), request_restart);
+    flowController_->load();
+    updateProperties(*flowController_);
+    flowController_->start();
+
+    assertions_done = assertion_runner.enqueue([this] { runAssertions(); });
+    std::future_status status = std::future_status::ready;
+    while (!running && (status = assertions_done.wait_for(10ms)) == std::future_status::timeout) { /* wait */ }
+    if (running && status != std::future_status::timeout) {
+      // cancel restart, because assertions have finished running
+      running = false;
+    }
+
+    if (!running) {
+      // Only stop servers if we're shutting down
+      shutdownBeforeFlowController();
+    }
+    flowController_->unload();
+    flowController_->stopC2();
   }
-
-  std::unique_ptr<core::FlowConfiguration> flow_config = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, test_file_location, filesystem));
-
-  auto controller_service_provider = flow_config->getControllerServiceProvider();
-  char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
-  state_dir = utils::file::create_temp_directory(state_dir_name_template);
-  if (!configuration->get(minifi::Configure::nifi_state_management_provider_local_path)) {
-    configuration->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir);
-  }
-  core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider.get(), configuration);
-
-  std::shared_ptr<core::ProcessGroup> pg(flow_config->getRoot());
-  queryRootProcessGroup(pg);
-
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
-
-  flowController_ = std::make_unique<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(flow_config), content_repo, DEFAULT_ROOT_GROUP_NAME);
-  flowController_->load();
-  updateProperties(*flowController_);
-  flowController_->start();
-
-  runAssertions();
-
-  shutdownBeforeFlowController();
-  flowController_->unload();
-  flowController_->stopC2();
 
   cleanup();
 }

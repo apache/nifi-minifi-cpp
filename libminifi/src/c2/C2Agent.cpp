@@ -47,27 +47,25 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
                  state::Pausable *pause_handler,
                  state::StateMonitor* updateSink,
-                 const std::shared_ptr<Configure> &configuration,
-                 const std::shared_ptr<utils::file::FileSystem> &filesystem)
+                 std::shared_ptr<Configure> configuration,
+                 std::shared_ptr<utils::file::FileSystem> filesystem,
+                 std::function<void()> request_restart)
     : heart_beat_period_(3s),
       max_c2_responses(5),
       update_sink_(updateSink),
       update_service_(nullptr),
       controller_(controller),
       pause_handler_(pause_handler),
-      configuration_(configuration),
-      filesystem_(filesystem),
+      configuration_(std::move(configuration)),
+      filesystem_(std::move(filesystem)),
       protocol_(nullptr),
-      thread_pool_(2, false, nullptr, "C2 threadpool") {
+      thread_pool_(2, false, nullptr, "C2 threadpool"),
+      request_restart_(std::move(request_restart)) {
   manifest_sent_ = false;
 
   last_run_ = std::chrono::steady_clock::now();
@@ -80,7 +78,7 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
     // create a stubbed service for updating the flow identifier
   }
 
-  configure(configuration, false);
+  configure(configuration_, false);
 
   functions_.emplace_back([this] {return produce();});
   functions_.emplace_back([this] {return consume();});
@@ -347,7 +345,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
       update_sink_->stop();
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
       protocol_.load()->consumePayload(std::move(response));
-      restart_agent();
+      restart_needed_ = true;
     }
       break;
     case Operation::START:
@@ -634,6 +632,7 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
   }
   C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
   enqueue_c2_response(std::move(response));
+  if (result != state::UpdateState::NO_OPERATION) { restart_needed_ = true; }
 }
 
 /**
@@ -715,19 +714,6 @@ void C2Agent::handle_transfer(const C2ContentResponse &resp) {
   }
 }
 
-void C2Agent::restart_agent() {
-  std::string cwd = utils::Environment::getCurrentWorkingDirectory();
-  if (cwd.empty()) {
-    logger_->log_error("Could not restart the agent because the working directory could not be determined");
-    return;
-  }
-
-  std::string command = cwd + "/bin/minifi.sh restart";
-  if (system(command.c_str()) != 0) {
-    logger_->log_error("System command '%s' failed", command);
-  }
-}
-
 utils::TaskRescheduleInfo C2Agent::produce() {
   // place priority on messages to send to the c2 server
   if (protocol_.load() != nullptr) {
@@ -754,6 +740,12 @@ utils::TaskRescheduleInfo C2Agent::produce() {
             logger_->log_error("Unknown exception occurred while consuming payload.");
           }
         });
+
+    if (restart_needed_ && requests.empty()) {
+      configuration_->commitChanges();
+      request_restart_();
+      return utils::TaskRescheduleInfo::Done();
+    }
 
     try {
       performHeartBeat();
@@ -911,8 +903,4 @@ void C2Agent::enqueue_c2_server_response(C2Payload &&resp) {
   responses.enqueue(std::move(resp));
 }
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2
