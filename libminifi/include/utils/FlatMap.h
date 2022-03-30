@@ -147,6 +147,22 @@ class FlatMap{
     return data_.rbegin()->second;
   }
 
+  const V& at(const K& key) const {
+    auto it = find(key);
+    if (it != end()) {
+      return it->second;
+    }
+    throw std::out_of_range("utils::FlatMap::at");
+  }
+
+  V& at(const K& key) {
+    auto it = find(key);
+    if (it != end()) {
+      return it->second;
+    }
+    throw std::out_of_range("utils::FlatMap::at");
+  }
+
   iterator erase(const_iterator pos) {
     auto offset = pos.it_ - data_.begin();
     std::swap(*data_.rbegin(), *(data_.begin() + offset));
@@ -268,6 +284,10 @@ class FlatMap{
 
   bool empty() const noexcept {
     return data_.empty();
+  }
+
+  bool contains(const K& key) const {
+    return find(key) != end();
   }
 
  private:

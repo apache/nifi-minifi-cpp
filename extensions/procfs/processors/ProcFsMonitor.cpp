@@ -72,17 +72,17 @@ void ProcFsMonitor::onSchedule(const std::shared_ptr<core::ProcessContext>& cont
 }
 
 namespace {
-size_t number_of_cores(const std::unordered_map<std::string, CpuStatData>& cpu_stat) {
+size_t number_of_cores(const utils::FlatMap<std::string, CpuStatData>& cpu_stat) {
   gsl_Expects(cpu_stat.size() > 1);
   return cpu_stat.size() - 1;
 }
 
-bool cpu_stats_are_valid(const std::unordered_map<std::string, CpuStatData>& cpu_stat) {
+bool cpu_stats_are_valid(const utils::FlatMap<std::string, CpuStatData>& cpu_stat) {
   return cpu_stat.contains("cpu") && cpu_stat.size() > 1;  // needs the aggregate and at least one core information to be valid
 }
 
-std::optional<std::chrono::duration<double>> getAggregateCpuDiff(std::unordered_map<std::string, CpuStatData>& current_cpu_stats,
-                                                                 std::unordered_map<std::string, CpuStatData>& last_cpu_stats) {
+std::optional<std::chrono::duration<double>> getAggregateCpuDiff(utils::FlatMap<std::string, CpuStatData>& current_cpu_stats,
+                                                                 utils::FlatMap<std::string, CpuStatData>& last_cpu_stats) {
   if (current_cpu_stats.size() != last_cpu_stats.size())
     return std::nullopt;
   if (!cpu_stats_are_valid(current_cpu_stats) || !cpu_stats_are_valid(last_cpu_stats))
@@ -167,7 +167,7 @@ void ProcFsMonitor::setupDecimalPlacesFromProperties(const core::ProcessContext&
   }
 }
 
-void ProcFsMonitor::processCPUInformation(const std::unordered_map<std::string, CpuStatData>& current_cpu_stats,
+void ProcFsMonitor::processCPUInformation(const utils::FlatMap<std::string, CpuStatData>& current_cpu_stats,
                                           rapidjson::Value& body,
                                           rapidjson::Document::AllocatorType& alloc) {
   if (!cpu_stats_are_valid(current_cpu_stats))
@@ -189,7 +189,7 @@ void ProcFsMonitor::processCPUInformation(const std::unordered_map<std::string, 
     body.AddMember("CPU", cpu_root.Move(), alloc);
 }
 
-void ProcFsMonitor::processDiskInformation(const std::unordered_map<std::string, DiskStatData>& current_disk_stats,
+void ProcFsMonitor::processDiskInformation(const utils::FlatMap<std::string, DiskStatData>& current_disk_stats,
                                            rapidjson::Value& body,
                                            rapidjson::Document::AllocatorType& alloc) {
   if (current_disk_stats.empty())
@@ -212,7 +212,7 @@ void ProcFsMonitor::processDiskInformation(const std::unordered_map<std::string,
     body.AddMember("Disk", disk_root.Move(), alloc);
 }
 
-void ProcFsMonitor::processNetworkInformation(const std::unordered_map<std::string, NetDevData>& current_net_devs,
+void ProcFsMonitor::processNetworkInformation(const utils::FlatMap<std::string, NetDevData>& current_net_devs,
                                               rapidjson::Value& body,
                                               rapidjson::Document::AllocatorType& alloc) {
   if (current_net_devs.empty())
@@ -234,7 +234,7 @@ void ProcFsMonitor::processNetworkInformation(const std::unordered_map<std::stri
     body.AddMember("Network", network_root.Move(), alloc);
 }
 
-void ProcFsMonitor::processProcessInformation(const std::unordered_map<pid_t, ProcessStat>& current_process_stats,
+void ProcFsMonitor::processProcessInformation(const std::map<pid_t, ProcessStat>& current_process_stats,
                                               std::optional<std::chrono::duration<double>> last_cpu_period,
                                               rapidjson::Value& body,
                                               rapidjson::Document::AllocatorType& alloc) {
@@ -268,10 +268,10 @@ void ProcFsMonitor::processMemoryInformation(rapidjson::Value& body, rapidjson::
 }
 
 
-void ProcFsMonitor::refreshMembers(std::unordered_map<std::string, CpuStatData>&& current_cpu_stats,
-                                   std::unordered_map<std::string, DiskStatData>&& current_disk_stats,
-                                   std::unordered_map<std::string, NetDevData>&& current_net_devs,
-                                   std::unordered_map<pid_t, ProcessStat>&& current_process_stats) {
+void ProcFsMonitor::refreshMembers(utils::FlatMap<std::string, CpuStatData>&& current_cpu_stats,
+                                   utils::FlatMap<std::string, DiskStatData>&& current_disk_stats,
+                                   utils::FlatMap<std::string, NetDevData>&& current_net_devs,
+                                   std::map<pid_t, ProcessStat>&& current_process_stats) {
   last_cpu_stats_ = std::move(current_cpu_stats);
   last_net_devs_ = std::move(current_net_devs);
   last_disk_stats_ = std::move(current_disk_stats);

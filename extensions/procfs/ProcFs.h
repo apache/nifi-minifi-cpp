@@ -19,7 +19,7 @@
 
 #include <unistd.h>
 
-#include <unordered_map>
+#include <map>
 #include <utility>
 #include <string>
 #include <optional>
@@ -32,6 +32,7 @@
 #include "NetDev.h"
 #include "DiskStat.h"
 
+#include "utils/FlatMap.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
 
@@ -48,11 +49,11 @@ class ProcFs {
       : root_path_(std::move(path)) {
   }
 
-  [[nodiscard]] std::unordered_map<pid_t, ProcessStat> getProcessStats() const;
-  [[nodiscard]] std::unordered_map<std::string, CpuStatData> getCpuStats() const;
+  [[nodiscard]] std::map<pid_t, ProcessStat> getProcessStats() const;
+  [[nodiscard]] utils::FlatMap<std::string, CpuStatData> getCpuStats() const;
   [[nodiscard]] std::optional<MemInfo> getMemInfo() const;
-  [[nodiscard]] std::unordered_map<std::string, NetDevData> getNetDevs() const;
-  [[nodiscard]] std::unordered_map<std::string, DiskStatData> getDiskStats() const;
+  [[nodiscard]] utils::FlatMap<std::string, NetDevData> getNetDevs() const;
+  [[nodiscard]] utils::FlatMap<std::string, DiskStatData> getDiskStats() const;
 
  private:
   std::filesystem::path root_path_;
