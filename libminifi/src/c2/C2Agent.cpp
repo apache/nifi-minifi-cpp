@@ -647,7 +647,7 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
     bool persist = (
         entry.second.getAnnotation("persist")
         | utils::map(&AnnotatedValue::to_string)
-        | utils::flatMap(utils::StringUtils::toBool)).value_or(false);
+        | utils::flatMap(utils::StringUtils::toBool)).value_or(true);
     PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
     changeUpdateState(update_property(entry.first, entry.second.to_string(), lifetime));
   }

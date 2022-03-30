@@ -32,7 +32,7 @@
 struct PropertyChange {
   std::string name;
   std::string value;
-  bool persist;
+  std::optional<bool> persist;
 };
 
 class C2HeartbeatHandler : public ServerAwareHandler {
@@ -54,7 +54,11 @@ class C2HeartbeatHandler : public ServerAwareHandler {
   void setProperties(const std::vector<PropertyChange>& changes) {
     std::vector<std::string> fields;
     for (const auto& change : changes) {
-      fields.push_back(fmt::format(R"("{}": {{"value": "{}", "persist": {}}})", change.name, change.value, change.persist));
+      if (change.persist.has_value()) {
+        fields.push_back(fmt::format(R"("{}": {{"value": "{}", "persist": {}}})", change.name, change.value, change.persist.value()));
+      } else {
+        fields.push_back(fmt::format(R"("{}": "{}")", change.name, change.value));
+      }
     }
     response_ =
         R"({
@@ -186,7 +190,7 @@ int main() {
 
   hb_handler.setProperties({
     {"nifi.dummy.property", "banana", false},
-    {"nifi.property.one", "bush", true},
+    {"nifi.property.one", "bush", std::nullopt},  // default persist = true
     {"nifi.property.two", "ring", true},
     {"nifi.log.logger.test", "DEBUG,ostream", false},
     {"nifi.log.logger.DummyClass1", "DEBUG,ostream", true}
