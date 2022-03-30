@@ -247,7 +247,7 @@ class MiNiFi_integration_test():
     def check_query_results(self, postgresql_container_name, query, number_of_rows, timeout_seconds):
         assert self.cluster.check_query_results(postgresql_container_name, query, number_of_rows, timeout_seconds)
 
-    def wait_for_container_logs(self, container_name, log_pattern, timeout_seconds, count=1):
+    def check_container_log_matches_regex(self, container_name, log_pattern, timeout_seconds, count=1):
         assert self.cluster.wait_for_app_logs_regex(container_name, log_pattern, timeout_seconds, count)
 
     def add_test_blob(self, blob_name, content, with_snapshot):
