@@ -26,8 +26,6 @@ std::optional<CpuStatData> CpuStatData::parseCpuStatLine(std::istream& iss) {
   iss >> data.user_ >> data.nice_ >> data.system_ >> data.idle_ >> data.io_wait_ >> data.irq_ >> data.soft_irq_ >> data.steal_ >> data.guest_ >> data.guest_nice_;
   if (iss.fail())
     return std::nullopt;
-  data.user_ -= data.guest_;  // Guest time is already accounted in usertime
-  data.nice_ -= data.guest_nice_;
   return data;
 }
 

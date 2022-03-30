@@ -20,6 +20,7 @@
 
 using org::apache::nifi::minifi::extensions::procfs::ProcFs;
 using org::apache::nifi::minifi::extensions::procfs::ProcessStat;
+using org::apache::nifi::minifi::extensions::procfs::SystemClockDuration;
 
 TEST_CASE("ProcFSTest process test with mock", "[procfsprocessmocktest]") {
   ProcFs proc_fs_t0("./mockprocfs_t0");
@@ -27,7 +28,7 @@ TEST_CASE("ProcFSTest process test with mock", "[procfsprocessmocktest]") {
   REQUIRE(process_stats_t0.size() == 1);
   REQUIRE(process_stats_t0.contains(624372));
   CHECK(process_stats_t0.at(624372).getComm() == "gnome-system-mo");
-  CHECK(process_stats_t0.at(624372).getCpuTime() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(1558+221));
+  CHECK(process_stats_t0.at(624372).getCpuTime() == SystemClockDuration(1558+221));
   CHECK(process_stats_t0.at(624372).getMemory() == (14983UL)*sysconf(_SC_PAGESIZE));
   ProcFs proc_fs_t1("./mockprocfs_t0");
   auto process_stats_t1 = proc_fs_t1.getProcessStats();

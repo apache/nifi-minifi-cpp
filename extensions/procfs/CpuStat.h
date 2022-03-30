@@ -51,7 +51,7 @@ class CpuStatData {
   [[nodiscard]] SystemClockDuration getIdleAll() const noexcept { return idle_ + io_wait_; }
   [[nodiscard]] SystemClockDuration getSystemAll() const noexcept { return system_ + irq_ + soft_irq_; }
   [[nodiscard]] SystemClockDuration getVirtAll() const noexcept { return guest_ + guest_nice_; }
-  [[nodiscard]] std::chrono::duration<double> getTotal() const noexcept { return user_ + nice_ + getSystemAll() + getIdleAll() + steal_ + getVirtAll(); }
+  [[nodiscard]] std::chrono::duration<double> getTotal() const noexcept { return user_ + nice_ + getSystemAll() + getIdleAll() + steal_; }  // VirtAll is already included in User and Nice
 
  private:
   SystemClockDuration user_;

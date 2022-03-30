@@ -22,6 +22,7 @@
 
 using org::apache::nifi::minifi::extensions::procfs::ProcFs;
 using org::apache::nifi::minifi::extensions::procfs::CpuStatData;
+using org::apache::nifi::minifi::extensions::procfs::SystemClockDuration;
 
 void cpu_stat_period_total_should_be_one(const CpuStatData& cpu_stat) {
   double percentage = 0;
@@ -47,16 +48,16 @@ TEST_CASE("ProcFSTest stat test with mock", "[procfsstatmockabsolutetest]") {
   }
 
   REQUIRE(cpu_stats_t0.contains("cpu3"));
-  CHECK(cpu_stats_t0.at("cpu3").getUser() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(1299551));
-  CHECK(cpu_stats_t0.at("cpu3").getNice() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(732));
-  CHECK(cpu_stats_t0.at("cpu3").getSystem() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(316295));
-  CHECK(cpu_stats_t0.at("cpu3").getIdle() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(4498383));
-  CHECK(cpu_stats_t0.at("cpu3").getIoWait() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(1428));
-  CHECK(cpu_stats_t0.at("cpu3").getIrq() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(22491));
-  CHECK(cpu_stats_t0.at("cpu3").getSoftIrq() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(7022));
-  CHECK(cpu_stats_t0.at("cpu3").getSteal() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(0));
-  CHECK(cpu_stats_t0.at("cpu3").getGuest() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(0));
-  CHECK(cpu_stats_t0.at("cpu3").getGuestNice() == org::apache::nifi::minifi::extensions::procfs::SystemClockDuration(0));
+  CHECK(cpu_stats_t0.at("cpu3").getUser() == SystemClockDuration(1299551));
+  CHECK(cpu_stats_t0.at("cpu3").getNice() == SystemClockDuration(732));
+  CHECK(cpu_stats_t0.at("cpu3").getSystem() == SystemClockDuration(316295));
+  CHECK(cpu_stats_t0.at("cpu3").getIdle() == SystemClockDuration(4498383));
+  CHECK(cpu_stats_t0.at("cpu3").getIoWait() == SystemClockDuration(1428));
+  CHECK(cpu_stats_t0.at("cpu3").getIrq() == SystemClockDuration(22491));
+  CHECK(cpu_stats_t0.at("cpu3").getSoftIrq() == SystemClockDuration(7022));
+  CHECK(cpu_stats_t0.at("cpu3").getSteal() == SystemClockDuration(0));
+  CHECK(cpu_stats_t0.at("cpu3").getGuest() == SystemClockDuration(0));
+  CHECK(cpu_stats_t0.at("cpu3").getGuestNice() == SystemClockDuration(0));
 
   ProcFs proc_fs_t1("./mockprocfs_t1");
   auto cpu_stats_t1 = proc_fs_t1.getCpuStats();
