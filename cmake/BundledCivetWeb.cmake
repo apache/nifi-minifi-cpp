@@ -26,11 +26,11 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     if (WIN32)
         set(SUFFIX "lib")
     else()
-		set(PREFIX "lib")
-      include(GNUInstallDirs)
-      set(LIBDIR "${CMAKE_INSTALL_LIBDIR}")
-      set(SUFFIX "a")
-
+        set(PREFIX "lib")
+        include(GNUInstallDirs)
+        string(REPLACE "/" ";" LIBDIR_LIST ${CMAKE_INSTALL_LIBDIR})
+        list(GET LIBDIR_LIST 0 LIBDIR)
+        set(SUFFIX "a")
     endif()
 
     set(BYPRODUCTS

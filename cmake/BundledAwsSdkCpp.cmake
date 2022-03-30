@@ -25,9 +25,11 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
             (\"${Patch_EXECUTABLE}\" -p1 -R -s -f --dry-run -i \"${PATCH_FILE3}\" || \"${Patch_EXECUTABLE}\" -p1 -N -i \"${PATCH_FILE3}\") ")
 
     if (WIN32)
-        set(CMAKE_INSTALL_LIBDIR "lib")
+        set(LIBDIR "lib")
     else()
         include(GNUInstallDirs)
+        string(REPLACE "/" ";" LIBDIR_LIST ${CMAKE_INSTALL_LIBDIR})
+        list(GET LIBDIR_LIST 0 LIBDIR)
     endif()
 
     # Define byproducts
@@ -40,22 +42,22 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     endif()
 
     if (NOT WIN32 AND NOT APPLE)
-        list(APPEND BYPRODUCTS "${CMAKE_INSTALL_LIBDIR}/${PREFIX}s2n.${SUFFIX}")
+        list(APPEND BYPRODUCTS "${LIBDIR}/${PREFIX}s2n.${SUFFIX}")
     endif()
     list(APPEND BYPRODUCTS
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
-            "${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
+            "${LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}"
+            "${LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
 
     FOREACH(BYPRODUCT ${BYPRODUCTS})
         LIST(APPEND AWSSDK_LIBRARIES_LIST "${BINARY_DIR}/thirdparty/libaws-install/${BYPRODUCT}")
@@ -103,19 +105,19 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     file(MAKE_DIRECTORY ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-c-common STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-common PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}")
+    set_target_properties(AWS::aws-c-common PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-common.${SUFFIX}")
     add_dependencies(AWS::aws-c-common aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-common INTERFACE ${LIBAWS_INCLUDE_DIR})
 
     if (NOT WIN32 AND NOT APPLE)
         add_library(AWS::s2n STATIC IMPORTED)
-        set_target_properties(AWS::s2n PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}s2n.${SUFFIX}")
+        set_target_properties(AWS::s2n PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}s2n.${SUFFIX}")
         add_dependencies(AWS::s2n aws-sdk-cpp-external)
         target_include_directories(AWS::s2n INTERFACE ${LIBAWS_INCLUDE_DIR})
     endif()
 
     add_library(AWS::aws-c-io STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-io PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}")
+    set_target_properties(AWS::aws-c-io PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-io.${SUFFIX}")
     add_dependencies(AWS::aws-c-io aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-io INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-c-io INTERFACE AWS::aws-c-common)
@@ -124,55 +126,55 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     endif()
 
     add_library(AWS::aws-checksums STATIC IMPORTED)
-    set_target_properties(AWS::aws-checksums PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}")
+    set_target_properties(AWS::aws-checksums PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-checksums.${SUFFIX}")
     add_dependencies(AWS::aws-checksums aws-sdk-cpp-external)
     target_include_directories(AWS::aws-checksums INTERFACE ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-c-event-stream STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-event-stream PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}")
+    set_target_properties(AWS::aws-c-event-stream PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-event-stream.${SUFFIX}")
     add_dependencies(AWS::aws-c-event-stream aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-event-stream INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-c-event-stream INTERFACE AWS::aws-checksums AWS::aws-c-io)
 
     add_library(AWS::aws-c-auth STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-auth PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}")
+    set_target_properties(AWS::aws-c-auth PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-auth.${SUFFIX}")
     add_dependencies(AWS::aws-c-auth aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-auth INTERFACE ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-c-s3 STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-s3 PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}")
+    set_target_properties(AWS::aws-c-s3 PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-s3.${SUFFIX}")
     add_dependencies(AWS::aws-c-s3 aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-s3 INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-c-s3 INTERFACE AWS::aws-c-auth)
 
     add_library(AWS::aws-c-mqtt STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-mqtt PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}")
+    set_target_properties(AWS::aws-c-mqtt PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-mqtt.${SUFFIX}")
     add_dependencies(AWS::aws-c-mqtt aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-mqtt INTERFACE ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-c-http STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-http PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}")
+    set_target_properties(AWS::aws-c-http PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-http.${SUFFIX}")
     add_dependencies(AWS::aws-c-http aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-http INTERFACE ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-c-cal STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-cal PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}")
+    set_target_properties(AWS::aws-c-cal PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-cal.${SUFFIX}")
     add_dependencies(AWS::aws-c-cal aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-cal INTERFACE ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-c-compression STATIC IMPORTED)
-    set_target_properties(AWS::aws-c-compression PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}")
+    set_target_properties(AWS::aws-c-compression PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-c-compression.${SUFFIX}")
     add_dependencies(AWS::aws-c-compression aws-sdk-cpp-external)
     target_include_directories(AWS::aws-c-compression INTERFACE ${LIBAWS_INCLUDE_DIR})
 
     add_library(AWS::aws-crt-cpp STATIC IMPORTED)
-    set_target_properties(AWS::aws-crt-cpp PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}")
+    set_target_properties(AWS::aws-crt-cpp PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-crt-cpp.${SUFFIX}")
     add_dependencies(AWS::aws-crt-cpp aws-sdk-cpp-external)
     target_include_directories(AWS::aws-crt-cpp INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-crt-cpp INTERFACE AWS::aws-c-io AWS::aws-c-s3 AWS::aws-c-mqtt AWS::aws-c-http AWS::aws-c-cal AWS::aws-c-compression)
 
     add_library(AWS::aws-cpp-sdk-core STATIC IMPORTED)
-    set_target_properties(AWS::aws-cpp-sdk-core PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}")
+    set_target_properties(AWS::aws-cpp-sdk-core PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-cpp-sdk-core.${SUFFIX}")
     add_dependencies(AWS::aws-cpp-sdk-core aws-sdk-cpp-external)
     target_include_directories(AWS::aws-cpp-sdk-core INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-cpp-sdk-core INTERFACE AWS::aws-crt-cpp AWS::aws-c-event-stream CURL::libcurl OpenSSL::Crypto OpenSSL::SSL ZLIB::ZLIB Threads::Threads)
@@ -185,7 +187,7 @@ function(use_bundled_libaws SOURCE_DIR BINARY_DIR)
     endif()
 
     add_library(AWS::aws-cpp-sdk-s3 STATIC IMPORTED)
-    set_target_properties(AWS::aws-cpp-sdk-s3 PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${CMAKE_INSTALL_LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
+    set_target_properties(AWS::aws-cpp-sdk-s3 PROPERTIES IMPORTED_LOCATION "${BINARY_DIR}/thirdparty/libaws-install/${LIBDIR}/${PREFIX}aws-cpp-sdk-s3.${SUFFIX}")
     add_dependencies(AWS::aws-cpp-sdk-s3 aws-sdk-cpp-external)
     target_include_directories(AWS::aws-cpp-sdk-s3 INTERFACE ${LIBAWS_INCLUDE_DIR})
     target_link_libraries(AWS::aws-cpp-sdk-s3 INTERFACE AWS::aws-cpp-sdk-core)
