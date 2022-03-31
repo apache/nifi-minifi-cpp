@@ -39,7 +39,7 @@
 - [ListAzureDataLakeStorage](#listazuredatalakestorage)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
-- [ListenFile](#listfile)
+- [ListFile](#listfile)
 - [ListS3](#lists3)
 - [ListSFTP](#listsftp)
 - [LogAttribute](#logattribute)
