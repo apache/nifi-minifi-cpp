@@ -179,17 +179,17 @@ inline const std::optional<std::filesystem::file_time_type> last_write_time(cons
   return std::nullopt;
 }
 
-inline std::optional<std::string> get_last_modified_time_formatted_string(const std::string& path, const std::string& format_string) {
-  auto last_write = last_write_time(path);
-  if (!last_write) {
-    return std::nullopt;
-  }
-  auto last_write_time_t = to_time_t(*last_write);
+inline std::optional<std::string> format_time(const std::filesystem::file_time_type& time, const std::string& format) {
+  auto last_write_time_t = to_time_t(time);
   std::array<char, 128U> result;
-  if (std::strftime(result.data(), result.size(), format_string.c_str(), gmtime(&last_write_time_t)) != 0) {
+  if (std::strftime(result.data(), result.size(), format.c_str(), gmtime(&last_write_time_t)) != 0) {
     return std::string(result.data());
   }
   return std::nullopt;
+}
+
+inline std::optional<std::string> get_last_modified_time_formatted_string(const std::string& path, const std::string& format_string) {
+  return last_write_time(path) | utils::flatMap([format_string](auto time) { return format_time(time, format_string); });
 }
 
 inline bool set_last_write_time(const std::string &path, std::filesystem::file_time_type new_time) {
@@ -694,6 +694,7 @@ inline std::optional<std::string> get_file_owner(const std::string& file_path) {
   if (account_name == NULL) {
     return std::nullopt;
   }
+  auto cleanup_account_name = gsl::finally([&account_name] { GlobalFree(account_name); });
 
   domain_name = (LPTSTR)GlobalAlloc(
     GMEM_FIXED,
@@ -701,9 +702,9 @@ inline std::optional<std::string> get_file_owner(const std::string& file_path) {
 
   // Check GetLastError for GlobalAlloc error condition.
   if (domain_name == NULL) {
-    GlobalFree(account_name);
     return std::nullopt;
   }
+  auto cleanup_domain_name = gsl::finally([&domain_name] { GlobalFree(domain_name); });
 
   // Second call to LookupAccountSid to get the account name.
   bool_return = LookupAccountSid(
@@ -717,14 +718,10 @@ inline std::optional<std::string> get_file_owner(const std::string& file_path) {
 
   // Check GetLastError for LookupAccountSid error condition.
   if (bool_return == FALSE) {
-    GlobalFree(account_name);
-    GlobalFree(domain_name);
     return std::nullopt;
   }
 
   auto result = std::string(account_name);
-  GlobalFree(account_name);
-  GlobalFree(domain_name);
   return result;
 #endif
 }
@@ -753,7 +750,7 @@ inline std::optional<std::string> get_relative_path(const std::string& path, con
     return std::nullopt;
   }
 
-  return std::filesystem::relative(path, base_path);
+  return std::filesystem::relative(path, base_path).string();
 }
 
 }  // namespace file

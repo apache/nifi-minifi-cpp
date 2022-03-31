@@ -105,8 +105,8 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files only once with default
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + first_sub_file_abs_path_));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + second_sub_file_abs_path_));
   REQUIRE(LogTestController::getInstance().countOccurrences(std::string("key:path value:.") + utils::file::FileUtils::get_separator() + "\n") == 2);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:path value:first_subdir"));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:path value:second_subdir"));
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:first_subdir") + utils::file::FileUtils::get_separator()));
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:second_subdir") + utils::file::FileUtils::get_separator()));
   REQUIRE(LogTestController::getInstance().countOccurrences("key:filename value:.hidden_file.txt") == 0);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:file.size value:0"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:file.size value:4"));

@@ -185,7 +185,8 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
   auto flow_file = session.create();
   session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.filename);
   session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, listed_file.absolute_path);
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, listed_file.relative_path == "." ? std::string(".") + utils::file::FileUtils::get_separator() : listed_file.relative_path);
+  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, listed_file.relative_path == "." ?
+    std::string(".") + utils::file::FileUtils::get_separator() : listed_file.relative_path + utils::file::FileUtils::get_separator());
   session.putAttribute(flow_file, "file.size", std::to_string(listed_file.file_size));
   if (auto last_modified_str = utils::file::FileUtils::get_last_modified_time_formatted_string(listed_file.absolute_path, "%Y-%m-%dT%H:%M:%SZ")) {
     session.putAttribute(flow_file, "file.lastModifiedTime", *last_modified_str);
