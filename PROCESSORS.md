@@ -1052,6 +1052,19 @@ In the list below, the names of required properties appear in bold. Any other pr
 | - | - |
 |success|All FlowFiles that are received are routed to success|
 
+### Output Attributes
+
+| Attribute                  | Relationship | Description                                                        |
+|----------------------------|--------------|--------------------------------------------------------------------|
+| _filename_                 | success      | The name of the file that was read from filesystem.                |
+| _path_                     | success      | The path is set to the relative path of the file's directory on filesystem compared to the Input Directory property. For example, if Input Directory is set to /tmp, then files picked up from /tmp will have the path attribute set to "/". If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to "abc/1/2/3/". |
+| _absolute.path_            | success      | The absolute.path is set to the absolute path of the file's directory on filesystem. For example, if the Input Directory property is set to /tmp, then files picked up from /tmp will have the path attribute set to "/tmp/". If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to "/tmp/abc/1/2/3/". |
+| _file.owner_               | success      | The user that owns the file in filesystem                          |
+| _file.group_               | success      | The group that owns the file in filesystem                         |
+| _file.size_                | success      | The number of bytes in the file in filesystem                      |
+| _file.permissions_         | success      | The permissions for the file in filesystem. This is formatted as 3 characters for the owner, 3 for the group, and 3 for other users. For example rw-rw-r-- |
+| _file.lastModifiedTime_    | success      | The timestamp of when the file in filesystem was last modified as 'yyyy-MM-dd'T'HH:mm:ssZ' |
+
 
 ## ListS3
 

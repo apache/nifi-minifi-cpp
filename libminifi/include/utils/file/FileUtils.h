@@ -225,22 +225,24 @@ inline int set_permissions(const std::string &path, const uint32_t permissions) 
   return ec.value();
 }
 
-inline bool get_permission_string(const std::string &path, std::string &permission_string) {
+inline std::optional<std::string> get_permission_string(const std::string &path) {
   std::error_code ec;
   auto permissions = std::filesystem::status(path, ec).permissions();
-  if (ec.value() == 0) {
-    permission_string.clear();
-    permission_string += (permissions & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-";
-    permission_string += (permissions & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-";
-    permission_string += (permissions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-";
-    permission_string += (permissions & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-";
-    permission_string += (permissions & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-";
-    permission_string += (permissions & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-";
-    permission_string += (permissions & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-";
-    permission_string += (permissions & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-";
-    permission_string += (permissions & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-";
+  if (ec.value() != 0) {
+    return std::nullopt;
   }
-  return ec.value() == 0;
+
+  std::string permission_string;
+  permission_string += (permissions & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-";
+  permission_string += (permissions & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-";
+  permission_string += (permissions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-";
+  permission_string += (permissions & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-";
+  permission_string += (permissions & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-";
+  permission_string += (permissions & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-";
+  permission_string += (permissions & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-";
+  permission_string += (permissions & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-";
+  permission_string += (permissions & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-";
+  return permission_string;
 }
 
 #ifndef WIN32
@@ -624,8 +626,7 @@ inline std::optional<std::string> get_file_owner(const std::string& file_path) {
   struct passwd pw;
   pw.pw_name = 0;
   struct passwd *result = nullptr;
-  char localbuf[1024];
-  std::fill(localbuf, localbuf + sizeof(localbuf), 0);
+  char localbuf[1024] = {};
   if (getpwuid_r(info.st_uid, &pw, localbuf, sizeof(localbuf), &result) != 0 || pw.pw_name == 0) {
     return std::nullopt;
   }
@@ -700,6 +701,7 @@ inline std::optional<std::string> get_file_owner(const std::string& file_path) {
 
   // Check GetLastError for GlobalAlloc error condition.
   if (domain_name == NULL) {
+    GlobalFree(account_name);
     return std::nullopt;
   }
 
@@ -715,10 +717,15 @@ inline std::optional<std::string> get_file_owner(const std::string& file_path) {
 
   // Check GetLastError for LookupAccountSid error condition.
   if (bool_return == FALSE) {
+    GlobalFree(account_name);
+    GlobalFree(domain_name);
     return std::nullopt;
   }
 
-  return std::string(account_name);
+  auto result = std::string(account_name);
+  GlobalFree(account_name);
+  GlobalFree(domain_name);
+  return result;
 #endif
 }
 
@@ -732,8 +739,7 @@ inline std::optional<std::string> get_file_group(const std::string& file_path) {
   struct group gr;
   gr.gr_name = 0;
   struct group *result = nullptr;
-  char localbuf[1024];
-  std::fill(localbuf, localbuf + sizeof(localbuf), 0);
+  char localbuf[1024] = {};
   if ((getgrgid_r(info.st_uid, &gr, localbuf, sizeof(localbuf), &result) != 0) || gr.gr_name == 0) {
     return std::nullopt;
   }
@@ -747,12 +753,7 @@ inline std::optional<std::string> get_relative_path(const std::string& path, con
     return std::nullopt;
   }
 
-  auto relative_path = path.substr(base_path.size());
-  if (utils::StringUtils::startsWith(relative_path, std::string(1, utils::file::FileUtils::get_separator()))) {
-    return relative_path.substr(1);
-  }
-
-  return relative_path;
+  return std::filesystem::relative(path, base_path);
 }
 
 }  // namespace file

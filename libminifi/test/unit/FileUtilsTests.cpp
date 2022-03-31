@@ -509,9 +509,9 @@ TEST_CASE("FileUtils::get_permission_string", "[TestGetPermissionString]") {
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
 
   REQUIRE(FileUtils::set_permissions(path, 0644) == 0);
-  std::string perms;
-  REQUIRE(true == FileUtils::get_permission_string(path, perms));
-  REQUIRE(perms == "rw-r--r--");
+  auto perms = FileUtils::get_permission_string(path);
+  REQUIRE(perms != std::nullopt);
+  REQUIRE(*perms == "rw-r--r--");
 }
 #endif
 
@@ -603,4 +603,5 @@ TEST_CASE("FileUtils::get_relative_path", "[TestGetRelativePath]") {
   path = base_path + FileUtils::get_separator() + "subdir/file.log";
   REQUIRE(*FileUtils::get_relative_path(path, base_path) == "subdir/file.log");
   REQUIRE(*FileUtils::get_relative_path(path, base_path + FileUtils::get_separator()) == "subdir/file.log");
+  REQUIRE(*FileUtils::get_relative_path(base_path, base_path) == ".");
 }

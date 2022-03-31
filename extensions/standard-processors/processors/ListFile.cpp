@@ -152,8 +152,8 @@ bool ListFile::fileMatchesFilters(const ListedFile& listed_file) {
     return false;
   }
 
-  if (path_filter_ && !listed_file.relative_path.empty() && !std::regex_match(listed_file.relative_path, *path_filter_)) {
-    logger_->log_debug("Relative path '%s' does not match path filter so file '%s' it will not be listed", listed_file.relative_path, listed_file.absolute_path);
+  if (path_filter_ && listed_file.relative_path != "." && !std::regex_match(listed_file.relative_path, *path_filter_)) {
+    logger_->log_debug("Relative path '%s' does not match path filter so file '%s' will not be listed", listed_file.relative_path, listed_file.absolute_path);
     return false;
   }
 
@@ -185,7 +185,7 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
   auto flow_file = session.create();
   session.putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, listed_file.filename);
   session.putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, listed_file.absolute_path);
-  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, listed_file.relative_path.empty() ? std::string(".") + utils::file::FileUtils::get_separator() : listed_file.relative_path);
+  session.putAttribute(flow_file, core::SpecialFlowAttribute::PATH, listed_file.relative_path == "." ? std::string(".") + utils::file::FileUtils::get_separator() : listed_file.relative_path);
   session.putAttribute(flow_file, "file.size", std::to_string(listed_file.file_size));
   if (auto last_modified_str = utils::file::FileUtils::get_last_modified_time_formatted_string(listed_file.absolute_path, "%Y-%m-%dT%H:%M:%SZ")) {
     session.putAttribute(flow_file, "file.lastModifiedTime", *last_modified_str);
@@ -194,9 +194,8 @@ std::shared_ptr<core::FlowFile> ListFile::createFlowFile(core::ProcessSession& s
     logger_->log_warn("Could not get last modification time of file '%s'", listed_file.absolute_path);
   }
 
-  std::string permission_string;
-  if (utils::file::FileUtils::get_permission_string(listed_file.absolute_path, permission_string)) {
-    session.putAttribute(flow_file, "file.permissions", permission_string);
+  if (auto permission_string = utils::file::FileUtils::get_permission_string(listed_file.absolute_path)) {
+    session.putAttribute(flow_file, "file.permissions", *permission_string);
   } else {
     logger_->log_warn("Failed to get permissions of file '%s'", listed_file.absolute_path);
     session.putAttribute(flow_file, "file.permissions", "");
