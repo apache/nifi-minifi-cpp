@@ -49,12 +49,10 @@ class AckAuditor {
       assert(false);
     }
 
+    ack_verifiers_[next_verifier_index_](root);
+    ++next_verifier_index_;
     if (next_verifier_index_ >= ack_verifiers_.size()) {
-      ack_verifiers_[0](root);
-      next_verifier_index_ = 1;
-    } else {
-      ack_verifiers_[next_verifier_index_](root);
-      ++next_verifier_index_;
+      next_verifier_index_ = 0;
     }
   }
 
