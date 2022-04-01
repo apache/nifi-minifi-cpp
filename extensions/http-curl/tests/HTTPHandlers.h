@@ -556,7 +556,7 @@ class HeartbeatHandler : public ServerAwareHandler {
           std::unordered_map<std::string, std::string> config_property;
           if (ranges::find(disallowed_properties, property.name) == ranges::end(disallowed_properties)) {
             config_property.emplace("propertyName", property.name);
-            if (auto value = configuration_->get(std::string(property.name))) {
+            if (auto value = configuration_->getString(std::string(property.name))) {
               config_property.emplace("propertyValue", *value);
             }
             config_property.emplace("validator", property.validator->getName());
