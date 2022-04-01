@@ -744,12 +744,12 @@ def step_impl(context, log_message, duration):
 # MQTT
 @then("the MQTT broker has a log line matching \"{log_pattern}\"")
 def step_impl(context, log_pattern):
-    context.test.wait_for_container_logs('mqtt-broker', log_pattern, 30, count=1)
+    context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 30, count=1)
 
 
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")
 def step_impl(context, minifi_container_name, log_pattern, duration):
-    context.test.wait_for_container_logs(minifi_container_name, log_pattern, timeparse(duration), count=1)
+    context.test.check_container_log_matches_regex(minifi_container_name, log_pattern, timeparse(duration), count=1)
 
 
 @then("an MQTT broker is deployed in correspondence with the PublishMQTT")
