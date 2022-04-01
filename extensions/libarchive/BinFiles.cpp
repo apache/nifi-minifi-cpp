@@ -119,6 +119,8 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
     logger_->log_debug("BinFiles: MaxBinCount [%" PRIu32 "]", maxBinCount_);
   }
   if (auto max_bin_age = context->getProperty<core::TimePeriodValue>(MaxBinAge)) {
+    // We need to trigger the processor even when there are no incoming flow files so that it can flush the bins.
+    setTriggerWhenEmpty(true);
     this->binManager_.setBinAge(max_bin_age->getMilliseconds());
     logger_->log_debug("BinFiles: MaxBinAge [%" PRId64 "] ms", int64_t{max_bin_age->getMilliseconds().count()});
   }
