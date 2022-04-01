@@ -17,16 +17,18 @@
 
 function(use_bundled_yamlcpp SOURCE_DIR BINARY_DIR)
     if (WIN32)
-        set(CMAKE_INSTALL_LIBDIR "lib")
+        set(LIBDIR "lib")
     else()
         include(GNUInstallDirs)
+        string(REPLACE "/" ";" LIBDIR_LIST ${CMAKE_INSTALL_LIBDIR})
+        list(GET LIBDIR_LIST 0 LIBDIR)
     endif()
 
     # Define byproducts
     if (WIN32)
-        set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/yaml-cpp.lib")
+        set(BYPRODUCT "${LIBDIR}/yaml-cpp.lib")
     else()
-        set(BYPRODUCT "${CMAKE_INSTALL_LIBDIR}/libyaml-cpp.a")
+        set(BYPRODUCT "${LIBDIR}/libyaml-cpp.a")
     endif()
 
     # Set build options

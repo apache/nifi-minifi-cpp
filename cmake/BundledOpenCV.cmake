@@ -17,9 +17,11 @@
 
 function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     if (WIN32)
-        set(CMAKE_INSTALL_LIBDIR "lib")
+        set(LIBDIR "lib")
     else()
         include(GNUInstallDirs)
+        string(REPLACE "/" ";" LIBDIR_LIST ${CMAKE_INSTALL_LIBDIR})
+        list(GET LIBDIR_LIST 0 LIBDIR)
     endif()
 
     # Define byproducts
@@ -37,21 +39,21 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
 
     set(OPENCV_BYPRODUCT_DIR "${CMAKE_CURRENT_BINARY_DIR}/thirdparty/opencv-install")
     set(BYPRODUCTS
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_flann${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_dnn${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_objdetect${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_core${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_gapi${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_imgcodecs${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_calib3d${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_imgproc${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_photo${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_videoio${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_video${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_stitching${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_features2d${SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libjpeg-turbo${THIRDPARTY_SUFFIX}"
-        "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libpng${THIRDPARTY_SUFFIX}")
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_flann${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_dnn${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_objdetect${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_core${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_gapi${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_imgcodecs${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_calib3d${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_imgproc${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_photo${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_videoio${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_video${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_stitching${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_features2d${SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libjpeg-turbo${THIRDPARTY_SUFFIX}"
+        "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libpng${THIRDPARTY_SUFFIX}")
 
     # Set build options
     set(OPENCV_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
@@ -129,79 +131,79 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
     file(MAKE_DIRECTORY ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libjpeg-turbo STATIC IMPORTED)
-    set_target_properties(OPENCV::libjpeg-turbo PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libjpeg-turbo${THIRDPARTY_SUFFIX}")
+    set_target_properties(OPENCV::libjpeg-turbo PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libjpeg-turbo${THIRDPARTY_SUFFIX}")
     add_dependencies(OPENCV::libjpeg-turbo opencv-external)
 
     add_library(OPENCV::libpng STATIC IMPORTED)
-    set_target_properties(OPENCV::libpng PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libpng${THIRDPARTY_SUFFIX}")
+    set_target_properties(OPENCV::libpng PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${THIRDPARTY_DIR}${PREFIX}libpng${THIRDPARTY_SUFFIX}")
     add_dependencies(OPENCV::libpng opencv-external)
 
     add_library(OPENCV::libopencv-core STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-core PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_core${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-core PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_core${SUFFIX}")
     add_dependencies(OPENCV::libopencv-core opencv-external ZLIB::ZLIB)
     target_include_directories(OPENCV::libopencv-core INTERFACE ${OPENCV_INCLUDE_DIR})
     target_link_libraries(OPENCV::libopencv-core INTERFACE ZLIB::ZLIB)
 
     add_library(OPENCV::libopencv-flann STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-flann PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_flann${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-flann PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_flann${SUFFIX}")
     add_dependencies(OPENCV::libopencv-flann opencv-external)
     target_include_directories(OPENCV::libopencv-flann INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-dnn STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-dnn PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_dnn${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-dnn PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_dnn${SUFFIX}")
     add_dependencies(OPENCV::libopencv-dnn opencv-external)
     target_include_directories(OPENCV::libopencv-dnn INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-objdetect STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-objdetect PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_objdetect${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-objdetect PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_objdetect${SUFFIX}")
     add_dependencies(OPENCV::libopencv-objdetect opencv-external)
     target_include_directories(OPENCV::libopencv-objdetect INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-gapi STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-gapi PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_gapi${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-gapi PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_gapi${SUFFIX}")
     add_dependencies(OPENCV::libopencv-gapi opencv-external)
     target_include_directories(OPENCV::libopencv-gapi INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-imgcodecs STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-imgcodecs PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_imgcodecs${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-imgcodecs PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_imgcodecs${SUFFIX}")
     add_dependencies(OPENCV::libopencv-imgcodecs opencv-external)
     target_include_directories(OPENCV::libopencv-imgcodecs INTERFACE ${OPENCV_INCLUDE_DIR})
     target_link_libraries(OPENCV::libopencv-imgcodecs INTERFACE OPENCV::libopencv-core OPENCV::libjpeg-turbo OPENCV::libpng)
 
     add_library(OPENCV::libopencv-calib3d STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-calib3d PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_calib3d${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-calib3d PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_calib3d${SUFFIX}")
     add_dependencies(OPENCV::libopencv-calib3d opencv-external)
     target_include_directories(OPENCV::libopencv-calib3d INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-imgproc STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-imgproc PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_imgproc${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-imgproc PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_imgproc${SUFFIX}")
     add_dependencies(OPENCV::libopencv-imgproc opencv-external)
     target_include_directories(OPENCV::libopencv-imgproc INTERFACE ${OPENCV_INCLUDE_DIR})
     target_link_libraries(OPENCV::libopencv-imgproc INTERFACE OPENCV::libopencv-core)
 
     add_library(OPENCV::libopencv-photo STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-photo PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_photo${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-photo PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_photo${SUFFIX}")
     add_dependencies(OPENCV::libopencv-photo opencv-external)
     target_include_directories(OPENCV::libopencv-photo INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-videoio STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-videoio PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_videoio${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-videoio PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_videoio${SUFFIX}")
     add_dependencies(OPENCV::libopencv-videoio opencv-external)
     target_include_directories(OPENCV::libopencv-videoio INTERFACE ${OPENCV_INCLUDE_DIR})
     target_link_libraries(OPENCV::libopencv-videoio INTERFACE OPENCV::libopencv-core)
 
     add_library(OPENCV::libopencv-video STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-video PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_video${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-video PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_video${SUFFIX}")
     add_dependencies(OPENCV::libopencv-video opencv-external)
     target_include_directories(OPENCV::libopencv-video INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-stitching STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-stitching PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_stitching${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-stitching PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_stitching${SUFFIX}")
     add_dependencies(OPENCV::libopencv-stitching opencv-external)
     target_include_directories(OPENCV::libopencv-stitching INTERFACE ${OPENCV_INCLUDE_DIR})
 
     add_library(OPENCV::libopencv-features2d STATIC IMPORTED)
-    set_target_properties(OPENCV::libopencv-features2d PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${CMAKE_INSTALL_LIBDIR}/${PREFIX}opencv_features2d${SUFFIX}")
+    set_target_properties(OPENCV::libopencv-features2d PROPERTIES IMPORTED_LOCATION "${OPENCV_BYPRODUCT_DIR}/${LIBDIR}/${PREFIX}opencv_features2d${SUFFIX}")
     add_dependencies(OPENCV::libopencv-features2d opencv-external)
     target_include_directories(OPENCV::libopencv-features2d INTERFACE ${OPENCV_INCLUDE_DIR})
 
