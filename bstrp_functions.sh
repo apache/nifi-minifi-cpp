@@ -450,7 +450,7 @@ read_feature_options(){
     z) ToggleFeature NANOFI_ENABLED ;;
     aa) ToggleFeature SPLUNK_ENABLED ;;
     ab) ToggleFeature KUBERNETES_ENABLED ;;
-    ac) ToogleFeature GCP_ENABLED ;;
+    ac) ToggleFeature GCP_ENABLED ;;
     1) ToggleFeature TESTS_ENABLED ;;
     2) EnableAllFeatures ;;
     3) ToggleFeature JNI_ENABLED;;
