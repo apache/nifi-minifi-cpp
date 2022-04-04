@@ -23,7 +23,7 @@ import os
 
 
 class NifiContainer(FlowContainer):
-    NIFI_VERSION = '1.15.3'
+    NIFI_VERSION = '1.16.0'
     NIFI_ROOT = '/opt/nifi/nifi-' + NIFI_VERSION
 
     def __init__(self, config_dir, name, vols, network, image_store, command=None):
