@@ -150,7 +150,7 @@ std::shared_ptr<core::FlowFile> Connection::poll(std::set<std::shared_ptr<core::
   std::lock_guard<std::mutex> lock(mutex_);
 
   while (queue_.isWorkAvailable()) {
-    utils::optional<std::shared_ptr<core::FlowFile>> opt_item = queue_.tryPop();
+    std::optional<std::shared_ptr<core::FlowFile>> opt_item = queue_.tryPop();
     if (!opt_item) {
       return nullptr;
     }

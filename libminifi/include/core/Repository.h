@@ -146,7 +146,7 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
   // Start the repository monitor thread
   virtual void start();
   // Stop the repository monitor thread
-  void stop();
+  virtual void stop();
   // whether the repo is full
   virtual bool isFull() {
     return repo_full_;

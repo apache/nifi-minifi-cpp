@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "../Catch.h"
 #include "core/RepositoryFactory.h"
 #include "core/repository/VolatileContentRepository.h"
 #include "FlowFileRepository.h"
@@ -22,6 +23,9 @@
 #include "../Utils.h"
 #include "StreamPipe.h"
 #include "IntegrationTestUtils.h"
+#include "core/Processor.h"
+#include "core/ProcessSession.h"
+#include "../unit/ProvenanceTestHelper.h"
 
 class OutputProcessor : public core::Processor {
  public:
@@ -60,8 +64,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
   LogTestController::getInstance().setTrace<core::repository::FlowFileRepository>();
   LogTestController::getInstance().setTrace<core::repository::VolatileRepository<minifi::ResourceClaim::Path>>();
 
-  char format[] = "/var/tmp/test.XXXXXX";
-  auto dir = testController.createTempDirectory(format);
+  auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
@@ -84,9 +87,9 @@ TEST_CASE("Connection will on-demand swap flow files") {
   connection->setSwapThreshold(50);
   connection->addRelationship(OutputProcessor::Success);
   connection->setSourceUUID(processor->getUUID());
-  processor->addConnection(connection);
+  processor->addConnection(connection.get());
 
-  auto processor_node = std::make_shared<core::ProcessorNode>(processor);
+  auto processor_node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(processor_node, nullptr, prov_repo, ff_repo, content_repo);
   auto session_factory = std::make_shared<core::ProcessSessionFactory>(context);
 

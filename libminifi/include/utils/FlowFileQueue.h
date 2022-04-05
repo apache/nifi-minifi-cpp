@@ -44,8 +44,8 @@ class FlowFileQueue {
   explicit FlowFileQueue(std::shared_ptr<SwapManager> swap_manager = {});
 
   value_type pop();
-  utils::optional<value_type> tryPop();
-  utils::optional<value_type> tryPop(std::chrono::milliseconds timeout);
+  std::optional<value_type> tryPop();
+  std::optional<value_type> tryPop(std::chrono::milliseconds timeout);
   void push(value_type element);
   bool isWorkAvailable() const;
   bool empty() const;
@@ -55,7 +55,7 @@ class FlowFileQueue {
   void setMaxSize(size_t max_size);
 
  private:
-  utils::optional<value_type> tryPopImpl(utils::optional<std::chrono::milliseconds> timeout);
+  std::optional<value_type> tryPopImpl(std::optional<std::chrono::milliseconds> timeout);
 
   void initiateLoadIfNeeded();
 
@@ -76,7 +76,7 @@ class FlowFileQueue {
     }
   };
 
-  bool processLoadTaskWait(utils::optional<std::chrono::milliseconds> timeout);
+  bool processLoadTaskWait(std::optional<std::chrono::milliseconds> timeout);
 
   struct FlowFilePenaltyExpirationComparator {
     bool operator()(const value_type& left, const value_type& right) const;
@@ -100,12 +100,12 @@ class FlowFileQueue {
 
   MinMaxHeap<SwappedFlowFile, SwappedFlowFileComparator> swapped_flow_files_;
   // the pending swap-in operation (if any)
-  utils::optional<LoadTask> load_task_;
+  std::optional<LoadTask> load_task_;
   MinMaxHeap<value_type, FlowFilePenaltyExpirationComparator> queue_;
 
   std::shared_ptr<timeutils::SteadyClock> clock_{std::make_shared<timeutils::SteadyClock>()};
 
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace utils

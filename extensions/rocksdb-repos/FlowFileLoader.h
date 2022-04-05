@@ -20,9 +20,9 @@
 #include <future>
 #include <list>
 
-#include "RocksDatabase.h"
+#include "database/RocksDatabase.h"
 #include "FlowFile.h"
-#include "gsl.h"
+#include "utils/gsl.h"
 #include "core/ContentRepository.h"
 #include "SwapManager.h"
 #include "utils/ThreadPool.h"
@@ -59,7 +59,7 @@ class FlowFileLoader {
   minifi::internal::RocksDatabase* db_{nullptr};
 
   std::shared_ptr<core::ContentRepository> content_repo_;
-  std::shared_ptr<logging::Logger> logger_;
+  std::shared_ptr<core::logging::Logger> logger_;
 };
 
 }  // namespace minifi

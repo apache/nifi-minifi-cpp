@@ -19,13 +19,15 @@
 #include "logging/LoggerConfiguration.h"
 #include "FlowFileRecord.h"
 
+#include <span>
+
 namespace org {
 namespace apache {
 namespace nifi {
 namespace minifi {
 
 FlowFileLoader::FlowFileLoader()
-  : logger_(logging::LoggerFactory<FlowFileLoader>::getLogger()) {}
+  : logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()) {}
 
 FlowFileLoader::~FlowFileLoader() {
   stop();
@@ -42,7 +44,7 @@ std::future<FlowFileLoader::FlowFilePtrVec> FlowFileLoader::load(std::vector<Swa
   utils::Worker<utils::TaskRescheduleInfo> task{
     std::bind(&FlowFileLoader::loadImpl, this, std::move(flow_files), std::move(promise)),
     "",  // doesn't matter that tasks alias by name, as we never actually query their status or stop a single task
-    utils::make_unique<utils::ComplexMonitor>()};
+    std::make_unique<utils::ComplexMonitor>()};
   std::future<utils::TaskRescheduleInfo> dummy_future;
   thread_pool_.execute(std::move(task), dummy_future);
   return future;
@@ -86,8 +88,7 @@ utils::TaskRescheduleInfo FlowFileLoader::loadImpl(const std::vector<SwappedFlow
       }
       utils::Identifier container_id;
       auto flow_file = FlowFileRecord::DeSerialize(
-          reinterpret_cast<const uint8_t*>(serialized_items[idx].data()),
-          serialized_items[idx].size(), content_repo_, container_id);
+          std::as_bytes(std::span(serialized_items[idx])), content_repo_, container_id);
       if (!flow_file) {
         // corrupted flow file
         logger_->log_error("Failed to deserialize flow file \"%s\"", serialized_keys[idx]);

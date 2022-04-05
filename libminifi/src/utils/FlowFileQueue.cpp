@@ -36,22 +36,22 @@ bool FlowFileQueue::SwappedFlowFileComparator::operator()(const SwappedFlowFile&
 
 FlowFileQueue::FlowFileQueue(std::shared_ptr<SwapManager> swap_manager)
   : swap_manager_(std::move(swap_manager)),
-    logger_(logging::LoggerFactory<FlowFileQueue>::getLogger()) {}
+    logger_(core::logging::LoggerFactory<FlowFileQueue>::getLogger()) {}
 
 FlowFileQueue::value_type FlowFileQueue::pop() {
   return tryPopImpl({}).value();
 }
 
-utils::optional<FlowFileQueue::value_type> FlowFileQueue::tryPop() {
+std::optional<FlowFileQueue::value_type> FlowFileQueue::tryPop() {
   return tryPopImpl(std::chrono::milliseconds{0});
 }
 
-utils::optional<FlowFileQueue::value_type> FlowFileQueue::tryPop(std::chrono::milliseconds timeout) {
+std::optional<FlowFileQueue::value_type> FlowFileQueue::tryPop(std::chrono::milliseconds timeout) {
   return tryPopImpl(timeout);
 }
 
-utils::optional<FlowFileQueue::value_type> FlowFileQueue::tryPopImpl(utils::optional<std::chrono::milliseconds> timeout) {
-  utils::optional<std::shared_ptr<core::FlowFile>> result;
+std::optional<FlowFileQueue::value_type> FlowFileQueue::tryPopImpl(std::optional<std::chrono::milliseconds> timeout) {
+  std::optional<std::shared_ptr<core::FlowFile>> result;
   if (!queue_.empty()) {
     result = queue_.popMin();
     if (processLoadTaskWait(std::chrono::milliseconds{0})) {
@@ -62,7 +62,7 @@ utils::optional<FlowFileQueue::value_type> FlowFileQueue::tryPopImpl(utils::opti
   if (load_task_) {
     logger_->log_debug("Head is empty checking already running load task");
     if (!processLoadTaskWait(timeout)) {
-      return utils::nullopt;
+      return std::nullopt;
     }
     if (!queue_.empty()) {
       // load provided items
@@ -73,10 +73,10 @@ utils::optional<FlowFileQueue::value_type> FlowFileQueue::tryPopImpl(utils::opti
   }
   // no pending load_task_ and no items in the queue_
   initiateLoadIfNeeded();
-  return utils::nullopt;
+  return std::nullopt;
 }
 
-bool FlowFileQueue::processLoadTaskWait(utils::optional<std::chrono::milliseconds> timeout) {
+bool FlowFileQueue::processLoadTaskWait(std::optional<std::chrono::milliseconds> timeout) {
   if (!load_task_) {
     return true;
   }
