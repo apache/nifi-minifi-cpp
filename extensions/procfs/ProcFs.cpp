@@ -28,7 +28,7 @@ bool is_number(const std::string& s) {
 
 std::map<pid_t, ProcessStat> ProcFs::getProcessStats() const {
   std::map<pid_t, ProcessStat> process_stats;
-  for (const auto &entry : std::filesystem::directory_iterator(root_path_)) {
+  for (const auto& entry : std::filesystem::directory_iterator(root_path_)) {
     if (entry.is_directory() && is_number(entry.path().filename())) {
       auto stat_file_path = entry.path() / STAT_FILE;
       std::ifstream stat_file(stat_file_path);
@@ -42,8 +42,8 @@ std::map<pid_t, ProcessStat> ProcFs::getProcessStats() const {
   return process_stats;
 }
 
-utils::FlatMap<std::string, CpuStatData> ProcFs::getCpuStats() const {
-  utils::FlatMap<std::string, CpuStatData> cpu_stats;
+std::vector<std::pair<std::string, CpuStatData>> ProcFs::getCpuStats() const {
+  std::vector<std::pair<std::string, CpuStatData>> cpu_stats;
   auto stat_file_path = root_path_ / STAT_FILE;
   std::ifstream stat_file;
   stat_file.open(stat_file_path);
@@ -54,7 +54,7 @@ utils::FlatMap<std::string, CpuStatData> ProcFs::getCpuStats() const {
     iss >> entry_name;
     if (entry_name.starts_with("cpu")) {
       if (auto cpu_stat_data = CpuStatData::parseCpuStatLine(iss)) {
-        cpu_stats.insert_or_assign(std::move(entry_name), std::move(*cpu_stat_data));
+        cpu_stats.emplace_back(entry_name, *cpu_stat_data);
       } else {
         logger_->log_error("Failed to parse %s from %s", entry_name, stat_file_path);
       }
@@ -63,14 +63,8 @@ utils::FlatMap<std::string, CpuStatData> ProcFs::getCpuStats() const {
   return cpu_stats;
 }
 
-std::optional<MemInfo> ProcFs::getMemInfo() const {
-  auto mem_info_file_path = root_path_ / MEMINFO_FILE;
-  std::ifstream mem_info_file(mem_info_file_path);
-  return MemInfo::parseMemInfoFile(mem_info_file);
-}
-
-utils::FlatMap<std::string, NetDevData> ProcFs::getNetDevs() const {
-  utils::FlatMap<std::string, NetDevData> net_devs;
+std::vector<std::pair<std::string, NetDevData>> ProcFs::getNetDevs() const {
+  std::vector<std::pair<std::string, NetDevData>> net_devs;
   auto stat_file_path = root_path_ / NET_DEV_FILE;
   std::ifstream stat_file;
   stat_file.open(stat_file_path);
@@ -82,7 +76,7 @@ utils::FlatMap<std::string, NetDevData> ProcFs::getNetDevs() const {
     ++line_num;
     std::istringstream iss(line);
     if (auto net_dev = NetDevData::parseNetDevLine(iss)) {
-      net_devs.insert_or_assign(std::move(net_dev->first), std::move(net_dev->second));
+      net_devs.emplace_back(net_dev->first, net_dev->second);
     } else {
       logger_->log_error("Failed to parse line %d from %s", line_num, stat_file_path);
     }
@@ -90,8 +84,8 @@ utils::FlatMap<std::string, NetDevData> ProcFs::getNetDevs() const {
   return net_devs;
 }
 
-utils::FlatMap<std::string, DiskStatData> ProcFs::getDiskStats() const {
-  utils::FlatMap<std::string, DiskStatData> disk_stats;
+std::vector<std::pair<std::string, DiskStatData>> ProcFs::getDiskStats() const {
+  std::vector<std::pair<std::string, DiskStatData>> disk_stats;
   auto disk_stats_file_path = root_path_ / DISK_STATS_FILE;
   std::ifstream stat_file;
   stat_file.open(disk_stats_file_path);
@@ -101,12 +95,18 @@ utils::FlatMap<std::string, DiskStatData> ProcFs::getDiskStats() const {
     ++line_num;
     std::istringstream iss(line);
     if (auto disk_stat = DiskStatData::parseDiskStatLine(iss)) {
-      disk_stats.insert_or_assign(std::move(disk_stat->first), std::move(disk_stat->second));
+      disk_stats.emplace_back(disk_stat->first, disk_stat->second);
     } else {
       logger_->log_error("Failed to parse line %d from %s", line_num, disk_stats_file_path);
     }
   }
   return disk_stats;
+}
+
+std::optional<MemInfo> ProcFs::getMemInfo() const {
+  auto mem_info_file_path = root_path_ / MEMINFO_FILE;
+  std::ifstream mem_info_file(mem_info_file_path);
+  return MemInfo::parseMemInfoFile(mem_info_file);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::procfs

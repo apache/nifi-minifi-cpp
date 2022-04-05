@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include <map>
+#include <vector>
 #include <utility>
 #include <string>
 #include <optional>
@@ -32,7 +33,6 @@
 #include "NetDev.h"
 #include "DiskStat.h"
 
-#include "utils/FlatMap.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
 
@@ -50,10 +50,10 @@ class ProcFs {
   }
 
   [[nodiscard]] std::map<pid_t, ProcessStat> getProcessStats() const;
-  [[nodiscard]] utils::FlatMap<std::string, CpuStatData> getCpuStats() const;
+  [[nodiscard]] std::vector<std::pair<std::string, CpuStatData>> getCpuStats() const;
+  [[nodiscard]] std::vector<std::pair<std::string, NetDevData>> getNetDevs() const;
+  [[nodiscard]] std::vector<std::pair<std::string, DiskStatData>> getDiskStats() const;
   [[nodiscard]] std::optional<MemInfo> getMemInfo() const;
-  [[nodiscard]] utils::FlatMap<std::string, NetDevData> getNetDevs() const;
-  [[nodiscard]] utils::FlatMap<std::string, DiskStatData> getDiskStats() const;
 
  private:
   std::filesystem::path root_path_;

@@ -47,17 +47,17 @@ TEST_CASE("ProcFSTest stat test with mock", "[procfsstatmockabsolutetest]") {
     cpu_stat_period_total_should_be_one(cpu_stat);
   }
 
-  REQUIRE(cpu_stats_t0.contains("cpu3"));
-  CHECK(cpu_stats_t0.at("cpu3").getUser() == SystemClockDuration(1299551));
-  CHECK(cpu_stats_t0.at("cpu3").getNice() == SystemClockDuration(732));
-  CHECK(cpu_stats_t0.at("cpu3").getSystem() == SystemClockDuration(316295));
-  CHECK(cpu_stats_t0.at("cpu3").getIdle() == SystemClockDuration(4498383));
-  CHECK(cpu_stats_t0.at("cpu3").getIoWait() == SystemClockDuration(1428));
-  CHECK(cpu_stats_t0.at("cpu3").getIrq() == SystemClockDuration(22491));
-  CHECK(cpu_stats_t0.at("cpu3").getSoftIrq() == SystemClockDuration(7022));
-  CHECK(cpu_stats_t0.at("cpu3").getSteal() == SystemClockDuration(0));
-  CHECK(cpu_stats_t0.at("cpu3").getGuest() == SystemClockDuration(0));
-  CHECK(cpu_stats_t0.at("cpu3").getGuestNice() == SystemClockDuration(0));
+  REQUIRE(cpu_stats_t0[4].first == "cpu3");
+  CHECK(cpu_stats_t0[4].second.getUser() == SystemClockDuration(1299551));
+  CHECK(cpu_stats_t0[4].second.getNice() == SystemClockDuration(732));
+  CHECK(cpu_stats_t0[4].second.getSystem() == SystemClockDuration(316295));
+  CHECK(cpu_stats_t0[4].second.getIdle() == SystemClockDuration(4498383));
+  CHECK(cpu_stats_t0[4].second.getIoWait() == SystemClockDuration(1428));
+  CHECK(cpu_stats_t0[4].second.getIrq() == SystemClockDuration(22491));
+  CHECK(cpu_stats_t0[4].second.getSoftIrq() == SystemClockDuration(7022));
+  CHECK(cpu_stats_t0[4].second.getSteal() == SystemClockDuration(0));
+  CHECK(cpu_stats_t0[4].second.getGuest() == SystemClockDuration(0));
+  CHECK(cpu_stats_t0[4].second.getGuestNice() == SystemClockDuration(0));
 
   ProcFs proc_fs_t1("./mockprocfs_t1");
   auto cpu_stats_t1 = proc_fs_t1.getCpuStats();
@@ -66,9 +66,12 @@ TEST_CASE("ProcFSTest stat test with mock", "[procfsstatmockabsolutetest]") {
     cpu_stat_period_total_should_be_one(cpu_stat);
   }
 
-  for (const auto& [cpu_name_t1, cpu_stat_t1] : cpu_stats_t1) {
-    REQUIRE(cpu_stats_t0.contains(cpu_name_t1));
-    const auto& cpu_stat_t0 = cpu_stats_t0.at(cpu_name_t1);
+  for (size_t i = 0; i < cpu_stats_t1.size(); ++i) {
+    const auto& cpu_name_t0 = cpu_stats_t0[i].first;
+    const auto& cpu_stat_t0 = cpu_stats_t0[i].second;
+    const auto& cpu_name_t1 = cpu_stats_t1[i].first;
+    const auto& cpu_stat_t1 = cpu_stats_t1[i].second;
+    REQUIRE(cpu_name_t0 == cpu_name_t1);
     REQUIRE(cpu_stat_t1 > cpu_stat_t0);
     auto cpu_stat_diff = cpu_stat_t1-cpu_stat_t0;
     cpu_stat_period_total_should_be_one(cpu_stat_diff);
@@ -89,9 +92,12 @@ TEST_CASE("ProcFSTest stat test ", "[procfsstatmockabsolutetest]") {
 
   REQUIRE(cpu_stats_t0.size() == cpu_stats_t1.size());
 
-  for (const auto& [cpu_name_t1, cpu_stat_t1] : cpu_stats_t1) {
-    REQUIRE(cpu_stats_t0.contains(cpu_name_t1));
-    const auto& cpu_stat_t0 = cpu_stats_t0.at(cpu_name_t1);
+  for (size_t i = 0; i < cpu_stats_t1.size(); ++i) {
+    const auto& cpu_name_t0 = cpu_stats_t0[i].first;
+    const auto& cpu_stat_t0 = cpu_stats_t0[i].second;
+    const auto& cpu_name_t1 = cpu_stats_t1[i].first;
+    const auto& cpu_stat_t1 = cpu_stats_t1[i].second;
+    REQUIRE(cpu_name_t0 == cpu_name_t1);
     REQUIRE(cpu_stat_t1 > cpu_stat_t0);
     auto cpu_stat_diff = cpu_stat_t1-cpu_stat_t0;
     cpu_stat_period_total_should_be_one(cpu_stat_diff);
