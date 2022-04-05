@@ -83,7 +83,7 @@ void addDiskStatToJson(const std::string& disk_name,
 }
 
 void addDiskStatPerSecToJson(const std::string& disk_name,
-                             const DiskStatData disk_stat,
+                             const DiskStatData& disk_stat,
                              const std::chrono::duration<double> duration,
                              rapidjson::Value& disk_root,
                              rapidjson::Document::AllocatorType& alloc) {
