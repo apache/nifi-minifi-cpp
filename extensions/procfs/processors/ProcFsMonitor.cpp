@@ -194,7 +194,8 @@ void processRelativeCPUInformation(const std::vector<std::pair<std::string, CpuS
     const auto& last_cpu_name = last_cpu_stats[i].first;
     const auto& last_cpu_stat = last_cpu_stats[i].second;
     gsl_Expects(last_cpu_name == cpu_name);
-    addCPUStatPeriodToJson(cpu_name, cpu_stat, last_cpu_stat, cpu_root, alloc);
+    if (cpu_stat.getTotal() > last_cpu_stat.getTotal())
+      addCPUStatPeriodToJson(cpu_name, cpu_stat, last_cpu_stat, cpu_root, alloc);
   }
   if (!cpu_root.ObjectEmpty())
     body.AddMember("CPU", cpu_root.Move(), alloc);
