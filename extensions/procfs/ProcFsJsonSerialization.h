@@ -108,7 +108,7 @@ void addNetDevToJson(const std::string& interface_name,
 }
 
 void addNetDevPerSecToJson(const std::string& interface_name,
-                           const NetDevData net_dev,
+                           const NetDevData& net_dev,
                            const std::chrono::duration<double> duration,
                            rapidjson::Value& net_root,
                            rapidjson::Document::AllocatorType& alloc) {
