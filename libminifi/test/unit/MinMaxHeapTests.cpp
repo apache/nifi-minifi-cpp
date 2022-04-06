@@ -21,6 +21,7 @@
 #include <random>
 
 #include "../TestBase.h"
+#include "../Catch.h"
 
 using org::apache::nifi::minifi::utils::MinMaxHeap;
 

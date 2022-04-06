@@ -28,6 +28,7 @@ using namespace std::chrono_literals;
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 #include "Connection.h"
 #include "FlowFileQueue.h"
+#include "Catch.h"
 
 #define FIELD_ACCESSOR(field) \
   template<typename T> \

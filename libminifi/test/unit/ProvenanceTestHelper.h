@@ -228,7 +228,8 @@ class TestFlowRepository : public org::apache::nifi::minifi::core::Repository {
     }
   }
 
-  void loadComponent(const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/) override {
+  void loadComponent(const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& content_repo) override {
+    content_repo_ = content_repo;
   }
 
   void run() override {
@@ -238,6 +239,7 @@ class TestFlowRepository : public org::apache::nifi::minifi::core::Repository {
  protected:
   mutable std::mutex repository_results_mutex_;
   std::map<std::string, std::string> repository_results_;
+  std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository> content_repo_;
 };
 
 class TestFlowController : public org::apache::nifi::minifi::FlowController {

@@ -21,6 +21,10 @@
 #include "../TestBase.h"
 #include "TestUtils.h"
 #include "../Utils.h"
+#include "../Catch.h"
+#include "../unit/ProvenanceTestHelper.h"
+
+#include <span>
 
 using Timepoint = std::chrono::time_point<std::chrono::steady_clock>;
 
@@ -53,7 +57,7 @@ class SwappingFlowFileTestRepo : public TestFlowRepository, public minifi::SwapM
       ids.push_back(minifi::SwappedFlowFile{ff->getUUID(), ff->getPenaltyExpiration()});
       minifi::io::BufferStream output;
       std::static_pointer_cast<minifi::FlowFileRecord>(ff)->Serialize(output);
-      Put(ff->getUUIDStr().c_str(), output.getBuffer(), output.size());
+      Put(ff->getUUIDStr().c_str(), reinterpret_cast<const uint8_t*>(output.getBuffer().data()), output.size());
     }
     swap_events_.push_back({Store, ids});
   }
@@ -67,7 +71,7 @@ class SwappingFlowFileTestRepo : public TestFlowRepository, public minifi::SwapM
       std::string value;
       Get(ff_id.id.to_string().c_str(), value);
       utils::Identifier container_id;
-      auto ff = minifi::FlowFileRecord::DeSerialize(reinterpret_cast<const uint8_t*>(value.c_str()), value.size(), content_repo_, container_id);
+      auto ff = minifi::FlowFileRecord::DeSerialize(std::as_bytes(std::span(value)), content_repo_, container_id);
       ff->setPenaltyExpiration(ff_id.to_be_processed_after);
       load_task.result.push_back(std::move(ff));
     }
@@ -116,7 +120,7 @@ struct VerifiedQueue {
     return ff;
   }
 
-  void verify(std::initializer_list<unsigned> live, utils::optional<std::initializer_list<unsigned>> inter, std::initializer_list<unsigned> swapped) const {
+  void verify(std::initializer_list<unsigned> live, std::optional<std::initializer_list<unsigned>> inter, std::initializer_list<unsigned> swapped) const {
     // check live ffs
     auto live_copy = FlowFileQueueTestAccessor::get_queue_(impl);
     REQUIRE(live_copy.size() == live.size());
@@ -204,7 +208,7 @@ class SwapTestController : public TestController {
     flow_repo_->swap_events_.clear();
   }
 
-  void verifyQueue(std::initializer_list<unsigned> live, utils::optional<std::initializer_list<unsigned>> inter, std::initializer_list<unsigned> swapped) {
+  void verifyQueue(std::initializer_list<unsigned> live, std::optional<std::initializer_list<unsigned>> inter, std::initializer_list<unsigned> swapped) {
     queue_->verify(live, inter, swapped);
   }
 
