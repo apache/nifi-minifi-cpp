@@ -521,29 +521,6 @@ TEST_CASE("StringUtils::removeFramingCharacters works correctly", "[removeFramin
   REQUIRE(utils::StringUtils::removeFramingCharacters("\"\"abba\"\"", '"') == "\"abba\"");
 }
 
-TEST_CASE("StringUtils::getLastRegexMatch works correctly", "[getLastRegexMatch]") {
-  std::regex pattern("<[0-9]+>");
-  {
-    std::string content = "Foo";
-    auto last_match = StringUtils::getLastRegexMatch(content, pattern);
-    REQUIRE_FALSE(last_match.ready());
-  }
-  {
-    std::string content = "<1> Foo";
-    auto last_match = StringUtils::getLastRegexMatch(content, pattern);
-    REQUIRE(last_match.ready());
-    CHECK(last_match.length(0) == 3);
-    CHECK(last_match.position(0) == 0);
-  }
-  {
-    std::string content = "<1> Foo<2> Bar<3> Baz<10> Qux";
-    auto last_match = StringUtils::getLastRegexMatch(content, pattern);
-    REQUIRE(last_match.ready());
-    CHECK(last_match.length(0) == 4);
-    CHECK(last_match.position(0) == 21);
-  }
-}
-
 // ignore terminating \0 character
 template<size_t N>
 gsl::span<const std::byte> from_cstring(const char (&str)[N]) {

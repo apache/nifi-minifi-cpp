@@ -29,7 +29,7 @@
 #include "utils/TimeUtil.h"
 
 #ifdef YAML_CONFIGURATION_USE_REGEX
-#include <regex>
+#include "utils/RegexUtils.h"
 #endif  // YAML_CONFIGURATION_USE_REGEX
 
 namespace org {
@@ -826,8 +826,8 @@ void YamlConfiguration::validateComponentProperties(ConfigurableComponent& compo
     }
 
     for (const auto &excl_pair : excl_props) {
-      std::regex excl_expr(excl_pair.second);
-      if (std::regex_match(component_properties.at(excl_pair.first).getValue().to_string(), excl_expr)) {
+      utils::Regex excl_expr(excl_pair.second);
+      if (utils::regexMatch(component_properties.at(excl_pair.first).getValue().to_string(), excl_expr)) {
         std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(),
             "' must not be set when the value of property '", excl_pair.first, "' matches '", excl_pair.second, "'");
         raiseComponentError(component_name, yaml_section, reason);
@@ -840,8 +840,8 @@ void YamlConfiguration::validateComponentProperties(ConfigurableComponent& compo
     const auto &prop_regex_str = prop_pair.second.getValidRegex();
 
     if (!prop_regex_str.empty()) {
-      std::regex prop_regex(prop_regex_str);
-      if (!std::regex_match(prop_pair.second.getValue().to_string(), prop_regex)) {
+      utils::Regex prop_regex(prop_regex_str);
+      if (!utils::regexMatch(prop_pair.second.getValue().to_string(), prop_regex)) {
         std::string reason = utils::StringUtils::join_pack("property '", prop_pair.second.getName(), "' does not match validation pattern '", prop_regex_str, "'");
         raiseComponentError(component_name, yaml_section, reason);
       }

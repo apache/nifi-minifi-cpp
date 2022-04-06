@@ -27,7 +27,6 @@
 #include <memory>
 #include <set>
 #include <string>
-#include <regex>
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
@@ -37,6 +36,7 @@
 #include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "utils/FileReaderCallback.h"
+#include "utils/RegexUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -261,8 +261,8 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   if (request.ignoreHiddenFile && utils::file::is_hidden(fullName))
     return false;
 
-  std::regex rgx(request.fileFilter);
-  if (!std::regex_search(name, rgx)) {
+  utils::Regex rgx(request.fileFilter);
+  if (!utils::regexSearch(name, rgx)) {
     return false;
   }
 

@@ -25,7 +25,6 @@
 #include <unordered_set>
 #include <memory>
 #include <map>
-#include <regex>
 
 #include "rapidjson/document.h"
 #include "core/FlowFile.h"
@@ -35,6 +34,7 @@
 #include "io/StreamPipe.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -90,7 +90,7 @@ class AttributesToJSON : public core::Processor {
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AttributesToJSON>::getLogger();
   std::vector<std::string> attribute_list_;
-  std::optional<std::regex> attributes_regular_expression_;
+  std::optional<utils::Regex> attributes_regular_expression_;
   WriteDestination write_destination_;
   bool include_core_attributes_ = true;
   bool null_value_ = false;

@@ -32,6 +32,7 @@
 #include "utils/StringUtils.h"
 #include "utils/OsUtils.h"
 #include "expression/Expression.h"
+#include "utils/RegexUtils.h"
 
 #ifndef DISABLE_CURL
 #ifdef WIN32
@@ -822,16 +823,16 @@ Value expr_replaceEmpty(const std::vector<Value> &args) {
 
 Value expr_matches(const std::vector<Value> &args) {
   const auto &subject = args[0].asString();
-  const std::regex expr = std::regex(args[1].asString());
+  const auto expr = utils::Regex(args[1].asString());
 
-  return Value(std::regex_match(subject.begin(), subject.end(), expr));
+  return Value(utils::regexMatch(subject, expr));
 }
 
 Value expr_find(const std::vector<Value> &args) {
   const auto &subject = args[0].asString();
-  const std::regex expr = std::regex(args[1].asString());
+  const auto expr = utils::Regex(args[1].asString());
 
-  return Value(std::regex_search(subject.begin(), subject.end(), expr));
+  return Value(utils::regexSearch(subject, expr));
 }
 
 #endif  // EXPRESSION_LANGUAGE_USE_REGEX
@@ -1184,7 +1185,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
     std::vector<Expression> out_exprs;
 
     for (const auto &arg : args) {
-      const std::regex attr_regex = std::regex(arg(params).asString());
+      const auto attr_regex = utils::Regex(arg(params).asString());
       const auto cur_flow_file = params.flow_file.lock();
       std::map<std::string, std::string> attrs;
 
@@ -1193,7 +1194,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
       }
 
       for (const auto &attr : attrs) {
-        if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
+        if (utils::regexMatch(attr.first, attr_regex)) {
           out_exprs.emplace_back(make_dynamic([=](const Parameters& /*params*/,
                       const std::vector<Expression>& /*sub_exprs*/) -> Value {
                     std::string attr_val;
@@ -1237,7 +1238,7 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
     std::vector<Expression> out_exprs;
 
     for (const auto &arg : args) {
-      const std::regex attr_regex = std::regex(arg(params).asString());
+      const auto attr_regex = utils::Regex(arg(params).asString());
       const auto cur_flow_file = params.flow_file.lock();
       std::map<std::string, std::string> attrs;
 
@@ -1246,7 +1247,7 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
       }
 
       for (const auto &attr : attrs) {
-        if (std::regex_match(attr.first.begin(), attr.first.end(), attr_regex)) {
+        if (utils::regexMatch(attr.first, attr_regex)) {
           out_exprs.emplace_back(make_dynamic([=](const Parameters& /*params*/,
                       const std::vector<Expression>& /*sub_exprs*/) -> Value {
                     std::string attr_val;

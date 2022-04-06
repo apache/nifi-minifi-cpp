@@ -112,16 +112,16 @@ std::optional<storage::ListAzureDataLakeStorageParameters> ListAzureDataLakeStor
     return std::nullopt;
   }
 
-  auto createFilterRegex = [&context](const std::string& property_name) -> std::optional<std::regex> {
+  auto createFilterRegex = [&context](const std::string& property_name) -> std::optional<minifi::utils::Regex> {
     try {
       std::string filter_str;
       context.getProperty(property_name, filter_str);
       if (!filter_str.empty()) {
-        return std::regex(filter_str);
+        return minifi::utils::Regex(filter_str);
       }
 
       return std::nullopt;
-    } catch (const std::regex_error&) {
+    } catch (const minifi::Exception&) {
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, property_name + " regex is invalid");
     }
   };

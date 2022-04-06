@@ -20,9 +20,9 @@
 #define LIBMINIFI_INCLUDE_UTILS_HTTPUTILS_H_
 
 #include <string>
-#include <regex>
 
 #include "io/ClientSocket.h"
+#include "utils/RegexUtils.h"
 
 /**
 This function, unfortunately, assumes that we're parsing http components of a local host. On windows this is problematic
@@ -36,9 +36,9 @@ inline bool parse_http_components(const std::string &url, std::string &port, std
   std::string regex_str = "^(http|https)://(localhost:)([0-9]+)?(/.*)$";
 #endif
 
-  auto rgx = std::regex(regex_str, std::regex_constants::icase);
-  std::smatch matches;
-  if (std::regex_search(url, matches, rgx)) {
+  auto rgx = org::apache::nifi::minifi::utils::Regex(regex_str, {org::apache::nifi::minifi::utils::Regex::Mode::ICASE});
+  org::apache::nifi::minifi::utils::SMatch matches;
+  if (org::apache::nifi::minifi::utils::regexSearch(url, matches, rgx)) {
     if (matches.size() >= 5) {
       scheme = matches[1];
       port = matches[3];

@@ -319,7 +319,7 @@ void ListenHTTP::Handler::setHeaderAttributes(const mg_request_info *req_info, c
 
     if (strcmp("filename", header->name) == 0) {
       flow_file->setAttribute("filename", header->value);
-    } else if (std::regex_match(header->name, headers_as_attrs_regex_)) {
+    } else if (utils::regexMatch(header->name, headers_as_attrs_regex_)) {
       flow_file->setAttribute(header->name, header->value);
     }
   }
@@ -373,7 +373,7 @@ bool ListenHTTP::Handler::authRequest(mg_connection *conn, const mg_request_info
   // If this is a two-way TLS connection, authorize the peer against the configured pattern
   bool authorized = true;
   if (req_info->is_ssl && req_info->client_cert != nullptr) {
-    if (!std::regex_match(req_info->client_cert->subject, auth_dn_regex_)) {
+    if (!utils::regexMatch(req_info->client_cert->subject, auth_dn_regex_)) {
       mg_printf(conn, "HTTP/1.1 403 Forbidden\r\n"
                 "Content-Type: text/html\r\n"
                 "Content-Length: 0\r\n\r\n");

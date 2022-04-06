@@ -20,7 +20,6 @@
 
 #include "AzureDataLakeStorage.h"
 
-#include <regex>
 #include <string_view>
 
 #include "AzureDataLakeStorageClient.h"
@@ -29,11 +28,12 @@
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
 #include "utils/GeneralUtils.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
 namespace {
-bool matchesPathFilter(std::string_view base_directory, const std::optional<std::regex>& path_regex, std::string path) {
+bool matchesPathFilter(std::string_view base_directory, const std::optional<minifi::utils::Regex>& path_regex, std::string path) {
   gsl_Expects(utils::implies(!base_directory.empty(), minifi::utils::StringUtils::startsWith(path, base_directory)));
   if (!path_regex) {
     return true;
@@ -43,15 +43,15 @@ bool matchesPathFilter(std::string_view base_directory, const std::optional<std:
     path = path.size() == base_directory.size() ? "" : path.substr(base_directory.size() + 1);
   }
 
-  return std::regex_match(path, *path_regex);
+  return minifi::utils::regexMatch(path, *path_regex);
 }
 
-bool matchesFileFilter(const std::optional<std::regex>& file_regex, const std::string& filename) {
+bool matchesFileFilter(const std::optional<minifi::utils::Regex>& file_regex, const std::string& filename) {
   if (!file_regex) {
     return true;
   }
 
-  return std::regex_match(filename, *file_regex);
+  return minifi::utils::regexMatch(filename, *file_regex);
 }
 }  // namespace
 

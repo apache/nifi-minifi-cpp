@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <regex>
 #include <optional>
 #include <string_view>
 #include <map>
@@ -27,6 +26,7 @@
 #include "Processor.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -111,7 +111,7 @@ class RouteText : public core::Processor {
   Segmentation segmentation_;
   bool trim_{true};
   CasePolicy case_policy_{CasePolicy::CASE_SENSITIVE};
-  std::optional<std::regex> group_regex_;
+  std::optional<utils::Regex> group_regex_;
   std::string group_fallback_;
 
   std::map<std::string, core::Property> dynamic_properties_;

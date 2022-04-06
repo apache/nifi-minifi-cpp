@@ -21,7 +21,6 @@
 
 #include <map>
 #include <memory>
-#include <regex>
 #include <string>
 #include <utility>
 
@@ -35,6 +34,7 @@
 #include "utils/MinifiConcurrentQueue.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -116,8 +116,8 @@ class ListenHTTP : public core::Processor {
     void enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream>);
 
     std::string base_uri_;
-    std::regex auth_dn_regex_;
-    std::regex headers_as_attrs_regex_;
+    utils::Regex auth_dn_regex_;
+    utils::Regex headers_as_attrs_regex_;
     core::ProcessContext *process_context_;
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
     std::map<std::string, ResponseBody> response_uri_map_;

@@ -1824,11 +1824,11 @@ TEST_CASE("TailFile can use an AttributeProviderService", "[AttributeProviderSer
   CHECK(LogTestController::getInstance().contains("key:test.animal value:dog"));
   CHECK(LogTestController::getInstance().contains("key:test.animal value:dolphin"));
 
-  CHECK_FALSE(LogTestController::getInstance().contains("key:test.fruit value:strawberry"));
-  CHECK_FALSE(LogTestController::getInstance().contains("key:test.uid value:002"));
-  CHECK_FALSE(LogTestController::getInstance().contains("key:test.uid value:003"));
-  CHECK_FALSE(LogTestController::getInstance().contains("key:test.animal value:elephant"));
-  CHECK_FALSE(LogTestController::getInstance().contains("key:test.animal value:horse"));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.fruit value:strawberry", 0s, 0ms));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.uid value:002", 0s, 0ms));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.uid value:003", 0s, 0ms));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.animal value:elephant", 0s, 0ms));
+  CHECK_FALSE(LogTestController::getInstance().contains("key:test.animal value:horse", 0s, 0ms));
 
   LogTestController::getInstance().reset();
 }

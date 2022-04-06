@@ -135,7 +135,7 @@ void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFa
   matching_ = utils::parseEnumProperty<Matching>(*context, MatchingStrategy);
   context->getProperty(TrimWhitespace.getName(), trim_);
   case_policy_ = context->getProperty<bool>(IgnoreCase).value_or(false) ? CasePolicy::IGNORE_CASE : CasePolicy::CASE_SENSITIVE;
-  group_regex_ = context->getProperty(GroupingRegex) | utils::map([] (const auto& str) {return std::regex(str);});
+  group_regex_ = context->getProperty(GroupingRegex) | utils::map([] (const auto& str) {return utils::Regex(str);});
   segmentation_ = utils::parseEnumProperty<Segmentation>(*context, SegmentationStrategy);
   context->getProperty(GroupingFallbackValue.getName(), group_fallback_);
 }
@@ -227,7 +227,7 @@ class RouteText::MatchingContext {
       flow_file_(std::move(flow_file)),
       case_policy_(case_policy) {}
 
-  const std::regex& getRegexProperty(const core::Property& prop) {
+  const utils::Regex& getRegexProperty(const core::Property& prop) {
     auto it = regex_values_.find(prop.getName());
     if (it != regex_values_.end()) {
       return it->second;
@@ -236,11 +236,11 @@ class RouteText::MatchingContext {
     if (!process_context_.getDynamicProperty(prop, value, flow_file_)) {
       throw Exception(PROCESSOR_EXCEPTION, "Missing dynamic property: '" + prop.getName() + "'");
     }
-    std::regex::flag_type flags = std::regex::ECMAScript;
+    std::vector<utils::Regex::Mode> flags;
     if (case_policy_ == CasePolicy::IGNORE_CASE) {
-      flags |= std::regex::icase;
+      flags.push_back(utils::Regex::Mode::ICASE);
     }
-    return (regex_values_[prop.getName()] = std::regex(value, flags));
+    return (regex_values_[prop.getName()] = utils::Regex(value, flags));
   }
 
   const std::string& getStringProperty(const core::Property& prop) {
@@ -275,7 +275,7 @@ class RouteText::MatchingContext {
   CasePolicy case_policy_;
 
   std::map<std::string, std::string> string_values_;
-  std::map<std::string, std::regex> regex_values_;
+  std::map<std::string, utils::Regex> regex_values_;
 
   struct OwningSearcher {
     OwningSearcher(std::string str, CasePolicy case_policy)
@@ -425,12 +425,12 @@ bool RouteText::matchSegment(MatchingContext& context, const Segment& segment, c
       return utils::StringUtils::equals(segment.value_, context.getStringProperty(prop), case_policy_ == CasePolicy::CASE_SENSITIVE);
     }
     case Matching::CONTAINS_REGEX: {
-      std::match_results<std::string_view::const_iterator> match_result;
-      return std::regex_search(segment.value_.begin(), segment.value_.end(), match_result, context.getRegexProperty(prop));
+      std::string segment_str = std::string(segment.value_);
+      return utils::regexSearch(segment_str, context.getRegexProperty(prop));
     }
     case Matching::MATCHES_REGEX: {
-      std::match_results<std::string_view::const_iterator> match_result;
-      return std::regex_match(segment.value_.begin(), segment.value_.end(), match_result, context.getRegexProperty(prop));
+      std::string segment_str = std::string(segment.value_);
+      return utils::regexMatch(segment_str, context.getRegexProperty(prop));
     }
   }
   throw Exception(PROCESSOR_EXCEPTION, "Unknown matching strategy");
@@ -440,8 +440,9 @@ std::optional<std::string> RouteText::getGroup(const std::string_view& segment) 
   if (!group_regex_) {
     return std::nullopt;
   }
-  std::match_results<std::string_view::const_iterator> match_result;
-  if (!std::regex_match(segment.begin(), segment.end(), match_result, group_regex_.value())) {
+  utils::SMatch match_result;
+  std::string segment_str = std::string(segment);
+  if (!utils::regexMatch(segment_str, match_result, group_regex_.value())) {
     return group_fallback_;
   }
   // WARNING!! using a temporary std::string causes the omission of delimiters

@@ -89,7 +89,7 @@ void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSe
     attribute_list_ = utils::StringUtils::splitAndTrimRemovingEmpty(value, ",");
   }
   if (context->getProperty(AttributesRegularExpression.getName(), value) && !value.empty()) {
-    attributes_regular_expression_ = std::regex(value);
+    attributes_regular_expression_ = utils::Regex(value);
   }
   write_destination_ = WriteDestination::parse(utils::parsePropertyWithAllowableValuesOrThrow(*context, Destination.getName(), WriteDestination::values()).c_str());
   context->getProperty(IncludeCoreAttributes.getName(), include_core_attributes_);
@@ -114,7 +114,7 @@ std::optional<std::unordered_set<std::string>> AttributesToJSON::getAttributesTo
 
   if (attributes_regular_expression_) {
     for (const auto& [key, value] : flowfile_attributes) {
-      if (std::regex_match(key, attributes_regular_expression_.value())) {
+      if (utils::regexMatch(key, attributes_regular_expression_.value())) {
         attributes.insert(key);
       }
     }

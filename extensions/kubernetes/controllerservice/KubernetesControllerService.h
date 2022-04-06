@@ -24,6 +24,7 @@
 #include "controllers/AttributeProviderService.h"
 #include "core/logging/Logger.h"
 #include "core/Property.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
 
@@ -48,9 +49,9 @@ class KubernetesControllerService : public AttributeProviderService {
 
   std::mutex initialization_mutex_;
   bool initialized_ = false;
-  std::optional<std::regex> namespace_filter_;
-  std::optional<std::regex> pod_name_filter_;
-  std::optional<std::regex> container_name_filter_;
+  std::optional<utils::Regex> namespace_filter_;
+  std::optional<utils::Regex> pod_name_filter_;
+  std::optional<utils::Regex> container_name_filter_;
   std::shared_ptr<core::logging::Logger> logger_;
   std::unique_ptr<APIClient> api_client_;
 };

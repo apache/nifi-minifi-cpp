@@ -474,16 +474,6 @@ std::string StringUtils::to_base64(const gsl::span<const std::byte> raw_data, bo
   return buf;
 }
 
-std::smatch StringUtils::getLastRegexMatch(const std::string& str, const std::regex& pattern) {
-  auto matches = std::sregex_iterator(str.begin(), str.end(), pattern);
-  std::smatch last_match;
-  while (matches != std::sregex_iterator()) {
-    last_match = *matches;
-    matches = std::next(matches);
-  }
-  return last_match;
-}
-
 std::string StringUtils::escapeUnprintableBytes(gsl::span<const std::byte> data) {
   constexpr const char* hex_digits = "0123456789abcdef";
   std::string result;
