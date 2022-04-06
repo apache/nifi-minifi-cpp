@@ -18,13 +18,18 @@
 
 #pragma once
 
+#include <span>
+#include <string>
+#include <vector>
+#include <utility>
+#include <memory>
+
 #include "../TestBase.h"
 #include "TestUtils.h"
 #include "../Utils.h"
 #include "../Catch.h"
 #include "../unit/ProvenanceTestHelper.h"
 
-#include <span>
 
 using Timepoint = std::chrono::time_point<std::chrono::steady_clock>;
 

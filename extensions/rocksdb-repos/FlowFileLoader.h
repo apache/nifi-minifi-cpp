@@ -19,6 +19,8 @@
 
 #include <future>
 #include <list>
+#include <vector>
+#include <memory>
 
 #include "database/RocksDatabase.h"
 #include "FlowFile.h"

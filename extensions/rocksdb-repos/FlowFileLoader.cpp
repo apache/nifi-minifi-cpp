@@ -16,10 +16,15 @@
  */
 
 #include "FlowFileLoader.h"
-#include "logging/LoggerConfiguration.h"
-#include "FlowFileRecord.h"
 
 #include <span>
+#include <memory>
+#include <string>
+#include <vector>
+#include <utility>
+
+#include "logging/LoggerConfiguration.h"
+#include "FlowFileRecord.h"
 
 namespace org {
 namespace apache {
