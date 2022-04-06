@@ -66,6 +66,7 @@ class SupportedOperations : public DeviceInformation {
   static void addProperty(SerializedResponseNode& properties, const std::string& operand, const Metadata& metadata = {});
   void fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const;
   Metadata buildUpdatePropertiesMetadata() const;
+  std::vector<std::string> getSensitiveProperties() const;
 
   state::StateMonitor* monitor_ = nullptr;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;

@@ -25,17 +25,6 @@
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
 
-class VerifyC2DescribeJstack : public VerifyC2Describe {
- public:
-  explicit VerifyC2DescribeJstack(const std::atomic_bool& acknowledgement_received) : VerifyC2Describe(), acknowledgement_received_(acknowledgement_received) {}
-  void runAssertions() override {
-    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] { return acknowledgement_received_.load(); }));
-  }
- protected:
-  const std::atomic_bool& acknowledgement_received_;
-};
-
 class DescribeJstackHandler : public HeartbeatHandler {
  public:
   explicit DescribeJstackHandler(std::atomic_bool& acknowledgement_received, std::shared_ptr<minifi::Configure> configuration)
@@ -58,7 +47,7 @@ class DescribeJstackHandler : public HeartbeatHandler {
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
   std::atomic_bool acknowledgement_received{ false };
-  VerifyC2DescribeJstack harness{acknowledgement_received};
+  VerifyC2Describe harness{acknowledgement_received};
   harness.setKeyDir(args.key_dir);
   DescribeJstackHandler responder{acknowledgement_received, harness.getConfiguration()};
   harness.setUrl(args.url, &responder);

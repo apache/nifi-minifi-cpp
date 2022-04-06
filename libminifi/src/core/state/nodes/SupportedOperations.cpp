@@ -18,6 +18,7 @@
 
 #include "core/state/nodes/SupportedOperations.h"
 #include "core/Resource.h"
+#include "range/v3/algorithm/find.hpp"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -62,11 +63,27 @@ void SupportedOperations::addProperty(SerializedResponseNode& properties, const 
   properties.children.push_back(operand_node);
 }
 
+std::vector<std::string> SupportedOperations::getSensitiveProperties() const {
+  std::vector<std::string> sensitive_properties;
+  sensitive_properties.assign(Configuration::DEFAULT_SENSITIVE_PROPERTIES.begin(), Configuration::DEFAULT_SENSITIVE_PROPERTIES.end());
+  if (configuration_reader_) {
+    const auto additional_sensitive_props_list = configuration_reader_(Configuration::nifi_sensitive_props_additional_keys);
+    if (additional_sensitive_props_list) {
+      std::vector<std::string> additional_sensitive_properties = utils::StringUtils::split(*additional_sensitive_props_list, ",");
+      return Configuration::mergeProperties(sensitive_properties, additional_sensitive_properties);
+    }
+  }
+  return sensitive_properties;
+}
+
 SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata() const {
   std::vector<std::unordered_map<std::string, std::string>> supported_config_updates;
-  for (const auto& config_property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
-    if (!update_policy_controller_ ||
-        (update_policy_controller_ && update_policy_controller_->canUpdate(std::string(config_property.name)))) {
+  for (const auto& config_property : Configuration::CONFIGURATION_PROPERTIES) {
+    auto sensitive_properties = getSensitiveProperties();
+    if (ranges::find(sensitive_properties, config_property.name) != ranges::end(sensitive_properties)) {
+      continue;
+    }
+    if (!update_policy_controller_ || (update_policy_controller_ && update_policy_controller_->canUpdate(std::string(config_property.name)))) {
       std::unordered_map<std::string, std::string> property;
       property.emplace("propertyName", config_property.name);
       property.emplace("validator", config_property.validator->getName());

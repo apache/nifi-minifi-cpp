@@ -35,10 +35,7 @@ class ConfigFile : public PropertiesFile {
   [[nodiscard]] std::vector<std::string> getSensitiveProperties() const;
 
  private:
-  friend class ConfigFileTestAccessor;
   friend bool operator==(const ConfigFile&, const ConfigFile&);
-  static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
-                                                  const std::vector<std::string>& additional_properties);
 };
 
 }  // namespace encrypt_config

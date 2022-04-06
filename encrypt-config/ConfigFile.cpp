@@ -31,16 +31,12 @@ namespace nifi {
 namespace minifi {
 namespace encrypt_config {
 
-constexpr std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES{Configuration::nifi_security_client_pass_phrase,
-                                                                  Configuration::nifi_rest_api_password};
-constexpr const char* ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME = Configuration::nifi_sensitive_props_additional_keys;
-
 std::vector<std::string> ConfigFile::getSensitiveProperties() const {
-  std::vector<std::string> sensitive_properties(DEFAULT_SENSITIVE_PROPERTIES.begin(), DEFAULT_SENSITIVE_PROPERTIES.end());
-  const std::optional<std::string> additional_sensitive_props_list = getValue(ADDITIONAL_SENSITIVE_PROPS_PROPERTY_NAME);
+  std::vector<std::string> sensitive_properties(Configuration::DEFAULT_SENSITIVE_PROPERTIES.begin(), Configuration::DEFAULT_SENSITIVE_PROPERTIES.end());
+  const std::optional<std::string> additional_sensitive_props_list = getValue(Configuration::nifi_sensitive_props_additional_keys);
   if (additional_sensitive_props_list) {
     std::vector<std::string> additional_sensitive_properties = utils::StringUtils::split(*additional_sensitive_props_list, ",");
-    sensitive_properties = mergeProperties(sensitive_properties, additional_sensitive_properties);
+    sensitive_properties = Configuration::mergeProperties(sensitive_properties, additional_sensitive_properties);
   }
 
   const auto not_found = [this](const std::string& property_name) { return !hasValue(property_name); };
@@ -48,21 +44,6 @@ std::vector<std::string> ConfigFile::getSensitiveProperties() const {
   sensitive_properties.erase(new_end, sensitive_properties.end());
 
   return sensitive_properties;
-}
-
-std::vector<std::string> ConfigFile::mergeProperties(std::vector<std::string> properties,
-                                                     const std::vector<std::string>& additional_properties) {
-  for (const auto& property_name : additional_properties) {
-    std::string property_name_trimmed = utils::StringUtils::trim(property_name);
-    if (!property_name_trimmed.empty()) {
-      properties.push_back(std::move(property_name_trimmed));
-    }
-  }
-
-  std::sort(properties.begin(), properties.end());
-  auto new_end = std::unique(properties.begin(), properties.end());
-  properties.erase(new_end, properties.end());
-  return properties;
 }
 
 }  // namespace encrypt_config
