@@ -40,7 +40,7 @@ const core::Property ListenSyslog::ProtocolProperty(
 const core::Property ListenSyslog::MaxBatchSize(
     core::PropertyBuilder::createProperty("Max Batch Size")
         ->withDescription("The maximum number of Syslog events to process at a time.")
-        ->withDefaultValue<uint64_t>(500)
+        ->withDefaultValue<uint64_t>(500, std::make_shared<core::UnsignedLongValidator>("Greater or equal than 1 validator", 1))
         ->build());
 
 const core::Property ListenSyslog::ParseMessages(
@@ -85,23 +85,12 @@ void ListenSyslog::initialize() {
 void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context && !server_thread_.joinable() && !server_);
 
-  if (!context->getProperty(MaxBatchSize.getName(), max_batch_size_) || max_batch_size_ <= 0) {
-    max_batch_size_ = MaxBatchSize.getDefaultValue();
-    logger_->log_debug("Missing or invalid attribute %s", MaxBatchSize.getName());
-  }
-
-  if (!context->getProperty(ParseMessages.getName(), parse_messages_)) {
-    parse_messages_ = ParseMessages.getDefaultValue();
-    logger_->log_debug("Missing or invalid attribute %s", ParseMessages.getName());
-  }
+  context->getProperty(MaxBatchSize.getName(), max_batch_size_);
+  context->getProperty(ParseMessages.getName(), parse_messages_);
 
   uint64_t max_queue_size = 0;
-  if (context->getProperty(MaxQueueSize.getName(), max_queue_size) && max_queue_size > 0) {
-    max_queue_size_ = max_queue_size;
-  } else {
-    max_queue_size_ = std::nullopt;
-    logger_->log_debug("Missing or invalid attribute %s", MaxQueueSize.getName());
-  }
+  context->getProperty(MaxQueueSize.getName(), max_queue_size);
+  max_queue_size_ = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
 
   Protocol protocol = Protocol(ProtocolProperty.getDefaultValue());
   if (!context->getProperty(ProtocolProperty.getName(), protocol)) {

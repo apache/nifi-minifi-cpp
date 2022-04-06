@@ -628,7 +628,7 @@ def step_impl(context, num_flowfiles, duration):
 
 @then("at least one flowfile is placed in the monitored directory in less than {duration}")
 def step_impl(context, duration):
-    context.test.check_for_num_files_generated(1, timeparse(duration))
+    context.test.check_for_num_file_range_generated(1, float('inf'), timeparse(duration))
 
 
 @then("one flowfile with the contents \"{content}\" is placed in the monitored directory in less than {duration}")

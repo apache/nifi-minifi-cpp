@@ -236,8 +236,10 @@ class LongValidator : public PropertyValidator {
 
 class UnsignedLongValidator : public PropertyValidator {
  public:
-  explicit UnsignedLongValidator(const std::string &name)
-      : PropertyValidator(name) {
+  explicit UnsignedLongValidator(const std::string &name, uint64_t min = std::numeric_limits<uint64_t>::min(), uint64_t max = std::numeric_limits<uint64_t>::max())
+      : PropertyValidator(name),
+        min_(min),
+        max_(max) {
   }
   ~UnsignedLongValidator() override = default;
 
@@ -251,12 +253,16 @@ class UnsignedLongValidator : public PropertyValidator {
       if (negative) {
         throw std::out_of_range("non negative expected");
       }
-      std::stoull(input);
-      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(true).build();
+      auto res = std::stoull(input);
+      return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(res >= min_ && res <= max_).build();
     } catch (...) {
     }
     return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(input).isValid(false).build();
   }
+
+ private:
+  uint64_t min_;
+  uint64_t max_;
 };
 
 class NonBlankValidator : public PropertyValidator {
