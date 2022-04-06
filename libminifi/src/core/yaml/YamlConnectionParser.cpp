@@ -75,7 +75,7 @@ uint64_t YamlConnectionParser::getWorkQueueSizeFromYaml() const {
       logger_->log_debug("Setting %" PRIu64 " as the max queue size.", max_work_queue_size);
       return max_work_queue_size;
     }
-    logger_->log_info("Invalid max queue size value: %s.", max_work_queue_str);
+    logger_->log_error("Invalid max queue size value: %s.", max_work_queue_str);
   }
   return 0;
 }
@@ -89,7 +89,7 @@ uint64_t YamlConnectionParser::getWorkQueueDataSizeFromYaml() const {
       logger_->log_debug("Setting %" PRIu64 "as the max as the max queue data size.", max_work_queue_data_size);
       return max_work_queue_data_size;
     }
-    logger_->log_info("Invalid max queue data size value: %s.", max_work_queue_str);
+    logger_->log_error("Invalid max queue data size value: %s.", max_work_queue_str);
   }
   return 0;
 }
@@ -103,8 +103,7 @@ uint64_t YamlConnectionParser::getSwapThresholdFromYaml() const {
       logger_->log_debug("Setting %" PRIu64 " as the swap threshold.", swap_threshold);
       return swap_threshold;
     }
-    logger_->log_info("Invalid swap threshold value: %s.", swap_threshold_str);
-    throw std::invalid_argument("Invalid swap threshold");
+    logger_->log_error("Invalid swap threshold value: %s.", swap_threshold_str);
   }
   return 0;
 }
