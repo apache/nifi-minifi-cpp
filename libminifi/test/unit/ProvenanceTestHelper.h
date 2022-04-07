@@ -33,7 +33,6 @@
 #include "FlowController.h"
 #include "properties/Configure.h"
 #include "provenance/Provenance.h"
-#include "../StubShutdownAgent.h"
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -246,7 +245,7 @@ class TestFlowController : public org::apache::nifi::minifi::FlowController {
       const std::shared_ptr<org::apache::nifi::minifi::core::ContentRepository>& /*content_repo*/)
       :org::apache::nifi::minifi::FlowController(repo, flow_file_repo, std::make_shared<org::apache::nifi::minifi::Configure>(), nullptr,
           std::make_shared<org::apache::nifi::minifi::core::repository::VolatileContentRepository>(), "",
-          std::make_shared<org::apache::nifi::minifi::utils::file::FileSystem>(), std::make_unique<org::apache::nifi::minifi::test::StubShutdownAgent>()) {
+          std::make_shared<org::apache::nifi::minifi::utils::file::FileSystem>(), []{}) {
   }
 
   ~TestFlowController() override = default;

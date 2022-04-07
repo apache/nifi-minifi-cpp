@@ -39,7 +39,6 @@
 #include "unit/ProvenanceTestHelper.h"
 #include "integration/IntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
-#include "StubShutdownAgent.h"
 
 REGISTER_RESOURCE(MockControllerService, "");
 REGISTER_RESOURCE(MockProcessor, "");
@@ -70,15 +69,15 @@ int main(int argc, char **argv) {
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   content_repo->initialize(configuration);
-  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::unique_ptr<core::YamlConfiguration>(
-      new core::YamlConfiguration(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file));
+  std::unique_ptr<core::FlowConfiguration> yaml_ptr = std::make_unique<core::YamlConfiguration>(
+      test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
-  std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
-                                                                                                content_repo,
-                                                                                                DEFAULT_ROOT_GROUP_NAME,
-                                                                                                std::make_shared<utils::file::FileSystem>(),
-                                                                                                std::make_unique<minifi::test::StubShutdownAgent>());
+  const auto controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr),
+      content_repo,
+      DEFAULT_ROOT_GROUP_NAME,
+      std::make_shared<utils::file::FileSystem>(),
+      []{});
 
   disabled = false;
   std::shared_ptr<core::controller::ControllerServiceMap> map = std::make_shared<core::controller::ControllerServiceMap>();

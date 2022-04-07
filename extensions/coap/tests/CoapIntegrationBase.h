@@ -25,7 +25,6 @@
 #include "../tests/TestServer.h"
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
-#include "StubShutdownAgent.h"
 
 using std::literals::chrono_literals::operator""s;
 
@@ -76,7 +75,7 @@ class CoapIntegrationBase : public IntegrationBase {
     std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
     std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-      std::make_shared<utils::file::FileSystem>(), std::make_unique<minifi::test::StubShutdownAgent>());
+      std::make_shared<utils::file::FileSystem>(), []{});
 
     controller->load();
     controller->start();

@@ -36,7 +36,6 @@
 #include "../../extensions/rocksdb-repos/DatabaseContentRepository.h"
 #include "utils/gsl.h"
 #include "utils/IntegrationTestUtils.h"
-#include "../StubShutdownAgent.h"
 
 using Connection = minifi::Connection;
 using MergeContent = minifi::processors::MergeContent;
@@ -177,7 +176,7 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
 
   auto flowConfig = std::make_unique<core::FlowConfiguration>(prov_repo, ff_repository, content_repo, nullptr, config, "");
   auto flowController = std::make_shared<minifi::FlowController>(
-      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", std::make_shared<utils::file::FileSystem>(), std::make_unique<minifi::test::StubShutdownAgent>());
+      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", std::make_shared<utils::file::FileSystem>(), []{});
 
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupMergeProcessor, MergeContent::Merge);
@@ -291,7 +290,7 @@ TEST_CASE("Persisted flowFiles are updated on modification", "[TestP1]") {
 
   auto flowConfig = std::make_unique<core::FlowConfiguration>(prov_repo, ff_repository, content_repo, nullptr, config, "");
   auto flowController = std::make_shared<minifi::FlowController>(
-      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", std::make_shared<utils::file::FileSystem>(), std::make_unique<minifi::test::StubShutdownAgent>());
+      prov_repo, ff_repository, config, std::move(flowConfig), content_repo, "", std::make_shared<utils::file::FileSystem>(), []{});
 
   {
     TestFlow flow(ff_repository, content_repo, prov_repo, setupContentUpdaterProcessor, {"success", "d"});

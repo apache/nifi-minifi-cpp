@@ -48,7 +48,8 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
       std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
       std::shared_ptr<core::Repository> flow_file_repo, std::shared_ptr<core::ContentRepository> content_repo,
       std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
-      std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger(), std::unique_ptr<ShutdownAgent> shutdown_agent = nullptr);
+      std::function<void()> request_restart,
+      std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger());
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
 
@@ -84,7 +85,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
  protected:
   std::atomic<bool> flow_update_{false};
-  std::unique_ptr<ShutdownAgent> shutdown_agent_;
+  std::function<void()> request_restart_;
 };
 
 }  // namespace c2

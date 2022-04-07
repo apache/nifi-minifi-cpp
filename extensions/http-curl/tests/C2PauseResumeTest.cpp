@@ -31,7 +31,6 @@
 #include "properties/Configure.h"
 #include "io/StreamFactory.h"
 #include "integration/IntegrationBase.h"
-#include "StubShutdownAgent.h"
 
 class VerifyC2PauseResume : public VerifyC2Base {
  public:
@@ -133,7 +132,7 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(
       test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
-      std::make_shared<utils::file::FileSystem>(), std::make_unique<minifi::test::StubShutdownAgent>());
+      std::make_shared<utils::file::FileSystem>(), []{});
 
   core::YamlConfiguration yaml_config(test_repo, test_repo, content_repo, stream_factory, configuration, args.test_file);
 

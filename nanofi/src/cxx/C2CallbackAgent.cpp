@@ -28,15 +28,11 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 C2CallbackAgent::C2CallbackAgent(core::controller::ControllerServiceProvider* controller, state::Pausable* pause_handler, state::StateMonitor* updateSink,
                                  const std::shared_ptr<Configure> &configuration)
-    : C2Agent(controller, pause_handler, updateSink, configuration),
+    : C2Agent(controller, pause_handler, updateSink, configuration, std::make_shared<utils::file::FileSystem>(), []{}),
       stop(nullptr) {
 }
 
@@ -72,8 +68,4 @@ void C2CallbackAgent::handle_c2_server_response(const C2ContentResponse &resp) {
   }
 }
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+} /* namespace org::apache::nifi::minifi::c2 */

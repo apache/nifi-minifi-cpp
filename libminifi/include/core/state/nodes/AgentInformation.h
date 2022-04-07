@@ -624,7 +624,7 @@ class AgentManifest : public DeviceInformation {
   }
 
   std::vector<SerializedResponseNode> serialize() {
-    static std::vector<SerializedResponseNode> serialized;
+    std::vector<SerializedResponseNode> serialized;
     if (serialized.empty()) {
       SerializedResponseNode ident;
 
