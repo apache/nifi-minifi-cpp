@@ -28,6 +28,7 @@
 #include "core/ContentRepository.h"
 #include "SwapManager.h"
 #include "utils/ThreadPool.h"
+#include "core/logging/Logger.h"
 
 namespace org {
 namespace apache {

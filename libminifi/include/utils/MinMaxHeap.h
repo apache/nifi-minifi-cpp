@@ -22,6 +22,8 @@
 #include <cmath>
 #include <utility>
 
+#include "utils/gsl.h"
+
 struct MinMaxHeapTestAccessor;
 
 namespace org {
@@ -42,17 +44,7 @@ class MinMaxHeap {
   }
 
   const T& max() const {
-    // the element at index 0, 1 or 2
-    if (data_.size() == 1) {
-      return data_[0];
-    }
-    if (data_.size() == 2) {
-      return data_[1];
-    }
-    if (less_(data_[2], data_[1])) {
-      return data_[1];
-    }
-    return data_[2];
+    return data_[getMaxIndex()];
   }
 
   size_t size() const {
@@ -77,27 +69,27 @@ class MinMaxHeap {
   }
 
   T popMax() {
-    if (data_.size() <= 2) {
-      T item = std::move(data_.back());
-      data_.pop_back();
-      return item;
+    size_t max_index = getMaxIndex();
+    std::swap(data_[max_index], data_.back());
+    T item = std::move(data_.back());
+    data_.pop_back();
+    if (max_index < data_.size()) {
+      pushDown(max_index);
     }
-    if (less_(data_[2], data_[1])) {
-      std::swap(data_[1], data_[data_.size() - 1]);
-      T item = std::move(data_.back());
-      data_.pop_back();
-      pushDown(1);
-      return item;
-    } else {
-      std::swap(data_[2], data_[data_.size() - 1]);
-      T item = std::move(data_.back());
-      data_.pop_back();
-      pushDown(2);
-      return item;
-    }
+    return item;
   }
 
  private:
+  size_t getMaxIndex() const {
+    if (data_.size() <= 2) {
+      return data_.size() - 1;
+    }
+    if (less_(data_[2], data_[1])) {
+      return 1;
+    }
+    return 2;
+  }
+
   friend struct ::MinMaxHeapTestAccessor;
 
   static size_t getLevel(size_t index) {
@@ -126,6 +118,7 @@ class MinMaxHeap {
    * @return index of smallest child, grandchild or 0
    */
   size_t getSmallestChildOrGrandchild(size_t index) const {
+    gsl_ExpectsAudit(isOnMinLevel(index));
     const size_t left = 2 * index + 1;
     const size_t right = 2 * index + 2;
     const size_t ll = 2 * left + 1;
@@ -170,6 +163,7 @@ class MinMaxHeap {
    * @return index of largest child, grandchild or 0
    */
   size_t getLargestChildOrGrandchild(size_t index) const {
+    gsl_ExpectsAudit(!isOnMinLevel(index));
     const size_t left = 2 * index + 1;
     const size_t right = 2 * index + 2;
     const size_t ll = 2 * left + 1;
