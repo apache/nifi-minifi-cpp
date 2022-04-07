@@ -17,10 +17,6 @@
 # under the License.
 #
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  option(ENABLE_SYSTEMD "Enables the systemd extension." ON)
-endif()
-
 if (NOT ENABLE_SYSTEMD)
   return()
 endif()
