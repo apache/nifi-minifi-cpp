@@ -95,11 +95,6 @@ std::optional<std::chrono::duration<double>> getAggregateCpuDiff(std::vector<std
 void ProcFsMonitor::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
   gsl_Expects(session);
   std::shared_ptr<core::FlowFile> flowFile = session->create();
-  if (!flowFile) {
-    logger_->log_error("Failed to create flowfile!");
-    yield();
-    return;
-  }
 
   rapidjson::Document root = rapidjson::Document(rapidjson::kObjectType);
   rapidjson::Value& body = prepareJSONBody(root);

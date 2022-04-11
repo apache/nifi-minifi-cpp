@@ -16,6 +16,7 @@
  */
 
 #include "NetDev.h"
+#include "utils/gsl.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -43,8 +44,10 @@ std::optional<std::pair<std::string, NetDevData>> NetDevData::parseNetDevLine(st
       >> net_dev_data.compressed_packets_transmitted_;
   if (iss.fail())
     return std::nullopt;
-  if (!entry_name.empty())
+  if (!entry_name.empty()) {
+    gsl_Expects(entry_name.back() == ':');
     entry_name.pop_back();  // remove the ':' from the end of 'eth0:' etc
+  }
   return std::make_pair(entry_name, net_dev_data);
 }
 
