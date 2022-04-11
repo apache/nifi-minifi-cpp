@@ -175,7 +175,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
     fileExtension = search->second;
   }
   std::shared_ptr<core::FlowFile> result = session->create(flowFile);
-  bool success = false;
+  bool success = true;
   if (encapsulateInTar_) {
     std::function<int64_t(const std::shared_ptr<io::InputStream>&, const std::shared_ptr<io::OutputStream>&)> transformer;
 
@@ -193,9 +193,15 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
       transformer = [&] (const std::shared_ptr<io::InputStream>& in, const std::shared_ptr<io::OutputStream>& out) -> int64_t {
         io::ReadArchiveStreamImpl decompressor(in);
         if (!decompressor.nextEntry()) {
-          return -1;
+          success = false;
+          return 0;  // prevents a session rollback
         }
-        return internal::pipe(&decompressor, out.get());
+        auto ret = internal::pipe(&decompressor, out.get());
+        if (ret < 0) {
+          success = false;
+          return 0;  // prevents a session rollback
+        }
+        return ret;
       };
     }
     session->write(result, FunctionOutputStreamCallback([&] (const auto& out) {
@@ -203,11 +209,6 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
         return transformer(in, out);
       }));
     }));
-    // TODO(adebreceni): previous attempt to handle a malformed archive were in vain
-    //    as the session->read threw anyway rolling back the flowfile, we should correctly
-    //    forward a malformed archive to failure
-    //    https://issues.apache.org/jira/browse/MINIFICPP-1708
-    success = true;
   } else {
     CompressContent::GzipWriteCallback callback(compressMode_, compressLevel_, flowFile, session);
     session->write(result, &callback);
