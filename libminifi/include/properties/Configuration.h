@@ -167,6 +167,7 @@ class Configuration : public Properties {
 
   static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
                                                   const std::vector<std::string>& additional_properties);
+  static std::vector<std::string> getSensitiveProperties(std::function<std::optional<std::string>(const std::string&)> reader);
 };
 
 }  // namespace minifi

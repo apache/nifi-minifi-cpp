@@ -25,20 +25,10 @@
 #include "utils/StringUtils.h"
 #include "properties/Configuration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 std::vector<std::string> ConfigFile::getSensitiveProperties() const {
-  std::vector<std::string> sensitive_properties(Configuration::DEFAULT_SENSITIVE_PROPERTIES.begin(), Configuration::DEFAULT_SENSITIVE_PROPERTIES.end());
-  const std::optional<std::string> additional_sensitive_props_list = getValue(Configuration::nifi_sensitive_props_additional_keys);
-  if (additional_sensitive_props_list) {
-    std::vector<std::string> additional_sensitive_properties = utils::StringUtils::split(*additional_sensitive_props_list, ",");
-    sensitive_properties = Configuration::mergeProperties(sensitive_properties, additional_sensitive_properties);
-  }
-
+  auto sensitive_properties = Configuration::getSensitiveProperties([this](const std::string& sensitive_props) { return getValue(sensitive_props); });
   const auto not_found = [this](const std::string& property_name) { return !hasValue(property_name); };
   const auto new_end = std::remove_if(sensitive_properties.begin(), sensitive_properties.end(), not_found);
   sensitive_properties.erase(new_end, sensitive_properties.end());
@@ -46,8 +36,4 @@ std::vector<std::string> ConfigFile::getSensitiveProperties() const {
   return sensitive_properties;
 }
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::encrypt_config
