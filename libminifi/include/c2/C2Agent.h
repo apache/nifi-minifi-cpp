@@ -246,7 +246,7 @@ class C2Agent : public state::UpdateController {
 
   const uint64_t C2RESPONSE_POLL_MS = 100;
 
-  bool restart_needed_ = false;
+  std::atomic<bool> restart_needed_ = false;
   std::function<void()> request_restart_;
 };
 

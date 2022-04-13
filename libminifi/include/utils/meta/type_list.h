@@ -14,22 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef MAIN_AGENTDOCS_H_
-#define MAIN_AGENTDOCS_H_
 
-#include <iostream>
-#include "agent/build_description.h"
+#pragma once
+#include <type_traits>
 
-namespace org::apache::nifi::minifi::docs {
+namespace org::apache::nifi::minifi::utils::meta {
 
-class AgentDocs {
- public:
-  void generate(const std::string &docsdir, std::ostream &genStream);
- private:
-  [[nodiscard]] inline std::string extractClassName(const std::string &processor) const;
-  BuildDescription build_description_;
+template<typename... Types>
+struct type_list {
+  template<typename T>
+  [[nodiscard]] constexpr static bool contains() noexcept {
+    return (std::is_same_v<T, Types> || ...);
+  }
+
+  template<template<typename...> typename Metafn>
+  using apply = Metafn<Types...>;
 };
 
-}  // namespace org::apache::nifi::minifi::docs
-
-#endif  // MAIN_AGENTDOCS_H_
+}  // namespace org::apache::nifi::minifi::utils::meta

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -34,18 +33,13 @@
 #include "core/Relationship.h"
 #include "io/validation.h"
 #include "utils/file/FileUtils.h"
-#include "agent/build_description.h"
 #include "agent/agent_docs.h"
 #include "agent/agent_version.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace docs {
+namespace org::apache::nifi::minifi::docs {
 
 std::string AgentDocs::extractClassName(const std::string &processor) const {
-  auto positionOfLastDot = processor.find_last_of(".");
+  auto positionOfLastDot = processor.find_last_of('.');
   if (positionOfLastDot != std::string::npos) {
     return processor.substr(positionOfLastDot + 1);
   }
@@ -55,7 +49,7 @@ std::string AgentDocs::extractClassName(const std::string &processor) const {
 void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   std::map<std::string, ClassDescription> processorSet;
   for (const auto &group : minifi::AgentBuild::getExtensions()) {
-    struct Components descriptions = BuildDescription::getClassDescriptions(group);
+    struct Components descriptions = build_description_.getClassDescriptions(group);
     for (const auto &processorName : descriptions.processors_) {
       processorSet.insert(std::make_pair(extractClassName(processorName.class_name_), processorName));
     }
@@ -64,18 +58,18 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     const std::string &filename = docsdir + utils::file::get_separator() + processor.first;
     std::ofstream outfile(filename);
 
-    std::string description;
+    {
+      std::string description;
+      bool foundDescription = minifi::AgentDocs::getDescription(processor.first, description);
+      if (!foundDescription) {
+        foundDescription = minifi::AgentDocs::getDescription(processor.second.class_name_, description);
+      }
 
-    bool foundDescription = minifi::AgentDocs::getDescription(processor.first, description);
-
-    if (!foundDescription) {
-      foundDescription = minifi::AgentDocs::getDescription(processor.second.class_name_, description);
-    }
-
-    outfile << "## " << processor.first << std::endl << std::endl;
-    if (foundDescription) {
-      outfile << "### Description " << std::endl << std::endl;
-      outfile << description << std::endl;
+      outfile << "## " << processor.first << std::endl << std::endl;
+      if (foundDescription) {
+        outfile << "### Description " << std::endl << std::endl;
+        outfile << description << std::endl;
+      }
     }
 
     outfile << "### Properties " << std::endl << std::endl;
@@ -165,8 +159,4 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   }
 }
 
-} /* namespace docs */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::docs

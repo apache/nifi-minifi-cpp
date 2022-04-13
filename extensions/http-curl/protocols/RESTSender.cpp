@@ -141,7 +141,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
   }
 
   if (payload.getOperation() == Operation::TRANSFER) {
-    file_callback = std::unique_ptr<utils::ByteOutputCallback>(new utils::ByteOutputCallback(std::numeric_limits<size_t>::max()));
+    file_callback = std::make_unique<utils::ByteOutputCallback>(std::numeric_limits<size_t>::max());
     read.pos = 0;
     read.ptr = file_callback.get();
     client.setReadCallback(&read);

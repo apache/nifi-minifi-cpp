@@ -741,6 +741,11 @@ utils::TaskRescheduleInfo C2Agent::produce() {
           }
         });
 
+    if (restart_needed_ && requests.empty()) {
+      request_restart_();
+      return utils::TaskRescheduleInfo::Done();
+    }
+
     try {
       performHeartBeat();
     }
@@ -766,7 +771,6 @@ utils::TaskRescheduleInfo C2Agent::consume() {
       extractPayload(C2Payload{ Operation::HEARTBEAT });
     }
   }
-  if (restart_needed_) { request_restart_(); }
   return utils::TaskRescheduleInfo::RetryIn(std::chrono::milliseconds(C2RESPONSE_POLL_MS));
 }
 
