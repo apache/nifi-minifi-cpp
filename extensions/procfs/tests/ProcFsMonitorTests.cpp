@@ -20,7 +20,7 @@
 #include "Catch.h"
 #include "processors/ProcFsMonitor.h"
 
-using org::apache::nifi::minifi::extensions::procfs::ProcFsMonitor;
+namespace org::apache::nifi::minifi::extensions::procfs::tests {
 
 TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
   std::shared_ptr<ProcFsMonitor> proc_fs_monitor = std::make_shared<ProcFsMonitor>("ProcFsMonitor");
@@ -155,3 +155,4 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
     REQUIRE(result2.at(ProcFsMonitor::Success).size() == 1);
   }
 }
+}  // namespace org::apache::nifi::minifi::extensions::procfs::tests

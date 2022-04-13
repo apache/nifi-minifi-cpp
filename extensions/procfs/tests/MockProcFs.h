@@ -15,27 +15,24 @@
  * limitations under the License.
  */
 
-#include "Catch.h"
-#include "ProcFs.h"
-#include "Literals.h"
-#include "MockProcFs.h"
+#pragma once
+
+#include <filesystem>
+#include "utils/file/FileUtils.h"
+#include "../ProcFs.h"
 
 namespace org::apache::nifi::minifi::extensions::procfs::tests {
 
-TEST_CASE("ProcFSTest meminfo test with mock", "[procfmeminfomocktest]") {
-  ProcFs proc_fs(get_procfs_test_dir() / "mockprocfs_t0");
-  auto mem_info = proc_fs.getMemInfo();
-  REQUIRE(mem_info);
-  CHECK(mem_info->getTotalMemory() == 32895000_KiB);
-  CHECK(mem_info->getFreeMemory() == 9870588_KiB);
-  CHECK(mem_info->getAvailableMemory() == 22167288_KiB);
-  CHECK(mem_info->getTotalSwap() == 9227464_KiB);
-  CHECK(mem_info->getFreeSwap() == 9188320_KiB);
+std::filesystem::path get_procfs_test_dir() {
+  return std::filesystem::path(org::apache::nifi::minifi::utils::file::FileUtils::get_executable_dir()) / "procfs-test";
 }
 
-TEST_CASE("ProcFSTest meminfo test", "[procfsmeminfotest]") {
-  ProcFs proc_fs;
-  auto mem_info = proc_fs.getMemInfo();
-  REQUIRE(mem_info);
+ProcFs mock_proc_fs_t0() {
+  return ProcFs(get_procfs_test_dir() / "mockprocfs_t0");
 }
+
+ProcFs mock_proc_fs_t1() {
+  return ProcFs(get_procfs_test_dir() / "mockprocfs_t1");
+}
+
 }  // namespace org::apache::nifi::minifi::extensions::procfs::tests

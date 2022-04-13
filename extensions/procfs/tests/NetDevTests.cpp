@@ -17,12 +17,12 @@
 
 #include "Catch.h"
 #include "ProcFs.h"
+#include "MockProcFs.h"
 
-using org::apache::nifi::minifi::extensions::procfs::ProcFs;
-using org::apache::nifi::minifi::extensions::procfs::NetDevData;
+namespace org::apache::nifi::minifi::extensions::procfs::tests {
 
 TEST_CASE("ProcFSTest NetDev with mock", "[procfsdiskstatmocktest]") {
-  ProcFs proc_fs_t0("./mockprocfs_t0");
+  ProcFs proc_fs_t0 = mock_proc_fs_t0();
   auto net_devs_t0 = proc_fs_t0.getNetDevs();
   REQUIRE(net_devs_t0.size() == 3);
 
@@ -44,7 +44,7 @@ TEST_CASE("ProcFSTest NetDev with mock", "[procfsdiskstatmocktest]") {
   CHECK(net_devs_t0[1].second.getTransmitCarrierLosses() == 0);
   CHECK(net_devs_t0[1].second.getCompressedPacketsTransmitted() == 0);
 
-  ProcFs proc_fs_t1("./mockprocfs_t1");
+  ProcFs proc_fs_t1 = mock_proc_fs_t1();
   auto net_devs_t1 = proc_fs_t1.getNetDevs();
   REQUIRE(net_devs_t1.size() == 3);
 
@@ -70,3 +70,4 @@ TEST_CASE("ProcFSTest NetDev", "[procfsdiskstatmocktest]") {
   }
 }
 
+}  // namespace org::apache::nifi::minifi::extensions::procfs::tests
