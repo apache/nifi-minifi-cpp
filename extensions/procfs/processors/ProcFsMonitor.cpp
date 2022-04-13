@@ -184,10 +184,8 @@ void processRelativeCPUInformation(const std::vector<std::pair<std::string, CpuS
 
   rapidjson::Value cpu_root{rapidjson::kObjectType};
   for (size_t i = 0; i < current_cpu_stats.size(); ++i) {
-    const auto& cpu_name = current_cpu_stats[i].first;
-    const auto& cpu_stat = current_cpu_stats[i].second;
-    const auto& last_cpu_name = last_cpu_stats[i].first;
-    const auto& last_cpu_stat = last_cpu_stats[i].second;
+    const auto& [cpu_name, cpu_stat] = current_cpu_stats[i];
+    const auto& [last_cpu_name, last_cpu_stat] = last_cpu_stats[i];
     gsl_Expects(last_cpu_name == cpu_name);
     if (cpu_stat.getTotal() > last_cpu_stat.getTotal())
       addCPUStatPeriodToJson(cpu_name, cpu_stat, last_cpu_stat, cpu_root, alloc);
@@ -221,7 +219,7 @@ void processRelativeNetworkInformation(const std::vector<std::pair<std::string, 
   for (const auto& current_net_dev_it : current_net_devs) {
     auto& interface_name = current_net_dev_it.first;
     auto& current_net_dev = current_net_dev_it.second;
-    auto last_net_dev_it = std::find_if(last_net_devs.begin(), last_net_devs.end(), [&interface_name](auto& it) { return it.first == interface_name; });
+    auto last_net_dev_it = std::find_if(last_net_devs.begin(), last_net_devs.end(), [&interface_name](auto& last_net_dev) { return last_net_dev.first == interface_name; });
     if (last_net_dev_it == last_net_devs.end())
       continue;
     auto& last_net_dev = last_net_dev_it->second;
@@ -256,7 +254,7 @@ void processRelativeDiskInformation(const std::vector<std::pair<std::string, Dis
   for (const auto& current_disk_stat_it : current_disk_stats) {
     auto& disk_name = current_disk_stat_it.first;
     auto& current_disk_stat = current_disk_stat_it.second;
-    auto last_disk_stat_it = std::find_if(last_disk_stats.begin(), last_disk_stats.end(), [&disk_name](auto& it) { return it.first == disk_name; });
+    auto last_disk_stat_it = std::find_if(last_disk_stats.begin(), last_disk_stats.end(), [&disk_name](auto& last_disk_stat) { return last_disk_stat.first == disk_name; });
     if (last_disk_stat_it == last_disk_stats.end())
       continue;
     auto& last_disk_stat = last_disk_stat_it->second;

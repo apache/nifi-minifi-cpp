@@ -67,10 +67,8 @@ TEST_CASE("ProcFSTest stat test with mock", "[procfsstatmockabsolutetest]") {
   }
 
   for (size_t i = 0; i < cpu_stats_t1.size(); ++i) {
-    const auto& cpu_name_t0 = cpu_stats_t0[i].first;
-    const auto& cpu_stat_t0 = cpu_stats_t0[i].second;
-    const auto& cpu_name_t1 = cpu_stats_t1[i].first;
-    const auto& cpu_stat_t1 = cpu_stats_t1[i].second;
+    const auto& [cpu_name_t0, cpu_stat_t0] = cpu_stats_t0[i];
+    const auto& [cpu_name_t1, cpu_stat_t1] = cpu_stats_t1[i];
     REQUIRE(cpu_name_t0 == cpu_name_t1);
     REQUIRE(cpu_stat_t1 > cpu_stat_t0);
     auto cpu_stat_diff = cpu_stat_t1-cpu_stat_t0;
@@ -84,7 +82,7 @@ TEST_CASE("ProcFSTest stat test ", "[procfsstatmockabsolutetest]") {
   for (const auto& [cpu_name, cpu_stat] : cpu_stats_t0) {
     cpu_stat_period_total_should_be_one(cpu_stat);
   }
-  sleep(1);
+  std::this_thread::sleep_for(100ms);
   auto cpu_stats_t1 = proc_fs.getCpuStats();
   for (const auto& [cpu_name, cpu_stat] : cpu_stats_t1) {
     cpu_stat_period_total_should_be_one(cpu_stat);
@@ -93,10 +91,8 @@ TEST_CASE("ProcFSTest stat test ", "[procfsstatmockabsolutetest]") {
   REQUIRE(cpu_stats_t0.size() == cpu_stats_t1.size());
 
   for (size_t i = 0; i < cpu_stats_t1.size(); ++i) {
-    const auto& cpu_name_t0 = cpu_stats_t0[i].first;
-    const auto& cpu_stat_t0 = cpu_stats_t0[i].second;
-    const auto& cpu_name_t1 = cpu_stats_t1[i].first;
-    const auto& cpu_stat_t1 = cpu_stats_t1[i].second;
+    const auto& [cpu_name_t0, cpu_stat_t0] = cpu_stats_t0[i];
+    const auto& [cpu_name_t1, cpu_stat_t1] = cpu_stats_t1[i];
     REQUIRE(cpu_name_t0 == cpu_name_t1);
     REQUIRE(cpu_stat_t1 > cpu_stat_t0);
     auto cpu_stat_diff = cpu_stat_t1-cpu_stat_t0;

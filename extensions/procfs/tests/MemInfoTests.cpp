@@ -17,6 +17,7 @@
 
 #include "Catch.h"
 #include "ProcFs.h"
+#include "Literals.h"
 
 using org::apache::nifi::minifi::extensions::procfs::ProcFs;
 using org::apache::nifi::minifi::extensions::procfs::MemInfo;
@@ -25,11 +26,11 @@ TEST_CASE("ProcFSTest meminfo test with mock", "[procfmeminfomocktest]") {
   ProcFs proc_fs("./mockprocfs_t0");
   auto mem_info = proc_fs.getMemInfo();
   REQUIRE(mem_info);
-  CHECK(mem_info->getTotalMemory() == 32895000LL*1024);
-  CHECK(mem_info->getFreeMemory() == 9870588LL*1024);
-  CHECK(mem_info->getAvailableMemory() == 22167288LL*1024);
-  CHECK(mem_info->getTotalSwap() == 9227464LL*1024);
-  CHECK(mem_info->getFreeSwap() == 9188320LL*1024);
+  CHECK(mem_info->getTotalMemory() == 32895000_KiB);
+  CHECK(mem_info->getFreeMemory() == 9870588_KiB);
+  CHECK(mem_info->getAvailableMemory() == 22167288_KiB);
+  CHECK(mem_info->getTotalSwap() == 9227464_KiB);
+  CHECK(mem_info->getFreeSwap() == 9188320_KiB);
 }
 
 TEST_CASE("ProcFSTest meminfo test", "[procfsmeminfotest]") {

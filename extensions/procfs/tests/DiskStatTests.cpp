@@ -47,7 +47,7 @@ TEST_CASE("ProcFSTest DiskStat with mock", "[procfsdiskstatmocktest]") {
   REQUIRE(disk_stats_t1.size() == 17);
 
   for (const auto& disk_stat_t0 : disk_stats_t0) {
-    auto disk_stat_t1 = std::find_if(disk_stats_t1.begin(), disk_stats_t1.end(), [&disk_stat_t0](auto& it){return it.first == disk_stat_t0.first;});
+    auto disk_stat_t1 = std::find_if(disk_stats_t1.begin(), disk_stats_t1.end(), [&disk_stat_t0](auto& disk_stat_t1){return disk_stat_t1.first == disk_stat_t0.first;});
     REQUIRE(disk_stat_t1 != disk_stats_t1.end());
     REQUIRE(disk_stat_t0.second.getMinorDeviceNumber() == disk_stat_t1->second.getMinorDeviceNumber());
     REQUIRE(disk_stat_t0.second.getMajorDeviceNumber() == disk_stat_t1->second.getMajorDeviceNumber());
@@ -58,13 +58,13 @@ TEST_CASE("ProcFSTest DiskStat with mock", "[procfsdiskstatmocktest]") {
 TEST_CASE("ProcFSTest DiskStat", "[procfsdiskstatmocktest]") {
   ProcFs proc_fs;
   auto disk_stats_t0 = proc_fs.getDiskStats();
-  sleep(1);
+  std::this_thread::sleep_for(100ms);
   auto disk_stats_t1 = proc_fs.getDiskStats();
 
   REQUIRE(disk_stats_t1.size() == disk_stats_t0.size());
 
   for (const auto& disk_stat_t0 : disk_stats_t0) {
-    auto disk_stat_t1 = std::find_if(disk_stats_t1.begin(), disk_stats_t1.end(), [&disk_stat_t0](auto& it){return it.first == disk_stat_t0.first;});
+    auto disk_stat_t1 = std::find_if(disk_stats_t1.begin(), disk_stats_t1.end(), [&disk_stat_t0](auto& disk_stat_t1){return disk_stat_t1.first == disk_stat_t0.first;});
     REQUIRE(disk_stat_t1 != disk_stats_t1.end());
     REQUIRE(disk_stat_t0.second.getMinorDeviceNumber() == disk_stat_t1->second.getMinorDeviceNumber());
     REQUIRE(disk_stat_t0.second.getMajorDeviceNumber() == disk_stat_t1->second.getMajorDeviceNumber());

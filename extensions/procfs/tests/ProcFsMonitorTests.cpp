@@ -87,7 +87,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
       CHECK_FALSE(document.HasMember("Process"));
       CHECK(document.HasMember("Memory"));
     }
-    sleep(1);
+    std::this_thread::sleep_for(100ms);
     {
       const auto& result = test_controller_.trigger();
 
@@ -127,7 +127,7 @@ TEST_CASE("ProcFsMonitorTests", "[procfsmonitortests]") {
       CHECK_FALSE(document["Body"].HasMember("Process"));
       CHECK(document["Body"].HasMember("Memory"));
     }
-    sleep(1);
+    std::this_thread::sleep_for(100ms);
     {
       const auto& result = test_controller_.trigger();
 

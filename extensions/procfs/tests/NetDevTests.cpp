@@ -49,7 +49,7 @@ TEST_CASE("ProcFSTest NetDev with mock", "[procfsdiskstatmocktest]") {
   REQUIRE(net_devs_t1.size() == 3);
 
   for (const auto& net_dev_t0 : net_devs_t0) {
-    auto net_dev_t1 = std::find_if(net_devs_t1.begin(), net_devs_t1.end(), [&net_dev_t0](auto& it){return it.first == net_dev_t0.first;});
+    auto net_dev_t1 = std::find_if(net_devs_t1.begin(), net_devs_t1.end(), [&net_dev_t0](auto& net_dev_t1){return net_dev_t1.first == net_dev_t0.first;});
     REQUIRE(net_dev_t1 != net_devs_t1.end());
     REQUIRE(net_dev_t1->second >= net_dev_t0.second);
   }
@@ -58,13 +58,13 @@ TEST_CASE("ProcFSTest NetDev with mock", "[procfsdiskstatmocktest]") {
 TEST_CASE("ProcFSTest NetDev", "[procfsdiskstatmocktest]") {
   ProcFs proc_fs;
   auto net_devs_t0 = proc_fs.getNetDevs();
-  sleep(1);
+  std::this_thread::sleep_for(100ms);
   auto net_devs_t1 = proc_fs.getNetDevs();
 
   REQUIRE(net_devs_t0.size() == net_devs_t1.size());
 
   for (const auto& net_dev_t0 : net_devs_t0) {
-    auto net_dev_t1 = std::find_if(net_devs_t1.begin(), net_devs_t1.end(), [&net_dev_t0](auto& it){return it.first == net_dev_t0.first;});
+    auto net_dev_t1 = std::find_if(net_devs_t1.begin(), net_devs_t1.end(), [&net_dev_t0](auto& net_dev_t1){return net_dev_t1.first == net_dev_t0.first;});
     REQUIRE(net_dev_t1 != net_devs_t1.end());
     REQUIRE(net_dev_t1->second >= net_dev_t0.second);
   }

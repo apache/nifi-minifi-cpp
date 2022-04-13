@@ -38,7 +38,7 @@ TEST_CASE("ProcFSTest process test with mock", "[procfsprocessmocktest]") {
 TEST_CASE("ProcFSTest process test", "[procfsprocesstest]") {
   ProcFs proc_fs;
   auto process_stats_t0 = proc_fs.getProcessStats();
-  sleep(1);
+  std::this_thread::sleep_for(100ms);
   auto process_stats_t1 = proc_fs.getProcessStats();
   size_t number_of_valid_measurements = 0;
   for (const auto& [pid_t0, process_stat_t0] : process_stats_t0) {
