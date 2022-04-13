@@ -46,7 +46,7 @@ const core::Property PutGCSObject::Bucket(
         ->build());
 
 const core::Property PutGCSObject::Key(
-    core::PropertyBuilder::createProperty("Name of the object.")
+    core::PropertyBuilder::createProperty("Key")
         ->withDescription("Name of the object.")
         ->withDefaultValue("${filename}")
         ->supportsExpressionLanguage(true)
