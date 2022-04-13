@@ -42,6 +42,7 @@ class Configure : public Configuration, public core::AgentIdentificationProvider
   bool get(const std::string& key, std::string& value) const;
   bool get(const std::string& key, const std::string& alternate_key, std::string& value) const;
   std::optional<std::string> get(const std::string& key) const;
+  std::optional<std::string> getRawValue(const std::string& key) const;
 
   std::optional<std::string> getAgentClass() const override;
   std::string getAgentIdentifier() const override;

@@ -30,19 +30,14 @@ namespace nifi {
 namespace minifi {
 
 bool Configure::get(const std::string& key, std::string& value) const {
-  static constexpr std::string_view log_prefix = "nifi.log.";
-  if (utils::StringUtils::startsWith(key, log_prefix)) {
-    if (logger_properties_) {
-      return logger_properties_->getString(key.substr(log_prefix.length()), value);
+  if (auto opt_value = getRawValue(key)) {
+    value = *opt_value;
+    if (decryptor_ && isEncrypted(key)) {
+      value = decryptor_->decrypt(value);
     }
-    return false;
+    return true;
   }
-
-  bool found = getString(key, value);
-  if (decryptor_ && found && isEncrypted(key)) {
-    value = decryptor_->decrypt(value);
-  }
-  return found;
+  return false;
 }
 
 bool Configure::get(const std::string& key, const std::string& alternate_key, std::string& value) const {
@@ -67,6 +62,18 @@ std::optional<std::string> Configure::get(const std::string& key) const {
     return value;
   }
   return std::nullopt;
+}
+
+std::optional<std::string> Configure::getRawValue(const std::string& key) const {
+  static constexpr std::string_view log_prefix = "nifi.log.";
+  if (utils::StringUtils::startsWith(key, log_prefix)) {
+    if (logger_properties_) {
+      return logger_properties_->getString(key.substr(log_prefix.length()));
+    }
+    return std::nullopt;
+  }
+
+  return getString(key);
 }
 
 bool Configure::isEncrypted(const std::string& key) const {

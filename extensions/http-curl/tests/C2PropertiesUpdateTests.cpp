@@ -28,6 +28,7 @@
 #include "spdlog/sinks/dist_sink.h"
 #include "LogUtils.h"
 #include "properties/PropertiesFile.h"
+#include "ConfigTestAccessor.h"
 
 struct PropertyChange {
   std::string name;
@@ -115,12 +116,6 @@ struct DummyClass2 {};
 namespace test {
 struct DummyClass3 {};
 }  // namespace test
-
-struct ConfigTestAccessor {
-  static void call_setLoggerProperties(const std::shared_ptr<minifi::Configure>& config, std::shared_ptr<core::logging::LoggerProperties> props) {
-    config->setLoggerProperties(props);
-  }
-};
 
 int main() {
   TempDirectory tmp_dir;

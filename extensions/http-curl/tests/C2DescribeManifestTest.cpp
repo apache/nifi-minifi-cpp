@@ -23,6 +23,7 @@
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "properties/Configuration.h"
+#include "ConfigTestAccessor.h"
 
 class DescribeManifestHandler: public HeartbeatHandler {
  public:
@@ -56,12 +57,16 @@ int main(int argc, char **argv) {
   harness.setKeyDir(args.key_dir);
   DescribeManifestHandler responder(harness.getConfiguration(), verified);
 
+  auto logger_properties = std::make_shared<core::logging::LoggerProperties>();
+  ConfigTestAccessor::call_setLoggerProperties(harness.getConfiguration(), logger_properties);
+
   harness.getConfiguration()->set(minifi::Configuration::nifi_rest_api_password, encrypted_value);
   harness.getConfiguration()->set(std::string(minifi::Configuration::nifi_rest_api_password) + ".protected", utils::crypto::EncryptionType::name());
   harness.getConfiguration()->set(minifi::Configuration::nifi_server_name, "server_name");
   harness.getConfiguration()->set(minifi::Configuration::nifi_framework_dir, "framework_path");
   harness.getConfiguration()->set(minifi::Configuration::nifi_sensitive_props_additional_keys,
     std::string(minifi::Configuration::nifi_framework_dir) + ", " + std::string(minifi::Configuration::nifi_server_name));
+  harness.getConfiguration()->set(minifi::Configuration::nifi_log_appender_rolling_directory, "/var/log/minifi");
 
   harness.setUrl(args.url, &responder);
   harness.run(args.test_file);
