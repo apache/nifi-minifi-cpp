@@ -40,10 +40,6 @@ class ProcFsMonitor : public core::Processor {
   explicit ProcFsMonitor(const std::string& name, utils::Identifier uuid = utils::Identifier())
       : Processor(name, uuid) {
   }
-  ProcFsMonitor(const ProcFsMonitor&) = delete;
-  ProcFsMonitor(ProcFsMonitor&&) = delete;
-  ProcFsMonitor& operator=(const ProcFsMonitor&) = delete;
-  ProcFsMonitor& operator=(ProcFsMonitor&&) = delete;
   ~ProcFsMonitor() override = default;
 
   static constexpr char const *ProcessorName = "ProcFsMonitor";
