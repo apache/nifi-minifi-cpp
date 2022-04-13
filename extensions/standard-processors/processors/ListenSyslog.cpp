@@ -25,7 +25,7 @@ namespace org::apache::nifi::minifi::processors {
 
 const core::Property ListenSyslog::Port(
     core::PropertyBuilder::createProperty("Listening Port")
-        ->withDescription("The port for Syslog communication.")
+        ->withDescription("The port for Syslog communication. (Well-known ports (0-1023) require root access)")
         ->isRequired(true)
         ->withDefaultValue<int>(514, core::StandardValidators::get().LISTEN_PORT_VALIDATOR)->build());
 
@@ -92,15 +92,11 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   context->getProperty(MaxQueueSize.getName(), max_queue_size);
   max_queue_size_ = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
 
-  Protocol protocol = Protocol(ProtocolProperty.getDefaultValue());
-  if (!context->getProperty(ProtocolProperty.getName(), protocol)) {
-    logger_->log_error("Missing or invalid Protocol: defaulting to %s", protocol.toString());
-  }
+  Protocol protocol;
+  context->getProperty(ProtocolProperty.getName(), protocol);
 
-  int port = Port.getDefaultValue();
-  if (!context->getProperty(Port.getName(), port)) {
-    logger_->log_error("Missing or invalid Port: defaulting to %s", port);
-  }
+  int port;
+  context->getProperty(Port.getName(), port);
 
   if (protocol == Protocol::UDP) {
     server_ = std::make_unique<UdpServer>(io_context_, queue_, max_queue_size_, port);
