@@ -19,5 +19,5 @@ class SyslogTcpClientContainer(Container):
             detach=True,
             name=self.name,
             network=self.network.name,
-            entrypoint=self.command)
+            entrypoint='/bin/bash -c "echo Syslog TCP client started; while true; do logger --tcp -n minifi-cpp-flow -P 514 sample_log; sleep 1; done"')
         logging.info('Added container \'%s\'', self.name)

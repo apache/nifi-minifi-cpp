@@ -37,7 +37,8 @@ class ImageStore:
         # Clean up images
         for image in self.images.values():
             logging.info('Cleaning up image: %s', image.id)
-            self.client.images.remove(image.id, force=True)
+            if image.id in self.client.images.list():
+                self.client.images.remove(image.id, force=True)
 
     def get_image(self, container_engine):
         if container_engine in self.images:
@@ -60,9 +61,9 @@ class ImageStore:
         elif container_engine == "splunk":
             image = self.__build_splunk_image()
         elif container_engine == "syslog-udp-client":
-            image = self.__build_syslog_udp_client_image()
+            image = self.client.images.pull("ubuntu:20.04")
         elif container_engine == "syslog-tcp-client":
-            image = self.__build_syslog_tcp_client_image()
+            image = self.client.images.pull("ubuntu:20.04")
         else:
             raise Exception("There is no associated image for " + container_engine)
 
