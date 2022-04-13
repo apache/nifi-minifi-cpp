@@ -70,7 +70,7 @@ SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata
     if (ranges::find(sensitive_properties, config_property.name) != ranges::end(sensitive_properties)) {
       continue;
     }
-    if (!update_policy_controller_ || (update_policy_controller_ && update_policy_controller_->canUpdate(std::string(config_property.name)))) {
+    if (!update_policy_controller_ || update_policy_controller_->canUpdate(std::string(config_property.name))) {
       std::unordered_map<std::string, std::string> property;
       property.emplace("propertyName", config_property.name);
       property.emplace("validator", config_property.validator->getName());
