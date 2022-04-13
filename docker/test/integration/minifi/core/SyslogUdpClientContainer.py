@@ -15,7 +15,7 @@ class SyslogUdpClientContainer(Container):
 
         logging.info('Creating and running a Syslog udp client docker container...')
         self.client.containers.run(
-            self.image_store.get_image(self.get_engine()),
+            "ubuntu:20.04",
             detach=True,
             name=self.name,
             network=self.network.name,
