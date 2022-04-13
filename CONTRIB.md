@@ -108,10 +108,10 @@ a `CMakeLists.txt` file. It is up to the extension creator's discretion how they
 It is important that `register_extension` be called at the end of the setup, for the extension to be made available to other stages of the build process.
 
 ```
-# extensions/gps/CMakeLists.txt
+# extensions/kubernetes/CMakeLists.txt
 
 # the author chooses to look for the explicit compilation request
-if (NOT ENABLE_GPS)
+if (NOT ENABLE_KUBERNETES)
   return()
 endif()
 
@@ -120,12 +120,12 @@ endif()
 #
 
 # at the end we should announce our extension
-register_extension(minifi-gps "GPS EXTENSIONS" GPS-EXTENSION "Enables LibGPS Functionality and the GetGPS processor." "${TEST_DIR}/gps-tests")
+register_extension(minifi-kubernetes-extensions "KUBERNETES EXTENSIONS" KUBERNETES-EXTENSIONS "This enables Kubernetes support")
 # the first argument should be the extension target
 # the next three arguments are used for documentation purposes
 # the fifth optional argument designates the directory of the extension's tests
 
 # we could optionally enforce a coding style by registering a linter target
-register_extension_linter(minifi-gps-linter)
+register_extension_linter(minifi-kubernetes-extensions-linter)
 ```
 
