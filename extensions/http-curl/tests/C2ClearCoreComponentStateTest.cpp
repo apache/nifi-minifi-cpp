@@ -41,12 +41,18 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessContext>();
+    LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
+    LogTestController::getInstance().setDebug<minifi::processors::TailFile>();
     VerifyC2Base::testSetup();
   }
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
     assert(verifyEventHappenedInPollTime(40s, [&] { return component_cleared_successfully_.load(); }));
+  }
+
+  [[nodiscard]] std::string getFile1Location() const {
+    return test_file_1_;
   }
 
  protected:
@@ -70,14 +76,20 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
 
 class ClearCoreComponentStateHandler: public HeartbeatHandler {
  public:
-  explicit ClearCoreComponentStateHandler(std::atomic_bool& component_cleared_successfully, std::shared_ptr<minifi::Configure> configuration)
+  explicit ClearCoreComponentStateHandler(std::atomic_bool& component_cleared_successfully,
+                                          std::shared_ptr<minifi::Configure> configuration,
+                                          std::string file1Location)
     : HeartbeatHandler(std::move(configuration)),
-      component_cleared_successfully_(component_cleared_successfully) {
+      component_cleared_successfully_(component_cleared_successfully),
+      file_1_location_(std::move(file1Location)) {
   }
 
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
+    using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     switch (flow_state_) {
       case FlowState::STARTED:
+        assert(verifyLogLinePresenceInPollTime(10s, "ProcessSession committed for TailFile1"));
+        assert(verifyLogLinePresenceInPollTime(10s, "ProcessSession committed for TailFile2"));
         sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889345", conn);
         flow_state_ = FlowState::FIRST_DESCRIBE_SENT;
         break;
@@ -86,9 +98,21 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
         flow_state_ = FlowState::CLEAR_SENT;
         break;
       }
-      default:
+      case FlowState::CLEAR_SENT: {
+        using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+        auto tailFileRanAgainChecker = [this] {
+          const auto logContents = LogTestController::getInstance().log_output.str();
+          const std::string tailingFilePattern = "[debug] Tailing file " + file_1_location_;
+          const std::string tailFileCommittedPattern = "[trace] ProcessSession committed for TailFile1";
+          const std::vector<std::string> patterns = {tailingFilePattern, tailingFilePattern, tailFileCommittedPattern};
+          return utils::StringUtils::matchesSequence(logContents, patterns);
+        };
+        assert(verifyEventHappenedInPollTime(10s, tailFileRanAgainChecker));
         sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889347", conn);
         flow_state_ = FlowState::SECOND_DESCRIBE_SENT;
+        break;
+      }
+      default: {}
     }
   }
 
@@ -145,6 +169,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
   std::atomic_bool& component_cleared_successfully_;
   std::string last_read_time_1_;
   std::string last_read_time_2_;
+  std::string file_1_location_;
 };
 
 int main(int argc, char **argv) {
@@ -152,7 +177,7 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "api/heartbeat");
   VerifyC2ClearCoreComponentState harness(component_cleared_successfully);
   harness.setKeyDir(args.key_dir);
-  ClearCoreComponentStateHandler handler(component_cleared_successfully, harness.getConfiguration());
+  ClearCoreComponentStateHandler handler(component_cleared_successfully, harness.getConfiguration(), harness.getFile1Location());
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);
   return 0;

@@ -190,7 +190,7 @@ TEST_CASE("TestTLSContextCreation", "[TestSocket8]") {
     std::function<bool()> f_ex = createSocket;
     utils::Worker<bool> functor(f_ex, "id");
     std::future<bool> fut;
-    REQUIRE(true == pool.execute(std::move(functor), fut));
+    pool.execute(std::move(functor), fut);
     futures.push_back(std::move(fut));
   }
   pool.start();

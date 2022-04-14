@@ -495,6 +495,15 @@ class StringUtils {
 
   static std::string escapeUnprintableBytes(gsl::span<const std::byte> data);
 
+  /**
+   * Returns whether sequence of patterns are found in given string in their incoming order
+   * Non-regex search!
+   * @param str string to search in
+   * @param patterns sequence of patterns to search
+   * @return success of string sequence matching
+   */
+  static bool matchesSequence(const std::string_view str, const std::vector<std::string>& patterns);
+
  private:
 };
 

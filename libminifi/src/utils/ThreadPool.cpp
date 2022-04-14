@@ -48,8 +48,15 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
           worker_queue_.enqueue(std::move(task));
           continue;
         }
+        ++running_task_ids_[task.getIdentifier()];
       }
-      if (task.run()) {
+      const bool taskRunResult = task.run();
+      {
+        std::unique_lock<std::mutex> lock(worker_queue_mutex_);
+        --running_task_ids_[task.getIdentifier()];
+      }
+      task_run_complete_.notify_all();
+      if (taskRunResult) {
         if (task.getNextExecutionTime() <= std::chrono::steady_clock::now()) {
           // it can be rescheduled again as soon as there is a worker available
           worker_queue_.enqueue(std::move(task));
@@ -101,17 +108,13 @@ void ThreadPool<T>::manage_delayed_queue() {
 }
 
 template<typename T>
-bool ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
+void ThreadPool<T>::execute(Worker<T> &&task, std::future<T> &future) {
   {
     std::unique_lock<std::mutex> lock(worker_queue_mutex_);
     task_status_[task.getIdentifier()] = true;
   }
   future = std::move(task.getPromise()->get_future());
   worker_queue_.enqueue(std::move(task));
-
-  task_count_++;
-
-  return true;
 }
 
 template<typename T>
@@ -200,6 +203,26 @@ template<typename T>
 void ThreadPool<T>::stopTasks(const TaskId &identifier) {
   std::unique_lock<std::mutex> lock(worker_queue_mutex_);
   task_status_[identifier] = false;
+
+  // remove tasks belonging to identifier from worker_queue_
+  worker_queue_.remove([&] (const Worker<T>& worker) { return worker.getIdentifier() == identifier; });
+
+  // also remove from delayed_worker_queue_
+  decltype(delayed_worker_queue_) newDelayedWorkerQueue;
+  while (!delayed_worker_queue_.empty()) {
+    Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
+    delayed_worker_queue_.pop();
+    if (task.getIdentifier() != identifier) {
+      newDelayedWorkerQueue.push(std::move(task));
+    }
+  }
+  delayed_worker_queue_ = std::move(newDelayedWorkerQueue);
+
+  // if tasks are progress, wait for their completion
+  task_run_complete_.wait(lock, [&] () {
+    auto iter = running_task_ids_.find(identifier);
+    return iter == running_task_ids_.end() || iter->second == 0;
+  });
 }
 
 template<typename T>

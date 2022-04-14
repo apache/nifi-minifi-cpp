@@ -18,21 +18,21 @@
 #define LIBMINIFI_INCLUDE_UTILS_THREADPOOL_H_
 
 #include <algorithm>
-#include <memory>
-#include <string>
-#include <utility>
-#include <chrono>
-#include <sstream>
-#include <iostream>
 #include <atomic>
-#include <mutex>
-#include <map>
-#include <unordered_map>
-#include <vector>
-#include <queue>
-#include <future>
-#include <thread>
+#include <chrono>
 #include <functional>
+#include <future>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <sstream>
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "BackTrace.h"
 #include "MinifiConcurrentQueue.h"
@@ -177,7 +177,6 @@ class ThreadPool {
         controller_service_provider_(controller_service_provider),
         name_(std::move(name)) {
     current_workers_ = 0;
-    task_count_ = 0;
     thread_manager_ = nullptr;
   }
 
@@ -196,9 +195,8 @@ class ThreadPool {
    * @param task this thread pool will subsume ownership of
    * the worker task
    * @param future future to move new promise to
-   * @return true if future can be created and thread pool is in a running state.
    */
-  bool execute(Worker<T> &&task, std::future<T> &future);
+  void execute(Worker<T> &&task, std::future<T> &future);
 
   /**
    * attempts to stop tasks with the provided identifier.
@@ -310,7 +308,6 @@ class ThreadPool {
   int max_worker_threads_;
 // current worker tasks.
   std::atomic<int> current_workers_;
-  std::atomic<int> task_count_;
 // thread queue
   std::vector<std::shared_ptr<WorkerThread>> thread_queue_;
 // manager thread
@@ -340,6 +337,10 @@ class ThreadPool {
   std::recursive_mutex manager_mutex_;
   // thread pool name
   std::string name_;
+  // running task IDs
+  std::map<TaskId, unsigned> running_task_ids_;
+  // variable to signal task running completion
+  std::condition_variable task_run_complete_;
 
   /**
    * Call for the manager to start worker threads
