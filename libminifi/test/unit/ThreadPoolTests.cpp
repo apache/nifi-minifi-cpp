@@ -72,7 +72,7 @@ TEST_CASE("ThreadPoolTest1", "[TPT1]") {
   utils::Worker<bool> functor(f_ex, "id");
   pool.start();
   std::future<bool> fut;
-  REQUIRE(true == pool.execute(std::move(functor), fut));
+  pool.execute(std::move(functor), fut);
   fut.wait();
   REQUIRE(true == fut.get());
 }
@@ -91,7 +91,7 @@ TEST_CASE("ThreadPoolTest2", "[TPT2]") {
   utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
   pool.start();
   std::future<int> fut;
-  REQUIRE(true == pool.execute(std::move(functor), fut));
+  pool.execute(std::move(functor), fut);
   fut.wait();
   REQUIRE(20 == fut.get());
 }

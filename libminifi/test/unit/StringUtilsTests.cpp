@@ -532,3 +532,13 @@ TEST_CASE("StringUtils::escapeUnprintableBytes", "[escapeUnprintableBytes]") {
   REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("ab\n\r\t\v\fde")) == "ab\\n\\r\\t\\v\\fde");
   REQUIRE(StringUtils::escapeUnprintableBytes(from_cstring("ab\x00""c\x01""d")) == "ab\\x00c\\x01d");
 }
+
+TEST_CASE("StringUtils::matchesSequence works correctly", "[matchesSequence]") {
+  REQUIRE(StringUtils::matchesSequence("abcdef", {"abc", "def"}));
+  REQUIRE(!StringUtils::matchesSequence("abcef", {"abc", "def"}));
+  REQUIRE(StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "def"}));
+  REQUIRE(!StringUtils::matchesSequence("defabc", {"abc", "def"}));
+  REQUIRE(StringUtils::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "def"}));
+  REQUIRE(StringUtils::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "abc", "def"}));
+  REQUIRE(!StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
+}

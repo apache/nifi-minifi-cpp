@@ -18,6 +18,7 @@
 #define LIBMINIFI_INCLUDE_UTILS_MINIFICONCURRENTQUEUE_H_
 
 
+#include <algorithm>
 #include <chrono>
 #include <deque>
 #include <mutex>
@@ -79,6 +80,12 @@ class ConcurrentQueue {
   void clear() {
     std::lock_guard<std::mutex> guard(mtx_);
     queue_.clear();
+  }
+
+  template<typename Functor>
+  void remove(Functor fun) {
+    std::lock_guard<std::mutex> guard(mtx_);
+    queue_.erase(std::remove_if(queue_.begin(), queue_.end(), fun), queue_.end());
   }
 
   template <typename... Args>
@@ -222,6 +229,8 @@ class ConditionConcurrentQueue : private ConcurrentQueue<T> {
     std::lock_guard<std::mutex> guard(this->mtx_);
     return running_;  // In case it's not running no notifications are generated, dequeueing fails instead of blocking to avoid hanging threads
   }
+
+  using ConcurrentQueue<T>::remove;
 
  private:
   bool running_;

@@ -147,19 +147,15 @@ class Instance {
 
  protected:
 
-  bool registerUpdateListener(const std::shared_ptr<state::UpdateController> &updateController, const int64_t& /*delay*/) {
+  void registerUpdateListener(const std::shared_ptr<state::UpdateController> &updateController, const int64_t& /*delay*/) {
     auto functions = updateController->getFunctions();
     // run all functions independently
 
     for (auto function : functions) {
       utils::Worker<utils::TaskRescheduleInfo> functor(function, "listeners");
       std::future<utils::TaskRescheduleInfo> future;
-      if (!listener_thread_pool_.execute(std::move(functor), future)) {
-        // denote failure
-        return false;
-      }
+      listener_thread_pool_.execute(std::move(functor), future);
     }
-    return true;
   }
 
   std::shared_ptr<c2::C2CallbackAgent> agent_;
