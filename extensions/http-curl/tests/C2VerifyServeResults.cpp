@@ -77,7 +77,6 @@ class VerifyC2Server : public HTTPIntegrationBase {
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_protocol_class, "RESTSender");
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_port, port);
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_agent_heartbeat_period, "10");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_rest_listener_heartbeat_rooturi, path);
   }
 
  protected:

@@ -110,12 +110,11 @@ TEST_CASE("ConfigFile creates an empty object from a nonexistent file", "[encryp
 
 TEST_CASE("ConfigFile can parse a simple config file", "[encrypt-config][constructor]") {
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-  REQUIRE(test_file.size() == 101);
+  REQUIRE(test_file.size() == 100);
 }
 
 TEST_CASE("ConfigFile can test whether a key is present", "[encrypt-config][hasValue]") {
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
-  REQUIRE(test_file.hasValue(Configuration::nifi_version));
   REQUIRE(test_file.hasValue(Configuration::nifi_c2_flow_id));  // present but blank
   REQUIRE(!test_file.hasValue(Configuration::nifi_remote_input_secure));  // commented out
   REQUIRE(!test_file.hasValue("nifi.this.property.does.not.exist"));
@@ -123,7 +122,7 @@ TEST_CASE("ConfigFile can test whether a key is present", "[encrypt-config][hasV
 
 TEST_CASE("ConfigFile can read empty properties correctly", "[encrypt-config][constructor]") {
   ConfigFile test_file{std::ifstream{"resources/with-additional-sensitive-props.minifi.properties"}};
-  REQUIRE(test_file.size() == 103);
+  REQUIRE(test_file.size() == 102);
 
   auto empty_property = test_file.getValue(Configuration::nifi_security_need_ClientAuth);
   REQUIRE(empty_property);
@@ -164,7 +163,7 @@ TEST_CASE("ConfigFile can add a new setting after an existing setting", "[encryp
 
   SECTION("valid key") {
     test_file.insertAfter(Configuration::nifi_rest_api_password, "nifi.rest.api.password.protected", "my-cipher-name");
-    REQUIRE(test_file.size() == 102);
+    REQUIRE(test_file.size() == 101);
     REQUIRE(test_file.getValue("nifi.rest.api.password.protected") == "my-cipher-name");
   }
 
@@ -179,7 +178,7 @@ TEST_CASE("ConfigFile can add a new setting at the end", "[encrypt-config][appen
   const std::string KEY = "nifi.bootstrap.sensitive.key";
   const std::string VALUE = "aa411f289c91685ef9d5a9e5a4fad9393ff4c7a78ab978484323488caed7a9ab";
   test_file.append(KEY, VALUE);
-  REQUIRE(test_file.size() == 102);
+  REQUIRE(test_file.size() == 101);
   REQUIRE(test_file.getValue(KEY) == std::make_optional(VALUE));
 }
 

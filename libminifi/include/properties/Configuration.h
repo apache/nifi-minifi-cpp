@@ -40,7 +40,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_volatile_repository_options = "nifi.volatile.repository.options.";
 
   // nifi.flow.configuration.file
-  static constexpr const char *nifi_version = "nifi.version";
   static constexpr const char *nifi_default_directory = "nifi.default.directory";
   static constexpr const char *nifi_flow_configuration_file = "nifi.flow.configuration.file";
   static constexpr const char *nifi_flow_configuration_encrypt = "nifi.flow.configuration.encrypt";
@@ -76,7 +75,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_dbcontent_repository_directory_default = "nifi.database.content.repository.directory.default";
   static constexpr const char *nifi_remote_input_secure = "nifi.remote.input.secure";
   static constexpr const char *nifi_remote_input_http = "nifi.remote.input.http.enabled";
-  static constexpr const char *nifi_remote_input_socket_port = "nifi.remote.input.socket.port";
   static constexpr const char *nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
   static constexpr const char *nifi_sensitive_props_additional_keys = "nifi.sensitive.props.additional.keys";
   static constexpr const char *nifi_python_processor_dir = "nifi.python.processor.dir";
@@ -121,7 +119,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_rest_url = "nifi.c2.rest.url";
   static constexpr const char *nifi_c2_rest_url_ack = "nifi.c2.rest.url.ack";
   static constexpr const char *nifi_c2_rest_ssl_context_service = "nifi.c2.rest.ssl.context.service";
-  static constexpr const char *nifi_c2_rest_listener_heartbeat_rooturi = "nifi.c2.rest.listener.heartbeat.rooturi";
   static constexpr const char *nifi_c2_rest_heartbeat_minimize_updates = "nifi.c2.rest.heartbeat.minimize.updates";
   static constexpr const char *nifi_c2_mqtt_connector_service = "nifi.c2.mqtt.connector.service";
   static constexpr const char *nifi_c2_mqtt_heartbeat_topic = "nifi.c2.mqtt.heartbeat.topic";

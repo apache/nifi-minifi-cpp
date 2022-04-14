@@ -82,7 +82,6 @@ class VerifyC2Server : public HTTPIntegrationBase {
     configuration->set(Configuration::nifi_c2_agent_heartbeat_reporter_classes, "null");
     configuration->set(Configuration::nifi_c2_rest_listener_port, "null");
     configuration->set(Configuration::nifi_c2_agent_heartbeat_period, "null");
-    configuration->set(Configuration::nifi_c2_rest_listener_heartbeat_rooturi, "null");
   }
 
  protected:

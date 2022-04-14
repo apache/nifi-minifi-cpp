@@ -20,7 +20,6 @@
 namespace org::apache::nifi::minifi {
 
 const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROPERTIES{
-  core::ConfigurationProperty{Configuration::nifi_version},
   core::ConfigurationProperty{Configuration::nifi_default_directory},
   core::ConfigurationProperty{Configuration::nifi_flow_configuration_file},
   core::ConfigurationProperty{Configuration::nifi_flow_configuration_encrypt, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
@@ -56,7 +55,6 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_dbcontent_repository_directory_default},
   core::ConfigurationProperty{Configuration::nifi_remote_input_secure, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_remote_input_http, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
-  core::ConfigurationProperty{Configuration::nifi_remote_input_socket_port, gsl::make_not_null(core::StandardValidators::get().PORT_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_security_need_ClientAuth, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_sensitive_props_additional_keys},
   core::ConfigurationProperty{Configuration::nifi_python_processor_dir},
@@ -95,7 +93,6 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_c2_rest_url},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_url_ack},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_ssl_context_service},
-  core::ConfigurationProperty{Configuration::nifi_c2_rest_listener_heartbeat_rooturi},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_heartbeat_minimize_updates, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_c2_mqtt_connector_service},
   core::ConfigurationProperty{Configuration::nifi_c2_mqtt_heartbeat_topic},

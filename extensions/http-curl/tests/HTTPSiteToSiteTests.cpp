@@ -63,7 +63,6 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_c2_enable, "false");
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_remote_input_http, "true");
-    configuration->set(org::apache::nifi::minifi::Configuration::nifi_remote_input_socket_port, "8099");
   }
 
   void runAssertions() override {
