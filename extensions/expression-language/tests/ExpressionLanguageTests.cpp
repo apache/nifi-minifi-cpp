@@ -40,6 +40,7 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "date/tz.h"
 
 namespace expression = org::apache::nifi::minifi::expression;
 
@@ -389,8 +390,6 @@ TEST_CASE("Substring After No Args", "[expressionLanguageSubstringAfterNoArgs]")
   REQUIRE_THROWS_WITH(expression::compile("${attr:substringAfter()}"), "Expression language function substringAfter called with 1 argument(s), but 2 are required");
 }
 
-#ifdef EXPRESSION_LANGUAGE_USE_REGEX
-
 TEST_CASE("Replace", "[expressionLanguageReplace]") {
   auto expr = expression::compile("${attr:replace('.', '_')}");
 
@@ -599,8 +598,6 @@ TEST_CASE("LastIndexOf4", "[expressionLanguageLastIndexOf4]") {
   REQUIRE("11" == expr(expression::Parameters{ flow_file_a }).asString());
 }
 
-#endif  // EXPRESSION_LANGUAGE_USE_REGEX
-
 TEST_CASE("Plus Integer", "[expressionLanguagePlusInteger]") {
   auto expr = expression::compile("${attr:plus(13)}");
 
@@ -630,7 +627,7 @@ TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.345678901234");
-  REQUIRE("10000011.345678901234351" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(10000011.345678901234 == Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
 }
 
 TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {
@@ -662,7 +659,7 @@ TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("-148.136937" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(-148.136937 == Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
 }
 
 TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {
@@ -1176,7 +1173,6 @@ TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a }).asString());
 }
 
-#ifndef WIN32
 #ifndef DISABLE_CURL
 TEST_CASE("Encode URL", "[expressionEncodeURL]") {
   auto expr = expression::compile("${message:urlEncode()}");
@@ -1226,11 +1222,11 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURLExcept]") {
   REQUIRE_THROWS(expr(expression::Parameters{flow_file_a}).asString());
 }
 #endif
-#endif
-
-#ifdef EXPRESSION_LANGUAGE_USE_DATE
 
 TEST_CASE("Parse Date", "[expressionParseDate]") {
+#ifdef WIN32
+  expression::dateSetInstall(TZ_DATA_DIR);
+#endif
   auto expr = expression::compile("${message:toDate('%Y/%m/%d', 'America/Los_Angeles')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
@@ -1239,6 +1235,9 @@ TEST_CASE("Parse Date", "[expressionParseDate]") {
 }
 
 TEST_CASE("Reformat Date", "[expressionReformatDate]") {
+#ifdef WIN32
+  expression::dateSetInstall(TZ_DATA_DIR);
+#endif
   auto expr = expression::compile("${message:toDate('%Y/%m/%d', 'GMT'):format('%m-%d-%Y', 'America/New_York')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
@@ -1246,18 +1245,17 @@ TEST_CASE("Reformat Date", "[expressionReformatDate]") {
   REQUIRE("03-13-2014" == expr(expression::Parameters{ flow_file_a }).asString());
 }
 
-#endif  // EXPRESSION_LANGUAGE_USE_DATE
-
 TEST_CASE("Now Date", "[expressionNowDate]") {
+#ifdef WIN32
+  expression::dateSetInstall(TZ_DATA_DIR);
+#endif
   auto expr = expression::compile("${now():format('%Y')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "2014/03/14");
-  time_t t = time(nullptr);
-  struct tm lt;
-  localtime_r(&t, &lt);
+  date::year_month_day date{std::chrono::floor<std::chrono::days>(std::chrono::system_clock::now())};
 
-  REQUIRE(gsl::narrow<uint64_t>(lt.tm_year + 1900) == expr(expression::Parameters{ flow_file_a }).asUnsignedLong());
+  REQUIRE(date.year().operator int() == expr(expression::Parameters{ flow_file_a }).asSignedLong());
 }
 
 TEST_CASE("Format Date", "[expressionFormatDate]") {
@@ -1383,8 +1381,6 @@ TEST_CASE("Any Contains 2", "[expressionAnyContains2]") {
   REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
 }
 
-#ifdef EXPRESSION_LANGUAGE_USE_REGEX
-
 TEST_CASE("All Matching Contains", "[expressionAllMatchingContains]") {
   auto expr = expression::compile("${allMatchingAttributes('xyz_.*'):contains('hello')}");
 
@@ -1456,8 +1452,6 @@ TEST_CASE("Any Matching Contains 4", "[expressionAnyMatchingContains4]") {
   flow_file_a->addAttribute("xyz_2", "mello 2");
   REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
 }
-
-#endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
 TEST_CASE("All Delineated Contains", "[expressionAllDelineatedContains]") {
   auto expr = expression::compile("${allDelineatedValues(${word_list}, \",\"):contains('hello')}");

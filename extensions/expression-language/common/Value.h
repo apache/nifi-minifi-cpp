@@ -180,7 +180,7 @@ class Value {
     if (is_unsigned_long_) {
       return unsigned_long_val_;
     } else if (is_string_) {
-      return string_val_.empty() ? 0 : std::stoul(string_val_);
+      return string_val_.empty() ? 0 : std::stoull(string_val_);
     } else if (is_signed_long_) {
       return signed_long_val_;
     } else if (is_long_double_) {
@@ -196,7 +196,7 @@ class Value {
     } else if (is_unsigned_long_) {
       return unsigned_long_val_;
     } else if (is_string_) {
-      return string_val_.empty() ? 0 : std::stol(string_val_);
+      return string_val_.empty() ? 0 : std::stoll(string_val_);
     } else if (is_long_double_) {
       return static_cast<int64_t >(long_double_val_);
     } else {

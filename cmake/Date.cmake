@@ -28,15 +28,21 @@ if (WIN32)
         FetchContent_Populate(tzdata)
     endif()
 
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tzdata)
+
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
+        DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
+
+    file(COPY ${tzdata_SOURCE_DIR}/
+        DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
+
     install(DIRECTORY ${tzdata_SOURCE_DIR}/
         DESTINATION tzdata
-        COMPONENT tzdata
-    )
+        COMPONENT bin)
 
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
         DESTINATION tzdata
-        COMPONENT tzdata
-    )
+        COMPONENT bin)
 endif()
 
 FetchContent_Declare(date_src

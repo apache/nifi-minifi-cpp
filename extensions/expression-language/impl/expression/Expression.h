@@ -17,15 +17,6 @@
 
 #pragma once
 
-#define EXPRESSION_LANGUAGE_USE_REGEX
-
-// Disable regex in EL for incompatible compilers
-#if !defined(WIN32) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9))
-#undef EXPRESSION_LANGUAGE_USE_REGEX
-#endif
-
-#define EXPRESSION_LANGUAGE_USE_DATE
-
 #include <string>
 #include <memory>
 #include <functional>
@@ -188,6 +179,10 @@ Expression make_dynamic_function(const std::string &function_name, const std::ve
  * @return
  */
 Expression make_function_composition(const Expression &arg, const std::vector<std::pair<std::string, std::vector<Expression>>> &chain);
+
+#ifdef WIN32
+void dateSetInstall(const std::string& install);
+#endif
 
 } /* namespace expression */
 } /* namespace minifi */
