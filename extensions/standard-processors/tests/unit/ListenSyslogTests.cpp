@@ -393,7 +393,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
   }
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
-  REQUIRE(triggerUntil(controller, {{ListenSyslog::Success, 9}}, result, 300ms, 50ms));
+  REQUIRE(triggerUntil(controller, {{ListenSyslog::Success, 9}, {ListenSyslog::Invalid, 1}}, result, 300ms, 50ms));
   REQUIRE(result.at(ListenSyslog::Success).size() == 9);
   REQUIRE(result.at(ListenSyslog::Invalid).size() == 1);
 
