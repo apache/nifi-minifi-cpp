@@ -1176,7 +1176,6 @@ TEST_CASE("Encode Decode CSV", "[expressionEncodeDecodeCSV]") {
   REQUIRE("Zero > One < \"two!\" & 'true'" == expr(expression::Parameters{ flow_file_a }).asString());
 }
 
-#ifndef WIN32
 #ifndef DISABLE_CURL
 TEST_CASE("Encode URL", "[expressionEncodeURL]") {
   auto expr = expression::compile("${message:urlEncode()}");
@@ -1225,7 +1224,6 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURLExcept]") {
   flow_file_a->addAttribute("message", "some value with spaces");
   REQUIRE_THROWS(expr(expression::Parameters{flow_file_a}).asString());
 }
-#endif
 #endif
 
 #ifdef EXPRESSION_LANGUAGE_USE_DATE
