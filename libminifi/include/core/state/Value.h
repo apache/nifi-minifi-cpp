@@ -431,7 +431,7 @@ class DoubleValue : public Value {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
-  bool getValue(int64_t& ref ) override {
+  bool getValue(int64_t& ref) override {
     return utils::internal::cast_if_in_range(value, ref);
   }
 
@@ -496,6 +496,7 @@ static inline std::shared_ptr<Value> createValue(const double &object) {
  */
 class ValueNode {
   using supported_types = utils::meta::type_list<int, uint32_t, size_t, int64_t, uint64_t, bool, char*, const char*, double, std::string>;
+
  public:
   ValueNode() = default;
   ValueNode(ValueNode &&vn) = default;
@@ -503,9 +504,9 @@ class ValueNode {
   ValueNode &operator=(const ValueNode &ref) = default;
 
   template<typename T>
-  requires (supported_types::contains<T>())
+  requires (supported_types::contains<T>())  // NOLINT
   /* implicit, because it doesn't change the meaning, and it simplifies construction of maps */ ValueNode(const T value)  // NOLINT
-      :value_{ createValue(value)}
+      :value_{createValue(value)}
   {}
 
   /**
@@ -513,7 +514,7 @@ class ValueNode {
    * createValue
    */
   template<typename T>
-  requires (supported_types::contains<T>())
+  requires (supported_types::contains<T>())  // NOLINT
   ValueNode& operator=(const T ref) {
     value_ = createValue(ref);
     return *this;
@@ -559,7 +560,11 @@ struct SerializedResponseNode {
   [[nodiscard]] bool empty() const noexcept {
     return value.empty() && children.empty();
   }
+
+  [[nodiscard]] std::string to_string() const;
 };
+
+inline std::string to_string(const SerializedResponseNode& node) { return node.to_string(); }
 
 std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes);
 

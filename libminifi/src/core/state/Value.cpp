@@ -20,13 +20,11 @@
 #include <openssl/sha.h>
 #include <utility>
 #include <string>
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 const std::type_index Value::UINT64_TYPE = std::type_index(typeid(uint64_t));
 const std::type_index Value::INT64_TYPE = std::type_index(typeid(int64_t));
@@ -58,10 +56,36 @@ std::string hashResponseNodes(const std::vector<SerializedResponseNode>& nodes) 
   return utils::StringUtils::to_hex(digest, true /*uppercase*/);
 }
 
-} /* namespace response */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+namespace {
+rapidjson::Value nodeToJson(const SerializedResponseNode& node, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& alloc) {
+  if (node.value.empty()) {
+    if (node.array) {
+      rapidjson::Value result(rapidjson::kArrayType);
+      for (const auto& elem: node.children) {
+        result.PushBack(nodeToJson(elem, alloc), alloc);
+      }
+      return result;
+    } else {
+      rapidjson::Value result(rapidjson::kObjectType);
+      for (const auto& elem: node.children) {
+        result.AddMember(rapidjson::Value(elem.name.c_str(), alloc), nodeToJson(elem, alloc), alloc);
+      }
+      return result;
+    }
+  } else {
+    return rapidjson::Value(node.value.to_string().c_str(), alloc);
+  }
+}
+}  // namespace
+
+std::string SerializedResponseNode::to_string() const {
+  rapidjson::Document doc;
+  doc.SetObject();
+  doc.AddMember(rapidjson::Value(name.c_str(), doc.GetAllocator()), nodeToJson(*this, doc.GetAllocator()), doc.GetAllocator());
+  rapidjson::StringBuffer buf;
+  rapidjson::Writer<rapidjson::StringBuffer> writer{buf};
+  doc.Accept(writer);
+  return buf.GetString();
+}
+}  // namespace org::apache::nifi::minifi::state::response
 

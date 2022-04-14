@@ -585,7 +585,7 @@ class AgentMonitor {
     }
   }
 
-  void setStateMonitor(state::StateMonitor* &monitor) {
+  void setStateMonitor(state::StateMonitor* monitor) {
     monitor_ = monitor;
   }
 
@@ -684,47 +684,33 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
 
  protected:
   std::vector<SerializedResponseNode> serialize() override {
-    std::vector<SerializedResponseNode> serialized;
-
-    SerializedResponseNode ident;
-
-    ident.name = "identifier";
-    ident.value = provider_->getAgentIdentifier();
-    serialized.push_back(ident);
+    std::vector<SerializedResponseNode> serialized = {
+        {.name = "identifier", .value = provider_->getAgentIdentifier()},
+    };
 
     const auto agent_class = provider_->getAgentClass();
     if (agent_class) {
-      SerializedResponseNode agentClass;
-      agentClass.name = "agentClass";
-      agentClass.value = *agent_class;
-      serialized.push_back(agentClass);
+      serialized.push_back({.name = "agentClass", .value = *agent_class});
     }
 
-    SerializedResponseNode agentManifestHash;
-    agentManifestHash.name = "agentManifestHash";
-    agentManifestHash.value = getAgentManifestHash();
-    serialized.push_back(agentManifestHash);
-
+    serialized.push_back({.name = "agentManifestHash", .value = getAgentManifestHash()});
     return serialized;
   }
 
   std::vector<SerializedResponseNode> getAgentManifest() const {
-    SerializedResponseNode agentManifest;
-    agentManifest.name = "agentManifest";
-    AgentManifest manifest{"manifest"};
-    manifest.setStateMonitor(monitor_);
-    manifest.setUpdatePolicyController(update_policy_controller_);
-    manifest.setConfigurationReader(configuration_reader_);
-    agentManifest.children = manifest.serialize();
-    return std::vector<SerializedResponseNode>{ agentManifest };
+    if (agent_manifest_cache_) { return std::vector{*agent_manifest_cache_}; }
+    agent_manifest_cache_ = {.name = "agentManifest", .children = [this] {
+      AgentManifest manifest{"manifest"};
+      manifest.setStateMonitor(monitor_);
+      manifest.setUpdatePolicyController(update_policy_controller_);
+      manifest.setConfigurationReader(configuration_reader_);
+      return manifest.serialize();
+    }()};
+    return std::vector{ *agent_manifest_cache_ };
   }
 
   std::string getAgentManifestHash() {
-    if (!agentManifestHash_.has_value()) {
-      agentManifestHash_ = hashResponseNodes(getAgentManifest());
-    }
-
-    return *agentManifestHash_;
+    return hashResponseNodes(getAgentManifest());
   }
 
   std::vector<SerializedResponseNode> getAgentStatus() const {
@@ -745,9 +731,10 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
   }
 
  private:
-  std::optional<std::string> agentManifestHash_;
+  mutable std::optional<SerializedResponseNode> agent_manifest_cache_;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
   std::function<std::optional<std::string>(const std::string&)> configuration_reader_;
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AgentNode>::getLogger();
 };
 
 /**
