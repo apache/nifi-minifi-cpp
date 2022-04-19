@@ -100,9 +100,9 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test listing without versioning", "[awsS3L
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.storeClass value:" + S3_STORAGE_CLASS_STR) == S3_OBJECT_COUNT);
   REQUIRE(LogTestController::getInstance().countOccurrences("key:s3.tag") == 0);
   REQUIRE(!mock_s3_request_sender_ptr->list_object_request.ContinuationTokenHasBeenSet());
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->endpointOverride == "http://localhost:1234");
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test listing with versioning", "[awsS3ListVersions]") {
@@ -179,9 +179,9 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test write object tags", "[awsS3ListTags]"
   }
   REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
   REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->endpointOverride == "http://localhost:1234");
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test write user metadata", "[awsS3ListMetadata]") {
@@ -198,9 +198,9 @@ TEST_CASE_METHOD(ListS3TestsFixture, "Test write user metadata", "[awsS3ListMeta
   REQUIRE(mock_s3_request_sender_ptr->head_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::requester);
   REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSAccessKeyId() == "key");
   REQUIRE(mock_s3_request_sender_ptr->getCredentials().GetAWSSecretKey() == "secret");
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->endpointOverride == "http://localhost:1234");
 }
 
 TEST_CASE_METHOD(ListS3TestsFixture, "Test truncated listing without versioning", "[awsS3ListObjects]") {

@@ -62,31 +62,31 @@ class S3RequestSender {
   virtual std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) = 0;
   virtual bool sendDeleteObjectRequest(
     const Aws::S3::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) = 0;
   virtual std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
     const Aws::S3::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) = 0;
   virtual std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
     const Aws::S3::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) = 0;
   virtual std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
     const Aws::S3::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) = 0;
   virtual std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
     const Aws::S3::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) = 0;
   virtual std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    const Aws::Client::ClientConfiguration& client_config) = 0;
+    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) = 0;
   virtual ~S3RequestSender() = default;
 
  protected:

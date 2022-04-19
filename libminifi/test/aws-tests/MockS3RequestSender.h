@@ -94,7 +94,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
       const Aws::S3::Model::PutObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
     put_object_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
@@ -112,7 +112,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   bool sendDeleteObjectRequest(
       const Aws::S3::Model::DeleteObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
     delete_object_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
@@ -122,7 +122,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
       const Aws::S3::Model::GetObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
     get_object_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
@@ -144,7 +144,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
       const Aws::S3::Model::ListObjectsV2Request& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
     list_object_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
@@ -175,7 +175,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
       const Aws::S3::Model::ListObjectVersionsRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
     list_version_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
@@ -207,7 +207,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
       const Aws::S3::Model::GetObjectTaggingRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
     get_object_tagging_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
@@ -224,7 +224,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
       const Aws::S3::Model::HeadObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      const Aws::Client::ClientConfiguration& client_config) override {
+      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
     head_object_request = request;
     credentials_ = credentials;
     client_config_ = client_config;
@@ -246,7 +246,7 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
     return credentials_;
   }
 
-  Aws::Client::ClientConfiguration getClientConfig() const {
+  Aws::Client::ClientConfiguration* getClientConfig() const {
     return client_config_;
   }
 
@@ -290,5 +290,5 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   bool return_empty_result_ = false;
   bool is_listing_truncated_ = false;
   Aws::Auth::AWSCredentials credentials_;
-  Aws::Client::ClientConfiguration client_config_;
+  Aws::Client::ClientConfiguration* client_config_;
 };

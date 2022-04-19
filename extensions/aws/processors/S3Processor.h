@@ -115,7 +115,7 @@ class S3Processor : public core::Processor {
 
   std::shared_ptr<core::logging::Logger> logger_;
   aws::s3::S3Wrapper s3_wrapper_;
-  Aws::Client::ClientConfiguration client_config_;
+  std::unique_ptr<Aws::Client::ClientConfiguration> client_config_;
 };
 
 }  // namespace processors
