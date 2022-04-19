@@ -664,22 +664,6 @@ void YamlConfiguration::parsePropertyValueSequence(const std::string& propertyNa
   }
 }
 
-namespace {
-  void handleExceptionOnValidatedProcessorPropertyRead(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode,
-      const std::shared_ptr<Configure>& config, const std::type_index& defaultType, std::shared_ptr<logging::Logger>& logger) {
-    std::string eof;
-    bool const exit_on_failure = (config->get(Configure::nifi_flow_configuration_file_exit_failure, eof) && utils::StringUtils::toBool(eof).value_or(false));
-    logger->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.as<std::string>());
-    if (exit_on_failure) {
-      // We do not exit here even if exit_on_failure is set. Maybe we should?
-      logger->log_error("Invalid conversion for %s to %s.", propertyFromProcessor.getName(), defaultType.name());
-    }
-  }
-}  // namespace
-
-// coerce the types. upon failure we will either exit or use the default value.
-// we do this here ( in addition to the PropertyValue class ) to get the earliest
-// possible YAML failure.
 PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode) {
   PropertyValue defaultValue;
   defaultValue = propertyFromProcessor.getDefaultValue();
@@ -705,9 +689,9 @@ PropertyValue YamlConfiguration::getValidatedProcessorPropertyForDefaultTypeInfo
     return coercedValue;
   } catch (const std::exception& e) {
     logger_->log_error("Fetching property failed with an exception of %s", e.what());
-    handleExceptionOnValidatedProcessorPropertyRead(propertyFromProcessor, propertyValueNode, configuration_, defaultType, logger_);
-  }  catch (...) {
-    handleExceptionOnValidatedProcessorPropertyRead(propertyFromProcessor, propertyValueNode, configuration_, defaultType, logger_);
+    logger_->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.as<std::string>());
+  } catch (...) {
+    logger_->log_error("Invalid conversion for field %s. Value %s", propertyFromProcessor.getName(), propertyValueNode.as<std::string>());
   }
   return defaultValue;
 }

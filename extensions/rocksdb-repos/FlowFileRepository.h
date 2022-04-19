@@ -104,15 +104,6 @@ class FlowFileRepository : public core::Repository {
       directory_ = value;
     }
     logger_->log_debug("NiFi FlowFile Repository Directory %s", directory_);
-    if (configure->get(Configure::nifi_flowfile_repository_max_storage_size, value)) {
-      Property::StringToInt(value, max_partition_bytes_);
-    }
-    logger_->log_debug("NiFi FlowFile Max Partition Bytes %d", max_partition_bytes_);
-    if (configure->get(Configure::nifi_flowfile_repository_max_storage_time, value)) {
-      if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
-        max_partition_millis_ = *max_partition;
-    }
-    logger_->log_debug("NiFi FlowFile Max Storage Time: [%" PRId64 "] ms", int64_t{max_partition_millis_.count()});
 
     const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configure->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
     logger_->log_info("Using %s FlowFileRepository", encrypted_env ? "encrypted" : "plaintext");

@@ -60,8 +60,6 @@ args = parser.parse_args()
 """ dll_file is the path to the shared object """
 minifi = MiNiFi(dll_file=args.dll_file, url=args.nifi_instance.encode('utf-8'), port=args.input_port.encode('utf-8'))  # noqa F405
 
-minifi.set_property("nifi.remote.input.http.enabled", "true")
-
 processor = minifi.add_processor(GetFile())  # noqa F405
 
 processor.set_property("Input Directory", args.dir)

@@ -73,10 +73,7 @@ C2Payload RESTSender::consumePayload(const C2Payload &payload, Direction directi
   return consumePayload(rest_uri_, payload, direction, async);
 }
 
-void RESTSender::update(const std::shared_ptr<Configure> &configure) {
-  std::string url;
-  configure->get(Configuration::nifi_c2_rest_url, "c2.rest.url", url);
-  configure->get(Configuration::nifi_c2_rest_url_ack, "c2.rest.url.ack", url);
+void RESTSender::update(const std::shared_ptr<Configure> &) {
 }
 
 void RESTSender::setSecurityContext(utils::HTTPClient &client, const std::string &type, const std::string &url) {
