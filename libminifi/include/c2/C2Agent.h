@@ -229,9 +229,6 @@ class C2Agent : public state::UpdateController {
 
   std::shared_ptr<utils::file::FileSystem> filesystem_;
 
-  // shared pointer to the running c2 configuration.
-  std::shared_ptr<Configure> running_c2_configuration;
-
   std::mutex heartbeat_mutex;
 
   std::vector<std::unique_ptr<HeartbeatReporter>> heartbeat_protocols_;

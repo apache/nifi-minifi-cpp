@@ -70,8 +70,6 @@ C2Agent::C2Agent(core::controller::ControllerServiceProvider *controller,
       thread_pool_(2, false, nullptr, "C2 threadpool") {
   manifest_sent_ = false;
 
-  running_c2_configuration = std::make_shared<Configure>();
-
   last_run_ = std::chrono::steady_clock::now();
 
   if (nullptr != controller_) {
@@ -596,7 +594,6 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     return;
   }
 
-  // we've been told to update something
   switch (operand.value()) {
     case UpdateOperand::CONFIGURATION: {
       handleConfigurationUpdate(resp);
@@ -604,26 +601,6 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
     }
     case UpdateOperand::PROPERTIES: {
       handlePropertyUpdate(resp);
-      break;
-    } case UpdateOperand::C2: {
-      // prior configuration options were already in place. thus
-      // we clear the map so that we don't go through replacing
-      // unnecessary objects.
-      running_c2_configuration->clear();
-
-      for (auto entry : resp.operation_arguments) {
-        bool can_update = true;
-        if (nullptr != update_service_) {
-          can_update = update_service_->canUpdate(entry.first);
-        }
-        if (can_update)
-          running_c2_configuration->set(entry.first, entry.second.to_string());
-      }
-
-      if (resp.operation_arguments.size() > 0)
-        configure(running_c2_configuration);
-      C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
-      enqueue_c2_response(std::move(response));
       break;
     }
   }
