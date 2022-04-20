@@ -39,6 +39,7 @@
 - [ListAzureDataLakeStorage](#listazuredatalakestorage)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
+- [ListFile](#listfile)
 - [ListS3](#lists3)
 - [ListSFTP](#listsftp)
 - [LogAttribute](#logattribute)
@@ -1049,6 +1050,46 @@ In the list below, the names of required properties appear in bold. Any other pr
 | _syslog.msg_id_          | The message id of the Syslog message.                              | Parsed RFC5424         |
 | _syslog.structured_data_ | The structured data of the Syslog message.                         | Parsed RFC5424         |
 
+
+
+## ListFile
+
+### Description
+
+Retrieves a listing of files from the local filesystem. For each file that is listed, creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name | Default Value | Allowable Values | Description |
+| - | - | - | - |
+|**Input Directory**|||The input directory from which files to pull files|
+|**Recurse Subdirectories**|true||Indicates whether to list files from subdirectories of the directory|
+|File Filter|||Only files whose names match the given regular expression will be picked up|
+|Path Filter|||When Recurse Subdirectories is true, then only subdirectories whose path matches the given regular expression will be scanned|
+|**Minimum File Age**|0 sec||The minimum age that a file must be in order to be pulled; any file younger than this amount of time (according to last modification date) will be ignored|
+|Maximum File Age|||The maximum age that a file must be in order to be pulled; any file older than this amount of time (according to last modification date) will be ignored|
+|**Minimum File Size**|0 B||The minimum size that a file must be in order to be pulled|
+|Maximum File Size|||The maximum size that a file can be in order to be pulled|
+|**Ignore Hidden Files**|true||Indicates whether or not hidden files should be ignored|
+### Relationships
+
+| Name | Description |
+| - | - |
+|success|All FlowFiles that are received are routed to success|
+
+### Output Attributes
+
+| Attribute                  | Relationship | Description                                                        |
+|----------------------------|--------------|--------------------------------------------------------------------|
+| _filename_                 | success      | The name of the file that was read from filesystem.                |
+| _path_                     | success      | The path is set to the relative path of the file's directory on filesystem compared to the Input Directory property. For example, if Input Directory is set to /tmp, then files picked up from /tmp will have the path attribute set to "./". If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to "abc/1/2/3/". |
+| _absolute.path_            | success      | The absolute.path is set to the absolute path of the file's directory on filesystem. For example, if the Input Directory property is set to /tmp, then files picked up from /tmp will have the path attribute set to "/tmp/". If the Recurse Subdirectories property is set to true and a file is picked up from /tmp/abc/1/2/3, then the path attribute will be set to "/tmp/abc/1/2/3/". |
+| _file.owner_               | success      | The user that owns the file in filesystem                          |
+| _file.group_               | success      | The group that owns the file in filesystem                         |
+| _file.size_                | success      | The number of bytes in the file in filesystem                      |
+| _file.permissions_         | success      | The permissions for the file in filesystem. This is formatted as 3 characters for the owner, 3 for the group, and 3 for other users. For example rw-rw-r-- |
+| _file.lastModifiedTime_    | success      | The timestamp of when the file in filesystem was last modified as 'yyyy-MM-dd'T'HH:mm:ssZ' |
 
 
 ## ListS3

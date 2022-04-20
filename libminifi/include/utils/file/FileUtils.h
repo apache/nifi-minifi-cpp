@@ -25,16 +25,20 @@
 #include <utility>
 #include <vector>
 #include <cstdio>
+#include <algorithm>
 
 #ifndef WIN32
 #include <unistd.h>
 #include <sys/stat.h> //NOLINT
+#include <pwd.h>
+#include <grp.h>
 
 #endif
 
 #include <fcntl.h>
 
 #ifdef WIN32
+#include <stdio.h>
 #include <direct.h>
 #include <sys/stat.h>  // stat // NOLINT
 #include <sys/types.h> // NOLINT
@@ -51,11 +55,14 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#include <algorithm>  // replace
-#include <string>  // string
+#include <string>
 
 #include "properties/Properties.h"
 #include "utils/Id.h"
+
+#include "accctrl.h"
+#include "aclapi.h"
+#pragma comment(lib, "advapi32.lib")
 
 #endif
 #ifdef __APPLE__
@@ -109,7 +116,8 @@ inline char get_separator(bool /*force_posix*/ = false) {
   return '/';
 }
 #endif
-time_t to_time_t(const std::filesystem::file_time_type time);
+time_t to_time_t(const std::filesystem::file_time_type& time);
+std::chrono::time_point<std::chrono::system_clock> to_sys_time_point(const std::filesystem::file_time_type& time);
 
 inline std::string normalize_path_separators(std::string path, bool force_posix = false) {
   const auto normalize_separators = [force_posix](const char c) {
@@ -171,6 +179,19 @@ inline const std::optional<std::filesystem::file_time_type> last_write_time(cons
   return std::nullopt;
 }
 
+inline std::optional<std::string> format_time(const std::filesystem::file_time_type& time, const std::string& format) {
+  auto last_write_time_t = to_time_t(time);
+  std::array<char, 128U> result;
+  if (std::strftime(result.data(), result.size(), format.c_str(), gmtime(&last_write_time_t)) != 0) {
+    return std::string(result.data());
+  }
+  return std::nullopt;
+}
+
+inline std::optional<std::string> get_last_modified_time_formatted_string(const std::string& path, const std::string& format_string) {
+  return last_write_time(path) | utils::flatMap([format_string](auto time) { return format_time(time, format_string); });
+}
+
 inline bool set_last_write_time(const std::string &path, std::filesystem::file_time_type new_time) {
   std::error_code ec;
   std::filesystem::last_write_time(path, new_time, ec);
@@ -192,7 +213,6 @@ inline uint64_t file_size(const std::string &path) {
   return 0;
 }
 
-#ifndef WIN32
 inline bool get_permissions(const std::string &path, uint32_t &permissions) {
   std::error_code ec;
   permissions = static_cast<uint32_t>(std::filesystem::status(path, ec).permissions());
@@ -204,7 +224,26 @@ inline int set_permissions(const std::string &path, const uint32_t permissions) 
   std::filesystem::permissions(path, static_cast<std::filesystem::perms>(permissions), ec);
   return ec.value();
 }
-#endif
+
+inline std::optional<std::string> get_permission_string(const std::string &path) {
+  std::error_code ec;
+  auto permissions = std::filesystem::status(path, ec).permissions();
+  if (ec.value() != 0) {
+    return std::nullopt;
+  }
+
+  std::string permission_string;
+  permission_string += (permissions & std::filesystem::perms::owner_read) != std::filesystem::perms::none ? "r" : "-";
+  permission_string += (permissions & std::filesystem::perms::owner_write) != std::filesystem::perms::none ? "w" : "-";
+  permission_string += (permissions & std::filesystem::perms::owner_exec) != std::filesystem::perms::none ? "x" : "-";
+  permission_string += (permissions & std::filesystem::perms::group_read) != std::filesystem::perms::none ? "r" : "-";
+  permission_string += (permissions & std::filesystem::perms::group_write) != std::filesystem::perms::none ? "w" : "-";
+  permission_string += (permissions & std::filesystem::perms::group_exec) != std::filesystem::perms::none ? "x" : "-";
+  permission_string += (permissions & std::filesystem::perms::others_read) != std::filesystem::perms::none ? "r" : "-";
+  permission_string += (permissions & std::filesystem::perms::others_write) != std::filesystem::perms::none ? "w" : "-";
+  permission_string += (permissions & std::filesystem::perms::others_exec) != std::filesystem::perms::none ? "x" : "-";
+  return permission_string;
+}
 
 #ifndef WIN32
 inline bool get_uid_gid(const std::string &path, uint64_t &uid, uint64_t &gid) {
@@ -576,6 +615,143 @@ inline std::string get_file_content(const std::string &file_name) {
 
 bool contains(const std::filesystem::path& file_path, std::string_view text_to_search);
 
+
+inline std::optional<std::string> get_file_owner(const std::string& file_path) {
+#ifndef WIN32
+  struct stat info;
+  if (stat(file_path.c_str(), &info) != 0) {
+    return std::nullopt;
+  }
+
+  struct passwd pw;
+  pw.pw_name = 0;
+  struct passwd *result = nullptr;
+  char localbuf[1024] = {};
+  if (getpwuid_r(info.st_uid, &pw, localbuf, sizeof(localbuf), &result) != 0 || pw.pw_name == 0) {
+    return std::nullopt;
+  }
+
+  return std::string(pw.pw_name);
+#else
+  DWORD return_code = 0;
+  PSID sid_owner = NULL;
+  BOOL bool_return = TRUE;
+  LPTSTR account_name = NULL;
+  LPTSTR domain_name = NULL;
+  DWORD account_name_dword = 1;
+  DWORD domain_name_dword = 1;
+  SID_NAME_USE sid_type = SidTypeUnknown;
+  HANDLE file_handle;
+  PSECURITY_DESCRIPTOR sec_descriptor = NULL;
+
+  // Get the handle of the file object.
+  file_handle = CreateFile(
+    TEXT(file_path.c_str()),
+    GENERIC_READ,
+    FILE_SHARE_READ,
+    NULL,
+    OPEN_EXISTING,
+    FILE_ATTRIBUTE_NORMAL,
+    NULL);
+
+  // Check GetLastError for CreateFile error code.
+  if (file_handle == INVALID_HANDLE_VALUE) {
+    return std::nullopt;
+  }
+
+  // Get the owner SID of the file.
+  return_code = GetSecurityInfo(
+    file_handle,
+    SE_FILE_OBJECT,
+    OWNER_SECURITY_INFORMATION,
+    &sid_owner,
+    NULL,
+    NULL,
+    NULL,
+    &sec_descriptor);
+
+  // Check GetLastError for GetSecurityInfo error condition.
+  if (return_code != ERROR_SUCCESS) {
+    return std::nullopt;
+  }
+
+  // First call to LookupAccountSid to get the buffer sizes.
+  bool_return = LookupAccountSid(
+    NULL,
+    sid_owner,
+    account_name,
+    (LPDWORD)&account_name_dword,
+    domain_name,
+    (LPDWORD)&domain_name_dword,
+    &sid_type);
+
+  // Reallocate memory for the buffers.
+  account_name = (LPTSTR)GlobalAlloc(
+    GMEM_FIXED,
+    account_name_dword);
+
+  // Check GetLastError for GlobalAlloc error condition.
+  if (account_name == NULL) {
+    return std::nullopt;
+  }
+  auto cleanup_account_name = gsl::finally([&account_name] { GlobalFree(account_name); });
+
+  domain_name = (LPTSTR)GlobalAlloc(
+    GMEM_FIXED,
+    domain_name_dword);
+
+  // Check GetLastError for GlobalAlloc error condition.
+  if (domain_name == NULL) {
+    return std::nullopt;
+  }
+  auto cleanup_domain_name = gsl::finally([&domain_name] { GlobalFree(domain_name); });
+
+  // Second call to LookupAccountSid to get the account name.
+  bool_return = LookupAccountSid(
+    NULL,                   // name of local or remote computer
+    sid_owner,              // security identifier
+    account_name,               // account name buffer
+    (LPDWORD)&account_name_dword,   // size of account name buffer
+    domain_name,             // domain name
+    (LPDWORD)&domain_name_dword,  // size of domain name buffer
+    &sid_type);                 // SID type
+
+  // Check GetLastError for LookupAccountSid error condition.
+  if (bool_return == FALSE) {
+    return std::nullopt;
+  }
+
+  auto result = std::string(account_name);
+  return result;
+#endif
+}
+
+#ifndef WIN32
+inline std::optional<std::string> get_file_group(const std::string& file_path) {
+  struct stat info;
+  if (stat(file_path.c_str(), &info) != 0) {
+    return std::nullopt;
+  }
+
+  struct group gr;
+  gr.gr_name = 0;
+  struct group *result = nullptr;
+  char localbuf[1024] = {};
+  if ((getgrgid_r(info.st_uid, &gr, localbuf, sizeof(localbuf), &result) != 0) || gr.gr_name == 0) {
+    return std::nullopt;
+  }
+
+  return std::string(gr.gr_name);
+}
+#endif
+
+inline std::optional<std::string> get_relative_path(const std::string& path, const std::string& base_path) {
+  if (!utils::StringUtils::startsWith(path, base_path)) {
+    return std::nullopt;
+  }
+
+  return std::filesystem::relative(path, base_path).string();
+}
 
 }  // namespace file
 }  // namespace utils

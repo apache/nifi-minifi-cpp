@@ -86,13 +86,23 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   return check_range(left.size(), left.size() + right.size());
 }
 
-time_t to_time_t(const std::filesystem::file_time_type file_time) {
+time_t to_time_t(const std::filesystem::file_time_type& file_time) {
 #if defined(WIN32)
-  return std::chrono::system_clock::to_time_t(std::chrono::utc_clock::to_sys(std::chrono::file_clock::to_utc(file_time)));
+  return std::chrono::system_clock::to_time_t(to_sys_time_point(file_time));
 #elif defined(_LIBCPP_VERSION)
   return std::chrono::file_clock::to_time_t(file_time);
 #else
-  return std::chrono::system_clock::to_time_t(std::chrono::file_clock::to_sys(file_time));
+  return std::chrono::system_clock::to_time_t(to_sys_time_point(file_time));
+#endif
+}
+
+std::chrono::time_point<std::chrono::system_clock> to_sys_time_point(const std::filesystem::file_time_type& file_time) {
+#if defined(WIN32)
+  return std::chrono::time_point_cast<std::chrono::system_clock::duration>(file_time - std::filesystem::file_time_type::clock::now() + std::chrono::system_clock::now());
+#elif defined(_LIBCPP_VERSION)
+  return std::chrono::system_clock::from_time_t(std::chrono::file_clock::to_time_t(file_time));
+#else
+  return std::chrono::file_clock::to_sys(file_time);
 #endif
 }
 
