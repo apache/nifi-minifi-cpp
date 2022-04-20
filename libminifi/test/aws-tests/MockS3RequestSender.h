@@ -94,10 +94,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
       const Aws::S3::Model::PutObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
+      const Aws::Client::ClientConfiguration& client_config) override {
     put_object_request = request;
     credentials_ = credentials;
-    client_config_ = client_config;
+    client_config_ = const_cast<Aws::Client::ClientConfiguration*>(&client_config);
 
     Aws::S3::Model::PutObjectResult put_s3_result;
     if (!return_empty_result_) {
@@ -112,20 +112,20 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   bool sendDeleteObjectRequest(
       const Aws::S3::Model::DeleteObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
+      const Aws::Client::ClientConfiguration& client_config) override {
     delete_object_request = request;
     credentials_ = credentials;
-    client_config_ = client_config;
+    client_config_ = const_cast<Aws::Client::ClientConfiguration*>(&client_config);
     return delete_object_result_;
   }
 
   std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
       const Aws::S3::Model::GetObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
+      const Aws::Client::ClientConfiguration& client_config) override {
     get_object_request = request;
     credentials_ = credentials;
-    client_config_ = client_config;
+    client_config_ = const_cast<Aws::Client::ClientConfiguration*>(&client_config);
 
     Aws::S3::Model::GetObjectResult get_s3_result;
     if (!return_empty_result_) {
@@ -144,10 +144,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
       const Aws::S3::Model::ListObjectsV2Request& request,
       const Aws::Auth::AWSCredentials& credentials,
-      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
+      const Aws::Client::ClientConfiguration& client_config) override {
     list_object_request = request;
     credentials_ = credentials;
-    client_config_ = client_config;
+    client_config_ = const_cast<Aws::Client::ClientConfiguration*>(&client_config);
 
     Aws::S3::Model::ListObjectsV2Result list_object_result;
     if (!is_listing_truncated_) {
@@ -175,10 +175,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
       const Aws::S3::Model::ListObjectVersionsRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
+      const Aws::Client::ClientConfiguration& client_config) override {
     list_version_request = request;
     credentials_ = credentials;
-    client_config_ = client_config;
+    client_config_ = const_cast<Aws::Client::ClientConfiguration*>(&client_config);
 
     Aws::S3::Model::ListObjectVersionsResult list_version_result;
     if (!is_listing_truncated_) {
@@ -207,10 +207,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
       const Aws::S3::Model::GetObjectTaggingRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
+      const Aws::Client::ClientConfiguration& client_config) override {
     get_object_tagging_request = request;
     credentials_ = credentials;
-    client_config_ = client_config;
+    client_config_ = const_cast<Aws::Client::ClientConfiguration*>(&client_config);
     Aws::S3::Model::GetObjectTaggingResult result;
     for (const auto& tag_pair : S3_OBJECT_TAGS) {
       Aws::S3::Model::Tag tag;
@@ -224,10 +224,10 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
       const Aws::S3::Model::HeadObjectRequest& request,
       const Aws::Auth::AWSCredentials& credentials,
-      gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override {
+      const Aws::Client::ClientConfiguration& client_config) override {
     head_object_request = request;
     credentials_ = credentials;
-    client_config_ = client_config;
+    client_config_ = const_cast<Aws::Client::ClientConfiguration*>(&client_config);
 
     Aws::S3::Model::HeadObjectResult head_s3_result;
     if (!return_empty_result_) {

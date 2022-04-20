@@ -35,31 +35,31 @@ class S3ClientRequestSender : public S3RequestSender {
   std::optional<Aws::S3::Model::PutObjectResult> sendPutObjectRequest(
     const Aws::S3::Model::PutObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override;
+    const Aws::Client::ClientConfiguration& client_config) override;
   bool sendDeleteObjectRequest(
     const Aws::S3::Model::DeleteObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override;
+    const Aws::Client::ClientConfiguration& client_config) override;
   std::optional<Aws::S3::Model::GetObjectResult> sendGetObjectRequest(
     const Aws::S3::Model::GetObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override;
+    const Aws::Client::ClientConfiguration& client_config) override;
   std::optional<Aws::S3::Model::ListObjectsV2Result> sendListObjectsRequest(
     const Aws::S3::Model::ListObjectsV2Request& request,
     const Aws::Auth::AWSCredentials& credentials,
-    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override;
+    const Aws::Client::ClientConfiguration& client_config) override;
   std::optional<Aws::S3::Model::ListObjectVersionsResult> sendListVersionsRequest(
     const Aws::S3::Model::ListObjectVersionsRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override;
+    const Aws::Client::ClientConfiguration& client_config) override;
   std::optional<Aws::S3::Model::GetObjectTaggingResult> sendGetObjectTaggingRequest(
     const Aws::S3::Model::GetObjectTaggingRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override;
+    const Aws::Client::ClientConfiguration& client_config) override;
   std::optional<Aws::S3::Model::HeadObjectResult> sendHeadObjectRequest(
     const Aws::S3::Model::HeadObjectRequest& request,
     const Aws::Auth::AWSCredentials& credentials,
-    gsl::not_null<Aws::Client::ClientConfiguration*> client_config) override;
+    const Aws::Client::ClientConfiguration& client_config) override;
 };
 
 }  // namespace s3
