@@ -552,7 +552,13 @@ class HeartbeatHandler : public ServerAwareHandler {
       }
       case minifi::c2::Operation::UPDATE: {
         std::vector<std::unordered_map<std::string, std::string>> config_properties;
+        const auto prop_reader = [this](const std::string& sensitive_props) { return configuration_->getString(sensitive_props); };
+        const auto sensitive_props = minifi::Configuration::getSensitiveProperties(prop_reader);
         for (const auto& property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
+          if (ranges::find(sensitive_props, property.name) != ranges::end(sensitive_props)) {
+            continue;
+          }
+
           std::unordered_map<std::string, std::string> config_property;
           if (ranges::find(disallowed_properties, property.name) == ranges::end(disallowed_properties)) {
             config_property.emplace("propertyName", property.name);

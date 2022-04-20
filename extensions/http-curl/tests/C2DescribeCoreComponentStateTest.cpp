@@ -28,7 +28,8 @@
 
 class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
  public:
-  VerifyC2DescribeCoreComponentState() {
+  explicit VerifyC2DescribeCoreComponentState(std::atomic_bool& verified)
+    : VerifyC2Describe(verified) {
     temp_dir_ = testController.createTempDirectory();
 
     test_file_1_ = utils::file::FileUtils::concat_path(temp_dir_, "test1.txt");
@@ -62,8 +63,9 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
 
 class DescribeCoreComponentStateHandler: public HeartbeatHandler {
  public:
-  explicit DescribeCoreComponentStateHandler(std::shared_ptr<minifi::Configure> configuration)
-    : HeartbeatHandler(std::move(configuration)) {
+  explicit DescribeCoreComponentStateHandler(std::shared_ptr<minifi::Configure> configuration, std::atomic_bool& verified)
+    : HeartbeatHandler(std::move(configuration)),
+      verified_(verified) {
   }
 
   void handleHeartbeat(const rapidjson::Document&, struct mg_connection * conn) override {
@@ -86,14 +88,19 @@ class DescribeCoreComponentStateHandler: public HeartbeatHandler {
 
     assertExpectedTailFileState("2438e3c8-015a-1000-79ca-83af40ec1993", "test1.txt", "4");
     assertExpectedTailFileState("2438e3c8-015a-1000-79ca-83af40ec1994", "test2.txt", "7");
+    verified_ = true;
   }
+
+ private:
+  std::atomic_bool& verified_;
 };
 
 int main(int argc, char **argv) {
+  std::atomic_bool verified{false};
   const cmd_args args = parse_cmdline_args(argc, argv, "api/heartbeat");
-  VerifyC2DescribeCoreComponentState harness;
+  VerifyC2DescribeCoreComponentState harness(verified);
   harness.setKeyDir(args.key_dir);
-  DescribeCoreComponentStateHandler handler(harness.getConfiguration());
+  DescribeCoreComponentStateHandler handler(harness.getConfiguration(), verified);
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);
   return 0;

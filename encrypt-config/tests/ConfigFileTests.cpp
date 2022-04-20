@@ -29,27 +29,7 @@
 #include "Catch.h"
 #include "utils/file/FileUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
-
-class ConfigFileTestAccessor {
- public:
-  static std::vector<std::string> mergeProperties(std::vector<std::string> left, const std::vector<std::string>& right) {
-    return ConfigFile::mergeProperties(left, right);
-  }
-};
-
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
 using org::apache::nifi::minifi::encrypt_config::ConfigFile;
-using org::apache::nifi::minifi::encrypt_config::ConfigFileTestAccessor;
 using org::apache::nifi::minifi::Configuration;
 
 TEST_CASE("ConfigLine can be constructed from a line", "[encrypt-config][constructor]") {
@@ -203,30 +183,6 @@ TEST_CASE("ConfigFile will throw if we try to write to an invalid file name", "[
   ConfigFile test_file{std::ifstream{"resources/minifi.properties"}};
   const char* file_path = "/tmp/3915913c-b37d-4adc-b6a8-b8e36e44c639/6ede949c-12b3-4a91-8956-71bc6ab6f73e/some.file";
   REQUIRE_THROWS(test_file.writeTo(file_path));
-}
-
-TEST_CASE("ConfigFile can merge lists of property names", "[encrypt-config][mergeProperties]") {
-  using vector = std::vector<std::string>;
-
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{}, vector{}) == vector{});
-
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a"}, vector{}) == vector{"a"});
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a"}, vector{"a"}) == vector{"a"});
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a"}, vector{"b"}) == (vector{"a", "b"}));
-
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"c"}) == (vector{"a", "b", "c"}));
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"a", "b"}) == (vector{"a", "b"}));
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"a", "c"}) == (vector{"a", "b", "c"}));
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"b", "c"}) == (vector{"a", "b", "c"}));
-
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a"}, vector{" a"}) == vector{"a"});
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a"}, vector{"a "}) == vector{"a"});
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a"}, vector{" a "}) == vector{"a"});
-
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"\tc"}) == (vector{"a", "b", "c"}));
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"a\n", "b"}) == (vector{"a", "b"}));
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"a", "c\r\n"}) == (vector{"a", "b", "c"}));
-  REQUIRE(ConfigFileTestAccessor::mergeProperties(vector{"a", "b"}, vector{"b\n", "\t c"}) == (vector{"a", "b", "c"}));
 }
 
 TEST_CASE("ConfigFile can find the list of sensitive properties", "[encrypt-config][getSensitiveProperties]") {

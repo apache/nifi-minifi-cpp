@@ -14,6 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <algorithm>
+
 #include "properties/Configuration.h"
 #include "core/Property.h"
 
@@ -128,5 +130,35 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_log_compression_cached_log_max_size, gsl::make_not_null(core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_log_compression_compressed_log_max_size, gsl::make_not_null(core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())}
 };
+
+const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {Configuration::nifi_security_client_pass_phrase,
+                                                                                Configuration::nifi_rest_api_password};
+
+std::vector<std::string> Configuration::mergeProperties(std::vector<std::string> properties,
+                                                        const std::vector<std::string>& additional_properties) {
+  for (const auto& property_name : additional_properties) {
+    std::string property_name_trimmed = utils::StringUtils::trim(property_name);
+    if (!property_name_trimmed.empty()) {
+      properties.push_back(std::move(property_name_trimmed));
+    }
+  }
+
+  std::sort(properties.begin(), properties.end());
+  auto new_end = std::unique(properties.begin(), properties.end());
+  properties.erase(new_end, properties.end());
+  return properties;
+}
+
+std::vector<std::string> Configuration::getSensitiveProperties(std::function<std::optional<std::string>(const std::string&)> reader) {
+  std::vector<std::string> sensitive_properties(Configuration::DEFAULT_SENSITIVE_PROPERTIES.begin(), Configuration::DEFAULT_SENSITIVE_PROPERTIES.end());
+  if (reader) {
+    const auto additional_sensitive_props_list = reader(Configuration::nifi_sensitive_props_additional_keys);
+    if (additional_sensitive_props_list) {
+      std::vector<std::string> additional_sensitive_properties = utils::StringUtils::split(*additional_sensitive_props_list, ",");
+      return Configuration::mergeProperties(sensitive_properties, additional_sensitive_properties);
+    }
+  }
+  return sensitive_properties;
+}
 
 }  // namespace org::apache::nifi::minifi

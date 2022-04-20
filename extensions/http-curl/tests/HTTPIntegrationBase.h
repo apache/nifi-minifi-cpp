@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <atomic>
 
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
@@ -146,6 +147,10 @@ class VerifyC2Base : public HTTPIntegrationBase {
 
 class VerifyC2Describe : public VerifyC2Base {
  public:
+  explicit VerifyC2Describe(std::atomic<bool>& verified)
+    : verified_(verified) {
+  }
+
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
@@ -158,10 +163,12 @@ class VerifyC2Describe : public VerifyC2Base {
   }
 
   void runAssertions() override {
-    // This class is never used for running assertions, but we are forced to wait for DescribeManifestHandler to verifyJsonHasAgentManifest
-    // if we were to log something on finished verification, we could poll on finding it
-    std::this_thread::sleep_for(std::chrono::milliseconds(wait_time_));
+    using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
+    assert(verifyEventHappenedInPollTime(std::chrono::milliseconds(wait_time_), [&] { return verified_.load(); }));
   }
+
+ protected:
+  std::atomic<bool>& verified_;
 };
 
 class VerifyC2Update : public HTTPIntegrationBase {

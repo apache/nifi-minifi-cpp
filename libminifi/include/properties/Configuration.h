@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <mutex>
 #include <vector>
+#include <string>
 
 #include "properties/Properties.h"
 #include "utils/OptionalUtils.h"
@@ -163,6 +163,11 @@ class Configuration : public Properties {
   static constexpr const char *nifi_log_compression_compressed_log_max_size = "nifi.log.compression.compressed.log.max.size";
 
   MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
+  MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
+
+  static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
+                                                  const std::vector<std::string>& additional_properties);
+  static std::vector<std::string> getSensitiveProperties(std::function<std::optional<std::string>(const std::string&)> reader);
 };
 
 }  // namespace minifi

@@ -18,6 +18,7 @@
 
 #include "core/state/nodes/SupportedOperations.h"
 #include "core/Resource.h"
+#include "range/v3/algorithm/find.hpp"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -64,9 +65,12 @@ void SupportedOperations::addProperty(SerializedResponseNode& properties, const 
 
 SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata() const {
   std::vector<std::unordered_map<std::string, std::string>> supported_config_updates;
-  for (const auto& config_property : minifi::Configuration::CONFIGURATION_PROPERTIES) {
-    if (!update_policy_controller_ ||
-        (update_policy_controller_ && update_policy_controller_->canUpdate(std::string(config_property.name)))) {
+  for (const auto& config_property : Configuration::CONFIGURATION_PROPERTIES) {
+    auto sensitive_properties = Configuration::getSensitiveProperties(configuration_reader_);
+    if (ranges::find(sensitive_properties, config_property.name) != ranges::end(sensitive_properties)) {
+      continue;
+    }
+    if (!update_policy_controller_ || update_policy_controller_->canUpdate(std::string(config_property.name))) {
       std::unordered_map<std::string, std::string> property;
       property.emplace("propertyName", config_property.name);
       property.emplace("validator", config_property.validator->getName());
