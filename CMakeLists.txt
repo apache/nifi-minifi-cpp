@@ -117,6 +117,7 @@ option(ENABLE_AZURE "Enables Azure support." OFF)
 option(ENABLE_ENCRYPT_CONFIG "Enables build of encrypt-config binary." ON)
 option(ENABLE_SPLUNK "Enable Splunk support" OFF)
 option(ENABLE_GCP "Enable Google Cloud support" OFF)
+option(ENABLE_PROCFS "Enable ProcFs support" OFF)
 option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Ideal for systems without an up-to-date compiler." OFF)
 option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." OFF)
 option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
@@ -622,6 +623,14 @@ endif()
 ## Google Cloud Platform Extension
 if (ENABLE_ALL OR ENABLE_GCP)
 	createExtension(GCP-EXTENSIONS "GCP EXTENSIONS" "This enables Google Cloud Platform support" "extensions/gcp" "extensions/gcp/tests")
+endif()
+
+## Add the procfs extension
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	option(ENABLE_PROCFS "Enables the procfs extension." OFF)
+	if (ENABLE_ALL OR ENABLE_PROCFS)
+		createExtension(PROCFS-EXTENSIONS "PROCFS EXTENSIONS" "Enabled metrics collection from procfs" "extensions/procfs" "extensions/procfs/tests")
+	endif()
 endif()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN

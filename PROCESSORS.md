@@ -46,6 +46,7 @@
 - [MergeContent](#mergecontent)
 - [MotionDetector](#motiondetector)
 - [PerformanceDataMonitor](#performancedatamonitor)
+- [ProcFsMonitor](#procfsmonitor)
 - [PublishKafka](#publishkafka)
 - [PublishMQTT](#publishmqtt)
 - [PutAzureBlobStorage](#putazureblobstorage)
@@ -1260,7 +1261,8 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Predefined Groups||CPU<br>IO<br>Disk<br>Network<br>Memory<br>System<br>Process|Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups. (e.g. "CPU,Network")|
 |Custom PDH Counters|||Comma separated list of Windows Performance Counters to monitor. (e.g. "\\System\\Threads,\\Process(*)\\ID Process")|
 |**Output Format**|JSON|JSON<br>OpenTelemetry|The output format of the new flowfile|
-|Round to decimal places|3|integers|The number of decimal places to round the values to (blank for no rounding)|
+|**Output Compactness**|Pretty|Pretty<br>Compact|The output format of the new flowfile|
+|Round to decimal places||integers|The number of decimal places to round the values to (blank for no rounding)|
 
 #### Predefined Groups
 <ul>
@@ -1368,6 +1370,30 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|All files are routed to success|
+
+
+## ProcFsMonitor
+
+### Description
+This processor can create FlowFiles with various performance data through the proc pseudo-filesystem. (Linux only)
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                    | Default Value | Allowable Values      | Description                                                                                |
+|-------------------------|---------------|-----------------------|--------------------------------------------------------------------------------------------|
+| **Output Format**       | JSON          | JSON<br>OpenTelemetry | The output format of the new flowfile                                                      |
+| **Output Compactness**  | Pretty        | Pretty<br>Compact     | The output type of the new flowfile                                                        |
+| **Result Type**         | Absolute      | Absolute<br>Relative  | Absolute returns the current procfs values, relative calculates the usage between triggers |
+| Round to decimal places |               | integers              | The number of decimal places to round the values to (blank for no rounding)                |
+
+
+### Relationships
+
+| Name    | Description                     |
+|---------|---------------------------------|
+| success | All files are routed to success |
 
 
 ## PublishKafka
