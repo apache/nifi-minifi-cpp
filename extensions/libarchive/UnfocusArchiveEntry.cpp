@@ -25,6 +25,7 @@
 #include <memory>
 #include <string>
 #include <set>
+#include <system_error>
 
 #include "archive.h"
 #include "archive_entry.h"
@@ -181,7 +182,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
       size_t stat_ok = stat(entryMetadata.tmpFileName.c_str(), &st);
       if (stat_ok != 0) {
-        logger_->log_error("Error statting %s: %d", entryMetadata.tmpFileName, stat_ok);
+        logger_->log_error("Error statting %s: %s", entryMetadata.tmpFileName, std::system_category().default_error_condition(errno).message());
       }
       archive_entry_copy_stat(entry, &st);
     }
