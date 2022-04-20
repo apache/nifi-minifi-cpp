@@ -60,8 +60,7 @@ SMART_ENUM(DescribeOperand,
 
 SMART_ENUM(UpdateOperand,
   (CONFIGURATION, "configuration"),
-  (PROPERTIES, "properties"),
-  (C2, "c2")
+  (PROPERTIES, "properties")
 )
 
 SMART_ENUM(TransferOperand,
