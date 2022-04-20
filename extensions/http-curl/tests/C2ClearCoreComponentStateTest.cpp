@@ -100,14 +100,14 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
       }
       case FlowState::CLEAR_SENT: {
         using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-        auto tailFileRanAgainChecker = [this] {
-          const auto logContents = LogTestController::getInstance().log_output.str();
-          const std::string tailingFilePattern = "[debug] Tailing file " + file_1_location_;
-          const std::string tailFileCommittedPattern = "[trace] ProcessSession committed for TailFile1";
-          const std::vector<std::string> patterns = {tailingFilePattern, tailingFilePattern, tailFileCommittedPattern};
-          return utils::StringUtils::matchesSequence(logContents, patterns);
+        auto tail_file_ran_again_checker = [this] {
+          const auto log_contents = LogTestController::getInstance().log_output.str();
+          const std::string tailing_file_pattern = "[debug] Tailing file " + file_1_location_;
+          const std::string tail_file_committed_pattern = "[trace] ProcessSession committed for TailFile1";
+          const std::vector<std::string> patterns = {tailing_file_pattern, tailing_file_pattern, tail_file_committed_pattern};
+          return utils::StringUtils::matchesSequence(log_contents, patterns);
         };
-        assert(verifyEventHappenedInPollTime(10s, tailFileRanAgainChecker));
+        assert(verifyEventHappenedInPollTime(10s, tail_file_ran_again_checker));
         sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889347", conn);
         flow_state_ = FlowState::SECOND_DESCRIBE_SENT;
         break;
@@ -142,14 +142,15 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
       case FlowState::CLEAR_SENT:
         break;
       case FlowState::SECOND_DESCRIBE_SENT: {
-        auto clearedStateFound = [this, &root]() {
-          return root.HasMember("corecomponentstate") &&
+        const bool clearedStateFound =
+            root.HasMember("corecomponentstate") &&
             root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1993") &&
             root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1994") &&
             std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString()) == last_read_time_2_ &&
             std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1993"]["file.0.last_read_time"].GetString()) != last_read_time_1_;
-        };
-        component_cleared_successfully_ = clearedStateFound();
+        if (clearedStateFound) {
+          component_cleared_successfully_ = clearedStateFound;
+        }
         break;
       }
       default:

@@ -208,17 +208,17 @@ void ThreadPool<T>::stopTasks(const TaskId &identifier) {
   worker_queue_.remove([&] (const Worker<T>& worker) { return worker.getIdentifier() == identifier; });
 
   // also remove from delayed_worker_queue_
-  decltype(delayed_worker_queue_) newDelayedWorkerQueue;
+  decltype(delayed_worker_queue_) new_delayed_worker_queue;
   while (!delayed_worker_queue_.empty()) {
     Worker<T> task = std::move(const_cast<Worker<T>&>(delayed_worker_queue_.top()));
     delayed_worker_queue_.pop();
     if (task.getIdentifier() != identifier) {
-      newDelayedWorkerQueue.push(std::move(task));
+      new_delayed_worker_queue.push(std::move(task));
     }
   }
-  delayed_worker_queue_ = std::move(newDelayedWorkerQueue);
+  delayed_worker_queue_ = std::move(new_delayed_worker_queue);
 
-  // if tasks are progress, wait for their completion
+  // if tasks are in progress, wait for their completion
   task_run_complete_.wait(lock, [&] () {
     auto iter = running_task_ids_.find(identifier);
     return iter == running_task_ids_.end() || iter->second == 0;

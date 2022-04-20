@@ -337,7 +337,7 @@ class ThreadPool {
   std::recursive_mutex manager_mutex_;
   // thread pool name
   std::string name_;
-  // running task IDs
+  // count of running tasks by ID
   std::map<TaskId, unsigned> running_task_ids_;
   // variable to signal task running completion
   std::condition_variable task_run_complete_;
