@@ -22,6 +22,18 @@
 #include <algorithm>
 #include <iostream>
 
+#include "utils/Literals.h"
+
+#if __cpp_lib_boyer_moore_searcher < 201603L
+#include <experimental/functional>
+template<typename It, typename Hash, typename Eq>
+using boyer_moore_searcher = std::experimental::boyer_moore_searcher<It, Hash, Eq>;
+#else
+#include <functional>
+template<typename It, typename Hash, typename Eq>
+using boyer_moore_searcher = std::boyer_moore_searcher<It, Hash, Eq>;
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -49,41 +61,21 @@ uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) 
 }
 
 bool contains(const std::filesystem::path& file_path, std::string_view text_to_search) {
-  gsl_Expects(text_to_search.size() <= 8192);
+  gsl_Expects(text_to_search.size() <= 8_KiB);
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
-  std::array<char, 8192> buf1{};
-  std::array<char, 8192> buf2{};
-  gsl::span<char> left = buf1;
-  gsl::span<char> right = buf2;
+  std::array<char, 16_KiB> buf{};
 
-  const auto charat = [&](size_t idx) {
-    if (idx < left.size()) {
-      return left[idx];
-    } else if (idx < left.size() + right.size()) {
-      return right[idx - left.size()];
-    } else {
-      return '\0';
-    }
-  };
-  const auto check_range = [&](size_t start, size_t end) -> size_t {
-    for (size_t i = start; i < end; ++i) {
-      size_t j{};
-      for (j = 0; j < text_to_search.size(); ++j) {
-        if (charat(i + j) != text_to_search[j]) break;
-      }
-      if (j == text_to_search.size()) return true;
-    }
-    return false;
-  };
+  boyer_moore_searcher<const char*, std::hash<char>, std::equal_to<char>> searcher(text_to_search.begin(), text_to_search.end());
 
   std::ifstream ifs{file_path, std::ios::binary};
-  ifs.read(right.data(), gsl::narrow<std::streamsize>(right.size()));
   do {
-    std::swap(left, right);
-    ifs.read(right.data(), gsl::narrow<std::streamsize>(right.size()));
-    if (check_range(0, left.size())) return true;
+    std::copy(buf.end() - text_to_search.size(), buf.end(), buf.begin());
+    ifs.read(buf.data() + text_to_search.size(), buf.size() - text_to_search.size());
+    if (auto it = std::search(buf.begin(), buf.end(), searcher); it != buf.end()) {
+      return true;
+    }
   } while (ifs);
-  return check_range(left.size(), left.size() + right.size());
+  return std::search(buf.begin(), buf.end(), searcher) != buf.end();
 }
 
 time_t to_time_t(std::filesystem::file_time_type file_time) {
