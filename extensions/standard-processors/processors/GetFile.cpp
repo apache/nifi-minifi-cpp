@@ -25,9 +25,9 @@
 #include <queue>
 #include <map>
 #include <memory>
+#include <regex>
 #include <set>
 #include <string>
-#include <regex>
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
@@ -232,19 +232,16 @@ std::queue<std::string> GetFile::pollListing(uint64_t batch_size) {
 bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request) {
   logger_->log_trace("Checking file: %s", fullName);
 
-#ifdef WIN32
-  struct _stat64 statbuf;
-  if (_stat64(fullName.c_str(), &statbuf) != 0) {
+  std::error_code ec;
+  uint64_t file_size = std::filesystem::file_size(fullName, ec);
+  if (ec) {
+    logger_->log_error("file_size of %s: %s", fullName, ec.message());
+  }
+  const auto modifiedTime = std::filesystem::last_write_time(fullName, ec);
+  if (ec) {
+    logger_->log_error("last_write_time of %s: %s", fullName, ec.message());
     return false;
   }
-#else
-  struct stat statbuf;
-  if (stat(fullName.c_str(), &statbuf) != 0) {
-    return false;
-  }
-#endif
-  uint64_t file_size = gsl::narrow<uint64_t>(statbuf.st_size);
-  auto modifiedTime = std::chrono::system_clock::time_point() + std::chrono::seconds(gsl::narrow<uint64_t>(statbuf.st_mtime));
 
   if (request.minSize > 0 && file_size < request.minSize)
     return false;
@@ -252,7 +249,7 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   if (request.maxSize > 0 && file_size > request.maxSize)
     return false;
 
-  auto fileAge = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - modifiedTime);
+  auto fileAge = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::file_clock::now() - modifiedTime);
   if (request.minAge > 0ms && fileAge < request.minAge)
     return false;
   if (request.maxAge > 0ms && fileAge > request.maxAge)

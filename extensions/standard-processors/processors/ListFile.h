@@ -60,7 +60,7 @@ class ListFile : public core::Processor {
  private:
   struct ListedFile : public utils::ListedObject {
     [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
-      return std::chrono::time_point_cast<std::chrono::milliseconds>(utils::file::FileUtils::to_sys_time_point(last_modified_time));
+      return std::chrono::time_point_cast<std::chrono::milliseconds>(utils::file::FileUtils::to_sys(last_modified_time));
     }
 
     [[nodiscard]] std::string getKey() const override {

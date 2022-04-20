@@ -116,8 +116,9 @@ inline char get_separator(bool /*force_posix*/ = false) {
   return '/';
 }
 #endif
-time_t to_time_t(const std::filesystem::file_time_type& time);
-std::chrono::time_point<std::chrono::system_clock> to_sys_time_point(const std::filesystem::file_time_type& time);
+time_t to_time_t(std::filesystem::file_time_type time);
+
+std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type time);
 
 inline std::string normalize_path_separators(std::string path, bool force_posix = false) {
   const auto normalize_separators = [force_posix](const char c) {
@@ -161,7 +162,7 @@ inline int64_t delete_dir(const std::string &path, bool delete_files_recursively
 }
 
 inline std::chrono::time_point<std::chrono::file_clock,
-                               std::chrono::seconds> last_write_time_point(const std::string &path) {
+    std::chrono::seconds> last_write_time_point(const std::string &path) {
   std::error_code ec;
   auto result = std::filesystem::last_write_time(path, ec);
   if (ec.value() == 0) {
@@ -170,7 +171,7 @@ inline std::chrono::time_point<std::chrono::file_clock,
   return std::chrono::time_point<std::chrono::file_clock, std::chrono::seconds>{};
 }
 
-inline const std::optional<std::filesystem::file_time_type> last_write_time(const std::string &path) {
+inline std::optional<std::filesystem::file_time_type> last_write_time(const std::string &path) {
   std::error_code ec;
   auto result = std::filesystem::last_write_time(path, ec);
   if (ec.value() == 0) {
