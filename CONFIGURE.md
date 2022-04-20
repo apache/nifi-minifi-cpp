@@ -131,10 +131,6 @@ for TCP and secure HTTPS communications.
           CA Certificate: <CA cert path>
     
 ### HTTP SiteToSite Configuration
-To enable HTTPSiteToSite globally you must set the following flag to true.
-	
-    nifi.remote.input.http.enabled=true
-
 To enable HTTPSiteToSite for a remote process group.
     Remote Processing Groups:
     - name: NiFi Flow

@@ -135,7 +135,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
 
   initializeComponentMetrics();
 
-  loadC2ResponseConfiguration("nifi.c2.root.class.definitions");
+  loadC2ResponseConfiguration(Configuration::nifi_c2_root_class_definitions);
 
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (!initialized_) {

@@ -88,7 +88,6 @@ class RemoteProcessorGroupPort : public core::Processor {
         direction_(sitetosite::SEND),
         transmitting_(false),
         timeout_(0),
-        http_enabled_(false),
         bypass_rest_api_(false),
         ssl_service(nullptr),
         logger_(core::logging::LoggerFactory<RemoteProcessorGroupPort>::getLogger()) {
@@ -213,7 +212,6 @@ class RemoteProcessorGroupPort : public core::Processor {
   // rest API end point info
   std::vector<struct RPG> nifi_instances_;
 
-  bool http_enabled_;
   // http proxy
   utils::HTTPProxy proxy_;
 

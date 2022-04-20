@@ -164,7 +164,6 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     configuration->set(minifi::Configuration::nifi_c2_agent_coap_host, "127.0.0.1");
     configuration->set(minifi::Configuration::nifi_c2_agent_coap_port, new_port_str);
     configuration->set(minifi::Configuration::nifi_c2_agent_heartbeat_period, "10");
-    configuration->set(minifi::Configuration::nifi_c2_rest_listener_heartbeat_rooturi, path);
   }
 
  protected:

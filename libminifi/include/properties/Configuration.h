@@ -40,11 +40,9 @@ class Configuration : public Properties {
   static constexpr const char *nifi_volatile_repository_options = "nifi.volatile.repository.options.";
 
   // nifi.flow.configuration.file
-  static constexpr const char *nifi_version = "nifi.version";
   static constexpr const char *nifi_default_directory = "nifi.default.directory";
   static constexpr const char *nifi_flow_configuration_file = "nifi.flow.configuration.file";
   static constexpr const char *nifi_flow_configuration_encrypt = "nifi.flow.configuration.encrypt";
-  static constexpr const char *nifi_flow_configuration_file_exit_failure = "nifi.flow.configuration.file.exit.onfailure";
   static constexpr const char *nifi_flow_configuration_file_backup_update = "nifi.flow.configuration.backup.on.update";
   static constexpr const char *nifi_flow_engine_threads = "nifi.flow.engine.threads";
   static constexpr const char *nifi_flow_engine_alert_period = "nifi.flow.engine.alert.period";
@@ -70,13 +68,9 @@ class Configuration : public Properties {
   static constexpr const char *nifi_provenance_repository_max_storage_size = "nifi.provenance.repository.max.storage.size";
   static constexpr const char *nifi_provenance_repository_max_storage_time = "nifi.provenance.repository.max.storage.time";
   static constexpr const char *nifi_provenance_repository_directory_default = "nifi.provenance.repository.directory.default";
-  static constexpr const char *nifi_flowfile_repository_max_storage_size = "nifi.flowfile.repository.max.storage.size";
-  static constexpr const char *nifi_flowfile_repository_max_storage_time = "nifi.flowfile.repository.max.storage.time";
   static constexpr const char *nifi_flowfile_repository_directory_default = "nifi.flowfile.repository.directory.default";
   static constexpr const char *nifi_dbcontent_repository_directory_default = "nifi.database.content.repository.directory.default";
   static constexpr const char *nifi_remote_input_secure = "nifi.remote.input.secure";
-  static constexpr const char *nifi_remote_input_http = "nifi.remote.input.http.enabled";
-  static constexpr const char *nifi_remote_input_socket_port = "nifi.remote.input.socket.port";
   static constexpr const char *nifi_security_need_ClientAuth = "nifi.security.need.ClientAuth";
   static constexpr const char *nifi_sensitive_props_additional_keys = "nifi.sensitive.props.additional.keys";
   static constexpr const char *nifi_python_processor_dir = "nifi.python.processor.dir";
@@ -121,7 +115,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_rest_url = "nifi.c2.rest.url";
   static constexpr const char *nifi_c2_rest_url_ack = "nifi.c2.rest.url.ack";
   static constexpr const char *nifi_c2_rest_ssl_context_service = "nifi.c2.rest.ssl.context.service";
-  static constexpr const char *nifi_c2_rest_listener_heartbeat_rooturi = "nifi.c2.rest.listener.heartbeat.rooturi";
   static constexpr const char *nifi_c2_rest_heartbeat_minimize_updates = "nifi.c2.rest.heartbeat.minimize.updates";
   static constexpr const char *nifi_c2_mqtt_connector_service = "nifi.c2.mqtt.connector.service";
   static constexpr const char *nifi_c2_mqtt_heartbeat_topic = "nifi.c2.mqtt.heartbeat.topic";

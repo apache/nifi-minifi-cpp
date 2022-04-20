@@ -142,16 +142,6 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     protocol_uuid_ = value;
   }
 
-  std::string http_enabled_str;
-  if (configure_->get(Configure::nifi_remote_input_http, http_enabled_str)) {
-    http_enabled_ = utils::StringUtils::toBool(http_enabled_str).value_or(false);
-    if (http_enabled_) {
-      if (client_type_ == sitetosite::CLIENT_TYPE::RAW) {
-        logger_->log_trace("Remote Input HTTP Enabled, but raw has been suggested for %s", protocol_uuid_.to_string());
-      }
-    }
-  }
-
   std::string context_name;
   if (!context->getProperty(SSLContext.getName(), context_name) || IsNullOrEmpty(context_name)) {
     context_name = RPG_SSL_CONTEXT_SERVICE_NAME;
