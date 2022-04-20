@@ -17,50 +17,21 @@
  */
 #include <memory>
 
-#include "../../include/core/state/nodes/ProcessMetrics.h"
 #include "../../include/core/state/nodes/QueueMetrics.h"
 #include "../../include/core/state/nodes/RepositoryMetrics.h"
-#include "../../include/core/state/nodes/SystemMetrics.h"
 #include "../TestBase.h"
 #include "../Catch.h"
-#include "io/ClientSocket.h"
 #include "core/Processor.h"
 #include "core/ClassLoader.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "repository/VolatileContentRepository.h"
 #include "ProvenanceTestHelper.h"
-
-TEST_CASE("TestProcessMetrics", "[c2m1]") {
-  minifi::state::response::ProcessMetrics metrics;
-
-  REQUIRE("ProcessMetrics" == metrics.getName());
-#ifndef WIN32
-  REQUIRE(2 == metrics.serialize().size());
-
-  REQUIRE("MemoryMetrics" == metrics.serialize().at(0).name);
-  REQUIRE("CpuMetrics" == metrics.serialize().at(1).name);
-#endif
-}
-
-TEST_CASE("TestSystemMetrics", "[c2m5]") {
-  minifi::state::response::SystemInformation metrics;
-
-  REQUIRE("systeminfo" == metrics.getName());
-
-#ifndef WIN32
-  REQUIRE(2 == metrics.serialize().size());
-
-  REQUIRE("systemInfo" == metrics.serialize().at(0).name);
-  REQUIRE("identifier" == metrics.serialize().at(1).name);
-#endif
-}
 
 TEST_CASE("QueueMetricsTestNoConnections", "[c2m2]") {
   minifi::state::response::QueueMetrics metrics;
 
   REQUIRE("QueueMetrics" == metrics.getName());
 
-  REQUIRE(0 == metrics.serialize().size());
+  REQUIRE(metrics.serialize().empty());
 }
 
 TEST_CASE("QueueMetricsTestConnections", "[c2m3]") {
@@ -116,7 +87,7 @@ TEST_CASE("RepositorymetricsNoRepo", "[c2m4]") {
 
   REQUIRE("RepositoryMetrics" == metrics.getName());
 
-  REQUIRE(0 == metrics.serialize().size());
+  REQUIRE(metrics.serialize().empty());
 }
 
 TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
