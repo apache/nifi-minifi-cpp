@@ -210,6 +210,7 @@ std::optional<aws::s3::PutObjectRequestParameters> PutS3Object::buildPutS3Reques
     const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::FlowFile> &flow_file,
     const CommonProperties &common_properties) const {
+  gsl_Expects(client_config_);
   aws::s3::PutObjectRequestParameters params(common_properties.credentials, *client_config_);
   params.setClientConfig(common_properties.proxy, common_properties.endpoint_override_url);
   params.bucket = common_properties.bucket;
