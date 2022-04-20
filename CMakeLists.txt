@@ -403,11 +403,6 @@ endif()
 SET(TEST_DIR ${CMAKE_SOURCE_DIR}/libminifi/test)
 include(Extensions)
 
-if(BOOTSTRAP)
-	# display an error message for those using the bootstrap
-	message(FATAL_ERROR "Bootstrapping is no longer needed within the agent")
-endif()
-
 add_subdirectory(libminifi)
 
 createExtension(STANDARD-PROCESSORS "STANDARD PROCESSORS" "Provides standard processors" "extensions/standard-processors" "extensions/standard-processors/tests/")
