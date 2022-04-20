@@ -290,5 +290,5 @@ class MockS3RequestSender : public minifi::aws::s3::S3RequestSender {
   bool return_empty_result_ = false;
   bool is_listing_truncated_ = false;
   Aws::Auth::AWSCredentials credentials_;
-  Aws::Client::ClientConfiguration* client_config_;
+  Aws::Client::ClientConfiguration* client_config_ = nullptr;
 };
