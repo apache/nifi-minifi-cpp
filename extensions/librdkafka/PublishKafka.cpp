@@ -602,7 +602,13 @@ bool PublishKafka::configureNewConnection(const std::shared_ptr<core::ProcessCon
     }
   }
   value = "";
-  if (context->getProperty(QueueBufferMaxMessage.getName(), value) && !value.empty()) {
+  uint32_t int_val;
+  if (context->getProperty(QueueBufferMaxMessage.getName(), int_val)) {
+    if (int_val < batch_size_) {
+      throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid configuration: Batch Size cannot be larger than Queue Max Message");
+    }
+
+    value = std::to_string(int_val);
     result = rd_kafka_conf_set(conf_.get(), "queue.buffering.max.messages", value.c_str(), errstr.data(), errstr.size());
     logger_->log_debug("PublishKafka: queue.buffering.max.messages [%s]", value);
     if (result != RD_KAFKA_CONF_OK) {
