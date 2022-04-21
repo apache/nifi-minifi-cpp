@@ -26,12 +26,10 @@
 
 #if __cpp_lib_boyer_moore_searcher < 201603L
 #include <experimental/functional>
-template<typename It, typename Hash, typename Eq>
-using boyer_moore_searcher = std::experimental::boyer_moore_searcher<It, Hash, Eq>;
+using std::experimental::boyer_moore_searcher;
 #else
 #include <functional>
-template<typename It, typename Hash, typename Eq>
-using boyer_moore_searcher = std::boyer_moore_searcher<It, Hash, Eq>;
+using std::boyer_moore_searcher;
 #endif
 
 namespace org {
@@ -65,7 +63,7 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
   std::array<char, 16_KiB> buf{};
 
-  boyer_moore_searcher<const char*, std::hash<char>, std::equal_to<char>> searcher(text_to_search.begin(), text_to_search.end());
+  boyer_moore_searcher searcher(text_to_search.begin(), text_to_search.end());
 
   std::ifstream ifs{file_path, std::ios::binary};
   do {
