@@ -211,7 +211,8 @@ case "\$1" in
             exit 0;
         fi
       fi
-      echo running
+      pid=$$
+      echo ${pid} > "${pid_file}"
       exec "\${minifi_executable}"
       ;;
     status)
@@ -339,6 +340,8 @@ case "$1" in
             exit 0;
         fi
       fi
+      pid=$$
+      echo ${pid} > "${pid_file}"
       exec "${minifi_executable}"
       ;;
     status)

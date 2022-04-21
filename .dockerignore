@@ -37,7 +37,8 @@ bin/minifi
 *_repository*
 logs
 **/cmake-build-*
-docker
+docker/*
+!docker/conf
 target
 *.pyc
 *.swp

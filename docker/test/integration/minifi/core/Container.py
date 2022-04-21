@@ -64,6 +64,3 @@ class Container:
 
     def get_startup_finished_log_entry(self):
         raise NotImplementedError()
-
-    def get_log_file_path(self):
-        return None
