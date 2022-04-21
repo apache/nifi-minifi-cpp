@@ -53,10 +53,6 @@ namespace processors {
 // ExecuteProcess Class
 class ExecuteProcess : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   ExecuteProcess(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : Processor(name, uuid) {
     _redirectErrorStream = false;
@@ -64,21 +60,38 @@ class ExecuteProcess : public core::Processor {
     _processRunning = false;
     _pid = 0;
   }
-  // Destructor
   ~ExecuteProcess() override {
     if (_processRunning && _pid > 0)
       kill(_pid, SIGTERM);
   }
-  // Processor Name
-  static constexpr char const* ProcessorName = "ExecuteProcess";
-  // Supported Properties
-  static core::Property Command;
-  static core::Property CommandArguments;
-  static core::Property WorkingDir;
-  static core::Property BatchDuration;
-  static core::Property RedirectErrorStream;
-  // Supported Relationships
-  static core::Relationship Success;
+
+  EXTENSIONAPI static constexpr const char* Description = "Runs an operating system command specified by the user and writes the output of that command to a FlowFile. "
+      "If the command is expected to be long-running, the Processor can output the partial data on a specified interval. "
+      "When this option is used, the output is expected to be in textual format, as it typically does not make sense to split binary data on arbitrary time-based intervals.";
+
+  EXTENSIONAPI static core::Property Command;
+  EXTENSIONAPI static core::Property CommandArguments;
+  EXTENSIONAPI static core::Property WorkingDir;
+  EXTENSIONAPI static core::Property BatchDuration;
+  EXTENSIONAPI static core::Property RedirectErrorStream;
+  static auto properties() {
+    return std::array{
+      Command,
+      CommandArguments,
+      WorkingDir,
+      BatchDuration,
+      RedirectErrorStream
+    };
+  }
+
+  EXTENSIONAPI static core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
  public:
   // OnTrigger method, implemented by NiFi ExecuteProcess

@@ -41,6 +41,7 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "Bookmark.h"
 #include "utils/Deleters.h"
@@ -59,11 +60,9 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// ConsumeWindowsEventLog
-const std::string ConsumeWindowsEventLog::ProcessorName("ConsumeWindowsEventLog");
 const int EVT_NEXT_TIMEOUT_MS = 500;
 
-core::Property ConsumeWindowsEventLog::Channel(
+const core::Property ConsumeWindowsEventLog::Channel(
   core::PropertyBuilder::createProperty("Channel")->
   isRequired(true)->
   withDefaultValue("System")->
@@ -71,7 +70,7 @@ core::Property ConsumeWindowsEventLog::Channel(
   supportsExpressionLanguage(true)->
   build());
 
-core::Property ConsumeWindowsEventLog::Query(
+const core::Property ConsumeWindowsEventLog::Query(
   core::PropertyBuilder::createProperty("Query")->
   isRequired(true)->
   withDefaultValue("*")->
@@ -79,7 +78,7 @@ core::Property ConsumeWindowsEventLog::Query(
   supportsExpressionLanguage(true)->
   build());
 
-core::Property ConsumeWindowsEventLog::MaxBufferSize(
+const core::Property ConsumeWindowsEventLog::MaxBufferSize(
   core::PropertyBuilder::createProperty("Max Buffer Size")->
   isRequired(true)->
   withDefaultValue<core::DataSizeValue>("1 MB")->
@@ -89,7 +88,7 @@ core::Property ConsumeWindowsEventLog::MaxBufferSize(
   build());
 
 // !!! This property is obsolete since now subscription is not used, but leave since it might be is used already in config.yml.
-core::Property ConsumeWindowsEventLog::InactiveDurationToReconnect(
+const core::Property ConsumeWindowsEventLog::InactiveDurationToReconnect(
   core::PropertyBuilder::createProperty("Inactive Duration To Reconnect")->
   isRequired(true)->
   withDefaultValue<core::TimePeriodValue>("10 min")->
@@ -100,7 +99,7 @@ core::Property ConsumeWindowsEventLog::InactiveDurationToReconnect(
     " Setting no duration, e.g. '0 ms' disables auto-reconnection.")->
   build());
 
-core::Property ConsumeWindowsEventLog::IdentifierMatcher(
+const core::Property ConsumeWindowsEventLog::IdentifierMatcher(
   core::PropertyBuilder::createProperty("Identifier Match Regex")->
   isRequired(false)->
   withDefaultValue(".*Sid")->
@@ -108,14 +107,14 @@ core::Property ConsumeWindowsEventLog::IdentifierMatcher(
   build());
 
 
-core::Property ConsumeWindowsEventLog::IdentifierFunction(
+const core::Property ConsumeWindowsEventLog::IdentifierFunction(
   core::PropertyBuilder::createProperty("Apply Identifier Function")->
   isRequired(false)->
   withDefaultValue<bool>(true)->
   withDescription("If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\\USERNAME associated with that ID")->
   build());
 
-core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
+const core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
   core::PropertyBuilder::createProperty("Resolve Metadata in Attributes")->
   isRequired(false)->
   withDefaultValue<bool>(true)->
@@ -123,14 +122,14 @@ core::Property ConsumeWindowsEventLog::ResolveAsAttributes(
   build());
 
 
-core::Property ConsumeWindowsEventLog::EventHeaderDelimiter(
+const core::Property ConsumeWindowsEventLog::EventHeaderDelimiter(
   core::PropertyBuilder::createProperty("Event Header Delimiter")->
   isRequired(false)->
   withDescription("If set, the chosen delimiter will be used in the Event output header. Otherwise, a colon followed by spaces will be used.")->
   build());
 
 
-core::Property ConsumeWindowsEventLog::EventHeader(
+const core::Property ConsumeWindowsEventLog::EventHeader(
   core::PropertyBuilder::createProperty("Event Header")->
   isRequired(false)->
   withDefaultValue("LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,"
@@ -139,7 +138,7 @@ core::Property ConsumeWindowsEventLog::EventHeader(
       "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")->
   build());
 
-core::Property ConsumeWindowsEventLog::OutputFormat(
+const core::Property ConsumeWindowsEventLog::OutputFormat(
   core::PropertyBuilder::createProperty("Output Format")->
   isRequired(true)->
   withDefaultValue(Both)->
@@ -147,7 +146,7 @@ core::Property ConsumeWindowsEventLog::OutputFormat(
   withDescription("Set the output format type. In case \'Both\' is selected the processor generates two flow files for every event captured in format XML and Plaintext")->
   build());
 
-core::Property ConsumeWindowsEventLog::JSONFormat(
+const core::Property ConsumeWindowsEventLog::JSONFormat(
   core::PropertyBuilder::createProperty("JSON Format")->
   isRequired(true)->
   withDefaultValue(JSONSimple)->
@@ -155,28 +154,28 @@ core::Property ConsumeWindowsEventLog::JSONFormat(
   withDescription("Set the json format type. Only applicable if Output Format is set to 'JSON'")->
   build());
 
-core::Property ConsumeWindowsEventLog::BatchCommitSize(
+const core::Property ConsumeWindowsEventLog::BatchCommitSize(
   core::PropertyBuilder::createProperty("Batch Commit Size")->
   isRequired(false)->
   withDefaultValue<uint64_t>(1000U)->
   withDescription("Maximum number of Events to consume and create to Flow Files from before committing.")->
   build());
 
-core::Property ConsumeWindowsEventLog::BookmarkRootDirectory(
+const core::Property ConsumeWindowsEventLog::BookmarkRootDirectory(
   core::PropertyBuilder::createProperty("State Directory")->
   isRequired(false)->
   withDefaultValue("CWELState")->
   withDescription("DEPRECATED. Only use it for state migration from the state file, supplying the legacy state directory.")->
   build());
 
-core::Property ConsumeWindowsEventLog::ProcessOldEvents(
+const core::Property ConsumeWindowsEventLog::ProcessOldEvents(
   core::PropertyBuilder::createProperty("Process Old Events")->
   isRequired(true)->
   withDefaultValue<bool>(false)->
   withDescription("This property defines if old events (which are created before first time server is started) should be processed.")->
   build());
 
-core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
+const core::Relationship ConsumeWindowsEventLog::Success("success", "Relationship for successfully consumed events.");
 
 ConsumeWindowsEventLog::ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid)
   : core::Processor(name, uuid),
@@ -211,14 +210,8 @@ ConsumeWindowsEventLog::~ConsumeWindowsEventLog() {
 }
 
 void ConsumeWindowsEventLog::initialize() {
-  //! Set the supported properties
-  setSupportedProperties({
-     Channel, Query, MaxBufferSize, InactiveDurationToReconnect, IdentifierMatcher, IdentifierFunction, ResolveAsAttributes,
-     EventHeaderDelimiter, EventHeader, OutputFormat, JSONFormat, BatchCommitSize, BookmarkRootDirectory, ProcessOldEvents
-  });
-
-  //! Set the supported relationships
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 bool ConsumeWindowsEventLog::insertHeaderName(wel::METADATA_NAMES &header, const std::string &key, const std::string & value) const {
@@ -750,7 +743,7 @@ void ConsumeWindowsEventLog::LogWindowsError(std::string error) const {
   LocalFree(lpMsg);
 }
 
-REGISTER_RESOURCE(ConsumeWindowsEventLog, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
+REGISTER_RESOURCE(ConsumeWindowsEventLog, Processor);
 
 }  // namespace processors
 }  // namespace minifi

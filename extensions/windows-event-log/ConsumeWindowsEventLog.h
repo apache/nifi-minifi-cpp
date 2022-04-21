@@ -59,52 +59,59 @@ struct EventRender {
 
 class Bookmark;
 
-//! ConsumeWindowsEventLog Class
 class ConsumeWindowsEventLog : public core::Processor {
  public:
-  //! Constructor
-  /*!
-  * Create a new processor
-  */
   explicit ConsumeWindowsEventLog(const std::string& name, const utils::Identifier& uuid = {});
 
-  //! Destructor
   virtual ~ConsumeWindowsEventLog();
 
-  //! Processor Name
-  EXTENSIONAPI static const std::string ProcessorName;
+  EXTENSIONAPI static constexpr const char* Description = "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.";
 
-  //! Supported Properties
-  EXTENSIONAPI static core::Property Channel;
-  EXTENSIONAPI static core::Property Query;
-  EXTENSIONAPI static core::Property RenderFormatXML;
-  EXTENSIONAPI static core::Property MaxBufferSize;
-  EXTENSIONAPI static core::Property InactiveDurationToReconnect;
-  EXTENSIONAPI static core::Property IdentifierMatcher;
-  EXTENSIONAPI static core::Property IdentifierFunction;
-  EXTENSIONAPI static core::Property ResolveAsAttributes;
-  EXTENSIONAPI static core::Property EventHeaderDelimiter;
-  EXTENSIONAPI static core::Property EventHeader;
-  EXTENSIONAPI static core::Property OutputFormat;
-  EXTENSIONAPI static core::Property JSONFormat;
-  EXTENSIONAPI static core::Property BatchCommitSize;
-  EXTENSIONAPI static core::Property BookmarkRootDirectory;
-  EXTENSIONAPI static core::Property ProcessOldEvents;
+  EXTENSIONAPI static const core::Property Channel;
+  EXTENSIONAPI static const core::Property Query;
+  EXTENSIONAPI static const core::Property MaxBufferSize;
+  EXTENSIONAPI static const core::Property InactiveDurationToReconnect;
+  EXTENSIONAPI static const core::Property IdentifierMatcher;
+  EXTENSIONAPI static const core::Property IdentifierFunction;
+  EXTENSIONAPI static const core::Property ResolveAsAttributes;
+  EXTENSIONAPI static const core::Property EventHeaderDelimiter;
+  EXTENSIONAPI static const core::Property EventHeader;
+  EXTENSIONAPI static const core::Property OutputFormat;
+  EXTENSIONAPI static const core::Property JSONFormat;
+  EXTENSIONAPI static const core::Property BatchCommitSize;
+  EXTENSIONAPI static const core::Property BookmarkRootDirectory;
+  EXTENSIONAPI static const core::Property ProcessOldEvents;
+  static auto properties() {
+    return std::array{
+      Channel,
+      Query,
+      MaxBufferSize,
+      InactiveDurationToReconnect,
+      IdentifierMatcher,
+      IdentifierFunction,
+      ResolveAsAttributes,
+      EventHeaderDelimiter,
+      EventHeader,
+      OutputFormat,
+      JSONFormat,
+      BatchCommitSize,
+      BookmarkRootDirectory,
+      ProcessOldEvents
+    };
+  }
 
-  //! Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
 
- public:
-  /**
-  * Function that's executed when the processor is scheduled.
-  * @param context process context.
-  * @param sessionFactory process session factory that is used when creating
-  * ProcessSession objects.
-  */
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  //! OnTrigger method, implemented by NiFi ConsumeWindowsEventLog
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  //! Initialize, overwrite by NiFi ConsumeWindowsEventLog
   void initialize(void) override;
   void notifyStop() override;
 
@@ -133,20 +140,11 @@ class ConsumeWindowsEventLog : public core::Processor {
     const decltype(std::chrono::steady_clock::now()) time_ = std::chrono::steady_clock::now();
   };
 
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
   bool commitAndSaveBookmark(const std::wstring &bookmarkXml, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
   std::tuple<size_t, std::wstring> processEventLogs(const std::shared_ptr<core::ProcessContext> &context,
     const std::shared_ptr<core::ProcessSession> &session, const EVT_HANDLE& event_query_results);
 
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_;
   core::CoreComponentStateManager* state_manager_;
   wel::METADATA_NAMES header_names_;

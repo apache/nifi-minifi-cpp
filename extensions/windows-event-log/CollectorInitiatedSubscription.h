@@ -1,7 +1,4 @@
 /**
- * @file CollectorInitiatedSubscription.h
- * CollectorInitiatedSubscription class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -35,39 +32,24 @@
 #include "core/ProcessSession.h"
 #include "SupportedProperty.h"
 
+namespace org::apache::nifi::minifi::processors {
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-//! CollectorInitiatedSubscription Class
 class CollectorInitiatedSubscription : public core::Processor {
  public:
-  //! Constructor
-  /*!
-  * Create a new processor
-  */
   explicit CollectorInitiatedSubscription(const std::string& name, const utils::Identifier& uuid = {});
-
-  //! Destructor
   virtual ~CollectorInitiatedSubscription() = default;
 
-  //! Processor Name
-  static const std::string ProcessorName;
+  EXTENSIONAPI static constexpr const char* Description = "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
- public:
-  /**
-  * Function that's executed when the processor is scheduled.
-  * @param context process context.
-  * @param sessionFactory process session factory that is used when creating
-  * ProcessSession objects.
-  */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  //! OnTrigger method, implemented by NiFi CollectorInitiatedSubscription
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  //! Initialize, overwrite by NiFi CollectorInitiatedSubscription
   void initialize(void) override;
   void notifyStop() override;
 
@@ -107,8 +89,4 @@ class CollectorInitiatedSubscription : public core::Processor {
   SupportedProperty<uint64_t> inactiveDurationToReconnect_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

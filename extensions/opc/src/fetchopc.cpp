@@ -1,6 +1,4 @@
 /**
- * FetchOPC class definition
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,71 +18,20 @@
 #include <memory>
 #include <string>
 #include <list>
-#include <map>
-#include <thread>
 
 #include "opc.h"
 #include "fetchopc.h"
-#include "utils/ByteArrayCallback.h"
-#include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
-#include "controllers/SSLContextService.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "utils/Id.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-  core::Property FetchOPCProcessor::NodeID(
-      core::PropertyBuilder::createProperty("Node ID")
-      ->withDescription("Specifies the ID of the root node to traverse")
-      ->isRequired(true)->build());
-
-
-  core::Property FetchOPCProcessor::NodeIDType(
-      core::PropertyBuilder::createProperty("Node ID type")
-      ->withDescription("Specifies the type of the provided node ID")
-      ->isRequired(true)
-      ->withAllowableValues<std::string>({"Path", "Int", "String"})->build());
-
-  core::Property FetchOPCProcessor::NameSpaceIndex(
-      core::PropertyBuilder::createProperty("Namespace index")
-      ->withDescription("The index of the namespace. Used only if node ID type is not path.")
-      ->withDefaultValue<int32_t>(0)->build());
-
-  core::Property FetchOPCProcessor::MaxDepth(
-      core::PropertyBuilder::createProperty("Max depth")
-      ->withDescription("Specifiec the max depth of browsing. 0 means unlimited.")
-      ->withDefaultValue<uint64_t>(0)->build());
-
-  core::Property FetchOPCProcessor::Lazy(
-      core::PropertyBuilder::createProperty("Lazy mode")
-      ->withDescription("Only creates flowfiles from nodes with new timestamp from the server.")
-      ->withDefaultValue<std::string>("Off")
-      ->isRequired(true)
-      ->withAllowableValues<std::string>({"On", "Off"})
-      ->build());
-
-  core::Relationship FetchOPCProcessor::Success("success", "Successfully retrieved OPC-UA nodes");
-  core::Relationship FetchOPCProcessor::Failure("failure", "Retrieved OPC-UA nodes where value cannot be extracted (only if enabled)");
-
+namespace org::apache::nifi::minifi::processors {
 
   void FetchOPCProcessor::initialize() {
-    // Set the supported properties
-    std::set<core::Property> fetchOPCProperties = {OPCServerEndPoint, NodeID, NodeIDType, NameSpaceIndex, MaxDepth, Lazy};
-    std::set<core::Property> baseOPCProperties = BaseOPCProcessor::getSupportedProperties();
-    fetchOPCProperties.insert(baseOPCProperties.begin(), baseOPCProperties.end());
-    setSupportedProperties(fetchOPCProperties);
-
-    // Set the supported relationships
-    setSupportedRelationships({Success, Failure});
+    setSupportedProperties(properties());
+    setSupportedRelationships(relationships());
   }
 
   void FetchOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
@@ -234,10 +181,4 @@ namespace processors {
     session->transfer(flowFile, Success);
   }
 
-REGISTER_RESOURCE(FetchOPCProcessor, "Fetches OPC-UA node");
-
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

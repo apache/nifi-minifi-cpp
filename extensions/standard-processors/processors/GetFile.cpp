@@ -26,7 +26,6 @@
 #include <map>
 #include <memory>
 #include <regex>
-#include <set>
 #include <string>
 
 #include "utils/StringUtils.h"
@@ -34,6 +33,7 @@
 #include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "utils/FileReaderCallback.h"
@@ -43,67 +43,51 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::processors {
 
-core::Property GetFile::BatchSize(
+const core::Property GetFile::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")->withDescription("The maximum number of files to pull in each iteration")->withDefaultValue<uint32_t>(10)->build());
 
-core::Property GetFile::Directory(
+const core::Property GetFile::Directory(
     core::PropertyBuilder::createProperty("Input Directory")->withDescription("The input directory from which to pull files")->isRequired(true)->supportsExpressionLanguage(true)
         ->build());
 
-core::Property GetFile::IgnoreHiddenFile(
+const core::Property GetFile::IgnoreHiddenFile(
     core::PropertyBuilder::createProperty("Ignore Hidden Files")->withDescription("Indicates whether or not hidden files should be ignored")->withDefaultValue<bool>(true)->build());
 
-core::Property GetFile::KeepSourceFile(
+const core::Property GetFile::KeepSourceFile(
     core::PropertyBuilder::createProperty("Keep Source File")->withDescription("If true, the file is not deleted after it has been copied to the Content Repository")->withDefaultValue<bool>(false)
         ->build());
 
-core::Property GetFile::MaxAge(
+const core::Property GetFile::MaxAge(
     core::PropertyBuilder::createProperty("Maximum File Age")->withDescription("The maximum age that a file must be in order to be pulled;"
                                                                                " any file older than this amount of time (according to last modification date) will be ignored")
         ->withDefaultValue<core::TimePeriodValue>("0 sec")->build());
 
-core::Property GetFile::MinAge(
+const core::Property GetFile::MinAge(
     core::PropertyBuilder::createProperty("Minimum File Age")->withDescription("The minimum age that a file must be in order to be pulled;"
                                                                                " any file younger than this amount of time (according to last modification date) will be ignored")
         ->withDefaultValue<core::TimePeriodValue>("0 sec")->build());
 
-core::Property GetFile::MaxSize(
+const core::Property GetFile::MaxSize(
     core::PropertyBuilder::createProperty("Maximum File Size")->withDescription("The maximum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")->build());
 
-core::Property GetFile::MinSize(
+const core::Property GetFile::MinSize(
     core::PropertyBuilder::createProperty("Minimum File Size")->withDescription("The minimum size that a file can be in order to be pulled")->withDefaultValue<core::DataSizeValue>("0 B")->build());
 
-core::Property GetFile::PollInterval(
+const core::Property GetFile::PollInterval(
     core::PropertyBuilder::createProperty("Polling Interval")->withDescription("Indicates how long to wait before performing a directory listing")->withDefaultValue<core::TimePeriodValue>("0 sec")
         ->build());
 
-core::Property GetFile::Recurse(
+const core::Property GetFile::Recurse(
     core::PropertyBuilder::createProperty("Recurse Subdirectories")->withDescription("Indicates whether or not to pull files from subdirectories")->withDefaultValue<bool>(true)->build());
 
-core::Property GetFile::FileFilter(
+const core::Property GetFile::FileFilter(
     core::PropertyBuilder::createProperty("File Filter")->withDescription("Only files whose names match the given regular expression will be picked up")->withDefaultValue("[^\\.].*")->build());
 
-core::Relationship GetFile::Success("success", "All files are routed to success");
+const core::Relationship GetFile::Success("success", "All files are routed to success");
 
 void GetFile::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(BatchSize);
-  properties.insert(Directory);
-  properties.insert(IgnoreHiddenFile);
-  properties.insert(KeepSourceFile);
-  properties.insert(MaxAge);
-  properties.insert(MinAge);
-  properties.insert(MaxSize);
-  properties.insert(MinSize);
-  properties.insert(PollInterval);
-  properties.insert(Recurse);
-  properties.insert(FileFilter);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -285,6 +269,6 @@ int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::Res
   return 0;
 }
 
-REGISTER_RESOURCE(GetFile, "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.");
+REGISTER_RESOURCE(GetFile, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

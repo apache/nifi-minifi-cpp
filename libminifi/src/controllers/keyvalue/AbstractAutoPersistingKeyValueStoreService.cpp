@@ -16,24 +16,14 @@
  */
 
 #include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
+
 #include <cinttypes>
+
+#include "core/PropertyBuilder.h"
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
-
-core::Property AbstractAutoPersistingKeyValueStoreService::AlwaysPersist(
-    core::PropertyBuilder::createProperty("Always Persist")->withDescription("Persist every change instead of persisting it periodically.")
-        ->isRequired(false)->withDefaultValue<bool>(false)->build());
-core::Property AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterval(
-    core::PropertyBuilder::createProperty("Auto Persistence Interval")->withDescription("The interval of the periodic task persisting all values. "
-                                                                                        "Only used if Always Persist is false. "
-                                                                                        "If set to 0 seconds, auto persistence will be disabled.")
-        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("1 min")->build());
+namespace org::apache::nifi::minifi::controllers {
 
 AbstractAutoPersistingKeyValueStoreService::AbstractAutoPersistingKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
@@ -56,11 +46,6 @@ void AbstractAutoPersistingKeyValueStoreService::stopPersistingThread() {
   }
 }
 
-void AbstractAutoPersistingKeyValueStoreService::initialize() {
-  ControllerService::initialize();
-  updateSupportedProperties({AlwaysPersist, AutoPersistenceInterval});
-}
-
 void AbstractAutoPersistingKeyValueStoreService::onEnable() {
   std::unique_lock<std::mutex> lock(persisting_mutex_);
 
@@ -70,13 +55,13 @@ void AbstractAutoPersistingKeyValueStoreService::onEnable() {
   }
 
   std::string value;
-  if (!getProperty(AlwaysPersist.getName(), value)) {
+  if (!getProperty(AlwaysPersistPropertyName, value)) {
     logger_->log_error("Always Persist attribute is missing or invalid");
   } else {
     always_persist_ = utils::StringUtils::toBool(value).value_or(false);
   }
   core::TimePeriodValue auto_persistence_interval;
-  if (!getProperty(AutoPersistenceInterval.getName(), auto_persistence_interval)) {
+  if (!getProperty(AutoPersistenceIntervalPropertyName, auto_persistence_interval)) {
     logger_->log_error("Auto Persistence Interval attribute is missing or invalid");
   } else {
     auto_persistence_interval_ = auto_persistence_interval.getMilliseconds();
@@ -115,8 +100,4 @@ void AbstractAutoPersistingKeyValueStoreService::persistingThreadFunc() {
   }
 }
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

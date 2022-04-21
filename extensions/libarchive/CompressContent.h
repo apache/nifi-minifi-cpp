@@ -48,33 +48,45 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// CompressContent Class
 class CompressContent : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit CompressContent(const std::string& name, const utils::Identifier& uuid = {})
     : core::Processor(name, uuid)
     , updateFileName_(false)
     , encapsulateInTar_(false) {
   }
-  // Destructor
   ~CompressContent() override = default;
-  // Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "CompressContent";
-  // Supported Properties
-  EXTENSIONAPI static core::Property CompressMode;
-  EXTENSIONAPI static core::Property CompressLevel;
-  EXTENSIONAPI static core::Property CompressFormat;
-  EXTENSIONAPI static core::Property UpdateFileName;
-  EXTENSIONAPI static core::Property EncapsulateInTar;
-  EXTENSIONAPI static core::Property BatchSize;
 
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Failure;
-  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static constexpr const char* Description = "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm "
+      "and updates the mime.type attribute as appropriate";
+
+  EXTENSIONAPI static const core::Property CompressMode;
+  EXTENSIONAPI static const core::Property CompressLevel;
+  EXTENSIONAPI static const core::Property CompressFormat;
+  EXTENSIONAPI static const core::Property UpdateFileName;
+  EXTENSIONAPI static const core::Property EncapsulateInTar;
+  EXTENSIONAPI static const core::Property BatchSize;
+  static auto properties() {
+    return std::array{
+      CompressMode,
+      CompressLevel,
+      CompressFormat,
+      UpdateFileName,
+      EncapsulateInTar,
+      BatchSize
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   static const std::string TAR_EXT;
 
@@ -158,10 +170,6 @@ class CompressContent : public core::Processor {
   static std::string toMimeType(io::CompressionFormat format);
 
   void processFlowFile(const std::shared_ptr<core::FlowFile>& flowFile, const std::shared_ptr<core::ProcessSession>& session);
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CompressContent>::getLogger();
   int compressLevel_{};

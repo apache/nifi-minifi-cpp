@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,12 +23,7 @@
 #include "core/controller/ControllerService.h"
 #include "data/DatabaseConnectors.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
-namespace controllers {
+namespace org::apache::nifi::minifi::sql::controllers {
 
 /**
  * Purpose and Justification: Controller services function as a layerable way to provide
@@ -55,6 +49,7 @@ class DatabaseService : public core::controller::ControllerService {
    * Parameters needed.
    */
   EXTENSIONAPI static core::Property ConnectionString;
+  static auto properties() { return std::array{ConnectionString}; }
 
   void initialize() override;
 
@@ -89,9 +84,4 @@ class DatabaseService : public core::controller::ControllerService {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<DatabaseService>::getLogger();
 };
 
-} /* namespace controllers */
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql::controllers

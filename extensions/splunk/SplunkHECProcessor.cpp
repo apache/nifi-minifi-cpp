@@ -17,34 +17,14 @@
 
 #include "SplunkHECProcessor.h"
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 #include "client/HTTPClient.h"
 #include "utils/HTTPClient.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 
-const core::Property SplunkHECProcessor::Hostname(core::PropertyBuilder::createProperty("Hostname")
-    ->withDescription("The ip address or hostname of the Splunk server.")
-    ->isRequired(true)->build());
-
-const core::Property SplunkHECProcessor::Port(core::PropertyBuilder::createProperty("Port")
-    ->withDescription("The HTTP Event Collector HTTP Port Number.")
-    ->withDefaultValue<int>(8088, core::StandardValidators::get().PORT_VALIDATOR)->isRequired(true)->build());
-
-const core::Property SplunkHECProcessor::Token(core::PropertyBuilder::createProperty("Token")
-    ->withDescription("HTTP Event Collector token starting with the string Splunk. For example \'Splunk 1234578-abcd-1234-abcd-1234abcd\'")
-    ->isRequired(true)->build());
-
-const core::Property SplunkHECProcessor::SplunkRequestChannel(core::PropertyBuilder::createProperty("Splunk Request Channel")
-    ->withDescription("Identifier of the used request channel.")->isRequired(true)->build());
-
-const core::Property SplunkHECProcessor::SSLContext(core::PropertyBuilder::createProperty("SSL Context Service")
-    ->withDescription("The SSL Context Service used to provide client certificate "
-                      "information for TLS/SSL (https) connections.")
-    ->isRequired(false)->withExclusiveProperty("Hostname", "^http:.*$")
-    ->asType<minifi::controllers::SSLContextService>()->build());
-
 void SplunkHECProcessor::initialize() {
-  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel});
+  setSupportedProperties(properties());
 }
 
 void SplunkHECProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {

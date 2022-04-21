@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,24 +15,21 @@
  * limitations under the License.
  */
 
+#include "DatabaseContentRepository.h"
+
 #include <memory>
 #include <string>
 #include <utility>
 
-#include "DatabaseContentRepository.h"
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "RocksDbStream.h"
 #include "utils/gsl.h"
 #include "Exception.h"
+#include "database/RocksDbUtils.h"
 #include "database/StringAppender.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configure> &configuration) {
   std::string value;
@@ -45,7 +41,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");
 
-  auto set_db_opts = [encrypted_env] (internal::Writable<rocksdb::DBOptions>& db_opts) {
+  auto set_db_opts = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);
     db_opts.set(&rocksdb::DBOptions::use_direct_reads, true);
@@ -56,7 +52,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
       db_opts.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
     }
   };
-  auto set_cf_opts = [] (internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts){
+  auto set_cf_opts = [] (minifi::internal::Writable<rocksdb::ColumnFamilyOptions>& cf_opts){
     cf_opts.set(&rocksdb::ColumnFamilyOptions::merge_operator, std::make_shared<StringAppender>(), StringAppender::Eq{});
     cf_opts.set<size_t>(&rocksdb::ColumnFamilyOptions::max_successive_merges, 0);
   };
@@ -182,11 +178,6 @@ std::shared_ptr<io::BaseStream> DatabaseContentRepository::write(const minifi::R
   return std::make_shared<io::RocksDbStream>(claim.getContentFullPath(), gsl::make_not_null<minifi::internal::RocksDatabase*>(db_.get()), true, batch);
 }
 
-REGISTER_INTERNAL_RESOURCE_AS(DatabaseContentRepository, ("DatabaseContentRepository", "databasecontentrepository"));
+REGISTER_RESOURCE_AS(DatabaseContentRepository, InternalResource, ("DatabaseContentRepository", "databasecontentrepository"));
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::repository

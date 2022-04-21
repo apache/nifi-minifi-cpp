@@ -24,6 +24,7 @@
 #include "core/Resource.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "../ProcFsJsonSerialization.h"
 #include "utils/JsonCallback.h"
 #include "utils/OpenTelemetryLogDataModelUtils.h"
@@ -59,8 +60,8 @@ const core::Property ProcFsMonitor::ResultRelativenessProperty(
 
 
 void ProcFsMonitor::initialize() {
-  setSupportedProperties({OutputFormatProperty, OutputCompactnessProperty, DecimalPlaces, ResultRelativenessProperty});
-  setSupportedRelationships({ProcFsMonitor::Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ProcFsMonitor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -374,6 +375,6 @@ void ProcFsMonitor::refreshMembers(std::vector<std::pair<std::string, CpuStatDat
   last_trigger_ = std::chrono::steady_clock::now();
 }
 
-REGISTER_RESOURCE(ProcFsMonitor, "This processor can create FlowFiles with various performance data through the proc pseudo-filesystem. (Linux only)");
+REGISTER_RESOURCE(ProcFsMonitor, Processor);
 
 }  // namespace org::apache::nifi::minifi::extensions::procfs

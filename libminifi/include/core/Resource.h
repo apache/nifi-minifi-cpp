@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
-#define LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -32,11 +30,7 @@
 #include "utils/OptionalUtils.h"
 #include "utils/Macro.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 #define MKSOC(x) #x
 #define MAKESTRING(x) MKSOC(x)
@@ -49,23 +43,23 @@ static inline ClassLoader& getClassLoader() {
 #endif
 }
 
-template<class T>
+template<typename Class, ResourceType Type>
 class StaticClassType {
  public:
-  StaticClassType(const std::string& name, const std::optional<std::string>& description, const std::vector<std::string>& construction_names)
-      : name_(name), construction_names_(construction_names) {
-    // Notify when the static member is created
-    if (description) {
-      minifi::AgentDocs::putDescription(name, description.value());
-    }
-    for (const auto& construction_name : construction_names_) {
+  StaticClassType(const std::string& class_name, const std::vector<std::string>& construction_names)
+      : name_(class_name), construction_names_(construction_names) {
 #ifdef MODULE_NAME
-      auto factory = std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>(MAKESTRING(MODULE_NAME)));
+      auto module_name = MAKESTRING(MODULE_NAME);
 #else
-      auto factory = std::unique_ptr<ObjectFactory>(new DefautObjectFactory<T>("minifi-system"));
+      auto module_name = "minifi-system";
 #endif
+
+    for (const auto& construction_name : construction_names_) {
+      auto factory = std::unique_ptr<ObjectFactory>(new DefautObjectFactory<Class>(module_name));
       getClassLoader().registerClass(construction_name, std::move(factory));
     }
+
+    minifi::AgentDocs::createClassDescription<Class, Type>(module_name, class_name);
   }
 
   ~StaticClassType() {
@@ -74,8 +68,8 @@ class StaticClassType {
     }
   }
 
-  static StaticClassType& get(const std::string& name, const std::optional<std::string> &description, const std::vector<std::string>& construction_names) {
-    static StaticClassType instance(name, description, construction_names);
+  static const StaticClassType& get(const std::string& name, const std::vector<std::string>& construction_names) {
+    static const StaticClassType instance(name, construction_names);
     return instance;
   }
 
@@ -86,24 +80,10 @@ class StaticClassType {
 
 #define MAKE_INIT_LIST(...) {FOR_EACH(IDENTITY, COMMA, (__VA_ARGS__))}
 
+#define REGISTER_RESOURCE(CLASSNAME, TYPE) \
+        static const auto& CLASSNAME##_registrar = core::StaticClassType<CLASSNAME, minifi::ResourceType::TYPE>::get(#CLASSNAME, {#CLASSNAME})
 
-#define REGISTER_RESOURCE(CLASSNAME, DESC) \
-        static auto& CLASSNAME##_registrar = core::StaticClassType<CLASSNAME>::get(#CLASSNAME, DESC, {#CLASSNAME})
+#define REGISTER_RESOURCE_AS(CLASSNAME, TYPE, NAMES) \
+        static const auto& CLASSNAME##_registrar = core::StaticClassType<CLASSNAME, minifi::ResourceType::TYPE>::get(#CLASSNAME, MAKE_INIT_LIST NAMES)
 
-#define REGISTER_RESOURCE_AS(CLASSNAME, DESC, NAMES) \
-        static auto& CLASSNAME##_registrar = core::StaticClassType<CLASSNAME>::get(#CLASSNAME, DESC, MAKE_INIT_LIST NAMES)
-
-#define REGISTER_INTERNAL_RESOURCE(CLASSNAME) \
-        static auto& CLASSNAME##_registrar = core::StaticClassType<CLASSNAME>::get(#CLASSNAME, {}, {#CLASSNAME})
-
-#define REGISTER_INTERNAL_RESOURCE_AS(CLASSNAME, NAMES) \
-        static auto& CLASSNAME##_registrar = core::StaticClassType<CLASSNAME>::get(#CLASSNAME, {}, MAKE_INIT_LIST NAMES)
-
-
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_RESOURCE_H_
+}  // namespace org::apache::nifi::minifi::core

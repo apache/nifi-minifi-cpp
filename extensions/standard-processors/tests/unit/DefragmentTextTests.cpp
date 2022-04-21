@@ -311,7 +311,16 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
 
 class FragmentGenerator : public core::Processor {
  public:
-  static inline const core::Relationship Success = core::Relationship("success", "success operational on the flow record");
+  static constexpr const char* Description = "FragmentGenerator (only for testing purposes)";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static inline const core::Relationship Success{"success", "success operational on the flow record"};
+  static auto relationships() { return std::array{Success}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   explicit FragmentGenerator(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
       : Processor(name, uuid) {
   }
@@ -333,8 +342,7 @@ class FragmentGenerator : public core::Processor {
       session->transfer(flow_file, Success);
     }
   }
-  void initialize() override { setSupportedRelationships({Success});}
-
+  void initialize() override { setSupportedRelationships(std::array{Success});}
 
   void setFragments(std::vector<std::string>&& fragments) {fragment_contents_ = std::move(fragments);}
   void setBatchSize(const size_t batch_size) {batch_size_ = batch_size;}
@@ -355,7 +363,7 @@ class FragmentGenerator : public core::Processor {
   std::vector<std::string> fragment_contents_;
 };
 
-REGISTER_RESOURCE(FragmentGenerator, "FragmentGenerator (only for testing purposes)");
+REGISTER_RESOURCE(FragmentGenerator, Processor);
 
 TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattributes]") {
   TestController testController;

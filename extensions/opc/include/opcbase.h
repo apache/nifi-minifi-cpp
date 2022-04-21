@@ -1,6 +1,4 @@
 /**
- * OPCBase class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,7 +20,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <set>
 
 #include "opc.h"
 #include "core/Processor.h"
@@ -30,22 +27,28 @@
 #include "core/Core.h"
 #include "core/Property.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class BaseOPCProcessor : public core::Processor {
  public:
-  static core::Property OPCServerEndPoint;
-
-  static core::Property ApplicationURI;
-  static core::Property Username;
-  static core::Property Password;
-  static core::Property CertificatePath;
-  static core::Property KeyPath;
-  static core::Property TrustedPath;
+  EXTENSIONAPI static const core::Property OPCServerEndPoint;
+  EXTENSIONAPI static const core::Property ApplicationURI;
+  EXTENSIONAPI static const core::Property Username;
+  EXTENSIONAPI static const core::Property Password;
+  EXTENSIONAPI static const core::Property CertificatePath;
+  EXTENSIONAPI static const core::Property KeyPath;
+  EXTENSIONAPI static const core::Property TrustedPath;
+  static auto properties() {
+    return std::array{
+      OPCServerEndPoint,
+      ApplicationURI,
+      Username,
+      Password,
+      CertificatePath,
+      KeyPath,
+      TrustedPath
+    };
+  }
 
   explicit BaseOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
   : Processor(name, uuid) {
@@ -54,10 +57,6 @@ class BaseOPCProcessor : public core::Processor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
 
  protected:
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
   virtual bool reconnect();
 
   std::shared_ptr<core::logging::Logger> logger_;
@@ -76,12 +75,6 @@ class BaseOPCProcessor : public core::Processor {
   std::vector<char> certBuffer_;
   std::vector<char> keyBuffer_;
   std::vector<std::vector<char>> trustBuffers_;
-
-  virtual std::set<core::Property> getSupportedProperties() const {return {OPCServerEndPoint, ApplicationURI, Username, Password, CertificatePath, KeyPath, TrustedPath};}
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

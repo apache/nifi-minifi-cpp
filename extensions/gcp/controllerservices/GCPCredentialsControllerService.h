@@ -38,9 +38,22 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
              (USE_JSON_CONTENTS, "Service Account JSON"),
              (USE_ANONYMOUS_CREDENTIALS, "Use Anonymous credentials"));
 
+  EXTENSIONAPI static constexpr const char* Description = "Google Cloud Platform Credentials Controller Service";
+
   EXTENSIONAPI static const core::Property CredentialsLoc;
   EXTENSIONAPI static const core::Property JsonFilePath;
   EXTENSIONAPI static const core::Property JsonContents;
+  static auto properties() {
+    return std::array{
+      CredentialsLoc,
+      JsonFilePath,
+      JsonContents
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   using ControllerService::ControllerService;
 

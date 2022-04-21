@@ -42,7 +42,6 @@ namespace controllers {
 /**
  * Purpose and Justification: Java Controller Service is intended to be used either within the flow or
  * based on a static load in JVM Creator. The static load simply loads via minifi properties.
- *
  */
 class JavaControllerService : public core::controller::ControllerService, public std::enable_shared_from_this<JavaControllerService>, public JavaServicer {
  public:
@@ -56,9 +55,22 @@ class JavaControllerService : public core::controller::ControllerService, public
     initialize();
   }
 
-  static core::Property NarDirectory;
-  static core::Property NarDeploymentDirectory;
-  static core::Property NarDocumentDirectory;
+  EXTENSIONAPI static constexpr const char* Description = "Allows specification of nars to be used within referenced processors.";
+
+  EXTENSIONAPI static const core::Property NarDirectory;
+  EXTENSIONAPI static const core::Property NarDeploymentDirectory;
+  EXTENSIONAPI static const core::Property NarDocumentDirectory;
+  static auto properties() {
+    return std::array{
+      NarDirectory,
+      NarDeploymentDirectory,
+      NarDocumentDirectory
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 
@@ -92,11 +104,10 @@ class JavaControllerService : public core::controller::ControllerService, public
   JNIEnv *attach() override {
     return loader->attach();
   }
+
   void detach() override {
       loader->detach();
     }
-
-
 
   jobject getClassLoader() override {
     return loader->getClassLoader();

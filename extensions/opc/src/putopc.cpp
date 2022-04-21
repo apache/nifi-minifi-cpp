@@ -1,6 +1,4 @@
 /**
- * PutOPC class definition
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -26,76 +24,15 @@
 #include "putopc.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
-#include "controllers/SSLContextService.h"
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-  core::Property PutOPCProcessor::ParentNodeID(
-      core::PropertyBuilder::createProperty("Parent node ID")
-          ->withDescription("Specifies the ID of the root node to traverse")
-          ->isRequired(true)->build());
-
-
-  core::Property PutOPCProcessor::ParentNodeIDType(
-      core::PropertyBuilder::createProperty("Parent node ID type")
-          ->withDescription("Specifies the type of the provided node ID")
-          ->isRequired(true)
-          ->withAllowableValues<std::string>({"Path", "Int", "String"})->build());
-
-  core::Property PutOPCProcessor::ParentNameSpaceIndex(
-      core::PropertyBuilder::createProperty("Parent node namespace index")
-          ->withDescription("The index of the namespace. Used only if node ID type is not path.")
-          ->withDefaultValue<int32_t>(0)->build());
-
-  core::Property PutOPCProcessor::ValueType(
-      core::PropertyBuilder::createProperty("Value type")
-          ->withDescription("Set the OPC value type of the created nodes")
-          ->isRequired(true)->build());
-
-  core::Property PutOPCProcessor::TargetNodeIDType(
-      core::PropertyBuilder::createProperty("Target node ID type")
-          ->withDescription("ID type of target node. Allowed values are: Int, String.")
-          ->supportsExpressionLanguage(true)->build());
-
-  core::Property PutOPCProcessor::TargetNodeID(
-      core::PropertyBuilder::createProperty("Target node ID")
-          ->withDescription("ID of target node.")
-          ->supportsExpressionLanguage(true)->build());
-
-  core::Property PutOPCProcessor::TargetNodeNameSpaceIndex(
-      core::PropertyBuilder::createProperty("Target node namespace index")
-          ->withDescription("The index of the namespace. Used only if node ID type is not path.")
-          ->supportsExpressionLanguage(true)->build());
-
-  core::Property PutOPCProcessor::TargetNodeBrowseName(
-      core::PropertyBuilder::createProperty("Target node browse name")
-          ->withDescription("Browse name of target node. Only used when new node is created.")
-          ->supportsExpressionLanguage(true)->build());
-
-  static core::Property TargetNodeID;
-  static core::Property TargetNodeBrowseName;
-
-
-  core::Relationship PutOPCProcessor::Success("success", "Successfully put OPC-UA node");
-  core::Relationship PutOPCProcessor::Failure("failure", "Failed to put OPC-UA node");
-
   void PutOPCProcessor::initialize() {
-    PutOPCProcessor::ValueType.clearAllowedValues();
-    core::PropertyValue pv;
-    for (const auto& kv : opc::StringToOPCDataTypeMap) {
-      pv = kv.first;
-      PutOPCProcessor::ValueType.addAllowedValue(pv);
-    }
-    std::set<core::Property> putOPCProperties = {ParentNodeID, ParentNodeIDType, ParentNameSpaceIndex, ValueType, TargetNodeIDType, TargetNodeID, TargetNodeNameSpaceIndex, TargetNodeBrowseName};
-    std::set<core::Property> baseOPCProperties = BaseOPCProcessor::getSupportedProperties();
-    putOPCProperties.insert(baseOPCProperties.begin(), baseOPCProperties.end());
-    setSupportedProperties(putOPCProperties);
-
-    // Set the supported relationships
-    setSupportedRelationships({Success, Failure});
+    setSupportedProperties(properties());
+    setSupportedRelationships(relationships());
   }
 
   void PutOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
@@ -396,7 +333,5 @@ namespace org::apache::nifi::minifi::processors {
       return;
     }
   }
-
-REGISTER_RESOURCE(PutOPCProcessor, "Creates/updates  OPC nodes");
 
 }  // namespace org::apache::nifi::minifi::processors

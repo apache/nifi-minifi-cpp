@@ -28,7 +28,6 @@
 #include <memory>
 #include <queue>
 #include <random>
-#include <set>
 #include <string>
 #include <thread>
 #include <utility>
@@ -38,6 +37,7 @@
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/PropertyValidation.h"
 #include "core/TypedValues.h"
 #include "core/Resource.h"
@@ -48,44 +48,34 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 const char *GenerateFlowFile::DATA_FORMAT_TEXT = "Text";
-core::Property GenerateFlowFile::FileSize(
+const core::Property GenerateFlowFile::FileSize(
     core::PropertyBuilder::createProperty("File Size")->withDescription("The size of the file that will be used")->isRequired(false)->withDefaultValue<core::DataSizeValue>("1 kB")->build());
 
-core::Property GenerateFlowFile::BatchSize(
+const core::Property GenerateFlowFile::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")->withDescription("The number of FlowFiles to be transferred in each invocation")->isRequired(false)->withDefaultValue<int>(1)->build());
 
-core::Property GenerateFlowFile::DataFormat(
+const core::Property GenerateFlowFile::DataFormat(
     core::PropertyBuilder::createProperty("Data Format")->withDescription("Specifies whether the data should be Text or Binary")->isRequired(false)->withAllowableValue<std::string>("Text")
         ->withAllowableValue("Binary")->withDefaultValue("Binary")->build());
 
-core::Property GenerateFlowFile::UniqueFlowFiles(
+const core::Property GenerateFlowFile::UniqueFlowFiles(
     core::PropertyBuilder::createProperty("Unique FlowFiles")->withDescription("If true, each FlowFile that is generated will be unique. If false, a random value will be generated and all FlowFiles")
         ->isRequired(false)->withDefaultValue<bool>(true)->build());
 
-core::Property GenerateFlowFile::CustomText(
+const core::Property GenerateFlowFile::CustomText(
     core::PropertyBuilder::createProperty("Custom Text")
       ->withDescription("If Data Format is text and if Unique FlowFiles is false, then this custom text will be used as content of the generated FlowFiles and the File Size will be ignored. "
                         "Finally, if Expression Language is used, evaluation will be performed only once per batch of generated FlowFiles")
       ->supportsExpressionLanguage(true)
       ->build());
 
-core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
+const core::Relationship GenerateFlowFile::Success("success", "success operational on the flow record");
 
 constexpr const char * TEXT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-_=+/?.,';:\"?<>\n\t ";
 
 void GenerateFlowFile::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(FileSize);
-  properties.insert(BatchSize);
-  properties.insert(DataFormat);
-  properties.insert(UniqueFlowFiles);
-  properties.insert(CustomText);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void generateData(std::vector<char>& data, bool textData = false) {
@@ -157,7 +147,7 @@ void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::Proces
   }
 }
 
-REGISTER_RESOURCE(GenerateFlowFile, "This processor creates FlowFiles with random data or custom content. GenerateFlowFile is useful for load testing, configuration, and simulation.");
+REGISTER_RESOURCE(GenerateFlowFile, Processor);
 
 }  // namespace processors
 }  // namespace minifi

@@ -15,30 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
-#define LIBMINIFI_INCLUDE_CORE_PROPERTY_H_
+#pragma once
 
-#include <cmath>
-#include <cstdlib>
-#include <algorithm>
-#include <map>
 #include <memory>
-#include <mutex>
-#include <queue>
-#include <set>
-#include <sstream>
 #include <string>
-#include <typeindex>
 #include <utility>
 #include <vector>
-#include <string_view>
 
-#include "CachedValueValidator.h"
-#include "core/Core.h"
-#include "PropertyValidation.h"
 #include "PropertyValue.h"
-#include "utils/StringUtils.h"
-#include "utils/TimeUtil.h"
 #include "utils/gsl.h"
 
 namespace org {
@@ -295,194 +279,8 @@ class Property {
   friend class PropertyBuilder;
 };
 
-template<typename T>
-class ConstrainedProperty;
-
-class PropertyBuilder : public std::enable_shared_from_this<PropertyBuilder> {
- public:
-  static std::shared_ptr<PropertyBuilder> createProperty(const std::string &name) {
-    std::shared_ptr<PropertyBuilder> builder = std::unique_ptr<PropertyBuilder>(new PropertyBuilder());
-    builder->prop.name_ = name;
-    return builder;
-  }
-
-  static std::shared_ptr<PropertyBuilder> createProperty(const std::string &name, const std::string &displayName) {
-    std::shared_ptr<PropertyBuilder> builder = std::unique_ptr<PropertyBuilder>(new PropertyBuilder());
-    builder->prop.name_ = name;
-    builder->prop.display_name_ = displayName;
-    return builder;
-  }
-
-  std::shared_ptr<PropertyBuilder> withDescription(const std::string &description) {
-    prop.description_ = description;
-    return shared_from_this();
-  }
-
-  std::shared_ptr<PropertyBuilder> isRequired(bool required) {
-    prop.is_required_ = required;
-    return shared_from_this();
-  }
-
-  std::shared_ptr<PropertyBuilder> supportsExpressionLanguage(bool sel) {
-    prop.supports_el_ = sel;
-    return shared_from_this();
-  }
-
-  template<typename T>
-  std::shared_ptr<PropertyBuilder> withDefaultValue(const T &df, const std::shared_ptr<PropertyValidator> &validator = nullptr) {
-    prop.default_value_ = df;
-
-    if (validator != nullptr) {
-      prop.default_value_.setValidator(gsl::make_not_null(validator));
-      prop.validator_ = gsl::make_not_null(validator);
-    } else {
-      prop.validator_ = StandardValidators::getValidator(prop.default_value_.getValue());
-      prop.default_value_.setValidator(prop.validator_);
-    }
-    // inspect the type and add a validator to this.
-    // there may be cases in which the validator is typed differently
-    // and a validator can be added for this.
-    return shared_from_this();
-  }
-
-  std::shared_ptr<PropertyBuilder> withType(const std::shared_ptr<PropertyValidator> &validator) {
-    prop.validator_ = gsl::make_not_null(validator);
-    prop.default_value_.setValidator(gsl::make_not_null(validator));
-    return shared_from_this();
-  }
-
-  template<typename T>
-  std::shared_ptr<ConstrainedProperty<T>> withAllowableValue(const T& df) {
-    auto property = std::make_shared<ConstrainedProperty<T>>(shared_from_this());
-    property->withAllowableValue(df);
-    return property;
-  }
-
-  template<typename T>
-  std::shared_ptr<ConstrainedProperty<T>> withAllowableValues(const std::set<T> &df) {
-    auto property = std::make_shared<ConstrainedProperty<T>>(shared_from_this());
-    property->withAllowableValues(df);
-    return property;
-  }
-
-  template<typename T>
-  std::shared_ptr<PropertyBuilder> withDefaultValue(const std::string &df) {
-    prop.default_value_.operator=<T>(df);
-
-    prop.validator_ = StandardValidators::getValidator(prop.default_value_.getValue());
-    prop.default_value_.setValidator(prop.validator_);
-
-    // inspect the type and add a validator to this.
-    // there may be cases in which the validator is typed differently
-    // and a validator can be added for this.
-    return shared_from_this();
-  }
-
-  template<typename T>
-  std::shared_ptr<PropertyBuilder> asType() {
-    prop.types_.push_back(core::getClassName<T>());
-    return shared_from_this();
-  }
-
-  std::shared_ptr<PropertyBuilder> withExclusiveProperty(const std::string &property, const std::string regex) {
-    prop.exclusive_of_properties_.push_back({ property, regex });
-    return shared_from_this();
-  }
-
-  Property &&build() {
-    return std::move(prop);
-  }
-
- private:
-  Property prop;
-
-  PropertyBuilder() = default;
-};
-
-template<typename T>
-class ConstrainedProperty : public std::enable_shared_from_this<ConstrainedProperty<T>> {
- public:
-  std::shared_ptr<ConstrainedProperty<T>> withDescription(const std::string &description) {
-    builder_->withDescription(description);
-    return this->shared_from_this();
-  }
-
-  std::shared_ptr<ConstrainedProperty<T>> isRequired(bool required) {
-    builder_->isRequired(required);
-    return this->shared_from_this();
-  }
-
-  std::shared_ptr<ConstrainedProperty<T>> supportsExpressionLanguage(bool sel) {
-    builder_->supportsExpressionLanguage(sel);
-    return this->shared_from_this();
-  }
-
-  std::shared_ptr<ConstrainedProperty<T>> withDefaultValue(const T &df, const std::shared_ptr<PropertyValidator> &validator = nullptr) {
-    builder_->withDefaultValue(df, validator);
-    return this->shared_from_this();
-  }
-
-  std::shared_ptr<ConstrainedProperty<T>> withAllowableValue(const T& df) {
-    PropertyValue dn;
-    dn = df;
-    allowed_values_.emplace_back(dn);
-    return this->shared_from_this();
-  }
-
-  std::shared_ptr<ConstrainedProperty<T>> withAllowableValues(const std::set<T>& defaultValues) {
-    for (const auto &defaultValue : defaultValues) {
-      PropertyValue dn;
-      dn = defaultValue;
-      allowed_values_.emplace_back(dn);
-    }
-    return this->shared_from_this();
-  }
-
-  template<typename J>
-  std::shared_ptr<ConstrainedProperty<T>> asType() {
-    builder_->asType<J>();
-    return this->shared_from_this();
-  }
-
-  std::shared_ptr<ConstrainedProperty<T>> withExclusiveProperty(const std::string &property, const std::string regex) {
-    builder_->withExclusiveProperty(property, regex);
-    return this->shared_from_this();
-  }
-
-  Property &&build() {
-    Property &&prop = builder_->build();
-    for (const auto &value : allowed_values_) {
-      prop.addAllowedValue(value);
-    }
-    return std::move(prop);
-  }
-
-  ConstrainedProperty(const std::shared_ptr<PropertyBuilder> &builder) // NOLINT
-      : builder_(builder) {
-  }
-
- protected:
-  std::vector<PropertyValue> allowed_values_;
-  std::shared_ptr<PropertyBuilder> builder_;
-
-  friend class PropertyBuilder;
-};
-
-struct ConfigurationProperty {
-  explicit ConfigurationProperty(std::string_view name,
-      gsl::not_null<PropertyValidator*> validator = gsl::make_not_null(StandardValidators::get().VALID_VALIDATOR.get()))
-    : name(name),
-      validator(validator) {
-  }
-
-  std::string_view name;
-  gsl::not_null<PropertyValidator*> validator;
-};
-
 }  // namespace core
 }  // namespace minifi
 }  // namespace nifi
 }  // namespace apache
 }  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_PROPERTY_H_

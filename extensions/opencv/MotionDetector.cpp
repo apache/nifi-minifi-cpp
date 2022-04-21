@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-#include <set>
 #include <utility>
 #include <vector>
 
 #include "MotionDetector.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -30,46 +30,39 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property MotionDetector::ImageEncoding(
+const core::Property MotionDetector::ImageEncoding(
     core::PropertyBuilder::createProperty("Image Encoding")
         ->withDescription("The encoding that should be applied to the output")
         ->isRequired(true)
         ->withAllowableValues<std::string>({".jpg", ".png"})
         ->withDefaultValue(".jpg")->build());
-core::Property MotionDetector::MinInterestArea(
+const core::Property MotionDetector::MinInterestArea(
     core::PropertyBuilder::createProperty("Minimum Area")
         ->withDescription("We only consider the movement regions with area greater than this.")
         ->isRequired(true)
         ->withDefaultValue<uint32_t>(100)->build());
-core::Property MotionDetector::Threshold(
+const core::Property MotionDetector::Threshold(
     core::PropertyBuilder::createProperty("Threshold for segmentation")
         ->withDescription("Pixel greater than this will be white, otherwise black.")
         ->isRequired(true)
         ->withDefaultValue<uint32_t>(42)->build());
-core::Property MotionDetector::BackgroundFrame(
+const core::Property MotionDetector::BackgroundFrame(
     core::PropertyBuilder::createProperty("Path to background frame")
         ->withDescription("If not provided then the processor will take the first input frame as background")
         ->isRequired(true)
         ->build());
-core::Property MotionDetector::DilateIter(
+const core::Property MotionDetector::DilateIter(
     core::PropertyBuilder::createProperty("Dilate iteration")
         ->withDescription("For image processing, if an object is detected as 2 separate objects, increase this value")
         ->isRequired(true)
         ->withDefaultValue<uint32_t>(10)->build());
 
-core::Relationship MotionDetector::Success("success", "Successful to detect motion");
-core::Relationship MotionDetector::Failure("failure", "Failure to detect motion");
+const core::Relationship MotionDetector::Success("success", "Successful to detect motion");
+const core::Relationship MotionDetector::Failure("failure", "Failure to detect motion");
 
 void MotionDetector::initialize() {
-  std::set<core::Property> properties;
-  properties.insert(ImageEncoding);
-  properties.insert(MinInterestArea);
-  properties.insert(Threshold);
-  properties.insert(BackgroundFrame);
-  properties.insert(DilateIter);
-  setSupportedProperties(std::move(properties));
-
-  setSupportedRelationships({Success, Failure});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void MotionDetector::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
@@ -214,7 +207,7 @@ void MotionDetector::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 void MotionDetector::notifyStop() {
 }
 
-REGISTER_RESOURCE(MotionDetector, "Detect motion from captured images.");
+REGISTER_RESOURCE(MotionDetector, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

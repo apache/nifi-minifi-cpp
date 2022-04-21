@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,7 +16,6 @@
  */
 #pragma once
 
-#include <set>
 #include <memory>
 #include <string>
 
@@ -26,12 +24,14 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 
+namespace minifi = org::apache::nifi::minifi;
+
 std::atomic<bool> disabled;
 std::mutex control_mutex;
 
-class MockControllerService : public org::apache::nifi::minifi::core::controller::ControllerService {
+class MockControllerService : public minifi::core::controller::ControllerService {
  public:
-  explicit MockControllerService(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid)
+  explicit MockControllerService(const std::string &name, const minifi::utils::Identifier &uuid)
       : ControllerService(name, uuid) {
   }
 
@@ -40,10 +40,16 @@ class MockControllerService : public org::apache::nifi::minifi::core::controller
   }
   MockControllerService() = default;
 
-  ~MockControllerService() = default;
+  ~MockControllerService() override = default;
 
-  virtual void initialize() {
-    org::apache::nifi::minifi::core::controller::ControllerService::initialize();
+  static constexpr const char* Description = "An example service";
+  static auto properties() { return std::array<minifi::core::Property, 0>{}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
+  void initialize() override {
+    minifi::core::controller::ControllerService::initialize();
     enable();
   }
 
@@ -55,14 +61,14 @@ class MockControllerService : public org::apache::nifi::minifi::core::controller
     str = "pushitrealgood";
   }
 
-  void yield() {
+  void yield() override {
   }
 
-  bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
-  bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 
@@ -70,9 +76,9 @@ class MockControllerService : public org::apache::nifi::minifi::core::controller
   std::string str;
 };
 
-class MockProcessor : public org::apache::nifi::minifi::core::Processor {
+class MockProcessor : public minifi::core::Processor {
  public:
-  explicit MockProcessor(const std::string &name, const org::apache::nifi::minifi::utils::Identifier &uuid)
+  explicit MockProcessor(const std::string &name, const minifi::utils::Identifier &uuid)
       : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }
@@ -82,21 +88,27 @@ class MockProcessor : public org::apache::nifi::minifi::core::Processor {
     setTriggerWhenEmpty(true);
   }
 
-  ~MockProcessor() = default;
+  ~MockProcessor() override = default;
+
+  static constexpr const char* Description = "An example processor";
+  static inline const minifi::core::Property LinkedService{"linkedService", "Linked service"};
+  static auto properties() { return std::array{LinkedService}; }
+  static auto relationships() { return std::array<minifi::core::Relationship, 0>{}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr minifi::core::annotation::Input InputRequirement = minifi::core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override {
-    org::apache::nifi::minifi::core::Property property("linkedService", "Linked service");
-    std::set<org::apache::nifi::minifi::core::Property> properties;
-    properties.insert(property);
-    setSupportedProperties(properties);
+    setSupportedProperties(properties());
   }
 
-  // OnTrigger method, implemented by NiFi Processor Designer
-  void onTrigger(org::apache::nifi::minifi::core::ProcessContext *context, org::apache::nifi::minifi::core::ProcessSession* /*session*/) override {
+  void onTrigger(minifi::core::ProcessContext *context, minifi::core::ProcessSession* /*session*/) override {
     std::string linked_service = "";
     getProperty("linkedService", linked_service);
     if (!IsNullOrEmpty(linked_service)) {
-      std::shared_ptr<org::apache::nifi::minifi::core::controller::ControllerService> service = context->getControllerService(linked_service);
+      std::shared_ptr<minifi::core::controller::ControllerService> service = context->getControllerService(linked_service);
       std::lock_guard<std::mutex> lock(control_mutex);
       if (!disabled.load()) {
         assert(true == context->isControllerServiceEnabled(linked_service));

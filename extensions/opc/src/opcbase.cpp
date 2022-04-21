@@ -1,6 +1,4 @@
 /**
- * BaseOPC class definition
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -26,43 +24,9 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-  core::Property BaseOPCProcessor::OPCServerEndPoint(
-      core::PropertyBuilder::createProperty("OPC server endpoint")
-      ->withDescription("Specifies the address, port and relative path of an OPC endpoint")
-      ->isRequired(true)->build());
-
-  core::Property BaseOPCProcessor::ApplicationURI(
-      core::PropertyBuilder::createProperty("Application URI")
-          ->withDescription("Application URI of the client in the format 'urn:unconfigured:application'. "
-                            "Mandatory, if using Secure Channel and must match the URI included in the certificate's Subject Alternative Names.")->build());
-
-  core::Property BaseOPCProcessor::Username(
-      core::PropertyBuilder::createProperty("Username")
-          ->withDescription("Username to log in with.")->build());
-
-  core::Property BaseOPCProcessor::Password(
-      core::PropertyBuilder::createProperty("Password")
-          ->withDescription("Password to log in with.")->build());
-
-  core::Property BaseOPCProcessor::CertificatePath(
-      core::PropertyBuilder::createProperty("Certificate path")
-          ->withDescription("Path to the DER-encoded cert file")->build());
-
-  core::Property BaseOPCProcessor::KeyPath(
-      core::PropertyBuilder::createProperty("Key path")
-          ->withDescription("Path to the DER-encoded key file")->build());
-
-  core::Property BaseOPCProcessor::TrustedPath(
-      core::PropertyBuilder::createProperty("Trusted server certificate path")
-          ->withDescription("Path to the DER-encoded trusted server certificate")->build());
+namespace org::apache::nifi::minifi::processors {
 
   void BaseOPCProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
     logger_->log_trace("BaseOPCProcessor::onSchedule");
@@ -142,8 +106,4 @@ namespace processors {
     return true;
   }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

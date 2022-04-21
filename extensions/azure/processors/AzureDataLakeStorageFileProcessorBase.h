@@ -1,7 +1,4 @@
 /**
- * @file AzureDataLakeStorageFileProcessorBase.h
- * AzureDataLakeStorageFileProcessorBase class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,13 +22,16 @@
 #include <memory>
 
 #include "AzureDataLakeStorageProcessorBase.h"
+#include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureDataLakeStorageFileProcessorBase : public AzureDataLakeStorageProcessorBase {
  public:
-  // Supported Properties
   EXTENSIONAPI static const core::Property FileName;
+  static auto properties() {
+    return utils::array_cat(AzureDataLakeStorageProcessorBase::properties(), std::array{FileName});
+  }
 
   explicit AzureDataLakeStorageFileProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
     : AzureDataLakeStorageProcessorBase(name, uuid, logger) {

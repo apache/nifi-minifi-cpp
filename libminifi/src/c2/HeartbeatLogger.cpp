@@ -18,11 +18,7 @@
 #include "c2/HeartbeatLogger.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 HeartbeatLogger::HeartbeatLogger(const std::string& name, const utils::Identifier& id)
   : HeartbeatReporter(name, id) {
@@ -40,10 +36,6 @@ void HeartbeatLogger::initialize(core::controller::ControllerServiceProvider* co
   RESTProtocol::initialize(controller, configure);
 }
 
-REGISTER_RESOURCE(HeartbeatLogger, "Logs heartbeats at TRACE level.");
+REGISTER_RESOURCE(HeartbeatLogger, DescriptionOnly);
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

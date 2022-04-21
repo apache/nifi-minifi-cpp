@@ -1,7 +1,4 @@
 /**
- * @file ListS3.cpp
- * ListS3 class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -26,64 +23,14 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
-
-const core::Property ListS3::Delimiter(
-  core::PropertyBuilder::createProperty("Delimiter")
-    ->withDescription("The string used to delimit directories within the bucket. Please consult the AWS documentation for the correct use of this field.")
-    ->build());
-const core::Property ListS3::Prefix(
-  core::PropertyBuilder::createProperty("Prefix")
-    ->withDescription("The prefix used to filter the object list. In most cases, it should end with a forward slash ('/').")
-    ->build());
-const core::Property ListS3::UseVersions(
-  core::PropertyBuilder::createProperty("Use Versions")
-    ->isRequired(true)
-    ->withDefaultValue<bool>(false)
-    ->withDescription("Specifies whether to use S3 versions, if applicable. If false, only the latest version of each object will be returned.")
-    ->build());
-const core::Property ListS3::MinimumObjectAge(
-  core::PropertyBuilder::createProperty("Minimum Object Age")
-    ->isRequired(true)
-    ->withDefaultValue<core::TimePeriodValue>("0 sec")
-    ->withDescription("The minimum age that an S3 object must be in order to be considered; any object younger than this amount of time (according to last modification date) will be ignored.")
-    ->build());
-const core::Property ListS3::WriteObjectTags(
-  core::PropertyBuilder::createProperty("Write Object Tags")
-    ->isRequired(true)
-    ->withDefaultValue<bool>(false)
-    ->withDescription("If set to 'true', the tags associated with the S3 object will be written as FlowFile attributes.")
-    ->build());
-const core::Property ListS3::WriteUserMetadata(
-  core::PropertyBuilder::createProperty("Write User Metadata")
-    ->isRequired(true)
-    ->withDefaultValue<bool>(false)
-    ->withDescription("If set to 'true', the user defined metadata associated with the S3 object will be added to FlowFile attributes/records.")
-    ->build());
-const core::Property ListS3::RequesterPays(
-  core::PropertyBuilder::createProperty("Requester Pays")
-    ->isRequired(true)
-    ->withDefaultValue<bool>(false)
-    ->withDescription("If true, indicates that the requester consents to pay any charges associated with listing the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'. "
-                      "Note that this setting is only used if Write User Metadata is true.")
-    ->build());
-
-const core::Relationship ListS3::Success("success", "FlowFiles are routed to success relationship");
+namespace org::apache::nifi::minifi::aws::processors {
 
 void ListS3::initialize() {
-  // Add new supported properties
-  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
-                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, Delimiter, Prefix, UseVersions,
-                          MinimumObjectAge, WriteObjectTags, WriteUserMetadata, RequesterPays});
-  // Set the supported relationships
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ListS3::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -230,11 +177,4 @@ void ListS3::onTrigger(const std::shared_ptr<core::ProcessContext> &context, con
   }
 }
 
-REGISTER_RESOURCE(ListS3, "This Processor retrieves a listing of objects from an Amazon S3 bucket.");
-
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

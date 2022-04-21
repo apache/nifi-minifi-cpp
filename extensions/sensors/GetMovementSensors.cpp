@@ -23,7 +23,6 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -46,20 +45,13 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const char *GetMovementSensors::ProcessorName = "GetMovementSensors";
-
-core::Relationship GetMovementSensors::Success("success", "All files are routed to success");
+const core::Relationship GetMovementSensors::Success("success", "All files are routed to success");
 
 void GetMovementSensors::initialize() {
   logger_->log_trace("Initializing GetMovementSensors");
-  // Set the supported properties
-  std::set<core::Property> properties;
 
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 GetMovementSensors::~GetMovementSensors() = default;
@@ -90,7 +82,7 @@ void GetMovementSensors::onTrigger(const std::shared_ptr<core::ProcessContext>& 
   }
 }
 
-REGISTER_RESOURCE(GetMovementSensors, "Defines a processor that is able to retrieve sensor information from a class of known servo sensors");
+REGISTER_RESOURCE(GetMovementSensors, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

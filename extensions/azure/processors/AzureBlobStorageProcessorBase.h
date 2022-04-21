@@ -30,12 +30,12 @@
 #include "storage/AzureBlobStorage.h"
 #include "AzureStorageProcessorBase.h"
 #include "storage/AzureStorageCredentials.h"
+#include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
  public:
-  // Supported Properties
   EXTENSIONAPI static const core::Property ContainerName;
   EXTENSIONAPI static const core::Property StorageAccountName;
   EXTENSIONAPI static const core::Property StorageAccountKey;
@@ -43,6 +43,17 @@ class AzureBlobStorageProcessorBase : public AzureStorageProcessorBase {
   EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
   EXTENSIONAPI static const core::Property ConnectionString;
   EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
+  static auto properties() {
+    return utils::array_cat(AzureStorageProcessorBase::properties(), std::array{
+      ContainerName,
+      StorageAccountName,
+      StorageAccountKey,
+      SASToken,
+      CommonStorageAccountEndpointSuffix,
+      ConnectionString,
+      UseManagedIdentityCredentials
+    });
+  }
 
   explicit AzureBlobStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
     : AzureBlobStorageProcessorBase(name, uuid, logger, nullptr) {

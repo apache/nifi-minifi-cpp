@@ -44,38 +44,47 @@ class PutFile : public core::Processor {
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_IGNORE = "ignore";
   static constexpr char const *CONFLICT_RESOLUTION_STRATEGY_FAIL = "fail";
 
-  static constexpr char const *ProcessorName = "PutFile";
-
-  /*!
-   * Create a new processor
-   */
   PutFile(const std::string& name,  const utils::Identifier& uuid = {}) // NOLINT
       : core::Processor(name, uuid) {
   }
 
   ~PutFile() override = default;
 
-  // Supported Properties
-  EXTENSIONAPI static core::Property Directory;
-  EXTENSIONAPI static core::Property ConflictResolution;
-  EXTENSIONAPI static core::Property CreateDirs;
-  EXTENSIONAPI static core::Property MaxDestFiles;
+  EXTENSIONAPI static constexpr const char* Description = "Writes the contents of a FlowFile to the local file system";
+
 #ifndef WIN32
-  EXTENSIONAPI static core::Property Permissions;
-  EXTENSIONAPI static core::Property DirectoryPermissions;
+  EXTENSIONAPI static const core::Property Permissions;
+  EXTENSIONAPI static const core::Property DirectoryPermissions;
 #endif
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Failure;
+  EXTENSIONAPI static const core::Property Directory;
+  EXTENSIONAPI static const core::Property ConflictResolution;
+  EXTENSIONAPI static const core::Property CreateDirs;
+  EXTENSIONAPI static const core::Property MaxDestFiles;
+  static auto properties() {
+    return std::array{
+#ifndef WIN32
+      Permissions,
+      DirectoryPermissions,
+#endif
+      Directory,
+      ConflictResolution,
+      CreateDirs,
+      MaxDestFiles
+    };
+  }
 
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
 
@@ -102,10 +111,6 @@ class PutFile : public core::Processor {
   std::string tmpWritePath(const std::string &filename, const std::string &directory) const;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   std::string conflict_resolution_;
   bool try_mkdirs_ = true;
   int64_t max_dest_files_ = -1;

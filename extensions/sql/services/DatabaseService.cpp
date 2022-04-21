@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -21,24 +20,13 @@
 #include <string>
 #include <memory>
 #include <set>
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "DatabaseService.h"
 #include "DatabaseService.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
-namespace controllers {
-
-static core::Property RemoteServer;
-static core::Property Port;
-static core::Property MaxQueueSize;
-
-core::Property DatabaseService::ConnectionString(core::PropertyBuilder::createProperty("Connection String")->withDescription("Database Connection String")->isRequired(true)->build());
+namespace org::apache::nifi::minifi::sql::controllers {
 
 void DatabaseService::initialize() {
   std::lock_guard<std::recursive_mutex> lock(initialization_mutex_);
@@ -59,12 +47,7 @@ void DatabaseService::onEnable() {
 }
 
 void DatabaseService::initializeProperties() {
-  setSupportedProperties({ ConnectionString });
+  setSupportedProperties(properties());
 }
 
-} /* namespace controllers */
-} /* namespace coap */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql::controllers

@@ -1,7 +1,4 @@
 /**
- * @file ExecuteSQL.cpp
- * ExecuteSQL class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,29 +26,13 @@
 #include "io/StreamPipe.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "Exception.h"
 #include "data/JSONSQLWriter.h"
 #include "data/SQLRowsetProcessor.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-const std::string ExecuteSQL::ProcessorName("ExecuteSQL");
-
-const core::Property ExecuteSQL::SQLSelectQuery(
-  core::PropertyBuilder::createProperty("SQL select query")
-  ->withDescription(
-    "The SQL select query to execute. The query can be empty, a constant value, or built from attributes using Expression Language. "
-    "If this property is specified, it will be used regardless of the content of incoming flowfiles. "
-    "If this property is empty, the content of the incoming flow file is expected to contain a valid SQL select query, to be issued by the processor to the database. "
-    "Note that Expression Language is not evaluated for flow file contents.")
-  ->supportsExpressionLanguage(true)->build());
-
-const core::Relationship ExecuteSQL::Success("success", "Successfully created FlowFile from SQL query result set.");
+namespace org::apache::nifi::minifi::processors {
 
 const std::string ExecuteSQL::RESULT_ROW_COUNT = "executesql.row.count";
 const std::string ExecuteSQL::INPUT_FLOW_FILE_UUID = "input.flowfile.uuid";
@@ -61,11 +42,8 @@ ExecuteSQL::ExecuteSQL(const std::string& name, const utils::Identifier& uuid)
 }
 
 void ExecuteSQL::initialize() {
-  //! Set the supported properties
-  setSupportedProperties({ DBControllerService, OutputFormat, SQLSelectQuery, MaxRowsPerFlowFile});
-
-  //! Set the supported relationships
-  setSupportedRelationships({ Success });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ExecuteSQL::processOnSchedule(core::ProcessContext& context) {
@@ -119,10 +97,4 @@ void ExecuteSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSe
   }
 }
 
-REGISTER_RESOURCE(ExecuteSQL, "ExecuteSQL to execute SELECT statement via ODBC.");
-
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

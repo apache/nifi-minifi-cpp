@@ -40,6 +40,7 @@
 #include "utils/gsl.h"
 #include "agent/build_description.h"
 #include "c2/C2Payload.h"
+#include "core/PropertyBuilder.h"
 #include "properties/Configuration.h"
 #include "range/v3/algorithm/find.hpp"
 
@@ -466,7 +467,7 @@ class HeartbeatHandler : public ServerAwareHandler {
 
         auto group = minifi::BuildDescription{}.getClassDescriptions(str);
         for (const auto& proc : group.processors_) {
-          assert(std::find(classes.begin(), classes.end(), proc.class_name_) != std::end(classes));
+          assert(std::find(classes.begin(), classes.end(), proc.full_name_) != std::end(classes));
           (void)proc;
           found = true;
         }

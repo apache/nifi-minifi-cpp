@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,33 +15,13 @@
  * limitations under the License.
  */
 
-#include "core/logging/LoggerConfiguration.h"
-#include "core/controller/ControllerService.h"
-#include <string>
-#include <memory>
-#include <set>
-#include "core/Property.h"
-#include "core/Resource.h"
 #include "ODBCConnector.h"
-#include "io/validation.h"
-#include "properties/Configure.h"
+#include <memory>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
-namespace controllers {
+namespace org::apache::nifi::minifi::sql::controllers {
 
 std::unique_ptr<sql::Connection> ODBCService::getConnection() const {
   return std::unique_ptr<sql::Connection>(new ODBCConnection(connection_string_));
 }
 
-REGISTER_RESOURCE(ODBCService, "Controller service that provides ODBC database connection");
-
-} /* namespace controllers */
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql::controllers

@@ -1,6 +1,4 @@
 /**
- * FetchOPC class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,38 +29,49 @@
 #include "core/Property.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class FetchOPCProcessor : public BaseOPCProcessor {
  public:
-  static constexpr char const* ProcessorName = "FetchOPC";
-  // Supported Properties
-  static core::Property NodeIDType;
-  static core::Property NodeID;
-  static core::Property NameSpaceIndex;
-  static core::Property MaxDepth;
-  static core::Property Lazy;
-
-  // Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship Failure;
-
   explicit FetchOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), nodesFound_(0), variablesFound_(0), maxDepth_(0) {
     logger_ = core::logging::LoggerFactory<FetchOPCProcessor>::getLogger();
   }
 
+  EXTENSIONAPI static constexpr const char* Description = "Fetches OPC-UA node";
+
+  EXTENSIONAPI static const core::Property NodeIDType;
+  EXTENSIONAPI static const core::Property NodeID;
+  EXTENSIONAPI static const core::Property NameSpaceIndex;
+  EXTENSIONAPI static const core::Property MaxDepth;
+  EXTENSIONAPI static const core::Property Lazy;
+  static auto properties() {
+    return utils::array_cat(BaseOPCProcessor::properties(), std::array{
+      NodeIDType,
+      NodeID,
+      NameSpaceIndex,
+      MaxDepth,
+      Lazy
+    });
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
-
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-
   void initialize() override;
 
  protected:
@@ -80,16 +89,8 @@ class FetchOPCProcessor : public BaseOPCProcessor {
   bool lazy_mode_;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   std::vector<UA_NodeId> translatedNodeIDs_;  // Only used when user provides path, path->nodeid translation is only done once
   std::unordered_map<std::string, std::string> node_timestamp_;  // Key = Full path, Value = Timestamp
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

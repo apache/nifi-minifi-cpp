@@ -1,7 +1,4 @@
 /**
- * @file FocusArchiveEntry.h
- * FocusArchiveEntry class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -39,29 +36,31 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! FocusArchiveEntry Class
 class FocusArchiveEntry : public core::Processor {
  public:
-  //! Constructor
-  /*!
-   * Create a new processor
-   */
   explicit FocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
   : core::Processor(name, uuid) {
   }
-  //! Destructor
   ~FocusArchiveEntry()   override = default;
-  //! Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "FocusArchiveEntry";
-  //! Supported Properties
-  EXTENSIONAPI static core::Property Path;
-  //! Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
 
-  //! OnTrigger method, implemented by NiFi FocusArchiveEntry
-  void onTrigger(core::ProcessContext *context,
-      core::ProcessSession *session) override;
-  //! Initialize, over write by NiFi FocusArchiveEntry
+  EXTENSIONAPI static constexpr const char* Description = "Allows manipulation of entries within an archive (e.g. TAR) by focusing on one entry within the archive at a time. "
+      "When an archive entry is focused, that entry is treated as the content of the FlowFile and may be manipulated independently of the rest of the archive. "
+      "To restore the FlowFile to its original state, use UnfocusArchiveEntry.";
+
+  EXTENSIONAPI static const core::Property Path;
+  static auto properties() { return std::array{Path}; }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
 
   class ReadCallback {
@@ -80,7 +79,6 @@ class FocusArchiveEntry : public core::Processor {
   };
 
  private:
-  //! Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FocusArchiveEntry>::getLogger();
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };

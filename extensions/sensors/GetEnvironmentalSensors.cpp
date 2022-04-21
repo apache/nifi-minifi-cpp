@@ -24,7 +24,6 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -49,20 +48,13 @@ namespace processors {
 
 std::shared_ptr<utils::IdGenerator> GetEnvironmentalSensors::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-const char *GetEnvironmentalSensors::ProcessorName = "GetEnvironmentalSensors";
-
-core::Relationship GetEnvironmentalSensors::Success("success", "All files are routed to success");
+const core::Relationship GetEnvironmentalSensors::Success("success", "All files are routed to success");
 
 void GetEnvironmentalSensors::initialize() {
   logger_->log_trace("Initializing EnvironmentalSensors");
-  // Set the supported properties
-  std::set<core::Property> properties;
 
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void GetEnvironmentalSensors::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -142,7 +134,7 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
   }
 }
 
-REGISTER_RESOURCE(GetEnvironmentalSensors, "Provides sensor information from known sensors to include humidity and pressure data");
+REGISTER_RESOURCE(GetEnvironmentalSensors, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

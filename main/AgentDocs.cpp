@@ -17,21 +17,11 @@
 
 #include "AgentDocs.h"
 #include <vector>
-#include <algorithm>
 #include <iostream>
 #include <iterator>
-#include <fstream>
 #include <set>
-#include <memory>
 #include <string>
-#include "core/ClassLoader.h"
-#include "core/ConfigurableComponent.h"
 #include "core/Core.h"
-#include "core/Processor.h"
-#include "core/Property.h"
-#include "core/PropertyValidation.h"
-#include "core/Relationship.h"
-#include "io/validation.h"
 #include "utils/file/FileUtils.h"
 #include "agent/agent_docs.h"
 #include "agent/agent_version.h"
@@ -51,7 +41,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   for (const auto &group : minifi::AgentBuild::getExtensions()) {
     struct Components descriptions = build_description_.getClassDescriptions(group);
     for (const auto &processorName : descriptions.processors_) {
-      processorSet.insert(std::make_pair(extractClassName(processorName.class_name_), processorName));
+      processorSet.insert(std::make_pair(extractClassName(processorName.full_name_), processorName));
     }
   }
   for (const auto &processor : processorSet) {
@@ -62,7 +52,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
       std::string description;
       bool foundDescription = minifi::AgentDocs::getDescription(processor.first, description);
       if (!foundDescription) {
-        foundDescription = minifi::AgentDocs::getDescription(processor.second.class_name_, description);
+        foundDescription = minifi::AgentDocs::getDescription(processor.second.full_name_, description);
       }
 
       outfile << "## " << processor.first << std::endl << std::endl;
@@ -79,27 +69,27 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
 
     outfile << "| Name | Default Value | Allowable Values | Description | " << std::endl << "| - | - | - | - | " << std::endl;
     for (const auto &prop : processor.second.class_properties_) {
-      bool supportsEl = prop.second.supportsExpressionLanguage();
+      bool supportsEl = prop.supportsExpressionLanguage();
       outfile << "|";
-      if (prop.second.getRequired()) {
+      if (prop.getRequired()) {
         outfile << "**";
       }
-      outfile << prop.first;
-      if (prop.second.getRequired()) {
+      outfile << prop.getName();
+      if (prop.getRequired()) {
         outfile << "**";
       }
-      const auto allowableValues = prop.second.getAllowedValues();
+      const auto allowableValues = prop.getAllowedValues();
       std::stringstream s;
       std::copy(allowableValues.begin(), allowableValues.end(), std::ostream_iterator<std::string>(s, "<br>"));
       outfile << "|";
-      const auto defaultValue = prop.second.getDefaultValue().to_string();
+      const auto defaultValue = prop.getDefaultValue().to_string();
       if (defaultValue.size() == 1 && (int)defaultValue.c_str()[0] == 0x0a) {
         outfile << "\\n";
       }
       else {
         outfile << defaultValue;
       }
-      std::string description = prop.second.getDescription();
+      std::string description = prop.getDescription();
       outfile << "|" << s.str() << "|" << utils::StringUtils::replaceAll(description, "\n", "<br/>");
       if (supportsEl) {
         outfile << "<br/>**Supports Expression Language: true**";

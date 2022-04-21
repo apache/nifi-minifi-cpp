@@ -20,7 +20,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <set>
 #include <list>
 #include <algorithm>
 
@@ -43,13 +42,14 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ManipulateArchive::Operation("Operation", "Operation to perform on the archive (touch, remove, copy, move).", "");
-core::Property ManipulateArchive::Target("Target", "An existing entry within the archive to perform the operation on.", "");
-core::Property ManipulateArchive::Destination("Destination", "Destination for operations (touch, move or copy) which result in new entries.", "");
-core::Property ManipulateArchive::Before("Before", "For operations which result in new entries, places the new entry before the entry specified by this property.", "");
-core::Property ManipulateArchive::After("After", "For operations which result in new entries, places the new entry after the entry specified by this property.", "");
-core::Relationship ManipulateArchive::Success("success", "FlowFiles will be transferred to the success relationship if the operation succeeds.");
-core::Relationship ManipulateArchive::Failure("failure", "FlowFiles will be transferred to the failure relationship if the operation fails.");
+const core::Property ManipulateArchive::Operation("Operation", "Operation to perform on the archive (touch, remove, copy, move).", "");
+const core::Property ManipulateArchive::Target("Target", "An existing entry within the archive to perform the operation on.", "");
+const core::Property ManipulateArchive::Destination("Destination", "Destination for operations (touch, move or copy) which result in new entries.", "");
+const core::Property ManipulateArchive::Before("Before", "For operations which result in new entries, places the new entry before the entry specified by this property.", "");
+const core::Property ManipulateArchive::After("After", "For operations which result in new entries, places the new entry after the entry specified by this property.", "");
+
+const core::Relationship ManipulateArchive::Success("success", "FlowFiles will be transferred to the success relationship if the operation succeeds.");
+const core::Relationship ManipulateArchive::Failure("failure", "FlowFiles will be transferred to the failure relationship if the operation fails.");
 
 char const* ManipulateArchive::OPERATION_REMOVE = "remove";
 char const* ManipulateArchive::OPERATION_COPY =   "copy";
@@ -57,20 +57,9 @@ char const* ManipulateArchive::OPERATION_MOVE =   "move";
 char const* ManipulateArchive::OPERATION_TOUCH =  "touch";
 
 void ManipulateArchive::initialize() {
-    //! Set the supported properties
-    std::set<core::Property> properties;
-    properties.insert(Operation);
-    properties.insert(Target);
-    properties.insert(Destination);
-    properties.insert(Before);
-    properties.insert(After);
-    setSupportedProperties(properties);
+  setSupportedProperties(properties());
 
-    //! Set the supported relationships
-    std::set<core::Relationship> relationships;
-    relationships.insert(Success);
-    relationships.insert(Failure);
-    setSupportedRelationships(relationships);
+  setSupportedRelationships(relationships());
 }
 
 void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -213,7 +202,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     session->transfer(flowFile, Success);
 }
 
-REGISTER_RESOURCE(ManipulateArchive, "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.");
+REGISTER_RESOURCE(ManipulateArchive, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

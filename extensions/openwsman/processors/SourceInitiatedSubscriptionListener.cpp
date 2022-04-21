@@ -28,7 +28,6 @@
 #include <iterator>
 #include <limits>
 #include <unordered_map>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -48,6 +47,7 @@ extern "C" {
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
+#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
@@ -68,32 +68,32 @@ extern "C" {
 
 namespace org::apache::nifi::minifi::processors {
 
-core::Property SourceInitiatedSubscriptionListener::ListenHostname(
+const core::Property SourceInitiatedSubscriptionListener::ListenHostname(
     core::PropertyBuilder::createProperty("Listen Hostname")->withDescription("The hostname or IP of this machine that will be advertised to event sources to connect to. "
                                                                               "It must be contained as a Subject Alternative Name in the server certificate, "
                                                                               "otherwise source machines will refuse to connect.")
         ->isRequired(true)->build());
-core::Property SourceInitiatedSubscriptionListener::ListenPort(
+const core::Property SourceInitiatedSubscriptionListener::ListenPort(
     core::PropertyBuilder::createProperty("Listen Port")->withDescription("The port to listen on.")
         ->isRequired(true)->withDefaultValue<int64_t>(5986, core::StandardValidators::get().LISTEN_PORT_VALIDATOR)->build());
-core::Property SourceInitiatedSubscriptionListener::SubscriptionManagerPath(
+const core::Property SourceInitiatedSubscriptionListener::SubscriptionManagerPath(
     core::PropertyBuilder::createProperty("Subscription Manager Path")->withDescription("The URI path that will be used for the WEC Subscription Manager endpoint.")
         ->isRequired(true)->withDefaultValue("/wsman/SubscriptionManager/WEC")->build());
-core::Property SourceInitiatedSubscriptionListener::SubscriptionsBasePath(
+const core::Property SourceInitiatedSubscriptionListener::SubscriptionsBasePath(
     core::PropertyBuilder::createProperty("Subscriptions Base Path")->withDescription("The URI path that will be used as the base for endpoints serving individual subscriptions.")
         ->isRequired(true)->withDefaultValue("/wsman/subscriptions")->build());
-core::Property SourceInitiatedSubscriptionListener::SSLCertificate(
+const core::Property SourceInitiatedSubscriptionListener::SSLCertificate(
     core::PropertyBuilder::createProperty("SSL Certificate")->withDescription("File containing PEM-formatted file including TLS/SSL certificate and key. "
                                                                               "The root CA of the certificate must be the CA set in SSL Certificate Authority.")
         ->isRequired(true)->build());
-core::Property SourceInitiatedSubscriptionListener::SSLCertificateAuthority(
+const core::Property SourceInitiatedSubscriptionListener::SSLCertificateAuthority(
     core::PropertyBuilder::createProperty("SSL Certificate Authority")->withDescription("File containing the PEM-formatted CA that is the root CA for both this server's certificate "
                                                                                         "and the event source clients' certificates.")
         ->isRequired(true)->build());
-core::Property SourceInitiatedSubscriptionListener::SSLVerifyPeer(
+const core::Property SourceInitiatedSubscriptionListener::SSLVerifyPeer(
     core::PropertyBuilder::createProperty("SSL Verify Peer")->withDescription("Whether or not to verify the client's certificate")
         ->isRequired(false)->withDefaultValue<bool>(true)->build());
-core::Property SourceInitiatedSubscriptionListener::XPathXmlQuery(
+const core::Property SourceInitiatedSubscriptionListener::XPathXmlQuery(
     core::PropertyBuilder::createProperty("XPath XML Query")->withDescription("An XPath Query in structured XML format conforming to the Query Schema described in "
                                                                               "https://docs.microsoft.com/en-gb/windows/win32/wes/queryschema-schema, "
                                                                               "see an example here: https://docs.microsoft.com/en-gb/windows/win32/wes/consuming-events")
@@ -103,43 +103,41 @@ core::Property SourceInitiatedSubscriptionListener::XPathXmlQuery(
                            "    <Select Path=\"Application\">*</Select>\n"
                            "  </Query>\n"
                            "</QueryList>\n")->build());
-core::Property SourceInitiatedSubscriptionListener::InitialExistingEventsStrategy(
+const core::Property SourceInitiatedSubscriptionListener::InitialExistingEventsStrategy(
     core::PropertyBuilder::createProperty("Initial Existing Events Strategy")->withDescription("Defines the behaviour of the Processor when a new event source connects.\n"
     "None: will not request existing events\n"
     "All: will request all existing events matching the query")
         ->isRequired(true)->withAllowableValues<std::string>({INITIAL_EXISTING_EVENTS_STRATEGY_NONE, INITIAL_EXISTING_EVENTS_STRATEGY_ALL})
         ->withDefaultValue(INITIAL_EXISTING_EVENTS_STRATEGY_NONE)->build());
-core::Property SourceInitiatedSubscriptionListener::SubscriptionExpirationInterval(
+const core::Property SourceInitiatedSubscriptionListener::SubscriptionExpirationInterval(
     core::PropertyBuilder::createProperty("Subscription Expiration Interval")->withDescription("The interval while a subscription is valid without renewal. "
     "Because in a source-initiated subscription, the collector can not cancel the subscription, "
     "setting this too large could cause unnecessary load on the source machine. "
     "Setting this too small causes frequent reenumeration and resubscription which is ineffective.")
         ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("10 min")->build());
-core::Property SourceInitiatedSubscriptionListener::HeartbeatInterval(
+const core::Property SourceInitiatedSubscriptionListener::HeartbeatInterval(
     core::PropertyBuilder::createProperty("Heartbeat Interval")->withDescription("The processor will ask the sources to send heartbeats with this interval.")
         ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
-core::Property SourceInitiatedSubscriptionListener::MaxElements(
+const core::Property SourceInitiatedSubscriptionListener::MaxElements(
     core::PropertyBuilder::createProperty("Max Elements")->withDescription("The maximum number of events a source will batch together and send at once.")
         ->isRequired(true)->withDefaultValue<uint32_t>(20U)->build());
-core::Property SourceInitiatedSubscriptionListener::MaxLatency(
+const core::Property SourceInitiatedSubscriptionListener::MaxLatency(
     core::PropertyBuilder::createProperty("Max Latency")->withDescription("The maximum time a source will wait to send new events.")
         ->isRequired(true)->withDefaultValue<core::TimePeriodValue>("10 sec")->build());
-core::Property SourceInitiatedSubscriptionListener::ConnectionRetryInterval(
+const core::Property SourceInitiatedSubscriptionListener::ConnectionRetryInterval(
     core::PropertyBuilder::createProperty("Connection Retry Interval")->withDescription("The interval with which a source will try to reconnect to the server.")
         ->withDefaultValue<core::TimePeriodValue>("10 sec")->build());
-core::Property SourceInitiatedSubscriptionListener::ConnectionRetryCount(
+const core::Property SourceInitiatedSubscriptionListener::ConnectionRetryCount(
     core::PropertyBuilder::createProperty("Connection Retry Count")->withDescription("The number of connection retries after which a source will consider the subscription expired.")
         ->withDefaultValue<uint32_t>(5U)->build());
 
-core::Relationship SourceInitiatedSubscriptionListener::Success("success", "All Events are routed to success");
+const core::Relationship SourceInitiatedSubscriptionListener::Success("success", "All Events are routed to success");
 
 constexpr char const* SourceInitiatedSubscriptionListener::ATTRIBUTE_WEF_REMOTE_MACHINEID;
 constexpr char const* SourceInitiatedSubscriptionListener::ATTRIBUTE_WEF_REMOTE_IP;
 
 constexpr char const* SourceInitiatedSubscriptionListener::INITIAL_EXISTING_EVENTS_STRATEGY_NONE;
 constexpr char const* SourceInitiatedSubscriptionListener::INITIAL_EXISTING_EVENTS_STRATEGY_ALL;
-
-constexpr char const* SourceInitiatedSubscriptionListener::ProcessorName;
 
 SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(const std::string& name, const utils::Identifier& uuid)
     : Processor(name, uuid)
@@ -745,29 +743,8 @@ void SourceInitiatedSubscriptionListener::onTrigger(const std::shared_ptr<core::
 void SourceInitiatedSubscriptionListener::initialize() {
   logger_->log_trace("Initializing SourceInitiatedSubscriptionListener");
 
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(ListenHostname);
-  properties.insert(ListenPort);
-  properties.insert(SubscriptionManagerPath);
-  properties.insert(SubscriptionsBasePath);
-  properties.insert(SSLCertificate);
-  properties.insert(SSLCertificateAuthority);
-  properties.insert(SSLVerifyPeer);
-  properties.insert(XPathXmlQuery);
-  properties.insert(InitialExistingEventsStrategy);
-  properties.insert(SubscriptionExpirationInterval);
-  properties.insert(HeartbeatInterval);
-  properties.insert(MaxElements);
-  properties.insert(MaxLatency);
-  properties.insert(ConnectionRetryInterval);
-  properties.insert(ConnectionRetryCount);
-  setSupportedProperties(properties);
-
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -890,7 +867,6 @@ void SourceInitiatedSubscriptionListener::notifyStop() {
   server_.reset();
 }
 
-REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
-                                                       "Windows hosts can be set up to connect and forward Event Logs to this processor.");
+REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

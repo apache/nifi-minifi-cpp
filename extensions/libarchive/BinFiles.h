@@ -1,7 +1,4 @@
 /**
- * @file BinFiles.h
- * BinFiles class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -36,11 +33,7 @@
 #include "utils/Export.h"
 #include "core/FlowFileStore.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 // Bin Class
 class Bin {
@@ -191,29 +184,50 @@ class BinManager {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<BinManager>::getLogger()};
 };
 
-// BinFiles Class
 class BinFiles : public core::Processor {
  protected:
-  static core::Relationship Self;
+  static const core::Relationship Self;
 
  public:
   using core::Processor::Processor;
-  // Destructor
   ~BinFiles() override = default;
-  // Processor Name
-  static constexpr char const* ProcessorName = "BinFiles";
-  // Supported Properties
-  EXTENSIONAPI static core::Property MinSize;
-  EXTENSIONAPI static core::Property MaxSize;
-  EXTENSIONAPI static core::Property MinEntries;
-  EXTENSIONAPI static core::Property MaxEntries;
-  EXTENSIONAPI static core::Property MaxBinCount;
-  EXTENSIONAPI static core::Property MaxBinAge;
-  EXTENSIONAPI static core::Property BatchSize;
 
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Failure;
-  EXTENSIONAPI static core::Relationship Original;
+  EXTENSIONAPI static constexpr const char* Description = "Bins flow files into buckets based on the number of entries or size of entries";
+
+  EXTENSIONAPI static const core::Property MinSize;
+  EXTENSIONAPI static const core::Property MaxSize;
+  EXTENSIONAPI static const core::Property MinEntries;
+  EXTENSIONAPI static const core::Property MaxEntries;
+  EXTENSIONAPI static const core::Property MaxBinCount;
+  EXTENSIONAPI static const core::Property MaxBinAge;
+  EXTENSIONAPI static const core::Property BatchSize;
+  static auto properties() {
+    return std::array{
+      MinSize,
+      MaxSize,
+      MinEntries,
+      MaxEntries,
+      MaxBinCount,
+      MaxBinAge,
+      BatchSize
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Original;
+  static auto relationships() {
+    return std::array{
+      Failure,
+      Original
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   // attributes
   EXTENSIONAPI static const char *FRAGMENT_ID_ATTRIBUTE;
@@ -227,19 +241,10 @@ class BinFiles : public core::Processor {
   EXTENSIONAPI static const char *TAR_PERMISSIONS_ATTRIBUTE;
 
  public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  // OnTrigger method, implemented by NiFi BinFiles
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/) override {
   }
-  // OnTrigger method, implemented by NiFi BinFiles
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  // Initialize, over write by NiFi BinFiles
   void initialize() override;
 
   void restore(const std::shared_ptr<core::FlowFile>& flowFile) override;
@@ -271,9 +276,5 @@ class BinFiles : public core::Processor {
   core::FlowFileStore file_store_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors
 

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -27,6 +26,11 @@ namespace org::apache::nifi::minifi::io {
 class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
  public:
   using ArchiveStreamProvider::ArchiveStreamProvider;
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+
   std::unique_ptr<WriteArchiveStream> createWriteStream(int compress_level, const std::string& compress_format,
                                                         std::shared_ptr<OutputStream> sink, std::shared_ptr<core::logging::Logger> logger) override {
     CompressionFormat format = CompressionFormat::parse(compress_format.c_str(), CompressionFormat{});
@@ -44,6 +48,6 @@ class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
   }
 };
 
-REGISTER_INTERNAL_RESOURCE_AS(ArchiveStreamProviderImpl, ("ArchiveStreamProvider"));
+REGISTER_RESOURCE_AS(ArchiveStreamProviderImpl, InternalResource, ("ArchiveStreamProvider"));
 
 }  // namespace org::apache::nifi::minifi::io

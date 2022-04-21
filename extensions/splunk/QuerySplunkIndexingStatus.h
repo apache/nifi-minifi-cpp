@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "SplunkHECProcessor.h"
+#include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -37,21 +38,40 @@ class QuerySplunkIndexingStatus final : public SplunkHECProcessor {
   QuerySplunkIndexingStatus& operator=(QuerySplunkIndexingStatus&&) = delete;
   ~QuerySplunkIndexingStatus() override = default;
 
+  EXTENSIONAPI static constexpr const char* Description = "Queries Splunk server in order to acquire the status of indexing acknowledgement.";
+
   EXTENSIONAPI static const core::Property MaximumWaitingTime;
   EXTENSIONAPI static const core::Property MaxQuerySize;
+  static auto properties() {
+    return utils::array_cat(SplunkHECProcessor::properties(), std::array{
+      MaximumWaitingTime,
+      MaxQuerySize
+    });
+  }
 
   EXTENSIONAPI static const core::Relationship Acknowledged;
   EXTENSIONAPI static const core::Relationship Unacknowledged;
   EXTENSIONAPI static const core::Relationship Undetermined;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() {
+    return std::array{
+      Acknowledged,
+      Unacknowledged,
+      Undetermined,
+      Failure
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
  protected:
   uint32_t batch_size_ = 1000;

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,6 +16,7 @@
  */
 
 #include "core/state/nodes/SupportedOperations.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "range/v3/algorithm/find.hpp"
 
@@ -150,6 +150,6 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
   return serialized;
 }
 
-REGISTER_RESOURCE(SupportedOperations, "Node part of an AST that defines the supported C2 operations in the Agent Manifest.");
+REGISTER_RESOURCE(SupportedOperations, DescriptionOnly);
 
 }  // namespace org::apache::nifi::minifi::state::response

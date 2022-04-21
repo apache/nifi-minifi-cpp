@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,21 +17,11 @@
 #include "core/state/nodes/DeviceInformation.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 utils::SystemCpuUsageTracker DeviceInfoNode::cpu_load_tracker_;
 std::mutex DeviceInfoNode::cpu_load_tracker_mutex_;
 
-REGISTER_RESOURCE(DeviceInfoNode, "Node part of an AST that defines device characteristics to the C2 protocol");
+REGISTER_RESOURCE(DeviceInfoNode, DescriptionOnly);
 
-} /* namespace response */
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::state::response

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -26,12 +25,7 @@
 #include "core/Resource.h"
 #include "data/DatabaseConnectors.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
-namespace controllers {
+namespace org::apache::nifi::minifi::sql::controllers {
 
 class MockODBCService : public DatabaseService {
  public:
@@ -48,7 +42,13 @@ class MockODBCService : public DatabaseService {
     initialize();
   }
 
-  std::unique_ptr<sql::Connection> getConnection() const {
+  static constexpr const char* Description = "Controller service that provides Mock ODBC database connection";
+  static auto properties() { return DatabaseService::properties(); }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
+  std::unique_ptr<sql::Connection> getConnection() const override {
     return std::make_unique<sql::MockODBCConnection>(connection_string_);
   }
 
@@ -56,11 +56,6 @@ class MockODBCService : public DatabaseService {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-REGISTER_RESOURCE(MockODBCService, "Controller service that provides Mock ODBC database connection");
+REGISTER_RESOURCE(MockODBCService, ControllerService);
 
-} /* namespace controllers */
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql::controllers

@@ -45,6 +45,19 @@ const std::string REPOTEST_FLOWFILE_CHECKPOINT_DIR = ".\\repotest_flowfile_check
 const std::string REPOTEST_FLOWFILE_CHECKPOINT_DIR = "./repotest_flowfile_checkpoint";
 #endif
 
+namespace {
+class TestProcessor : public minifi::core::Processor {
+ public:
+  using Processor::Processor;
+
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+};
+}  // namespace
+
 TEST_CASE("Test Repo Names", "[TestFFR1]") {
   auto repoA = minifi::core::createRepository("FlowFileRepository", false, "flowfile");
   REQUIRE("flowfile" == repoA->getName());
@@ -303,7 +316,7 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
    * which case the orphan FlowFiles are deleted.)
    */
   {
-    std::shared_ptr<core::Processor> processor = std::make_shared<core::Processor>("dummy");
+    std::shared_ptr<core::Processor> processor = std::make_shared<TestProcessor>("dummy");
     utils::Identifier uuid = processor->getUUID();
     REQUIRE(uuid);
     inputPtr->setSourceUUID(uuid);

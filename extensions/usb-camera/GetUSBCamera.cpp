@@ -24,7 +24,6 @@
 #include <utility>
 #include <string>
 #include <vector>
-#include <set>
 #include <algorithm>
 
 #include "utils/gsl.h"
@@ -37,42 +36,31 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property GetUSBCamera::FPS(  // NOLINT
+const core::Property GetUSBCamera::FPS(
     "FPS", "Frames per second to capture from USB camera", "1");
-core::Property GetUSBCamera::Width(  // NOLINT
+const core::Property GetUSBCamera::Width(
     "Width", "Target width of image to capture from USB camera", "");
-core::Property GetUSBCamera::Height(  // NOLINT
+const core::Property GetUSBCamera::Height(
     "Height", "Target height of image to capture from USB camera", "");
-core::Property GetUSBCamera::Format(  // NOLINT
+const core::Property GetUSBCamera::Format(
     "Format",
     "Frame format (currently only PNG and RAW are supported; RAW is a binary pixel buffer of RGB values)",
     "PNG");
-core::Property GetUSBCamera::VendorID(  // NOLINT
+const core::Property GetUSBCamera::VendorID(
     "USB Vendor ID", "USB Vendor ID of camera device, in hexadecimal format", "0x0");
-core::Property GetUSBCamera::ProductID(  // NOLINT
+const core::Property GetUSBCamera::ProductID(
     "USB Product ID", "USB Product ID of camera device, in hexadecimal format", "0x0");
-core::Property GetUSBCamera::SerialNo(  // NOLINT
+const core::Property GetUSBCamera::SerialNo(
     "USB Serial No.", "USB Serial No. of camera device", "");
-core::Relationship GetUSBCamera::Success(  // NOLINT
+
+const core::Relationship GetUSBCamera::Success(
     "success", "Sucessfully captured images sent here");
-core::Relationship GetUSBCamera::Failure(  // NOLINT
+const core::Relationship GetUSBCamera::Failure(
     "failure", "Failures sent here");
 
 void GetUSBCamera::initialize() {
-  std::set<core::Property> properties;
-  properties.insert(FPS);
-  properties.insert(Width);
-  properties.insert(Height);
-  properties.insert(Format);
-  properties.insert(VendorID);
-  properties.insert(ProductID);
-  properties.insert(SerialNo);
-  setSupportedProperties(properties);
-
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
@@ -460,7 +448,7 @@ int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::Bas
   return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
-REGISTER_RESOURCE(GetUSBCamera, "Gets images from USB Video Class (UVC)-compatible devices. Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.");  // NOLINT line length
+REGISTER_RESOURCE(GetUSBCamera, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

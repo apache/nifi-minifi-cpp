@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/TypedValues.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -80,17 +81,8 @@ ReplaceText::ReplaceText(const std::string& name, const utils::Identifier& uuid)
 }
 
 void ReplaceText::initialize() {
-  setSupportedProperties({
-      EvaluationMode,
-      LineByLineEvaluationMode,
-      ReplacementStrategy,
-      SearchValue,
-      ReplacementValue
-  });
-  setSupportedRelationships({
-      Success,
-      Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ReplaceText::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -302,6 +294,6 @@ std::string ReplaceText::getAttributeValue(const std::shared_ptr<core::FlowFile>
   }
 }
 
-REGISTER_RESOURCE(ReplaceText, "Updates the content of a FlowFile by replacing parts of it using various replacement strategies.");
+REGISTER_RESOURCE(ReplaceText, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

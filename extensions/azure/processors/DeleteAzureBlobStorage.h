@@ -29,6 +29,7 @@
 #include "core/Property.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 
 template<typename T>
 class AzureBlobStorageTestsFixture;
@@ -37,12 +38,23 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase {
  public:
-  // Supported Properties
-  static const core::Property DeleteSnapshotsOption;
+  EXTENSIONAPI static constexpr const char* Description = "Deletes the provided blob from Azure Storage";
 
-  // Supported Relationships
-  static const core::Relationship Failure;
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Property DeleteSnapshotsOption;
+  static auto properties() {
+    return utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::properties(), std::array{DeleteSnapshotsOption});
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit DeleteAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : DeleteAzureBlobStorage(name, uuid, nullptr) {
@@ -54,14 +66,6 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorB
 
  private:
   friend class ::AzureBlobStorageTestsFixture<DeleteAzureBlobStorage>;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
   explicit DeleteAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
     : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {

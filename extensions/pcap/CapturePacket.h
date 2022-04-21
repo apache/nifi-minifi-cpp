@@ -93,24 +93,38 @@ struct PacketMovers {
 // CapturePacket Class
 class CapturePacket : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit CapturePacket(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
     mover = std::unique_ptr<PacketMovers>(new PacketMovers());
   }
-  // Destructor
   virtual ~CapturePacket();
-  // Processor Name
-  static const char *ProcessorName;
-  static core::Property BatchSize;
-  static core::Property NetworkControllers;
-  static core::Property BaseDir;
-  static core::Property CaptureBluetooth;
-  // Supported Relationships
-  static core::Relationship Success;
+
+  EXTENSIONAPI static constexpr const char* Description = "CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content of a flow file."
+    " Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. "
+    "A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.";
+
+  static const core::Property BatchSize;
+  static const core::Property NetworkControllers;
+  static const core::Property BaseDir;
+  static const core::Property CaptureBluetooth;
+  static auto properties() {
+    return std::array{
+      BatchSize,
+      NetworkControllers,
+      BaseDir,
+      CaptureBluetooth
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;

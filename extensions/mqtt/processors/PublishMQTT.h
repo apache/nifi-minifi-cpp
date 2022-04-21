@@ -1,7 +1,4 @@
 /**
- * @file PublishMQTT.h
- * PublishMQTT class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -33,38 +30,42 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "MQTTClient.h"
 #include "AbstractMQTTProcessor.h"
+#include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
-// PublishMQTT Class
 class PublishMQTT : public processors::AbstractMQTTProcessor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit PublishMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
     retain_ = false;
     max_seg_size_ = ULLONG_MAX;
   }
-  // Destructor
   ~PublishMQTT() override = default;
-  // Processor Name
-  static constexpr char const* ProcessorName = "PublishMQTT";
-  // Supported Properties
-  static core::Property Retain;
-  static core::Property MaxFlowSegSize;
 
-  static core::Relationship Failure;
-  static core::Relationship Success;
+  EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
 
-  // Nest Callback Class for read stream
+  EXTENSIONAPI static const core::Property Retain;
+  EXTENSIONAPI static const core::Property MaxFlowSegSize;
+  static auto properties() {
+    return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
+      Retain,
+      MaxFlowSegSize
+    });
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   class ReadCallback {
    public:
     ReadCallback(uint64_t flow_size, uint64_t max_seg_size, const std::string &key, MQTTClient client, int qos, bool retain, MQTTClient_deliveryToken &token)
@@ -122,30 +123,14 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   };
 
  public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
-  // OnTrigger method, implemented by NiFi PublishMQTT
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  // Initialize, over write by NiFi PublishMQTT
   void initialize() override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   uint64_t max_seg_size_;
   bool retain_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PublishMQTT>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -27,14 +27,11 @@
 #include "core/Core.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class FetchSFTP : public SFTPProcessorBase {
  public:
@@ -42,28 +39,48 @@ class FetchSFTP : public SFTPProcessorBase {
   static constexpr char const *COMPLETION_STRATEGY_MOVE_FILE = "Move File";
   static constexpr char const *COMPLETION_STRATEGY_DELETE_FILE = "Delete File";
 
-  static constexpr char const* ProcessorName = "FetchSFTP";
-
-
-  /*!
-   * Create a new processor
-   */
   explicit FetchSFTP(const std::string& name, const utils::Identifier& uuid = {});
   ~FetchSFTP() override;
 
-  // Supported Properties
-  static core::Property RemoteFile;
-  static core::Property CompletionStrategy;
-  static core::Property MoveDestinationDirectory;
-  static core::Property CreateDirectory;
-  static core::Property DisableDirectoryListing;
-  static core::Property UseCompression;
+  EXTENSIONAPI static constexpr const char* Description = "Fetches the content of a file from a remote SFTP server "
+      "and overwrites the contents of an incoming FlowFile with the content of the remote file.";
 
-  // Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship CommsFailure;
-  static core::Relationship NotFound;
-  static core::Relationship PermissionDenied;
+  EXTENSIONAPI static const core::Property RemoteFile;
+  EXTENSIONAPI static const core::Property CompletionStrategy;
+  EXTENSIONAPI static const core::Property MoveDestinationDirectory;
+  EXTENSIONAPI static const core::Property CreateDirectory;
+  EXTENSIONAPI static const core::Property DisableDirectoryListing;
+  EXTENSIONAPI static const core::Property UseCompression;
+  static auto properties() {
+    return utils::array_cat(SFTPProcessorBase::properties(), std::array{
+      RemoteFile,
+      CompletionStrategy,
+      MoveDestinationDirectory,
+      CreateDirectory,
+      DisableDirectoryListing,
+      UseCompression
+    });
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship CommsFailure;
+  EXTENSIONAPI static const core::Relationship NotFound;
+  EXTENSIONAPI static const core::Relationship PermissionDenied;
+  static auto relationships() {
+    return std::array{
+      Success,
+      CommsFailure,
+      NotFound,
+      PermissionDenied
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   // Writes Attributes
   static constexpr char const* ATTRIBUTE_SFTP_REMOTE_HOST = "sftp.remote.host";
@@ -75,17 +92,9 @@ class FetchSFTP : public SFTPProcessorBase {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   std::string completion_strategy_;
   bool create_directory_;
   bool disable_directory_listing_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

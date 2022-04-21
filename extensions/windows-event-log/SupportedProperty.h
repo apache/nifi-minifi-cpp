@@ -23,7 +23,6 @@
 #include <vector>
 #include <memory>
 #include <string>
-#include <set>
 #include <codecvt>
 
 #include "core/ProcessContext.h"
@@ -49,10 +48,10 @@ class SupportedProperties {
     }
   }
 
-  std::set<core::Property> getProperties() const  {
-    std::set<core::Property> ret;
+  std::vector<core::Property> getProperties() const  {
+    std::vector<core::Property> ret;
     for (auto pProperty : listProperties_) {
-      ret.insert(*pProperty);
+      ret.push_back(*pProperty);
     }
     return ret;
   }

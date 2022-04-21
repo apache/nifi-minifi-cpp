@@ -85,24 +85,39 @@ class S3Processor : public core::Processor {
  public:
   static const std::set<std::string> REGIONS;
 
-  // Supported Properties
-  static const core::Property Bucket;
-  static const core::Property AccessKey;
-  static const core::Property SecretKey;
-  static const core::Property CredentialsFile;
-  static const core::Property AWSCredentialsProviderService;
-  static const core::Property Region;
-  static const core::Property CommunicationsTimeout;
-  static const core::Property EndpointOverrideURL;
-  static const core::Property ProxyHost;
-  static const core::Property ProxyPort;
-  static const core::Property ProxyUsername;
-  static const core::Property ProxyPassword;
-  static const core::Property UseDefaultCredentials;
+  EXTENSIONAPI static const core::Property Bucket;
+  EXTENSIONAPI static const core::Property AccessKey;
+  EXTENSIONAPI static const core::Property SecretKey;
+  EXTENSIONAPI static const core::Property CredentialsFile;
+  EXTENSIONAPI static const core::Property AWSCredentialsProviderService;
+  EXTENSIONAPI static const core::Property Region;
+  EXTENSIONAPI static const core::Property CommunicationsTimeout;
+  EXTENSIONAPI static const core::Property EndpointOverrideURL;
+  EXTENSIONAPI static const core::Property ProxyHost;
+  EXTENSIONAPI static const core::Property ProxyPort;
+  EXTENSIONAPI static const core::Property ProxyUsername;
+  EXTENSIONAPI static const core::Property ProxyPassword;
+  EXTENSIONAPI static const core::Property UseDefaultCredentials;
+  static auto properties() {
+    return std::array{
+      Bucket,
+      AccessKey,
+      SecretKey,
+      CredentialsFile,
+      AWSCredentialsProviderService,
+      Region,
+      CommunicationsTimeout,
+      EndpointOverrideURL,
+      ProxyHost,
+      ProxyPort,
+      ProxyUsername,
+      ProxyPassword,
+      UseDefaultCredentials
+    };
+  }
 
   explicit S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger);
 
-  bool supportsDynamicProperties() override { return true; }
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:

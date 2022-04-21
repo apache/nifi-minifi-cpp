@@ -24,14 +24,10 @@
 #include <string>
 
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
-
-const core::Property AzureStorageProcessorBase::AzureStorageCredentialsService(
-  core::PropertyBuilder::createProperty("Azure Storage Credentials Service")
-    ->withDescription("Name of the Azure Storage Credentials Service used to retrieve the connection string from.")
-    ->build());
 
 std::tuple<AzureStorageProcessorBase::GetCredentialsFromControllerResult, std::optional<storage::AzureStorageCredentials>> AzureStorageProcessorBase::getCredentialsFromControllerService(
     core::ProcessContext &context) const {

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -35,11 +34,7 @@
 #include "concurrentqueue.h"
 #include "MQTTClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 static constexpr const char* const MQTT_QOS_0 = "0";
 static constexpr const char* const MQTT_QOS_1 = "1";
@@ -90,20 +85,36 @@ class MQTTControllerService : public core::controller::ControllerService {
     initialize();
   }
 
-  static core::Property BrokerURL;
-  static core::Property ClientID;
-  static core::Property UserName;
-  static core::Property Password;
-  static core::Property CleanSession;
-  static core::Property KeepLiveInterval;
-  static core::Property ConnectionTimeout;
-  static core::Property Topic;
-  static core::Property QOS;
-  static core::Property SecurityProtocol;
+  EXTENSIONAPI static const core::Property BrokerURL;
+  EXTENSIONAPI static const core::Property ClientID;
+  EXTENSIONAPI static const core::Property UserName;
+  EXTENSIONAPI static const core::Property Password;
+  EXTENSIONAPI static const core::Property KeepLiveInterval;
+  EXTENSIONAPI static const core::Property ConnectionTimeout;
+  EXTENSIONAPI static const core::Property Topic;
+  EXTENSIONAPI static const core::Property QOS;
+  EXTENSIONAPI static const core::Property SecurityProtocol;
+  static auto properties() {
+    return std::array{
+      BrokerURL,
+      ClientID,
+      UserName,
+      Password,
+      KeepLiveInterval,
+      ConnectionTimeout,
+      Topic,
+      QOS,
+      SecurityProtocol
+    };
+  }
 
-  virtual void initialize();
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  void yield() {
+  void initialize() override;
+
+  void yield() override {
   }
 
   int send(const std::string &topic, const std::vector<uint8_t> &data) {
@@ -149,15 +160,15 @@ class MQTTControllerService : public core::controller::ControllerService {
     return token;
   }
 
-  bool isRunning() {
+  bool isRunning() override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 
-  bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return false;
   }
 
-  virtual void onEnable();
+  void onEnable() override;
 
   void subscribeToTopic(const std::string newTopic) {
     std::lock_guard<std::mutex> lock(initialization_mutex_);
@@ -314,8 +325,4 @@ class MQTTControllerService : public core::controller::ControllerService {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MQTTControllerService>::getLogger();
 };
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

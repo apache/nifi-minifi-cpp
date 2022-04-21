@@ -28,7 +28,7 @@
 #include <regex>
 #include <algorithm>
 #include "core/ProcessContext.h"
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
 #include "core/Resource.h"
@@ -41,19 +41,19 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property AppendHostInfo::InterfaceNameFilter("Network Interface Filter", "A regular expression to filter ip addresses based on the name of the network interface", "");
-core::Property AppendHostInfo::HostAttribute("Hostname Attribute", "Flowfile attribute used to record the agent's hostname", "source.hostname");
-core::Property AppendHostInfo::IPAttribute("IP Attribute", "Flowfile attribute used to record the agent's IP addresses in a comma separated list", "source.ipv4");
-core::Property AppendHostInfo::RefreshPolicy(core::PropertyBuilder::createProperty("Refresh Policy")
+const core::Property AppendHostInfo::InterfaceNameFilter("Network Interface Filter", "A regular expression to filter ip addresses based on the name of the network interface", "");
+const core::Property AppendHostInfo::HostAttribute("Hostname Attribute", "Flowfile attribute used to record the agent's hostname", "source.hostname");
+const core::Property AppendHostInfo::IPAttribute("IP Attribute", "Flowfile attribute used to record the agent's IP addresses in a comma separated list", "source.ipv4");
+const core::Property AppendHostInfo::RefreshPolicy(core::PropertyBuilder::createProperty("Refresh Policy")
     ->withDescription("When to recalculate the host info")
     ->withAllowableValues<std::string>({ REFRESH_POLICY_ON_SCHEDULE, REFRESH_POLICY_ON_TRIGGER })
     ->withDefaultValue(REFRESH_POLICY_ON_SCHEDULE)->build());
 
-core::Relationship AppendHostInfo::Success("success", "success operational on the flow record");
+const core::Relationship AppendHostInfo::Success("success", "success operational on the flow record");
 
 void AppendHostInfo::initialize() {
-  setSupportedProperties({InterfaceNameFilter, HostAttribute, IPAttribute, RefreshPolicy});
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void AppendHostInfo::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -120,7 +120,7 @@ void AppendHostInfo::refreshHostInfo() {
   }
 }
 
-REGISTER_RESOURCE(AppendHostInfo, "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.");
+REGISTER_RESOURCE(AppendHostInfo, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

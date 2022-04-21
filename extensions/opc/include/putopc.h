@@ -1,6 +1,4 @@
 /**
- * PutOPC class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,26 +29,46 @@
 #include "core/Property.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 class PutOPCProcessor : public BaseOPCProcessor {
  public:
-  static constexpr char const* ProcessorName = "PutOPC";
+  EXTENSIONAPI static constexpr const char* Description = "Creates/updates  OPC nodes";
 
-  static core::Property ParentNodeIDType;
-  static core::Property ParentNodeID;
-  static core::Property ParentNameSpaceIndex;
-  static core::Property ValueType;
+  EXTENSIONAPI static const core::Property ParentNodeIDType;
+  EXTENSIONAPI static const core::Property ParentNodeID;
+  EXTENSIONAPI static const core::Property ParentNameSpaceIndex;
+  EXTENSIONAPI static const core::Property ValueType;
+  EXTENSIONAPI static const core::Property TargetNodeIDType;
+  EXTENSIONAPI static const core::Property TargetNodeID;
+  EXTENSIONAPI static const core::Property TargetNodeBrowseName;
+  EXTENSIONAPI static const core::Property TargetNodeNameSpaceIndex;
+  static auto properties() {
+    return utils::array_cat(BaseOPCProcessor::properties(), std::array{
+      ParentNodeIDType,
+      ParentNodeID,
+      ParentNameSpaceIndex,
+      ValueType,
+      TargetNodeIDType,
+      TargetNodeID,
+      TargetNodeBrowseName,
+      TargetNodeNameSpaceIndex
+    });
+  }
 
-  static core::Property TargetNodeIDType;
-  static core::Property TargetNodeID;
-  static core::Property TargetNodeBrowseName;
-  static core::Property TargetNodeNameSpaceIndex;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
 
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit PutOPCProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : BaseOPCProcessor(name, uuid), nameSpaceIdx_(0), parentExists_(false) {
@@ -62,10 +80,6 @@ class PutOPCProcessor : public BaseOPCProcessor {
   void initialize() override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   std::string nodeID_;
   int32_t nameSpaceIdx_{};
   opc::OPCNodeIDType idType_{};

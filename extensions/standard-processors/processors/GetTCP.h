@@ -148,7 +148,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
   std::atomic<size_t> input_bytes_{0};
 };
 
-// GetTCP Class
 class GetTCP : public core::Processor, public state::response::MetricsNodeSource {
  public:
   explicit GetTCP(const std::string& name, const utils::Identifier& uuid = {})
@@ -168,47 +167,48 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
     client_thread_pool_.shutdown();
   }
 
-// Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "GetTCP";
+  EXTENSIONAPI static constexpr const char* Description = "Establishes a TCP Server that defines and retrieves one or more byte messages from clients";
 
-  // Supported Properties
-  EXTENSIONAPI static core::Property EndpointList;
-  EXTENSIONAPI static core::Property ConcurrentHandlers;
-  EXTENSIONAPI static core::Property ReconnectInterval;
-  EXTENSIONAPI static core::Property StayConnected;
-  EXTENSIONAPI static core::Property ReceiveBufferSize;
-  EXTENSIONAPI static core::Property SSLContextService;
-  EXTENSIONAPI static core::Property ConnectionAttemptLimit;
-  EXTENSIONAPI static core::Property EndOfMessageByte;
+  EXTENSIONAPI static const core::Property EndpointList;
+  EXTENSIONAPI static const core::Property ConcurrentHandlers;
+  EXTENSIONAPI static const core::Property ReconnectInterval;
+  EXTENSIONAPI static const core::Property StayConnected;
+  EXTENSIONAPI static const core::Property ReceiveBufferSize;
+  EXTENSIONAPI static const core::Property SSLContextService;
+  EXTENSIONAPI static const core::Property ConnectionAttemptLimit;
+  EXTENSIONAPI static const core::Property EndOfMessageByte;
+  static auto properties() {
+    return std::array{
+      EndpointList,
+      ConcurrentHandlers,
+      ReconnectInterval,
+      StayConnected,
+      ReceiveBufferSize,
+      SSLContextService,
+      ConnectionAttemptLimit,
+      EndOfMessageByte
+    };
+  }
 
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Partial;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Partial;
+  static auto relationships() { return std::array{Success, Partial}; }
 
- public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext> &processContext, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-
   void onSchedule(core::ProcessContext* /*processContext*/, core::ProcessSessionFactory* /*sessionFactory*/) override {
     throw std::logic_error{"GetTCP::onSchedule(ProcessContext*, ProcessSessionFactory*) is unimplemented"};
   }
-  /**
-   * Execution trigger for the GetTCP Processor
-   * @param context processor context
-   * @param session processor session reference.
-   */
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/) override {
     throw std::logic_error{"GetTCP::onTrigger(ProcessContext*, ProcessSession*) is unimplemented"};
   }
-
-  // Initialize, over write by NiFi GetTCP
   void initialize() override;
 
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
@@ -218,39 +218,22 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
 
  private:
   std::function<int()> f_ex;
-
   std::atomic<bool> running_;
-
   std::unique_ptr<DataHandler> handler_;
-
   std::vector<std::string> endpoints;
-
   std::map<std::string, std::future<int>*> live_clients_;
-
   moodycamel::ConcurrentQueue<std::unique_ptr<io::Socket>> socket_ring_buffer_;
-
   bool stay_connected_;
-
   uint16_t concurrent_handlers_;
-
   std::byte endOfMessageByte;
-
   std::chrono::milliseconds reconnect_interval_{5000};
-
   uint64_t receive_buffer_size_;
-
   uint16_t connection_attempt_limit_;
-
   std::shared_ptr<GetTCPMetrics> metrics_;
-
   // Mutex for ensuring clients are running
-
   std::mutex mutex_;
-
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
-
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetTCP>::getLogger();
-
   utils::ThreadPool<int> client_thread_pool_;
 };
 

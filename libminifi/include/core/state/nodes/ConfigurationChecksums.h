@@ -24,17 +24,14 @@
 #include "utils/ChecksumCalculator.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 class ConfigurationChecksums : public ResponseNode {
  public:
   ConfigurationChecksums() = default;
   explicit ConfigurationChecksums(const std::string& name, const utils::Identifier& uuid = {}) : ResponseNode(name, uuid) {}
+
+  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines checksums of configuration files in the C2 protocol";
 
   void addChecksumCalculator(utils::ChecksumCalculator& checksum_calculator);
 
@@ -45,9 +42,4 @@ class ConfigurationChecksums : public ResponseNode {
   std::vector<gsl::not_null<utils::ChecksumCalculator*>> checksum_calculators_;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state::response

@@ -1,7 +1,4 @@
 /**
- * @file PutSQL.cpp
- * PutSQL class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,34 +22,19 @@
 #include "io/BufferStream.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "Exception.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-const std::string PutSQL::ProcessorName("PutSQL");
-
-const core::Property PutSQL::SQLStatement(
-  core::PropertyBuilder::createProperty("SQL Statement")
-  ->isRequired(false)
-  ->withDescription(
-      "The SQL statement to execute. The statement can be empty, a constant value, or built from attributes using Expression Language. "
-      "If this property is specified, it will be used regardless of the content of incoming flowfiles. If this property is empty, the content of "
-      "the incoming flow file is expected to contain a valid SQL statement, to be issued by the processor to the database.")
-  ->supportsExpressionLanguage(true)->build());
-
-const core::Relationship PutSQL::Success("success", "Database is successfully updated.");
 
 PutSQL::PutSQL(const std::string& name, const utils::Identifier& uuid)
   : SQLProcessor(name, uuid, core::logging::LoggerFactory<PutSQL>::getLogger()) {
 }
 
 void PutSQL::initialize() {
-  //! Set the supported properties
-  setSupportedProperties({ DBControllerService, SQLStatement });
-
-  //! Set the supported relationships
-  setSupportedRelationships({ Success });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PutSQL::processOnSchedule(core::ProcessContext& /*context*/) {}
@@ -76,7 +58,5 @@ void PutSQL::processOnTrigger(core::ProcessContext& context, core::ProcessSessio
 
   connection_->prepareStatement(sql_statement)->execute(collectArguments(flow_file));
 }
-
-REGISTER_RESOURCE(PutSQL, "PutSQL to execute SQL command via ODBC.");
 
 }  // namespace org::apache::nifi::minifi::processors

@@ -1,7 +1,4 @@
 /**
- * @file ConsumeMQTT.h
- * ConsumeMQTT class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -33,56 +30,53 @@
 #include "concurrentqueue.h"
 #include "MQTTClient.h"
 #include "AbstractMQTTProcessor.h"
+#include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 #define MQTT_TOPIC_ATTRIBUTE "mqtt.topic"
 #define MQTT_BROKER_ATTRIBUTE "mqtt.broker"
 
-// ConsumeMQTT Class
 class ConsumeMQTT : public processors::AbstractMQTTProcessor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit ConsumeMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
     isSubscriber_ = true;
     maxQueueSize_ = 100;
     maxSegSize_ = ULLONG_MAX;
   }
-  // Destructor
   ~ConsumeMQTT() override {
     MQTTClient_message *message;
     while (queue_.try_dequeue(message)) {
       MQTTClient_freeMessage(&message);
     }
   }
-  // Processor Name
-  static constexpr char const* ProcessorName = "ConsumeMQTT";
-  // Supported Properties
-  static core::Property MaxFlowSegSize;
-  static core::Property QueueBufferMaxMessage;
 
-  static core::Relationship Success;
+  EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
+      "The the payload of the MQTT message becomes content of a FlowFile";
 
- public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static const core::Property MaxFlowSegSize;
+  EXTENSIONAPI static const core::Property QueueBufferMaxMessage;
+  static auto properties() {
+    return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
+      MaxFlowSegSize,
+      QueueBufferMaxMessage
+    });
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
-  // OnTrigger method, implemented by NiFi ConsumeMQTT
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  // Initialize, over write by NiFi ConsumeMQTT
   void initialize() override;
   bool enqueueReceiveMQTTMsg(MQTTClient_message *message) override;
 
@@ -95,10 +89,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   }
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
   std::mutex mutex_;
   uint64_t maxQueueSize_;
@@ -106,8 +96,4 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

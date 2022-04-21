@@ -20,6 +20,7 @@
 
 #include "utils/FileReaderCallback.h"
 #include "utils/StringUtils.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -81,21 +82,8 @@ const core::Property ListFile::IgnoreHiddenFiles(
 const core::Relationship ListFile::Success("success", "All FlowFiles that are received are routed to success");
 
 void ListFile::initialize() {
-  setSupportedProperties({
-    InputDirectory,
-    RecurseSubdirectories,
-    FileFilter,
-    PathFilter,
-    MinimumFileAge,
-    MaximumFileAge,
-    MinimumFileSize,
-    MaximumFileSize,
-    IgnoreHiddenFiles
-  });
-
-  setSupportedRelationships({
-    Success
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ListFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
@@ -273,7 +261,6 @@ void ListFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
   }
 }
 
-REGISTER_RESOURCE(ListFile, "Retrieves a listing of files from the local filesystem. For each file that is listed, "
-  "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.");
+REGISTER_RESOURCE(ListFile, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

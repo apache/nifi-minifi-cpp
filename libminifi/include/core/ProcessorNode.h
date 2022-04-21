@@ -166,35 +166,12 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return ret;
   }
 
-  /**
-   * Sets supported properties for the ConfigurableComponent
-   * @param supported properties
-   * @return result of set operation.
-   */
-  bool setSupportedProperties(const std::set<Property>& properties) {
-    const auto processor_cast = dynamic_cast<ConfigurableComponent*>(processor_);
-    bool ret = ConfigurableComponent::setSupportedProperties(properties);
-    if (nullptr != processor_cast)
-      ret = processor_cast->setSupportedProperties(properties);
-
-    return ret;
-  }
-  /**
-   * Sets supported properties for the ConfigurableComponent
-   * @param supported properties
-   * @return result of set operation.
-   */
-
-  bool setAutoTerminatedRelationships(std::set<Relationship> relationships) {
+  bool setAutoTerminatedRelationships(std::vector<Relationship> relationships) {
     return processor_->setAutoTerminatedRelationships(relationships);
   }
 
   bool isAutoTerminated(Relationship relationship) {
     return processor_->isAutoTerminated(relationship);
-  }
-
-  bool setSupportedRelationships(std::set<Relationship> relationships) {
-    return processor_->setSupportedRelationships(relationships);
   }
 
   bool isSupportedRelationship(Relationship relationship) {
@@ -280,7 +257,11 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     processor_->setMaxConcurrentTasks(tasks);
   }
 
-  bool supportsDynamicProperties() override {
+  bool supportsDynamicProperties() const override {
+    return false;
+  }
+
+  bool supportsDynamicRelationships() const override {
     return false;
   }
 

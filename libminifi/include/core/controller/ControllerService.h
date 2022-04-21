@@ -21,11 +21,14 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <set>
 #include "properties/Configure.h"
 #include "core/Core.h"
 #include "core/ConfigurableComponent.h"
 #include "core/Connectable.h"
+
+#define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES \
+  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; } \
+  bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; }
 
 namespace org {
 namespace apache {
@@ -88,16 +91,11 @@ class ControllerService : public ConfigurableComponent, public Connectable {
       current_state_ = DISABLED;
     }
 
-  virtual void initialize() {
-    // set base supported properties
-    Property property("Linked Services", "Referenced Controller Services");
-    std::set<Property> supportedProperties;
-    supportedProperties.insert(property);
-    setSupportedProperties(supportedProperties);
+  void initialize() override {
     current_state_ = ENABLED;
   }
 
-  virtual ~ControllerService() {
+  ~ControllerService() override {
     notifyStop();
   }
 
@@ -131,10 +129,6 @@ class ControllerService : public ConfigurableComponent, public Connectable {
     }
   }
 
-  virtual bool supportsDynamicProperties() {
-    return false;
-  }
-
   void setLinkedControllerServices(const std::vector<std::shared_ptr<controller::ControllerService>> &services) {
     linked_services_ = services;
   }
@@ -143,7 +137,7 @@ class ControllerService : public ConfigurableComponent, public Connectable {
   std::vector<std::shared_ptr<controller::ControllerService> > linked_services_;
   std::shared_ptr<Configure> configuration_;
   std::atomic<ControllerServiceState> current_state_;
-  virtual bool canEdit() {
+  bool canEdit() override {
     return true;
   }
 };

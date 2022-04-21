@@ -28,13 +28,7 @@
 
 #include "rocksdb/options.h"
 
-
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyValueStoreService {
  public:
@@ -44,7 +38,22 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
 
   ~RocksDbPersistableKeyValueStoreService() override = default;
 
-  static core::Property Directory;
+  EXTENSIONAPI static constexpr const char* Description = "A key-value service implemented by RocksDB";
+  EXTENSIONAPI static const core::Property LinkedServices;
+  EXTENSIONAPI static const core::Property AlwaysPersist;
+  EXTENSIONAPI static const core::Property AutoPersistenceInterval;
+  EXTENSIONAPI static const core::Property Directory;
+  static auto properties() {
+    return std::array{
+      LinkedServices,
+      AlwaysPersist,
+      AutoPersistenceInterval,
+      Directory
+    };
+  }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
   void onEnable() override;
@@ -74,8 +83,4 @@ class RocksDbPersistableKeyValueStoreService : public AbstractAutoPersistingKeyV
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RocksDbPersistableKeyValueStoreService>::getLogger();
 };
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

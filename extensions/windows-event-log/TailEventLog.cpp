@@ -22,7 +22,6 @@
 
 #include <vector>
 #include <map>
-#include <set>
 #include <string>
 #include <memory>
 
@@ -37,20 +36,14 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string TailEventLog::ProcessorName("TailEventLog");
-core::Relationship TailEventLog::Success("success", "All files, containing log events, are routed to success");
-core::Property TailEventLog::LogSourceFileName("Log Source", "Log Source from which to read events", "");
-core::Property TailEventLog::MaxEventsPerFlowFile("Max Events Per FlowFile", "Events per flow file", "1");
+const core::Relationship TailEventLog::Success("success", "All files, containing log events, are routed to success");
+
+const core::Property TailEventLog::LogSourceFileName("Log Source", "Log Source from which to read events", "");
+const core::Property TailEventLog::MaxEventsPerFlowFile("Max Events Per FlowFile", "Events per flow file", "1");
+
 void TailEventLog::initialize() {
-  //! Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(LogSourceFileName);
-  properties.insert(MaxEventsPerFlowFile);
-  setSupportedProperties(properties);
-  //! Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void TailEventLog::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -126,7 +119,7 @@ void TailEventLog::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   }
 }
 
-REGISTER_RESOURCE(TailEventLog, "Windows event log reader that functions as a stateful tail of the provided windows event log name");
+REGISTER_RESOURCE(TailEventLog, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

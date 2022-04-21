@@ -1,7 +1,4 @@
 /**
- * @file AbstractMQTTProcessor.h
- * AbstractMQTTProcessor class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,9 +16,9 @@
  */
 #pragma once
 
-#include <set>
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -30,11 +27,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "MQTTClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 static constexpr const char* const MQTT_QOS_0 = "0";
 static constexpr const char* const MQTT_QOS_1 = "1";
@@ -43,13 +36,8 @@ static constexpr const char* const MQTT_QOS_2 = "2";
 static constexpr const char* const MQTT_SECURITY_PROTOCOL_PLAINTEXT = "plaintext";
 static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
-// AbstractMQTTProcessor Class
 class AbstractMQTTProcessor : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit AbstractMQTTProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
     client_ = nullptr;
@@ -57,7 +45,7 @@ class AbstractMQTTProcessor : public core::Processor {
     qos_ = 0;
     isSubscriber_ = false;
   }
-  // Destructor
+
   ~AbstractMQTTProcessor() override {
     if (isSubscriber_) {
       MQTTClient_unsubscribe(client_, topic_.c_str());
@@ -68,31 +56,41 @@ class AbstractMQTTProcessor : public core::Processor {
     if (client_)
       MQTTClient_destroy(&client_);
   }
-  // Processor Name
-  static constexpr char const* ProcessorName = "AbstractMQTTProcessor";
-  // Supported Properties
-  static core::Property BrokerURL;
-  static core::Property ClientID;
-  static core::Property UserName;
-  static core::Property PassWord;
-  static core::Property CleanSession;
-  static core::Property KeepLiveInterval;
-  static core::Property ConnectionTimeout;
-  static core::Property Topic;
-  static core::Property QOS;
-  static core::Property SecurityProtocol;
-  static core::Property SecurityCA;
-  static core::Property SecurityCert;
-  static core::Property SecurityPrivateKey;
-  static core::Property SecurityPrivateKeyPassWord;
+
+  EXTENSIONAPI static const core::Property BrokerURL;
+  EXTENSIONAPI static const core::Property ClientID;
+  EXTENSIONAPI static const core::Property UserName;
+  EXTENSIONAPI static const core::Property PassWord;
+  EXTENSIONAPI static const core::Property CleanSession;
+  EXTENSIONAPI static const core::Property KeepLiveInterval;
+  EXTENSIONAPI static const core::Property ConnectionTimeout;
+  EXTENSIONAPI static const core::Property Topic;
+  EXTENSIONAPI static const core::Property QOS;
+  EXTENSIONAPI static const core::Property SecurityProtocol;
+  EXTENSIONAPI static const core::Property SecurityCA;
+  EXTENSIONAPI static const core::Property SecurityCert;
+  EXTENSIONAPI static const core::Property SecurityPrivateKey;
+  EXTENSIONAPI static const core::Property SecurityPrivateKeyPassWord;
+  static auto properties() {
+    return std::array{
+      BrokerURL,
+      ClientID,
+      UserName,
+      PassWord,
+      CleanSession,
+      KeepLiveInterval,
+      ConnectionTimeout,
+      Topic,
+      QOS,
+      SecurityProtocol,
+      SecurityCA,
+      SecurityCert,
+      SecurityPrivateKey,
+      SecurityPrivateKeyPassWord
+    };
+  }
 
  public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
 
   // MQTT async callbacks
@@ -116,14 +114,11 @@ class AbstractMQTTProcessor : public core::Processor {
     processor->reconnect();
   }
   bool reconnect();
-  // enqueue receive MQTT message
   virtual bool enqueueReceiveMQTTMsg(MQTTClient_message* /*message*/) {
     return false;
   }
 
  protected:
-  static const std::set<core::Property> getSupportedProperties();
-
   MQTTClient client_;
   MQTTClient_deliveryToken delivered_token_;
   std::string uri_;
@@ -148,8 +143,4 @@ class AbstractMQTTProcessor : public core::Processor {
 };
 
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

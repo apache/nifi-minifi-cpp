@@ -21,42 +21,15 @@
 #include "DeleteAzureBlobStorage.h"
 
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property DeleteAzureBlobStorage::DeleteSnapshotsOption(
-  core::PropertyBuilder::createProperty("Delete Snapshots Option")
-    ->withDescription("Specifies the snapshot deletion options to be used when deleting a blob. None: Deletes the blob only. Include Snapshots: Delete the blob and its snapshots. "
-                      "Delete Snapshots Only: Delete only the blob's snapshots.")
-    ->isRequired(true)
-    ->withDefaultValue<std::string>(toString(storage::OptionalDeletion::NONE))
-    ->withAllowableValues<std::string>(storage::OptionalDeletion::values())
-    ->build());
-
-const core::Relationship DeleteAzureBlobStorage::Success("success", "All successfully processed FlowFiles are routed to this relationship");
-const core::Relationship DeleteAzureBlobStorage::Failure("failure", "Unsuccessful operations will be transferred to the failure relationship");
-
 void DeleteAzureBlobStorage::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    ContainerName,
-    StorageAccountName,
-    StorageAccountKey,
-    SASToken,
-    CommonStorageAccountEndpointSuffix,
-    ConnectionString,
-    Blob,
-    DeleteSnapshotsOption,
-    UseManagedIdentityCredentials
-  });
-  // Set the supported relationships
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void DeleteAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
@@ -98,7 +71,5 @@ void DeleteAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContex
     session->transfer(flow_file, Failure);
   }
 }
-
-REGISTER_RESOURCE(DeleteAzureBlobStorage, "Deletes the provided blob from Azure Storage");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

@@ -21,6 +21,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-REGISTER_RESOURCE(LogOnDestructionProcessor, "This processor logs a message on destruction. Only for testing purposes.");
+REGISTER_RESOURCE(LogOnDestructionProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

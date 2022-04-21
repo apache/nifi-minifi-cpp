@@ -27,28 +27,41 @@ namespace minifi {
 namespace core {
 namespace annotation {
 
-  enum class Input : uint8_t {
-    /**
-     * This value is used to indicate that the Processor requires input from other Processors
-     * in order to run. As a result, the Processor will not be valid if it does not have any
-     * incoming connections.
-     */
-    INPUT_REQUIRED,
-    /**
-     * This value is used to indicate that the Processor will consume data from an incoming
-     * connection but does not require an incoming connection in order to perform its task.
-     * If no input annotation is present, this is the default value that is used.
-     */
-    INPUT_ALLOWED,
-    /**
-     * This value is used to indicate that the Processor is a "Source Processor" and does
-     * not accept incoming connections. Because the Processor does not pull FlowFiles from
-     * an incoming connection, it can be very confusing for users who create incoming connections
-     * to the Processor. As a result, this structure can be used in order to clarify that incoming
-     * connections will not be used. This prevents the user from even creating such a connection.
-     */
-    INPUT_FORBIDDEN
-  };
+enum class Input : uint8_t {
+  /**
+   * This value is used to indicate that the Processor requires input from other Processors
+   * in order to run. As a result, the Processor will not be valid if it does not have any
+   * incoming connections.
+   */
+  INPUT_REQUIRED,
+  /**
+   * This value is used to indicate that the Processor will consume data from an incoming
+   * connection but does not require an incoming connection in order to perform its task.
+   * If no input annotation is present, this is the default value that is used.
+   */
+  INPUT_ALLOWED,
+  /**
+   * This value is used to indicate that the Processor is a "Source Processor" and does
+   * not accept incoming connections. Because the Processor does not pull FlowFiles from
+   * an incoming connection, it can be very confusing for users who create incoming connections
+   * to the Processor. As a result, this structure can be used in order to clarify that incoming
+   * connections will not be used. This prevents the user from even creating such a connection.
+   */
+  INPUT_FORBIDDEN
+};
+
+inline std::string toString(Input input_requirement) {
+  switch (input_requirement) {
+    case annotation::Input::INPUT_REQUIRED:
+      return "INPUT_REQUIRED";
+    case annotation::Input::INPUT_ALLOWED:
+      return "INPUT_ALLOWED";
+    case annotation::Input::INPUT_FORBIDDEN:
+      return "INPUT_FORBIDDEN";
+  }
+
+  return "ERROR_no_such_input_requirement";
+}
 
 }  // namespace annotation
 }  // namespace core

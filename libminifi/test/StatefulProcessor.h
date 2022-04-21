@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,24 +23,26 @@
 #include "core/Processor.h"
 #include "core/CoreComponentState.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class StatefulProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
 
-  using HookType = std::function<void(core::CoreComponentStateManager&)>;
+  static constexpr const char* Description = "A processor with state for test purposes.";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override;
-
   void onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>&) override;
 
+  using HookType = std::function<void(core::CoreComponentStateManager&)>;
   void setHooks(HookType onScheduleHook, std::vector<HookType> onTriggerHooks);
-
   [[nodiscard]] bool hasFinishedHooks() const;
 
  private:
@@ -52,8 +53,4 @@ class StatefulProcessor : public core::Processor {
   size_t on_trigger_hook_index_ = 0;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

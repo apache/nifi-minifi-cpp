@@ -26,7 +26,7 @@ namespace minifi {
 namespace state {
 namespace response {
 
-REGISTER_RESOURCE(BuildInformation, "Node part of an AST that defines the pertinent build information for this agent binary");
+REGISTER_RESOURCE(BuildInformation, DescriptionOnly);
 
 }  // namespace response
 }  // namespace state

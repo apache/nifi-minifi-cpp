@@ -24,7 +24,6 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -36,6 +35,7 @@
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "CapturePacket.h"
@@ -51,20 +51,19 @@ namespace minifi {
 namespace processors {
 
 std::shared_ptr<utils::IdGenerator> CapturePacket::id_generator_ = utils::IdGenerator::getIdGenerator();
-core::Property CapturePacket::BaseDir(core::PropertyBuilder::createProperty("Base Directory")
+
+const core::Property CapturePacket::BaseDir(core::PropertyBuilder::createProperty("Base Directory")
     ->withDescription("Scratch directory for PCAP files")
     ->withDefaultValue<std::string>("/tmp/")->build());
-
-core::Property CapturePacket::BatchSize(core::PropertyBuilder::createProperty("Batch Size")
+const core::Property CapturePacket::BatchSize(core::PropertyBuilder::createProperty("Batch Size")
     ->withDescription("The number of packets to combine within a given PCAP")
     ->withDefaultValue<uint64_t>(50)->build());
-
-core::Property CapturePacket::NetworkControllers("Network Controllers", "Regular expression of the network controller(s) to which we will attach", ".*");
-core::Property CapturePacket::CaptureBluetooth(core::PropertyBuilder::createProperty("Capture Bluetooth")
+const core::Property CapturePacket::NetworkControllers("Network Controllers", "Regular expression of the network controller(s) to which we will attach", ".*");
+const core::Property CapturePacket::CaptureBluetooth(core::PropertyBuilder::createProperty("Capture Bluetooth")
     ->withDescription("True indicates that we support bluetooth interfaces")
     ->withDefaultValue<bool>(false)->build());
 
-const char *CapturePacket::ProcessorName = "CapturePacket";
+const core::Relationship CapturePacket::Success("success", "All files are routed to success");
 
 std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
   std::string path = base_path;
@@ -112,21 +111,12 @@ CapturePacketMechanism *CapturePacket::create_new_capture(const std::string &bas
 }
 
 std::atomic<int> CapturePacket::num_(0);
-core::Relationship CapturePacket::Success("success", "All files are routed to success");
+
 void CapturePacket::initialize() {
   logger_->log_info("Initializing CapturePacket");
 
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(BatchSize);
-  properties.insert(NetworkControllers);
-  properties.insert(BaseDir);
-  properties.insert(CaptureBluetooth);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -230,9 +220,7 @@ void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 }
 
-REGISTER_RESOURCE(CapturePacket, "CapturePacket captures and writes one or more packets into a PCAP file that will be used as the content of a flow file."
-    " Configuration options exist to adjust the batching of PCAP files. PCAP batching will place a single PCAP into a flow file. "
-    "A regular expression selects network interfaces. Bluetooth network interfaces can be selected through a separate option.");
+REGISTER_RESOURCE(CapturePacket, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

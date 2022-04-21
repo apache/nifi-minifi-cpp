@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_TFAPPLYGRAPH_H
-#define NIFI_MINIFI_CPP_TFAPPLYGRAPH_H
+#pragma once
 
 #include <atomic>
 
@@ -25,11 +24,7 @@
 #include <tensorflow/core/public/session.h>
 #include <concurrentqueue.h>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class TFApplyGraph : public core::Processor {
  public:
@@ -38,12 +33,36 @@ class TFApplyGraph : public core::Processor {
         logger_(logging::LoggerFactory<TFApplyGraph>::getLogger()) {
   }
 
-  static core::Property InputNode;
-  static core::Property OutputNode;
+  EXTENSIONAPI static constexpr const char* Description = "Applies a TensorFlow graph to the tensor protobuf supplied as input. The tensor is fed into the node specified by the Input Node property. "
+    "The output FlowFile is a tensor protobuf extracted from the node specified by the Output Node property. TensorFlow graphs are read dynamically by feeding a graph "
+    "protobuf to the processor with the tf.type property set to graph.";
 
-  static core::Relationship Success;
-  static core::Relationship Retry;
-  static core::Relationship Failure;
+  EXTENSIONAPI static const core::Property InputNode;
+  EXTENSIONAPI static const core::Property OutputNode;
+  static auto properties() {
+    return std::array{
+      InputNode,
+      OutputNode
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Retry;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() {
+    return std::array{
+      Success,
+      Retry,
+      Failure
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
@@ -104,10 +123,4 @@ class TFApplyGraph : public core::Processor {
   moodycamel::ConcurrentQueue<std::shared_ptr<TFContext>> tf_context_q_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_TFAPPLYGRAPH_H
+}  // namespace org::apache::nifi::minifi::processors

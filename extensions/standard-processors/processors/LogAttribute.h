@@ -39,34 +39,49 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// LogAttribute Class
 class LogAttribute : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit LogAttribute(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         flowfiles_to_log_(1),
         hexencode_(false),
         max_line_length_(80U) {
   }
-  // Destructor
   ~LogAttribute() override = default;
-  // Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "LogAttribute";
-  // Supported Properties
-  EXTENSIONAPI static core::Property LogLevel;
-  EXTENSIONAPI static core::Property AttributesToLog;
-  EXTENSIONAPI static core::Property AttributesToIgnore;
-  EXTENSIONAPI static core::Property LogPayload;
-  EXTENSIONAPI static core::Property HexencodePayload;
-  EXTENSIONAPI static core::Property MaxPayloadLineLength;
-  EXTENSIONAPI static core::Property LogPrefix;
-  EXTENSIONAPI static core::Property FlowFilesToLog;
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
+
+  EXTENSIONAPI static constexpr const char* Description = "Logs attributes of flow files in the MiNiFi application log.";
+
+  EXTENSIONAPI static const core::Property LogLevel;
+  EXTENSIONAPI static const core::Property AttributesToLog;
+  EXTENSIONAPI static const core::Property AttributesToIgnore;
+  EXTENSIONAPI static const core::Property LogPayload;
+  EXTENSIONAPI static const core::Property HexencodePayload;
+  EXTENSIONAPI static const core::Property MaxPayloadLineLength;
+  EXTENSIONAPI static const core::Property LogPrefix;
+  EXTENSIONAPI static const core::Property FlowFilesToLog;
+  static auto properties() {
+    return std::array{
+      LogLevel,
+      AttributesToLog,
+      AttributesToIgnore,
+      LogPayload,
+      HexencodePayload,
+      MaxPayloadLineLength,
+      LogPrefix,
+      FlowFilesToLog
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   enum LogAttrLevel {
     LogAttrLevelTrace,
     LogAttrLevelDebug,
@@ -98,16 +113,10 @@ class LogAttribute : public core::Processor {
 
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
-  // OnTrigger method, implemented by NiFi LogAttribute
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  // Initialize, over write by NiFi LogAttribute
   void initialize() override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   uint64_t flowfiles_to_log_;
   bool hexencode_;
   uint32_t max_line_length_;

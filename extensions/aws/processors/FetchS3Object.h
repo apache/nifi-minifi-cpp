@@ -1,7 +1,4 @@
 /**
- * @file FetchS3Object.h
- * FetchS3Object class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,30 +26,39 @@
 
 #include "io/StreamPipe.h"
 #include "S3Processor.h"
+#include "utils/ArrayUtils.h"
 #include "utils/GeneralUtils.h"
 
 template<typename T>
 class S3TestsFixture;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
+namespace org::apache::nifi::minifi::aws::processors {
 
 class FetchS3Object : public S3Processor {
  public:
-  static constexpr char const* ProcessorName = "FetchS3Object";
+  EXTENSIONAPI static constexpr const char* Description = "This Processor retrieves the contents of an S3 Object and writes it to the content of a FlowFile.";
 
-  // Supported Properties
   static const core::Property ObjectKey;
   static const core::Property Version;
   static const core::Property RequesterPays;
+  static auto properties() {
+    return minifi::utils::array_cat(S3Processor::properties(), std::array{
+      ObjectKey,
+      Version,
+      RequesterPays
+    });
+  }
 
-  // Supported Relationships
-  static const core::Relationship Failure;
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : S3Processor(name, uuid, core::logging::LoggerFactory<FetchS3Object>::getLogger()) {
@@ -65,14 +71,6 @@ class FetchS3Object : public S3Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
   friend class ::S3TestsFixture<FetchS3Object>;
 
   explicit FetchS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
@@ -87,9 +85,4 @@ class FetchS3Object : public S3Processor {
   bool requester_pays_ = false;
 };
 
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

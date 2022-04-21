@@ -21,6 +21,7 @@
 #include <memory>
 
 #include "SplunkHECProcessor.h"
+#include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
@@ -36,22 +37,37 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
   PutSplunkHTTP& operator=(PutSplunkHTTP&&) = delete;
   ~PutSplunkHTTP() override = default;
 
+  EXTENSIONAPI static constexpr const char* Description = "Sends the flow file contents to the specified Splunk HTTP Event Collector over HTTP or HTTPS. Supports HEC Index Acknowledgement.";
+
   EXTENSIONAPI static const core::Property Source;
   EXTENSIONAPI static const core::Property SourceType;
   EXTENSIONAPI static const core::Property Host;
   EXTENSIONAPI static const core::Property Index;
   EXTENSIONAPI static const core::Property ContentType;
+  static auto properties() {
+    return utils::array_cat(SplunkHECProcessor::properties(), std::array{
+      Source,
+      SourceType,
+      Host,
+      Index,
+      ContentType
+    });
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-
-  bool isSingleThreaded() const override {
-    return false;
-  }
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

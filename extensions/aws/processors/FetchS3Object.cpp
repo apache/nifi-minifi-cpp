@@ -25,6 +25,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/OptionalUtils.h"
 
@@ -35,33 +36,9 @@ namespace minifi {
 namespace aws {
 namespace processors {
 
-const core::Property FetchS3Object::ObjectKey(
-  core::PropertyBuilder::createProperty("Object Key")
-    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property FetchS3Object::Version(
-  core::PropertyBuilder::createProperty("Version")
-    ->withDescription("The Version of the Object to download")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property FetchS3Object::RequesterPays(
-  core::PropertyBuilder::createProperty("Requester Pays")
-    ->isRequired(true)
-    ->withDefaultValue<bool>(false)
-    ->withDescription("If true, indicates that the requester consents to pay any charges associated with retrieving "
-                      "objects from the S3 bucket. This sets the 'x-amz-request-payer' header to 'requester'.")
-    ->build());
-
-const core::Relationship FetchS3Object::Success("success", "FlowFiles are routed to success relationship");
-const core::Relationship FetchS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
-
 void FetchS3Object::initialize() {
-  // Add new supported properties
-  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
-                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, ObjectKey, Version, RequesterPays});
-  // Set the supported relationships
-  setSupportedRelationships({Failure, Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void FetchS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -143,8 +120,6 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     session->transfer(flow_file, Failure);
   }
 }
-
-REGISTER_RESOURCE(FetchS3Object, "This Processor retrieves the contents of an S3 Object and writes it to the content of a FlowFile.");
 
 }  // namespace processors
 }  // namespace aws

@@ -20,6 +20,7 @@
 
 #include <set>
 
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::controllers {
@@ -54,7 +55,7 @@ const core::Property AzureStorageCredentialsService::UseManagedIdentityCredentia
     ->build());
 
 void AzureStorageCredentialsService::initialize() {
-  setSupportedProperties({StorageAccountName, StorageAccountKey, SASToken, CommonStorageAccountEndpointSuffix, ConnectionString, UseManagedIdentityCredentials});
+  setSupportedProperties(properties());
 }
 
 void AzureStorageCredentialsService::onEnable() {
@@ -80,6 +81,6 @@ void AzureStorageCredentialsService::onEnable() {
   }
 }
 
-REGISTER_RESOURCE(AzureStorageCredentialsService, "Azure Storage Credentials Management Service");
+REGISTER_RESOURCE(AzureStorageCredentialsService, ControllerService);
 
 }  // namespace org::apache::nifi::minifi::azure::controllers

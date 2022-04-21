@@ -40,11 +40,6 @@ namespace controllers {
 
 class AWSCredentialsService : public core::controller::ControllerService {
  public:
-  static const core::Property UseDefaultCredentials;
-  static const core::Property AccessKey;
-  static const core::Property SecretKey;
-  static const core::Property CredentialsFile;
-
   explicit AWSCredentialsService(const std::string &name, const minifi::utils::Identifier &uuid = {})
       : ControllerService(name, uuid) {
   }
@@ -52,6 +47,25 @@ class AWSCredentialsService : public core::controller::ControllerService {
   explicit AWSCredentialsService(const std::string &name, const std::shared_ptr<Configure>& /*configuration*/)
       : ControllerService(name) {
   }
+
+  EXTENSIONAPI static constexpr const char* Description = "AWS Credentials Management Service";
+
+  EXTENSIONAPI static const core::Property UseDefaultCredentials;
+  EXTENSIONAPI static const core::Property AccessKey;
+  EXTENSIONAPI static const core::Property SecretKey;
+  EXTENSIONAPI static const core::Property CredentialsFile;
+  static auto properties() {
+    return std::array{
+      UseDefaultCredentials,
+      AccessKey,
+      SecretKey,
+      CredentialsFile
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 

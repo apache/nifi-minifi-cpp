@@ -21,48 +21,9 @@
 #include "AzureBlobStorageProcessorBase.h"
 
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
-
-const core::Property AzureBlobStorageProcessorBase::ContainerName(
-  core::PropertyBuilder::createProperty("Container Name")
-    ->withDescription("Name of the Azure Storage container. In case of PutAzureBlobStorage processor, container can be created if it does not exist.")
-    ->supportsExpressionLanguage(true)
-    ->isRequired(true)
-    ->build());
-const core::Property AzureBlobStorageProcessorBase::StorageAccountName(
-    core::PropertyBuilder::createProperty("Storage Account Name")
-      ->withDescription("The storage account name.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-const core::Property AzureBlobStorageProcessorBase::StorageAccountKey(
-    core::PropertyBuilder::createProperty("Storage Account Key")
-      ->withDescription("The storage account key. This is an admin-like password providing access to every container in this account. "
-                        "It is recommended one uses Shared Access Signature (SAS) token instead for fine-grained control with policies.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-const core::Property AzureBlobStorageProcessorBase::SASToken(
-    core::PropertyBuilder::createProperty("SAS Token")
-      ->withDescription("Shared Access Signature token. Specify either SAS Token (recommended) or Storage Account Key together with Storage Account Name if Managed Identity is not used.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-const core::Property AzureBlobStorageProcessorBase::CommonStorageAccountEndpointSuffix(
-    core::PropertyBuilder::createProperty("Common Storage Account Endpoint Suffix")
-      ->withDescription("Storage accounts in public Azure always use a common FQDN suffix. Override this endpoint suffix with a "
-                        "different suffix in certain circumstances (like Azure Stack or non-public Azure regions). ")
-      ->supportsExpressionLanguage(true)
-      ->build());
-const core::Property AzureBlobStorageProcessorBase::ConnectionString(
-  core::PropertyBuilder::createProperty("Connection String")
-    ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property AzureBlobStorageProcessorBase::UseManagedIdentityCredentials(
-  core::PropertyBuilder::createProperty("Use Managed Identity Credentials")
-    ->withDescription("If true Managed Identity credentials will be used together with the Storage Account Name for authentication.")
-    ->isRequired(true)
-    ->withDefaultValue<bool>(false)
-    ->build());
 
 void AzureBlobStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   gsl_Expects(context);

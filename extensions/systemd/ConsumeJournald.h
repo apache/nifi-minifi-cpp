@@ -50,14 +50,35 @@ class ConsumeJournald final : public core::Processor {
   static constexpr const char* JOURNAL_TYPE_SYSTEM = "System";
   static constexpr const char* JOURNAL_TYPE_BOTH = "Both";
 
-  static const core::Relationship Success;
+  EXTENSIONAPI static constexpr const char* Description = "Consume systemd-journald journal messages. Creates one flow file per message."
+      "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute.";
 
-  static const core::Property BatchSize;
-  static const core::Property PayloadFormat;
-  static const core::Property IncludeTimestamp;
-  static const core::Property JournalType;
-  static const core::Property ProcessOldMessages;
-  static const core::Property TimestampFormat;
+  EXTENSIONAPI static const core::Property BatchSize;
+  EXTENSIONAPI static const core::Property PayloadFormat;
+  EXTENSIONAPI static const core::Property IncludeTimestamp;
+  EXTENSIONAPI static const core::Property JournalType;
+  EXTENSIONAPI static const core::Property ProcessOldMessages;
+  EXTENSIONAPI static const core::Property TimestampFormat;
+  static auto properties() {
+    return std::array{
+      BatchSize,
+      PayloadFormat,
+      IncludeTimestamp,
+      JournalType,
+      ProcessOldMessages,
+      TimestampFormat
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit ConsumeJournald(const std::string& name, const utils::Identifier& id = {}, std::unique_ptr<libwrapper::LibWrapper>&& = libwrapper::createLibWrapper());
   ConsumeJournald(const ConsumeJournald&) = delete;
@@ -82,10 +103,6 @@ class ConsumeJournald final : public core::Processor {
     std::vector<journal_field> fields;
     std::chrono::system_clock::time_point timestamp;
   };
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
 
   static std::optional<gsl::span<const char>> enumerateJournalEntry(libwrapper::Journal&);
   static std::optional<journal_field> getNextField(libwrapper::Journal&);

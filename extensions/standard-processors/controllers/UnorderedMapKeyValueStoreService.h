@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPKEYVALUESTORESERVICE_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPKEYVALUESTORESERVICE_H_
+#pragma  once
 
 #include <unordered_map>
 #include <string>
@@ -30,11 +29,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 /// Key-value store service purely in RAM without disk usage
 class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStoreService {
@@ -44,11 +39,19 @@ class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStore
 
   ~UnorderedMapKeyValueStoreService() override;
 
+  EXTENSIONAPI static constexpr const char* Description = "A key-value service implemented by a locked std::unordered_map<std::string, std::string>";
+  EXTENSIONAPI static const core::Property LinkedServices;
+  static auto properties() { return std::array{LinkedServices}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
   bool set(const std::string& key, const std::string& value) override;
   bool get(const std::string& key, std::string& value) override;
   bool get(std::unordered_map<std::string, std::string>& kvs) override;
   bool remove(const std::string& key) override;
   bool clear() override;
+  void initialize() override;
   bool update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) override;
   bool persist() override {
     return true;
@@ -62,10 +65,4 @@ class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStore
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UnorderedMapKeyValueStoreService>::getLogger();
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_CONTROLLERS_UNORDEREDMAPKEYVALUESTORESERVICE_H_
+}  // namespace org::apache::nifi::minifi::controllers

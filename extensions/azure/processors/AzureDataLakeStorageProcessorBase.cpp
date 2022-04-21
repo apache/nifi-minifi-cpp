@@ -20,23 +20,11 @@
 
 #include "AzureDataLakeStorageProcessorBase.h"
 
+#include "core/PropertyBuilder.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
-
-const core::Property AzureDataLakeStorageProcessorBase::FilesystemName(
-    core::PropertyBuilder::createProperty("Filesystem Name")
-      ->withDescription("Name of the Azure Storage File System. It is assumed to be already existing.")
-      ->supportsExpressionLanguage(true)
-      ->isRequired(true)
-      ->build());
-const core::Property AzureDataLakeStorageProcessorBase::DirectoryName(
-    core::PropertyBuilder::createProperty("Directory Name")
-      ->withDescription("Name of the Azure Storage Directory. The Directory Name cannot contain a leading '/'. "
-                        "If left empty it designates the root directory. The directory will be created if not already existing.")
-      ->supportsExpressionLanguage(true)
-      ->build());
 
 void AzureDataLakeStorageProcessorBase::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
   gsl_Expects(context);

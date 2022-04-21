@@ -34,6 +34,17 @@
 
 namespace {
 
+class TestProcessor : public minifi::core::Processor {
+ public:
+  using Processor::Processor;
+
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+};
+
 #ifdef WIN32
 const std::string SESSIONTEST_FLOWFILE_CHECKPOINT_DIR = ".\\sessiontest_flowfile_checkpoint";
 #else
@@ -75,7 +86,7 @@ TEST_CASE("Import null data") {
   ff_repository->initialize(config);
   content_repo->initialize(config);
 
-  auto processor = std::make_shared<core::Processor>("dummy");
+  auto processor = std::make_shared<TestProcessor>("dummy");
   utils::Identifier uuid = processor->getUUID();
   auto output = std::make_unique<minifi::Connection>(ff_repository, content_repo, "output");
   output->addRelationship({"out", ""});

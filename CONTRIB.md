@@ -99,9 +99,11 @@ Please see [ThirdParties.md](ThirdParties.md) on how MiNiFi builds and uses thir
 MiNiFi C++ contains a dynamic loading mechanism that loads arbitrary objects. To maintain consistency of development amongst the NiFi ecosystem, it is called a class loader. If you
 are contributing a custom Processor or Controller Service, the mechanism to register your class into the default class loader is a pragma definition named:
 
-    REGISTER_RESOURCE(CLASSNAME,DOCUMENTATION);
+    REGISTER_RESOURCE(CLASSNAME, TYPE);
 
-To use this include REGISTER_RESOURCE(YourClassName); in your header file. The default class loader will make instances of YourClassName available for inclusion.  
+To use this include REGISTER_RESOURCE(YourClassName, Processor) or REGISTER_RESOURCE(YourClassName, ControllerService) in your cpp file. The default class loader will make instances
+of YourClassName available for inclusion. In order to include your new component in the manifest in the heartbeat message in a standardized way, REGISTER_RESOURCE requires the
+presence of a number of static variables and functions. Use an existing Processor or ControllerService as a model to create these static members.
 
 The extensions sub-directory allows you to contribute conditionally built extensions. The system adds all subdirectories in `extensions/*` that contain
 a `CMakeLists.txt` file. It is up to the extension creator's discretion how they handle cmake flags.

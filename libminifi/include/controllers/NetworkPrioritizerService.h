@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
+#pragma once
 
 #include <iostream>
 #include <limits>
@@ -34,11 +32,7 @@
 #include "io/NetworkPrioritizer.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 /**
  * Purpose: Network prioritizer for selecting network interfaces through the flow configuration.
@@ -66,23 +60,38 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
     initialize();
   }
 
-  MINIFIAPI static core::Property NetworkControllers;
-  MINIFIAPI static core::Property MaxThroughput;
-  MINIFIAPI static core::Property MaxPayload;
-  MINIFIAPI static core::Property VerifyInterfaces;
-  MINIFIAPI static core::Property DefaultPrioritizer;
+  MINIFIAPI static constexpr const char* Description = "Enables selection of networking interfaces on defined parameters to include output and payload size";
 
-  void initialize();
+  MINIFIAPI static const core::Property NetworkControllers;
+  MINIFIAPI static const core::Property MaxThroughput;
+  MINIFIAPI static const core::Property MaxPayload;
+  MINIFIAPI static const core::Property VerifyInterfaces;
+  MINIFIAPI static const core::Property DefaultPrioritizer;
+  static auto properties() {
+    return std::array{
+      NetworkControllers,
+      MaxThroughput,
+      MaxPayload,
+      VerifyInterfaces,
+      DefaultPrioritizer
+    };
+  }
 
-  void yield();
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
-  bool isRunning();
+  void initialize() override;
 
-  bool isWorkAvailable();
+  void yield() override;
 
-  virtual void onEnable();
+  bool isRunning() override;
 
-  virtual io::NetworkInterface getInterface(uint32_t size);
+  bool isWorkAvailable() override;
+
+  void onEnable() override;
+
+  io::NetworkInterface getInterface(uint32_t size) override;
 
  protected:
   std::string get_nearest_interface(const std::vector<std::string> &ifcs);
@@ -93,7 +102,7 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
 
   bool sufficient_tokens(uint32_t size);
 
-  virtual void reduce_tokens(uint32_t size);
+  void reduce_tokens(uint32_t size) override;
 
   bool enabled_;
 
@@ -129,10 +138,4 @@ class NetworkPrioritizerService : public core::controller::ControllerService, pu
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<NetworkPrioritizerService>::getLogger();
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_NETWORKPRIORITIZERSERVICE_H_
+}  // namespace org::apache::nifi::minifi::controllers

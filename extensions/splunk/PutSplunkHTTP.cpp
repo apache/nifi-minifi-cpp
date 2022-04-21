@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-
 #include "PutSplunkHTTP.h"
 
 #include <vector>
@@ -25,6 +24,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "client/HTTPClient.h"
@@ -34,49 +34,21 @@
 
 #include "rapidjson/document.h"
 
-
 namespace org::apache::nifi::minifi::extensions::splunk {
 
-const core::Property PutSplunkHTTP::Source(core::PropertyBuilder::createProperty("Source")
-    ->withDescription("Basic field describing the source of the event. If unspecified, the event will use the default defined in splunk.")
-    ->supportsExpressionLanguage(true)->build());
-
-const core::Property PutSplunkHTTP::SourceType(core::PropertyBuilder::createProperty("Source Type")
-    ->withDescription("Basic field describing the source type of the event. If unspecified, the event will use the default defined in splunk.")
-    ->supportsExpressionLanguage(true)->build());
-
-const core::Property PutSplunkHTTP::Host(core::PropertyBuilder::createProperty("Host")
-    ->withDescription("Basic field describing the host of the event. If unspecified, the event will use the default defined in splunk.")
-    ->supportsExpressionLanguage(true)->build());
-
-const core::Property PutSplunkHTTP::Index(core::PropertyBuilder::createProperty("Index")
-    ->withDescription("Identifies the index where to send the event. If unspecified, the event will use the default defined in splunk.")
-    ->supportsExpressionLanguage(true)->build());
-
-const core::Property PutSplunkHTTP::ContentType(core::PropertyBuilder::createProperty("Content Type")
-    ->withDescription("The media type of the event sent to Splunk. If not set, \"mime.type\" flow file attribute will be used. "
-                      "In case of neither of them is specified, this information will not be sent to the server.")
-    ->supportsExpressionLanguage(true)->build());
-
-
-const core::Relationship PutSplunkHTTP::Success("success", "FlowFiles that are sent successfully to the destination are sent to this relationship.");
-const core::Relationship PutSplunkHTTP::Failure("failure", "FlowFiles that failed to be sent to the destination are sent to this relationship.");
-
 void PutSplunkHTTP::initialize() {
-  setSupportedRelationships({Success, Failure});
-  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel, SSLContext, Source, SourceType, Host, Index, ContentType});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PutSplunkHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
   SplunkHECProcessor::onSchedule(context, sessionFactory);
 }
 
-
 namespace {
 std::optional<std::string> getContentType(core::ProcessContext& context, const core::FlowFile& flow_file) {
   return context.getProperty(PutSplunkHTTP::ContentType) | utils::orElse ([&flow_file] {return flow_file.getAttribute("mime.type");});
 }
-
 
 std::string getEndpoint(core::ProcessContext& context, const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file, utils::HTTPClient& client) {
   std::stringstream endpoint;
@@ -171,9 +143,6 @@ void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
 
   session->transfer(flow_file, success ? Success : Failure);
 }
-
-
-REGISTER_RESOURCE(PutSplunkHTTP, "Sends the flow file contents to the specified Splunk HTTP Event Collector over HTTP or HTTPS. Supports HEC Index Acknowledgement.");
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk
 

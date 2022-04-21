@@ -1,7 +1,4 @@
 /**
- * @file PublishKafka.cpp
- * PublishKafka class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,108 +26,13 @@
 #include <vector>
 
 #include "utils/gsl.h"
-#include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-const core::Property PublishKafka::SeedBrokers(
-    core::PropertyBuilder::createProperty("Known Brokers")->withDescription("A comma-separated list of known Kafka Brokers in the format <host>:<port>")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-const core::Property PublishKafka::Topic(
-    core::PropertyBuilder::createProperty("Topic Name")->withDescription("The Kafka Topic of interest")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-
-const core::Property PublishKafka::DeliveryGuarantee(
-    core::PropertyBuilder::createProperty("Delivery Guarantee")->withDescription("Specifies the requirement for guaranteeing that a message is sent to Kafka. "
-                                                                                 "Valid values are 0 (do not wait for acks), "
-                                                                                 "-1 or all (block until message is committed by all in sync replicas) "
-                                                                                 "or any concrete number of nodes.")
-        ->isRequired(false)->supportsExpressionLanguage(true)->withDefaultValue(DELIVERY_ONE_NODE)->build());
-const core::Property PublishKafka::MaxMessageSize(
-    core::PropertyBuilder::createProperty("Max Request Size")->withDescription("Maximum Kafka protocol request message size")
-        ->isRequired(false)->build());
-
-const core::Property PublishKafka::RequestTimeOut(
-    core::PropertyBuilder::createProperty("Request Timeout")->withDescription("The ack timeout of the producer request")
-        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("10 sec")->build());
-
-const core::Property PublishKafka::MessageTimeOut(
-    core::PropertyBuilder::createProperty("Message Timeout")->withDescription("The total time sending a message could take")
-        ->isRequired(false)->withDefaultValue<core::TimePeriodValue>("30 sec")->build());
-
-const core::Property PublishKafka::ClientName(
-    core::PropertyBuilder::createProperty("Client Name")->withDescription("Client Name to use when communicating with Kafka")
-        ->isRequired(true)->supportsExpressionLanguage(true)->build());
-
-const core::Property PublishKafka::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")->withDescription("Maximum number of messages batched in one MessageSet")
-        ->isRequired(false)->withDefaultValue<uint32_t>(10)->build());
-const core::Property PublishKafka::TargetBatchPayloadSize(
-    core::PropertyBuilder::createProperty("Target Batch Payload Size")->withDescription("The target total payload size for a batch. 0 B means unlimited (Batch Size is still applied).")
-        ->isRequired(false)->withDefaultValue<core::DataSizeValue>("512 KB")->build());
-const core::Property PublishKafka::AttributeNameRegex("Attributes to Send as Headers", "Any attribute whose name matches the regex will be added to the Kafka messages as a Header", "");
-
-const core::Property PublishKafka::QueueBufferMaxTime(
-        core::PropertyBuilder::createProperty("Queue Buffering Max Time")
-        ->isRequired(false)
-        ->withDefaultValue<core::TimePeriodValue>("5 millis")
-        ->withDescription("Delay to wait for messages in the producer queue to accumulate before constructing message batches")
-        ->build());
-const core::Property PublishKafka::QueueBufferMaxSize(
-        core::PropertyBuilder::createProperty("Queue Max Buffer Size")
-        ->isRequired(false)
-        ->withDefaultValue<core::DataSizeValue>("1 MB")
-        ->withDescription("Maximum total message size sum allowed on the producer queue")
-        ->build());
-const core::Property PublishKafka::QueueBufferMaxMessage(
-        core::PropertyBuilder::createProperty("Queue Max Message")
-        ->isRequired(false)
-        ->withDefaultValue<uint64_t>(1000)
-        ->withDescription("Maximum number of messages allowed on the producer queue")
-        ->build());
-const core::Property PublishKafka::CompressCodec(
-        core::PropertyBuilder::createProperty("Compress Codec")
-        ->isRequired(false)
-        ->withDefaultValue<std::string>(COMPRESSION_CODEC_NONE)
-        ->withAllowableValues<std::string>({COMPRESSION_CODEC_NONE, COMPRESSION_CODEC_GZIP, COMPRESSION_CODEC_SNAPPY})
-        ->withDescription("compression codec to use for compressing message sets")
-        ->build());
-const core::Property PublishKafka::MaxFlowSegSize(
-    core::PropertyBuilder::createProperty("Max Flow Segment Size")->withDescription("Maximum flow content payload segment size for the kafka record. 0 B means unlimited.")
-        ->isRequired(false)->withDefaultValue<core::DataSizeValue>("0 B")->build());
-
-const core::Property PublishKafka::SecurityCA("Security CA", "DEPRECATED in favor of SSL Context Service. File or directory path to CA certificate(s) for verifying the broker's key", "");
-const core::Property PublishKafka::SecurityCert("Security Cert", "DEPRECATED in favor of SSL Context Service.Path to client's public key (PEM) used for authentication", "");
-const core::Property PublishKafka::SecurityPrivateKey("Security Private Key", "DEPRECATED in favor of SSL Context Service.Path to client's private key (PEM) used for authentication", "");
-const core::Property PublishKafka::SecurityPrivateKeyPassWord("Security Pass Phrase", "DEPRECATED in favor of SSL Context Service.Private key passphrase", "");
-const core::Property PublishKafka::KafkaKey(
-    core::PropertyBuilder::createProperty("Kafka Key")
-        ->withDescription("The key to use for the message. If not specified, the UUID of the flow file is used as the message key.")
-        ->supportsExpressionLanguage(true)
-        ->build());
-const core::Property PublishKafka::MessageKeyField("Message Key Field", "DEPRECATED, does not work -- use Kafka Key instead", "");
-
-const core::Property PublishKafka::DebugContexts("Debug contexts", "A comma-separated list of debug contexts to enable."
-                                           "Including: generic, broker, topic, metadata, feature, queue, msg, protocol, cgrp, security, fetch, interceptor, plugin, consumer, admin, eos, all", "");
-const core::Property PublishKafka::FailEmptyFlowFiles(
-    core::PropertyBuilder::createProperty("Fail empty flow files")
-        ->withDescription("Keep backwards compatibility with <=0.7.0 bug which caused flow files with empty content to not be published to Kafka and forwarded to failure. The old behavior is "
-                          "deprecated. Use connections to drop empty flow files!")
-        ->isRequired(false)
-        ->withDefaultValue<bool>(true)
-        ->build());
-
-const core::Relationship PublishKafka::Success("success", "Any FlowFile that is successfully sent to Kafka will be routed to this Relationship");
-const core::Relationship PublishKafka::Failure("failure", "Any FlowFile that cannot be sent to Kafka will be routed to this Relationship");
-
+namespace org::apache::nifi::minifi::processors {
 
 namespace {
 struct rd_kafka_conf_deleter {
@@ -440,45 +342,8 @@ void messageDeliveryCallback(rd_kafka_t* rk, const rd_kafka_message_t* rkmessage
 }  // namespace
 
 void PublishKafka::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    SeedBrokers,
-    Topic,
-    DeliveryGuarantee,
-    MaxMessageSize,
-    RequestTimeOut,
-    MessageTimeOut,
-    ClientName,
-    AttributeNameRegex,
-    BatchSize,
-    TargetBatchPayloadSize,
-    QueueBufferMaxTime,
-    QueueBufferMaxSize,
-    QueueBufferMaxMessage,
-    CompressCodec,
-    MaxFlowSegSize,
-    SecurityProtocol,
-    SSLContextService,
-    SecurityCA,
-    SecurityCert,
-    SecurityPrivateKey,
-    SecurityPrivateKeyPassWord,
-    KerberosServiceName,
-    KerberosPrincipal,
-    KerberosKeytabPath,
-    KafkaKey,
-    MessageKeyField,
-    DebugContexts,
-    FailEmptyFlowFiles,
-    SASLMechanism,
-    Username,
-    Password
-  });
-  // Set the supported relationships
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -939,11 +804,4 @@ void PublishKafka::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   });
 }
 
-REGISTER_RESOURCE(PublishKafka, "This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. The content of a FlowFile becomes the contents of a Kafka message. "
-                  "This message is optionally assigned a key by using the <Kafka Key> Property.");
-
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

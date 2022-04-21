@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -28,11 +27,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/Configuration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
+namespace org::apache::nifi::minifi::jni {
 
 /**
  * Can be used to load the JVM from NiFi properties.
@@ -43,7 +38,11 @@ class JVMCreator : public minifi::core::CoreComponent {
       : minifi::core::CoreComponent(name, uuid) {
   }
 
-  virtual ~JVMCreator();
+  ~JVMCreator() override;
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
   void configure(const std::vector<std::string> &jarFileListings) {
     std::vector<std::string> pathOrFiles;
@@ -100,8 +99,4 @@ class JVMCreator : public minifi::core::CoreComponent {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JVMCreator>::getLogger();
 };
 
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni

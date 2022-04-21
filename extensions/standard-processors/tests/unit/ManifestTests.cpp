@@ -21,7 +21,7 @@
 #include "core/state/nodes/AgentInformation.h"
 #include "TestBase.h"
 #include "Catch.h"
-#include "core/ClassLoader.h"
+#include "range/v3/algorithm/find_if.hpp"
 
 // Include some processor headers to make sure they are part of the manifest
 #include "HashContent.h"
@@ -44,14 +44,14 @@ TEST_CASE("Test Required", "[required]") {
   REQUIRE(processorIndex < resp.children.size());
 
   const auto& processors = resp.children[processorIndex];
-  const auto get_file_it = std::ranges::find_if(processors.children, [](const auto& child) {
+  const auto get_file_it = ranges::find_if(processors.children, [](const auto& child) {
     return child.name == "org.apache.nifi.minifi.processors.GetFile";
   });
   REQUIRE(get_file_it != processors.children.end());
 
   REQUIRE(get_file_it->children.size() > 0);
   const auto& get_file_property_descriptors = get_file_it->children[0];
-  const auto batch_size_property_it = std::ranges::find_if(get_file_property_descriptors.children, [](const auto& property) {
+  const auto batch_size_property_it = ranges::find_if(get_file_property_descriptors.children, [](const auto& property) {
     return property.name == "Batch Size";
   });
   REQUIRE(batch_size_property_it != get_file_property_descriptors.children.end());
@@ -118,10 +118,10 @@ TEST_CASE("Test Relationships", "[rel1]") {
   // this is because they are now nested
   REQUIRE("supportedRelationships" == relationships.children[0].name);
   REQUIRE("name" == relationships.children[0].children[0].name);
-  REQUIRE("failure" == relationships.children[0].children[0].value.to_string());
+  REQUIRE("success" == relationships.children[0].children[0].value.to_string());
   REQUIRE("description" == relationships.children[0].children[1].name);
 
-  REQUIRE("success" == relationships.children[1].children[0].value.to_string());
+  REQUIRE("failure" == relationships.children[1].children[0].value.to_string());
   REQUIRE("description" == relationships.children[1].children[1].name);
 #endif
 }

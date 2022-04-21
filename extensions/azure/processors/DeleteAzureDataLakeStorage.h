@@ -33,9 +33,20 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBase {
  public:
-  // Supported Relationships
-  static const core::Relationship Failure;
-  static const core::Relationship Success;
+  EXTENSIONAPI static constexpr const char* Description = "Deletes the provided file from Azure Data Lake Storage";
+
+  static auto properties() { return AzureDataLakeStorageFileProcessorBase::properties(); }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit DeleteAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureDataLakeStorage>::getLogger()) {
@@ -48,14 +59,6 @@ class DeleteAzureDataLakeStorage final : public AzureDataLakeStorageFileProcesso
 
  private:
   friend class ::AzureDataLakeStorageTestsFixture<DeleteAzureDataLakeStorage>;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
   explicit DeleteAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
     : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<DeleteAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {

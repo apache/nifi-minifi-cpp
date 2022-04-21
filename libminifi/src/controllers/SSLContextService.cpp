@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -34,7 +33,7 @@
 #include <string>
 #include <set>
 
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
@@ -45,11 +44,7 @@
 #include "utils/tls/WindowsCertStoreLocation.h"
 #include "utils/TimeUtil.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 const core::Property SSLContextService::ClientCertificate(
     core::PropertyBuilder::createProperty("Client Certificate")
@@ -544,20 +539,7 @@ void SSLContextService::onEnable() {
 }
 
 void SSLContextService::initializeProperties() {
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(ClientCertificate);
-  supportedProperties.insert(PrivateKey);
-  supportedProperties.insert(Passphrase);
-  supportedProperties.insert(CACertificate);
-  supportedProperties.insert(UseSystemCertStore);
-#ifdef WIN32
-  supportedProperties.insert(CertStoreLocation);
-  supportedProperties.insert(ServerCertStore);
-  supportedProperties.insert(ClientCertStore);
-  supportedProperties.insert(ClientCertCN);
-  supportedProperties.insert(ClientCertKeyUsage);
-#endif  // WIN32
-  setSupportedProperties(supportedProperties);
+  setSupportedProperties(properties());
 }
 
 void SSLContextService::verifyCertificateExpiration() {
@@ -643,10 +625,6 @@ void SSLContextService::verifyCertificateExpiration() {
 #endif
 }
 
-REGISTER_RESOURCE(SSLContextService, "Controller service that provides SSL/TLS capabilities to consuming interfaces");
+REGISTER_RESOURCE(SSLContextService, ControllerService);
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,42 +18,38 @@
 
 #include <fstream>
 #include <limits>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
-core::Property LinuxPowerManagerService::BatteryCapacityPath(
+const core::Property LinuxPowerManagerService::BatteryCapacityPath(
     core::PropertyBuilder::createProperty("Battery Capacity Path")->withDescription("Path to the battery level")->isRequired(true)->withDefaultValue<std::string>(
         "/sys/class/power_supply/BAT0/capacity")->build());
 
-core::Property LinuxPowerManagerService::BatteryStatusPath(
+const core::Property LinuxPowerManagerService::BatteryStatusPath(
     core::PropertyBuilder::createProperty("Battery Status Path")->withDescription("Path to the battery status ( Discharging/Battery )")->isRequired(true)->withDefaultValue<std::string>(
         "/sys/class/power_supply/BAT0/status")->build());
 
-core::Property LinuxPowerManagerService::BatteryStatusDischargeKeyword(
+const core::Property LinuxPowerManagerService::BatteryStatusDischargeKeyword(
     core::PropertyBuilder::createProperty("Battery Status Discharge")->withDescription("Keyword to identify if battery is discharging")->isRequired(true)->withDefaultValue<std::string>("Discharging")
         ->build());
 
-core::Property LinuxPowerManagerService::TriggerThreshold(
+const core::Property LinuxPowerManagerService::TriggerThreshold(
     core::PropertyBuilder::createProperty("Trigger Threshold")->withDescription("Battery threshold before which we consider a slow reduction. Should be a number from 1-100")->isRequired(true)
         ->withDefaultValue<int>(75)->build());
 
-core::Property LinuxPowerManagerService::WaitPeriod(
+const core::Property LinuxPowerManagerService::WaitPeriod(
     core::PropertyBuilder::createProperty("Wait Period")->withDescription("Decay between checking threshold and determining if a reduction is needed")->isRequired(true)
         ->withDefaultValue<core::TimePeriodValue>("100 ms")->build());
 
-core::Property LinuxPowerManagerService::LowBatteryThreshold(
+const core::Property LinuxPowerManagerService::LowBatteryThreshold(
     core::PropertyBuilder::createProperty("Low Battery Threshold")->withDescription("Battery threshold before which we will aggressively reduce. Should be a number from 1-100")->isRequired(true)
         ->withDefaultValue<int>(50)->build());
 
@@ -166,13 +161,7 @@ bool LinuxPowerManagerService::shouldReduce() {
 
 void LinuxPowerManagerService::initialize() {
   ThreadManagementService::initialize();
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(BatteryCapacityPath);
-  supportedProperties.insert(BatteryStatusPath);
-  supportedProperties.insert(TriggerThreshold);
-  supportedProperties.insert(LowBatteryThreshold);
-  supportedProperties.insert(WaitPeriod);
-  setSupportedProperties(supportedProperties);
+  setSupportedProperties(properties());
 }
 
 void LinuxPowerManagerService::yield() {
@@ -221,10 +210,6 @@ void LinuxPowerManagerService::onEnable() {
   }
 }
 
-REGISTER_RESOURCE(LinuxPowerManagerService, "Linux power management service that enables control of power usage in the agent through Linux power management information. Use name \"ThreadPoolManager\" to throttle battery consumption"); // NOLINT
+REGISTER_RESOURCE(LinuxPowerManagerService, ControllerService);
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::controllers

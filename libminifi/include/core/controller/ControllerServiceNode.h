@@ -19,7 +19,6 @@
 #define LIBMINIFI_INCLUDE_CORE_CONTROLLER_CONTROLLERSERVICENODE_H_
 
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -61,14 +60,13 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
     service->setConfiguration(configuration);
   }
 
-  virtual void initialize() {
+  void initialize() override {
     controller_service_->initialize();
-    // set base supported properties
-    Property property("Linked Services", "Referenced Controller Services");
-    std::set<Property> supportedProperties;
-    supportedProperties.insert(property);
-    setSupportedProperties(supportedProperties);
+    setSupportedProperties(std::array{
+      Property{"Linked Services", "Referenced Controller Services"}
+    });
   }
+
   void setName(const std::string name) {
     CoreComponent::setName(name);
     controller_service_->setName(name);
@@ -108,7 +106,11 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
    */
   virtual bool disable() = 0;
 
-  virtual bool supportsDynamicProperties() {
+  bool supportsDynamicProperties() const override {
+    return false;
+  }
+
+  bool supportsDynamicRelationships() const override {
     return false;
   }
 
@@ -116,7 +118,7 @@ class ControllerServiceNode : public CoreComponent, public ConfigurableComponent
   ControllerServiceNode &operator=(const ControllerServiceNode &parent) = delete;
 
  protected:
-  bool canEdit() {
+  bool canEdit() override {
     return true;
   }
 

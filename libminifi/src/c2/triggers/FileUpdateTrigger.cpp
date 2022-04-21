@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,11 +18,7 @@
 #include "c2/triggers/FileUpdateTrigger.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Returns a payload implementing a C2 action
@@ -54,10 +49,6 @@ void FileUpdateTrigger::setLastUpdate(const std::optional<std::filesystem::file_
   last_update_ = last_update;
 }
 
-REGISTER_RESOURCE(FileUpdateTrigger, "Defines a file update trigger when the last write time of a file has been changed.");
+REGISTER_RESOURCE(FileUpdateTrigger, DescriptionOnly);
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

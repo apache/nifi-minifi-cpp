@@ -20,14 +20,16 @@ To enable all extensions for your platform, you may use -DENABLE_ALL=TRUE OR sel
 Extensions are dynamic libraries loaded at runtime by the agent. An extension makes its 
 capabilities (classes) available to the system through registrars. Registration must happen in source files, not headers.
 
-``` C++
+```C++
 // register user-facing classes as
-REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
-    "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
-    "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
+REGISTER_RESOURCE(InvokeHTTP, Processor);
+// or
+REGISTER_RESOURCE(SSLContextService, ControllerService);
 
 // register internal resources as
-REGISTER_INTERNAL_RESOURCE(HTTPClient);
+REGISTER_RESOURCE(HTTPClient, InternalResource);
+// or
+REGISTER_RESOURCE(RESTSender, DescriptionOnly);
 ```
 
 Some extensions (e.g. `http-curl`) require initialization before use. 

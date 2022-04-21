@@ -1,7 +1,4 @@
 /**
- * @file ListS3.h
- * ListS3 class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -28,29 +25,42 @@
 #include <memory>
 
 #include "S3Processor.h"
+#include "utils/ArrayUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
+namespace org::apache::nifi::minifi::aws::processors {
 
 class ListS3 : public S3Processor {
  public:
-  static constexpr char const* ProcessorName = "ListS3";
+  EXTENSIONAPI static constexpr const char* Description = "This Processor retrieves a listing of objects from an Amazon S3 bucket.";
 
-  // Supported Properties
-  static const core::Property Delimiter;
-  static const core::Property Prefix;
-  static const core::Property UseVersions;
-  static const core::Property MinimumObjectAge;
-  static const core::Property WriteObjectTags;
-  static const core::Property WriteUserMetadata;
-  static const core::Property RequesterPays;
+  EXTENSIONAPI static const core::Property Delimiter;
+  EXTENSIONAPI static const core::Property Prefix;
+  EXTENSIONAPI static const core::Property UseVersions;
+  EXTENSIONAPI static const core::Property MinimumObjectAge;
+  EXTENSIONAPI static const core::Property WriteObjectTags;
+  EXTENSIONAPI static const core::Property WriteUserMetadata;
+  EXTENSIONAPI static const core::Property RequesterPays;
+  static auto properties() {
+    return minifi::utils::array_cat(S3Processor::properties(), std::array{
+      Delimiter,
+      Prefix,
+      UseVersions,
+      MinimumObjectAge,
+      WriteObjectTags,
+      WriteUserMetadata,
+      RequesterPays
+    });
+  }
 
-  // Supported Relationships
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit ListS3(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : S3Processor(name, uuid, core::logging::LoggerFactory<ListS3>::getLogger()) {
@@ -66,10 +76,6 @@ class ListS3 : public S3Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   void writeObjectTags(
     const aws::s3::ListedObjectAttributes &object_attributes,
     core::ProcessSession &session,
@@ -89,9 +95,4 @@ class ListS3 : public S3Processor {
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

@@ -49,29 +49,81 @@ class InvokeHTTP : public core::Processor {
       : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }
-  EXTENSIONAPI static std::string DefaultContentType;
 
-  EXTENSIONAPI static core::Property Method;
-  EXTENSIONAPI static core::Property URL;
-  EXTENSIONAPI static core::Property ConnectTimeout;
-  EXTENSIONAPI static core::Property ReadTimeout;
-  EXTENSIONAPI static core::Property DateHeader;
-  EXTENSIONAPI static core::Property FollowRedirects;
-  EXTENSIONAPI static core::Property AttributesToSend;
-  EXTENSIONAPI static core::Property SSLContext;
-  EXTENSIONAPI static core::Property ProxyHost;
-  EXTENSIONAPI static core::Property ProxyPort;
-  EXTENSIONAPI static core::Property ProxyUsername;
-  EXTENSIONAPI static core::Property ProxyPassword;
-  EXTENSIONAPI static core::Property ContentType;
-  EXTENSIONAPI static core::Property SendBody;
-  EXTENSIONAPI static core::Property SendMessageBody;
-  EXTENSIONAPI static core::Property UseChunkedEncoding;
-  EXTENSIONAPI static core::Property DisablePeerVerification;
-  EXTENSIONAPI static core::Property PropPutOutputAttributes;
-  EXTENSIONAPI static core::Property AlwaysOutputResponse;
-  EXTENSIONAPI static core::Property PenalizeOnNoRetry;
-  EXTENSIONAPI static core::Property InvalidHTTPHeaderFieldHandlingStrategy;
+  EXTENSIONAPI static constexpr const char* Description = "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
+      "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
+      "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).";
+
+  EXTENSIONAPI static const core::Property Method;
+  EXTENSIONAPI static const core::Property URL;
+  EXTENSIONAPI static const core::Property ConnectTimeout;
+  EXTENSIONAPI static const core::Property ReadTimeout;
+  EXTENSIONAPI static const core::Property DateHeader;
+  EXTENSIONAPI static const core::Property FollowRedirects;
+  EXTENSIONAPI static const core::Property AttributesToSend;
+  EXTENSIONAPI static const core::Property SSLContext;
+  EXTENSIONAPI static const core::Property ProxyHost;
+  EXTENSIONAPI static const core::Property ProxyPort;
+  EXTENSIONAPI static const core::Property ProxyUsername;
+  EXTENSIONAPI static const core::Property ProxyPassword;
+  EXTENSIONAPI static const core::Property ContentType;
+  EXTENSIONAPI static const core::Property SendBody;
+  EXTENSIONAPI static const core::Property SendMessageBody;
+  EXTENSIONAPI static const core::Property UseChunkedEncoding;
+  EXTENSIONAPI static const core::Property DisablePeerVerification;
+  EXTENSIONAPI static const core::Property PropPutOutputAttributes;
+  EXTENSIONAPI static const core::Property AlwaysOutputResponse;
+  EXTENSIONAPI static const core::Property PenalizeOnNoRetry;
+  EXTENSIONAPI static const core::Property InvalidHTTPHeaderFieldHandlingStrategy;
+  static auto properties() {
+    return std::array{
+      Method,
+      URL,
+      ConnectTimeout,
+      ReadTimeout,
+      DateHeader,
+      FollowRedirects,
+      AttributesToSend,
+      SSLContext,
+      ProxyHost,
+      ProxyPort,
+      ProxyUsername,
+      ProxyPassword,
+      ContentType,
+      SendBody,
+      SendMessageBody,
+      UseChunkedEncoding,
+      DisablePeerVerification,
+      PropPutOutputAttributes,
+      AlwaysOutputResponse,
+      PenalizeOnNoRetry,
+      InvalidHTTPHeaderFieldHandlingStrategy
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship RelResponse;
+  EXTENSIONAPI static const core::Relationship RelRetry;
+  EXTENSIONAPI static const core::Relationship RelNoRetry;
+  EXTENSIONAPI static const core::Relationship RelFailure;
+  static auto relationships() {
+    return std::array{
+      Success,
+      RelResponse,
+      RelRetry,
+      RelNoRetry,
+      RelFailure
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  EXTENSIONAPI static std::string DefaultContentType;
 
   EXTENSIONAPI static const char* STATUS_CODE;
   EXTENSIONAPI static const char* STATUS_MESSAGE;
@@ -81,12 +133,6 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static const char* REMOTE_DN;
   EXTENSIONAPI static const char* EXCEPTION_CLASS;
   EXTENSIONAPI static const char* EXCEPTION_MESSAGE;
-
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship RelResponse;
-  EXTENSIONAPI static core::Relationship RelRetry;
-  EXTENSIONAPI static core::Relationship RelNoRetry;
-  EXTENSIONAPI static core::Relationship RelFailure;
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;

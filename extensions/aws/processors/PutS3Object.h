@@ -1,7 +1,4 @@
 /**
- * @file PutS3Object.h
- * PutS3Object class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,28 +29,23 @@
 
 #include "io/StreamPipe.h"
 #include "S3Processor.h"
+#include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"
 
 template<typename T>
 class S3TestsFixture;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
+namespace org::apache::nifi::minifi::aws::processors {
 
 class PutS3Object : public S3Processor {
  public:
-  static constexpr char const* ProcessorName = "PutS3Object";
-
   static const std::set<std::string> CANNED_ACLS;
   static const std::set<std::string> STORAGE_CLASSES;
   static const std::set<std::string> SERVER_SIDE_ENCRYPTIONS;
 
-  // Supported Properties
+  EXTENSIONAPI static constexpr const char* Description = "This Processor puts FlowFiles to an Amazon S3 Bucket.";
+
   static const core::Property ObjectKey;
   static const core::Property ContentType;
   static const core::Property StorageClass;
@@ -63,10 +55,30 @@ class PutS3Object : public S3Processor {
   static const core::Property ReadACLUserList;
   static const core::Property WriteACLUserList;
   static const core::Property CannedACL;
+  static auto properties() {
+    return minifi::utils::array_cat(S3Processor::properties(), std::array{
+      ObjectKey,
+      ContentType,
+      StorageClass,
+      ServerSideEncryption,
+      FullControlUserList,
+      ReadPermissionUserList,
+      ReadACLUserList,
+      WriteACLUserList,
+      CannedACL
+    });
+  }
 
-  // Supported Relationships
-  static const core::Relationship Failure;
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : S3Processor(name, uuid, core::logging::LoggerFactory<PutS3Object>::getLogger()) {
@@ -80,8 +92,8 @@ class PutS3Object : public S3Processor {
 
   class ReadCallback {
    public:
-    static const uint64_t MAX_SIZE;
-    static const uint64_t BUFFER_SIZE;
+    static constexpr uint64_t MAX_SIZE = 5_GiB;
+    static constexpr uint64_t BUFFER_SIZE = 4_KiB;
 
     ReadCallback(uint64_t flow_size, const minifi::aws::s3::PutObjectRequestParameters& options, aws::s3::S3Wrapper& s3_wrapper)
       : flow_size_(flow_size)
@@ -122,14 +134,6 @@ class PutS3Object : public S3Processor {
   };
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
   friend class ::S3TestsFixture<PutS3Object>;
 
   explicit PutS3Object(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<aws::s3::S3RequestSender> s3_request_sender)
@@ -156,9 +160,4 @@ class PutS3Object : public S3Processor {
   std::string server_side_encryption_;
 };
 
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

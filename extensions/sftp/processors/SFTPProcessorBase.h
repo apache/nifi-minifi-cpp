@@ -24,7 +24,7 @@
 #include <map>
 #include <mutex>
 #include <thread>
-#include <set>
+#include <vector>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -43,26 +43,44 @@ namespace processors {
 class SFTPProcessorBase : public core::Processor {
  public:
   SFTPProcessorBase(const std::string& name, const utils::Identifier& uuid);
-  virtual ~SFTPProcessorBase();
+  ~SFTPProcessorBase() override;
 
-  // Supported Properties
-  static core::Property Hostname;
-  static core::Property Port;
-  static core::Property Username;
-  static core::Property Password;
-  static core::Property PrivateKeyPath;
-  static core::Property PrivateKeyPassphrase;
-  static core::Property StrictHostKeyChecking;
-  static core::Property HostKeyFile;
-  static core::Property ConnectionTimeout;
-  static core::Property DataTimeout;
-  static core::Property SendKeepaliveOnTimeout;
-  static core::Property TargetSystemTimestampPrecision;
-  static core::Property ProxyType;
-  static core::Property ProxyHost;
-  static core::Property ProxyPort;
-  static core::Property HttpProxyUsername;
-  static core::Property HttpProxyPassword;
+  EXTENSIONAPI static const core::Property Hostname;
+  EXTENSIONAPI static const core::Property Port;
+  EXTENSIONAPI static const core::Property Username;
+  EXTENSIONAPI static const core::Property Password;
+  EXTENSIONAPI static const core::Property PrivateKeyPath;
+  EXTENSIONAPI static const core::Property PrivateKeyPassphrase;
+  EXTENSIONAPI static const core::Property StrictHostKeyChecking;
+  EXTENSIONAPI static const core::Property HostKeyFile;
+  EXTENSIONAPI static const core::Property ConnectionTimeout;
+  EXTENSIONAPI static const core::Property DataTimeout;
+  EXTENSIONAPI static const core::Property SendKeepaliveOnTimeout;
+  EXTENSIONAPI static const core::Property ProxyType;
+  EXTENSIONAPI static const core::Property ProxyHost;
+  EXTENSIONAPI static const core::Property ProxyPort;
+  EXTENSIONAPI static const core::Property HttpProxyUsername;
+  EXTENSIONAPI static const core::Property HttpProxyPassword;
+  static auto properties() {
+    return std::array{
+      Hostname,
+      Port,
+      Username,
+      Password,
+      PrivateKeyPath,
+      PrivateKeyPassphrase,
+      StrictHostKeyChecking,
+      HostKeyFile,
+      ConnectionTimeout,
+      DataTimeout,
+      SendKeepaliveOnTimeout,
+      ProxyType,
+      ProxyHost,
+      ProxyPort,
+      HttpProxyUsername,
+      HttpProxyPassword
+    };
+  }
 
   static constexpr char const *PROXY_TYPE_DIRECT = "DIRECT";
   static constexpr char const *PROXY_TYPE_HTTP = "HTTP";
@@ -81,7 +99,6 @@ class SFTPProcessorBase : public core::Processor {
   bool use_compression_;
   std::string proxy_type_;
 
-  void addSupportedCommonProperties(std::set<core::Property>& supported_properties);
   void parseCommonPropertiesOnSchedule(const std::shared_ptr<core::ProcessContext>& context);
   struct CommonProperties {
     std::string hostname;

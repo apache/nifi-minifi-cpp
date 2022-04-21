@@ -27,7 +27,6 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -35,6 +34,7 @@
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "ResourceClaim.h"
@@ -58,21 +58,13 @@ core::Property ExecuteJavaProcessor::NiFiProcessor(core::PropertyBuilder::create
     ->withDescription("Name of NiFi processor to load and run")
     ->isRequired(true)->withDefaultValue<std::string>("")->build());
 
-const char *ExecuteJavaProcessor::ProcessorName = "ExecuteJavaClass";
-
 core::Relationship ExecuteJavaProcessor::Success("success", "All files are routed to success");
+
 void ExecuteJavaProcessor::initialize() {
   logger_->log_info("Initializing ExecuteJavaClass");
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(JVMControllerService);
-  properties.insert(NiFiProcessor);
-  setSupportedProperties(properties);
+  setSupportedProperties(properties());
   setAcceptAllProperties();
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships(relationships());
 }
 
 void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -233,7 +225,7 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
   // do nothing.
 }
 
-REGISTER_RESOURCE_AS(ExecuteJavaProcessor, "ExecuteJavaClass runs NiFi processors given a provided system path ", ("ExecuteJavaClass"));
+REGISTER_RESOURCE_AS(ExecuteJavaProcessor, Processor, ("ExecuteJavaClass"));
 
 } /* namespace processors */
 } /* namespace jni */

@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::processors {
 const core::Relationship ReadFromFlowFileTestProcessor::Success("success", "success operational on the flow record");
 
 void ReadFromFlowFileTestProcessor::initialize() {
-  setSupportedRelationships({ Success });
+  setSupportedRelationships(relationships());
 }
 
 void ReadFromFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {
@@ -69,6 +69,6 @@ bool ReadFromFlowFileTestProcessor::readFlowFileWithAttribute(const std::string&
 }
 
 
-REGISTER_RESOURCE(ReadFromFlowFileTestProcessor, "ReadFromFlowFileTestProcessor (only for testing purposes)");
+REGISTER_RESOURCE(ReadFromFlowFileTestProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

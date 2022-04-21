@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -36,12 +35,7 @@
 #include "encryption/RocksDbEncryptionProvider.h"
 #include "utils/crypto/EncryptionProvider.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 #ifdef WIN32
 #define FLOWFILE_REPOSITORY_DIRECTORY ".\\flowfile_repository"
@@ -68,7 +62,7 @@ class FlowFileRepository : public core::Repository {
       : FlowFileRepository(name) {
   }
 
-  FlowFileRepository(const std::string repo_name = "",
+  explicit FlowFileRepository(const std::string repo_name = "",
                      const std::string& checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
                      std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
                      std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
@@ -86,6 +80,10 @@ class FlowFileRepository : public core::Repository {
   ~FlowFileRepository() override {
     stop();
   }
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
   bool isNoop() override {
     return false;
@@ -235,9 +233,4 @@ class FlowFileRepository : public core::Repository {
   std::shared_ptr<minifi::Configure> config_;
 };
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::repository

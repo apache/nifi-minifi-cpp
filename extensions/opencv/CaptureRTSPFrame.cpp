@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <set>
 
 #include "CaptureRTSPFrame.h"
 #include "core/ProcessContext.h"
@@ -27,55 +26,37 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-static core::Property rtspUsername;
-static core::Property rtspPassword;
-static core::Property rtspHostname;
-static core::Property rtspURI;
-static core::Property captureFrameRate;
-static core::Property imageEncoding;
-
-core::Property CaptureRTSPFrame::RTSPUsername(
+const core::Property CaptureRTSPFrame::RTSPUsername(
     "RTSP Username",
     "The username for connecting to the RTSP stream", "");
-core::Property CaptureRTSPFrame::RTSPPassword(
+const core::Property CaptureRTSPFrame::RTSPPassword(
     "RTSP Password",
     "Password used to connect to the RTSP stream", "");
-core::Property CaptureRTSPFrame::RTSPHostname(
+const core::Property CaptureRTSPFrame::RTSPHostname(
     "RTSP Hostname",
     "Hostname of the RTSP stream we are trying to connect to", "");
-core::Property CaptureRTSPFrame::RTSPURI(
+const core::Property CaptureRTSPFrame::RTSPURI(
     "RTSP URI",
     "URI that should be appended to the RTSP stream hostname", "");
-core::Property CaptureRTSPFrame::RTSPPort(
+const core::Property CaptureRTSPFrame::RTSPPort(
     "RTSP Port",
     "Port that should be connected to to receive RTSP Frames",
     "");
-core::Property CaptureRTSPFrame::ImageEncoding(
+const core::Property CaptureRTSPFrame::ImageEncoding(
     "Image Encoding",
     "The encoding that should be applied the the frame images captured from the RTSP stream",
     ".jpg");
 
-core::Relationship CaptureRTSPFrame::Success(
+const core::Relationship CaptureRTSPFrame::Success(
     "success",
     "Successful capture of RTSP frame");
-core::Relationship CaptureRTSPFrame::Failure(
+const core::Relationship CaptureRTSPFrame::Failure(
     "failure",
     "Failures to capture RTSP frame");
 
 void CaptureRTSPFrame::initialize() {
-  std::set<core::Property> properties;
-  properties.insert(RTSPUsername);
-  properties.insert(RTSPPassword);
-  properties.insert(RTSPHostname);
-  properties.insert(RTSPPort);
-  properties.insert(RTSPURI);
-  properties.insert(ImageEncoding);
-  setSupportedProperties(std::move(properties));
-
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(std::move(relationships));
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void CaptureRTSPFrame::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -180,7 +161,7 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
 void CaptureRTSPFrame::notifyStop() {
 }
 
-REGISTER_RESOURCE(CaptureRTSPFrame, "Captures a frame from the RTSP stream at specified intervals."); // NOLINT
+REGISTER_RESOURCE(CaptureRTSPFrame, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

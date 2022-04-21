@@ -27,6 +27,7 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include "processors/GenerateFlowFile.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -52,9 +53,20 @@ class TestProcessor : public core::Processor, public ProcessorWithStatistics {
  public:
   TestProcessor(const std::string& name, const utils::Identifier& uuid) : Processor(name, uuid) {}
   explicit TestProcessor(const std::string& name) : Processor(name) {}
+
+  static constexpr const char* Description = "Processor used for testing cycles";
+  static auto properties() { return std::array{AppleProbability, BananaProbability}; }
+  static auto relationships() { return std::array{Apple, Banana}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void initialize() override {
-    setSupportedProperties({AppleProbability, BananaProbability});
-    setSupportedRelationships({Apple, Banana});
+    setSupportedProperties(properties());
+    setSupportedRelationships(relationships());
   }
   void onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) override {
     ++trigger_count;
@@ -96,6 +108,8 @@ class TestFlowFileGenerator : public processors::GenerateFlowFile, public Proces
   TestFlowFileGenerator(const std::string& name, const utils::Identifier& uuid) : GenerateFlowFile(name, uuid) {}
   explicit TestFlowFileGenerator(const std::string& name) : GenerateFlowFile(name) {}
 
+  static constexpr const char* Description = "Processor generating files and notifying us";
+
   using processors::GenerateFlowFile::onTrigger;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override {
     ++trigger_count;
@@ -106,8 +120,8 @@ class TestFlowFileGenerator : public processors::GenerateFlowFile, public Proces
   }
 };
 
-REGISTER_RESOURCE(TestProcessor, "Processor used for testing cycles");
-REGISTER_RESOURCE(TestFlowFileGenerator, "Processor generating files and notifying us");
+REGISTER_RESOURCE(TestProcessor, Processor);
+REGISTER_RESOURCE(TestFlowFileGenerator, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

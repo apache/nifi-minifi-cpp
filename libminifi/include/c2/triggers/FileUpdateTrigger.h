@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
-#define LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -27,11 +25,7 @@
 #include "c2/C2Payload.h"
 #include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Purpose: Defines a file update trigger when the last write time of a file has been changed.
@@ -40,12 +34,14 @@ namespace c2 {
  */
 class FileUpdateTrigger : public C2Trigger {
  public:
-  FileUpdateTrigger(const std::string &name, const utils::Identifier &uuid = {}) // NOLINT
+  MINIFIAPI static constexpr const char* Description = "Defines a file update trigger when the last write time of a file has been changed.";
+
+  explicit FileUpdateTrigger(const std::string &name, const utils::Identifier &uuid = {})
       : C2Trigger(name, uuid),
         update_(false) {
   }
 
-  void initialize(const std::shared_ptr<minifi::Configure> &configuration) {
+  void initialize(const std::shared_ptr<minifi::Configure> &configuration) override {
     if (nullptr != configuration) {
       if (configuration->get(minifi::Configure::nifi_c2_file_watch, "c2.file.watch", file_)) {
         setLastUpdate(utils::file::last_write_time(file_));
@@ -55,7 +51,7 @@ class FileUpdateTrigger : public C2Trigger {
     }
   }
 
-  virtual bool triggered() {
+  bool triggered() override {
     if (!getLastUpdate().has_value()) {
       logger_->log_trace("Last Update is zero");
       return false;
@@ -72,7 +68,7 @@ class FileUpdateTrigger : public C2Trigger {
   }
 
 
-  virtual void reset() {
+  void reset() override {
     setLastUpdate(utils::file::last_write_time(file_));
     update_ = false;
   }
@@ -80,12 +76,12 @@ class FileUpdateTrigger : public C2Trigger {
   /**
    * Returns an update payload implementing a C2 action
    */
-  virtual C2Payload getAction();
+  C2Payload getAction() override;
 
   /**
    * Determines if we are connected and operating
    */
-  virtual bool isRunning() {
+  bool isRunning() override {
     return true;
   }
 
@@ -94,14 +90,14 @@ class FileUpdateTrigger : public C2Trigger {
    * @param timeoutMs timeout in milliseconds
    */
 
-  virtual void yield() {
+  void yield() override {
   }
 
   /**
    * Determines if work is available by this connectable
    * @return boolean if work is available.
    */
-  virtual bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return true;
   }
 
@@ -119,10 +115,4 @@ class FileUpdateTrigger : public C2Trigger {
   std::optional<std::filesystem::file_time_type> last_update_;
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_C2_TRIGGERS_FILEUPDATETRIGGER_H_
+}  // namespace org::apache::nifi::minifi::c2

@@ -35,6 +35,7 @@
 #include "utils/net/Socket.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 
@@ -63,14 +64,8 @@ PutUDP::PutUDP(const std::string& name, const utils::Identifier& uuid)
 PutUDP::~PutUDP() = default;
 
 void PutUDP::initialize() {
-  setSupportedProperties({
-      Hostname,
-      Port
-  });
-  setSupportedRelationships({
-      Success,
-      Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PutUDP::notifyStop() {}
@@ -156,8 +151,7 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
       });
 }
 
-REGISTER_RESOURCE(PutUDP, "The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet which is then transmitted to the configured UDP server. "
-                          "The processor doesn't guarantee a successful transfer, even if the flow file is routed to the success relationship.");
+REGISTER_RESOURCE(PutUDP, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors
 

@@ -42,15 +42,30 @@ class ProcFsMonitor : public core::Processor {
   }
   ~ProcFsMonitor() override = default;
 
-  static constexpr char const *ProcessorName = "ProcFsMonitor";
+  EXTENSIONAPI static constexpr const char* Description = "This processor can create FlowFiles with various performance data through the proc pseudo-filesystem. (Linux only)";
 
   EXTENSIONAPI static const core::Property OutputFormatProperty;
   EXTENSIONAPI static const core::Property OutputCompactnessProperty;
   EXTENSIONAPI static const core::Property DecimalPlaces;
   EXTENSIONAPI static const core::Property ResultRelativenessProperty;
+  static auto properties() {
+    return std::array{
+      OutputFormatProperty,
+      OutputCompactnessProperty,
+      DecimalPlaces,
+      ResultRelativenessProperty
+    };
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
 
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
@@ -75,14 +90,6 @@ class ProcFsMonitor : public core::Processor {
   )
 
  private:
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
 
   void setupDecimalPlacesFromProperties(const core::ProcessContext& context);

@@ -25,13 +25,13 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <set>
 #include <utility>
 #ifdef WIN32
 #include <Windows.h>
 #endif
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -42,54 +42,40 @@ namespace processors {
 
 std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-core::Property PutFile::Directory(
-    core::PropertyBuilder::createProperty("Directory")->withDescription("The output directory to which to put files")->supportsExpressionLanguage(true)->withDefaultValue(".")->build());
-
-core::Property PutFile::ConflictResolution(
-    core::PropertyBuilder::createProperty("Conflict Resolution Strategy")->withDescription("Indicates what should happen when a file with the same name already exists in the output directory")
-        ->withAllowableValue<std::string>(CONFLICT_RESOLUTION_STRATEGY_FAIL)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_IGNORE)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_REPLACE)
-        ->withDefaultValue(CONFLICT_RESOLUTION_STRATEGY_FAIL)->build());
-
-core::Property PutFile::CreateDirs("Create Missing Directories", "If true, then missing destination directories will be created. "
-                                   "If false, flowfiles are penalized and sent to failure.",
-                                   "true", true, "", { "Directory" }, { });
-
-core::Property PutFile::MaxDestFiles(
-    core::PropertyBuilder::createProperty("Maximum File Count")->withDescription("Specifies the maximum number of files that can exist in the output directory")->withDefaultValue<int>(-1)->build());
-
 #ifndef WIN32
-core::Property PutFile::Permissions(
+const core::Property PutFile::Permissions(
     core::PropertyBuilder::createProperty("Permissions")
       ->withDescription("Sets the permissions on the output file to the value of this attribute. "
                         "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
       ->build());
-core::Property PutFile::DirectoryPermissions(
+const core::Property PutFile::DirectoryPermissions(
     core::PropertyBuilder::createProperty("Directory Permissions")
       ->withDescription("Sets the permissions on the directories being created if 'Create Missing Directories' property is set. "
                         "Must be an octal number (e.g. 644 or 0755). Not supported on Windows systems.")
       ->build());
 #endif
 
-core::Relationship PutFile::Success("success", "All files are routed to success");
-core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
+const core::Property PutFile::Directory(
+    core::PropertyBuilder::createProperty("Directory")->withDescription("The output directory to which to put files")->supportsExpressionLanguage(true)->withDefaultValue(".")->build());
+
+const core::Property PutFile::ConflictResolution(
+    core::PropertyBuilder::createProperty("Conflict Resolution Strategy")->withDescription("Indicates what should happen when a file with the same name already exists in the output directory")
+        ->withAllowableValue<std::string>(CONFLICT_RESOLUTION_STRATEGY_FAIL)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_IGNORE)->withAllowableValue(CONFLICT_RESOLUTION_STRATEGY_REPLACE)
+        ->withDefaultValue(CONFLICT_RESOLUTION_STRATEGY_FAIL)->build());
+
+const core::Property PutFile::CreateDirs("Create Missing Directories", "If true, then missing destination directories will be created. "
+                                   "If false, flowfiles are penalized and sent to failure.",
+                                   "true", true, "", { "Directory" }, { });
+
+const core::Property PutFile::MaxDestFiles(
+    core::PropertyBuilder::createProperty("Maximum File Count")->withDescription("Specifies the maximum number of files that can exist in the output directory")->withDefaultValue<int>(-1)->build());
+
+const core::Relationship PutFile::Success("success", "All files are routed to success");
+const core::Relationship PutFile::Failure("failure", "Failed files (conflict, write failure, etc.) are transferred to failure");
 
 void PutFile::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(Directory);
-  properties.insert(ConflictResolution);
-  properties.insert(CreateDirs);
-  properties.insert(MaxDestFiles);
-#ifndef WIN32
-  properties.insert(Permissions);
-  properties.insert(DirectoryPermissions);
-#endif
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PutFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -366,7 +352,7 @@ PutFile::ReadCallback::~ReadCallback() {
   std::remove(tmp_file_.c_str());
 }
 
-REGISTER_RESOURCE(PutFile, "Writes the contents of a FlowFile to the local file system");
+REGISTER_RESOURCE(PutFile, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

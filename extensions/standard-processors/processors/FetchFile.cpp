@@ -23,6 +23,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/FileReaderCallback.h"
 #include "utils/file/FileUtils.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -85,21 +86,8 @@ const core::Relationship FetchFile::Failure(
   "Any FlowFile that could not be fetched from the file system for any reason other than insufficient permissions or the file not existing will be transferred to this Relationship.");
 
 void FetchFile::initialize() {
-  setSupportedProperties({
-    FileToFetch,
-    CompletionStrategy,
-    MoveDestinationDirectory,
-    MoveConflictStrategy,
-    LogLevelWhenFileNotFound,
-    LogLevelWhenPermissionDenied
-  });
-
-  setSupportedRelationships({
-    Success,
-    NotFound,
-    PermissionDenied,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void FetchFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &/*sessionFactory*/) {
@@ -257,7 +245,6 @@ void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   executeCompletionStrategy(file_fetch_path_str, file_name);
 }
 
-REGISTER_RESOURCE(FetchFile, "Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. "
-  "Once this is done, the file is optionally moved elsewhere or deleted to help keep the file system organized.");
+REGISTER_RESOURCE(FetchFile, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

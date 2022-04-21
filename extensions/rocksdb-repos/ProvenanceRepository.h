@@ -31,11 +31,7 @@
 #include "provenance/Provenance.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace provenance {
+namespace org::apache::nifi::minifi::provenance {
 
 #define PROVENANCE_DIRECTORY "./provenance_repository"
 #define MAX_PROVENANCE_STORAGE_SIZE (10*1024*1024)  // 10M
@@ -47,10 +43,6 @@ class ProvenanceRepository : public core::Repository {
   ProvenanceRepository(const std::string& name, const utils::Identifier& /*uuid*/)
       : ProvenanceRepository(name) {
   }
-  // Constructor
-  /*!
-   * Create a new provenance repository
-   */
   explicit ProvenanceRepository(const std::string& repo_name = "", std::string directory = PROVENANCE_DIRECTORY, std::chrono::milliseconds maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
       int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE, std::chrono::milliseconds purgePeriod = PROVENANCE_PURGE_PERIOD)
       : core::SerializableComponent(repo_name),
@@ -61,6 +53,10 @@ class ProvenanceRepository : public core::Repository {
   ~ProvenanceRepository() override {
     stop();
   }
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
   void printStats();
 
@@ -189,7 +185,6 @@ class ProvenanceRepository : public core::Repository {
     return max_size > 0;
   }
 
-  //! get record
   void getProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records, int maxSize) {
     std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
@@ -243,8 +238,4 @@ class ProvenanceRepository : public core::Repository {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProvenanceRepository>::getLogger();
 };
 
-} /* namespace provenance */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::provenance

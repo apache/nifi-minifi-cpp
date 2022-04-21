@@ -33,6 +33,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/PropertyValidation.h"
 #include "core/Resource.h"
 
@@ -42,24 +43,17 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-const std::string GetGPS::ProcessorName("GetGPS");
-core::Relationship GetGPS::Success("success", "All files are routed to success");
-core::Property GetGPS::GPSDHost(core::PropertyBuilder::createProperty("GPSD Host")->withDescription("The host running the GPSD daemon")->withDefaultValue<std::string>("localhost")->build());
-core::Property GetGPS::GPSDPort(
+const core::Relationship GetGPS::Success("success", "All files are routed to success");
+
+const core::Property GetGPS::GPSDHost(core::PropertyBuilder::createProperty("GPSD Host")->withDescription("The host running the GPSD daemon")->withDefaultValue<std::string>("localhost")->build());
+const core::Property GetGPS::GPSDPort(
     core::PropertyBuilder::createProperty("GPSD Port")->withDescription("The GPSD daemon port")->withDefaultValue<int64_t>(2947, core::StandardValidators::get().PORT_VALIDATOR)->build());
-core::Property GetGPS::GPSDWaitTime(
+const core::Property GetGPS::GPSDWaitTime(
     core::PropertyBuilder::createProperty("GPSD Wait Time")->withDescription("Timeout value for waiting for data from the GPSD instance")->withDefaultValue<uint64_t>(50000000)->build());
+
 void GetGPS::initialize() {
-  //! Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(GPSDHost);
-  properties.insert(GPSDPort);
-  properties.insert(GPSDWaitTime);
-  setSupportedProperties(properties);
-  //! Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void GetGPS::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -150,7 +144,7 @@ void GetGPS::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
   }
 }
 
-REGISTER_RESOURCE(GetGPS, "Obtains GPS coordinates from the GPSDHost and port.");
+REGISTER_RESOURCE(GetGPS, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

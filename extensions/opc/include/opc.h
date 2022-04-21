@@ -21,6 +21,7 @@
 #include <string>
 #include <functional>
 #include <map>
+#include <set>
 #include <vector>
 #include <memory>
 
@@ -124,6 +125,8 @@ struct NodeData {
 static std::map<std::string, OPCNodeDataType>  StringToOPCDataTypeMap = {{"Int64", OPCNodeDataType::Int64}, {"UInt64", OPCNodeDataType::UInt64 }, {"Int32", OPCNodeDataType::Int32},
                                                                          {"UInt32", OPCNodeDataType::UInt32}, {"Boolean", OPCNodeDataType::Boolean}, {"Float", OPCNodeDataType::Float},
                                                                          {"Double", OPCNodeDataType::Double}, {"String", OPCNodeDataType::String}};
+
+std::set<std::string> stringToOPCDataTypeMapKeys();
 
 std::string nodeValue2String(const NodeData& nd);
 

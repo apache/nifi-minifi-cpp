@@ -1,7 +1,4 @@
 /**
- * @file CollectorInitiatedSubscription.cpp
- CollectorInitiatedSubscription class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -33,6 +30,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 #include "utils/gsl.h"
@@ -42,11 +40,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 #define LOG_SUBSCRIPTION_ERROR(error) logError(__LINE__, error)
 #define LOG_SUBSCRIPTION_WINDOWS_ERROR(info) logWindowsError(__LINE__, info)
@@ -189,11 +183,8 @@ CollectorInitiatedSubscription::CollectorInitiatedSubscription(const std::string
 }
 
 void CollectorInitiatedSubscription::initialize() {
-  //! Set the supported properties
   setSupportedProperties(supportedProperties_.getProperties());
-
-  //! Set the supported relationships
-  setSupportedRelationships({s_success});
+  setSupportedRelationships(std::array{s_success});
 }
 
 void CollectorInitiatedSubscription::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -689,10 +680,6 @@ void CollectorInitiatedSubscription::logWindowsError(int line, const std::string
   LocalFree(lpMsg);
 }
 
-REGISTER_RESOURCE(CollectorInitiatedSubscription, "Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.");
+REGISTER_RESOURCE(CollectorInitiatedSubscription, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

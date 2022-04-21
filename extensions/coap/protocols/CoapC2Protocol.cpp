@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -23,12 +22,7 @@
 #include "io/BaseStream.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace coap {
-namespace c2 {
+namespace org::apache::nifi::minifi::coap::c2 {
 
 uint8_t CoapProtocol::REGISTRATION_MSG[8] = { 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72 };
 
@@ -292,11 +286,6 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
   return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
 }
 
-REGISTER_INTERNAL_RESOURCE(CoapProtocol);
+REGISTER_RESOURCE(CoapProtocol, InternalResource);
 
-} /* namespace c2 */
-} /* namespace coap */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::coap::c2

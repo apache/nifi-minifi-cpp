@@ -24,8 +24,8 @@ namespace org::apache::nifi::minifi::processors {
 const core::Relationship WriteToFlowFileTestProcessor::Success("success", "success operational on the flow record");
 
 void WriteToFlowFileTestProcessor::initialize() {
-  setSupportedProperties({});
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void WriteToFlowFileTestProcessor::onSchedule(core::ProcessContext*, core::ProcessSessionFactory*) {
@@ -52,6 +52,6 @@ void WriteToFlowFileTestProcessor::onUnSchedule() {
   logger_->log_info("%s", ON_UNSCHEDULE_LOG_STR);
 }
 
-REGISTER_RESOURCE(WriteToFlowFileTestProcessor, "WriteToFlowFileTestProcessor (only for testing purposes)");
+REGISTER_RESOURCE(WriteToFlowFileTestProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

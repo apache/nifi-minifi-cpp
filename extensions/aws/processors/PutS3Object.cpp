@@ -1,7 +1,4 @@
 /**
- * @file PutS3Object.cpp
- * PutS3Object class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,89 +28,14 @@
 #include "utils/MapUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
-
-const uint64_t PutS3Object::ReadCallback::MAX_SIZE = 5UL * 1024UL * 1024UL * 1024UL;  // 5GB limit on AWS
-const uint64_t PutS3Object::ReadCallback::BUFFER_SIZE = 4096;
-
-const std::set<std::string> PutS3Object::CANNED_ACLS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::CANNED_ACL_MAP));
-const std::set<std::string> PutS3Object::STORAGE_CLASSES(minifi::utils::MapUtils::getKeys(minifi::aws::s3::STORAGE_CLASS_MAP));
-const std::set<std::string> PutS3Object::SERVER_SIDE_ENCRYPTIONS(minifi::utils::MapUtils::getKeys(minifi::aws::s3::SERVER_SIDE_ENCRYPTION_MAP));
-
-const core::Property PutS3Object::ObjectKey(
-  core::PropertyBuilder::createProperty("Object Key")
-    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::ContentType(
-  core::PropertyBuilder::createProperty("Content Type")
-    ->withDescription("Sets the Content-Type HTTP header indicating the type of content stored in "
-                      "the associated object. The value of this header is a standard MIME type. "
-                      "If no content type is provided the default content type "
-                      "\"application/octet-stream\" will be used.")
-    ->supportsExpressionLanguage(true)
-    ->withDefaultValue<std::string>("application/octet-stream")
-    ->build());
-const core::Property PutS3Object::StorageClass(
-  core::PropertyBuilder::createProperty("Storage Class")
-    ->isRequired(true)
-    ->withDefaultValue<std::string>("Standard")
-    ->withAllowableValues<std::string>(PutS3Object::STORAGE_CLASSES)
-    ->withDescription("AWS S3 Storage Class")
-    ->build());
-const core::Property PutS3Object::FullControlUserList(
-  core::PropertyBuilder::createProperty("FullControl User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Full Control for an object.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::ReadPermissionUserList(
-  core::PropertyBuilder::createProperty("Read Permission User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have Read Access for an object.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::ReadACLUserList(
-  core::PropertyBuilder::createProperty("Read ACL User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to read "
-                      "the Access Control List for an object.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::WriteACLUserList(
-  core::PropertyBuilder::createProperty("Write ACL User List")
-    ->withDescription("A comma-separated list of Amazon User ID's or E-mail addresses that specifies who should have permissions to change "
-                      "the Access Control List for an object.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::CannedACL(
-  core::PropertyBuilder::createProperty("Canned ACL")
-    ->withDescription("Amazon Canned ACL for an object. Allowed values: BucketOwnerFullControl, BucketOwnerRead, AuthenticatedRead, "
-                      "PublicReadWrite, PublicRead, Private, AwsExecRead; will be ignored if any other ACL/permission property is specified.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property PutS3Object::ServerSideEncryption(
-  core::PropertyBuilder::createProperty("Server Side Encryption")
-    ->isRequired(true)
-    ->withDefaultValue<std::string>("None")
-    ->withAllowableValues<std::string>(PutS3Object::SERVER_SIDE_ENCRYPTIONS)
-    ->withDescription("Specifies the algorithm used for server side encryption.")
-    ->build());
-
-const core::Relationship PutS3Object::Success("success", "FlowFiles are routed to success relationship");
-const core::Relationship PutS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
+namespace org::apache::nifi::minifi::aws::processors {
 
 void PutS3Object::initialize() {
-  // Add new supported properties
-  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
-                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, ObjectKey, ContentType, StorageClass,
-                          FullControlUserList, ReadPermissionUserList, ReadACLUserList, WriteACLUserList, CannedACL, ServerSideEncryption});
-  // Set the supported relationships
-  setSupportedRelationships({Failure, Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context) {
@@ -292,11 +214,4 @@ void PutS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &context
   }
 }
 
-REGISTER_RESOURCE(PutS3Object, "This Processor puts FlowFiles to an Amazon S3 Bucket.");
-
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

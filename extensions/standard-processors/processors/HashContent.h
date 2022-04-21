@@ -126,39 +126,42 @@ namespace org::apache::nifi::minifi::processors {
 static const std::map<std::string, const std::function<HashReturnType(const std::shared_ptr<io::BaseStream>&)>> HashAlgos =
   { {"MD5",  MD5Hash}, {"SHA1", SHA1Hash}, {"SHA256", SHA256Hash} };
 
-//! HashContent Class
 class HashContent : public core::Processor {
  public:
-  //! Constructor
-  /*!
-  * Create a new processor
-  */
   explicit HashContent(const std::string& name,  const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
-  //! Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "HashContent";
-  //! Supported Properties
-  EXTENSIONAPI static core::Property HashAttribute;
-  EXTENSIONAPI static core::Property HashAlgorithm;
-  EXTENSIONAPI static core::Property FailOnEmpty;
-  //! Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Failure;
+
+  EXTENSIONAPI static constexpr const char* Description = "HashContent calculates the checksum of the content of the flowfile and adds it as an attribute. "
+      "Configuration options exist to select hashing algorithm and set the name of the attribute.";
+
+  EXTENSIONAPI static const core::Property HashAttribute;
+  EXTENSIONAPI static const core::Property HashAlgorithm;
+  EXTENSIONAPI static const core::Property FailOnEmpty;
+  static auto properties() {
+    return std::array{
+      HashAttribute,
+      HashAlgorithm,
+      FailOnEmpty
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-
-  //! OnTrigger method, implemented by NiFi HashContent
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  //! Initialize, over write by NiFi HashContent
   void initialize() override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  //! Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HashContent>::getLogger();
   std::string algoName_;
   std::string attrKey_;

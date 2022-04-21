@@ -30,12 +30,28 @@ namespace org::apache::nifi::minifi::azure::controllers {
 
 class AzureStorageCredentialsService : public core::controller::ControllerService {
  public:
+  EXTENSIONAPI static constexpr const char* Description = "Azure Storage Credentials Management Service";
+
   EXTENSIONAPI static const core::Property StorageAccountName;
   EXTENSIONAPI static const core::Property StorageAccountKey;
   EXTENSIONAPI static const core::Property SASToken;
   EXTENSIONAPI static const core::Property CommonStorageAccountEndpointSuffix;
   EXTENSIONAPI static const core::Property ConnectionString;
   EXTENSIONAPI static const core::Property UseManagedIdentityCredentials;
+  static auto properties() {
+    return std::array{
+      StorageAccountName,
+      StorageAccountKey,
+      SASToken,
+      CommonStorageAccountEndpointSuffix,
+      ConnectionString,
+      UseManagedIdentityCredentials
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   explicit AzureStorageCredentialsService(const std::string& name, const minifi::utils::Identifier& uuid = {})
       : ControllerService(name, uuid) {

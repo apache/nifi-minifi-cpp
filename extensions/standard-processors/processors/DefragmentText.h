@@ -37,14 +37,39 @@ class DefragmentText : public core::Processor {
   explicit DefragmentText(const std::string& name,  const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
-  EXTENSIONAPI static const core::Relationship Self;
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
+
+  EXTENSIONAPI static constexpr const char* Description = "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "
+      "It can handle multiple inputs differentiated by the absolute.path flow file attribute.";
 
   EXTENSIONAPI static const core::Property Pattern;
   EXTENSIONAPI static const core::Property PatternLoc;
   EXTENSIONAPI static const core::Property MaxBufferAge;
   EXTENSIONAPI static const core::Property MaxBufferSize;
+  static auto properties() {
+    return std::array{
+      Pattern,
+      PatternLoc,
+      MaxBufferAge,
+      MaxBufferSize
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Self;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() {
+    return std::array{
+      Success,
+      Failure
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* sessionFactory) override;
@@ -56,11 +81,6 @@ class DefragmentText : public core::Processor {
              (END_OF_MESSAGE, "End of Message"),
              (START_OF_MESSAGE, "Start of Message")
   )
-
- private:
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
  protected:
   class Buffer {

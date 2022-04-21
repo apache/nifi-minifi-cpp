@@ -1,7 +1,4 @@
 /**
- * @file KafkaProcessorBase.cpp
- * KafkaProcessorBase class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,48 +19,9 @@
 #include "rdkafka_utils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "controllers/SSLContextService.h"
+#include "core/PropertyBuilder.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-const core::Property KafkaProcessorBase::SecurityProtocol(
-        core::PropertyBuilder::createProperty("Security Protocol")
-        ->withDescription("Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
-        ->withDefaultValue<std::string>(toString(SecurityProtocolOption::PLAINTEXT))
-        ->withAllowableValues<std::string>(SecurityProtocolOption::values())
-        ->isRequired(true)
-        ->build());
-const core::Property KafkaProcessorBase::SSLContextService(
-    core::PropertyBuilder::createProperty("SSL Context Service")
-        ->withDescription("SSL Context Service Name")
-        ->asType<minifi::controllers::SSLContextService>()
-        ->build());
-const core::Property KafkaProcessorBase::KerberosServiceName(
-    core::PropertyBuilder::createProperty("Kerberos Service Name")
-        ->withDescription("Kerberos Service Name")
-        ->build());
-const core::Property KafkaProcessorBase::KerberosPrincipal(
-    core::PropertyBuilder::createProperty("Kerberos Principal")
-        ->withDescription("Keberos Principal")
-        ->build());
-const core::Property KafkaProcessorBase::KerberosKeytabPath(
-    core::PropertyBuilder::createProperty("Kerberos Keytab Path")
-        ->withDescription("The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.")
-        ->build());
-const core::Property KafkaProcessorBase::SASLMechanism(
-        core::PropertyBuilder::createProperty("SASL Mechanism")
-        ->withDescription("The SASL mechanism to use for authentication. Corresponds to Kafka's 'sasl.mechanism' property.")
-        ->withDefaultValue<std::string>(toString(SASLMechanismOption::GSSAPI))
-        ->withAllowableValues<std::string>(SASLMechanismOption::values())
-        ->isRequired(true)
-        ->build());
-const core::Property KafkaProcessorBase::Username(
-    core::PropertyBuilder::createProperty("Username")
-        ->withDescription("The username when the SASL Mechanism is sasl_plaintext")
-        ->build());
-const core::Property KafkaProcessorBase::Password(
-    core::PropertyBuilder::createProperty("Password")
-        ->withDescription("The password for the given username when the SASL Mechanism is sasl_plaintext")
-        ->build());
 
 std::optional<utils::SSL_data> KafkaProcessorBase::getSslData(core::ProcessContext& context) const {
   std::string ssl_service_name;

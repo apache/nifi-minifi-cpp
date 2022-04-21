@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -39,13 +38,26 @@ class KamikazeProcessor : public core::Processor {
       : Processor(name, uuid) {
   }
 
-  // Processor Name
-  static constexpr char const* ProcessorName = "KamikazeProcessor";
-  // Supported Properties
-  EXTENSIONAPI static core::Property ThrowInOnSchedule;
-  EXTENSIONAPI static core::Property ThrowInOnTrigger;
+  EXTENSIONAPI static constexpr const char* Description = "This processor can throw exceptions in onTrigger and onSchedule calls based on configuration. Only for testing purposes.";
 
- public:
+  EXTENSIONAPI static const core::Property ThrowInOnSchedule;
+  EXTENSIONAPI static const core::Property ThrowInOnTrigger;
+  static auto properties() {
+    return std::array{
+      ThrowInOnSchedule,
+      ThrowInOnTrigger
+    };
+  }
+
+  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;

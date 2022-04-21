@@ -50,16 +50,32 @@ class AppendHostInfo : public core::Processor {
         refresh_on_trigger_(false) {
   }
   ~AppendHostInfo() override = default;
-  static constexpr char const* ProcessorName = "AppendHostInfo";
 
-  EXTENSIONAPI static core::Property InterfaceNameFilter;
-  EXTENSIONAPI static core::Property HostAttribute;
-  EXTENSIONAPI static core::Property IPAttribute;
-  EXTENSIONAPI static core::Property RefreshPolicy;
+  EXTENSIONAPI static constexpr const char* Description = "Appends host information such as IP address and hostname as an attribute to incoming flowfiles.";
 
-  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static const core::Property InterfaceNameFilter;
+  EXTENSIONAPI static const core::Property HostAttribute;
+  EXTENSIONAPI static const core::Property IPAttribute;
+  EXTENSIONAPI static const core::Property RefreshPolicy;
+  static auto properties() {
+    return std::array{
+      InterfaceNameFilter,
+      HostAttribute,
+      IPAttribute,
+      RefreshPolicy
+    };
+  }
 
- public:
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
   void onTrigger(core::ProcessContext* context, core::ProcessSession* session) override;
   void initialize() override;

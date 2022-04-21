@@ -18,8 +18,7 @@
 
 #include "AWSCredentialsService.h"
 
-#include <set>
-
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -51,12 +50,7 @@ const core::Property AWSCredentialsService::CredentialsFile(
     ->build());
 
 void AWSCredentialsService::initialize() {
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(AccessKey);
-  supportedProperties.insert(SecretKey);
-  supportedProperties.insert(UseDefaultCredentials);
-  supportedProperties.insert(CredentialsFile);
-  setSupportedProperties(supportedProperties);
+  setSupportedProperties(properties());
 }
 
 void AWSCredentialsService::onEnable() {
@@ -83,7 +77,7 @@ std::optional<Aws::Auth::AWSCredentials> AWSCredentialsService::getAWSCredential
   return aws_credentials_;
 }
 
-REGISTER_RESOURCE(AWSCredentialsService, "AWS Credentials Management Service");
+REGISTER_RESOURCE(AWSCredentialsService, ControllerService);
 
 }  // namespace controllers
 }  // namespace aws

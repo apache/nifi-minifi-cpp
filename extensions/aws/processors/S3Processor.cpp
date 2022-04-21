@@ -1,7 +1,4 @@
 /**
- * @file S3Processor.cpp
- * Base S3 processor class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -26,95 +23,13 @@
 #include <utility>
 
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 #include "S3Wrapper.h"
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
-
-const std::set<std::string> S3Processor::REGIONS({region::AF_SOUTH_1, region::AP_EAST_1, region::AP_NORTHEAST_1,
-  region::AP_NORTHEAST_2, region::AP_NORTHEAST_3, region::AP_SOUTH_1, region::AP_SOUTHEAST_1, region::AP_SOUTHEAST_2,
-  region::CA_CENTRAL_1, region::CN_NORTH_1, region::CN_NORTHWEST_1, region::EU_CENTRAL_1, region::EU_NORTH_1,
-  region::EU_SOUTH_1, region::EU_WEST_1, region::EU_WEST_2, region::EU_WEST_3, region::ME_SOUTH_1, region::SA_EAST_1,
-  region::US_EAST_1, region::US_EAST_2, region::US_GOV_EAST_1, region::US_GOV_WEST_1, region::US_WEST_1, region::US_WEST_2});
-
-const core::Property S3Processor::Bucket(
-  core::PropertyBuilder::createProperty("Bucket")
-    ->withDescription("The S3 bucket")
-    ->isRequired(true)
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::AccessKey(
-  core::PropertyBuilder::createProperty("Access Key")
-    ->withDescription("AWS account access key")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::SecretKey(
-  core::PropertyBuilder::createProperty("Secret Key")
-    ->withDescription("AWS account secret key")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::CredentialsFile(
-  core::PropertyBuilder::createProperty("Credentials File")
-    ->withDescription("Path to a file containing AWS access key and secret key in properties file format. Properties used: accessKey and secretKey")
-    ->build());
-const core::Property S3Processor::AWSCredentialsProviderService(
-  core::PropertyBuilder::createProperty("AWS Credentials Provider service")
-    ->withDescription("The name of the AWS Credentials Provider controller service that is used to obtain AWS credentials.")
-    ->build());
-const core::Property S3Processor::Region(
-  core::PropertyBuilder::createProperty("Region")
-    ->isRequired(true)
-    ->withDefaultValue<std::string>(region::US_WEST_2)
-    ->withAllowableValues<std::string>(S3Processor::REGIONS)
-    ->withDescription("AWS Region")
-    ->build());
-const core::Property S3Processor::CommunicationsTimeout(
-  core::PropertyBuilder::createProperty("Communications Timeout")
-    ->isRequired(true)
-    ->withDefaultValue<core::TimePeriodValue>("30 sec")
-    ->withDescription("Sets the timeout of the communication between the AWS server and the client")
-    ->build());
-const core::Property S3Processor::EndpointOverrideURL(
-  core::PropertyBuilder::createProperty("Endpoint Override URL")
-    ->withDescription("Endpoint URL to use instead of the AWS default including scheme, host, "
-                      "port, and path. The AWS libraries select an endpoint URL based on the AWS "
-                      "region, but this property overrides the selected endpoint URL, allowing use "
-                      "with other S3-compatible endpoints.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::ProxyHost(
-  core::PropertyBuilder::createProperty("Proxy Host")
-    ->withDescription("Proxy host name or IP")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::ProxyPort(
-  core::PropertyBuilder::createProperty("Proxy Port")
-    ->withDescription("The port number of the proxy host")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::ProxyUsername(
-    core::PropertyBuilder::createProperty("Proxy Username")
-    ->withDescription("Username to set when authenticating against proxy")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::ProxyPassword(
-  core::PropertyBuilder::createProperty("Proxy Password")
-    ->withDescription("Password to set when authenticating against proxy")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property S3Processor::UseDefaultCredentials(
-    core::PropertyBuilder::createProperty("Use Default Credentials")
-    ->withDescription("If true, uses the Default Credential chain, including EC2 instance profiles or roles, environment variables, default user credentials, etc.")
-    ->withDefaultValue<bool>(false)
-    ->isRequired(true)
-    ->build());
+namespace org::apache::nifi::minifi::aws::processors {
 
 S3Processor::S3Processor(const std::string& name, const minifi::utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
   : core::Processor(name, uuid),
@@ -243,9 +158,4 @@ std::optional<CommonProperties> S3Processor::getCommonELSupportedProperties(
   return properties;
 }
 
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

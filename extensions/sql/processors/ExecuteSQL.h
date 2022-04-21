@@ -26,6 +26,7 @@
 #include "core/ProcessContext.h"
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"
+#include "utils/ArrayUtils.h"
 
 namespace org {
 namespace apache {
@@ -38,18 +39,27 @@ class ExecuteSQL : public SQLProcessor, public FlowFileSource {
  public:
   explicit ExecuteSQL(const std::string& name, const utils::Identifier& uuid = {});
 
-  //! Processor Name
-  EXTENSIONAPI static const std::string ProcessorName;
+  EXTENSIONAPI static constexpr const char* Description = "ExecuteSQL to execute SELECT statement via ODBC.";
+
+  EXTENSIONAPI static const core::Property SQLSelectQuery;
+  static auto properties() {
+    return utils::array_cat(SQLProcessor::properties(), FlowFileSource::properties(), std::array{SQLSelectQuery});
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void processOnSchedule(core::ProcessContext& context) override;
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
-
-  EXTENSIONAPI static const core::Property SQLSelectQuery;
-
-  EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Failure;
 
   EXTENSIONAPI static const std::string RESULT_ROW_COUNT;
   EXTENSIONAPI static const std::string INPUT_FLOW_FILE_UUID;

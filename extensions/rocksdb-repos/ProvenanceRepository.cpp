@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,11 +21,7 @@
 
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace provenance {
+namespace org::apache::nifi::minifi::provenance {
 
 void ProvenanceRepository::printStats() {
   std::string key_count;
@@ -55,11 +50,6 @@ void ProvenanceRepository::run() {
   }
 }
 
-REGISTER_INTERNAL_RESOURCE_AS(ProvenanceRepository, ("ProvenanceRepository", "provenancerepository"));
+REGISTER_RESOURCE_AS(ProvenanceRepository, InternalResource, ("ProvenanceRepository", "provenancerepository"));
 
-} /* namespace provenance */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::provenance

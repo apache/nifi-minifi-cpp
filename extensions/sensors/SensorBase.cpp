@@ -28,8 +28,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship SensorBase::Success("success", "All files are routed to success");
-
 void SensorBase::initialize() {
 }
 

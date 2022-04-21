@@ -58,16 +58,38 @@ class GetUSBCamera : public core::Processor {
     cleanupUvc();
   }
 
-  static core::Property FPS;
-  static core::Property Width;
-  static core::Property Height;
-  static core::Property Format;
-  static core::Property VendorID;
-  static core::Property ProductID;
-  static core::Property SerialNo;
+  EXTENSIONAPI static constexpr const char* Description = "Gets images from USB Video Class (UVC)-compatible devices. "
+      "Outputs one flow file per frame at the rate specified by the FPS property in the format specified by the Format property.";
 
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static const core::Property FPS;
+  EXTENSIONAPI static const core::Property Width;
+  EXTENSIONAPI static const core::Property Height;
+  EXTENSIONAPI static const core::Property Format;
+  EXTENSIONAPI static const core::Property VendorID;
+  EXTENSIONAPI static const core::Property ProductID;
+  EXTENSIONAPI static const core::Property SerialNo;
+  static auto properties() {
+    return std::array{
+      FPS,
+      Width,
+      Height,
+      Format,
+      VendorID,
+      ProductID,
+      SerialNo
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onSchedule(core::ProcessContext *context,
                   core::ProcessSessionFactory *session_factory) override;

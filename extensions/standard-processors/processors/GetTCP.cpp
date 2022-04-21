@@ -27,7 +27,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-#include <set>
 #include <string>
 
 #include "io/ClientSocket.h"
@@ -38,6 +37,7 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/ProcessSessionFactory.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -48,38 +48,38 @@ namespace processors {
 
 const char *DataHandler::SOURCE_ENDPOINT_ATTRIBUTE = "source.endpoint";
 
-core::Property GetTCP::EndpointList(
+const core::Property GetTCP::EndpointList(
     core::PropertyBuilder::createProperty("endpoint-list")->withDescription("A comma delimited list of the endpoints to connect to. The format should be <server_address>:<port>.")->isRequired(true)
         ->build());
 
-core::Property GetTCP::ConcurrentHandlers(
+const core::Property GetTCP::ConcurrentHandlers(
     core::PropertyBuilder::createProperty("concurrent-handler-count")->withDescription("Number of concurrent handlers for this session")->withDefaultValue<int>(1)->build());
 
-core::Property GetTCP::ReconnectInterval(
+const core::Property GetTCP::ReconnectInterval(
     core::PropertyBuilder::createProperty("reconnect-interval")->withDescription("The number of seconds to wait before attempting to reconnect to the endpoint.")
         ->withDefaultValue<core::TimePeriodValue>("5 s")->build());
 
-core::Property GetTCP::ReceiveBufferSize(
+const core::Property GetTCP::ReceiveBufferSize(
     core::PropertyBuilder::createProperty("receive-buffer-size")->withDescription("The size of the buffer to receive data in. Default 16384 (16MB).")->withDefaultValue<core::DataSizeValue>("16 MB")
         ->build());
 
-core::Property GetTCP::SSLContextService(
+const core::Property GetTCP::SSLContextService(
     core::PropertyBuilder::createProperty("SSL Context Service")->withDescription("SSL Context Service Name")->asType<minifi::controllers::SSLContextService>()->build());
 
-core::Property GetTCP::StayConnected(
+const core::Property GetTCP::StayConnected(
     core::PropertyBuilder::createProperty("Stay Connected")->withDescription("Determines if we keep the same socket despite having no data")->withDefaultValue<bool>(true)->build());
 
-core::Property GetTCP::ConnectionAttemptLimit(
+const core::Property GetTCP::ConnectionAttemptLimit(
     core::PropertyBuilder::createProperty("connection-attempt-timeout")->withDescription("Maximum number of connection attempts before attempting backup hosts, if configured")->withDefaultValue<int>(
         3)->build());
 
-core::Property GetTCP::EndOfMessageByte(
+const core::Property GetTCP::EndOfMessageByte(
     core::PropertyBuilder::createProperty("end-of-message-byte")->withDescription(
         "Byte value which denotes end of message. Must be specified as integer within the valid byte range  (-128 thru 127). For example, '13' = Carriage return and '10' = New line. Default '13'.")
         ->withDefaultValue("13")->build());
 
-core::Relationship GetTCP::Success("success", "All files are routed to success");
-core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
+const core::Relationship GetTCP::Success("success", "All files are routed to success");
+const core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
 
 int16_t DataHandler::handle(std::string source, uint8_t *message, size_t size, bool partial) {
   std::shared_ptr<core::ProcessSession> my_session = sessionFactory_->createSession();
@@ -100,22 +100,8 @@ int16_t DataHandler::handle(std::string source, uint8_t *message, size_t size, b
   return 0;
 }
 void GetTCP::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(EndpointList);
-  properties.insert(ConcurrentHandlers);
-  properties.insert(ConnectionAttemptLimit);
-  properties.insert(EndOfMessageByte);
-  properties.insert(ReconnectInterval);
-  properties.insert(ReceiveBufferSize);
-  properties.insert(StayConnected);
-  properties.insert(SSLContextService);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Partial);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
@@ -312,7 +298,7 @@ int16_t GetTCP::getMetricNodes(std::vector<std::shared_ptr<state::response::Resp
   return 0;
 }
 
-REGISTER_RESOURCE(GetTCP, "Establishes a TCP Server that defines and retrieves one or more byte messages from clients");
+REGISTER_RESOURCE(GetTCP, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

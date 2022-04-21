@@ -361,19 +361,6 @@ void Processor::validateAnnotations() const {
   }
 }
 
-std::string Processor::getInputRequirementAsString() const {
-  switch (getInputRequirement()) {
-    case annotation::Input::INPUT_REQUIRED:
-      return "INPUT_REQUIRED";
-    case annotation::Input::INPUT_ALLOWED:
-      return "INPUT_ALLOWED";
-    case annotation::Input::INPUT_FORBIDDEN:
-      return "INPUT_FORBIDDEN";
-  }
-
-  return "ERROR_no_such_input_requirement";
-}
-
 void Processor::setMaxConcurrentTasks(const uint8_t tasks) {
   if (isSingleThreaded() && tasks > 1) {
     logger_->log_warn("Processor %s can not be run in parallel, its \"max concurrent tasks\" value is too high. "

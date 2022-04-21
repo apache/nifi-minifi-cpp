@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,12 +31,7 @@
 #include "coap_connection.h"
 #include "coap_message.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace coap {
-namespace controllers {
+namespace org::apache::nifi::minifi::coap::controllers {
 
 /**
  * Purpose and Justification: Controller services function as a layerable way to provide
@@ -57,12 +51,19 @@ class CoapConnectorService : public core::controller::ControllerService {
     initialize();
   }
 
-  /**
-   * Parameters needed.
-   */
-  static core::Property RemoteServer;
-  static core::Property Port;
-  static core::Property MaxQueueSize;
+  EXTENSIONAPI static const core::Property RemoteServer;
+  EXTENSIONAPI static const core::Property Port;
+  EXTENSIONAPI static const core::Property MaxQueueSize;
+  static auto properties() {
+    return std::array{
+      RemoteServer,
+      Port,
+      MaxQueueSize
+    };
+  }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 
@@ -108,9 +109,4 @@ class CoapConnectorService : public core::controller::ControllerService {
   std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<CoapConnectorService>::getLogger() };
 };
 
-} /* namespace controllers */
-} /* namespace coap */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::coap::controllers

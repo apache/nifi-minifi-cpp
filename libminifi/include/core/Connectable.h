@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
-#define LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -32,11 +30,8 @@
 #include "Relationship.h"
 #include "Scheduling.h"
 #include "core/state/FlowIdentifier.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+
+namespace org::apache::nifi::minifi::core {
 
 class FlowFile;
 
@@ -57,7 +52,7 @@ class Connectable : public CoreComponent {
   Connectable& operator=(const Connectable &other) = delete;
   Connectable& operator=(Connectable&& other) = delete;
 
-  bool setSupportedRelationships(const std::set<Relationship> &relationships);
+  void setSupportedRelationships(const auto& relationships);
 
   // Whether the relationship is supported
   bool isSupportedRelationship(const Relationship &relationship);
@@ -69,7 +64,7 @@ class Connectable : public CoreComponent {
    * @param relationships
    * @return result of set operation.
    */
-  bool setAutoTerminatedRelationships(const std::set<Relationship> &relationships);
+  bool setAutoTerminatedRelationships(const std::vector<Relationship> &relationships);
 
   // Check whether the relationship is auto terminated
   bool isAutoTerminated(const Relationship &relationship);
@@ -118,7 +113,7 @@ class Connectable : public CoreComponent {
    */
   virtual void yield() = 0;
 
-  virtual ~Connectable();
+  ~Connectable() override;
 
   /**
    * Determines if we are connected and operating
@@ -197,11 +192,19 @@ class Connectable : public CoreComponent {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace core
-/* namespace core */
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+void Connectable::setSupportedRelationships(const auto& relationships) {
+  if (isRunning()) {
+    logger_->log_warn("Can not set processor supported relationship while the process %s is running", name_);
+    return;
+  }
 
-#endif  // LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
+  std::lock_guard<std::mutex> lock(relationship_mutex_);
+
+  relationships_.clear();
+  for (const auto& item : relationships) {
+    relationships_[item.getName()] = item;
+    logger_->log_debug("Processor %s supported relationship name %s", name_, item.getName());
+  }
+}
+
+}  // namespace org::apache::nifi::minifi::core

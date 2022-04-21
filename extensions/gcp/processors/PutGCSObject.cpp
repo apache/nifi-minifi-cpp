@@ -23,6 +23,7 @@
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "../GCPAttributes.h"
 
 namespace gcs = ::google::cloud::storage;
@@ -161,18 +162,8 @@ class UploadToGCSCallback {
 
 
 void PutGCSObject::initialize() {
-  setSupportedProperties({GCPCredentials,
-                          Bucket,
-                          Key,
-                          NumberOfRetries,
-                          ContentType,
-                          MD5Hash,
-                          Crc32cChecksum,
-                          EncryptionKey,
-                          ObjectACL,
-                          OverwriteObject,
-                          EndpointOverrideURL});
-  setSupportedRelationships({Success, Failure});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 
@@ -245,5 +236,5 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
   }
 }
 
-REGISTER_RESOURCE(PutGCSObject, "Puts flow files to a Google Cloud Storage Bucket.");
+REGISTER_RESOURCE(PutGCSObject, Processor);
 }  // namespace org::apache::nifi::minifi::extensions::gcp

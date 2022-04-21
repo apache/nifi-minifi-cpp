@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/gsl.h"
 
@@ -37,75 +38,60 @@ namespace processors {
 
 const uint64_t ListenHTTP::DEFAULT_BUFFER_SIZE = 20000;
 
-core::Property ListenHTTP::BasePath(
+const core::Property ListenHTTP::BasePath(
     core::PropertyBuilder::createProperty("Base Path")
         ->withDescription("Base path for incoming connections")
         ->isRequired(false)
         ->withDefaultValue<std::string>("contentListener")->build());
 
-core::Property ListenHTTP::Port(
+const core::Property ListenHTTP::Port(
     core::PropertyBuilder::createProperty("Listening Port")
         ->withDescription("The Port to listen on for incoming connections. 0 means port is going to be selected randomly.")
         ->isRequired(true)
         ->withDefaultValue<int>(80, core::StandardValidators::get().LISTEN_PORT_VALIDATOR)->build());
 
-core::Property ListenHTTP::AuthorizedDNPattern("Authorized DN Pattern", "A Regular Expression to apply against the Distinguished Name of incoming"
+const core::Property ListenHTTP::AuthorizedDNPattern("Authorized DN Pattern", "A Regular Expression to apply against the Distinguished Name of incoming"
                                                " connections. If the Pattern does not match the DN, the connection will be refused.",
                                                ".*");
-core::Property ListenHTTP::SSLCertificate("SSL Certificate", "File containing PEM-formatted file including TLS/SSL certificate and key", "");
-core::Property ListenHTTP::SSLCertificateAuthority("SSL Certificate Authority", "File containing trusted PEM-formatted certificates", "");
+const core::Property ListenHTTP::SSLCertificate("SSL Certificate", "File containing PEM-formatted file including TLS/SSL certificate and key", "");
+const core::Property ListenHTTP::SSLCertificateAuthority("SSL Certificate Authority", "File containing trusted PEM-formatted certificates", "");
 
-core::Property ListenHTTP::SSLVerifyPeer(
+const core::Property ListenHTTP::SSLVerifyPeer(
     core::PropertyBuilder::createProperty("SSL Verify Peer")
         ->withDescription("Whether or not to verify the client's certificate (yes/no)")
         ->isRequired(false)
         ->withAllowableValues<std::string>({"yes", "no"})
         ->withDefaultValue("no")->build());
 
-core::Property ListenHTTP::SSLMinimumVersion(
+const core::Property ListenHTTP::SSLMinimumVersion(
     core::PropertyBuilder::createProperty("SSL Minimum Version")
         ->withDescription("Minimum TLS/SSL version allowed (TLS1.2)")
         ->isRequired(false)
         ->withAllowableValues<std::string>({"TLS1.2"})
         ->withDefaultValue("TLS1.2")->build());
 
-core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)", "Specifies the Regular Expression that determines the names of HTTP Headers that"
+const core::Property ListenHTTP::HeadersAsAttributesRegex("HTTP Headers to receive as Attributes (Regex)", "Specifies the Regular Expression that determines the names of HTTP Headers that"
                                                     " should be passed along as FlowFile attributes",
                                                     "");
 
-core::Property ListenHTTP::BatchSize(
+const core::Property ListenHTTP::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")
         ->withDescription("Maximum number of buffered requests to be processed in a single batch. If set to zero all buffered requests are processed.")
         ->withDefaultValue<uint64_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
 
-core::Property ListenHTTP::BufferSize(
+const core::Property ListenHTTP::BufferSize(
     core::PropertyBuilder::createProperty("Buffer Size")
         ->withDescription("Maximum number of HTTP Requests allowed to be buffered before processing them when the processor is triggered. "
                           "If the buffer full, the request is refused. If set to zero the buffer is unlimited.")
         ->withDefaultValue<uint64_t>(ListenHTTP::DEFAULT_BUFFER_SIZE)->build());
 
-core::Relationship ListenHTTP::Success("success", "All files are routed to success");
+const core::Relationship ListenHTTP::Success("success", "All files are routed to success");
 
 void ListenHTTP::initialize() {
   logger_->log_trace("Initializing ListenHTTP");
 
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(BasePath);
-  properties.insert(Port);
-  properties.insert(AuthorizedDNPattern);
-  properties.insert(SSLCertificate);
-  properties.insert(SSLCertificateAuthority);
-  properties.insert(SSLVerifyPeer);
-  properties.insert(SSLMinimumVersion);
-  properties.insert(HeadersAsAttributesRegex);
-  properties.insert(BatchSize);
-  properties.insert(BufferSize);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -522,12 +508,7 @@ void ListenHTTP::notifyStop() {
   handler_.reset();
 }
 
-REGISTER_RESOURCE(ListenHTTP, "Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service will be "
-    "http://{hostname}:{port}/contentListener. Only HEAD, POST, and GET requests are supported. PUT, and DELETE will result in an error and the HTTP response status code 405."
-    " The response body text for all requests, by default, is empty (length of 0). A static response body can be set for a given URI by sending input files to ListenHTTP with "
-    "the http.type attribute set to response_body. The response body FlowFile filename attribute is appended to the Base Path property (separated by a /) when mapped to incoming requests. "
-    "The mime.type attribute of the response body FlowFile is used for the Content-type header in responses. Response body content can be cleared by sending an empty (size 0) "
-    "FlowFile for a given URI mapping.");
+REGISTER_RESOURCE(ListenHTTP, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

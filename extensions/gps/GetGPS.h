@@ -40,33 +40,38 @@ class GetGPS : public core::Processor {
     gpsdWaitTime_ = 50000000;
   }
   ~GetGPS() override = default;
-  static const std::string ProcessorName;
-  // Supported Properties
-  static core::Property GPSDHost;
-  static core::Property GPSDPort;
-  static core::Property GPSDWaitTime;
 
-  // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static constexpr const char* Description = "Obtains GPS coordinates from the GPSDHost and port.";
 
- public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static const core::Property GPSDHost;
+  EXTENSIONAPI static const core::Property GPSDPort;
+  EXTENSIONAPI static const core::Property GPSDWaitTime;
+  static auto properties() {
+    return std::array{
+      GPSDHost,
+      GPSDPort,
+      GPSDWaitTime
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  //! OnTrigger method, implemented by NiFi GetGPS
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  //! Initialize, over write by NiFi GetGPS
   void initialize() override;
 
  private:
   std::string gpsdHost_;
   std::string gpsdPort_;
   int64_t gpsdWaitTime_;
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetGPS>::getLogger();
 };
 

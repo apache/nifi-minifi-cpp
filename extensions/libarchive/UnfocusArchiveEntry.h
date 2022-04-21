@@ -40,27 +40,28 @@ namespace processors {
 
 using core::logging::Logger;
 
-//! UnfocusArchiveEntry Class
 class UnfocusArchiveEntry : public core::Processor {
  public:
-  //! Constructor
-  /*!
-   * Create a new processor
-   */
   explicit UnfocusArchiveEntry(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
   }
-  //! Destructor
   ~UnfocusArchiveEntry() override = default;
-  //! Processor Name
-  static constexpr char const* ProcessorName = "UnfocusArchiveEntry";
-  //! Supported Relationships
-  static core::Relationship Success;
 
-  //! OnTrigger method, implemented by NiFi UnfocusArchiveEntry
-  void onTrigger(core::ProcessContext *context,
-      core::ProcessSession *session) override;
-  //! Initialize, over write by NiFi UnfocusArchiveEntry
+  EXTENSIONAPI static constexpr const char* Description = "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.";
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
 
   //! Write callback for reconstituting lensed archive into flow file content
@@ -77,7 +78,6 @@ class UnfocusArchiveEntry : public core::Processor {
   };
 
  private:
-  //! Logger
   std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<UnfocusArchiveEntry>::getLogger();
 };
 
