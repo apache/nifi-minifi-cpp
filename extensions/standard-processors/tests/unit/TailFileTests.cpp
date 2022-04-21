@@ -631,6 +631,7 @@ TEST_CASE("TailFile processes a very long line correctly", "[simple]") {
   uint32_t line_length = 0U;
   SECTION("with line length 80") {
     line_length = 80U;
+    plan->setProperty(log_attr, minifi::processors::LogAttribute::MaxPayloadLineLength.getName(), "80");
   }
   SECTION("with line length 200") {
     line_length = 200U;
@@ -703,6 +704,7 @@ TEST_CASE("TailFile processes a long line followed by multiple newlines correctl
   plan->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
   plan->setProperty(log_attr, minifi::processors::LogAttribute::LogPayload.getName(), "true");
   plan->setProperty(log_attr, minifi::processors::LogAttribute::HexencodePayload.getName(), "true");
+  plan->setProperty(log_attr, minifi::processors::LogAttribute::MaxPayloadLineLength.getName(), "80");
 
   testController.runSession(plan, true);
 
