@@ -240,6 +240,12 @@ bool RawSiteToSiteClient::initiateCodecResourceNegotiation() {
   }
 }
 
+namespace {
+void logPortStateError(std::shared_ptr<core::logging::Logger>& logger, utils::Identifier port_id, const std::string& error) {
+  logger->log_error("Site2Site HandShake Failed because destination port, %s, is %s", port_id.to_string(), error);
+}
+}  // namespace
+
 bool RawSiteToSiteClient::handShake() {
   if (peer_state_ != ESTABLISHED) {
     logger_->log_error("Site2Site peer state is not established while handshake");
@@ -318,23 +324,22 @@ bool RawSiteToSiteClient::handShake() {
       peer_state_ = HANDSHAKED;
       return true;
     case PORT_NOT_IN_VALID_STATE:
-      error = "in invalid state";
-      break;
+      logPortStateError(logger_, port_id_, "in invalid state");
+      return false;
     case UNKNOWN_PORT:
-      error = "an unknown port";
-      break;
+      logPortStateError(logger_, port_id_, "an unknown port");
+      return false;
     case PORTS_DESTINATION_FULL:
-      error = "full";
-      break;
+      logPortStateError(logger_, port_id_, "full");
+      return false;
+    case UNAUTHORIZED:
+      logger_->log_error("Site2Site HandShake failed: UNAUTHORIZED");
+      return false;
     // Unknown error
     default:
       logger_->log_error("HandShake Failed because of unknown respond code %d", code);
       return false;
   }
-
-  // All known error cases handled here
-  logger_->log_error("Site2Site HandShake Failed because destination port, %s, is %s", port_id_.to_string(), error);
-  return false;
 }
 
 void RawSiteToSiteClient::tearDown() {
