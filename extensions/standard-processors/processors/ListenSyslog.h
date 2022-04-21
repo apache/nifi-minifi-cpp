@@ -21,6 +21,7 @@
 #include <utility>
 #include <string>
 #include <memory>
+#include <regex>
 
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
