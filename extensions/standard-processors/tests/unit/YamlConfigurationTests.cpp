@@ -27,6 +27,7 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include "utils/TestUtils.h"
+#include "utils/StringUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -865,5 +866,68 @@ Remote Process Groups: []
     REQUIRE(!it.second->getUUIDStr().empty());
     REQUIRE(it.second->getDestination());
     REQUIRE(it.second->getSource());
+  }
+}
+
+TEST_CASE("Test UUID duplication checks", "[YamlConfiguration]") {
+  TestController test_controller;
+  std::shared_ptr<core::Repository> test_prov_repo = core::createRepository("provenancerepository", true);
+  std::shared_ptr<core::Repository> test_flow_file_repo = core::createRepository("flowfilerepository", true);
+  std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
+  std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
+  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  core::YamlConfiguration yaml_config(test_prov_repo, test_flow_file_repo, content_repo, stream_factory, configuration);
+
+  for (char i = '1'; i <= '8'; ++i) {
+    DYNAMIC_SECTION("Changing UUID 00000000-0000-0000-0000-00000000000" << i << " to be a duplicate") {
+      std::string config_yaml =
+        R"(
+          Flow Controller:
+            name: root
+            comment: ''
+          Processors:
+          - id: 00000000-0000-0000-0000-000000000001
+            name: GenerateFlowFile1
+            class: org.apache.nifi.minifi.processors.GenerateFlowFile
+          - id: 00000000-0000-0000-0000-000000000002
+            name: LogAttribute
+            class: org.apache.nifi.minifi.processors.LogAttribute
+          Funnels:
+          - id: 00000000-0000-0000-0000-000000000003
+          - id: 99999999-9999-9999-9999-999999999999
+          Connections:
+          - id: 00000000-0000-0000-0000-000000000004
+            name: 00000000-0000-0000-0000-000000000003//LogAttribute
+            source id: 00000000-0000-0000-0000-000000000003
+            source relationship names: []
+            destination id: 00000000-0000-0000-0000-000000000002
+          - id: 00000000-0000-0000-0000-000000000005
+            name: GenerateFlowFile1/success/00000000-0000-0000-0000-000000000003
+            source id: 00000000-0000-0000-0000-000000000001
+            source relationship names:
+            - success
+            destination id: 00000000-0000-0000-0000-000000000003
+          Remote Process Groups:
+          - id: 00000000-0000-0000-0000-000000000006
+            name: ''
+            url: http://localhost:8080/nifi
+            transport protocol: RAW
+            Input Ports:
+            - id: 00000000-0000-0000-0000-000000000007
+              name: test2
+              max concurrent tasks: 1
+              use compression: false
+            Output Ports: []
+          Controller Services:
+            - name: SSLContextService
+              id: 00000000-0000-0000-0000-000000000008
+              class: SSLContextService
+            )";
+
+      auto config_old = config_yaml;
+      utils::StringUtils::replaceAll(config_yaml, std::string("00000000-0000-0000-0000-00000000000") + i, "99999999-9999-9999-9999-999999999999");
+      std::istringstream config_yaml_stream(config_yaml);
+      REQUIRE_THROWS_WITH(yaml_config.getYamlRoot(config_yaml_stream), "General Operation: UUID 99999999-9999-9999-9999-999999999999 is duplicated in the flow configuration");
+    }
   }
 }

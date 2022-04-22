@@ -21,6 +21,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_set>
 
 #include "core/FlowConfiguration.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -277,6 +278,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @return         the parsed or generated UUID string
    */
   std::string getOrGenerateId(const YAML::Node& yamlNode, const std::string& idField = "id");
+  std::string getRequiredIdField(const YAML::Node& yaml_node, std::string_view yaml_section = "", std::string error_message = "");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
@@ -302,9 +304,11 @@ class YamlConfiguration : public FlowConfiguration {
   void parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
   void parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
   void parsePropertyNodeElement(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
+  void addNewId(const std::string& uuid);
 
   std::shared_ptr<logging::Logger> logger_;
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+  std::unordered_set<std::string> uuids_;
 
   /**
    * Raises a human-readable configuration error for the given configuration component/section.

@@ -14,7 +14,7 @@
 # limitations under the License.
 
 Flow Controller:
-    id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
+    id: 471deef6-2a6e-4a7d-912a-81cc17e3a209
     name: MiNiFi Flow
 
 Processors:
@@ -47,7 +47,7 @@ Processors:
 Connections:
     - name: GenerateFlowFileS2S
       id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
-      source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206 
+      source id: 471deef6-2a6e-4a7d-912a-81cc17e3a206
       source relationship name: success
       destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a204
       max work queue size: 0
@@ -55,8 +55,8 @@ Connections:
       flowfile expiration: 60 sec
       queue prioritizer class: org.apache.nifi.prioritizer.NewestFlowFileFirstPrioritizer
     - name: GenerateFlowFileS2S
-      id: 471deef6-2a6e-4a7d-912a-81cc17e3a207
-      source id: 471deef6-2a6e-4a7d-912a-81cc17e3a203 
+      id: 471deef6-2a6e-4a7d-912a-81cc17e3a210
+      source id: 471deef6-2a6e-4a7d-912a-81cc17e3a203
       source relationship name: success
       destination id: 471deef6-2a6e-4a7d-912a-81cc17e3a205
       max work queue size: 0
