@@ -182,7 +182,6 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   LogTestController::getInstance().reset();
 }
 
-#ifndef NO_MORE_REGFREEE
 TEST_CASE("Test usage of ExtractText in regex mode with large regex matches", "[extracttextRegexTest]") {
   TestController test_controller;
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::ExtractText>();
@@ -213,4 +212,3 @@ TEST_CASE("Test usage of ExtractText in regex mode with large regex matches", "[
   REQUIRE(LogTestController::getInstance().contains("key:RegexAttr.0 value:80"));
   LogTestController::getInstance().reset();
 }
-#endif
