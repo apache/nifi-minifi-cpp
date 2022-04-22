@@ -129,12 +129,12 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Check default client configuration", 
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::STANDARD);
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::NOT_SET);
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetACL() == Aws::S3::Model::ObjectCannedACL::NOT_SET);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->region == minifi::aws::processors::region::US_WEST_2);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->connectTimeoutMs == 30000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->endpointOverride.empty());
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->proxyHost.empty());
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->proxyUserName.empty());
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->proxyPassword.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_WEST_2);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 30000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyHost.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyUserName.empty());
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().proxyPassword.empty());
   REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
 }
 
@@ -167,9 +167,9 @@ TEST_CASE_METHOD(PutS3ObjectTestsFixture, "Set non-default client configuration"
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetContentType() == "application/tar");
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetStorageClass() == Aws::S3::Model::StorageClass::REDUCED_REDUNDANCY);
   REQUIRE(mock_s3_request_sender_ptr->put_object_request.GetServerSideEncryption() == Aws::S3::Model::ServerSideEncryption::AES256);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->region == minifi::aws::processors::region::US_EAST_1);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
   REQUIRE(mock_s3_request_sender_ptr->getPutObjectRequestBody() == INPUT_DATA);
 }
 

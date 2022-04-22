@@ -103,11 +103,11 @@ struct PutObjectResult {
 };
 
 struct RequestParameters {
-  RequestParameters(const Aws::Auth::AWSCredentials& creds, Aws::Client::ClientConfiguration& config)
+  RequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
     : credentials(creds)
     , client_config(config) {}
   Aws::Auth::AWSCredentials credentials;
-  Aws::Client::ClientConfiguration& client_config;
+  Aws::Client::ClientConfiguration client_config;
 
   void setClientConfig(const aws::s3::ProxyOptions& proxy, const std::string& endpoint_override_url) {
     client_config.proxyHost = proxy.host;
@@ -119,7 +119,7 @@ struct RequestParameters {
 };
 
 struct PutObjectRequestParameters : public RequestParameters {
-  PutObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, Aws::Client::ClientConfiguration& config)
+  PutObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
     : RequestParameters(creds, config) {}
   std::string bucket;
   std::string object_key;
@@ -135,7 +135,7 @@ struct PutObjectRequestParameters : public RequestParameters {
 };
 
 struct DeleteObjectRequestParameters : public RequestParameters {
-  DeleteObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, Aws::Client::ClientConfiguration& config)
+  DeleteObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
     : RequestParameters(creds, config) {}
   std::string bucket;
   std::string object_key;
@@ -143,7 +143,7 @@ struct DeleteObjectRequestParameters : public RequestParameters {
 };
 
 struct GetObjectRequestParameters : public RequestParameters {
-  GetObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, Aws::Client::ClientConfiguration& config)
+  GetObjectRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
     : RequestParameters(creds, config) {}
   std::string bucket;
   std::string object_key;
@@ -170,7 +170,7 @@ struct GetObjectResult : public HeadObjectResult {
 };
 
 struct ListRequestParameters : public RequestParameters {
-  ListRequestParameters(const Aws::Auth::AWSCredentials& creds, Aws::Client::ClientConfiguration& config)
+  ListRequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
     : RequestParameters(creds, config) {}
   std::string bucket;
   std::string delimiter;

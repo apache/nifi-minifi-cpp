@@ -193,7 +193,7 @@ std::optional<aws::s3::ProxyOptions> S3Processor::getProxy(const std::shared_ptr
 }
 
 void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
-  client_config_ = std::make_unique<Aws::Client::ClientConfiguration>();
+  client_config_ = Aws::Client::ClientConfiguration();
   std::string value;
   if (!context->getProperty(Bucket.getName(), value) || value.empty()) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");

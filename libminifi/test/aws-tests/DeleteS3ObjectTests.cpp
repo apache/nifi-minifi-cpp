@@ -114,9 +114,9 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test optional client configuration
   plan->setProperty(update_attribute, "test.endpoint", "http://localhost:1234", true);
   plan->setProperty(s3_processor, "Endpoint Override URL", "${test.endpoint}");
   test_controller.runSession(plan, true);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->region == minifi::aws::processors::region::US_EAST_1);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->connectTimeoutMs == 10000);
-  REQUIRE(mock_s3_request_sender_ptr->getClientConfig()->endpointOverride == "http://localhost:1234");
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().region == minifi::aws::processors::region::US_EAST_1);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().connectTimeoutMs == 10000);
+  REQUIRE(mock_s3_request_sender_ptr->getClientConfig().endpointOverride == "http://localhost:1234");
 }
 
 TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteFailure]") {
