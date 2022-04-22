@@ -80,7 +80,12 @@ class C2HeartbeatHandler : public ServerAwareHandler {
 
 class VerifyPropertyUpdate : public HTTPIntegrationBase {
  public:
+  VerifyPropertyUpdate() :fn_{[]{}} {}
   explicit VerifyPropertyUpdate(std::function<void()> fn) : fn_(std::move(fn)) {}
+  VerifyPropertyUpdate(const VerifyPropertyUpdate&) = delete;
+  VerifyPropertyUpdate(VerifyPropertyUpdate&&) = default;
+  VerifyPropertyUpdate& operator=(const VerifyPropertyUpdate&) = delete;
+  VerifyPropertyUpdate& operator=(VerifyPropertyUpdate&&) = default;
 
   void testSetup() {}
 
@@ -153,7 +158,9 @@ int main() {
     assert(!log_test_controller->contains("DummyClass3::before", 0s));
   }
 
-  VerifyPropertyUpdate harness([&] {
+  // On msvc, the passed lambda can't capture a reference to the object under construction, so we need to late-init harness.
+  VerifyPropertyUpdate harness;
+  harness = VerifyPropertyUpdate([&] {
     assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.isAcknowledged("79");}));
     assert(utils::verifyEventHappenedInPollTime(3s, [&] {
       return ack_handler.getApplyCount("FULLY_APPLIED") == 1

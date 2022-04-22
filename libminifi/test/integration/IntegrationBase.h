@@ -19,6 +19,7 @@
 
 #define DEFAULT_WAITTIME_MSECS 3000
 
+#include <future>
 #include <memory>
 #include <optional>
 #include <string>
@@ -43,7 +44,30 @@ namespace utils = minifi::utils;
 class IntegrationBase {
  public:
   explicit IntegrationBase(std::chrono::milliseconds waitTime = std::chrono::milliseconds(DEFAULT_WAITTIME_MSECS));
-
+  IntegrationBase(const IntegrationBase&) = delete;
+  IntegrationBase(IntegrationBase&& other) noexcept
+      :configuration{std::move(other.configuration)},
+      flowController_{std::move(other.flowController_)},
+      wait_time_{other.wait_time_},
+      port{std::move(other.port)},
+      scheme{std::move(other.scheme)},
+      key_dir{std::move(other.key_dir)},
+      state_dir{std::move(other.state_dir)},
+      restart_requested_count_{other.restart_requested_count_.load()}
+  {}
+  IntegrationBase& operator=(const IntegrationBase&) = delete;
+  IntegrationBase& operator=(IntegrationBase&& other) noexcept {
+    if (&other == this) return *this;
+    configuration = std::move(other.configuration);
+    flowController_ = std::move(other.flowController_);
+    wait_time_ = other.wait_time_;
+    port = std::move(other.port);
+    scheme = std::move(other.scheme);
+    key_dir = std::move(other.key_dir);
+    state_dir = std::move(other.state_dir);
+    restart_requested_count_ = other.restart_requested_count_.load();
+    return *this;
+  }
   virtual ~IntegrationBase() = default;
 
   virtual void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& home_path = {});
@@ -176,14 +200,17 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
     flowController_->start();
 
     assertions_done = assertion_runner.enqueue([this] { runAssertions(); });
-    std::future_status status;
-    while (!running && (status = assertions_done.wait_for(10ms)) == std::future_status::timeout) { }
+    std::future_status status = std::future_status::ready;
+    while (!running && (status = assertions_done.wait_for(10ms)) == std::future_status::timeout) { /* wait */ }
     if (running && status != std::future_status::timeout) {
       // cancel restart, because assertions have finished running
       running = false;
     }
 
-    shutdownBeforeFlowController();
+    if (!running) {
+      // Only stop servers if we're shutting down
+      shutdownBeforeFlowController();
+    }
     flowController_->unload();
     flowController_->stopC2();
   }
