@@ -89,6 +89,8 @@ class VerifyPropertyUpdate : public HTTPIntegrationBase {
   }
 
   std::function<void()> fn_;
+
+  [[nodiscard]] int getRestartRequestedCount() const noexcept { return restart_requested_count_; }
 };
 
 static const std::string properties_file =
@@ -153,8 +155,14 @@ int main() {
 
   VerifyPropertyUpdate harness([&] {
     assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.isAcknowledged("79");}));
-    assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.getApplyCount("FULLY_APPLIED") == 1;}));
-    assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.getApplyCount("NO_OPERATION") > 0;}));
+    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+      return ack_handler.getApplyCount("FULLY_APPLIED") == 1
+          && harness.getRestartRequestedCount() == 1;
+    }));
+    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+      return ack_handler.getApplyCount("NO_OPERATION") > 0
+          && harness.getRestartRequestedCount() == 1;  // only one, i.e. no additional restart requests compared to the previous update.
+    }));
     // update operation acknowledged
     {
       // verify final log levels

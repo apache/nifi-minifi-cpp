@@ -23,7 +23,7 @@
 
 #include "utils/MinifiConcurrentQueue.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
+namespace org::apache::nifi::minifi::utils {
 
 namespace detail {
 class WorkerThread final {
@@ -49,8 +49,9 @@ class WorkerThread final {
 
 /**
  * A worker that executes arbitrary functions with no parameters asynchronously on an internal thread, returning a future to the result.
+ * This is different from the Worker in ThreadPool.h in that it's only capable of running tasks, and any scheduling is left for the user.
  */
-class Worker final {
+class Worker2 final {
  public:
   template<typename Func>
   auto enqueue(Func func) -> std::future<decltype(func())> {
@@ -64,9 +65,4 @@ class Worker final {
   detail::WorkerThread worker_thread_;
 };
 
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

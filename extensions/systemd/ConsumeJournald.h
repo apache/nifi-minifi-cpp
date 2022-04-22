@@ -35,7 +35,7 @@
 #include "libwrapper/LibWrapper.h"
 #include "utils/Deleters.h"
 #include "utils/gsl.h"
-#include "WorkerThread.h"
+#include "utils/WorkerThread.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
 
@@ -97,7 +97,7 @@ class ConsumeJournald final : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeJournald>::getLogger();
   core::CoreComponentStateManager* state_manager_;
   std::unique_ptr<libwrapper::LibWrapper> libwrapper_;
-  std::unique_ptr<Worker> worker_;
+  std::unique_ptr<utils::Worker2> worker_;
   std::unique_ptr<libwrapper::Journal> journal_;
 
   std::size_t batch_size_ = 1000;

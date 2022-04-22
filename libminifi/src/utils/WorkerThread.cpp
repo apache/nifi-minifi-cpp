@@ -15,11 +15,9 @@
  * limitations under the License.
  */
 
-#include "WorkerThread.h"
+#include "utils/WorkerThread.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
-
-namespace detail {
+namespace org::apache::nifi::minifi::utils::detail {
 WorkerThread::WorkerThread()
     : thread_{&WorkerThread::run, this} {}
 
@@ -33,11 +31,4 @@ void WorkerThread::run() noexcept {
     task_queue_.consumeWait([](std::packaged_task<void()>&& f) { f(); });
   }
 }
-}  // namespace detail
-
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::detail
