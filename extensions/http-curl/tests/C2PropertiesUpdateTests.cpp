@@ -103,7 +103,7 @@ static const std::string properties_file =
     "nifi.c2.agent.protocol.class=RESTSender\n"
     "nifi.c2.enable=true\n"
     "nifi.c2.agent.class=test\n"
-    "nifi.c2.agent.heartbeat.period=100\n";
+    "nifi.c2.agent.heartbeat.period=500\n";
 
 static const std::string log_properties_file =
     "logger.root=INFO,ostream\n";
