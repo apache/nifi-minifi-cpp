@@ -251,8 +251,8 @@ TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple 
   test_controller.setProperty(minifi::processors::GetFile::PollInterval, "100 ms");
   test_controller.setProperty(minifi::processors::GetFile::KeepSourceFile, "true");
 
-  test_controller.runSession();
   auto start_time = std::chrono::steady_clock::now();
+  test_controller.runSession();
   while (LogTestController::getInstance().countOccurrences("Logged 2 flow files") < 2) {
     test_controller.test_plan_->reset();
     test_controller.runSession();
