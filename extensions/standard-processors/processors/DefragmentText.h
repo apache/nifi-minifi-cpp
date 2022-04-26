@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include <regex>
 #include <memory>
 #include <string>
 #include <set>
@@ -29,6 +28,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Enum.h"
 #include "serialization/PayloadSerializer.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -97,7 +97,7 @@ class DefragmentText : public core::Processor {
   };
 
 
-  std::regex pattern_;
+  utils::Regex pattern_;
   PatternLocation pattern_location_;
   std::optional<std::chrono::milliseconds> max_age_;
   std::optional<size_t> max_size_;

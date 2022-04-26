@@ -25,7 +25,6 @@
 #include <set>
 #include <tuple>
 #include <vector>
-#include <regex>
 
 #include "SFTPProcessorBase.h"
 #include "core/Processor.h"
@@ -33,6 +32,7 @@
 #include "core/Property.h"
 #include "utils/Id.h"
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -114,8 +114,8 @@ class ListSFTP : public SFTPProcessorBase {
   std::string path_filter_regex_;
   bool file_filter_regex_set_;
   bool path_filter_regex_set_;
-  std::regex compiled_file_filter_regex_;
-  std::regex compiled_path_filter_regex_;
+  utils::Regex compiled_file_filter_regex_;
+  utils::Regex compiled_path_filter_regex_;
   bool ignore_dotted_files_;
   std::string target_system_timestamp_precision_;
   std::string entity_tracking_initial_listing_target_;

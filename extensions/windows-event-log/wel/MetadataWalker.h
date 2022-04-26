@@ -27,7 +27,6 @@
 #include <map>
 #include <sstream>
 #include <string>
-#include <regex>
 #include <vector>
 
 #include "core/Core.h"
@@ -39,6 +38,7 @@
 
 #include "concurrentqueue.h"
 #include "pugixml.hpp"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -97,7 +97,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
 
   const WindowsEventLogMetadata& windows_event_log_metadata_;
   std::string log_name_;
-  std::regex regex_;
+  utils::Regex regex_;
   std::string regex_str_;
   bool update_xml_;
   bool resolve_;

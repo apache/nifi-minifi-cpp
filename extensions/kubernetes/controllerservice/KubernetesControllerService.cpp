@@ -116,17 +116,17 @@ void KubernetesControllerService::onEnable() {
 
   std::string namespace_filter;
   if (getProperty(NamespaceFilter.getName(), namespace_filter) && !namespace_filter.empty()) {
-    namespace_filter_ = std::regex{namespace_filter};
+    namespace_filter_ = utils::Regex{namespace_filter};
   }
 
   std::string pod_name_filter;
   if (getProperty(PodNameFilter.getName(), pod_name_filter) && !pod_name_filter.empty()) {
-    pod_name_filter_ = std::regex{pod_name_filter};
+    pod_name_filter_ = utils::Regex{pod_name_filter};
   }
 
   std::string container_name_filter;
   if (getProperty(ContainerNameFilter.getName(), container_name_filter) && !container_name_filter.empty()) {
-    container_name_filter_ = std::regex{container_name_filter};
+    container_name_filter_ = utils::Regex{container_name_filter};
   }
 }
 
@@ -199,8 +199,8 @@ std::optional<std::vector<KubernetesControllerService::AttributeMap>> Kubernetes
 }
 
 bool KubernetesControllerService::matchesRegexFilters(const std::string& name_space, const std::string& pod_name, const std::string& container_name) const {
-  static constexpr auto matchesFilter = [](const std::string& target, const std::optional<std::regex>& filter) {
-    return !filter || std::regex_match(target, *filter);
+  static constexpr auto matchesFilter = [](const std::string& target, const std::optional<utils::Regex>& filter) {
+    return !filter || utils::regexMatch(target, *filter);
   };
   return matchesFilter(name_space, namespace_filter_) &&
       matchesFilter(pod_name, pod_name_filter_) &&

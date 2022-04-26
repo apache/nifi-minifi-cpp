@@ -81,7 +81,7 @@ void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSess
 
   std::string pattern_str;
   if (context->getProperty(Pattern.getName(), pattern_str) && !pattern_str.empty()) {
-    pattern_ = std::regex(pattern_str);
+    pattern_ = utils::Regex(pattern_str);
     logger_->log_trace("The Pattern is configured to be %s", pattern_str);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Pattern property missing or invalid");
@@ -204,7 +204,7 @@ struct ReadFlowFileContent : public InputStreamCallback {
   }
 };
 
-size_t getSplitPosition(const std::smatch& last_match, DefragmentText::PatternLocation pattern_location) {
+size_t getSplitPosition(const utils::SMatch& last_match, DefragmentText::PatternLocation pattern_location) {
   size_t split_position = last_match.position(0);
   if (pattern_location == DefragmentText::PatternLocation::END_OF_MESSAGE) {
     split_position += last_match.length(0);
@@ -220,7 +220,7 @@ bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
                                                 std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
   ReadFlowFileContent read_flow_file_content;
   session->read(original_flow_file, &read_flow_file_content);
-  auto last_regex_match = utils::StringUtils::getLastRegexMatch(read_flow_file_content.content, pattern_);
+  auto last_regex_match = utils::getLastRegexMatch(read_flow_file_content.content, pattern_);
   if (!last_regex_match.ready()) {
     split_before_last_pattern = session->clone(original_flow_file);
     split_after_last_pattern = nullptr;

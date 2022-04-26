@@ -17,11 +17,11 @@
 
 #include <fstream>
 #include <optional>
-#include <regex>
 #include <string>
 
 #include "ConfigFileEncryptor.h"
 #include "properties/Configuration.h"
+#include "utils/RegexUtils.h"
 
 #include "TestBase.h"
 #include "Catch.h"
@@ -46,8 +46,8 @@ bool check_encryption(const ConfigFile& test_file, const std::string& property_n
   auto length = base64_length(utils::crypto::EncryptionType::nonceLength()) +
       utils::crypto::EncryptionType::separator().size() +
       base64_length(original_value_length + utils::crypto::EncryptionType::macLength());
-  std::regex pattern("[0-9A-Za-z/+=|]{" + std::to_string(length) + "}");
-  return std::regex_match(*encrypted_value, pattern);
+  utils::Regex pattern("[0-9A-Za-z/+=|]{" + std::to_string(length) + "}");
+  return utils::regexMatch(*encrypted_value, pattern);
 }
 }  // namespace
 

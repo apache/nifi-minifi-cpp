@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-#include <regex>
 #include <memory>
 #include <algorithm>
 #include <cctype>
@@ -43,6 +42,7 @@
 #include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/ByteArrayCallback.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -167,9 +167,9 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
       bool found_match = false;
       std::string matching_regex = "";
       for (const auto &filter : allowed_interfaces) {
-        std::regex r(filter);
-        std::smatch m;
-        if (std::regex_match(name, m, r)) {
+        utils::Regex r(filter);
+        utils::SMatch m;
+        if (utils::regexMatch(name, m, r)) {
           matching_regex = filter;
           found_match = true;
           break;

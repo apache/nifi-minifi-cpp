@@ -29,6 +29,7 @@
 #include "core/Core.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
+#include "utils/TestUtils.h"
 
 #include "core/FlowFile.h"
 #include "core/Processor.h"
@@ -178,5 +179,36 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
 
   REQUIRE(LogTestController::getInstance().contains(error_str));
 
+  LogTestController::getInstance().reset();
+}
+
+TEST_CASE("Test usage of ExtractText in regex mode with large regex matches", "[extracttextRegexTest]") {
+  TestController test_controller;
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::ExtractText>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::GetFile>();
+  LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
+
+  std::shared_ptr<TestPlan> plan = test_controller.createPlan();
+  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+
+  auto dir = test_controller.createTempDirectory();
+  REQUIRE(!dir.empty());
+  auto getfile = plan->addProcessor("GetFile", "GetFile");
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
+
+  auto extract_text_processor = plan->addProcessor("ExtractText", "ExtractText", core::Relationship("success", "description"), true);
+  plan->setProperty(extract_text_processor, org::apache::nifi::minifi::processors::ExtractText::RegexMode.getName(), "true");
+  plan->setProperty(extract_text_processor, "RegexAttr", "Speed limit (.*)", true);
+
+  auto log_attribute_processor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
+  plan->setProperty(log_attribute_processor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
+
+  std::string additional_long_string(100'000, '.');
+  utils::putFileToDir(dir, TEST_FILE, "Speed limit 80" + additional_long_string);
+
+  test_controller.runSession(plan);
+
+  REQUIRE(LogTestController::getInstance().contains("key:RegexAttr.0 value:80"));
   LogTestController::getInstance().reset();
 }

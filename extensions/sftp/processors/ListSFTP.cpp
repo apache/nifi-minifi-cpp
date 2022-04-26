@@ -34,7 +34,6 @@
 #include <vector>
 #include <tuple>
 #include <deque>
-#include <regex>
 
 #include "utils/ByteArrayCallback.h"
 #include "utils/TimeUtil.h"
@@ -236,9 +235,9 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
   if (context->getProperty(FileFilterRegex.getName(), file_filter_regex_)) {
     try {
-      compiled_file_filter_regex_ = std::regex(file_filter_regex_);
+      compiled_file_filter_regex_ = utils::Regex(file_filter_regex_);
       file_filter_regex_set_ = true;
-    } catch (const std::regex_error &e) {
+    } catch (const Exception &e) {
       logger_->log_error("Failed to compile File Filter Regex \"%s\"", file_filter_regex_.c_str());
       file_filter_regex_set_ = false;
     }
@@ -247,9 +246,9 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   }
   if (context->getProperty(PathFilterRegex.getName(), path_filter_regex_)) {
     try {
-      compiled_path_filter_regex_ = std::regex(path_filter_regex_);
+      compiled_path_filter_regex_ = utils::Regex(path_filter_regex_);
       path_filter_regex_set_ = true;
-    } catch (const std::regex_error &e) {
+    } catch (const Exception &e) {
       logger_->log_error("Failed to compile Path Filter Regex \"%s\"", path_filter_regex_.c_str());
       path_filter_regex_set_ = false;
     }
@@ -398,7 +397,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   /* File Filter Regex */
   if (file_filter_regex_set_) {
     bool match = false;
-    match = std::regex_search(filename, compiled_file_filter_regex_);
+    match = utils::regexSearch(filename, compiled_file_filter_regex_);
     if (!match) {
       logger_->log_debug("Ignoring \"%s/%s\" because it did not match the File Filter Regex \"%s\"",
                          parent_path.c_str(),
@@ -420,7 +419,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
   if (path_filter_regex_set_) {
     std::string dir_path = utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
     bool match = false;
-    match = std::regex_search(dir_path, compiled_path_filter_regex_);
+    match = utils::regexSearch(dir_path, compiled_path_filter_regex_);
     if (!match) {
       logger_->log_debug("Not recursing into \"%s\" because it did not match the Path Filter Regex \"%s\"",
                          dir_path.c_str(),

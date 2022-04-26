@@ -402,7 +402,7 @@ TEST_CASE_METHOD(RouteTextController, "RouteText grouping uses empty strings for
   proc_->setProperty(processors::RouteText::RoutingStrategy, "Dynamic Routing");
   proc_->setProperty(processors::RouteText::SegmentationStrategy, "Per Line");
   proc_->setProperty(processors::RouteText::MatchingStrategy, "Contains");
-  proc_->setProperty(processors::RouteText::GroupingRegex, "group(.)(?:\\.(.))?.*");
+  proc_->setProperty(processors::RouteText::GroupingRegex, "group(.)(\\..)?.*");
 
   proc_->setDynamicProperty("A", "toA");
 
@@ -416,8 +416,8 @@ TEST_CASE_METHOD(RouteTextController, "RouteText grouping uses empty strings for
   std::map<std::string, FlowFilePatternVec> expected;
 
   expected["A"] = {
-      FlowFilePattern{}.attr("RouteText.Group", "1, 1").content("group1.1:toA(one)\ngroup1.1:toA(two)\n"),
-      FlowFilePattern{}.attr("RouteText.Group", "1, 2").content("group1.2:toA(three)\n"),
+      FlowFilePattern{}.attr("RouteText.Group", "1, .1").content("group1.1:toA(one)\ngroup1.1:toA(two)\n"),
+      FlowFilePattern{}.attr("RouteText.Group", "1, .2").content("group1.2:toA(three)\n"),
       FlowFilePattern{}.attr("RouteText.Group", "2, ").content("group2:toA(four)\ngroup2:toA(five)")
   };
   expected["matched"] = FlowFilePatternVec{};

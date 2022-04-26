@@ -23,7 +23,6 @@
 #include <memory>
 #include <map>
 #include <set>
-#include <regex>
 #include <iostream>
 #include <sstream>
 #include <utility>
@@ -34,6 +33,7 @@
 #include "core/Resource.h"
 #include "core/FlowFile.h"
 #include "utils/gsl.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -149,9 +149,9 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
 
   if (regex_mode) {
     bool insensitive;
-    std::regex_constants::syntax_option_type regex_flags = std::regex::ECMAScript;  // ECMAScript is the default behaviour
+    std::vector<utils::Regex::Mode> regex_flags;
     if (ctx_->getProperty(InsensitiveMatch.getName(), insensitive) && insensitive) {
-      regex_flags |= std::regex_constants::icase;
+      regex_flags.push_back(utils::Regex::Mode::ICASE);
     }
 
     bool ignoregroupzero;
@@ -179,9 +179,9 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
       int matchcount = 0;
 
       try {
-        std::regex rgx(value, regex_flags);
-        std::smatch matches;
-        while (std::regex_search(workStr, matches, rgx)) {
+        utils::Regex rgx(value, regex_flags);
+        utils::SMatch matches;
+        while (utils::regexSearch(workStr, matches, rgx)) {
           size_t i = ignoregroupzero ? 1 : 0;
 
           for (; i < matches.size(); ++i, ++matchcount) {
@@ -199,7 +199,7 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
           }
           workStr = matches.suffix();
         }
-      } catch (const std::regex_error &e) {
+      } catch (const Exception &e) {
         logger_->log_error("%s error encountered when trying to construct regular expression from property (key: %s) value: %s",
                            e.what(), k, value);
         continue;

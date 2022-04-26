@@ -23,7 +23,6 @@
 #include <optional>
 #include <memory>
 #include <vector>
-#include <regex>
 
 #include "AzureStorageCredentials.h"
 
@@ -31,6 +30,7 @@
 #include "io/InputStream.h"
 #include "azure/storage/files/datalake/protocol/datalake_rest_client.hpp"
 #include "utils/Enum.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -63,8 +63,8 @@ struct FetchAzureDataLakeStorageParameters : public AzureDataLakeStorageFileOper
 
 struct ListAzureDataLakeStorageParameters : public AzureDataLakeStorageParameters {
   bool recurse_subdirectories = true;
-  std::optional<std::regex> path_regex;
-  std::optional<std::regex> file_regex;
+  std::optional<minifi::utils::Regex> path_regex;
+  std::optional<minifi::utils::Regex> file_regex;
 };
 
 class DataLakeStorageClient {

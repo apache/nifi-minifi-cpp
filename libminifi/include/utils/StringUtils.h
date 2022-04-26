@@ -23,7 +23,6 @@
 #include <iostream>
 #include <map>
 #include <optional>
-#include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -484,14 +483,6 @@ class StringUtils {
     }
     return str;
   }
-
-  /**
-   * Returns the last match of a regular expression within the given string
-   * @param str incoming string
-   * @param pattern the regex to be matched
-   * @return the last valid std::smatch or a default constructed smatch (ready() != true) if no matches have been found
-   */
-  static std::smatch getLastRegexMatch(const std::string& str, const std::regex& pattern);
 
   static std::string escapeUnprintableBytes(gsl::span<const std::byte> data);
 

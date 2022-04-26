@@ -283,12 +283,12 @@ class ReadCallback : public InputStreamCallback {
     });
   }
 
-  static rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, std::regex& attribute_name_regex) {
+  static rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, utils::Regex& attribute_name_regex) {
     const gsl::owner<rd_kafka_headers_t*> result{ rd_kafka_headers_new(8) };
     if (!result) { throw std::bad_alloc{}; }
 
     for (const auto& kv : flow_file.getAttributes()) {
-      if (std::regex_search(kv.first, attribute_name_regex)) {
+      if (utils::regexSearch(kv.first, attribute_name_regex)) {
         rd_kafka_header_add(result, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
       }
     }
@@ -337,7 +337,7 @@ class ReadCallback : public InputStreamCallback {
       rd_kafka_topic_t* const rkt,
       rd_kafka_t* const rk,
       const core::FlowFile& flowFile,
-      std::regex& attributeNameRegex,
+      utils::Regex& attributeNameRegex,
       std::shared_ptr<PublishKafka::Messages> messages,
       const size_t flow_file_index,
       const bool fail_empty_flow_files,
@@ -510,7 +510,7 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
   // Attributes to Send as Headers
   std::string value;
   if (context->getProperty(AttributeNameRegex.getName(), value) && !value.empty()) {
-    attributeNameRegex_ = std::regex(value);
+    attributeNameRegex_ = utils::Regex(value);
     logger_->log_debug("PublishKafka: AttributeNameRegex [%s]", value);
   }
 

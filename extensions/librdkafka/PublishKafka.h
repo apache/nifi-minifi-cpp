@@ -30,7 +30,6 @@
 #include <condition_variable>
 #include <utility>
 #include <vector>
-#include <regex>
 
 #include "KafkaProcessorBase.h"
 #include "utils/GeneralUtils.h"
@@ -43,6 +42,7 @@
 #include "controllers/SSLContextService.h"
 #include "rdkafka.h"
 #include "KafkaConnection.h"
+#include "utils/RegexUtils.h"
 
 namespace org {
 namespace apache {
@@ -133,7 +133,7 @@ class PublishKafka : public KafkaProcessorBase {
   uint32_t batch_size_{};
   uint64_t target_batch_payload_size_{};
   uint64_t max_flow_seg_size_{};
-  std::regex attributeNameRegex_;
+  utils::Regex attributeNameRegex_;
 
   std::atomic<bool> interrupted_{false};
   std::mutex messages_mutex_;  // If both connection_mutex_ and messages_mutex_ are needed, always take connection_mutex_ first to avoid deadlock
