@@ -51,7 +51,7 @@ class WorkerThread final {
  * A worker that executes arbitrary functions with no parameters asynchronously on an internal thread, returning a future to the result.
  * This is different from the Worker in ThreadPool.h in that it's only capable of running tasks, and any scheduling is left for the user.
  */
-class Worker2 final {
+class FifoExecutor final {
  public:
   template<typename Func>
   auto enqueue(Func func) -> std::future<decltype(func())> {

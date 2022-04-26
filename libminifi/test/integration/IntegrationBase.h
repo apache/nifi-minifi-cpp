@@ -35,7 +35,7 @@
 #include "core/ConfigurableComponent.h"
 #include "controllers/SSLContextService.h"
 #include "HTTPUtils.h"
-#include "utils/WorkerThread.h"
+#include "utils/FifoExecutor.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -155,7 +155,7 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
   content_repo->initialize(configuration);
 
   std::atomic<bool> running = true;
-  utils::Worker2 assertion_runner;
+  utils::FifoExecutor assertion_runner;
   std::future<void> assertions_done;
   while (running) {
     running = false;  // Stop running after this iteration, unless restart is explicitly requested

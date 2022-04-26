@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "utils/WorkerThread.h"
+#include "utils/FifoExecutor.h"
 
 namespace org::apache::nifi::minifi::utils::detail {
 WorkerThread::WorkerThread()
