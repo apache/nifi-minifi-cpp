@@ -48,12 +48,17 @@ void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
           worker_queue_.enqueue(std::move(task));
           continue;
         }
-        ++running_task_ids_[task.getIdentifier()];
+        ++running_task_count_by_id_[task.getIdentifier()];
       }
       const bool taskRunResult = task.run();
       {
         std::unique_lock<std::mutex> lock(worker_queue_mutex_);
-        --running_task_ids_[task.getIdentifier()];
+        auto& count = running_task_count_by_id_[task.getIdentifier()];
+        if (count == 1) {
+          running_task_count_by_id_.erase(task.getIdentifier());
+        } else {
+          --count;
+        }
       }
       task_run_complete_.notify_all();
       if (taskRunResult) {
@@ -220,8 +225,8 @@ void ThreadPool<T>::stopTasks(const TaskId &identifier) {
 
   // if tasks are in progress, wait for their completion
   task_run_complete_.wait(lock, [&] () {
-    auto iter = running_task_ids_.find(identifier);
-    return iter == running_task_ids_.end() || iter->second == 0;
+    auto iter = running_task_count_by_id_.find(identifier);
+    return iter == running_task_count_by_id_.end() || iter->second == 0;
   });
 }
 

@@ -338,7 +338,7 @@ class ThreadPool {
   // thread pool name
   std::string name_;
   // count of running tasks by ID
-  std::map<TaskId, unsigned> running_task_ids_;
+  std::unordered_map<TaskId, unsigned> running_task_count_by_id_;
   // variable to signal task running completion
   std::condition_variable task_run_complete_;
 
