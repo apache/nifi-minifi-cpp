@@ -162,13 +162,13 @@ int main() {
   // On msvc, the passed lambda can't capture a reference to the object under construction, so we need to late-init harness.
   VerifyPropertyUpdate harness;
   harness = VerifyPropertyUpdate([&] {
-    assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.isAcknowledged("79");}));
-    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+    assert(utils::verifyEventHappenedInPollTime(10s, [&] {return ack_handler.isAcknowledged("79");}));
+    assert(utils::verifyEventHappenedInPollTime(10s, [&] {
       return ack_handler.getApplyCount("FULLY_APPLIED") == 1;
     }));
 
     // Updating the same property will result in a no operation response
-    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+    assert(utils::verifyEventHappenedInPollTime(10s, [&] {
       return ack_handler.getApplyCount("NO_OPERATION") > 0;
     }));
 
@@ -176,12 +176,12 @@ int main() {
     hb_handler.setProperties({{minifi::Configuration::nifi_c2_rest_heartbeat_minimize_updates, "banana", true}, {minifi::Configuration::minifi_disk_space_watchdog_enable, "true", true}});
 
     // Due to 1 invalid value the result will be partially applied
-    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+    assert(utils::verifyEventHappenedInPollTime(10s, [&] {
       return ack_handler.getApplyCount("PARTIALLY_APPLIED") == 1;
     }));
 
     // Repeating the previous update request results in 1 no operation and 1 failure which results in not applied response
-    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+    assert(utils::verifyEventHappenedInPollTime(10s, [&] {
       return ack_handler.getApplyCount("NOT_APPLIED") > 0
         && harness.getRestartRequestedCount() == 2;
     }));

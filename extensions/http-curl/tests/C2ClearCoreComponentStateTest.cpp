@@ -48,7 +48,7 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(40s, [&] { return component_cleared_successfully_.load(); }));
+    assert(verifyEventHappenedInPollTime(40s, [&] { return component_cleared_successfully_.load(); }, 1s));
   }
 
   [[nodiscard]] std::string getFile1Location() const {
@@ -93,21 +93,14 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
         sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889345", conn);
         flow_state_ = FlowState::FIRST_DESCRIBE_SENT;
         break;
-      case FlowState::FIRST_DESCRIBE_SENT: {
+      case FlowState::FIRST_DESCRIBE_ACK:
+      case FlowState::CLEAR_SENT: {
         sendHeartbeatResponse("CLEAR", "corecomponentstate", "889346", conn, { {"corecomponent1", "TailFile1"} });
         flow_state_ = FlowState::CLEAR_SENT;
         break;
       }
-      case FlowState::CLEAR_SENT: {
-        using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-        auto tail_file_ran_again_checker = [this] {
-          const auto log_contents = LogTestController::getInstance().log_output.str();
-          const std::string tailing_file_pattern = "[debug] Tailing file " + file_1_location_;
-          const std::string tail_file_committed_pattern = "[trace] ProcessSession committed for TailFile1";
-          const std::vector<std::string> patterns = {tailing_file_pattern, tailing_file_pattern, tail_file_committed_pattern};
-          return utils::StringUtils::matchesSequence(log_contents, patterns);
-        };
-        assert(verifyEventHappenedInPollTime(10s, tail_file_ran_again_checker));
+      case FlowState::CLEAR_SENT_ACK:
+      case FlowState::SECOND_DESCRIBE_SENT: {
         sendHeartbeatResponse("DESCRIBE", "corecomponentstate", "889347", conn);
         flow_state_ = FlowState::SECOND_DESCRIBE_SENT;
         break;
@@ -137,24 +130,46 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
 
         last_read_time_1_ = std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1993"]["file.0.last_read_time"].GetString());
         last_read_time_2_ = std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString());
+        assert(!last_read_time_1_.empty());
+        assert(!last_read_time_2_.empty());
+        flow_state_ = FlowState::FIRST_DESCRIBE_ACK;
         break;
       }
-      case FlowState::CLEAR_SENT:
+      case FlowState::CLEAR_SENT: {
+        auto tail_file_ran_again_checker = [this] {
+          const auto log_contents = LogTestController::getInstance().log_output.str();
+          const std::string tailing_file_pattern = "[debug] Tailing file " + file_1_location_;
+          const std::string tail_file_committed_pattern = "[trace] ProcessSession committed for TailFile1";
+          const std::vector<std::string> patterns = {tailing_file_pattern, tailing_file_pattern, tail_file_committed_pattern};
+          return utils::StringUtils::matchesSequence(log_contents, patterns);
+        };
+        if (tail_file_ran_again_checker()) {
+          flow_state_ = FlowState::CLEAR_SENT_ACK;
+        }
         break;
+      }
       case FlowState::SECOND_DESCRIBE_SENT: {
+        if (!root.HasMember("corecomponentstate") ||
+            !root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1993") ||
+            !root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1994")) {
+          break;
+        }
+
+        auto file2_state_time = std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString());
+        auto file1_state_time = std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1993"]["file.0.last_read_time"].GetString());
         const bool clearedStateFound =
             root.HasMember("corecomponentstate") &&
             root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1993") &&
             root["corecomponentstate"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1994") &&
-            std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1994"]["file.0.last_read_time"].GetString()) == last_read_time_2_ &&
-            std::string(root["corecomponentstate"]["2438e3c8-015a-1000-79ca-83af40ec1993"]["file.0.last_read_time"].GetString()) != last_read_time_1_;
+            file2_state_time == last_read_time_2_ &&
+            file1_state_time != last_read_time_1_;
+
         if (clearedStateFound) {
           component_cleared_successfully_ = clearedStateFound;
         }
         break;
       }
-      default:
-        throw std::runtime_error("Invalid flow state state when handling acknowledge message!");
+      default: {}
     }
   }
 
@@ -162,7 +177,9 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
   enum class FlowState {
     STARTED,
     FIRST_DESCRIBE_SENT,
+    FIRST_DESCRIBE_ACK,
     CLEAR_SENT,
+    CLEAR_SENT_ACK,
     SECOND_DESCRIBE_SENT
   };
 

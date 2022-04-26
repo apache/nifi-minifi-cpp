@@ -83,7 +83,7 @@ class VerifyC2ClassRequest : public VerifyC2Base {
   }
 
   void runAssertions() override {
-    assert(utils::verifyEventHappenedInPollTime(std::chrono::seconds(3), verify_));
+    assert(utils::verifyEventHappenedInPollTime(std::chrono::seconds(10), verify_));
   }
 
  private:

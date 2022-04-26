@@ -17,7 +17,7 @@
  */
 #pragma once
 
-#define DEFAULT_WAITTIME_MSECS 3000
+#define DEFAULT_WAITTIME_MSECS 10000
 
 #include <future>
 #include <memory>

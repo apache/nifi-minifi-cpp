@@ -17,6 +17,8 @@
  */
 
 #undef NDEBUG
+#include <mutex>
+
 #include "TestBase.h"
 #include "Catch.h"
 #include "c2/C2Agent.h"
@@ -28,13 +30,14 @@
 #include "utils/IntegrationTestUtils.h"
 #include "properties/Configuration.h"
 
-class LightWeightC2Handler : public HeartbeatHandler {
+class LightWeightC2Handler : public StoppingHeartbeatHandler {
  public:
   explicit LightWeightC2Handler(std::shared_ptr<minifi::Configure> configuration)
-    : HeartbeatHandler(std::move(configuration)) {
+    : StoppingHeartbeatHandler(std::move(configuration)) {
   }
 
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection *) override {
+    std::lock_guard<std::mutex> lock(call_mutex_);
     if (calls_ == 0) {
       verifyJsonHasAgentManifest(root);
     } else {
@@ -43,8 +46,10 @@ class LightWeightC2Handler : public HeartbeatHandler {
     }
     calls_++;
   }
+
  private:
-  std::atomic<size_t> calls_{0};
+  std::mutex call_mutex_;
+  std::size_t calls_{0};
 };
 
 class VerifyLightWeightC2Heartbeat : public VerifyC2Base {

@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "heartbeat");
   VerifyC2Heartbeat harness;
   harness.setKeyDir(args.key_dir);
-  HeartbeatHandler responder(harness.getConfiguration());
+  StoppingHeartbeatHandler responder(harness.getConfiguration());
   harness.setUrl(args.url, &responder);
   harness.run(args.test_file);
 
