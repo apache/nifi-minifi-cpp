@@ -32,9 +32,6 @@ class MinifiContainer(FlowContainer):
     def get_startup_finished_log_entry(self):
         return "Starting Flow Controller"
 
-    def get_log_file_path(self):
-        return MinifiContainer.MINIFI_ROOT + '/logs/minifi-app.log'
-
     def _create_config(self):
         serializer = Minifi_flow_yaml_serializer()
         test_flow_yaml = serializer.serialize(self.start_nodes)

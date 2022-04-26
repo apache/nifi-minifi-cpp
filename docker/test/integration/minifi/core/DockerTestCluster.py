@@ -16,7 +16,6 @@
 
 import json
 import logging
-import subprocess
 import sys
 import time
 import os
@@ -69,26 +68,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             logging.warning('Container segfaulted: %s', container.name)
             self.segfault = True
 
-        log_file_path = self.containers[container_name].get_log_file_path()
-        if not log_file_path:
-            return container.status, container.logs()
-
-        try:
-            if container.status == 'running':
-                app_log_status, app_log = container.exec_run('/bin/sh -c \'cat ' + log_file_path + '\'')
-                if app_log_status == 0:
-                    return container.status, app_log
-            elif container.status == 'exited':
-                log_file_name = container_name + ".log"
-                code = subprocess.run(["docker", "cp", container_name + ":" + log_file_path, log_file_name]).returncode
-                if code == 0:
-                    output = open(log_file_name, 'rb').read()
-                    os.remove(log_file_name)
-                    return container.status, output
-        except Exception:
-            return container.status, None
-
-        return container.status, None
+        return container.status, container.logs()
 
     def __wait_for_app_logs_impl(self, container_name, log_entry, timeout_seconds, count, use_regex):
         wait_start_time = time.perf_counter()

@@ -37,9 +37,6 @@ class NifiContainer(FlowContainer):
     def get_startup_finished_log_entry(self):
         return "Starting Flow Controller"
 
-    def get_log_file_path(self):
-        return NifiContainer.NIFI_ROOT + '/logs/nifi-app.log'
-
     def __create_config(self):
         serializer = Nifi_flow_xml_serializer()
         test_flow_xml = serializer.serialize(self.start_nodes, NifiContainer.NIFI_VERSION)
