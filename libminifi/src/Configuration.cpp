@@ -83,6 +83,7 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_c2_agent_coap_port, gsl::make_not_null(core::StandardValidators::get().PORT_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_protocol_class},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_identifier},
+  core::ConfigurationProperty{Configuration::nifi_c2_agent_identifier_fallback},
   core::ConfigurationProperty{Configuration::nifi_c2_agent_trigger_classes},
   core::ConfigurationProperty{Configuration::nifi_c2_root_classes},
   core::ConfigurationProperty{Configuration::nifi_c2_root_class_definitions},

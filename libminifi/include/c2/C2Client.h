@@ -36,11 +36,7 @@
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 class C2Client : public core::Flow, public state::response::NodeReporter {
  public:
@@ -88,8 +84,4 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   std::function<void()> request_restart_;
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

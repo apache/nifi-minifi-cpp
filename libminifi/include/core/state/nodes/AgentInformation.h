@@ -706,11 +706,15 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
       manifest.setConfigurationReader(configuration_reader_);
       return manifest.serialize();
     }()};
+    agent_manifest_hash_cache_.clear();
     return std::vector{ *agent_manifest_cache_ };
   }
 
-  std::string getAgentManifestHash() {
-    return hashResponseNodes(getAgentManifest());
+  std::string getAgentManifestHash() const {
+    if (agent_manifest_hash_cache_.empty()) {
+      agent_manifest_hash_cache_ = hashResponseNodes(getAgentManifest());
+    }
+    return agent_manifest_hash_cache_;
   }
 
   std::vector<SerializedResponseNode> getAgentStatus() const {
@@ -732,6 +736,7 @@ class AgentNode : public DeviceInformation, public AgentMonitor, public AgentIde
 
  private:
   mutable std::optional<SerializedResponseNode> agent_manifest_cache_;
+  mutable std::string agent_manifest_hash_cache_;
   controllers::UpdatePolicyControllerService* update_policy_controller_ = nullptr;
   std::function<std::optional<std::string>(const std::string&)> configuration_reader_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AgentNode>::getLogger();

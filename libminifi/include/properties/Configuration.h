@@ -107,6 +107,7 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_agent_coap_port = "nifi.c2.agent.coap.port";
   static constexpr const char *nifi_c2_agent_protocol_class = "nifi.c2.agent.protocol.class";
   static constexpr const char *nifi_c2_agent_identifier = "nifi.c2.agent.identifier";
+  static constexpr const char *nifi_c2_agent_identifier_fallback = "nifi.c2.agent.identifier.fallback";
   static constexpr const char *nifi_c2_agent_trigger_classes = "nifi.c2.agent.trigger.classes";
   static constexpr const char *nifi_c2_root_classes = "nifi.c2.root.classes";
   static constexpr const char *nifi_c2_root_class_definitions = "nifi.c2.root.class.definitions";

@@ -742,6 +742,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
         });
 
     if (restart_needed_ && requests.empty()) {
+      configuration_->commitChanges();
       request_restart_();
       return utils::TaskRescheduleInfo::Done();
     }

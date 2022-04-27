@@ -499,13 +499,11 @@ class ValueNode {
 
  public:
   ValueNode() = default;
-  ValueNode(ValueNode &&vn) = default;
-  ValueNode(const ValueNode &vn) = default;
-  ValueNode &operator=(const ValueNode &ref) = default;
 
   template<typename T>
   requires (supported_types::contains<T>())  // NOLINT
-  /* implicit, because it doesn't change the meaning, and it simplifies construction of maps */ ValueNode(const T value)  // NOLINT
+  /* implicit, because it doesn't change the meaning, and it simplifies construction of maps */
+  ValueNode(const T value)  // NOLINT
       :value_{createValue(value)}
   {}
 
@@ -520,16 +518,15 @@ class ValueNode {
     return *this;
   }
 
-
   inline bool operator==(const ValueNode &rhs) const {
     return to_string() == rhs.to_string();
   }
 
-  inline bool operator==(const char*rhs) const {
+  inline bool operator==(const char* rhs) const {
     return to_string() == rhs;
   }
 
-  friend bool operator==(const char *lhs, const ValueNode& rhs) {
+  friend bool operator==(const char* lhs, const ValueNode& rhs) {
     return lhs == rhs.to_string();
   }
 
