@@ -32,12 +32,13 @@
 #include "state/ProcessorController.h"
 #include "integration/IntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/TestUtils.h"
 
 using std::literals::chrono_literals::operator""s;
 
 class TailFileTestHarness : public IntegrationBase {
  public:
-  TailFileTestHarness() : IntegrationBase(1s) {
+  TailFileTestHarness() : IntegrationBase(2s) {
     dir = testController.createTempDirectory();
 
     statefile = dir + utils::file::get_separator();
@@ -53,6 +54,9 @@ class TailFileTestHarness : public IntegrationBase {
     LogTestController::getInstance().setInfo<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setTrace<minifi::processors::TailFile>();
     LogTestController::getInstance().setTrace<minifi::FlowController>();
+#ifdef WIN32
+    utils::dateSetInstall(TZ_DATA_DIR);
+#endif
   }
 
   void cleanup() override {

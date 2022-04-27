@@ -89,7 +89,7 @@ else()
 endif()
 
 include(RangeV3)
-list(APPEND LIBMINIFI_LIBRARIES yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog cron Threads::Threads gsl-lite libsodium range-v3 expected-lite date::date)
+list(APPEND LIBMINIFI_LIBRARIES yaml-cpp ZLIB::ZLIB concurrentqueue RapidJSON spdlog Threads::Threads gsl-lite libsodium range-v3 expected-lite date::date date-tz)
 if(NOT WIN32)
 	list(APPEND LIBMINIFI_LIBRARIES OSSP::libuuid++)
 endif()

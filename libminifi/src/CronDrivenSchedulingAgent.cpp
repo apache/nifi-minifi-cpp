@@ -20,66 +20,56 @@
 #include "CronDrivenSchedulingAgent.h"
 #include <chrono>
 #include <memory>
-#include <thread>
-#include <iostream>
 #include "core/Processor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
-#include "core/Property.h"
 
 using namespace std::literals::chrono_literals;
+using std::chrono::ceil;
+using std::chrono::seconds;
+using std::chrono::milliseconds;
+using std::chrono::time_point_cast;
+using std::chrono::system_clock;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
-utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
-                                        const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) {
+utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* processor,
+                                                         const std::shared_ptr<core::ProcessContext>& processContext,
+                                                         const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
   if (this->running_ && processor->isRunning()) {
     auto uuid = processor->getUUID();
-    std::chrono::system_clock::time_point result;
-    std::chrono::system_clock::time_point from = std::chrono::system_clock::now();
-    {
-      std::lock_guard<std::mutex> locK(mutex_);
+    auto current_time = date::make_zoned<seconds>(date::current_zone(), time_point_cast<seconds>(system_clock::now()));
+    std::lock_guard<std::mutex> lock(mutex_);
 
-      auto sched_f = schedules_.find(uuid);
-      if (sched_f != std::end(schedules_)) {
-        result = last_exec_[uuid];
-        if (from >= result) {
-          result = sched_f->second.cron_to_next(from);
-          last_exec_[uuid] = result;
-        } else {
-          // we may be woken up a little early so that we can honor our time.
-          // in this case we can return the next time to run with the expectation
-          // that the wakeup mechanism gets more granular.
-          return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
-        }
-      } else {
-        Bosma::Cron schedule(processor->getCronPeriod());
-        result = schedule.cron_to_next(from);
-        last_exec_[uuid] = result;
-        schedules_.insert(std::make_pair(uuid, schedule));
-      }
+    if (!schedules_.contains(uuid))
+      schedules_.insert(std::make_pair(uuid, utils::Cron(processor->getCronPeriod())));
+
+    if (!last_exec_.contains(uuid))
+      last_exec_.insert(std::make_pair(uuid, current_time.get_local_time()));
+
+    auto last_trigger = last_exec_[uuid];
+    auto next_to_last_trigger = schedules_.at(uuid).calculateNextTrigger(last_trigger);
+    if (!next_to_last_trigger)
+      return utils::TaskRescheduleInfo::Done();
+
+    if (*next_to_last_trigger > current_time.get_local_time())
+      return utils::TaskRescheduleInfo::RetryIn(ceil<milliseconds>(*next_to_last_trigger-current_time.get_local_time()));
+
+    last_exec_[uuid] = current_time.get_local_time();
+    bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
+
+    if (processor->isYield()) {
+      return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
+    } else if (shouldYield && this->bored_yield_duration_ > 0ms) {
+      return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_);
     }
 
-    if (result > from) {
-      bool shouldYield = this->onTrigger(processor, processContext, sessionFactory);
-
-      if (processor->isYield()) {
-        // Honor the yield
-        return utils::TaskRescheduleInfo::RetryIn(processor->getYieldTime());
-      } else if (shouldYield && this->bored_yield_duration_ > 0ms) {
-        // No work to do or need to apply back pressure
-        return utils::TaskRescheduleInfo::RetryIn(this->bored_yield_duration_);
-      }
-    }
-    return utils::TaskRescheduleInfo::RetryIn(std::chrono::duration_cast<std::chrono::milliseconds>(result - from));
+    auto next_trigger = schedules_.at(uuid).calculateNextTrigger(current_time.get_local_time());
+    if (!next_trigger)
+      return utils::TaskRescheduleInfo::Done();
+    return utils::TaskRescheduleInfo::RetryIn(ceil<milliseconds>(*next_trigger-current_time.get_local_time()));
   }
   return utils::TaskRescheduleInfo::Done();
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

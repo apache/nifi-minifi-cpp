@@ -17,43 +17,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
-#define LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
+#pragma once
 
 #include <chrono>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Processor.h"
 #include "core/ProcessSessionFactory.h"
-#include "Cron.h"
+#include "utils/Cron.h"
 #include "ThreadedSchedulingAgent.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
-// CronDrivenSchedulingAgent Class
 class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
  public:
-  // Constructor
-  /*!
-   * Create a new event driven scheduling agent.
-   */
-  CronDrivenSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider, std::shared_ptr<core::Repository> repo,
-                            std::shared_ptr<core::Repository> flow_repo, std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configuration,
-                            utils::ThreadPool<utils::TaskRescheduleInfo> &thread_pool)
-      : ThreadedSchedulingAgent(controller_service_provider, repo, flow_repo, content_repo, configuration, thread_pool) {
+  CronDrivenSchedulingAgent(const gsl::not_null<core::controller::ControllerServiceProvider*> controller_service_provider,
+                            std::shared_ptr<core::Repository> repo,
+                            std::shared_ptr<core::Repository> flow_repo,
+                            std::shared_ptr<core::ContentRepository> content_repo,
+                            std::shared_ptr<Configure> configuration,
+                            utils::ThreadPool<utils::TaskRescheduleInfo>& thread_pool)
+      : ThreadedSchedulingAgent(controller_service_provider, std::move(repo), std::move(flow_repo), std::move(content_repo), std::move(configuration), thread_pool) {
   }
-  // Destructor
+
+  CronDrivenSchedulingAgent(const CronDrivenSchedulingAgent& parent) = delete;
+  CronDrivenSchedulingAgent& operator=(const CronDrivenSchedulingAgent& parent) = delete;
   ~CronDrivenSchedulingAgent() override = default;
-  // Run function for the thread
-  utils::TaskRescheduleInfo run(core::Processor* processor, const std::shared_ptr<core::ProcessContext> &processContext,
-      const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+
+  utils::TaskRescheduleInfo run(core::Processor *processor,
+                                const std::shared_ptr<core::ProcessContext>& processContext,
+                                const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
   void stop() override {
     std::lock_guard<std::mutex> locK(mutex_);
@@ -63,16 +61,8 @@ class CronDrivenSchedulingAgent : public ThreadedSchedulingAgent {
 
  private:
   std::mutex mutex_;
-  std::map<utils::Identifier, Bosma::Cron> schedules_;
-  std::map<utils::Identifier, std::chrono::system_clock::time_point> last_exec_;
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-  CronDrivenSchedulingAgent(const CronDrivenSchedulingAgent &parent);
-  CronDrivenSchedulingAgent &operator=(const CronDrivenSchedulingAgent &parent);
+  std::map<utils::Identifier, utils::Cron> schedules_;
+  std::map<utils::Identifier, date::local_time<std::chrono::seconds>> last_exec_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CRONDRIVENSCHEDULINGAGENT_H_
+}  // namespace org::apache::nifi::minifi

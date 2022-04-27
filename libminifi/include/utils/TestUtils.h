@@ -28,6 +28,10 @@
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
+#ifdef WIN32
+#include "date/tz.h"
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -64,6 +68,10 @@ class ManualClock : public timeutils::Clock {
  private:
   std::chrono::milliseconds time_{0};
 };
+
+#ifdef WIN32
+void dateSetInstall(const std::string& install);
+#endif
 
 }  // namespace utils
 }  // namespace minifi

@@ -47,7 +47,7 @@ endif()
 
 FetchContent_Declare(date_src
     GIT_REPOSITORY https://github.com/HowardHinnant/date.git
-    GIT_TAG        v3.0.0  # adjust tag/branch/commit as needed
+    GIT_TAG        v3.0.1  # adjust tag/branch/commit as needed
 )
 FetchContent_GetProperties(date_src)
 if (NOT date_src_POPULATED)
@@ -66,7 +66,7 @@ if (NOT date_src_POPULATED)
     target_compile_options(date-tz PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/w,-w>)
     target_compile_definitions(date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0)
     if (WIN32)
-        target_compile_definitions(date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=0)
+        target_compile_definitions(date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=0 PUBLIC TZ_DATA_DIR="${tzdata_SOURCE_DIR}")
     else()
         target_compile_definitions(date-tz PUBLIC USE_OS_TZDB=1)
     endif()
