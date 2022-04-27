@@ -883,7 +883,7 @@ std::string YamlConfiguration::getOrGenerateId(const YAML::Node& yamlNode, const
   return id;
 }
 
-std::string YamlConfiguration::getRequiredIdField(const YAML::Node& yaml_node, std::string_view yaml_section, std::string error_message) {
+std::string YamlConfiguration::getRequiredIdField(const YAML::Node& yaml_node, std::string_view yaml_section, const std::string& error_message) {
   yaml::checkRequiredField(yaml_node, "id", yaml_section, error_message);
   auto id = yaml_node["id"].as<std::string>();
   addNewId(id);
@@ -915,11 +915,10 @@ YAML::Node YamlConfiguration::getOptionalField(const YAML::Node& yamlNode, const
 }
 
 void YamlConfiguration::addNewId(const std::string& uuid) {
-  if (uuids_.find(uuid) != uuids_.end()) {
+  const auto [_, success] = uuids_.insert(uuid);
+  if (!success) {
     throw Exception(ExceptionType::GENERAL_EXCEPTION, "UUID " + uuid + " is duplicated in the flow configuration");
   }
-
-  uuids_.insert(uuid);
 }
 
 } /* namespace core */
