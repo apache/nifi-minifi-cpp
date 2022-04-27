@@ -923,6 +923,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Follow Redirects|true||Follow HTTP redirects issued by remote server.|
 |HTTP Method|GET||HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.|
 |Include Date Header|true||Include an RFC-2616 Date header in the request.|
+|**Invalid HTTP Header Field Handling Strategy**|fail|fail<br/>transform<br/>drop|Indicates what should happen when an attribute's name is not a valid HTTP header field name.<br/>Options:<br/>fail - flow file is transferred to failure<br/>transform - invalid characters are replaced<br/>drop - drops invalid attributes from HTTP message|
 |invokehttp-proxy-password|||Password to set when authenticating against proxy|
 |invokehttp-proxy-username|||Username to set when authenticating against proxy|
 |Penalize on "No Retry"|false||Enabling this property will penalize FlowFiles that are routed to the "No Retry" relationship.|

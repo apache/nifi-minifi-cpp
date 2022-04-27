@@ -34,27 +34,41 @@
 #include "core/ProcessorNode.h"
 #include "processors/LogAttribute.h"
 #include "utils/gsl.h"
-#include "processors/GenerateFlowFile.h"
+#include "SingleProcessorTestController.h"
 
-namespace {
+namespace org::apache::nifi::minifi::test {
+
 class TestHTTPServer {
  public:
   TestHTTPServer();
   static constexpr const char* PROCESSOR_NAME = "my_http_server";
   static constexpr const char* URL = "http://localhost:8681/testytesttest";
 
+  void trigger() {
+    LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
+    LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::LogAttribute>();
+    test_plan_->reset();
+    test_controller_.runSession(test_plan_);
+  }
+
  private:
   TestController test_controller_;
+  std::shared_ptr<core::Processor> listen_http_;
+  std::shared_ptr<core::Processor> log_attribute_;
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan();
 };
 
 TestHTTPServer::TestHTTPServer() {
-  std::shared_ptr<core::Processor> listen_http = test_plan_->addProcessor("ListenHTTP", PROCESSOR_NAME);
-  test_plan_->setProperty(listen_http, org::apache::nifi::minifi::processors::ListenHTTP::BasePath.getName(), "/testytesttest");
-  test_plan_->setProperty(listen_http, org::apache::nifi::minifi::processors::ListenHTTP::Port.getName(), "8681");
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
+  LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::LogAttribute>();
+
+  listen_http_ = test_plan_->addProcessor("ListenHTTP", PROCESSOR_NAME);
+  log_attribute_ = test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
+  test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::BasePath.getName(), "testytesttest");
+  test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::Port.getName(), "8681");
+  test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::HeadersAsAttributesRegex.getName(), ".*");
   test_controller_.runSession(test_plan_);
 }
-}  // namespace
 
 TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   TestController testController;
@@ -251,7 +265,7 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
 
   plan->setProperty(invokehttp, InvokeHTTP::Method.getName(), "GET");
-  plan->setProperty(invokehttp, InvokeHTTP::URL.getName(), TestHTTPServer::URL);
+  plan->setProperty(invokehttp, InvokeHTTP::URL.getName(), "http://localhost:8681/invalid");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
 
   constexpr const char* PENALIZE_LOG_PATTERN = "Penalizing [0-9a-f-]+ for [0-9]+ms at invokehttp";
@@ -289,3 +303,66 @@ TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
 
   REQUIRE(LogTestController::getInstance().contains("Adding http response body to flow file attribute http.type"));
 }
+
+TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in HTTP headers", "[httptest1]") {
+  using minifi::processors::InvokeHTTP;
+  TestHTTPServer http_server;
+
+  LogTestController::getInstance().setDebug<InvokeHTTP>();
+  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invokehttp};
+
+  invokehttp->setProperty(InvokeHTTP::Method, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::Success, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
+  test_controller.enqueueFlowFile("data", {{"invalid header", "value"}});
+  const auto result = test_controller.trigger();
+  auto file_contents = result.at(InvokeHTTP::RelFailure);
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
+}
+
+TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]") {
+  using minifi::processors::InvokeHTTP;
+  TestHTTPServer http_server;
+
+  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invokehttp};
+  LogTestController::getInstance().setTrace<InvokeHTTP>();
+
+  invokehttp->setProperty(InvokeHTTP::Method, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "transform");
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
+  test_controller.enqueueFlowFile("data", {{"invalid header", "value"}});
+  const auto result = test_controller.trigger();
+  auto file_contents = result.at(InvokeHTTP::Success);
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
+  http_server.trigger();
+  REQUIRE(LogTestController::getInstance().contains("key:invalid-header value:value"));
+}
+
+TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]") {
+  using minifi::processors::InvokeHTTP;
+  TestHTTPServer http_server;
+
+  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invokehttp};
+  LogTestController::getInstance().setTrace<InvokeHTTP>();
+
+  invokehttp->setProperty(InvokeHTTP::Method, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
+  test_controller.enqueueFlowFile("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
+  const auto result = test_controller.trigger();
+  auto file_contents = result.at(InvokeHTTP::Success);
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
+  http_server.trigger();
+  REQUIRE(LogTestController::getInstance().contains("key:legit-header value:value1"));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
+}
+
+}  // namespace org::apache::nifi::minifi::test

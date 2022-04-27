@@ -39,12 +39,9 @@
 #include "ResourceClaim.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const char *InvokeHTTP::ProcessorName = "InvokeHTTP";
 std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
@@ -115,6 +112,16 @@ core::Property InvokeHTTP::AlwaysOutputResponse("Always Output Response", "Will 
 core::Property InvokeHTTP::PenalizeOnNoRetry("Penalize on \"No Retry\"", "Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.", "false");
 
 core::Property InvokeHTTP::DisablePeerVerification("Disable Peer Verification", "Disables peer verification for the SSL session", "false");
+
+core::Property InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy(
+    core::PropertyBuilder::createProperty("Invalid HTTP Header Field Handling Strategy")
+      ->withDescription("Indicates what should happen when an attribute's name is not a valid HTTP header field name. "
+        "Options: fail - flow file is transferred to failure, transform - invalid characters are replaced, drop - drops invalid attributes from HTTP message")
+      ->isRequired(true)
+      ->withDefaultValue<std::string>(toString(InvalidHTTPHeaderFieldHandlingOption::FAIL))
+      ->withAllowableValues<std::string>(InvalidHTTPHeaderFieldHandlingOption::values())
+      ->build());
+
 const char* InvokeHTTP::STATUS_CODE = "invokehttp.status.code";
 const char* InvokeHTTP::STATUS_MESSAGE = "invokehttp.status.message";
 const char* InvokeHTTP::RESPONSE_BODY = "invokehttp.response.body";
@@ -142,32 +149,29 @@ core::Relationship InvokeHTTP::RelFailure("failure", "The original FlowFile will
 
 void InvokeHTTP::initialize() {
   logger_->log_trace("Initializing InvokeHTTP");
-
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(Method);
-  properties.insert(URL);
-  properties.insert(ConnectTimeout);
-  properties.insert(ReadTimeout);
-  properties.insert(DateHeader);
-  properties.insert(AttributesToSend);
-  properties.insert(SSLContext);
-  properties.insert(ProxyHost);
-  properties.insert(ProxyPort);
-  properties.insert(ProxyUsername);
-  properties.insert(ProxyPassword);
-  properties.insert(UseChunkedEncoding);
-  properties.insert(ContentType);
-  properties.insert(SendBody);
-  properties.insert(SendMessageBody);
-  properties.insert(DisablePeerVerification);
-  properties.insert(AlwaysOutputResponse);
-  properties.insert(FollowRedirects);
-  properties.insert(PropPutOutputAttributes);
-  properties.insert(PenalizeOnNoRetry);
-
-  setSupportedProperties(properties);
-  // Set the supported relationships
+  setSupportedProperties({
+    Method,
+    URL,
+    ConnectTimeout,
+    ReadTimeout,
+    DateHeader,
+    AttributesToSend,
+    SSLContext,
+    ProxyHost,
+    ProxyPort,
+    ProxyUsername,
+    ProxyPassword,
+    UseChunkedEncoding,
+    ContentType,
+    SendBody,
+    SendMessageBody,
+    DisablePeerVerification,
+    AlwaysOutputResponse,
+    FollowRedirects,
+    PropPutOutputAttributes,
+    PenalizeOnNoRetry,
+    InvalidHTTPHeaderFieldHandlingStrategy
+  });
   setSupportedRelationships({Success, RelResponse, RelFailure, RelRetry, RelNoRetry});
 }
 
@@ -258,9 +262,9 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   context->getProperty(ProxyPassword.getName(), proxy_.password);
   context->getProperty(FollowRedirects.getName(), follow_redirects_);
   context->getProperty(SendMessageBody.getName(), send_body_);
-}
 
-InvokeHTTP::~InvokeHTTP() = default;
+  invalid_http_header_field_handling_strategy_ = utils::parseEnumProperty<InvalidHTTPHeaderFieldHandlingOption>(*context, InvalidHTTPHeaderFieldHandlingStrategy);
+}
 
 std::string InvokeHTTP::generateId() {
   return utils::IdGenerator::getIdGenerator()->generate().to_string();
@@ -268,6 +272,20 @@ std::string InvokeHTTP::generateId() {
 
 bool InvokeHTTP::emitFlowFile(const std::string &method) {
   return ("POST" == method || "PUT" == method || "PATCH" == method);
+}
+
+std::optional<std::map<std::string, std::string>> InvokeHTTP::validateAttributesAgainstHTTPHeaderRules(const std::map<std::string, std::string>& attributes) {
+  std::map<std::string, std::string> result;
+  for (const auto& [attribute_name, attribute_value] : attributes) {
+    if (utils::HTTPClient::isValidHTTPHeaderField(attribute_name)) {
+      result.emplace(attribute_name, attribute_value);
+    } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::TRANSFORM) {
+      result.emplace(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName(attribute_name), attribute_value);
+    } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::FAIL) {
+      return std::nullopt;
+    }
+  }
+  return result;
 }
 
 void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -348,7 +366,12 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 
   // append all headers
-  client.build_header_list(attribute_to_send_regex_, flowFile->getAttributes());
+  auto attributes_in_headers = validateAttributesAgainstHTTPHeaderRules(flowFile->getAttributes());
+  if (!attributes_in_headers) {
+    session->transfer(flowFile, RelFailure);
+    return;
+  }
+  client.build_header_list(attribute_to_send_regex_, *attributes_in_headers);
 
   logger_->log_trace("InvokeHTTP -- curl performed");
   if (client.submit()) {
@@ -449,8 +472,4 @@ REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with 
     "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
     "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

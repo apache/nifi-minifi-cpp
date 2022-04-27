@@ -95,3 +95,21 @@ TEST_CASE("HTTPClient escape test") {
   CHECK(client.escape("Hello Günter") == "Hello%20G%C3%BCnter");
   CHECK(client.escape("шеллы") == "%D1%88%D0%B5%D0%BB%D0%BB%D1%8B");
 }
+
+TEST_CASE("HTTPClient isValidHTTPHeaderField test") {
+  CHECK_FALSE(utils::HTTPClient::isValidHTTPHeaderField(""));
+  CHECK(utils::HTTPClient::isValidHTTPHeaderField("valid"));
+  CHECK_FALSE(utils::HTTPClient::isValidHTTPHeaderField(" "));
+  CHECK_FALSE(utils::HTTPClient::isValidHTTPHeaderField(std::string("invalid") + static_cast<char>(11) + "character"));
+  CHECK_FALSE(utils::HTTPClient::isValidHTTPHeaderField(std::string("invalid") + static_cast<char>(128) + "character"));
+  CHECK_FALSE(utils::HTTPClient::isValidHTTPHeaderField("contains:invalid"));
+}
+
+TEST_CASE("HTTPClient replaceInvalidCharactersInHTTPHeaderFieldName test") {
+  CHECK(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName("") == "");
+  CHECK(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName("valid") == "valid");
+  CHECK(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName(" ") == "-");
+  CHECK(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName(std::string("invalid") + static_cast<char>(11) + "character") == "invalid-character");
+  CHECK(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName(std::string("invalid") + static_cast<char>(128) + "character") == "invalid-character");
+  CHECK(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName("contains:invalid") == "contains-invalid");
+}
