@@ -84,7 +84,7 @@ jobs:
           win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /K /L /R /Z /N /RO
         shell: cmd
       - name: test
-        run: cd ..\b && ctest --timeout 300 --parallel 8 -C Release --output-on-failure
+        run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
       - name: linter
         run: cd ..\b && msbuild -maxCpuCount linter.vcxproj
