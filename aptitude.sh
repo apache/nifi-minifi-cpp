@@ -23,7 +23,7 @@ verify_enable_platform(){
 add_os_flags() {
     CC=gcc
     CXX=g++
-    if [[ "$OS" = Ubuntu* ]] && [ "$OS_MAJOR" -lt 22 ]; then
+    if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
         CC=gcc-11
         CXX=g++-11
     fi
@@ -33,7 +33,7 @@ add_os_flags() {
 }
 bootstrap_cmake(){
     ## on Ubuntu install the latest CMake
-    if [[ "$OS" = Ubuntu* ]] && [ "$OS_MAJOR" -lt 22 ]; then
+    if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
         echo "Adding KitWare CMake apt repository..."
         sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg software-properties-common wget
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | sudo apt-key add -
@@ -44,7 +44,7 @@ bootstrap_cmake(){
 build_deps(){
     ## need to account for debian
     compiler_pkgs="gcc g++"
-    if [[ "$OS" = Ubuntu* ]] && [ "$OS_MAJOR" -lt 22 ]; then
+    if [[ "$OS" = Ubuntu* && "$OS_MAJOR" -lt 22 ]]; then
         sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
         compiler_pkgs="gcc-11 g++-11"
     fi
