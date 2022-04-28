@@ -1197,7 +1197,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |Log Level||debug<br>error<br>info<br>trace<br>warn<br>|The Log Level to use when logging the Attributes|
 |Log Payload|false||If true, the FlowFile's payload will be logged, in addition to its attributes.otherwise, just the Attributes will be logged|
 |Log Prefix|||Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.|
-|Maximum Payload Line Length|80||The logged payload will be broken into lines this long. 0 means no newlines will be added.|
+|Maximum Payload Line Length|0||The logged payload will be broken into lines this long. 0 means no newlines will be added.|
 ### Relationships
 
 | Name | Description |
