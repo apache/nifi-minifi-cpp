@@ -329,11 +329,10 @@ bool RawSiteToSiteClient::handShake() {
       logPortStateError("full");
       return false;
     case UNAUTHORIZED:
-      logger_->log_error("Site2Site HandShake failed: UNAUTHORIZED");
+      logger_->log_error("Site2Site HandShake on port %s failed: UNAUTHORIZED", port_id_.to_string());
       return false;
-    // Unknown error
     default:
-      logger_->log_error("HandShake Failed because of unknown respond code %d", code);
+      logger_->log_error("Site2Site HandShake on port %s failed: unknown respond code %d", port_id_.to_string(), code);
       return false;
   }
 }
