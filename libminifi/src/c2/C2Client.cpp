@@ -67,6 +67,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     logger_->log_info("Agent class is not predefined");
   }
 
+  // Set a persistent fallback agent id. This is needed so that the C2 server can identify the same agent after a restart, even if nifi.c2.agent.identifier is not specified.
   if (auto id = configuration_->get(Configuration::nifi_c2_agent_identifier_fallback)) {
     configuration_->setFallbackAgentIdentifier(*id);
   } else {
