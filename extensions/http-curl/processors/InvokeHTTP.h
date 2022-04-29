@@ -48,7 +48,6 @@ class InvokeHTTP : public core::Processor {
       : Processor(name, uuid) {
     setTriggerWhenEmpty(true);
   }
-  EXTENSIONAPI static const char *ProcessorName;
   EXTENSIONAPI static std::string DefaultContentType;
 
   EXTENSIONAPI static core::Property Method;
@@ -91,20 +90,8 @@ class InvokeHTTP : public core::Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  /**
-   * Provides a reference to the URL.
-   */
-  const std::string &getUrl() {
-    return url_;
-  }
 
- protected:
-  /**
-   * Generate a transaction ID
-   * @return transaction ID string.
-   */
-  std::string generateId();
-
+ private:
   /**
    * Routes the flowfile to the proper destination
    * @param request request flow file record
@@ -116,16 +103,10 @@ class InvokeHTTP : public core::Processor {
    */
   void route(const std::shared_ptr<core::FlowFile> &request, const std::shared_ptr<core::FlowFile> &response, const std::shared_ptr<core::ProcessSession> &session,
              const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode);
-  /**
-   * Determine if we should emit a new flowfile based on our activity
-   * @param method method type
-   * @return result of the evaluation.
-   */
-  bool emitFlowFile(const std::string &method);
+  bool shouldEmitFlowFile() const;
+  std::optional<std::map<std::string, std::string>> validateAttributesAgainstHTTPHeaderRules(const std::map<std::string, std::string>& attributes) const;
 
-  std::optional<std::map<std::string, std::string>> validateAttributesAgainstHTTPHeaderRules(const std::map<std::string, std::string>& attributes);
-
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_{nullptr};
+  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::string method_;
   std::string url_;
   bool date_header_include_{true};
@@ -144,8 +125,6 @@ class InvokeHTTP : public core::Processor {
   bool follow_redirects_{true};
   bool send_body_{true};
   InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_;
-
- private:
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger()};
 };
 
