@@ -883,7 +883,7 @@ std::string YamlConfiguration::getOrGenerateId(const YAML::Node& yamlNode, const
   return id;
 }
 
-std::string YamlConfiguration::getRequiredIdField(const YAML::Node& yaml_node, std::string_view yaml_section, const std::string& error_message) {
+std::string YamlConfiguration::getRequiredIdField(const YAML::Node& yaml_node, std::string_view yaml_section, std::string_view error_message) {
   yaml::checkRequiredField(yaml_node, "id", yaml_section, error_message);
   auto id = yaml_node["id"].as<std::string>();
   addNewId(id);

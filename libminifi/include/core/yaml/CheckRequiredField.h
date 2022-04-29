@@ -53,9 +53,9 @@ std::string buildErrorMessage(const YAML::Node &yaml_node, const std::vector<std
  *                               not present in 'yaml_node'
  */
 void checkRequiredField(
-    const YAML::Node &yaml_node, std::string_view field_name, std::string_view yaml_section = "", std::string error_message = "");
+    const YAML::Node &yaml_node, std::string_view field_name, std::string_view yaml_section = "", std::string_view error_message = "");
 
-std::string getRequiredField(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_names, std::string_view yaml_section, std::string error_message = {});
+std::string getRequiredField(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_names, std::string_view yaml_section, std::string_view error_message = {});
 
 }  // namespace yaml
 }  // namespace core

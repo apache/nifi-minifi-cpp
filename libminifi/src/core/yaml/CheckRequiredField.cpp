@@ -51,25 +51,25 @@ std::string buildErrorMessage(const YAML::Node &yaml_node, const std::vector<std
   return err_msg;
 }
 
-void checkRequiredField(const YAML::Node &yaml_node, std::string_view field_name, std::string_view yaml_section, std::string error_message) {
+void checkRequiredField(const YAML::Node &yaml_node, std::string_view field_name, std::string_view yaml_section, std::string_view error_message) {
   if (!isFieldPresent(yaml_node, field_name)) {
     if (error_message.empty()) {
-      error_message = buildErrorMessage(yaml_node, std::vector<std::string>{std::string(field_name)}, yaml_section);
+      throw std::invalid_argument(buildErrorMessage(yaml_node, std::vector<std::string>{std::string(field_name)}, yaml_section));
     }
-    throw std::invalid_argument(error_message);
+    throw std::invalid_argument(error_message.data());
   }
 }
 
-std::string getRequiredField(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_names, std::string_view yaml_section, std::string error_message) {
+std::string getRequiredField(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_names, std::string_view yaml_section, std::string_view error_message) {
   for (const auto& name : alternate_names) {
     if (yaml::isFieldPresent(yaml_node, name)) {
       return yaml_node[name].as<std::string>();
     }
   }
   if (error_message.empty()) {
-    error_message = buildErrorMessage(yaml_node, alternate_names, yaml_section);
+    throw std::invalid_argument(buildErrorMessage(yaml_node, alternate_names, yaml_section));
   }
-  throw std::invalid_argument(error_message);
+  throw std::invalid_argument(error_message.data());
 }
 
 }  // namespace yaml
