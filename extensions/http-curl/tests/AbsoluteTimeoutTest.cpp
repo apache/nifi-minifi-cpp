@@ -29,7 +29,7 @@ int main() {
 
   std::string port = "12324";
   std::string rootURI =  "/";
-  TimeoutingHTTPHandler handler({35, 100ms});
+  TimeoutingHTTPHandler handler(std::vector<std::chrono::milliseconds>(35, 100ms));
 
   TestServer server(port, rootURI, &handler);
 
