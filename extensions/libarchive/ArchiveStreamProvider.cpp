@@ -33,14 +33,14 @@ class ArchiveStreamProviderImpl : public ArchiveStreamProvider {
 
   std::unique_ptr<WriteArchiveStream> createWriteStream(int compress_level, const std::string& compress_format,
                                                         std::shared_ptr<OutputStream> sink, std::shared_ptr<core::logging::Logger> logger) override {
-    CompressionFormat format = CompressionFormat::parse(compress_format.c_str(), CompressionFormat{});
+    auto format = magic_enum::enum_cast<CompressionFormat>(compress_format);
     if (!format) {
       if (logger) {
         logger->log_error("Unrecognized compression format '%s'", compress_format);
       }
       return nullptr;
     }
-    return std::make_unique<WriteArchiveStreamImpl>(compress_level, format, std::move(sink));
+    return std::make_unique<WriteArchiveStreamImpl>(compress_level, *format, std::move(sink));
   }
 
   std::unique_ptr<ReadArchiveStream> createReadStream(std::shared_ptr<InputStream> archive_stream) override {

@@ -206,7 +206,7 @@ void ControllerSocketProtocol::writeQueueSizesResponse(io::BaseStream *stream) {
     response << "not found";
   }
   io::BufferStream resp;
-  uint8_t op = Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(Operation::describe);
   resp.write(&op, 1);
   resp.write(response.str());
   stream->write(resp.getBuffer());
@@ -218,7 +218,7 @@ void ControllerSocketProtocol::writeComponentsResponse(io::BaseStream *stream) {
     components.emplace_back(component.getComponentName(), component.isRunning());
   });
   io::BufferStream resp;
-  uint8_t op = Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(Operation::describe);
   resp.write(&op, 1);
   resp.write(gsl::narrow<uint16_t>(components.size()));
   for (const auto& [name, is_running] : components) {
@@ -231,7 +231,7 @@ void ControllerSocketProtocol::writeComponentsResponse(io::BaseStream *stream) {
 
 void ControllerSocketProtocol::writeConnectionsResponse(io::BaseStream *stream) {
   io::BufferStream resp;
-  uint8_t op = Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(Operation::describe);
   resp.write(&op, 1);
   std::unordered_set<std::string> connections;
   if (auto controller_socket_reporter = controller_socket_reporter_.lock()) {
@@ -248,7 +248,7 @@ void ControllerSocketProtocol::writeConnectionsResponse(io::BaseStream *stream) 
 
 void ControllerSocketProtocol::writeGetFullResponse(io::BaseStream *stream) {
   io::BufferStream resp;
-  uint8_t op = Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(Operation::describe);
   resp.write(&op, 1);
   std::unordered_set<std::string> full_connections;
   if (auto controller_socket_reporter = controller_socket_reporter_.lock()) {
@@ -265,7 +265,7 @@ void ControllerSocketProtocol::writeGetFullResponse(io::BaseStream *stream) {
 
 void ControllerSocketProtocol::writeManifestResponse(io::BaseStream *stream) {
   io::BufferStream resp;
-  uint8_t op = Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(Operation::describe);
   resp.write(&op, 1);
   std::string manifest;
   if (auto controller_socket_reporter = controller_socket_reporter_.lock()) {
@@ -291,7 +291,7 @@ std::string ControllerSocketProtocol::getJstack() {
 
 void ControllerSocketProtocol::writeJstackResponse(io::BaseStream *stream) {
   io::BufferStream resp;
-  uint8_t op = Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(Operation::describe);
   resp.write(&op, 1);
   std::string jstack_response;
   if (auto controller_socket_reporter = controller_socket_reporter_.lock()) {
@@ -337,20 +337,21 @@ void ControllerSocketProtocol::handleCommand(io::BaseStream *stream) {
     return;
   }
 
-  switch (head) {
-    case Operation::START:
+  auto op = static_cast<Operation>(head);
+  switch (op) {
+    case Operation::start:
       handleStart(stream);
       break;
-    case Operation::STOP:
+    case Operation::stop:
       handleStop(stream);
       break;
-    case Operation::CLEAR:
+    case Operation::clear:
       handleClear(stream);
       break;
-    case Operation::UPDATE:
+    case Operation::update:
       handleUpdate(stream);
       break;
-    case Operation::DESCRIBE:
+    case Operation::describe:
       handleDescribe(stream);
       break;
     default:

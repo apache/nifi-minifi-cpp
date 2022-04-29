@@ -33,35 +33,82 @@
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
 
-namespace org::apache::nifi::minifi::processors {
+namespace org::apache::nifi::minifi::processors::route_text {
+enum class Routing {
+  DYNAMIC,
+  ALL,
+  ANY
+};
 
-namespace route_text {
-SMART_ENUM(Routing,
-  (DYNAMIC, "Dynamic Routing"),
-  (ALL, "Route On All"),
-  (ANY, "Route On Any")
-)
+enum class Matching {
+  STARTS_WITH,
+  ENDS_WITH,
+  CONTAINS,
+  EQUALS,
+  MATCHES_REGEX,
+  CONTAINS_REGEX,
+  EXPRESSION
+};
 
-SMART_ENUM(Matching,
-  (STARTS_WITH, "Starts With"),
-  (ENDS_WITH, "Ends With"),
-  (CONTAINS, "Contains"),
-  (EQUALS, "Equals"),
-  (MATCHES_REGEX, "Matches Regex"),
-  (CONTAINS_REGEX, "Contains Regex"),
-  (EXPRESSION, "Satisfies Expression")
-)
-
-SMART_ENUM(Segmentation,
-  (FULL_TEXT, "Full Text"),
-  (PER_LINE, "Per Line")
-)
+enum class Segmentation {
+  FULL_TEXT,
+  PER_LINE
+};
 
 enum class CasePolicy {
   CASE_SENSITIVE,
   IGNORE_CASE
 };
-}  // namespace route_text
+}  // namespace org::apache::nifi::minifi::processors::route_text
+
+namespace magic_enum::customize {
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::route_text::Routing>(org::apache::nifi::minifi::processors::route_text::Routing value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::route_text::Routing::DYNAMIC:
+      return "Dynamic Routing";
+    case org::apache::nifi::minifi::processors::route_text::Routing::ALL:
+      return "Route On All";
+    case org::apache::nifi::minifi::processors::route_text::Routing::ANY:
+      return "Route On Any";
+  }
+  return default_tag;
+}
+
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::route_text::Matching>(org::apache::nifi::minifi::processors::route_text::Matching value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::route_text::Matching::STARTS_WITH:
+      return "Starts With";
+    case org::apache::nifi::minifi::processors::route_text::Matching::ENDS_WITH:
+      return "Ends With";
+    case org::apache::nifi::minifi::processors::route_text::Matching::CONTAINS:
+      return "Contains";
+    case org::apache::nifi::minifi::processors::route_text::Matching::EQUALS:
+      return "Equals";
+    case org::apache::nifi::minifi::processors::route_text::Matching::MATCHES_REGEX:
+      return "Matches Regex";
+    case org::apache::nifi::minifi::processors::route_text::Matching::CONTAINS_REGEX:
+      return "Contains Regex";
+    case org::apache::nifi::minifi::processors::route_text::Matching::EXPRESSION:
+      return "Satisfies Expression";
+  }
+  return default_tag;
+}
+
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::route_text::Segmentation>(org::apache::nifi::minifi::processors::route_text::Segmentation value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::route_text::Segmentation::FULL_TEXT:
+      return "Full Text";
+    case org::apache::nifi::minifi::processors::route_text::Segmentation::PER_LINE:
+      return "Per Line";
+  }
+  return default_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::processors {
 
 class RouteText : public core::Processor {
  public:
@@ -70,21 +117,21 @@ class RouteText : public core::Processor {
       "to these user-defined properties is defined by the 'Matching Strategy'. The data is then routed according to "
       "these rules, routing each segment of the text individually.";
 
-  EXTENSIONAPI static constexpr auto RoutingStrategy = core::PropertyDefinitionBuilder<route_text::Routing::length>::createProperty("Routing Strategy")
+  EXTENSIONAPI static constexpr auto RoutingStrategy = core::PropertyDefinitionBuilder<magic_enum::enum_count<route_text::Routing>()>::createProperty("Routing Strategy")
       .withDescription("Specifies how to determine which Relationship(s) to use when evaluating the segments "
           "of incoming text against the 'Matching Strategy' and user-defined properties. "
           "'Dynamic Routing' routes to all the matching dynamic relationships (or 'unmatched' if none matches). "
           "'Route On All' routes to 'matched' iff all dynamic relationships match. "
           "'Route On Any' routes to 'matched' iff any of the dynamic relationships match. ")
       .isRequired(true)
-      .withDefaultValue(toStringView(route_text::Routing::DYNAMIC))
-      .withAllowedValues(route_text::Routing::values)
+      .withDefaultValue(magic_enum::enum_name(route_text::Routing::DYNAMIC))
+      .withAllowedValues(magic_enum::enum_names<route_text::Routing>())
       .build();
-  EXTENSIONAPI static constexpr auto MatchingStrategy = core::PropertyDefinitionBuilder<route_text::Matching::length>::createProperty("Matching Strategy")
+  EXTENSIONAPI static constexpr auto MatchingStrategy = core::PropertyDefinitionBuilder<magic_enum::enum_count<route_text::Matching>()>::createProperty("Matching Strategy")
       .withDescription("Specifies how to evaluate each segment of incoming text against the user-defined properties. "
           "Possible values are: 'Starts With', 'Ends With', 'Contains', 'Equals', 'Matches Regex', 'Contains Regex', 'Satisfies Expression'.")
       .isRequired(true)
-      .withAllowedValues(route_text::Matching::values)
+      .withAllowedValues(magic_enum::enum_names<route_text::Matching>())
       .build();
   EXTENSIONAPI static constexpr auto TrimWhitespace = core::PropertyDefinitionBuilder<>::createProperty("Ignore Leading/Trailing Whitespace")
       .withDescription("Indicates whether or not the whitespace at the beginning and end should be ignored when evaluating a segment.")
@@ -110,12 +157,12 @@ class RouteText : public core::Processor {
   EXTENSIONAPI static constexpr auto GroupingFallbackValue = core::PropertyDefinitionBuilder<>::createProperty("Grouping Fallback Value")
       .withDescription("If the 'Grouping Regular Expression' is specified and the matching fails, this value will be considered the group of the segment.")
       .build();
-  EXTENSIONAPI static constexpr auto SegmentationStrategy = core::PropertyDefinitionBuilder<route_text::Segmentation::length>::createProperty("Segmentation Strategy")
+  EXTENSIONAPI static constexpr auto SegmentationStrategy = core::PropertyDefinitionBuilder<magic_enum::enum_count<route_text::Segmentation>()>::createProperty("Segmentation Strategy")
       .withDescription("Specifies what portions of the FlowFile content constitutes a single segment to be processed. "
                       "'Full Text' considers the whole content as a single segment, 'Per Line' considers each line of the content as a separate segment")
       .isRequired(true)
-      .withDefaultValue(toStringView(route_text::Segmentation::PER_LINE))
-      .withAllowedValues(route_text::Segmentation::values)
+      .withDefaultValue(magic_enum::enum_name(route_text::Segmentation::PER_LINE))
+      .withAllowedValues(magic_enum::enum_names<route_text::Segmentation>())
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 7>{
       RoutingStrategy,

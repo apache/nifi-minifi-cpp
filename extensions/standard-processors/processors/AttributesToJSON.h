@@ -40,14 +40,28 @@
 #include "utils/Export.h"
 #include "utils/RegexUtils.h"
 
-namespace org::apache::nifi::minifi::processors {
+namespace org::apache::nifi::minifi::processors::attributes_to_json {
+enum class WriteDestination {
+    FLOWFILE_ATTRIBUTE,
+    FLOWFILE_CONTENT
+};
+}  // namespace org::apache::nifi::minifi::processors::attributes_to_json
 
-namespace attributes_to_json {
-SMART_ENUM(WriteDestination,
-    (FLOWFILE_ATTRIBUTE, "flowfile-attribute"),
-    (FLOWFILE_CONTENT, "flowfile-content")
-)
-}  // namespace attributes_to_json
+namespace magic_enum::customize {
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination>(
+    org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination::FLOWFILE_ATTRIBUTE:
+      return "flowfile-attribute";
+    case org::apache::nifi::minifi::processors::attributes_to_json::WriteDestination::FLOWFILE_CONTENT:
+      return "flowfile-content";
+  }
+  return default_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::processors {
 
 class AttributesToJSON : public core::Processor {
  public:
@@ -67,8 +81,8 @@ class AttributesToJSON : public core::Processor {
       .withDescription("Control if JSON value is written as a new flowfile attribute 'JSONAttributes' or written in the flowfile content. "
           "Writing to flowfile content will overwrite any existing flowfile content.")
       .isRequired(true)
-      .withDefaultValue(toStringView(attributes_to_json::WriteDestination::FLOWFILE_ATTRIBUTE))
-      .withAllowedValues(attributes_to_json::WriteDestination::values)
+      .withDefaultValue(magic_enum::enum_name(attributes_to_json::WriteDestination::FLOWFILE_ATTRIBUTE))
+      .withAllowedValues(magic_enum::enum_names<attributes_to_json::WriteDestination>())
       .build();
   EXTENSIONAPI static constexpr auto IncludeCoreAttributes = core::PropertyDefinitionBuilder<>::createProperty("Include Core Attributes")
       .withDescription("Determines if the FlowFile core attributes which are contained in every FlowFile should be included in the final JSON value generated.")

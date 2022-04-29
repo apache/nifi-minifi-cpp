@@ -103,7 +103,7 @@ bool PublishMQTT::sendMessage(const std::vector<std::byte>& buffer, const std::s
   MQTTAsync_message message_to_publish = MQTTAsync_message_initializer;
   message_to_publish.payload = const_cast<std::byte*>(buffer.data());
   message_to_publish.payloadlen = buffer.size();
-  message_to_publish.qos = qos_.value();
+  message_to_publish.qos = static_cast<int>(qos_);
   message_to_publish.retained = retain_;
 
   setMqtt5Properties(message_to_publish, content_type, flow_file);

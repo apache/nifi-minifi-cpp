@@ -35,53 +35,106 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-SMART_ENUM(EvaluationModeType,
-  (LINE_BY_LINE, "Line-by-Line"),
-  (ENTIRE_TEXT, "Entire text")
-)
+enum class EvaluationModeType {
+  LINE_BY_LINE,
+  ENTIRE_TEXT
+};
 
-SMART_ENUM(LineByLineEvaluationModeType,
-  (ALL, "All"),
-  (FIRST_LINE, "First-Line"),
-  (LAST_LINE, "Last-Line"),
-  (EXCEPT_FIRST_LINE, "Except-First-Line"),
-  (EXCEPT_LAST_LINE, "Except-Last-Line")
-)
+enum class LineByLineEvaluationModeType {
+  ALL,
+  FIRST_LINE,
+  LAST_LINE,
+  EXCEPT_FIRST_LINE,
+  EXCEPT_LAST_LINE
+};
 
-SMART_ENUM(ReplacementStrategyType,
-  (PREPEND, "Prepend"),
-  (APPEND, "Append"),
-  (REGEX_REPLACE, "Regex Replace"),
-  (LITERAL_REPLACE, "Literal Replace"),
-  (ALWAYS_REPLACE, "Always Replace"),
-  (SUBSTITUTE_VARIABLES, "Substitute Variables")
-)
+enum class ReplacementStrategyType {
+  PREPEND,
+  APPEND,
+  REGEX_REPLACE,
+  LITERAL_REPLACE,
+  ALWAYS_REPLACE,
+  SUBSTITUTE_VARIABLES
+};
+
+}  // namespace org::apache::nifi::minifi::processors
+
+namespace magic_enum::customize {
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::EvaluationModeType>(org::apache::nifi::minifi::processors::EvaluationModeType value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::EvaluationModeType::LINE_BY_LINE:
+      return "Line-by-Line";
+    case org::apache::nifi::minifi::processors::EvaluationModeType::ENTIRE_TEXT:
+      return "Entire text";
+  }
+  return default_tag;
+}
+
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::LineByLineEvaluationModeType>(org::apache::nifi::minifi::processors::LineByLineEvaluationModeType value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::ALL:
+      return "All";
+    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::FIRST_LINE:
+      return "First-Line";
+    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::LAST_LINE:
+      return "Last-Line";
+    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::EXCEPT_FIRST_LINE:
+      return "Except-First-Line";
+    case org::apache::nifi::minifi::processors::LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
+      return "Except-Last-Line";
+  }
+  return default_tag;
+}
+
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::ReplacementStrategyType>(org::apache::nifi::minifi::processors::ReplacementStrategyType value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::ReplacementStrategyType::PREPEND:
+      return "Prepend";
+    case org::apache::nifi::minifi::processors::ReplacementStrategyType::APPEND:
+      return "Append";
+    case org::apache::nifi::minifi::processors::ReplacementStrategyType::REGEX_REPLACE:
+      return "Regex Replace";
+    case org::apache::nifi::minifi::processors::ReplacementStrategyType::LITERAL_REPLACE:
+      return "Literal Replace";
+    case org::apache::nifi::minifi::processors::ReplacementStrategyType::ALWAYS_REPLACE:
+      return "Always Replace";
+    case org::apache::nifi::minifi::processors::ReplacementStrategyType::SUBSTITUTE_VARIABLES:
+      return "Substitute Variables";
+  }
+  return default_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::processors {
 
 class ReplaceText : public core::Processor {
  public:
   EXTENSIONAPI static constexpr const char* Description = "Updates the content of a FlowFile by replacing parts of it using various replacement strategies.";
 
-  EXTENSIONAPI static constexpr auto EvaluationMode = core::PropertyDefinitionBuilder<EvaluationModeType::length>::createProperty("Evaluation Mode")
+  EXTENSIONAPI static constexpr auto EvaluationMode = core::PropertyDefinitionBuilder<magic_enum::enum_count<EvaluationModeType>()>::createProperty("Evaluation Mode")
       .withDescription("Run the 'Replacement Strategy' against each line separately (Line-by-Line) or "
           "against the whole input treated as a single string (Entire Text).")
       .isRequired(true)
-      .withDefaultValue(toStringView(EvaluationModeType::LINE_BY_LINE))
-      .withAllowedValues(EvaluationModeType::values)
+      .withDefaultValue(magic_enum::enum_name(EvaluationModeType::LINE_BY_LINE))
+      .withAllowedValues(magic_enum::enum_names<EvaluationModeType>())
       .build();
-  EXTENSIONAPI static constexpr auto LineByLineEvaluationMode = core::PropertyDefinitionBuilder<LineByLineEvaluationModeType::length>::createProperty("Line-by-Line Evaluation Mode")
+  EXTENSIONAPI static constexpr auto LineByLineEvaluationMode = core::PropertyDefinitionBuilder<magic_enum::enum_count<LineByLineEvaluationModeType>()>::createProperty("Line-by-Line Evaluation Mode")
       .withDescription("Run the 'Replacement Strategy' against each line separately (Line-by-Line) for All lines in the FlowFile, "
           "First Line (Header) only, Last Line (Footer) only, all Except the First Line (Header) or all Except the Last Line (Footer).")
       .isRequired(false)
-      .withDefaultValue(toStringView(LineByLineEvaluationModeType::ALL))
-      .withAllowedValues(LineByLineEvaluationModeType::values)
+      .withDefaultValue(magic_enum::enum_name(LineByLineEvaluationModeType::ALL))
+      .withAllowedValues(magic_enum::enum_names<LineByLineEvaluationModeType>())
       .build();
-  EXTENSIONAPI static constexpr auto ReplacementStrategy = core::PropertyDefinitionBuilder<ReplacementStrategyType::length>::createProperty("Replacement Strategy")
+  EXTENSIONAPI static constexpr auto ReplacementStrategy = core::PropertyDefinitionBuilder<magic_enum::enum_count<ReplacementStrategyType>()>::createProperty("Replacement Strategy")
       .withDescription("The strategy for how and what to replace within the FlowFile's text content. "
           "Substitute Variables replaces ${attribute_name} placeholders with the corresponding attribute's value "
           "(if an attribute is not found, the placeholder is kept as it was).")
       .isRequired(true)
-      .withDefaultValue(toStringView(ReplacementStrategyType::REGEX_REPLACE))
-      .withAllowedValues(ReplacementStrategyType::values)
+      .withDefaultValue(magic_enum::enum_name(ReplacementStrategyType::REGEX_REPLACE))
+      .withAllowedValues(magic_enum::enum_names<ReplacementStrategyType>())
       .build();
   EXTENSIONAPI static constexpr auto SearchValue = core::PropertyDefinitionBuilder<>::createProperty("Search Value")
       .withDescription("The Search Value to search for in the FlowFile content. "

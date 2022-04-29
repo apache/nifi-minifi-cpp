@@ -61,18 +61,18 @@ struct EventRender {
   std::string json;
 };
 
-SMART_ENUM(OutputFormat,
-    (XML, "XML"),
-    (BOTH, "Both"),
-    (PLAINTEXT, "Plaintext"),
-    (JSON, "JSON")
-)
+enum class OutputFormat {
+  XML,
+  Both,
+  Plaintext,
+  JSON
+};
 
-SMART_ENUM(JsonFormat,
-    (RAW, "Raw"),
-    (SIMPLE, "Simple"),
-    (FLATTENED, "Flattened")
-)
+enum class JsonFormat {
+  Raw,
+  Simple,
+  Flattened,
+};
 }  // namespace cwel
 
 class Bookmark;
@@ -142,16 +142,16 @@ class ConsumeWindowsEventLog : public core::Processor {
       .withDescription("Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,"
           "EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.")
       .build();
-  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<cwel::OutputFormat::length>::createProperty("Output Format")
+  EXTENSIONAPI static constexpr auto OutputFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::OutputFormat>()>::createProperty("Output Format")
       .isRequired(true)
-      .withDefaultValue(toStringView(cwel::OutputFormat::BOTH))
-      .withAllowedValues(cwel::OutputFormat::values)
+      .withDefaultValue(magic_enum::enum_name(cwel::OutputFormat::Both))
+      .withAllowedValues(magic_enum::enum_names<cwel::OutputFormat>())
       .withDescription("Set the output format type. In case \'Both\' is selected the processor generates two flow files for every event captured in format XML and Plaintext")
       .build();
-  EXTENSIONAPI static constexpr auto JsonFormatProperty = core::PropertyDefinitionBuilder<cwel::JsonFormat::length>::createProperty("JSON Format")
+  EXTENSIONAPI static constexpr auto JsonFormatProperty = core::PropertyDefinitionBuilder<magic_enum::enum_count<cwel::JsonFormat>()>::createProperty("JSON Format")
       .isRequired(true)
-      .withDefaultValue(toStringView(cwel::JsonFormat::SIMPLE))
-      .withAllowedValues(cwel::JsonFormat::values)
+      .withDefaultValue(magic_enum::enum_name(cwel::JsonFormat::Simple))
+      .withAllowedValues(magic_enum::enum_names<cwel::JsonFormat>())
       .withDescription("Set the json format type. Only applicable if Output Format is set to 'JSON'")
       .build();
   EXTENSIONAPI static constexpr auto BatchCommitSize = core::PropertyDefinitionBuilder<>::createProperty("Batch Commit Size")

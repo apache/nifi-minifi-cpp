@@ -44,18 +44,43 @@
 #include "WriteArchiveStream.h"
 #include "ReadArchiveStream.h"
 
+namespace org::apache::nifi::minifi::processors::compress_content {
+enum class CompressionMode {
+  compress,
+  decompress
+};
+
+enum class ExtendedCompressionFormat {
+  GZIP,
+  LZMA,
+  XZ_LZMA2,
+  BZIP2,
+  USE_MIME_TYPE
+};
+
+}  // namespace org::apache::nifi::minifi::processors::compress_content
+
+namespace magic_enum::customize {
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat>(
+    org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::GZIP:
+      return "gzip";
+    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::LZMA:
+      return "lzma";
+    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::XZ_LZMA2:
+      return "xz-lzma2";
+    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::BZIP2:
+      return "bzip2";
+    case org::apache::nifi::minifi::processors::compress_content::ExtendedCompressionFormat::USE_MIME_TYPE:
+      return "use mime.type attribute";
+  }
+  return default_tag;
+}
+}  // namespace magic_enum::customize
+
 namespace org::apache::nifi::minifi::processors {
-
-namespace compress_content {
-SMART_ENUM(CompressionMode,
-  (Compress, "compress"),
-  (Decompress, "decompress")
-)
-
-SMART_ENUM_EXTEND(ExtendedCompressionFormat, io::CompressionFormat, (GZIP, LZMA, XZ_LZMA2, BZIP2),
-  (USE_MIME_TYPE, "use mime.type attribute")
-)
-}  // namespace compress_content
 
 class CompressContent : public core::Processor {
  public:
@@ -67,23 +92,23 @@ class CompressContent : public core::Processor {
   EXTENSIONAPI static constexpr const char* Description = "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm "
       "and updates the mime.type attribute as appropriate";
 
-  EXTENSIONAPI static constexpr auto CompressMode = core::PropertyDefinitionBuilder<compress_content::CompressionMode::length>::createProperty("Mode")
+  EXTENSIONAPI static constexpr auto CompressMode = core::PropertyDefinitionBuilder<magic_enum::enum_count<compress_content::CompressionMode>()>::createProperty("Mode")
       .withDescription("Indicates whether the processor should compress content or decompress content.")
-      .isRequired(false)
-      .withAllowedValues(compress_content::CompressionMode::values)
-      .withDefaultValue(toStringView(compress_content::CompressionMode::Compress))
+      .isRequired(true)
+      .withDefaultValue(magic_enum::enum_name(compress_content::CompressionMode::compress))
+      .withAllowedValues(magic_enum::enum_names<compress_content::CompressionMode>())
       .build();
   EXTENSIONAPI static constexpr auto CompressLevel = core::PropertyDefinitionBuilder<>::createProperty("Compression Level")
       .withDescription("The compression level to use; this is valid only when using GZIP compression.")
-      .isRequired(false)
+      .isRequired(true)
       .withPropertyType(core::StandardPropertyTypes::INTEGER_TYPE)
       .withDefaultValue("1")
       .build();
-  EXTENSIONAPI static constexpr auto CompressFormat = core::PropertyDefinitionBuilder<compress_content::ExtendedCompressionFormat::length>::createProperty("Compression Format")
+  EXTENSIONAPI static constexpr auto CompressFormat = core::PropertyDefinitionBuilder<magic_enum::enum_count<compress_content::ExtendedCompressionFormat>()>::createProperty("Compression Format")
       .withDescription("The compression format to use.")
       .isRequired(false)
-      .withAllowedValues(compress_content::ExtendedCompressionFormat::values)
-      .withDefaultValue(toStringView(compress_content::ExtendedCompressionFormat::USE_MIME_TYPE))
+      .withDefaultValue(magic_enum::enum_name(compress_content::ExtendedCompressionFormat::USE_MIME_TYPE))
+      .withAllowedValues(magic_enum::enum_names<compress_content::ExtendedCompressionFormat>())
       .build();
   EXTENSIONAPI static constexpr auto UpdateFileName = core::PropertyDefinitionBuilder<>::createProperty("Update Filename")
       .withDescription("Determines if filename extension need to be updated")
@@ -146,7 +171,7 @@ class CompressContent : public core::Processor {
 
     int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) {
       std::shared_ptr<io::ZlibBaseStream> filterStream;
-      if (compress_mode_ == compress_content::CompressionMode::Compress) {
+      if (compress_mode_ == compress_content::CompressionMode::compress) {
         filterStream = std::make_shared<io::ZlibCompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP, compress_level_);
       } else {
         filterStream = std::make_shared<io::ZlibDecompressStream>(gsl::make_not_null(output_stream.get()), io::ZlibCompressionFormat::GZIP);

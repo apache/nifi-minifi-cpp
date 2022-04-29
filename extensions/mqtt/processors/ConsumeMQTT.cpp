@@ -139,7 +139,7 @@ int64_t ConsumeMQTT::WriteCallback::operator() (const std::shared_ptr<io::Output
 }
 
 void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const {
-  if (mqtt_version_.value() != mqtt::MqttVersions::V_5_0) {
+  if (mqtt_version_ != mqtt::MqttVersions::V_5_0) {
     return;
   }
 
@@ -153,7 +153,7 @@ void ConsumeMQTT::putUserPropertiesAsAttributes(const SmartMessage& message, con
 }
 
 void ConsumeMQTT::fillAttributeFromContentType(const SmartMessage& message, const std::shared_ptr<core::FlowFile>& flow_file, const std::shared_ptr<core::ProcessSession>& session) const {
-  if (mqtt_version_.value() != mqtt::MqttVersions::V_5_0 || attribute_from_content_type_.empty()) {
+  if (mqtt_version_ != mqtt::MqttVersions::V_5_0 || attribute_from_content_type_.empty()) {
     return;
   }
 
@@ -170,7 +170,7 @@ void ConsumeMQTT::startupClient() {
   MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
   response_options.context = this;
 
-  if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
+  if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
     response_options.onSuccess5 = subscriptionSuccess5;
     response_options.onFailure5 = subscriptionFailure5;
   } else {
@@ -178,7 +178,7 @@ void ConsumeMQTT::startupClient() {
     response_options.onFailure = subscriptionFailure;
   }
 
-  const int ret = MQTTAsync_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_.value()), &response_options);
+  const int ret = MQTTAsync_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_), &response_options);
   if (ret != MQTTASYNC_SUCCESS) {
     logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
     return;
@@ -250,12 +250,12 @@ void ConsumeMQTT::checkProperties() {
     }
   }
 
-  if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0 && isPropertyExplicitlySet(CleanSession)) {
+  if (mqtt_version_ == mqtt::MqttVersions::V_5_0 && isPropertyExplicitlySet(CleanSession)) {
     logger_->log_warn("MQTT 5.0 specification does not support Clean Session. Property is not used.");
   }
 
   if (clientID_.empty()) {
-    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
+    if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
       if (session_expiry_interval_ > std::chrono::seconds(0)) {
         throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Processor must have a Client ID for durable (Session Expiry Interval > 0) sessions");
       }
@@ -265,7 +265,7 @@ void ConsumeMQTT::checkProperties() {
   }
 
   if (qos_ == mqtt::MqttQoS::LEVEL_0) {
-    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
+    if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
       if (session_expiry_interval_ > std::chrono::seconds(0)) {
         logger_->log_warn("Messages are not preserved during client disconnection "
                           "by the broker when QoS is less than 1 for durable (Session Expiry Interval > 0) sessions. Only subscriptions are preserved.");
@@ -295,7 +295,7 @@ void ConsumeMQTT::checkBrokerLimitsImpl() {
   }
 
   if (utils::StringUtils::startsWith(topic_, "$share/")) {
-    if (mqtt_version_.value() == mqtt::MqttVersions::V_5_0) {
+    if (mqtt_version_ == mqtt::MqttVersions::V_5_0) {
       // shared topic are supported on MQTT 5, unless explicitly denied by broker
       if (shared_subscription_available_ == false) {
         std::ostringstream os;

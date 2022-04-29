@@ -92,7 +92,7 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, std::span<co
       auto array = root.HasMember("requested_operations") ? root["requested_operations"].GetArray() : root["requestedOperations"].GetArray();
 
       for (const rapidjson::Value& request : array) {
-        Operation newOp = Operation::parse(request["operation"].GetString(), Operation::HEARTBEAT, false);
+        auto newOp = utils::enumCast<Operation>(request["operation"].GetString(), Operation::heartbeat, true);
         C2Payload nested_payload(newOp, state::UpdateState::READ_COMPLETE);
         C2ContentResponse new_command(newOp);
         new_command.delay = 0;

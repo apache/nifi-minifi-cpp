@@ -34,22 +34,22 @@ bool sendSingleCommand(std::unique_ptr<io::Socket> socket, uint8_t op, const std
 }
 
 bool stopComponent(std::unique_ptr<io::Socket> socket, const std::string& component) {
-  return sendSingleCommand(std::move(socket), c2::Operation::STOP, component);
+  return sendSingleCommand(std::move(socket), static_cast<uint8_t>(c2::Operation::stop), component);
 }
 
 bool startComponent(std::unique_ptr<io::Socket> socket, const std::string& component) {
-  return sendSingleCommand(std::move(socket), c2::Operation::START, component);
+  return sendSingleCommand(std::move(socket), static_cast<uint8_t>(c2::Operation::start), component);
 }
 
 bool clearConnection(std::unique_ptr<io::Socket> socket, const std::string& connection) {
-  return sendSingleCommand(std::move(socket), c2::Operation::CLEAR, connection);
+  return sendSingleCommand(std::move(socket), static_cast<uint8_t>(c2::Operation::clear), connection);
 }
 
 int updateFlow(std::unique_ptr<io::Socket> socket, std::ostream &out, const std::string& file) {
   if (socket->initialize() < 0) {
     return -1;
   }
-  uint8_t op = c2::Operation::UPDATE;
+  auto op = static_cast<uint8_t>(c2::Operation::update);
   io::BufferStream stream;
   stream.write(&op, 1);
   stream.write("flow");
@@ -60,7 +60,7 @@ int updateFlow(std::unique_ptr<io::Socket> socket, std::ostream &out, const std:
   // read the response
   uint8_t resp = 0;
   socket->read(resp);
-  if (resp == c2::Operation::DESCRIBE) {
+  if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     uint16_t connections = 0;
     socket->read(connections);
     out << connections << " are full" << std::endl;
@@ -77,7 +77,7 @@ int getFullConnections(std::unique_ptr<io::Socket> socket, std::ostream &out) {
   if (socket->initialize() < 0) {
     return -1;
   }
-  uint8_t op = c2::Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(c2::Operation::describe);
   io::BufferStream stream;
   stream.write(&op, 1);
   stream.write("getfull");
@@ -87,7 +87,7 @@ int getFullConnections(std::unique_ptr<io::Socket> socket, std::ostream &out) {
   // read the response
   uint8_t resp = 0;
   socket->read(resp);
-  if (resp == c2::Operation::DESCRIBE) {
+  if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     uint16_t connections = 0;
     socket->read(connections);
     out << connections << " are full" << std::endl;
@@ -104,7 +104,7 @@ int getConnectionSize(std::unique_ptr<io::Socket> socket, std::ostream &out, con
   if (socket->initialize() < 0) {
     return -1;
   }
-  uint8_t op = c2::Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(c2::Operation::describe);
   io::BufferStream stream;
   stream.write(&op, 1);
   stream.write("queue");
@@ -115,7 +115,7 @@ int getConnectionSize(std::unique_ptr<io::Socket> socket, std::ostream &out, con
   // read the response
   uint8_t resp = 0;
   socket->read(resp);
-  if (resp == c2::Operation::DESCRIBE) {
+  if (resp == static_cast<uint8_t>(c2::Operation::describe)) {
     std::string size;
     socket->read(size);
     out << "Size/Max of " << connection << " " << size << std::endl;
@@ -128,7 +128,7 @@ int listComponents(std::unique_ptr<io::Socket> socket, std::ostream &out, bool s
     return -1;
   }
   io::BufferStream stream;
-  uint8_t op = c2::Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(c2::Operation::describe);
   stream.write(&op, 1);
   stream.write("components");
   if (io::isError(socket->write(stream.getBuffer()))) {
@@ -155,7 +155,7 @@ int listConnections(std::unique_ptr<io::Socket> socket, std::ostream &out, bool 
     return -1;
   }
   io::BufferStream stream;
-  uint8_t op = c2::Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(c2::Operation::describe);
   stream.write(&op, 1);
   stream.write("connections");
   if (io::isError(socket->write(stream.getBuffer()))) {
@@ -180,7 +180,7 @@ int printManifest(std::unique_ptr<io::Socket> socket, std::ostream &out) {
     return -1;
   }
   io::BufferStream stream;
-  uint8_t op = c2::Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(c2::Operation::describe);
   stream.write(&op, 1);
   stream.write("manifest");
   if (io::isError(socket->write(stream.getBuffer()))) {
@@ -198,7 +198,7 @@ int getJstacks(std::unique_ptr<io::Socket> socket, std::ostream &out) {
     return -1;
   }
   io::BufferStream stream;
-  uint8_t op = c2::Operation::DESCRIBE;
+  auto op = static_cast<uint8_t>(c2::Operation::describe);
   stream.write(&op, 1);
   stream.write("jstack");
   if (io::isError(socket->write(stream.getBuffer()))) {

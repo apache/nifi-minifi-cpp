@@ -72,8 +72,8 @@ void LogMetricsPublisher::readLoggingInterval() {
 void LogMetricsPublisher::readLogLevel() {
   gsl_Expects(configuration_);
   if (auto log_level_str = configuration_->get(Configure::nifi_metrics_publisher_log_metrics_log_level)) {
-    log_level_ = utils::LogUtils::LogLevelOption::parse(log_level_str->c_str(), utils::LogUtils::LogLevelOption::LOGGING_INFO, false);
-    logger_->log_info("Metric log level is set to %s", log_level_.toString());
+    log_level_ = utils::enumCast<utils::LogUtils::LogLevelOption>(*log_level_str, utils::LogUtils::LogLevelOption::LOGGING_INFO, true);
+    logger_->log_info("Metric log level is set to %s", magic_enum::enum_name(log_level_).data());
     return;
   }
 

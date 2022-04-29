@@ -44,11 +44,11 @@
 namespace org::apache::nifi::minifi::processors {
 
 namespace invoke_http {
-SMART_ENUM(InvalidHTTPHeaderFieldHandlingOption,
-  (FAIL, "fail"),
-  (TRANSFORM, "transform"),
-  (DROP, "drop")
-)
+enum class InvalidHTTPHeaderFieldHandlingOption {
+    fail,
+    transform,
+    drop
+};
 }  // namespace invoke_http
 
 class InvokeHTTP : public core::Processor {
@@ -166,13 +166,14 @@ class InvokeHTTP : public core::Processor {
       .withDescription("Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.")
       .withDefaultValue("false")
       .build();
-  EXTENSIONAPI static constexpr auto InvalidHTTPHeaderFieldHandlingStrategy = core::PropertyDefinitionBuilder<invoke_http::InvalidHTTPHeaderFieldHandlingOption::length>::createProperty(
+  EXTENSIONAPI static constexpr auto InvalidHTTPHeaderFieldHandlingStrategy
+    = core::PropertyDefinitionBuilder<magic_enum::enum_count<invoke_http::InvalidHTTPHeaderFieldHandlingOption>()>::createProperty(
           "Invalid HTTP Header Field Handling Strategy")
       .withDescription("Indicates what should happen when an attribute's name is not a valid HTTP header field name. "
           "Options: transform - invalid characters are replaced, fail - flow file is transferred to failure, drop - drops invalid attributes from HTTP message")
       .isRequired(true)
-      .withDefaultValue(toStringView(invoke_http::InvalidHTTPHeaderFieldHandlingOption::TRANSFORM))
-      .withAllowedValues(invoke_http::InvalidHTTPHeaderFieldHandlingOption::values)
+      .withDefaultValue(magic_enum::enum_name(invoke_http::InvalidHTTPHeaderFieldHandlingOption::transform))
+      .withAllowedValues(magic_enum::enum_names<invoke_http::InvalidHTTPHeaderFieldHandlingOption>())
       .build();
 
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 21>{

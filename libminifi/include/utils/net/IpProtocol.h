@@ -20,9 +20,9 @@
 
 namespace org::apache::nifi::minifi::utils::net {
 
-SMART_ENUM(IpProtocol,
-  (TCP, "TCP"),
-  (UDP, "UDP")
-)
+enum class IpProtocol {
+  TCP,
+  UDP
+};
 
 }  // namespace org::apache::nifi::minifi::utils::net

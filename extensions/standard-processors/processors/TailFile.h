@@ -44,6 +44,31 @@
 
 namespace org::apache::nifi::minifi::processors {
 
+enum class InitialStartPositions {
+  BEGINNING_OF_TIME,
+  BEGINNING_OF_FILE,
+  CURRENT_TIME
+};
+
+}  // namespace org::apache::nifi::minifi::processors
+
+namespace magic_enum::customize {
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::processors::InitialStartPositions>(org::apache::nifi::minifi::processors::InitialStartPositions value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::processors::InitialStartPositions::BEGINNING_OF_TIME:
+      return "Beginning of Time";
+    case org::apache::nifi::minifi::processors::InitialStartPositions::BEGINNING_OF_FILE:
+      return "Beginning of File";
+    case org::apache::nifi::minifi::processors::InitialStartPositions::CURRENT_TIME:
+      return "Current Time";
+  }
+  return default_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::processors {
+
 struct TailState {
   TailState(std::filesystem::path path, std::filesystem::path file_name, uint64_t position,
             std::chrono::file_clock::time_point last_read_time,
@@ -75,12 +100,6 @@ std::ostream& operator<<(std::ostream &os, const TailState &tail_state);
 enum class Mode {
   SINGLE, MULTIPLE, UNDEFINED
 };
-
-SMART_ENUM(InitialStartPositions,
-  (BEGINNING_OF_TIME, "Beginning of Time"),
-  (BEGINNING_OF_FILE, "Beginning of File"),
-  (CURRENT_TIME, "Current Time")
-)
 
 class TailFile : public core::Processor {
  public:
@@ -147,7 +166,7 @@ class TailFile : public core::Processor {
       .isRequired(false)
       .withDefaultValue("${filename}.*")
       .build();
-  EXTENSIONAPI static constexpr auto InitialStartPosition = core::PropertyDefinitionBuilder<InitialStartPositions::length>::createProperty("Initial Start Position")
+  EXTENSIONAPI static constexpr auto InitialStartPosition = core::PropertyDefinitionBuilder<magic_enum::enum_count<InitialStartPositions>()>::createProperty("Initial Start Position")
       .withDescription("When the Processor first begins to tail data, this property specifies where the Processor should begin reading data. "
           "Once data has been ingested from a file, the Processor will continue from the last point from which it has received data.\n"
           "Beginning of Time: Start with the oldest data that matches the Rolling Filename Pattern and then begin reading from the File to Tail.\n"
@@ -155,8 +174,8 @@ class TailFile : public core::Processor {
           "Current Time: Start with the data at the end of the File to Tail. Do not ingest any data that has already been rolled over or "
           "any data in the File to Tail that has already been written.")
       .isRequired(true)
-      .withDefaultValue(toStringView(InitialStartPositions::BEGINNING_OF_FILE))
-      .withAllowedValues(InitialStartPositions::values)
+      .withDefaultValue(magic_enum::enum_name(InitialStartPositions::BEGINNING_OF_FILE))
+      .withAllowedValues(magic_enum::enum_names<InitialStartPositions>())
       .build();
   EXTENSIONAPI static constexpr auto AttributeProviderService = core::PropertyDefinitionBuilder<0, 1>::createProperty("Attribute Provider Service")
       .withDescription("Provides a list of key-value pair records which can be used in the Base Directory property using Expression Language. Requires Multiple file mode.")

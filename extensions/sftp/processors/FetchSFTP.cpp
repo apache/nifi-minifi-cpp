@@ -132,7 +132,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug(ex.what());
-    switch (ex.error().value()) {
+    switch (ex.error()) {
       case utils::SFTPError::PermissionDenied:
         session->transfer(flow_file, PermissionDenied);
         put_connection_back_to_cache();

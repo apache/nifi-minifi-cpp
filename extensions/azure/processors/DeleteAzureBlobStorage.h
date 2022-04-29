@@ -42,12 +42,12 @@ class DeleteAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorB
  public:
   EXTENSIONAPI static constexpr const char* Description = "Deletes the provided blob from Azure Storage";
 
-  EXTENSIONAPI static constexpr auto DeleteSnapshotsOption = core::PropertyDefinitionBuilder<storage::OptionalDeletion::length>::createProperty("Delete Snapshots Option")
+  EXTENSIONAPI static constexpr auto DeleteSnapshotsOption = core::PropertyDefinitionBuilder<magic_enum::enum_count<storage::OptionalDeletion>()>::createProperty("Delete Snapshots Option")
       .withDescription("Specifies the snapshot deletion options to be used when deleting a blob. None: Deletes the blob only. Include Snapshots: Delete the blob and its snapshots. "
           "Delete Snapshots Only: Delete only the blob's snapshots.")
       .isRequired(true)
-      .withDefaultValue(toStringView(storage::OptionalDeletion::NONE))
-      .withAllowedValues(storage::OptionalDeletion::values)
+      .withDefaultValue(magic_enum::enum_name(storage::OptionalDeletion::NONE))
+      .withAllowedValues(magic_enum::enum_names<storage::OptionalDeletion>())
       .build();
   EXTENSIONAPI static constexpr auto Properties = utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::Properties, std::array<core::PropertyReference, 1>{DeleteSnapshotsOption});
 

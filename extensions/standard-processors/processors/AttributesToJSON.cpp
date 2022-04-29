@@ -43,8 +43,8 @@ void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSe
   if (context->getProperty(AttributesRegularExpression, value) && !value.empty()) {
     attributes_regular_expression_ = utils::Regex(value);
   }
-  write_destination_ = attributes_to_json::WriteDestination::parse(
-      utils::parsePropertyWithAllowableValuesOrThrow(*context, std::string{Destination.name}, attributes_to_json::WriteDestination::values).c_str());
+  write_destination_ = utils::parseEnumProperty<attributes_to_json::WriteDestination>(*context, Destination);
+
   context->getProperty(IncludeCoreAttributes, include_core_attributes_);
   context->getProperty(NullValue, null_value_);
 }

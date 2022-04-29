@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "core/ProcessContext.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -39,20 +40,6 @@ std::vector<std::string> listFromCommaSeparatedProperty(const core::ProcessConte
 std::vector<std::string> listFromRequiredCommaSeparatedProperty(const core::ProcessContext& context, std::string_view property_name);
 bool parseBooleanPropertyOrThrow(const core::ProcessContext& context, std::string_view property_name);
 std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext& context, std::string_view property_name);
-std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, std::string_view property_name, std::span<const std::string_view> allowable_values);
-
-template<typename T>
-T parseEnumProperty(const core::ProcessContext& context, const core::Property& prop) {
-  std::string value;
-  if (!context.getProperty(prop.getName(), value)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + prop.getName() + "' is missing");
-  }
-  T result = T::parse(value.c_str(), T{});
-  if (!result) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + prop.getName() + "' has invalid value: '" + value + "'");
-  }
-  return result;
-}
 
 template<typename T>
 T parseEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop) {
@@ -60,11 +47,20 @@ T parseEnumProperty(const core::ProcessContext& context, const core::PropertyRef
   if (!context.getProperty(prop.name, value)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' is missing");
   }
-  T result = T::parse(value.c_str(), T{});
+  auto result = magic_enum::enum_cast<T>(value);
   if (!result) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Property '" + std::string(prop.name) + "' has invalid value: '" + value + "'");
   }
-  return result;
+  return result.value();
+}
+
+template<typename T>
+std::optional<T> parseOptionalEnumProperty(const core::ProcessContext& context, const core::PropertyReference& prop) {
+  std::string value;
+  if (!context.getProperty(prop.name, value)) {
+    return std::nullopt;
+  }
+  return magic_enum::enum_cast<T>(value);
 }
 
 }  // namespace org::apache::nifi::minifi::utils

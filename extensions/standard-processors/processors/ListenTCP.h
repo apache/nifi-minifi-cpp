@@ -64,10 +64,10 @@ class ListenTCP : public NetworkListenerProcessor {
       .withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.")
       .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
       .build();
-  EXTENSIONAPI static constexpr auto ClientAuth = core::PropertyDefinitionBuilder<utils::net::ClientAuthOption::length>::createProperty("Client Auth")
+  EXTENSIONAPI static constexpr auto ClientAuth = core::PropertyDefinitionBuilder<magic_enum::enum_count<utils::net::ClientAuthOption>()>::createProperty("Client Auth")
       .withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")
-      .withDefaultValue(toStringView(utils::net::ClientAuthOption::NONE))
-      .withAllowedValues(utils::net::ClientAuthOption::values)
+      .withDefaultValue(magic_enum::enum_name(utils::net::ClientAuthOption::NONE))
+      .withAllowedValues(magic_enum::enum_names<utils::net::ClientAuthOption>())
       .build();
   EXTENSIONAPI static constexpr auto Properties = std::array<core::PropertyReference, 5>{
       Port,

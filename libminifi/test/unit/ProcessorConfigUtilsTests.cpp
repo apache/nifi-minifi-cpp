@@ -37,14 +37,14 @@ class TestProcessor : public Processor {
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 };
 
-SMART_ENUM(TestEnum,
-  (A, "A"),
-  (B, "B")
-)
+enum class TestEnum {
+  A,
+  B
+};
 
 TEST_CASE("Parse enum property") {
-  static constexpr auto prop = PropertyDefinitionBuilder<TestEnum::length>::createProperty("prop")
-      .withAllowedValues(TestEnum::values)
+  static constexpr auto prop = PropertyDefinitionBuilder<magic_enum::enum_count<TestEnum>()>::createProperty("prop")
+      .withAllowedValues(magic_enum::enum_names<TestEnum>())
       .build();
   auto proc = std::make_shared<TestProcessor>("test-proc");
   proc->setSupportedProperties(std::array<core::PropertyReference, 1>{prop});

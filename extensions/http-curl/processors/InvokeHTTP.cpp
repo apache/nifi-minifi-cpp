@@ -186,17 +186,17 @@ bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable
   // non-const views, because otherwise it doesn't satisfy viewable_range, and transform would fail
   ranges::viewable_range auto matching_attributes = original_attributes
       | ranges::views::filter([this](const auto& key) { return utils::regexMatch(key, *attributes_to_send_); }, key_fn);
-  switch (invalid_http_header_field_handling_strategy_.value()) {
-    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::FAIL:
+  switch (invalid_http_header_field_handling_strategy_) {
+    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::fail:
       if (ranges::any_of(matching_attributes, std::not_fn(&extensions::curl::HTTPClient::isValidHttpHeaderField), key_fn)) return false;
       for (const auto& header: matching_attributes) append_header(header.first, header.second);
       return true;
-    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::DROP:
+    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::drop:
       for (const auto& header: matching_attributes | ranges::views::filter(&extensions::curl::HTTPClient::isValidHttpHeaderField, key_fn)) {
         append_header(header.first, header.second);
       }
       return true;
-    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::TRANSFORM:
+    case invoke_http::InvalidHTTPHeaderFieldHandlingOption::transform:
       for (const auto& header: matching_attributes) {
         append_header(extensions::curl::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(header.first), header.second);
       }

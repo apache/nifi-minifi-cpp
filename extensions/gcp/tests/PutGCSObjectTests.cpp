@@ -55,7 +55,7 @@ class PutGCSObjectTests : public ::testing::Test {
     gcp_credentials_node_ = test_controller_.plan->addController("GCPCredentialsControllerService", "gcp_credentials_controller_service");
     test_controller_.plan->setProperty(gcp_credentials_node_,
                                        GCPCredentialsControllerService::CredentialsLoc,
-                                       toString(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
+                                       magic_enum::enum_name(minifi_gcp::CredentialsLocation::USE_ANONYMOUS_CREDENTIALS));
     test_controller_.plan->setProperty(put_gcs_object_,
                                        PutGCSObject::GCPCredentials,
                                        "gcp_credentials_controller_service");
@@ -247,7 +247,7 @@ TEST_F(PutGCSObjectTests, ObjectACLTest) {
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Bucket, "bucket-from-property"));
   EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::Key, "object-name-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::ObjectACL, toString(PutGCSObject::PredefinedAcl::AUTHENTICATED_READ)));
+  EXPECT_TRUE(test_controller_.plan->setProperty(put_gcs_object_, PutGCSObject::ObjectACL, magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::AUTHENTICATED_READ)));
   const auto& result = test_controller_.trigger("hello world");
   ASSERT_EQ(1, result.at(PutGCSObject::Success).size());
   EXPECT_EQ(0, result.at(PutGCSObject::Failure).size());
@@ -255,11 +255,11 @@ TEST_F(PutGCSObjectTests, ObjectACLTest) {
 }
 
 TEST_F(PutGCSObjectTests, PredefinedACLTests) {
-  EXPECT_EQ(toString(PutGCSObject::PredefinedAcl::AUTHENTICATED_READ), gcs::PredefinedAcl::AuthenticatedRead().value());
-  EXPECT_EQ(toString(PutGCSObject::PredefinedAcl::BUCKET_OWNER_FULL_CONTROL), gcs::PredefinedAcl::BucketOwnerFullControl().value());
-  EXPECT_EQ(toString(PutGCSObject::PredefinedAcl::BUCKET_OWNER_READ_ONLY), gcs::PredefinedAcl::BucketOwnerRead().value());
-  EXPECT_EQ(toString(PutGCSObject::PredefinedAcl::PRIVATE), gcs::PredefinedAcl::Private().value());
-  EXPECT_EQ(toString(PutGCSObject::PredefinedAcl::PROJECT_PRIVATE), gcs::PredefinedAcl::ProjectPrivate().value());
-  EXPECT_EQ(toString(PutGCSObject::PredefinedAcl::PUBLIC_READ_ONLY), gcs::PredefinedAcl::PublicRead().value());
-  EXPECT_EQ(toString(PutGCSObject::PredefinedAcl::PUBLIC_READ_WRITE), gcs::PredefinedAcl::PublicReadWrite().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::AUTHENTICATED_READ), gcs::PredefinedAcl::AuthenticatedRead().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_FULL_CONTROL), gcs::PredefinedAcl::BucketOwnerFullControl().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_READ_ONLY), gcs::PredefinedAcl::BucketOwnerRead().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::PRIVATE), gcs::PredefinedAcl::Private().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::PROJECT_PRIVATE), gcs::PredefinedAcl::ProjectPrivate().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::PUBLIC_READ_ONLY), gcs::PredefinedAcl::PublicRead().value());
+  EXPECT_EQ(magic_enum::enum_name(minifi_gcp::put_gcs_object::PredefinedAcl::PUBLIC_READ_WRITE), gcs::PredefinedAcl::PublicReadWrite().value());
 }

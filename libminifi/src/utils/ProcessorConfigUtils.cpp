@@ -49,14 +49,4 @@ std::chrono::milliseconds parseTimePropertyMSOrThrow(const core::ProcessContext&
   return time_property.getMilliseconds();
 }
 
-std::string parsePropertyWithAllowableValuesOrThrow(const core::ProcessContext& context, std::string_view property_name, std::span<const std::string_view> allowable_values) {
-  std::string value;
-  if (!context.getProperty(property_name, value)
-      || value.empty()
-      || !ranges::contains(allowable_values, value)) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, std::string(property_name) + " property missing or invalid");
-  }
-  return value;
-}
-
 }  // namespace org::apache::nifi::minifi::utils

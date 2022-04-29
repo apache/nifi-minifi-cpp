@@ -24,6 +24,7 @@
 #include "core/TypedValues.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/LineByLineInputOutputStreamCallback.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -40,19 +41,16 @@ void ReplaceText::initialize() {
 void ReplaceText::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
 
-  const std::optional<std::string> evaluation_mode = context->getProperty(EvaluationMode);
-  evaluation_mode_ = EvaluationModeType::parse(evaluation_mode.value().c_str());
-  logger_->log_debug("the %s property is set to %s", std::string(EvaluationMode.name), evaluation_mode_.toString());
+  evaluation_mode_ = utils::parseEnumProperty<EvaluationModeType>(*context, EvaluationMode);
+  logger_->log_debug("the %s property is set to %s", std::string(EvaluationMode.name), magic_enum::enum_name(evaluation_mode_).data());
 
-  const std::optional<std::string> line_by_line_evaluation_mode = context->getProperty(LineByLineEvaluationMode);
-  if (line_by_line_evaluation_mode) {
-    line_by_line_evaluation_mode_ = LineByLineEvaluationModeType::parse(line_by_line_evaluation_mode->c_str());
-    logger_->log_debug("the %s property is set to %s", std::string(LineByLineEvaluationMode.name), line_by_line_evaluation_mode_.toString());
+  if (auto line_by_line_evaluation_mode = utils::parseOptionalEnumProperty<LineByLineEvaluationModeType>(*context, LineByLineEvaluationMode)) {
+    line_by_line_evaluation_mode_ = *line_by_line_evaluation_mode;
+    logger_->log_debug("the %s property is set to %s", std::string(LineByLineEvaluationMode.name), magic_enum::enum_name(line_by_line_evaluation_mode_).data());
   }
 
-  const std::optional<std::string> replacement_strategy = context->getProperty(ReplacementStrategy);
-  replacement_strategy_ = ReplacementStrategyType::parse(replacement_strategy.value().c_str());
-  logger_->log_debug("the %s property is set to %s", std::string(ReplacementStrategy.name), replacement_strategy_.toString());
+  replacement_strategy_ = utils::parseEnumProperty<ReplacementStrategyType>(*context, ReplacementStrategy);
+  logger_->log_debug("the %s property is set to %s", std::string(ReplacementStrategy.name), magic_enum::enum_name(replacement_strategy_).data());
 }
 
 void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -68,7 +66,7 @@ void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context
 
   Parameters parameters = readParameters(context, flow_file);
 
-  switch (evaluation_mode_.value()) {
+  switch (evaluation_mode_) {
     case EvaluationModeType::ENTIRE_TEXT:
       replaceTextInEntireFile(flow_file, session, parameters);
       return;
@@ -77,7 +75,7 @@ void ReplaceText::onTrigger(const std::shared_ptr<core::ProcessContext>& context
       return;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.name, ": ", evaluation_mode_.toString())};
+  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", EvaluationMode.name, ": ", magic_enum::enum_name(evaluation_mode_).data())};
 }
 
 ReplaceText::Parameters ReplaceText::readParameters(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
@@ -139,7 +137,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
 
   try {
     utils::LineByLineInputOutputStreamCallback read_write_callback{[this, &flow_file, &parameters](const std::string& input_line, bool is_first_line, bool is_last_line) {
-      switch (line_by_line_evaluation_mode_.value()) {
+      switch (line_by_line_evaluation_mode_) {
         case LineByLineEvaluationModeType::ALL:
           return applyReplacements(input_line, flow_file, parameters);
         case LineByLineEvaluationModeType::FIRST_LINE:
@@ -151,7 +149,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
         case LineByLineEvaluationModeType::EXCEPT_LAST_LINE:
           return is_last_line ? input_line: applyReplacements(input_line, flow_file, parameters);
       }
-      throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", line_by_line_evaluation_mode_.toString())};
+      throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", LineByLineEvaluationMode.name, ": ", magic_enum::enum_name(line_by_line_evaluation_mode_).data())};
     }};
     session->readWrite(flow_file, std::move(read_write_callback));
     session->transfer(flow_file, Success);
@@ -164,7 +162,7 @@ void ReplaceText::replaceTextLineByLine(const std::shared_ptr<core::FlowFile>& f
 std::string ReplaceText::applyReplacements(const std::string& input, const std::shared_ptr<core::FlowFile>& flow_file, const Parameters& parameters) const {
   const auto [chomped_input, line_ending] = utils::StringUtils::chomp(input);
 
-  switch (replacement_strategy_.value()) {
+  switch (replacement_strategy_) {
     case ReplacementStrategyType::PREPEND:
       return parameters.replacement_value_ + input;
 
@@ -184,7 +182,7 @@ std::string ReplaceText::applyReplacements(const std::string& input, const std::
       return applySubstituteVariables(chomped_input, flow_file) + line_ending;
   }
 
-  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.name, ": ", replacement_strategy_.toString())};
+  throw Exception{PROCESSOR_EXCEPTION, utils::StringUtils::join_pack("Unsupported ", ReplacementStrategy.name, ": ", magic_enum::enum_name(replacement_strategy_).data())};
 }
 
 std::string ReplaceText::applyLiteralReplace(const std::string& input, const Parameters& parameters) {
@@ -241,7 +239,7 @@ std::string ReplaceText::getAttributeValue(const std::shared_ptr<core::FlowFile>
   if (attribute_value) {
     return *attribute_value;
   } else {
-    logger_->log_debug("Attribute %s not found in the flow file during %s", attribute_key, toString(ReplacementStrategyType::SUBSTITUTE_VARIABLES));
+    logger_->log_debug("Attribute %s not found in the flow file during %s", attribute_key, magic_enum::enum_name(ReplacementStrategyType::SUBSTITUTE_VARIABLES).data());
     return match[0];
   }
 }

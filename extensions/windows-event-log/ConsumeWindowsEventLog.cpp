@@ -147,7 +147,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   output_format_ = utils::parseEnumProperty<cwel::OutputFormat>(*context, OutputFormatProperty);
   json_format_ = utils::parseEnumProperty<cwel::JsonFormat>(*context, JsonFormatProperty);
 
-  if (output_format_ != cwel::OutputFormat::PLAINTEXT && !hMsobjsDll_) {
+  if (output_format_ != cwel::OutputFormat::Plaintext && !hMsobjsDll_) {
     char systemDir[MAX_PATH];
     if (GetSystemDirectory(systemDir, sizeof(systemDir))) {
       hMsobjsDll_ = LoadLibrary((systemDir + std::string("\\msobjs.dll")).c_str());
@@ -469,7 +469,7 @@ nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createE
 
   logger_->log_trace("Finish doc traversing, performing writing...");
 
-  if (output_format_ == cwel::OutputFormat::PLAINTEXT || output_format_ == cwel::OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::Plaintext || output_format_ == cwel::OutputFormat::Both) {
     logger_->log_trace("Writing event in plain text");
 
     auto& handler = getEventLogHandler(provider_name);
@@ -495,7 +495,7 @@ nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createE
     logger_->log_trace("Finish writing in plain text");
   }
 
-  if (output_format_ != cwel::OutputFormat::PLAINTEXT) {
+  if (output_format_ != cwel::OutputFormat::Plaintext) {
     substituteXMLPercentageItems(doc);
     logger_->log_trace("Finish substituting %% in XML");
   }
@@ -504,7 +504,7 @@ nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createE
     result.matched_fields = walker.getFieldValues();
   }
 
-  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::Both) {
     logger_->log_trace("Writing event in XML");
 
     wel::XmlString writer;
@@ -516,20 +516,20 @@ nonstd::expected<cwel::EventRender, std::string> ConsumeWindowsEventLog::createE
   }
 
   if (output_format_ == cwel::OutputFormat::JSON) {
-    switch (json_format_.value()) {
-      case cwel::JsonFormat::RAW: {
+    switch (json_format_) {
+      case cwel::JsonFormat::Raw: {
         logger_->log_trace("Writing event in raw JSON");
         result.json = wel::jsonToString(wel::toRawJSON(doc));
         logger_->log_trace("Finish writing in raw JSON");
         break;
       }
-      case cwel::JsonFormat::SIMPLE: {
+      case cwel::JsonFormat::Simple: {
         logger_->log_trace("Writing event in simple JSON");
         result.json = wel::jsonToString(wel::toSimpleJSON(doc));
         logger_->log_trace("Finish writing in simple JSON");
         break;
       }
-      case cwel::JsonFormat::FLATTENED: {
+      case cwel::JsonFormat::Flattened: {
         logger_->log_trace("Writing event in flattened JSON");
         result.json = wel::jsonToString(wel::toFlattenedJSON(doc));
         logger_->log_trace("Finish writing in flattened JSON");
@@ -591,18 +591,18 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const cwel::EventRe
     session.transfer(flow_file, Success);
   };
 
-  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::XML || output_format_ == cwel::OutputFormat::Both) {
     logger_->log_trace("Writing rendered XML to a flow file");
     commitFlowFile(eventRender.xml, "application/xml");
   }
 
-  if (output_format_ == cwel::OutputFormat::PLAINTEXT || output_format_ == cwel::OutputFormat::BOTH) {
+  if (output_format_ == cwel::OutputFormat::Plaintext || output_format_ == cwel::OutputFormat::Both) {
     logger_->log_trace("Writing rendered plain text to a flow file");
     commitFlowFile(eventRender.plaintext, "text/plain");
   }
 
   if (output_format_ == cwel::OutputFormat::JSON) {
-    logger_->log_trace("Writing rendered %s JSON to a flow file", json_format_.toString());
+    logger_->log_trace("Writing rendered %s JSON to a flow file", magic_enum::enum_name(json_format_).data());
     commitFlowFile(eventRender.json, "application/json");
   }
 }

@@ -32,19 +32,45 @@
 #include "utils/Enum.h"
 #include "google/cloud/storage/well_known_headers.h"
 
+namespace org::apache::nifi::minifi::extensions::gcp::put_gcs_object {
+enum class PredefinedAcl {
+  AUTHENTICATED_READ,
+  BUCKET_OWNER_FULL_CONTROL,
+  BUCKET_OWNER_READ_ONLY,
+  PRIVATE,
+  PROJECT_PRIVATE,
+  PUBLIC_READ_ONLY,
+  PUBLIC_READ_WRITE
+};
+}  // namespace org::apache::nifi::minifi::extensions::gcp::put_gcs_object
+
+namespace magic_enum::customize {
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl>(org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::AUTHENTICATED_READ:
+      return "authenticatedRead";
+    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_FULL_CONTROL:
+      return "bucketOwnerFullControl";
+    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::BUCKET_OWNER_READ_ONLY:
+      return "bucketOwnerRead";
+    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PRIVATE:
+      return "private";
+    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PROJECT_PRIVATE:
+      return "projectPrivate";
+    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PUBLIC_READ_ONLY:
+      return "publicRead";
+    case org::apache::nifi::minifi::extensions::gcp::put_gcs_object::PredefinedAcl::PUBLIC_READ_WRITE:
+      return "publicReadWrite";
+  }
+  return default_tag;
+}
+}  // namespace magic_enum::customize
+
 namespace org::apache::nifi::minifi::extensions::gcp {
 
 class PutGCSObject : public GCSProcessor {
  public:
-  SMART_ENUM(PredefinedAcl,
-             (AUTHENTICATED_READ, "authenticatedRead"),
-             (BUCKET_OWNER_FULL_CONTROL, "bucketOwnerFullControl"),
-             (BUCKET_OWNER_READ_ONLY, "bucketOwnerRead"),
-             (PRIVATE, "private"),
-             (PROJECT_PRIVATE, "projectPrivate"),
-             (PUBLIC_READ_ONLY, "publicRead"),
-             (PUBLIC_READ_WRITE, "publicReadWrite"));
-
   explicit PutGCSObject(std::string name, const utils::Identifier& uuid = {})
       : GCSProcessor(std::move(name), uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger(uuid)) {
   }
@@ -83,10 +109,10 @@ class PutGCSObject : public GCSProcessor {
       .isRequired(false)
       .supportsExpressionLanguage(true)
       .build();
-  EXTENSIONAPI static constexpr auto ObjectACL = core::PropertyDefinitionBuilder<PredefinedAcl::length>::createProperty("Object ACL")
+  EXTENSIONAPI static constexpr auto ObjectACL = core::PropertyDefinitionBuilder<magic_enum::enum_count<put_gcs_object::PredefinedAcl>()>::createProperty("Object ACL")
       .withDescription("Access Control to be attached to the object uploaded. Not providing this will revert to bucket defaults.")
       .isRequired(false)
-      .withAllowedValues(PredefinedAcl::values)
+      .withAllowedValues(magic_enum::enum_names<put_gcs_object::PredefinedAcl>())
       .build();
   EXTENSIONAPI static constexpr auto OverwriteObject = core::PropertyDefinitionBuilder<>::createProperty("Overwrite Object")
       .withDescription("If false, the upload to GCS will succeed only if the object does not exist.")

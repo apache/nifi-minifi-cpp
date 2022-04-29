@@ -32,17 +32,17 @@
 namespace org::apache::nifi::minifi::processors {
 
 namespace kafka {
-SMART_ENUM(SecurityProtocolOption,
-  (PLAINTEXT, "plaintext"),
-  (SSL, "ssl"),
-  (SASL_PLAIN, "sasl_plaintext"),
-  (SASL_SSL, "sasl_ssl")
-)
+enum class SecurityProtocolOption {
+  plaintext,
+  ssl,
+  sasl_plaintext,
+  sasl_ssl
+};
 
-SMART_ENUM(SASLMechanismOption,
-  (GSSAPI, "GSSAPI"),
-  (PLAIN, "PLAIN")
-)
+enum class SASLMechanismOption {
+  GSSAPI,
+  PLAIN
+};
 }  // namespace kafka
 
 class KafkaProcessorBase : public core::Processor {
@@ -51,10 +51,10 @@ class KafkaProcessorBase : public core::Processor {
         .withDescription("SSL Context Service Name")
         .withAllowedTypes({core::className<minifi::controllers::SSLContextService>()})
         .build();
-  EXTENSIONAPI static constexpr auto SecurityProtocol = core::PropertyDefinitionBuilder<kafka::SecurityProtocolOption::length>::createProperty("Security Protocol")
+  EXTENSIONAPI static constexpr auto SecurityProtocol = core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SecurityProtocolOption>()>::createProperty("Security Protocol")
         .withDescription("Protocol used to communicate with brokers. Corresponds to Kafka's 'security.protocol' property.")
-        .withDefaultValue(toStringView(kafka::SecurityProtocolOption::PLAINTEXT))
-        .withAllowedValues(kafka::SecurityProtocolOption::values)
+        .withDefaultValue(magic_enum::enum_name(kafka::SecurityProtocolOption::plaintext))
+        .withAllowedValues(magic_enum::enum_names<kafka::SecurityProtocolOption>())
         .isRequired(true)
         .build();
   EXTENSIONAPI static constexpr auto KerberosServiceName = core::PropertyDefinitionBuilder<>::createProperty("Kerberos Service Name")
@@ -66,10 +66,10 @@ class KafkaProcessorBase : public core::Processor {
   EXTENSIONAPI static constexpr auto KerberosKeytabPath = core::PropertyDefinitionBuilder<>::createProperty("Kerberos Keytab Path")
         .withDescription("The path to the location on the local filesystem where the kerberos keytab is located. Read permission on the file is required.")
         .build();
-  EXTENSIONAPI static constexpr auto SASLMechanism = core::PropertyDefinitionBuilder<kafka::SASLMechanismOption::length>::createProperty("SASL Mechanism")
+  EXTENSIONAPI static constexpr auto SASLMechanism = core::PropertyDefinitionBuilder<magic_enum::enum_count<kafka::SASLMechanismOption>()>::createProperty("SASL Mechanism")
         .withDescription("The SASL mechanism to use for authentication. Corresponds to Kafka's 'sasl.mechanism' property.")
-        .withDefaultValue(toStringView(kafka::SASLMechanismOption::GSSAPI))
-        .withAllowedValues(kafka::SASLMechanismOption::values)
+        .withDefaultValue(magic_enum::enum_name(kafka::SASLMechanismOption::GSSAPI))
+        .withAllowedValues(magic_enum::enum_names<kafka::SASLMechanismOption>())
         .isRequired(true)
         .build();
   EXTENSIONAPI static constexpr auto Username = core::PropertyDefinitionBuilder<>::createProperty("Username")

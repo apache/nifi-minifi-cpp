@@ -29,6 +29,7 @@
 #include "utils/JsonCallback.h"
 #include "utils/OpenTelemetryLogDataModelUtils.h"
 #include "utils/gsl.h"
+#include "utils/ProcessorConfigUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -41,9 +42,9 @@ void ProcFsMonitor::initialize() {
 
 void ProcFsMonitor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
-  context->getProperty(OutputFormatProperty, output_format_);
-  context->getProperty(OutputCompactnessProperty, output_compactness_);
-  context->getProperty(ResultRelativenessProperty, result_relativeness_);
+  output_format_ = utils::parseEnumProperty<OutputFormat>(*context, OutputFormatProperty);
+  output_compactness_ = utils::parseEnumProperty<OutputCompactness>(*context, OutputCompactnessProperty);
+  result_relativeness_ = utils::parseEnumProperty<ResultRelativeness>(*context, ResultRelativenessProperty);
   setupDecimalPlacesFromProperties(*context);
 }
 
@@ -94,11 +95,11 @@ void ProcFsMonitor::onTrigger(core::ProcessContext*, core::ProcessSession* sessi
   processProcessInformation(current_process_stats, last_cpu_period, body, root.GetAllocator());
   processMemoryInformation(body, root.GetAllocator());
 
-  if (output_compactness_ == OutputCompactness::PRETTY) {
+  if (output_compactness_ == OutputCompactness::Pretty) {
     utils::PrettyJsonOutputCallback callback(std::move(root), decimal_places_);
     session->write(flowFile, std::ref(callback));
     session->transfer(flowFile, Success);
-  } else if (output_compactness_ == OutputCompactness::COMPACT) {
+  } else if (output_compactness_ == OutputCompactness::Compact) {
     utils::JsonOutputCallback callback(std::move(root), decimal_places_);
     session->write(flowFile, std::ref(callback));
     session->transfer(flowFile, Success);
@@ -108,7 +109,7 @@ void ProcFsMonitor::onTrigger(core::ProcessContext*, core::ProcessSession* sessi
 }
 
 rapidjson::Value& ProcFsMonitor::prepareJSONBody(rapidjson::Document& root) {
-  if (output_format_ == OutputFormat::OPENTELEMETRY) {
+  if (output_format_ == OutputFormat::OpenTelemetry) {
     utils::OpenTelemetryLogDataModel::appendEventInformation(root, "PerformanceData");
     utils::OpenTelemetryLogDataModel::appendHostInformation(root);
     utils::OpenTelemetryLogDataModel::appendBody(root);
@@ -276,9 +277,9 @@ void ProcFsMonitor::processCPUInformation(const std::vector<std::pair<std::strin
   if (!cpu_stats_are_valid(current_cpu_stats))
     return;
 
-  if (result_relativeness_ == ResultRelativeness::RELATIVE)
+  if (result_relativeness_ == ResultRelativeness::Relative)
     processRelativeCPUInformation(current_cpu_stats, last_cpu_stats_, body, alloc);
-  else if (result_relativeness_ == ResultRelativeness::ABSOLUTE)
+  else if (result_relativeness_ == ResultRelativeness::Absolute)
     processAbsoluteCPUInformation(current_cpu_stats, body, alloc);
   else
     throw Exception(GENERAL_EXCEPTION, "Invalid result relativeness");
@@ -290,9 +291,9 @@ void ProcFsMonitor::processDiskInformation(const std::vector<std::pair<std::stri
   if (current_disk_stats.empty())
     return;
 
-  if (result_relativeness_ == ResultRelativeness::RELATIVE)
+  if (result_relativeness_ == ResultRelativeness::Relative)
     processRelativeDiskInformation(current_disk_stats, last_disk_stats_, last_trigger_, body, alloc);
-  else if (result_relativeness_ == ResultRelativeness::ABSOLUTE)
+  else if (result_relativeness_ == ResultRelativeness::Absolute)
     processAbsoluteDiskInformation(current_disk_stats, body, alloc);
   else
     throw Exception(GENERAL_EXCEPTION, "Invalid result relativeness");
@@ -304,9 +305,9 @@ void ProcFsMonitor::processNetworkInformation(const std::vector<std::pair<std::s
   if (current_net_devs.empty())
     return;
 
-  if (result_relativeness_ == ResultRelativeness::RELATIVE)
+  if (result_relativeness_ == ResultRelativeness::Relative)
     processRelativeNetworkInformation(current_net_devs, last_net_devs_, last_trigger_, body, alloc);
-  else if (result_relativeness_ == ResultRelativeness::ABSOLUTE)
+  else if (result_relativeness_ == ResultRelativeness::Absolute)
     processAbsoluteNetworkInformation(current_net_devs, body, alloc);
   else
     throw Exception(GENERAL_EXCEPTION, "Invalid result relativeness");
@@ -320,9 +321,9 @@ void ProcFsMonitor::processProcessInformation(const std::map<pid_t, ProcessStat>
     return;
 
   rapidjson::Value process_root{rapidjson::kObjectType};
-  if (result_relativeness_ == ResultRelativeness::RELATIVE)
+  if (result_relativeness_ == ResultRelativeness::Relative)
     processRelativeProcessInformation(current_process_stats, last_process_stats_, last_cpu_period, body, alloc);
-  else if (result_relativeness_ == ResultRelativeness::ABSOLUTE)
+  else if (result_relativeness_ == ResultRelativeness::Absolute)
     processAbsoluteProcessInformation(current_process_stats, body, alloc);
   else
     throw Exception(GENERAL_EXCEPTION, "Invalid result relativeness");

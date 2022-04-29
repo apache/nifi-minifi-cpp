@@ -166,25 +166,25 @@ int CoapProtocol::writeHeartbeat(io::OutputStream *stream, const minifi::c2::C2P
 minifi::c2::Operation CoapProtocol::getOperation(int type) {
   switch (type) {
     case 0:
-      return minifi::c2::Operation::ACKNOWLEDGE;
+      return minifi::c2::Operation::acknowledge;
     case 1:
-      return minifi::c2::Operation::HEARTBEAT;
+      return minifi::c2::Operation::heartbeat;
     case 2:
-      return minifi::c2::Operation::CLEAR;
+      return minifi::c2::Operation::clear;
     case 3:
-      return minifi::c2::Operation::DESCRIBE;
+      return minifi::c2::Operation::describe;
     case 4:
-      return minifi::c2::Operation::RESTART;
+      return minifi::c2::Operation::restart;
     case 5:
-      return minifi::c2::Operation::START;
+      return minifi::c2::Operation::start;
     case 6:
-      return minifi::c2::Operation::UPDATE;
+      return minifi::c2::Operation::update;
     case 7:
-      return minifi::c2::Operation::STOP;
+      return minifi::c2::Operation::stop;
     case 8:
-      return minifi::c2::Operation::PAUSE;
+      return minifi::c2::Operation::pause;
     case 9:
-      return minifi::c2::Operation::RESUME;
+      return minifi::c2::Operation::resume;
     default:
       gsl_FailFast();
   }
@@ -218,8 +218,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
 
   stream.write(version);
   std::string endpoint = "heartbeat";
-  switch (payload.getOperation().value()) {
-    case minifi::c2::Operation::ACKNOWLEDGE:
+  switch (payload.getOperation()) {
+    case minifi::c2::Operation::acknowledge:
       endpoint = "acknowledge";
       payload_type = 0;
       stream.write(&payload_type, 1);
@@ -227,7 +227,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
         return {payload.getOperation(), state::UpdateState::READ_ERROR};
       }
       break;
-    case minifi::c2::Operation::HEARTBEAT:
+    case minifi::c2::Operation::heartbeat:
       payload_type = 1;
       stream.write(&payload_type, 1);
       if (writeHeartbeat(&stream, payload) != 0) {

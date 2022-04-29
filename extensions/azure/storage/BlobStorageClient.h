@@ -33,11 +33,29 @@
 
 namespace org::apache::nifi::minifi::azure::storage {
 
-SMART_ENUM(OptionalDeletion,
-  (NONE, "None"),
-  (INCLUDE_SNAPSHOTS, "Include Snapshots"),
-  (DELETE_SNAPSHOTS_ONLY, "Delete Snapshots Only")
-)
+enum class OptionalDeletion {
+  NONE,
+  INCLUDE_SNAPSHOTS,
+  DELETE_SNAPSHOTS_ONLY
+};
+}  // namespace org::apache::nifi::minifi::azure::storage
+
+namespace magic_enum::customize {
+template <>
+constexpr customize_t enum_name<org::apache::nifi::minifi::azure::storage::OptionalDeletion>(org::apache::nifi::minifi::azure::storage::OptionalDeletion value) noexcept {
+  switch (value) {
+    case org::apache::nifi::minifi::azure::storage::OptionalDeletion::NONE:
+      return "None";
+    case org::apache::nifi::minifi::azure::storage::OptionalDeletion::INCLUDE_SNAPSHOTS:
+      return "Include Snapshots";
+    case org::apache::nifi::minifi::azure::storage::OptionalDeletion::DELETE_SNAPSHOTS_ONLY:
+      return "Delete Snapshots Only";
+  }
+  return default_tag;
+}
+}  // namespace magic_enum::customize
+
+namespace org::apache::nifi::minifi::azure::storage {
 
 struct AzureBlobStorageParameters {
   AzureStorageCredentials credentials;

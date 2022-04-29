@@ -38,10 +38,10 @@
 namespace org::apache::nifi::minifi::processors {
 
 namespace execute_script {
-SMART_ENUM(ScriptEngineOption,
-  (LUA, "lua"),
-  (PYTHON, "python")
-)
+enum class ScriptEngineOption {
+  lua,
+  python
+};
 }  // namespace execute_script
 
 class ExecuteScript : public core::Processor {
@@ -60,8 +60,8 @@ class ExecuteScript : public core::Processor {
   EXTENSIONAPI static constexpr auto ScriptEngine = core::PropertyDefinitionBuilder<2>::createProperty("Script Engine")
       .withDescription(R"(The engine to execute scripts (python, lua))")
       .isRequired(true)
-      .withAllowedValues(execute_script::ScriptEngineOption::values)
-      .withDefaultValue(toStringView(execute_script::ScriptEngineOption::PYTHON))
+      .withAllowedValues(magic_enum::enum_names<execute_script::ScriptEngineOption>())
+      .withDefaultValue(magic_enum::enum_name(execute_script::ScriptEngineOption::python))
       .build();
   EXTENSIONAPI static constexpr auto ScriptFile = core::PropertyDefinitionBuilder<>::createProperty("Script File")
       .withDescription(R"(Path to script file to execute. Only one of Script File or Script Body may be used)")

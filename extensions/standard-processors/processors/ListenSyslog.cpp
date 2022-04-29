@@ -51,8 +51,9 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
 
   context->getProperty(ParseMessages, parse_messages_);
 
-  utils::net::IpProtocol protocol;
-  context->getProperty(ProtocolProperty, protocol);
+  std::string protocol_name;
+  context->getProperty(ProtocolProperty, protocol_name);
+  auto protocol = utils::enumCast<utils::net::IpProtocol>(protocol_name);
 
   if (protocol == utils::net::IpProtocol::TCP) {
     startTcpServer(*context, SSLContextService, ClientAuth);
@@ -98,7 +99,7 @@ void ListenSyslog::transferAsFlowFile(const utils::net::Message& message, core::
   }
 
   session.writeBuffer(flow_file, message.message_data);
-  flow_file->setAttribute("syslog.protocol", message.protocol.toString());
+  flow_file->setAttribute("syslog.protocol", magic_enum::enum_name(message.protocol).data());
   flow_file->setAttribute("syslog.port", std::to_string(message.server_port));
   flow_file->setAttribute("syslog.sender", message.sender_address.to_string());
   session.transfer(flow_file, valid ? Success : Invalid);

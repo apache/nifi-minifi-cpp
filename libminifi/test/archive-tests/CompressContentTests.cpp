@@ -273,8 +273,8 @@ using CompressionFormat = minifi::processors::compress_content::ExtendedCompress
 using CompressionMode = minifi::processors::compress_content::CompressionMode;
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::GZIP));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -305,8 +305,8 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileGZip", "[compressfiletest1
 }
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfiletest2]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::GZIP));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -333,8 +333,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileGZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::BZIP2));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -362,8 +362,8 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileBZip", "[compressfiletest3
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfiletest4]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::BZIP2));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -387,8 +387,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileBZip", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::LZMA));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::LZMA));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -422,8 +422,8 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileLZMA", "[compressfiletest5
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfiletest6]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -453,8 +453,8 @@ TEST_CASE_METHOD(DecompressTestController, "DecompressFileLZMA", "[compressfilet
 }
 
 TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletest7]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::XZ_LZMA2));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::XZ_LZMA2));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -488,8 +488,8 @@ TEST_CASE_METHOD(CompressTestController, "CompressFileXYLZMA", "[compressfiletes
 
 
 TEST_CASE_METHOD(DecompressTestController, "DecompressFileXYLZMA", "[compressfiletest8]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::USE_MIME_TYPE));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::USE_MIME_TYPE));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
 
@@ -564,8 +564,8 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(get_file, minifi::processors::GetFile::Directory, src_dir.string());
 
   // Configure CompressContent processor for compression
-  plan->setProperty(compress_content, minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  plan->setProperty(compress_content, minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  plan->setProperty(compress_content, minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::compress));
+  plan->setProperty(compress_content, minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::GZIP));
   plan->setProperty(compress_content, minifi::processors::CompressContent::UpdateFileName, "true");
   plan->setProperty(compress_content, minifi::processors::CompressContent::EncapsulateInTar, "false");
 
@@ -573,8 +573,8 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(put_compressed, minifi::processors::PutFile::Directory, dst_dir.string());
 
   // Configure CompressContent processor for decompression
-  plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
-  plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::decompress));
+  plan->setProperty(decompress_content, minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::GZIP));
   plan->setProperty(decompress_content, minifi::processors::CompressContent::UpdateFileName, "true");
   plan->setProperty(decompress_content, minifi::processors::CompressContent::EncapsulateInTar, "false");
 
@@ -626,8 +626,8 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
   };
   const std::size_t batchSize = 3;
 
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Compress));
-  context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::compress));
+  context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::GZIP));
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");
   context->setProperty(minifi::processors::CompressContent::BatchSize, std::to_string(batchSize));
@@ -681,18 +681,18 @@ TEST_CASE_METHOD(CompressTestController, "Batch CompressFileGZip", "[compressFil
 }
 
 TEST_CASE_METHOD(DecompressTestController, "Invalid archive decompression", "[compressfiletest9]") {
-  context->setProperty(minifi::processors::CompressContent::CompressMode, toString(CompressionMode::Decompress));
+  context->setProperty(minifi::processors::CompressContent::CompressMode, magic_enum::enum_name(CompressionMode::decompress));
   SECTION("GZIP") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::GZIP));
+    context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::GZIP));
   }
   SECTION("LZMA") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::LZMA));
+    context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::LZMA));
   }
   SECTION("XZ_LZMA2") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::XZ_LZMA2));
+    context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::XZ_LZMA2));
   }
   SECTION("BZIP2") {
-    context->setProperty(minifi::processors::CompressContent::CompressFormat, toString(CompressionFormat::BZIP2));
+    context->setProperty(minifi::processors::CompressContent::CompressFormat, magic_enum::enum_name(CompressionFormat::BZIP2));
   }
   context->setProperty(minifi::processors::CompressContent::CompressLevel, "9");
   context->setProperty(minifi::processors::CompressContent::UpdateFileName, "true");

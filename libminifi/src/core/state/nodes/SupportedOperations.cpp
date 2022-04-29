@@ -20,6 +20,7 @@
 #include "range/v3/algorithm/contains.hpp"
 #include "range/v3/view/filter.hpp"
 #include "range/v3/view/view.hpp"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -80,27 +81,27 @@ SupportedOperations::Metadata SupportedOperations::buildUpdatePropertiesMetadata
 }
 
 void SupportedOperations::fillProperties(SerializedResponseNode& properties, minifi::c2::Operation operation) const {
-  switch (operation.value()) {
-    case minifi::c2::Operation::DESCRIBE: {
+  switch (operation) {
+    case minifi::c2::Operation::describe: {
       serializeProperty<minifi::c2::DescribeOperand>(properties);
       break;
     }
-    case minifi::c2::Operation::UPDATE: {
+    case minifi::c2::Operation::update: {
       std::unordered_map<std::string, Metadata> operand_with_metadata;
       operand_with_metadata.emplace("properties", buildUpdatePropertiesMetadata());
       serializeProperty<minifi::c2::UpdateOperand>(properties, operand_with_metadata);
       break;
     }
-    case minifi::c2::Operation::TRANSFER: {
+    case minifi::c2::Operation::transfer: {
       serializeProperty<minifi::c2::TransferOperand>(properties);
       break;
     }
-    case minifi::c2::Operation::CLEAR: {
+    case minifi::c2::Operation::clear: {
       serializeProperty<minifi::c2::ClearOperand>(properties);
       break;
     }
-    case minifi::c2::Operation::START:
-    case minifi::c2::Operation::STOP: {
+    case minifi::c2::Operation::start:
+    case minifi::c2::Operation::stop: {
       addProperty(properties, "c2");
       if (monitor_) {
         monitor_->executeOnAllComponents([&properties](StateController& component){
@@ -117,7 +118,7 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
 std::vector<SerializedResponseNode> SupportedOperations::serialize() {
   SerializedResponseNode supported_operation{.name = "supportedOperations", .array = true};
 
-  for (const auto& operation : minifi::c2::Operation::values) {
+  for (const auto& operation : magic_enum::enum_names<minifi::c2::Operation>()) {
     SerializedResponseNode child{
       .name = "supportedOperations",
       .children = {
@@ -126,7 +127,7 @@ std::vector<SerializedResponseNode> SupportedOperations::serialize() {
     };
 
     SerializedResponseNode properties{.name = "properties"};
-    fillProperties(properties, minifi::c2::Operation::parse(operation, {}, false));
+    fillProperties(properties, utils::enumCast<minifi::c2::Operation>(operation, std::nullopt, true));
     child.children.push_back(properties);
     supported_operation.children.push_back(child);
   }

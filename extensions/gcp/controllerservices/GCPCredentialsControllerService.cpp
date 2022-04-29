@@ -20,6 +20,7 @@
 
 #include "core/Resource.h"
 #include "google/cloud/storage/client.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace gcs = ::google::cloud::storage;
 
@@ -69,20 +70,24 @@ std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::creat
 }
 
 void GCPCredentialsControllerService::onEnable() {
-  CredentialsLocation credentials_location;
-  if (!getProperty(CredentialsLoc, credentials_location)) {
-    logger_->log_error("Invalid Credentials Location, defaulting to %s", toString(CredentialsLocation::USE_DEFAULT_CREDENTIALS));
+  std::string value;
+  std::optional<CredentialsLocation> credentials_location;
+  if (getProperty(CredentialsLoc, value)) {
+    credentials_location = magic_enum::enum_cast<CredentialsLocation>(value);
+  }
+  if (!credentials_location) {
+    logger_->log_error("Invalid Credentials Location, defaulting to %s", magic_enum::enum_name(CredentialsLocation::USE_DEFAULT_CREDENTIALS).data());
     credentials_location = CredentialsLocation::USE_DEFAULT_CREDENTIALS;
   }
-  if (credentials_location == CredentialsLocation::USE_DEFAULT_CREDENTIALS) {
+  if (*credentials_location == CredentialsLocation::USE_DEFAULT_CREDENTIALS) {
     credentials_ = createDefaultCredentials();
-  } else if (credentials_location == CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS) {
+  } else if (*credentials_location == CredentialsLocation::USE_COMPUTE_ENGINE_CREDENTIALS) {
     credentials_ = gcs::oauth2::CreateComputeEngineCredentials();
-  } else if (credentials_location == CredentialsLocation::USE_JSON_FILE) {
+  } else if (*credentials_location == CredentialsLocation::USE_JSON_FILE) {
     credentials_ = createCredentialsFromJsonPath();
-  } else if (credentials_location == CredentialsLocation::USE_JSON_CONTENTS) {
+  } else if (*credentials_location == CredentialsLocation::USE_JSON_CONTENTS) {
     credentials_ = createCredentialsFromJsonContents();
-  } else if (credentials_location == CredentialsLocation::USE_ANONYMOUS_CREDENTIALS) {
+  } else if (*credentials_location == CredentialsLocation::USE_ANONYMOUS_CREDENTIALS) {
     credentials_ = gcs::oauth2::CreateAnonymousCredentials();
   }
   if (!credentials_)
