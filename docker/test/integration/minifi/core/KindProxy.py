@@ -33,6 +33,12 @@ class KindProxy:
         self.__download_kind()
         self.docker_client = docker.from_env()
 
+    def __del__(self):
+        self.cleanup()
+
+    def cleanup(self):
+        subprocess.run([self.kind_binary_path, 'delete', 'cluster'])
+
     def __download_kind(self):
         if subprocess.run(['curl', '-Lo', self.kind_binary_path, 'https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64']).returncode != 0:
             raise Exception("Could not download kind")
@@ -78,9 +84,12 @@ class KindProxy:
         self.__create_objects_of_type(self.resources_directory, 'clusterrole')
         self.__create_objects_of_type(self.resources_directory, 'clusterrolebinding')
 
+    def delete_pods(self):
+        self.__delete_objects_of_type('pod')
+
     def __wait_for_default_service_account(self, namespace):
         for _ in range(120):
-            (code, output) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', '-n', namespace, 'get', 'serviceaccount', 'default'])
+            (code, _) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', '-n', namespace, 'get', 'serviceaccount', 'default'])
             if code == 0:
                 return
             time.sleep(1)
@@ -93,13 +102,22 @@ class KindProxy:
             file_name_in_container = os.path.join('/var/tmp', file_name)
             self.__copy_file_to_container(full_file_name, 'kind-control-plane', file_name_in_container)
 
-            (code, output) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', 'apply', '-f', file_name_in_container])
+            (code, _) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', 'apply', '-f', file_name_in_container])
             if code != 0:
                 raise Exception("Could not create kubernetes object from file '%s'" % full_file_name)
 
             object_name = file_name.replace(f'.{type}.yml', '')
             found_objects.append(object_name)
         return found_objects
+
+    def __delete_objects_of_type(self, type):
+        for full_file_name in glob.iglob(os.path.join(self.resources_directory, f'*.{type}.yml')):
+            file_name = os.path.basename(full_file_name)
+            file_name_in_container = os.path.join('/var/tmp', file_name)
+
+            (code, _) = self.docker_client.containers.get('kind-control-plane').exec_run(['kubectl', 'delete', '-f', file_name_in_container, '--grace-period=0', '--force'])
+            if code != 0:
+                raise Exception("Could not delete kubernetes object from file '%s'" % file_name_in_container)
 
     def __copy_file_to_container(self, host_file, container_name, container_file):
         if subprocess.run(['docker', 'cp', host_file, container_name + ':' + container_file]).returncode != 0:
@@ -111,8 +129,3 @@ class KindProxy:
             return output
         else:
             return None
-
-    def cleanup(self):
-        # cleanup gets called multiple times, also after the temp directories had been removed
-        if os.path.exists(self.kind_binary_path):
-            subprocess.run([self.kind_binary_path, 'delete', 'cluster'])

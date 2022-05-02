@@ -68,6 +68,3 @@ class OutputEventHandler(FileSystemEventHandler):
 
             if file_count_modified:
                 self.done_event.set()
-
-    def on_deleted(self, event):
-        logging.info("Output file deleted: " + event.src_path)

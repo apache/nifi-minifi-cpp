@@ -17,11 +17,15 @@
 import logging
 import datetime
 import sys
+import uuid
+import os
 sys.path.append('../minifi')
 
 from MiNiFi_integration_test_driver import MiNiFi_integration_test  # noqa: E402
 from minifi import *  # noqa
 from minifi.core.ImageStore import ImageStore # noqa
+from minifi.core.DockerTestDirectoryBindings import DockerTestDirectoryBindings # noqa
+from minifi.core.KindProxy import KindProxy # noqa
 
 
 def before_scenario(context, scenario):
@@ -30,7 +34,7 @@ def before_scenario(context, scenario):
         return
 
     logging.info("Integration test setup at {time:%H:%M:%S.%f}".format(time=datetime.datetime.now()))
-    context.test = MiNiFi_integration_test(context.image_store)
+    context.test = MiNiFi_integration_test(context.test_id, context.image_store, context.directory_bindings, context.kind)
 
 
 def after_scenario(context, scenario):
@@ -40,8 +44,28 @@ def after_scenario(context, scenario):
 
     logging.info("Integration test teardown at {time:%H:%M:%S.%f}".format(time=datetime.datetime.now()))
     context.test.cleanup()
+    context.directory_bindings.cleanup_io()
+    if context.kind:
+        context.kind.delete_pods()
 
 
 def before_all(context):
+    context.test_id = str(uuid.uuid4())
     context.config.setup_logging()
     context.image_store = ImageStore()
+    context.directory_bindings = DockerTestDirectoryBindings(context.test_id)
+    context.directory_bindings.create_new_data_directories()
+    context.kind = None
+
+
+def before_tag(context, tag):
+    if tag == "requires.kind.cluster":
+        context.kind = KindProxy(context.directory_bindings.get_data_directories(context.test_id)["kubernetes_temp_dir"], os.path.join(os.environ['TEST_DIRECTORY'], 'resources', 'kubernetes', 'pods-etc'))
+        context.kind.create_config(context.directory_bindings.get_directory_bindings(context.test_id))
+        context.kind.start_cluster()
+
+
+def after_tag(context, tag):
+    if tag == "requires.kind.cluster" and context.kind:
+        context.kind.cleanup()
+        context.kind = None

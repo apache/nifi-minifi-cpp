@@ -44,7 +44,7 @@ import os
 # Background
 @given("the content of \"{directory}\" is monitored")
 def step_impl(context, directory):
-    context.test.add_file_system_observer(FileSystemObserver(context.test.docker_path_to_local_path(directory)))
+    context.test.add_file_system_observer(FileSystemObserver(context.directory_bindings.docker_path_to_local_path(context.test_id, directory)))
 
 
 def __create_processor(context, processor_type, processor_name, property_name, property_value, container_name, engine='minifi-cpp'):
@@ -394,11 +394,13 @@ def step_impl(context):
 def step_impl(context):
     context.test.acquire_container("azure-storage-server", "azure-storage-server")
 
+
 # syslog client
 @given(u'a Syslog client with {protocol} protocol is setup to send logs to minifi')
 def step_impl(context, protocol):
     client_name = "syslog-" + protocol.lower() + "-client"
     context.test.acquire_container(client_name, client_name)
+
 
 # google cloud storage setup
 @given("a Google Cloud storage server is set up with some test data")

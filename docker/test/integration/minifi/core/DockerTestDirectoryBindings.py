@@ -20,29 +20,40 @@ import shutil
 
 
 class DockerTestDirectoryBindings:
-    def __init__(self):
+    def __init__(self, test_id):
         self.data_directories = {}
+        self.test_id = test_id
 
     def __del__(self):
         self.delete_data_directories()
 
-    def create_new_data_directories(self, test_id):
-        self.data_directories[test_id] = {
-            "input_dir": "/tmp/.nifi-test-input." + test_id,
-            "output_dir": "/tmp/.nifi-test-output." + test_id,
-            "resources_dir": "/tmp/.nifi-test-resources." + test_id,
-            "minifi_config_dir": "/tmp/.nifi-test-minifi-config-dir." + test_id,
-            "nifi_config_dir": "/tmp/.nifi-test-nifi-config-dir." + test_id
+    def cleanup_io(self):
+        for folder in [self.data_directories[self.test_id]["input_dir"], self.data_directories[self.test_id]["output_dir"]]:
+            for filename in os.listdir(folder):
+                file_path = os.path.join(folder, filename)
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+
+    def create_new_data_directories(self):
+        self.data_directories[self.test_id] = {
+            "input_dir": "/tmp/.nifi-test-input." + self.test_id,
+            "output_dir": "/tmp/.nifi-test-output." + self.test_id,
+            "resources_dir": "/tmp/.nifi-test-resources." + self.test_id,
+            "minifi_config_dir": "/tmp/.nifi-test-minifi-config-dir." + self.test_id,
+            "nifi_config_dir": "/tmp/.nifi-test-nifi-config-dir." + self.test_id,
+            "kubernetes_temp_dir": "/tmp/.nifi-test-kubernetes-temp-dir." + self.test_id
         }
 
-        [self.create_directory(directory) for directory in self.data_directories[test_id].values()]
+        [self.create_directory(directory) for directory in self.data_directories[self.test_id].values()]
 
         # Add resources
         test_dir = os.environ['TEST_DIRECTORY']  # Based on DockerVerify.sh
-        shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.data_directories[test_id]["resources_dir"] + "/certs")
-        shutil.copytree(test_dir + "/resources/python", self.data_directories[test_id]["resources_dir"] + "/python")
-        shutil.copytree(test_dir + "/resources/opcua", self.data_directories[test_id]["resources_dir"] + "/opcua")
-        shutil.copytree(test_dir + "/resources/lua", self.data_directories[test_id]["resources_dir"] + "/lua")
+        shutil.copytree(test_dir + "/resources/kafka_broker/conf/certs", self.data_directories[self.test_id]["resources_dir"] + "/certs")
+        shutil.copytree(test_dir + "/resources/python", self.data_directories[self.test_id]["resources_dir"] + "/python")
+        shutil.copytree(test_dir + "/resources/opcua", self.data_directories[self.test_id]["resources_dir"] + "/opcua")
+        shutil.copytree(test_dir + "/resources/lua", self.data_directories[self.test_id]["resources_dir"] + "/lua")
 
     def get_data_directories(self, test_id):
         return self.data_directories[test_id]

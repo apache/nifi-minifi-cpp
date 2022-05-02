@@ -23,7 +23,6 @@ from pydoc import locate
 from minifi.core.InputPort import InputPort
 
 from minifi.core.DockerTestCluster import DockerTestCluster
-from minifi.core.DockerTestDirectoryBindings import DockerTestDirectoryBindings
 
 from minifi.validators.EmptyFilesOutPutValidator import EmptyFilesOutPutValidator
 from minifi.validators.NoFileOutPutValidator import NoFileOutPutValidator
@@ -37,18 +36,17 @@ from minifi.validators.SingleJSONFileOutputValidator import SingleJSONFileOutput
 from minifi.core.utils import decode_escaped_str
 
 
-class MiNiFi_integration_test():
-    def __init__(self, image_store):
-        self.test_id = str(uuid.uuid4())
-        self.cluster = DockerTestCluster(image_store)
+class MiNiFi_integration_test:
+    def __init__(self, test_id, image_store, directory_bindings, kind):
+        self.test_id = test_id
+        self.cluster = DockerTestCluster(image_store, kind)
 
         self.connectable_nodes = []
         # Remote process groups are not connectables
         self.remote_process_groups = []
         self.file_system_observer = None
 
-        self.docker_directory_bindings = DockerTestDirectoryBindings()
-        self.docker_directory_bindings.create_new_data_directories(self.test_id)
+        self.docker_directory_bindings = directory_bindings
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id), self.docker_directory_bindings.get_data_directories(self.test_id))
 
     def __del__(self):
@@ -56,9 +54,6 @@ class MiNiFi_integration_test():
 
     def cleanup(self):
         self.cluster.cleanup()
-
-    def docker_path_to_local_path(self, docker_path):
-        return self.docker_directory_bindings.docker_path_to_local_path(self.test_id, docker_path)
 
     def acquire_container(self, name, engine='minifi-cpp', command=None):
         return self.cluster.acquire_container(name, engine, command)
