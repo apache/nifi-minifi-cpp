@@ -126,8 +126,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     ArchiveMetadata archiveMetadata;
     utils::file::FileManager file_man;
 
-    FocusArchiveEntry::ReadCallback readCallback(this, &file_man, &archiveMetadata);
-    session->read(flowFile, &readCallback);
+    session->read(flowFile, FocusArchiveEntry::ReadCallback{this, &file_man, &archiveMetadata});
 
     auto entries_end = archiveMetadata.entryMetadata.end();
 
@@ -210,9 +209,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
         archiveMetadata.entryMetadata.insert(position, touchEntry);
     }
 
-    UnfocusArchiveEntry::WriteCallback writeCallback(&archiveMetadata);
-    session->write(flowFile, &writeCallback);
-
+    session->write(flowFile, UnfocusArchiveEntry::WriteCallback{&archiveMetadata});
     session->transfer(flowFile, Success);
 }
 

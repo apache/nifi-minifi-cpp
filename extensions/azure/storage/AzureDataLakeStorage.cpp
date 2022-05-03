@@ -95,7 +95,7 @@ bool AzureDataLakeStorage::deleteFile(const DeleteAzureDataLakeStorageParameters
 std::optional<uint64_t> AzureDataLakeStorage::fetchFile(const FetchAzureDataLakeStorageParameters& params, io::BaseStream& stream) {
   try {
     auto result = data_lake_storage_client_->fetchFile(params);
-    return internal::pipe(result.get(), &stream);
+    return internal::pipe(*result, stream);
   } catch (const std::exception& ex) {
     logger_->log_error("An exception occurred while fetching '%s/%s' of filesystem '%s': %s", params.directory_name, params.filename, params.file_system_name, ex.what());
     return std::nullopt;

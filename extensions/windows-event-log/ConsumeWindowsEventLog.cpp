@@ -693,24 +693,8 @@ void ConsumeWindowsEventLog::refreshTimeZoneData() {
 }
 
 void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& eventRender, core::ProcessSession& session) const {
-  struct WriteCallback : public OutputStreamCallback {
-    explicit WriteCallback(const std::string& str)
-        : str_(str) {
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(str_.c_str()), str_.size());
-      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-    }
-
-    const std::string& str_;
-  };
-
   auto commitFlowFile = [&] (const std::shared_ptr<core::FlowFile>& flowFile, const std::string& content, const std::string& mimeType) {
-    {
-      WriteCallback wc{ content };
-      session.write(flowFile, &wc);
-    }
+    session.writeBuffer(flowFile, content);
     session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
     session.putAttribute(flowFile, "Timezone name", timezone_name_);
     session.putAttribute(flowFile, "Timezone offset", timezone_offset_);

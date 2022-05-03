@@ -53,7 +53,7 @@ namespace utils {
  *  - because of this, all functions that request data at a specific offset are implicit seeks and potentially modify
  *    the current buffer
  */
-class HttpStreamingCallback : public ByteInputCallBack {
+class HttpStreamingCallback final : public ByteInputCallback {
  public:
   HttpStreamingCallback()
       : is_alive_(true),
@@ -78,7 +78,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     seekInner(lock, pos);
   }
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) override {
     std::vector<std::byte> vec;
 
     if (stream->size() > 0) {
@@ -89,7 +89,7 @@ class HttpStreamingCallback : public ByteInputCallBack {
     return processInner(std::move(vec));
   }
 
-  virtual int64_t process(const uint8_t* data, size_t size) {
+  int64_t process(const uint8_t* data, size_t size) {
     std::vector<std::byte> vec;
     vec.resize(size);
     memcpy(vec.data(), data, size);

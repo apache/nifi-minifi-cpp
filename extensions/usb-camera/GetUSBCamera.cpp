@@ -109,25 +109,18 @@ void GetUSBCamera::onFrame(uvc_frame_t *frame, void *ptr) {
     flow_file->getAttribute("filename", flow_file_name);
     cb_data->logger->log_info("Created flow file: %s", flow_file_name);
 
-    // Initialize callback according to output format
-    std::shared_ptr<OutputStreamCallback> write_cb;
-
-    if (cb_data->format == "PNG") {
-      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx,
-                                                                  cb_data->frame_buffer,
-                                                                  cb_data->device_width,
-                                                                  cb_data->device_height);
-    } else if (cb_data->format == "RAW") {
-      write_cb = std::make_shared<GetUSBCamera::RawWriteCallback>(cb_data->frame_buffer);
+    if (cb_data->format == "RAW") {
+      session->writeBuffer(flow_file, gsl::make_span(static_cast<const std::byte*>(cb_data->frame_buffer->data), cb_data->frame_buffer->data_bytes));
     } else {
-      cb_data->logger->log_warn("Invalid format specified (%s); defaulting to PNG", cb_data->format);
-      write_cb = std::make_shared<GetUSBCamera::PNGWriteCallback>(cb_data->png_write_mtx,
-                                                                  cb_data->frame_buffer,
-                                                                  cb_data->device_width,
-                                                                  cb_data->device_height);
+      if (cb_data->format != "PNG") {
+        cb_data->logger->log_warn("Invalid format specified (%s); defaulting to PNG", cb_data->format);
+      }
+      session->write(flow_file, GetUSBCamera::PNGWriteCallback{
+          cb_data->png_write_mtx,
+          cb_data->frame_buffer,
+          cb_data->device_width,
+          cb_data->device_height});
     }
-
-    session->write(flow_file, write_cb.get());
     session->transfer(flow_file, GetUSBCamera::Success);
     session->commit();
   } catch (std::exception &exception) {
@@ -407,7 +400,7 @@ GetUSBCamera::PNGWriteCallback::PNGWriteCallback(std::shared_ptr<std::mutex> wri
       height_(height) {
 }
 
-int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) {
   std::lock_guard<std::mutex> lock(*png_write_mtx_);
   logger_->log_info("Writing %d bytes of raw capture data to PNG output", frame_->data_bytes);
   png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
@@ -464,16 +457,6 @@ int64_t GetUSBCamera::PNGWriteCallback::process(const std::shared_ptr<io::BaseSt
   }
 
   const auto write_ret = stream->write(png_output_buf_.data(), png_output_buf_.size());
-  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-}
-
-GetUSBCamera::RawWriteCallback::RawWriteCallback(uvc_frame_t *frame)
-    : frame_(frame) {
-}
-
-int64_t GetUSBCamera::RawWriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  logger_->log_info("Writing %d bytes of raw capture data", frame_->data_bytes);
-  const auto write_ret = stream->write(reinterpret_cast<uint8_t*>(frame_->data), frame_->data_bytes);
   return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 

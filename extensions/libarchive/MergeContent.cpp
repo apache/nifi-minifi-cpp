@@ -295,7 +295,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
     return false;
   }
 
-  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
+  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, const io::InputStreamCallback& cb) {
     return session->read(ff, cb);
   };
 
@@ -349,8 +349,7 @@ BinaryConcatenationMerge::BinaryConcatenationMerge(const std::string &header, co
 
 void BinaryConcatenationMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
-  BinaryConcatenationMerge::WriteCallback callback(header_, footer_, demarcator_, flows, serializer);
-  session->write(merge_flow, &callback);
+  session->write(merge_flow, BinaryConcatenationMerge::WriteCallback{header_, footer_, demarcator_, flows, serializer});
   std::string fileName;
   if (flows.size() == 1) {
     flows.front()->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
@@ -363,8 +362,7 @@ void BinaryConcatenationMerge::merge(core::ProcessContext* /*context*/, core::Pr
 
 void TarMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
-  ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_TAR_VALUE), flows, serializer);
-  session->write(merge_flow, &callback);
+  session->write(merge_flow, ArchiveMerge::WriteCallback{merge_content_options::MERGE_FORMAT_TAR_VALUE, flows, serializer});
   std::string fileName;
   merge_flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
   if (flows.size() == 1) {
@@ -380,8 +378,7 @@ void TarMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *se
 
 void ZipMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {
-  ArchiveMerge::WriteCallback callback(std::string(merge_content_options::MERGE_FORMAT_ZIP_VALUE), flows, serializer);
-  session->write(merge_flow, &callback);
+  session->write(merge_flow, ArchiveMerge::WriteCallback{merge_content_options::MERGE_FORMAT_ZIP_VALUE, flows, serializer});
   std::string fileName;
   merge_flow->getAttribute(core::SpecialFlowAttribute::FILENAME, fileName);
   if (flows.size() == 1) {

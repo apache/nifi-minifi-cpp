@@ -137,8 +137,7 @@ void GetEnvironmentalSensors::onTrigger(const std::shared_ptr<core::ProcessConte
   }
 
   if (have_sensor) {
-    WriteCallback callback("GetEnvironmentalSensors");
-    session->write(flow_file_, &callback);
+    session->writeBuffer(flow_file_, "GetEnvironmentalSensors");
     session->transfer(flow_file_, Success);
   }
 }

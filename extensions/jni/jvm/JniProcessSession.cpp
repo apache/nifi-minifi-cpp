@@ -18,21 +18,16 @@
 
 #include "JniProcessSession.h"
 
-#include <string>
 #include <memory>
+#include <string>
 #include <algorithm>
-#include <iterator>
 #include <set>
 #include <utility>
-#include "core/Property.h"
-#include "io/validation.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "properties/Configure.h"
 #include "JVMLoader.h"
 #include "JniReferenceObjects.h"
 
-#include "core/Processor.h"
 #include "JniFlowFile.h"
 #include "../JavaException.h"
 
@@ -76,21 +71,15 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniProcessSession_readF
   minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
   if (ptr->get()) {
     auto jincls = minifi::jni::JVMLoader::getInstance()->load_class("org/apache/nifi/processor/JniInputStream", env);
-
     auto jin = jincls.newInstance(env);
-
     minifi::jni::ThrowIf(env);
 
-    std::unique_ptr<minifi::jni::JniByteInputStream> callback = std::unique_ptr<minifi::jni::JniByteInputStream>(new minifi::jni::JniByteInputStream(4096));
-
-    session->getSession()->read(ptr->get(), callback.get());
-
+    auto callback = std::make_unique<minifi::jni::JniByteInputStream>(4096);
+    session->getSession()->read(ptr->get(), std::ref(*callback));
     auto jniInpuStream = std::make_shared<minifi::jni::JniInputStream>(std::move(callback), jin, session->getServicer());
-
     session->addInputStream(jniInpuStream);
 
     minifi::jni::JVMLoader::getInstance()->setReference(jin, env, jniInpuStream.get());
-
     return jin;
   }
 
@@ -133,8 +122,9 @@ JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_writ
     jbyte* buffer = env->GetByteArrayElements(byteArray, 0);
     jsize length = env->GetArrayLength(byteArray);
 
-    minifi::jni::JniByteOutStream outStream(buffer, (size_t) length);
-    session->getSession()->write(ptr->get(), &outStream);
+    if (length > 0) {
+      session->getSession()->writeBuffer(ptr->get(), gsl::make_span(reinterpret_cast<std::byte*>(buffer), gsl::narrow<size_t>(length)));
+    }
 
     env->ReleaseByteArrayElements(byteArray, buffer, 0);
 
@@ -436,16 +426,15 @@ JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniProcessSession_appe
     return false;
   }
   THROW_IF((ff == nullptr || byteArray == nullptr), env, NO_FF_OBJECT);
-  minifi::jni::JniSession *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
+  auto *session = minifi::jni::JVMLoader::getPtr<minifi::jni::JniSession>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, ff);
 
   if (ptr->get()) {
     jbyte* buffer = env->GetByteArrayElements(byteArray, 0);
     jsize length = env->GetArrayLength(byteArray);
 
     if (length > 0) {
-      minifi::jni::JniByteOutStream outStream(buffer, (size_t) length);
-      session->getSession()->append(ptr->get(), &outStream);
+      session->getSession()->appendBuffer(ptr->get(), gsl::make_span(reinterpret_cast<std::byte*>(buffer), gsl::narrow<size_t>(length)));
     }
 
     env->ReleaseByteArrayElements(byteArray, buffer, 0);

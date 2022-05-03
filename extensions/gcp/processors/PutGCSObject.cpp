@@ -114,7 +114,7 @@ const core::Relationship PutGCSObject::Failure("failure", "Files that could not 
 
 
 namespace {
-class UploadToGCSCallback : public InputStreamCallback {
+class UploadToGCSCallback {
  public:
   UploadToGCSCallback(gcs::Client& client, std::string bucket, std::string key)
       : bucket_(std::move(bucket)),
@@ -122,7 +122,7 @@ class UploadToGCSCallback : public InputStreamCallback {
         client_(client) {
   }
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
     std::string content;
     content.resize(stream->size());
     const auto read_ret = stream->read(gsl::make_span(content).as_span<std::byte>());
@@ -283,7 +283,7 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
 
   callback.setEncryptionKey(encryption_key_);
 
-  session->read(flow_file, &callback);
+  session->read(flow_file, std::ref(callback));
   auto& result = callback.getResult();
   if (!result.ok()) {
     flow_file->setAttribute(GCS_ERROR_REASON, result.status().error_info().reason());

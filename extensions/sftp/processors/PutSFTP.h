@@ -89,21 +89,6 @@ class PutSFTP : public SFTPProcessorBase {
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
-  class ReadCallback : public InputStreamCallback {
-   public:
-    ReadCallback(const std::string& target_path,
-        utils::SFTPClient& client,
-        const std::string& conflict_resolution);
-    ~ReadCallback() override;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
-
-   private:
-    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutSFTP::ReadCallback>::getLogger();
-    const std::string target_path_;
-    utils::SFTPClient& client_;
-    const std::string conflict_resolution_;
-  };
-
  private:
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_REQUIRED;

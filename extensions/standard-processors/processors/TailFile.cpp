@@ -211,7 +211,7 @@ void openFile(const std::string &file_name, uint64_t offset, std::ifstream &inpu
 
 constexpr std::size_t BUFFER_SIZE = 4096;
 
-class FileReaderCallback : public OutputStreamCallback {
+class FileReaderCallback {
  public:
   FileReaderCallback(const std::string &file_name,
                      uint64_t offset,
@@ -222,7 +222,7 @@ class FileReaderCallback : public OutputStreamCallback {
     openFile(file_name, offset, input_stream_, logger_);
   }
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& output_stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& output_stream) {
     io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
 
     uint64_t num_bytes_written = 0;
@@ -282,7 +282,7 @@ class FileReaderCallback : public OutputStreamCallback {
   bool latest_flow_file_ends_with_delimiter_ = true;
 };
 
-class WholeFileReaderCallback : public OutputStreamCallback {
+class WholeFileReaderCallback {
  public:
   WholeFileReaderCallback(const std::string &file_name,
                           uint64_t offset,
@@ -295,7 +295,7 @@ class WholeFileReaderCallback : public OutputStreamCallback {
     return checksum_;
   }
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& output_stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& output_stream) {
     std::array<char, BUFFER_SIZE> buffer;
 
     io::CRCStream<io::BaseStream> crc_stream{gsl::make_not_null(output_stream.get()), checksum_};
@@ -796,7 +796,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
 
     while (file_reader.hasMoreToRead()) {
       auto flow_file = session->create();
-      session->write(flow_file, &file_reader);
+      session->write(flow_file, std::ref(file_reader));
 
       if (file_reader.useLatestFlowFile()) {
         updateFlowFileAttributes(full_file_name, state_copy, fileName, baseName, extension, flow_file);
@@ -816,7 +816,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
   } else {
     WholeFileReaderCallback file_reader{full_file_name, state.position_, state.checksum_};
     auto flow_file = session->create();
-    session->write(flow_file, &file_reader);
+    session->write(flow_file, std::ref(file_reader));
 
     updateFlowFileAttributes(full_file_name, state, fileName, baseName, extension, flow_file);
     session->transfer(flow_file, Success);

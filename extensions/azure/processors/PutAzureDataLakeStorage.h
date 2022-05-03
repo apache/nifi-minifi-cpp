@@ -61,12 +61,12 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
  private:
   friend class ::AzureDataLakeStorageTestsFixture<PutAzureDataLakeStorage>;
 
-  class ReadCallback : public InputStreamCallback {
+  class ReadCallback {
    public:
     ReadCallback(uint64_t flow_size, storage::AzureDataLakeStorage& azure_data_lake_storage, const storage::PutAzureDataLakeStorageParameters& params, std::shared_ptr<core::logging::Logger> logger);
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
 
-    storage::UploadDataLakeStorageResult getResult() const {
+    [[nodiscard]] storage::UploadDataLakeStorageResult getResult() const {
       return result_;
     }
 

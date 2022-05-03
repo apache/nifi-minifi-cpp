@@ -89,25 +89,6 @@ class SocketAfterExecute : public utils::AfterExecute<int> {
   std::map<std::string, std::future<int>*> *list_;
 };
 
-class DataHandlerCallback : public OutputStreamCallback {
- public:
-  DataHandlerCallback(uint8_t *message, size_t size)
-      : message_(message),
-        size_(size) {
-  }
-
-  ~DataHandlerCallback() override = default;
-
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    const auto write_ret = stream->write(message_, size_);
-    return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-  }
-
- private:
-  uint8_t *message_;
-  size_t size_;
-};
-
 class DataHandler {
  public:
   DataHandler(std::shared_ptr<core::ProcessSessionFactory> sessionFactory) // NOLINT

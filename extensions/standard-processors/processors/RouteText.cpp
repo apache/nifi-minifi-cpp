@@ -140,14 +140,14 @@ void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFa
   context->getProperty(GroupingFallbackValue.getName(), group_fallback_);
 }
 
-class RouteText::ReadCallback : public InputStreamCallback {
+class RouteText::ReadCallback {
   using Fn = std::function<void(Segment)>;
 
  public:
   ReadCallback(Segmentation segmentation, size_t file_size, Fn&& fn)
     : segmentation_(segmentation), file_size_(file_size), fn_(std::move(fn)) {}
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
     std::vector<std::byte> buffer;
     buffer.resize(file_size_);
     size_t ret = stream->read(buffer);
@@ -364,7 +364,7 @@ void RouteText::onTrigger(core::ProcessContext *context, core::ProcessSession *s
     }
     throw Exception(PROCESSOR_EXCEPTION, "Unknown routing strategy");
   });
-  session->read(flow_file, &callback);
+  session->read(flow_file, std::move(callback));
 
   for (const auto& [route, content] : flow_file_contents) {
     auto new_flow_file = session->create(flow_file);

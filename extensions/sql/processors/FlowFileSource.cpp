@@ -53,11 +53,10 @@ void FlowFileSource::FlowFileGenerator::endProcessBatch() {
     return;
   }
 
-  OutputStreamPipe writer{std::make_shared<io::BufferStream>(json_writer_.toString())};
   auto new_flow = session_.create();
   new_flow->addAttribute(FRAGMENT_INDEX, std::to_string(flow_files_.size()));
   new_flow->addAttribute(FRAGMENT_IDENTIFIER, batch_id_.to_string());
-  session_.write(new_flow, &writer);
+  session_.writeBuffer(new_flow, json_writer_.toString());
   flow_files_.push_back(std::move(new_flow));
 }
 

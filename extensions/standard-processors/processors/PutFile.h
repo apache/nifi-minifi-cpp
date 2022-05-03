@@ -79,11 +79,11 @@ class PutFile : public core::Processor {
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
 
-  class ReadCallback : public InputStreamCallback {
+  class ReadCallback {
    public:
     ReadCallback(std::string tmp_file, std::string dest_file);
-    ~ReadCallback() override;
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override;
+    ~ReadCallback();
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream);
     bool commit();
 
    private:

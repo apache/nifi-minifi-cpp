@@ -167,8 +167,7 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
     session->transfer(flow_file, Success);
   } else {
     logger_->log_debug("Writing the following attribute data to flowfile: %s", json_data);
-    AttributesToJSON::WriteCallback callback(json_data);
-    session->write(flow_file, &callback);
+    session->writeBuffer(flow_file, json_data);
     session->transfer(flow_file, Success);
   }
 }

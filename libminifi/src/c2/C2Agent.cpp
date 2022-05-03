@@ -669,7 +669,7 @@ C2Payload C2Agent::bundleDebugInfo(std::map<std::string, std::unique_ptr<io::Inp
     if (!archiver->newEntry({filename, file_size})) {
       throw C2DebugBundleError("Couldn't initialize archive entry for '" + filename + "'");
     }
-    if (gsl::narrow<int64_t>(file_size) != internal::pipe(stream.get(), archiver.get())) {
+    if (gsl::narrow<int64_t>(file_size) != internal::pipe(*stream, *archiver)) {
       // we have touched the input streams, they cannot be reused
       throw C2DebugBundleError("Error while writing file '" + filename + "' into the debug bundle");
     }

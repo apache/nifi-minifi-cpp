@@ -109,10 +109,17 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
   }
 
   auto fetched_flow_file = session->create(flow_file);
-  WriteCallback callback(azure_data_lake_storage_, *params, logger_);
-  session->write(fetched_flow_file, &callback);
+  std::optional<uint64_t> result;
+  session->write(fetched_flow_file, [&, this](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+    result = azure_data_lake_storage_.fetchFile(*params, *output_stream);
+    if (!result) {
+      return 0;
+    }
 
-  if (callback.getResult() == std::nullopt) {
+    return gsl::narrow<int64_t>(*result);
+  });
+
+  if (result == std::nullopt) {
     logger_->log_error("Failed to fetch file '%s' from Azure Data Lake storage", params->filename);
     session->transfer(flow_file, Failure);
     session->remove(fetched_flow_file);

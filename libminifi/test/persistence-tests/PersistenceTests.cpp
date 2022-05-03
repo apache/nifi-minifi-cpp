@@ -109,8 +109,7 @@ struct TestFlow{
     return flow;
   }
   std::string read(const std::shared_ptr<core::FlowFile>& file) {
-    core::ProcessSession session(processorContext);
-    return to_string(session.readBuffer(file));
+    return to_string(core::ProcessSession{processorContext}.readBuffer(file));
   }
   void trigger() {
     auto session = std::make_shared<core::ProcessSession>(processorContext);

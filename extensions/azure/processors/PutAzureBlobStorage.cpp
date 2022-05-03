@@ -99,7 +99,7 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
     }
   }
   PutAzureBlobStorage::ReadCallback callback(flow_file->getSize(), azure_blob_storage_, *params);
-  session->read(flow_file, &callback);
+  session->read(flow_file, std::ref(callback));
   const std::optional<storage::UploadBlobResult> upload_result = callback.getResult();
 
   if (!upload_result) {

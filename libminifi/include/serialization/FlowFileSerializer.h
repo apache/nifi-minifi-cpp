@@ -21,6 +21,7 @@
 #include <memory>
 #include <utility>
 #include <functional>
+#include "io/StreamCallback.h"
 
 namespace org {
 namespace apache {
@@ -38,11 +39,9 @@ class FlowFile;
 
 } /* namespace core */
 
-class InputStreamCallback;
-
 class FlowFileSerializer {
  public:
-  using FlowFileReader = std::function<int64_t(const std::shared_ptr<core::FlowFile>&, InputStreamCallback*)>;
+  using FlowFileReader = std::function<int64_t(const std::shared_ptr<core::FlowFile>&, const io::InputStreamCallback&)>;
 
   explicit FlowFileSerializer(FlowFileReader reader) : reader_(std::move(reader)) {}
 

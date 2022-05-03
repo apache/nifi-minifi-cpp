@@ -187,7 +187,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
         if (!compressor.newEntry({filename, in->size()})) {
           return -1;
         }
-        return internal::pipe(in.get(), &compressor);
+        return internal::pipe(*in, compressor);
       };
     } else {
       transformer = [&] (const std::shared_ptr<io::InputStream>& in, const std::shared_ptr<io::OutputStream>& out) -> int64_t {
@@ -196,7 +196,7 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
           success = false;
           return 0;  // prevents a session rollback
         }
-        auto ret = internal::pipe(&decompressor, out.get());
+        auto ret = internal::pipe(decompressor, *out);
         if (ret < 0) {
           success = false;
           return 0;  // prevents a session rollback
@@ -204,14 +204,14 @@ void CompressContent::processFlowFile(const std::shared_ptr<core::FlowFile>& flo
         return ret;
       };
     }
-    session->write(result, FunctionOutputStreamCallback([&] (const auto& out) {
-      return session->read(flowFile, FunctionInputStreamCallback([&] (const auto& in) {
+    session->write(result, [&] (const auto& out) {
+      return session->read(flowFile, [&] (const auto& in) {
         return transformer(in, out);
-      }));
-    }));
+      });
+    });
   } else {
     CompressContent::GzipWriteCallback callback(compressMode_, compressLevel_, flowFile, session);
-    session->write(result, &callback);
+    session->write(result, std::ref(callback));
     success = callback.success_;
   }
 

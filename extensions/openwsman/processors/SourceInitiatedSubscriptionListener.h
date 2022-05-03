@@ -39,11 +39,7 @@ extern "C" {
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class SourceInitiatedSubscriptionListener : public core::Processor {
  public:
@@ -86,16 +82,7 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   class Handler: public CivetHandler {
    public:
     explicit Handler(SourceInitiatedSubscriptionListener& processor);
-    bool handlePost(CivetServer* server, struct mg_connection* conn);
-
-    class WriteCallback : public OutputStreamCallback {
-     public:
-      explicit WriteCallback(char* text);
-      int64_t process(const std::shared_ptr<io::BaseStream>& stream);
-
-     private:
-      char* text_;
-    };
+    bool handlePost(CivetServer* server, struct mg_connection* conn) override;
 
    private:
     SourceInitiatedSubscriptionListener& processor_;
@@ -163,8 +150,4 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   bool loadState();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

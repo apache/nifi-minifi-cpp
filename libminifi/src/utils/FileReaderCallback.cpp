@@ -35,31 +35,32 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
-FileReaderCallback::FileReaderCallback(const std::string& file_name)
-    : logger_(core::logging::LoggerFactory<FileReaderCallback>::getLogger()) {
-  logger_->log_debug("Opening %s", file_name);
-  input_stream_.open(file_name.c_str(), std::fstream::in | std::fstream::binary);
-  if (!input_stream_.is_open()) {
-    throw FileReaderCallbackIOError(StringUtils::join_pack("Error opening file: ", std::strerror(errno)), errno);
-  }
+FileReaderCallback::FileReaderCallback(std::string file_name)
+    : file_name_{std::move(file_name)},
+    logger_(core::logging::LoggerFactory<FileReaderCallback>::getLogger()) {
 }
 
-int64_t FileReaderCallback::process(const std::shared_ptr<io::BaseStream>& output_stream) {
+int64_t FileReaderCallback::operator()(const std::shared_ptr<io::BaseStream>& output_stream) const {
   std::array<char, BUFFER_SIZE> buffer;
   uint64_t num_bytes_written = 0;
 
-  while (input_stream_.good()) {
-    input_stream_.read(buffer.data(), buffer.size());
-    if (input_stream_.bad()) {
+  std::ifstream input_stream{file_name_, std::ifstream::in | std::ifstream::binary};
+  if (!input_stream.is_open()) {
+    throw FileReaderCallbackIOError(StringUtils::join_pack("Error opening file: ", std::strerror(errno)), errno);
+  }
+  logger_->log_debug("Opening %s", file_name_);
+  while (input_stream.good()) {
+    input_stream.read(buffer.data(), buffer.size());
+    if (input_stream.bad()) {
       throw FileReaderCallbackIOError(StringUtils::join_pack("Error reading file: ", std::strerror(errno)), errno);
     }
-    const auto num_bytes_read = input_stream_.gcount();
+    const auto num_bytes_read = input_stream.gcount();
     logger_->log_trace("Read %jd bytes of input", std::intmax_t{num_bytes_read});
-    const int len = gsl::narrow<int>(num_bytes_read);
+    const auto len = gsl::narrow<size_t>(num_bytes_read);
     output_stream->write(reinterpret_cast<uint8_t*>(buffer.data()), len);
     num_bytes_written += len;
   }
-  input_stream_.close();
+  input_stream.close();
 
   logger_->log_debug("Finished reading %" PRIu64 " bytes from the file", num_bytes_written);
   return num_bytes_written;

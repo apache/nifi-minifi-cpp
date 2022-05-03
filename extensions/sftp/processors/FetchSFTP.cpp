@@ -158,21 +158,6 @@ void FetchSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
   startKeepaliveThreadIfNeeded();
 }
 
-FetchSFTP::WriteCallback::WriteCallback(const std::string& remote_file,
-                                    utils::SFTPClient& client)
-    : remote_file_(remote_file)
-    , client_(client) {
-}
-
-FetchSFTP::WriteCallback::~WriteCallback() = default;
-
-int64_t FetchSFTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  if (!client_.getFile(remote_file_, *stream)) {
-    throw utils::SFTPException{client_.getLastError()};
-  }
-  return stream->size();
-}
-
 void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   auto flow_file = session->get();
   if (flow_file == nullptr) {
@@ -220,9 +205,13 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   };
 
   /* Download file */
-  WriteCallback write_callback(remote_file, *client);
   try {
-    session->write(flow_file, &write_callback);
+    session->write(flow_file, [&remote_file, &client](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+      if (!client->getFile(remote_file, *stream)) {
+        throw utils::SFTPException{client->getLastError()};
+      }
+      return gsl::narrow<int64_t>(stream->size());
+    });
   } catch (const utils::SFTPException& ex) {
     logger_->log_debug(ex.what());
     switch (ex.error().value()) {

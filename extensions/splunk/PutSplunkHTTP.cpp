@@ -30,6 +30,7 @@
 #include "client/HTTPClient.h"
 #include "utils/HTTPClient.h"
 #include "utils/OptionalUtils.h"
+#include "utils/ByteArrayCallback.h"
 
 #include "rapidjson/document.h"
 
@@ -131,9 +132,9 @@ void setFlowFileAsPayload(core::ProcessSession& session,
                           core::ProcessContext& context,
                           utils::HTTPClient& client,
                           const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file,
-                          utils::ByteInputCallBack& payload_callback,
+                          utils::ByteInputCallback& payload_callback,
                           utils::HTTPUploadCallback& payload_callback_obj) {
-  session.read(flow_file, &payload_callback);
+  session.read(flow_file, std::ref(payload_callback));
   payload_callback_obj.ptr = &payload_callback;
   payload_callback_obj.pos = 0;
   client.appendHeader("Content-Length", std::to_string(flow_file->getSize()));
@@ -160,7 +161,7 @@ void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
   utils::HTTPClient client;
   initializeClient(client, getNetworkLocation().append(getEndpoint(*context, flow_file, client)), getSSLContextService(*context));
 
-  utils::ByteInputCallBack payload_callback;
+  utils::ByteInputCallback payload_callback;
   utils::HTTPUploadCallback payload_callback_obj;
   setFlowFileAsPayload(*session, *context, client, flow_file, payload_callback, payload_callback_obj);
 

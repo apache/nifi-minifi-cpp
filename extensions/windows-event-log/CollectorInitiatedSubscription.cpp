@@ -627,29 +627,13 @@ void CollectorInitiatedSubscription::unsubscribe() {
 }
 
 int CollectorInitiatedSubscription::processQueue(const std::shared_ptr<core::ProcessSession> &session) {
-  struct WriteCallback: public OutputStreamCallback {
-    explicit WriteCallback(const std::string& str)
-      : str_(&str) {
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(str_->data()), str_->size());
-      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-    }
-
-    gsl::not_null<const std::string*> str_;
-  };
-
   int flowFileCount = 0;
 
   std::string xml;
   while (renderedXMLs_.try_dequeue(xml)) {
     auto flowFile = session->create();
 
-    {
-      WriteCallback wc{ xml };
-      session->write(flowFile, &wc);
-    }
+    session->writeBuffer(flowFile, xml);
     session->putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, "application/xml");
     session->getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
     session->transfer(flowFile, s_success);

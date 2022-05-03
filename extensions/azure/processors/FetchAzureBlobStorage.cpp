@@ -42,34 +42,6 @@ const core::Property FetchAzureBlobStorage::RangeLength(
 const core::Relationship FetchAzureBlobStorage::Success("success", "All successfully processed FlowFiles are routed to this relationship");
 const core::Relationship FetchAzureBlobStorage::Failure("failure", "Unsuccessful operations will be transferred to the failure relationship");
 
-namespace {
-class WriteCallback : public OutputStreamCallback {
- public:
-  WriteCallback(storage::AzureBlobStorage& azure_blob_storage, const storage::FetchAzureBlobStorageParameters& params)
-    : azure_blob_storage_(azure_blob_storage),
-      params_(params) {
-  }
-
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-    result_size_ = azure_blob_storage_.fetchBlob(params_, *stream);
-    if (!result_size_) {
-      return 0;
-    }
-
-    return gsl::narrow<int64_t>(*result_size_);
-  }
-
-  [[nodiscard]] auto getResult() const {
-    return result_size_;
-  }
-
- private:
-  storage::AzureBlobStorage& azure_blob_storage_;
-  const storage::FetchAzureBlobStorageParameters& params_;
-  std::optional<uint64_t> result_size_ = std::nullopt;
-};
-}  // namespace
-
 void FetchAzureBlobStorage::initialize() {
   setSupportedProperties({
     AzureStorageCredentialsService,
@@ -127,10 +99,16 @@ void FetchAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext
   }
 
   auto fetched_flow_file = session->create(flow_file);
-  WriteCallback callback(azure_blob_storage_, *params);
-  session->write(fetched_flow_file, &callback);
+  std::optional<int64_t> result_size;
+  session->write(fetched_flow_file, [&, this](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+    result_size = azure_blob_storage_.fetchBlob(*params, *stream);
+    if (!result_size) {
+      return 0;
+    }
+    return gsl::narrow<int64_t>(*result_size);
+  });
 
-  if (callback.getResult() == std::nullopt) {
+  if (result_size == std::nullopt) {
     logger_->log_error("Failed to fetch blob '%s' from Azure Blob storage", params->blob_name);
     session->transfer(flow_file, Failure);
     session->remove(fetched_flow_file);

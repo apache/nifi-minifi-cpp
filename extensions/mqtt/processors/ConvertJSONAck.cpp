@@ -33,14 +33,10 @@ std::string ConvertJSONAck::parseTopicName(const std::string &json) {
 
   try {
     rapidjson::ParseResult ok = root.Parse(json.c_str());
-    if (ok) {
-      if (root.HasMember("agentInfo")) {
-        if (root["agentInfo"].HasMember("identifier")) {
-          std::stringstream topicStr;
-          topicStr << root["agentInfo"]["identifier"].GetString() << "/in";
-          return topicStr.str();
-        }
-      }
+    if (ok && root.HasMember("agentInfo") && root["agentInfo"].HasMember("identifier")) {
+      std::stringstream topicStr;
+      topicStr << root["agentInfo"]["identifier"].GetString() << "/in";
+      return topicStr.str();
     }
   } catch (...) {
   }
@@ -68,6 +64,7 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
     topic = parseTopicName(to_string(read_result));
     session->transfer(flow, Success);
   }
+
   flow = session->get();
   if (!flow) {
     return;
@@ -76,8 +73,8 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   if (!topic.empty()) {
     const auto read_result = session->readBuffer(flow);
     c2::C2Payload response_payload(c2::Operation::HEARTBEAT, state::UpdateState::READ_COMPLETE, true);
-    auto payload = parseJsonResponse(response_payload, read_result.buffer);
-    auto stream = c2::PayloadSerializer::serialize(1, payload);
+    const auto payload = parseJsonResponse(response_payload, read_result.buffer);
+    const auto stream = c2::PayloadSerializer::serialize(1, payload);
     mqtt_service_->send(topic, stream->getBuffer());
   }
 

@@ -63,7 +63,7 @@ class FetchOPCProcessor : public BaseOPCProcessor {
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
-  void initialize(void) override;
+  void initialize() override;
 
  protected:
   bool nodeFoundCallBack(opc::Client& client, const UA_ReferenceDescription *ref, const std::string& path,
@@ -71,17 +71,6 @@ class FetchOPCProcessor : public BaseOPCProcessor {
 
   void OPCData2FlowFile(const opc::NodeData& opcnode, const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 
-  class WriteCallback : public OutputStreamCallback {
-    std::string data_;
-   public:
-    explicit WriteCallback(std::string&& data)
-      : data_(data) {
-    }
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) {
-      const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(data_.c_str()), data_.size());
-      return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-    }
-  };
   std::string nodeID_;
   int32_t nameSpaceIdx_;
   opc::OPCNodeIDType idType_;

@@ -107,15 +107,16 @@ void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession 
     return;
   }
 
-  ReadCallback cb(flowFile, context, logger_);
-  session->read(flowFile, &cb);
+  session->read(flowFile, ReadCallback{flowFile, context, logger_});
   session->transfer(flowFile, Success);
 }
 
-int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
+int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::BaseStream>& stream) const {
   size_t read_size = 0;
   bool regex_mode;
   size_t size_limit = flowFile_->getSize();
+  std::vector<std::byte> buffer;
+  buffer.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
 
   std::string attrKey, sizeLimitStr;
   ctx_->getProperty(Attribute.getName(), attrKey);
@@ -131,8 +132,8 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
 
   while (read_size < size_limit) {
     // Don't read more than config limit or the size of the buffer
-    const auto length = std::min(size_limit - read_size, buffer_.size());
-    const auto ret = stream->read(gsl::make_span(buffer_).subspan(0, length));
+    const auto length = std::min(size_limit - read_size, buffer.size());
+    const auto ret = stream->read(gsl::make_span(buffer).subspan(0, length));
 
     if (io::isError(ret)) {
       return -1;  // Stream error
@@ -140,7 +141,7 @@ int64_t ExtractText::ReadCallback::process(const std::shared_ptr<io::BaseStream>
       break;  // End of stream, no more data
     }
 
-    contentStream.write(reinterpret_cast<const char*>(buffer_.data()), gsl::narrow<std::streamsize>(ret));
+    contentStream.write(reinterpret_cast<const char*>(buffer.data()), gsl::narrow<std::streamsize>(ret));
     read_size += ret;
     if (contentStream.fail()) {
       return -1;
@@ -219,7 +220,6 @@ ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile
     : flowFile_(std::move(flowFile)),
       ctx_(ctx),
       logger_(std::move(lgr)) {
-  buffer_.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
 }
 
 REGISTER_RESOURCE(ExtractText, "Extracts the content of a FlowFile and places it into an attribute.");

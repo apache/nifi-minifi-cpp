@@ -165,19 +165,6 @@ void DefragmentText::updateAttributesForSplitFiles(const core::FlowFile& origina
 }
 
 namespace {
-class AppendFlowFileToFlowFile : public OutputStreamCallback {
- public:
-  explicit AppendFlowFileToFlowFile(const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append, PayloadSerializer& serializer)
-      : flow_file_to_append_(flow_file_to_append), serializer_(serializer) {}
-
-  int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
-    return serializer_.serialize(flow_file_to_append_, stream);
-  }
- private:
-  const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file_to_append_;
-  PayloadSerializer& serializer_;
-};
-
 void updateAppendedAttributes(core::FlowFile& buffered_ff) {
   std::string base_name, post_name, offset_str;
   if (!buffered_ff.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
@@ -191,18 +178,6 @@ void updateAppendedAttributes(core::FlowFile& buffered_ff) {
   std::string buffer_new_name = textfragmentutils::createFileName(base_name, post_name, fragment_offset, buffered_ff.getSize());
   buffered_ff.setAttribute(core::SpecialFlowAttribute::FILENAME, buffer_new_name);
 }
-
-struct ReadFlowFileContent : public InputStreamCallback {
-  std::string content;
-
-  int64_t process(const std::shared_ptr<io::BaseStream> &stream) override {
-    content.resize(stream->size());
-    const auto ret = stream->read(gsl::make_span(content).as_span<std::byte>());
-    if (io::isError(ret))
-      return -1;
-    return gsl::narrow<int64_t>(ret);
-  }
-};
 
 size_t getSplitPosition(const utils::SMatch& last_match, DefragmentText::PatternLocation pattern_location) {
   size_t split_position = last_match.position(0);
@@ -218,9 +193,8 @@ bool DefragmentText::splitFlowFileAtLastPattern(core::ProcessSession *session,
                                                 const gsl::not_null<std::shared_ptr<core::FlowFile>> &original_flow_file,
                                                 std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                                 std::shared_ptr<core::FlowFile> &split_after_last_pattern) const {
-  ReadFlowFileContent read_flow_file_content;
-  session->read(original_flow_file, &read_flow_file_content);
-  auto last_regex_match = utils::getLastRegexMatch(read_flow_file_content.content, pattern_);
+  const auto read_result = session->readBuffer(original_flow_file);
+  auto last_regex_match = utils::getLastRegexMatch(to_string(read_result), pattern_);
   if (!last_regex_match.ready()) {
     split_before_last_pattern = session->clone(original_flow_file);
     split_after_last_pattern = nullptr;
@@ -256,13 +230,14 @@ void DefragmentText::Buffer::append(core::ProcessSession* session, const gsl::no
     store(session, flow_file_to_append);
     return;
   }
-  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, InputStreamCallback* cb) {
+  auto flowFileReader = [&] (const std::shared_ptr<core::FlowFile>& ff, const io::InputStreamCallback& cb) {
     return session->read(ff, cb);
   };
   PayloadSerializer serializer(flowFileReader);
-  AppendFlowFileToFlowFile append_flow_file_to_flow_file(flow_file_to_append, serializer);
   session->add(buffered_flow_file_);
-  session->append(buffered_flow_file_, &append_flow_file_to_flow_file);
+  session->append(buffered_flow_file_, [&serializer, &flow_file_to_append](const auto& output_stream) -> int64_t {
+    return serializer.serialize(flow_file_to_append, output_stream);
+  });
   updateAppendedAttributes(*buffered_flow_file_);
   session->transfer(buffered_flow_file_, Self);
 

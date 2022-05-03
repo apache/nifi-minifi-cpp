@@ -21,6 +21,7 @@
 
 #include <deque>
 #include <map>
+#include <utility>
 #include <vector>
 #include <memory>
 #include <string>
@@ -72,7 +73,7 @@ class BinaryConcatenationMerge : public MergeBin {
   void merge(core::ProcessContext *context, core::ProcessSession *session,
       std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;
   // Nest Callback Class for write stream
-  class WriteCallback: public OutputStreamCallback {
+  class WriteCallback {
    public:
     WriteCallback(std::string &header, std::string &footer, std::string &demarcator,
         std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer) :
@@ -85,7 +86,7 @@ class BinaryConcatenationMerge : public MergeBin {
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
     FlowFileSerializer& serializer_;
 
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) const {
       size_t write_size_sum = 0;
       if (!header_.empty()) {
         const auto write_ret = stream->write(reinterpret_cast<const uint8_t*>(header_.data()), header_.size());
@@ -160,16 +161,15 @@ class ArchiveMerge {
     bool header_emitted_{false};
   };
   // Nest Callback Class for write stream
-  class WriteCallback: public OutputStreamCallback {
+  class WriteCallback {
    public:
     WriteCallback(std::string merge_type, std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer)
-        : merge_type_(merge_type),
+        : merge_type_(std::move(merge_type)),
           flows_(flows),
           serializer_(serializer) {
       size_ = 0;
       stream_ = nullptr;
     }
-    ~WriteCallback() override = default;
 
     std::string merge_type_;
     std::deque<std::shared_ptr<core::FlowFile>> &flows_;
@@ -199,7 +199,7 @@ class ArchiveMerge {
       return totalWrote;
     }
 
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+    int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
       struct archive *arch;
 
       arch = archive_write_new();

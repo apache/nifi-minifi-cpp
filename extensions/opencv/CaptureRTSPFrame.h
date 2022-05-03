@@ -32,12 +32,7 @@
 #include "utils/gsl.h"
 #include "utils/Export.h"
 
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class CaptureRTSPFrame : public core::Processor {
  public:
@@ -64,25 +59,6 @@ class CaptureRTSPFrame : public core::Processor {
                  const std::shared_ptr<core::ProcessSession> &session) override;
 
   void notifyStop() override;
-
-  class CaptureRTSPFrameWriteCallback : public OutputStreamCallback {
-   public:
-    explicit CaptureRTSPFrameWriteCallback(cv::Mat image_mat, std::string image_encoding)
-        : image_mat_(std::move(image_mat)), image_encoding_(image_encoding) {
-    }
-    ~CaptureRTSPFrameWriteCallback() override = default;
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      imencode(image_encoding_, image_mat_, image_buf_);
-      const auto ret = stream->write(image_buf_.data(), image_buf_.size());
-      return io::isError(ret) ? -1 : gsl::narrow<int64_t>(ret);
-    }
-
-   private:
-    std::vector<uchar> image_buf_;
-    cv::Mat image_mat_;
-    std::string image_encoding_;
-  };
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CaptureRTSPFrame>::getLogger();
@@ -132,8 +108,4 @@ class CaptureRTSPFrame : public core::Processor {
 //  std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}   // namespace org::apache::nifi::minifi::processors

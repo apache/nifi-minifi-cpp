@@ -94,9 +94,20 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   while (!msg_queue.empty()) {
     MQTTClient_message *message = msg_queue.front();
     std::shared_ptr<core::FlowFile> processFlowFile = session->create();
-    ConsumeMQTT::WriteCallback callback(message);
-    session->write(processFlowFile, &callback);
-    if (callback.status_ < 0) {
+    int write_status{};
+    session->write(processFlowFile, [message, &write_status](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+      if (message->payloadlen < 0) {
+        write_status = -1;
+        return -1;
+      }
+      const auto len = stream->write(reinterpret_cast<uint8_t*>(message->payload), gsl::narrow<size_t>(message->payloadlen));
+      if (io::isError(len)) {
+        write_status = -1;
+        return -1;
+      }
+      return gsl::narrow<int64_t>(len);
+    });
+    if (write_status < 0) {
       logger_->log_error("ConsumeMQTT fail for the flow with UUID %s", processFlowFile->getUUIDStr());
       session->remove(processFlowFile);
     } else {

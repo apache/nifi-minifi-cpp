@@ -120,11 +120,11 @@ void ProcFsMonitor::onTrigger(core::ProcessContext*, core::ProcessSession* sessi
 
   if (output_compactness_ == OutputCompactness::PRETTY) {
     utils::PrettyJsonOutputCallback callback(std::move(root), decimal_places_);
-    session->write(flowFile, &callback);
+    session->write(flowFile, std::ref(callback));
     session->transfer(flowFile, Success);
   } else if (output_compactness_ == OutputCompactness::COMPACT) {
     utils::JsonOutputCallback callback(std::move(root), decimal_places_);
-    session->write(flowFile, &callback);
+    session->write(flowFile, std::ref(callback));
     session->transfer(flowFile, Success);
   } else {
     throw Exception(GENERAL_EXCEPTION, "Invalid output compactness");

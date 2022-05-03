@@ -53,38 +53,6 @@ class LuaProcessSession {
    */
   void releaseCoreResources();
 
-  class LuaInputStreamCallback : public InputStreamCallback {
-   public:
-    explicit LuaInputStreamCallback(const sol::table &input_stream_callback) {
-      lua_callback_ = input_stream_callback;
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      auto lua_stream = std::make_shared<LuaBaseStream>(stream);
-      sol::function callback = lua_callback_["process"];
-      return callback(lua_callback_, lua_stream);
-    }
-
-   private:
-    sol::table lua_callback_;
-  };
-
-  class LuaOutputStreamCallback : public OutputStreamCallback {
-   public:
-    explicit LuaOutputStreamCallback(const sol::table &output_stream_callback) {
-      lua_callback_ = output_stream_callback;
-    }
-
-    int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
-      auto lua_stream = std::make_shared<LuaBaseStream>(stream);
-      sol::function callback = lua_callback_["process"];
-      return callback(lua_callback_, lua_stream);
-    }
-
-   private:
-    sol::table lua_callback_;
-  };
-
  private:
   std::vector<std::shared_ptr<script::ScriptFlowFile>> flow_files_;
   std::shared_ptr<core::ProcessSession> session_;

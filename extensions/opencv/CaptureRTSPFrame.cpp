@@ -148,8 +148,6 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   // retrieve a frame of your source
   if (video_capture_.read(frame)) {
     if (!frame.empty()) {
-      CaptureRTSPFrameWriteCallback write_cb(frame, image_encoding_);
-
       auto t = std::time(nullptr);
       auto tm = *std::localtime(&t);
 
@@ -161,7 +159,12 @@ void CaptureRTSPFrame::onTrigger(const std::shared_ptr<core::ProcessContext> &co
       session->putAttribute(flow_file, "filename", filename);
       session->putAttribute(flow_file, "video.backend.driver", video_backend_driver_);
 
-      session->write(flow_file, &write_cb);
+      session->write(flow_file, [&frame, this](const std::shared_ptr<io::BaseStream>& output_stream) -> int64_t {
+        std::vector<uchar> image_buf;
+        imencode(image_encoding_, frame, image_buf);
+        const auto ret = output_stream->write(image_buf.data(), image_buf.size());
+        return io::isError(ret) ? -1 : gsl::narrow<int64_t>(ret);
+      });
       session->transfer(flow_file, Success);
       logger_->log_info("A frame is captured");
     } else {

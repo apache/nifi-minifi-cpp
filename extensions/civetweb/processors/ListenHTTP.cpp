@@ -281,8 +281,10 @@ void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
     session->add(flow_file);
 
     if (flow_file_buffer_pair.second) {
-      WriteCallback callback(std::move(flow_file_buffer_pair.second));
-      session->write(flow_file, &callback);
+      session->write(flow_file, [request_content = flow_file_buffer_pair.second.get()](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+        const auto write_ret = stream->write(request_content->getBuffer());
+        return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
+      });
     }
 
     session->transfer(flow_file, Success);
@@ -502,15 +504,6 @@ std::unique_ptr<io::BufferStream> ListenHTTP::Handler::createContentBuffer(struc
   }
 
   return content_buffer;
-}
-
-ListenHTTP::WriteCallback::WriteCallback(std::unique_ptr<io::BufferStream> request_content)
-    : request_content_(std::move(request_content)) {
-}
-
-int64_t ListenHTTP::WriteCallback::process(const std::shared_ptr<io::BaseStream>& stream) {
-  const auto write_ret = stream->write(request_content_->getBuffer());
-  return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
 }
 
 bool ListenHTTP::isSecure() const {

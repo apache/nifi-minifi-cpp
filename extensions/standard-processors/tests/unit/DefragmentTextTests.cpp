@@ -319,8 +319,6 @@ class FragmentGenerator : public core::Processor {
   void onTrigger(core::ProcessContext*, core::ProcessSession* session) override {
     std::vector<core::FlowFile> flow_files;
     for (const size_t max_i = i_ + batch_size_; i_ < fragment_contents_.size() && i_ < max_i; ++i_) {
-      auto& fragment_content = fragment_contents_[i_];
-      WriteCallback callback(fragment_content);
       std::shared_ptr<core::FlowFile> flow_file = session->create();
       if (base_name_attribute_)
         flow_file->addAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, *base_name_attribute_);
@@ -329,8 +327,9 @@ class FragmentGenerator : public core::Processor {
       if (absolute_path_attribute_)
         flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, *absolute_path_attribute_);
       flow_file->addAttribute(textfragmentutils::OFFSET_ATTRIBUTE, std::to_string(offset_));
+      auto& fragment_content = fragment_contents_[i_];
       offset_ += fragment_content.size();
-      session->write(flow_file, &callback);
+      session->writeBuffer(flow_file, fragment_content);
       session->transfer(flow_file, Success);
     }
   }
@@ -347,17 +346,6 @@ class FragmentGenerator : public core::Processor {
   void clearBaseNameAttribute() { base_name_attribute_.reset(); }
 
  protected:
-  struct WriteCallback : public org::apache::nifi::minifi::OutputStreamCallback {
-    const gsl::span<const uint8_t> content_;
-
-    explicit WriteCallback(const std::string& content) : content_(reinterpret_cast<const uint8_t*>(content.data()), content.size()) {}
-
-    int64_t process(const std::shared_ptr<org::apache::nifi::minifi::io::BaseStream> &stream) override {
-      size_t bytes_written = stream->write(content_.begin(), content_.size());
-      return org::apache::nifi::minifi::io::isError(bytes_written) ? -1 : gsl::narrow<int64_t>(bytes_written);
-    }
-  };
-
   size_t offset_ = 0;
   size_t batch_size_ = 1;
   size_t i_ = 0;

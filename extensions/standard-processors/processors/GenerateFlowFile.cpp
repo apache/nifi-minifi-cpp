@@ -149,11 +149,9 @@ void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::Proces
       if (fileSize_ > 0) {
         generateData(data, textData_);
       }
-      GenerateFlowFile::WriteCallback callback(data);
-      session->write(flowFile, &callback);
+      session->writeBuffer(flowFile, data);
     } else {
-      GenerateFlowFile::WriteCallback callback(data_);
-      session->write(flowFile, &callback);
+      session->writeBuffer(flowFile, data_);
     }
     session->transfer(flowFile, Success);
   }

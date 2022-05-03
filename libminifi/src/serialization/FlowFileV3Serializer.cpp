@@ -92,9 +92,8 @@ int64_t FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& f
     if (io::isError(ret)) return -1;
     sum += ret;
   }
-  InputStreamPipe pipe(out);
   {
-    const auto ret = reader_(flowFile, &pipe);
+    const auto ret = reader_(flowFile, InputStreamPipe{*out});
     if (ret < 0) return -1;
     sum += gsl::narrow<size_t>(ret);
   }
