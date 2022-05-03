@@ -17,6 +17,8 @@
  */
 
 #undef NDEBUG
+#include <mutex>
+
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "utils/gsl.h"
@@ -39,6 +41,7 @@ struct PropertyChange {
 class C2HeartbeatHandler : public ServerAwareHandler {
  public:
   bool handlePost(CivetServer* /*server*/, struct mg_connection *conn) override {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (response_) {
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
                       "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
@@ -61,6 +64,8 @@ class C2HeartbeatHandler : public ServerAwareHandler {
         fields.push_back(fmt::format(R"("{}": "{}")", change.name, change.value));
       }
     }
+
+    std::lock_guard<std::mutex> lock(mutex_);
     response_ =
         R"({
         "operation" : "heartbeat",
@@ -76,6 +81,7 @@ class C2HeartbeatHandler : public ServerAwareHandler {
   }
 
  private:
+  std::mutex mutex_;
   std::optional<std::string> response_;
 };
 
@@ -158,13 +164,28 @@ int main() {
   harness = VerifyPropertyUpdate([&] {
     assert(utils::verifyEventHappenedInPollTime(3s, [&] {return ack_handler.isAcknowledged("79");}));
     assert(utils::verifyEventHappenedInPollTime(3s, [&] {
-      return ack_handler.getApplyCount("FULLY_APPLIED") == 1
-          && harness.getRestartRequestedCount() == 1;
+      return ack_handler.getApplyCount("FULLY_APPLIED") == 1;
     }));
+
+    // Updating the same property will result in a no operation response
     assert(utils::verifyEventHappenedInPollTime(3s, [&] {
-      return ack_handler.getApplyCount("NO_OPERATION") > 0
-          && harness.getRestartRequestedCount() == 1;  // only one, i.e. no additional restart requests compared to the previous update.
+      return ack_handler.getApplyCount("NO_OPERATION") > 0;
     }));
+
+    // Change the update response to 1 invalid and 1 valid value update
+    hb_handler.setProperties({{minifi::Configuration::nifi_c2_rest_heartbeat_minimize_updates, "banana", true}, {minifi::Configuration::minifi_disk_space_watchdog_enable, "true", true}});
+
+    // Due to 1 invalid value the result will be partially applied
+    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+      return ack_handler.getApplyCount("PARTIALLY_APPLIED") == 1;
+    }));
+
+    // Repeating the previous update request results in 1 no operation and 1 failure which results in not applied response
+    assert(utils::verifyEventHappenedInPollTime(3s, [&] {
+      return ack_handler.getApplyCount("NOT_APPLIED") > 0
+        && harness.getRestartRequestedCount() == 2;
+    }));
+
     // update operation acknowledged
     {
       // verify final log levels
@@ -181,6 +202,8 @@ int main() {
       assert(!minifi_properties.hasValue("nifi.dummy.property"));
       assert(minifi_properties.getValue("nifi.property.one") == "bush");
       assert(minifi_properties.getValue("nifi.property.two") == "ring");
+      assert(!minifi_properties.hasValue(minifi::Configuration::nifi_c2_rest_heartbeat_minimize_updates));
+      assert(minifi_properties.getValue(minifi::Configuration::minifi_disk_space_watchdog_enable) == "true");
     }
 
     {

@@ -24,10 +24,7 @@
 #include "utils/OptionalUtils.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 namespace core {
   struct ConfigurationProperty;
@@ -162,9 +159,7 @@ class Configuration : public Properties {
   static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
                                                   const std::vector<std::string>& additional_properties);
   static std::vector<std::string> getSensitiveProperties(std::function<std::optional<std::string>(const std::string&)> reader);
+  static bool validatePropertyValue(const std::string& property_name, const std::string& property_value);
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

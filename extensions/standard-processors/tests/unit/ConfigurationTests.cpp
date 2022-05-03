@@ -22,6 +22,8 @@
 
 using org::apache::nifi::minifi::Configuration;
 
+namespace org::apache::nifi::minifi::test {
+
 TEST_CASE("Configuration can merge lists of property names", "[mergeProperties]") {
   using vector = std::vector<std::string>;
 
@@ -45,3 +47,12 @@ TEST_CASE("Configuration can merge lists of property names", "[mergeProperties]"
   REQUIRE(Configuration::mergeProperties(vector{"a", "b"}, vector{"a", "c\r\n"}) == (vector{"a", "b", "c"}));
   REQUIRE(Configuration::mergeProperties(vector{"a", "b"}, vector{"b\n", "\t c"}) == (vector{"a", "b", "c"}));
 }
+
+TEST_CASE("Configuration can validate values to be assigned to specific properties", "[validatePropertyValue]") {
+  REQUIRE(Configuration::validatePropertyValue(Configuration::nifi_server_name, "anything is valid"));
+  REQUIRE_FALSE(Configuration::validatePropertyValue(Configuration::nifi_flow_configuration_encrypt, "invalid.value"));
+  REQUIRE(Configuration::validatePropertyValue(Configuration::nifi_flow_configuration_encrypt, "true"));
+  REQUIRE(Configuration::validatePropertyValue("random.property", "random_value"));
+}
+
+}  // namespace org::apache::nifi::minifi::test
