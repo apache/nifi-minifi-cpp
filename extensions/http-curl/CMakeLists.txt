@@ -17,7 +17,7 @@
 # under the License.
 #
 
-if (NOT ((DISABLE_CURL STREQUAL "OFF" OR NOT DISABLE_CURL) AND NOT DISABLE_CIVET))
+if (DISABLE_CURL OR DISABLE_CIVET)
   return()
 endif()
 
