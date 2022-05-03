@@ -25,12 +25,10 @@
 
 #if __cpp_lib_boyer_moore_searcher < 201603L
 #include <experimental/functional>
-template<typename It, typename Hash, typename Eq>
-using boyer_moore_searcher = std::experimental::boyer_moore_searcher<It, Hash, Eq>;
+using std::experimental::boyer_moore_horspool_searcher;
 #else
 #include <functional>
-template<typename It, typename Hash, typename Eq>
-using boyer_moore_searcher = std::boyer_moore_searcher<It, Hash, Eq>;
+using std::boyer_moore_horspool_searcher;
 #endif
 
 #include "core/ProcessSession.h"
@@ -219,7 +217,7 @@ class RouteText::MatchingContext {
    private:
     CasePolicy policy_;
   };
-  using Searcher = boyer_moore_searcher<std::string::const_iterator, CaseAwareHash, CaseAwareEq>;
+  using Searcher = boyer_moore_horspool_searcher<std::string::const_iterator, CaseAwareHash, CaseAwareEq>;
 
  public:
   MatchingContext(core::ProcessContext& process_context, std::shared_ptr<core::FlowFile> flow_file, CasePolicy case_policy)
