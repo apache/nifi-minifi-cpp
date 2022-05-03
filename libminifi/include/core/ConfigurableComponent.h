@@ -242,6 +242,7 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
     return false;
   }
 }
+
 }  // namespace core
 }  // namespace minifi
 }  // namespace nifi
