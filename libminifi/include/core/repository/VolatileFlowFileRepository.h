@@ -23,6 +23,7 @@
 
 #include "VolatileRepository.h"
 #include "FlowFileRecord.h"
+#include "core/ThreadedRepository.h"
 #include "utils/gsl.h"
 
 namespace org {
@@ -36,12 +37,10 @@ namespace repository {
  * Volatile flow file repository. keeps a running counter of the current location, freeing
  * those which we no longer hold.
  */
-class VolatileFlowFileRepository : public VolatileRepository<std::string>, public utils::EnableSharedFromThis<VolatileFlowFileRepository> {
-  using utils::EnableSharedFromThis<VolatileFlowFileRepository>::sharedFromThis;
-
+class VolatileFlowFileRepository : public VolatileRepository<std::string, core::ThreadedRepository> {
  public:
-  explicit VolatileFlowFileRepository(std::string repo_name = "",
-                                      std::string /*dir*/ = REPOSITORY_DIRECTORY,
+  explicit VolatileFlowFileRepository(const std::string& repo_name = "",
+                                      const std::string& /*dir*/ = REPOSITORY_DIRECTORY,
                                       std::chrono::milliseconds maxPartitionMillis = MAX_REPOSITORY_ENTRY_LIFE_TIME,
                                       int64_t maxPartitionBytes = MAX_REPOSITORY_STORAGE_SIZE,
                                       std::chrono::milliseconds purgePeriod = REPOSITORY_PURGE_PERIOD)
@@ -51,13 +50,21 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
     content_repo_ = nullptr;
   }
 
+  ~VolatileFlowFileRepository() override {
+    stop();
+  }
+
+ private:
   void run() override {
-    repo_full_ = false;
-    while (running_) {
+    while (isRunning()) {
       std::this_thread::sleep_for(purge_period_);
       flush();
     }
     flush();
+  }
+
+  std::thread& getThread() override {
+    return thread_;
   }
 
   void flush() override {
@@ -80,7 +87,6 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
     content_repo_ = content_repo;
   }
 
- protected:
   void emplace(RepoValue<std::string> &old_value) override {
     std::string buffer;
     old_value.emplace(buffer);
@@ -89,6 +95,7 @@ class VolatileFlowFileRepository : public VolatileRepository<std::string>, publi
   }
 
   std::shared_ptr<core::ContentRepository> content_repo_;
+  std::thread thread_;
 };
 }  // namespace repository
 }  // namespace core

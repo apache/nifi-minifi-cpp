@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
   harness.setKeyDir(args.key_dir);
   PauseResumeHandler responder{flow_resumed_successfully, harness.getConfiguration()};
 
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   configuration->set(minifi::Configure::nifi_default_directory, args.key_dir);

@@ -26,28 +26,32 @@
 #include "rocksdb/db.h"
 #include "rocksdb/options.h"
 #include "rocksdb/slice.h"
-#include "core/Repository.h"
 #include "core/Core.h"
-#include "provenance/Provenance.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/ThreadedRepository.h"
+#include "provenance/Provenance.h"
+#include "utils/Literals.h"
 
 namespace org::apache::nifi::minifi::provenance {
 
-#define PROVENANCE_DIRECTORY "./provenance_repository"
-#define MAX_PROVENANCE_STORAGE_SIZE (10*1024*1024)  // 10M
+constexpr auto PROVENANCE_DIRECTORY = "./provenance_repository";
+constexpr auto MAX_PROVENANCE_STORAGE_SIZE = 10_MiB;
 constexpr auto MAX_PROVENANCE_ENTRY_LIFE_TIME = std::chrono::minutes(1);
 constexpr auto PROVENANCE_PURGE_PERIOD = std::chrono::milliseconds(2500);
 
-class ProvenanceRepository : public core::Repository {
+class ProvenanceRepository : public core::ThreadedRepository {
  public:
   ProvenanceRepository(const std::string& name, const utils::Identifier& /*uuid*/)
       : ProvenanceRepository(name) {
   }
-  explicit ProvenanceRepository(const std::string& repo_name = "", std::string directory = PROVENANCE_DIRECTORY, std::chrono::milliseconds maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
-      int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE, std::chrono::milliseconds purgePeriod = PROVENANCE_PURGE_PERIOD)
-      : core::SerializableComponent(repo_name),
-        Repository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory, maxPartitionMillis, maxPartitionBytes, purgePeriod) {
-    db_ = nullptr;
+
+  explicit ProvenanceRepository(const std::string& repo_name = "", std::string directory = PROVENANCE_DIRECTORY,
+      std::chrono::milliseconds maxPartitionMillis = MAX_PROVENANCE_ENTRY_LIFE_TIME,
+      int64_t maxPartitionBytes = MAX_PROVENANCE_STORAGE_SIZE,
+      std::chrono::milliseconds purgePeriod = PROVENANCE_PURGE_PERIOD)
+    : core::SerializableComponent(repo_name),
+      ThreadedRepository(repo_name.length() > 0 ? repo_name : core::getClassName<ProvenanceRepository>(), directory,
+        maxPartitionMillis, maxPartitionBytes, purgePeriod) {
   }
 
   ~ProvenanceRepository() override {
@@ -60,19 +64,10 @@ class ProvenanceRepository : public core::Repository {
 
   void printStats();
 
-  bool isNoop() override {
+  bool isNoop() const override {
     return false;
   }
 
-  void start() override {
-    if (running_)
-      return;
-    running_ = true;
-    thread_ = std::thread(&ProvenanceRepository::run, this);
-    logger_->log_debug("%s Repository Monitor Thread Start", name_);
-  }
-
-  // initialize
   bool initialize(const std::shared_ptr<org::apache::nifi::minifi::Configure> &config) override {
     std::string value;
     if (config->get(Configure::nifi_provenance_repository_directory_default, value)) {
@@ -85,9 +80,10 @@ class ProvenanceRepository : public core::Repository {
     logger_->log_debug("MiNiFi Provenance Max Partition Bytes %d", max_partition_bytes_);
     if (config->get(Configure::nifi_provenance_repository_max_storage_time, value)) {
       if (auto max_partition = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value))
-          max_partition_millis_ = *max_partition;
+        max_partition_millis_ = *max_partition;
     }
-    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%" PRId64 "] ms", int64_t{max_partition_millis_.count()});
+    logger_->log_debug("MiNiFi Provenance Max Storage Time: [%" PRId64 "] ms",
+                       int64_t{max_partition_millis_.count()});
     rocksdb::Options options;
     options.create_if_missing = true;
     options.use_direct_io_for_flush_and_compaction = true;
@@ -121,8 +117,8 @@ class ProvenanceRepository : public core::Repository {
 
     return true;
   }
-  // Put
-  bool Put(std::string key, const uint8_t *buf, size_t bufLen) override {
+
+  bool Put(const std::string& key, const uint8_t *buf, size_t bufLen) override {
     // persist to the DB
     rocksdb::Slice value((const char *) buf, bufLen);
     return db_->Put(rocksdb::WriteOptions(), key, value).ok();
@@ -140,12 +136,11 @@ class ProvenanceRepository : public core::Repository {
     return db_->Write(rocksdb::WriteOptions(), &batch).ok();
   }
 
-  // Delete
-  bool Delete(std::string /*key*/) override {
+  bool Delete(const std::string& /*key*/) override {
     // The repo is cleaned up by itself, there is no need to delete items.
     return true;
   }
-  // Get
+
   bool Get(const std::string &key, std::string &value) override {
     return db_->Get(rocksdb::ReadOptions(), key, &value).ok();
   }
@@ -168,7 +163,8 @@ class ProvenanceRepository : public core::Repository {
     return true;
   }
 
-  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size, std::function<std::shared_ptr<core::SerializableComponent>()> lambda) override {
+  bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &records, size_t &max_size,
+                   std::function<std::shared_ptr<core::SerializableComponent>()> lambda) override {
     std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
     size_t requested_batch = max_size;
     max_size = 0;
@@ -183,19 +179,6 @@ class ProvenanceRepository : public core::Repository {
       }
     }
     return max_size > 0;
-  }
-
-  void getProvenanceRecord(std::vector<std::shared_ptr<ProvenanceEventRecord>> &records, int maxSize) {
-    std::unique_ptr<rocksdb::Iterator> it(db_->NewIterator(rocksdb::ReadOptions()));
-    for (it->SeekToFirst(); it->Valid(); it->Next()) {
-      std::shared_ptr<ProvenanceEventRecord> eventRead = std::make_shared<ProvenanceEventRecord>();
-      std::string key = it->key().ToString();
-      if (records.size() >= (uint64_t)maxSize)
-        break;
-      if (eventRead->DeSerialize(gsl::make_span(it->value()).as_span<const std::byte>())) {
-        records.push_back(eventRead);
-      }
-    }
   }
 
   bool DeSerialize(std::vector<std::shared_ptr<core::SerializableComponent>> &store, size_t &max_size) override {
@@ -214,12 +197,9 @@ class ProvenanceRepository : public core::Repository {
     return max_size > 0;
   }
 
-  // destroy
   void destroy() {
     db_.reset();
   }
-  // Run function for the thread
-  void run() override;
 
   uint64_t getKeyCount() const {
     std::string key_count;
@@ -231,11 +211,20 @@ class ProvenanceRepository : public core::Repository {
   // Prevent default copy constructor and assignment operation
   // Only support pass by reference or pointer
   ProvenanceRepository(const ProvenanceRepository &parent) = delete;
+
   ProvenanceRepository &operator=(const ProvenanceRepository &parent) = delete;
 
  private:
+  // Run function for the thread
+  void run() override;
+
+  std::thread& getThread() override {
+    return thread_;
+  }
+
   std::unique_ptr<rocksdb::DB> db_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ProvenanceRepository>::getLogger();
+  std::thread thread_;
 };
 
 }  // namespace org::apache::nifi::minifi::provenance

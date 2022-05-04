@@ -26,20 +26,7 @@
 #include "core/Repository.h"
 #include "Core.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-
-namespace core {
-
-/**
- * Create a repository represented by the configuration class name
- * @param configuration_class_name configuration class name
- * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
- * @param repo_name name of the repository
- */
-std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, bool fail_safe = false, const std::string& repo_name = "");
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Create a context repository
@@ -49,10 +36,14 @@ std::unique_ptr<core::Repository> createRepository(const std::string& configurat
  */
 std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name, bool fail_safe = false, const std::string& repo_name = "");
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+/**
+ * Create a repository represented by the configuration class name
+ * @param configuration_class_name configuration class name
+ * @param fail_safe determines whether or not to make the default class if configuration_class_name is invalid
+ * @param repo_name name of the repository
+ */
+std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, const std::string& repo_name = "");
+
+}  // namespace org::apache::nifi::minifi::core
 
 #endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORYFACTORY_H_

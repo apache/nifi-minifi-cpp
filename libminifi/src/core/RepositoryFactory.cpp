@@ -17,7 +17,6 @@
 #include "core/RepositoryFactory.h"
 #include <memory>
 #include <string>
-#include <utility>
 #include <algorithm>
 #include "core/ContentRepository.h"
 #include "core/repository/VolatileContentRepository.h"
@@ -29,51 +28,15 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
-std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, bool fail_safe, const std::string& repo_name) {
+std::unique_ptr<core::ContentRepository>
+createContentRepository(const std::string& configuration_class_name, bool fail_safe, const std::string& repo_name) {
   std::string class_name_lc = configuration_class_name;
   std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
-    auto return_obj = core::ClassLoader::getDefaultClassLoader().instantiate<core::Repository>(class_name_lc, class_name_lc);
-    if (return_obj) {
-      return_obj->setName(repo_name);
-      return return_obj;
-    }
-    // if the desired repos don't exist, we can try doing string matches and reoly on volatile repositories
-    if (class_name_lc == "flowfilerepository" || class_name_lc == "volatileflowfilerepository") {
-      return_obj = instantiate<repository::VolatileFlowFileRepository>(repo_name);
-    } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancefilerepository") {
-      return_obj = instantiate<repository::VolatileProvenanceRepository>(repo_name);
-    } else if (class_name_lc == "nooprepository") {
-      return_obj = instantiate<core::Repository>(repo_name);
-    }
-    if (return_obj) {
-      return return_obj;
-    }
-    if (fail_safe) {
-      return std::make_unique<core::Repository>("fail_safe", "fail_safe", 1ms, 1, 1ms);
-    } else {
-      throw std::runtime_error("Support for the provided configuration class could not be found");
-    }
-  } catch (const std::runtime_error &) {
-    if (fail_safe) {
-      return std::make_unique<core::Repository>("fail_safe", "fail_safe", 1ms, 1, 1ms);
-    }
-  }
-
-  throw std::runtime_error("Support for the provided configuration class could not be found");
-}
-
-std::unique_ptr<core::ContentRepository> createContentRepository(const std::string& configuration_class_name, bool fail_safe, const std::string& repo_name) {
-  std::string class_name_lc = configuration_class_name;
-  std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
-  try {
-    auto return_obj = core::ClassLoader::getDefaultClassLoader().instantiate<core::ContentRepository>(class_name_lc, class_name_lc);
+    auto return_obj = core::ClassLoader::getDefaultClassLoader().instantiate<core::ContentRepository>(class_name_lc,
+                                                                                                      class_name_lc);
     if (return_obj) {
       return return_obj;
     }
@@ -87,7 +50,7 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
     } else {
       throw std::runtime_error("Support for the provided configuration class could not be found");
     }
-  } catch (const std::runtime_error &) {
+  } catch (const std::runtime_error&) {
     if (fail_safe) {
       return std::make_unique<core::repository::VolatileContentRepository>("fail_safe");
     }
@@ -96,8 +59,50 @@ std::unique_ptr<core::ContentRepository> createContentRepository(const std::stri
   throw std::runtime_error("Support for the provided configuration class could not be found");
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+class NoOpThreadedRepository : public core::ThreadedRepository {
+ public:
+  explicit NoOpThreadedRepository(const std::string& repo_name)
+          : core::SerializableComponent(repo_name),
+            ThreadedRepository(repo_name) {
+  }
+
+  ~NoOpThreadedRepository() override {
+    stop();
+  }
+
+ private:
+  void run() override {
+  }
+
+  std::thread& getThread() override {
+    return thread_;
+  }
+
+  std::thread thread_;
+};
+
+std::unique_ptr<core::Repository> createRepository(const std::string& configuration_class_name, const std::string& repo_name) {
+  std::string class_name_lc = configuration_class_name;
+  std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
+  try {
+    auto return_obj = core::ClassLoader::getDefaultClassLoader().instantiate<core::ThreadedRepository>(class_name_lc,
+                                                                                                       class_name_lc);
+    if (return_obj) {
+      return_obj->setName(repo_name);
+      return return_obj;
+    }
+    // if the desired repos don't exist, we can try doing string matches and rely on volatile repositories
+    if (class_name_lc == "flowfilerepository" || class_name_lc == "volatileflowfilerepository") {
+      return instantiate<repository::VolatileFlowFileRepository>(repo_name);
+    } else if (class_name_lc == "provenancerepository" || class_name_lc == "volatileprovenancefilerepository") {
+      return instantiate<repository::VolatileProvenanceRepository>(repo_name);
+    } else if (class_name_lc == "nooprepository") {
+      return std::make_unique<core::NoOpThreadedRepository>(repo_name);
+    }
+    return {};
+  } catch (const std::runtime_error&) {
+    throw;
+  }
+}
+
+}  // namespace org::apache::nifi::minifi::core

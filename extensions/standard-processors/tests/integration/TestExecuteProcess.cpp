@@ -50,13 +50,9 @@ int main(int /*argc*/, char ** /*argv*/) {
   std::shared_ptr<core::Processor> processor = std::make_shared<org::apache::nifi::minifi::processors::ExecuteProcess>("executeProcess");
   processor->setMaxConcurrentTasks(1);
 
-  std::shared_ptr<core::Repository> test_repo =
-      std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  std::shared_ptr<TestRepository> repo =
-      std::static_pointer_cast<TestRepository>(test_repo);
-  std::shared_ptr<minifi::FlowController> controller =
-      std::make_shared<TestFlowController>(test_repo, test_repo, content_repo);
+  std::shared_ptr<minifi::FlowController> controller = std::make_shared<TestFlowController>(test_repo, test_repo, content_repo);
 
   utils::Identifier processoruuid = processor->getUUID();
   assert(processoruuid);

@@ -25,12 +25,8 @@
 #include "../ContentRepository.h"
 #include "properties/Configure.h"
 #include "core/logging/LoggerFactory.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+
+namespace org::apache::nifi::minifi::core::repository {
 
 /**
  * FileSystemRepository is a content repository that stores data onto the local file system.
@@ -38,36 +34,30 @@ namespace repository {
 class FileSystemRepository : public core::ContentRepository, public core::CoreComponent {
  public:
   FileSystemRepository(std::string name = getClassName<FileSystemRepository>()) // NOLINT
-      : core::CoreComponent(name),
-        logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
+          : core::CoreComponent(name),
+            logger_(logging::LoggerFactory<FileSystemRepository>::getLogger()) {
   }
+
   virtual ~FileSystemRepository() = default;
 
-  virtual bool initialize(const std::shared_ptr<minifi::Configure> &configuration);
+  virtual bool initialize(const std::shared_ptr<minifi::Configure>& configuration);
 
-  virtual void stop();
+  bool exists(const minifi::ResourceClaim& streamId);
 
-  bool exists(const minifi::ResourceClaim &streamId);
+  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim& claim, bool append = false);
 
-  virtual std::shared_ptr<io::BaseStream> write(const minifi::ResourceClaim &claim, bool append = false);
+  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim& claim);
 
-  virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim);
-
-  virtual bool close(const minifi::ResourceClaim &claim) {
+  virtual bool close(const minifi::ResourceClaim& claim) {
     return remove(claim);
   }
 
-  virtual bool remove(const minifi::ResourceClaim &claim);
+  virtual bool remove(const minifi::ResourceClaim& claim);
 
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::repository
 
 #endif  // LIBMINIFI_INCLUDE_CORE_REPOSITORY_FILESYSTEMREPOSITORY_H_

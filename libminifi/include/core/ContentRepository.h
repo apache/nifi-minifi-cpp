@@ -42,29 +42,24 @@ namespace core {
  */
 class ContentRepository : public StreamManager<minifi::ResourceClaim>, public utils::EnableSharedFromThis<ContentRepository> {
  public:
-  virtual ~ContentRepository() = default;
+  ~ContentRepository() override = default;
 
   /**
    * initialize this content repository using the provided configuration.
    */
   virtual bool initialize(const std::shared_ptr<Configure> &configure) = 0;
 
-  virtual std::string getStoragePath() const;
+  std::string getStoragePath() const override;
 
   virtual std::shared_ptr<ContentSession> createSession();
 
-  /**
-   * Stops this repository.
-   */
-  virtual void stop() = 0;
-
   void reset();
 
-  virtual uint32_t getStreamCount(const minifi::ResourceClaim &streamId);
+  uint32_t getStreamCount(const minifi::ResourceClaim &streamId) override;
 
-  virtual void incrementStreamCount(const minifi::ResourceClaim &streamId);
+  void incrementStreamCount(const minifi::ResourceClaim &streamId) override;
 
-  virtual StreamState decrementStreamCount(const minifi::ResourceClaim &streamId);
+  StreamState decrementStreamCount(const minifi::ResourceClaim &streamId) override;
 
  protected:
   std::string directory_;

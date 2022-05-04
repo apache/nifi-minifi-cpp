@@ -30,6 +30,7 @@
 #include "core/controller/ControllerServiceProvider.h"
 #include "c2/C2Agent.h"
 #include "core/state/nodes/FlowInformation.h"
+#include "properties/Configuration.h"
 #include "utils/file/FileSystem.h"
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"

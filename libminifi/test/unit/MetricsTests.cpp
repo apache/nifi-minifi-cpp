@@ -95,7 +95,7 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
 
   REQUIRE("RepositoryMetrics" == metrics.getName());
 
-  std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
+  auto repo = std::make_shared<TestThreadedRepository>();
 
   metrics.addRepository(repo);
   {

@@ -286,18 +286,18 @@ int main(int argc, char **argv) {
 
     configure->get(minifi::Configure::nifi_provenance_repository_class_name, prov_repo_class);
     // Create repos for flow record and provenance
-    std::shared_ptr<core::Repository> prov_repo = core::createRepository(prov_repo_class, true, "provenance");
+    std::shared_ptr prov_repo = core::createRepository(prov_repo_class, "provenance");
 
-    if (!prov_repo->initialize(configure)) {
+    if (!prov_repo || !prov_repo->initialize(configure)) {
       logger->log_error("Provenance repository failed to initialize, exiting..");
       exit(1);
     }
 
     configure->get(minifi::Configure::nifi_flow_repository_class_name, flow_repo_class);
 
-    std::shared_ptr<core::Repository> flow_repo = core::createRepository(flow_repo_class, true, "flowfile");
+    std::shared_ptr flow_repo = core::createRepository(flow_repo_class, "flowfile");
 
-    if (!flow_repo->initialize(configure)) {
+    if (!flow_repo || !flow_repo->initialize(configure)) {
       logger->log_error("Flow file repository failed to initialize, exiting..");
       exit(1);
     }
@@ -343,7 +343,7 @@ int main(int argc, char **argv) {
           std::vector<std::string> repo_paths;
           repo_paths.reserve(3);
           // REPOSITORY_DIRECTORY is a dummy path used by noop repositories
-          const auto path_valid = [](const std::string& p) { return !p.empty() && p != REPOSITORY_DIRECTORY; };
+          const auto path_valid = [](const std::string& p) { return !p.empty() && p != org::apache::nifi::minifi::core::REPOSITORY_DIRECTORY; };
           auto prov_repo_path = prov_repo->getDirectory();
           auto flow_repo_path = flow_repo->getDirectory();
           auto content_repo_storage_path = content_repo->getStoragePath();

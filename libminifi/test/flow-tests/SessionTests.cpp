@@ -30,6 +30,7 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "core/Processor.h"
+#include "core/RepositoryFactory.h"
 #include "repository/VolatileContentRepository.h"
 
 namespace {
@@ -68,7 +69,7 @@ TEST_CASE("Import null data") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
-  auto prov_repo = std::make_shared<core::Repository>();
+  std::shared_ptr<core::Repository> prov_repo = core::createRepository("nooprepository");
   std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", SESSIONTEST_FLOWFILE_CHECKPOINT_DIR);
   std::shared_ptr<core::ContentRepository> content_repo;
   SECTION("VolatileContentRepository") {

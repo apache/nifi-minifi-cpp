@@ -46,9 +46,9 @@ class CountOnTriggersProcessor : public minifi::core::Processor {
 
 
 TEST_CASE("SchedulingAgentTests", "[SchedulingAgent]") {
-  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+  std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
+  auto repo = std::static_pointer_cast<TestThreadedRepository>(test_repo);
   std::shared_ptr<minifi::FlowController> controller =
       std::make_shared<TestFlowController>(test_repo, test_repo, content_repo);
 

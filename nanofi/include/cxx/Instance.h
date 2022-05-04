@@ -29,6 +29,7 @@
 #include "core/repository/VolatileContentRepository.h"
 #include "core/repository/FileSystemRepository.h"
 #include "core/Repository.h"
+#include "core/RepositoryFactory.h"
 
 #include "C2CallbackAgent.h"
 #include "core/Connectable.h"
@@ -67,7 +68,7 @@ class Instance {
  public:
 
   explicit Instance(const std::string &url, const std::string &port, const std::string &repo_class_name = "")
-      : no_op_repo_(std::make_shared<minifi::core::Repository>()),
+      : no_op_repo_(minifi::core::createRepository("nooprepository")),
         url_(url),
         configure_(std::make_shared<Configure>()) {
     if (repo_class_name == "filesystemrepository") {

@@ -43,6 +43,7 @@
 #include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
 #include "core/ClassLoader.h"
+#include "core/ThreadedRepository.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -513,10 +514,14 @@ uint64_t FlowController::getUptime() {
 
 std::vector<BackTrace> FlowController::getTraces() {
   std::vector<BackTrace> traces{thread_pool_.getTraces()};
-  auto prov_repo_trace = provenance_repo_->getTraces();
-  traces.emplace_back(std::move(prov_repo_trace));
-  auto flow_repo_trace = flow_file_repo_->getTraces();
-  traces.emplace_back(std::move(flow_repo_trace));
+  if (auto provenance_repo = std::dynamic_pointer_cast<core::ThreadedRepository>(provenance_repo_)) {
+    auto prov_repo_trace = provenance_repo->getTraces();
+    traces.emplace_back(std::move(prov_repo_trace));
+  }
+  if (auto flow_file_repo = std::dynamic_pointer_cast<core::ThreadedRepository>(flow_file_repo_)) {
+    auto flow_repo_trace = flow_file_repo->getTraces();
+    traces.emplace_back(std::move(flow_repo_trace));
+  }
   auto my_traces = TraceResolver::getResolver().getBackTrace("main");
   traces.emplace_back(std::move(my_traces));
   return traces;

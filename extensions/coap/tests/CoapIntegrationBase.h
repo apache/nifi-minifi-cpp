@@ -53,7 +53,7 @@ class CoapIntegrationBase : public IntegrationBase {
   void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& = {}) override {
     testSetup();
 
-    std::shared_ptr<core::Repository> test_repo = std::make_shared<TestRepository>();
+    std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
     if (test_file_location) {
@@ -71,8 +71,6 @@ class CoapIntegrationBase : public IntegrationBase {
     std::shared_ptr<core::ProcessGroup> pg{ yaml_config.getRoot() };
 
     queryRootProcessGroup(pg);
-
-    std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
     std::shared_ptr<minifi::FlowController> controller = std::make_shared<minifi::FlowController>(test_repo, test_flow_repo, configuration, std::move(yaml_ptr), content_repo, DEFAULT_ROOT_GROUP_NAME,
       std::make_shared<utils::file::FileSystem>(), []{});

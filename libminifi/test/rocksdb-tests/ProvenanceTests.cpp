@@ -24,8 +24,8 @@
 #include "core/Core.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "core/repository/VolatileProvenanceRepository.h"
+#include "core/RepositoryFactory.h"
 #include "FlowFileRecord.h"
-#include "FlowFileRepository.h"
 #include "provenance/Provenance.h"
 #include "../unit/ProvenanceTestHelper.h"
 #include "../TestBase.h"
@@ -36,7 +36,7 @@ using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test Provenance record create", "[Testprovenance::ProvenanceEventRecord]") {
   provenance::ProvenanceEventRecord record1(provenance::ProvenanceEventRecord::ProvenanceEventType::CREATE, "blah", "blahblah");
-  REQUIRE(record1.getAttributes().size() == 0);
+  REQUIRE(record1.getAttributes().empty());
   REQUIRE(record1.getAlternateIdentifierUri().length() == 0);
 }
 
@@ -86,7 +86,7 @@ TEST_CASE("Test Flowfile record added to provenance", "[TestFlowAndProv1]") {
   utils::Identifier childId = record2.getChildrenUuids().at(0);
   REQUIRE(childId == ffr1->getUUID());
   record2.removeChildUuid(childId);
-  REQUIRE(record2.getChildrenUuids().size() == 0);
+  REQUIRE(record2.getChildrenUuids().empty());
 }
 
 TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
@@ -100,7 +100,7 @@ TEST_CASE("Test Provenance record serialization Volatile", "[Testprovenance::Pro
   auto sample = 65555ms;
 
   std::shared_ptr<core::Repository> testRepository = std::make_shared<core::repository::VolatileProvenanceRepository>();
-  testRepository->initialize(0);
+  testRepository->initialize(nullptr);
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);
@@ -126,7 +126,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
 
   auto sample = 65555ms;
   std::shared_ptr<core::Repository> testRepository = std::make_shared<core::repository::VolatileProvenanceRepository>();
-  testRepository->initialize(0);
+  testRepository->initialize(nullptr);
   record1.setEventDuration(sample);
 
   record1.Serialize(testRepository);
@@ -138,7 +138,7 @@ TEST_CASE("Test Flowfile record added to provenance using Volatile Repo", "[Test
   utils::Identifier childId = record2.getChildrenUuids().at(0);
   REQUIRE(childId == ffr1->getUUID());
   record2.removeChildUuid(childId);
-  REQUIRE(record2.getChildrenUuids().size() == 0);
+  REQUIRE(record2.getChildrenUuids().empty());
 }
 
 TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::ProvenanceEventRecordSerializeDeser]") {
@@ -151,8 +151,8 @@ TEST_CASE("Test Provenance record serialization NoOp", "[Testprovenance::Provena
 
   auto sample = 65555ms;
 
-  std::shared_ptr<core::Repository> testRepository = std::make_shared<core::Repository>();
-  testRepository->initialize(0);
+  std::shared_ptr<core::Repository> testRepository = core::createRepository("nooprepository");
+  testRepository->initialize(nullptr);
   record1.setEventDuration(sample);
 
   REQUIRE(record1.Serialize(testRepository) == true);
