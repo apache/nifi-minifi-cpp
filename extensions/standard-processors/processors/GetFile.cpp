@@ -236,6 +236,7 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
   uint64_t file_size = std::filesystem::file_size(fullName, ec);
   if (ec) {
     logger_->log_error("file_size of %s: %s", fullName, ec.message());
+    return false;
   }
   const auto modifiedTime = std::filesystem::last_write_time(fullName, ec);
   if (ec) {
