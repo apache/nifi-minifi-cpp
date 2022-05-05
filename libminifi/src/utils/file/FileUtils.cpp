@@ -21,16 +21,35 @@
 
 #include <algorithm>
 #include <iostream>
+#include <version>
 
 #include "utils/Literals.h"
 
-#if __cpp_lib_boyer_moore_searcher < 201603L
+#ifdef _LIBCPP_VERSION
+
+template<typename ...Args>
+static auto make_searcher(Args&& ...args) {
+  return std::default_searcher(std::forward<Args>(args)...);
+}
+
+#elif __cpp_lib_boyer_moore_searcher < 201603L
 #include <experimental/functional>
-using std::experimental::boyer_moore_searcher;
+
+template<typename ...Args>
+static auto make_searcher(Args&& ...args) {
+  return std::experimental::boyer_moore_searcher(std::forward<Args>(args)...);
+}
+
 #else
 #include <functional>
-using std::boyer_moore_searcher;
+
+template<typename ...Args>
+static auto make_searcher(Args&& ...args) {
+  return std::boyer_moore_searcher(std::forward<Args>(args)...);
+}
+
 #endif
+
 
 namespace org {
 namespace apache {
@@ -63,13 +82,13 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
   std::array<char, 16_KiB> buf{};
 
-  boyer_moore_searcher searcher(text_to_search.begin(), text_to_search.end());
+  auto searcher = make_searcher(text_to_search.begin(), text_to_search.end());
 
   std::ifstream ifs{file_path, std::ios::binary};
   do {
     std::copy(buf.end() - text_to_search.size(), buf.end(), buf.begin());
     ifs.read(buf.data() + text_to_search.size(), buf.size() - text_to_search.size());
-    if (auto it = std::search(buf.begin(), buf.end(), searcher); it != buf.end()) {
+    if (std::search(buf.begin(), buf.end(), searcher) != buf.end()) {
       return true;
     }
   } while (ifs);
