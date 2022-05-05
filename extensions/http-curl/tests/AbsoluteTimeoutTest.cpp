@@ -22,20 +22,14 @@
 #include "tests/TestServer.h"
 #include "HTTPHandlers.h"
 
+using namespace std::literals::chrono_literals;
+
 int main() {
   TestController controller;
 
   std::string port = "12324";
   std::string rootURI =  "/";
-  TimeoutingHTTPHandler handler({
-    std::chrono::milliseconds(500),
-    std::chrono::milliseconds(500),
-    std::chrono::milliseconds(500),
-    std::chrono::milliseconds(500),
-    std::chrono::milliseconds(500),
-    std::chrono::milliseconds(500),
-    std::chrono::milliseconds(500)
-  });
+  TimeoutingHTTPHandler handler(std::vector<std::chrono::milliseconds>(35, 100ms));
 
   TestServer server(port, rootURI, &handler);
 
