@@ -43,7 +43,7 @@ class Searcher {
 #ifdef _LIBCPP_VERSION
 
  public:
-  Searcher(It begin, It end, Hash hash = {}, BinaryPredicate pred = {})
+  Searcher(It begin, It end, Hash /*hash*/ = {}, BinaryPredicate pred = {})
       : impl_(std::move(begin), std::move(end), std::move(pred)) {}
 
  private:
