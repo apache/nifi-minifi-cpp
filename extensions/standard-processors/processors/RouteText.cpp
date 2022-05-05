@@ -23,14 +23,6 @@
 #include <algorithm>
 #include <set>
 
-#if __cpp_lib_boyer_moore_searcher < 201603L
-#include <experimental/functional>
-using std::experimental::boyer_moore_horspool_searcher;
-#else
-#include <functional>
-using std::boyer_moore_horspool_searcher;
-#endif
-
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "io/StreamPipe.h"
@@ -42,6 +34,7 @@ using std::boyer_moore_horspool_searcher;
 #include "range/v3/view/cache1.hpp"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/OptionalUtils.h"
+#include "utils/Searcher.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -217,7 +210,6 @@ class RouteText::MatchingContext {
    private:
     CasePolicy policy_;
   };
-  using Searcher = boyer_moore_horspool_searcher<std::string::const_iterator, CaseAwareHash, CaseAwareEq>;
 
  public:
   MatchingContext(core::ProcessContext& process_context, std::shared_ptr<core::FlowFile> flow_file, CasePolicy case_policy)
@@ -253,7 +245,7 @@ class RouteText::MatchingContext {
     return (string_values_[prop.getName()] = value);
   }
 
-  const Searcher& getSearcher(const core::Property& prop) {
+  const auto& getSearcher(const core::Property& prop) {
     auto it = searcher_values_.find(prop.getName());
     if (it != searcher_values_.end()) {
       return it->second.searcher_;
@@ -284,7 +276,7 @@ class RouteText::MatchingContext {
     OwningSearcher& operator=(OwningSearcher&&) = delete;
 
     std::string str_;
-    Searcher searcher_;
+    utils::Searcher<std::string::const_iterator, CaseAwareHash, CaseAwareEq> searcher_;
   };
 
   std::map<std::string, OwningSearcher> searcher_values_;
