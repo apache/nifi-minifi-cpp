@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if (NOT ENABLE_TENSORFLOW)
+  return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 set(CMAKE_CXX_STANDARD 14)
@@ -36,5 +40,5 @@ target_link_libraries(minifi-tensorflow-extensions ${TENSORFLOW_LIBRARIES})
 
 SET (TENSORFLOW-EXTENSIONS minifi-tensorflow-extensions PARENT_SCOPE)
 
-register_extension(minifi-tensorflow-extensions)
+register_extension(minifi-tensorflow-extensions "TENSORFLOW EXTENSIONS" TENSORFLOW-EXTENSIONS "This enables TensorFlow support" "${TEST_DIR}/tensorflow-tests")
 

@@ -17,6 +17,13 @@
 # under the License.
 #
 
+if (NOT (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL))
+  return()
+endif()
+
+include(BundledOpenWSMAN)
+use_bundled_openwsman(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES "processors/*.cpp")
@@ -26,6 +33,5 @@ add_library(minifi-openwsman SHARED ${SOURCES})
 target_link_libraries(minifi-openwsman ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-openwsman OpenWSMAN::libwsman CIVETWEB::civetweb-cpp CIVETWEB::c-library LibXml2::LibXml2)
 
-SET (OPENWSMAN-EXTENSION minifi-openwsman PARENT_SCOPE)
-register_extension(minifi-openwsman)
+register_extension(minifi-openwsman "OPENWSMAN EXTENSIONS" OPENWSMAN-EXTENSIONS "This enables Openwsman support")
 register_extension_linter(minifi-openwsman-linter)

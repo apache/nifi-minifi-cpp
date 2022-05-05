@@ -28,8 +28,7 @@ include(RangeV3)
 include(Asio)
 target_link_libraries(minifi-standard-processors ${LIBMINIFI} Threads::Threads range-v3 asio)
 
-SET (STANDARD-PROCESSORS minifi-standard-processors PARENT_SCOPE)
-register_extension(minifi-standard-processors)
+register_extension(minifi-standard-processors "STANDARD PROCESSORS" STANDARD-PROCESSORS "Provides standard processors" "extensions/standard-processors/tests/")
 
 
 register_extension_linter(minifi-standard-processors-linter)

@@ -25,6 +25,7 @@
 #include "FlowController.h"
 #include "unit/ProvenanceTestHelper.h"
 #include "repository/VolatileContentRepository.h"
+#include "CustomProcessors.h"
 
 class TestControllerWithFlow: public TestController{
  public:

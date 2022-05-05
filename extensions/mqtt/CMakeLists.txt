@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if(NOT (ENABLE_ALL OR ENABLE_MQTT))
+  return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 include_directories(./controllerservice ./processors ./protocol ../../libminifi/include  ../../libminifi/include/core)
 
@@ -29,7 +33,5 @@ target_link_libraries(minifi-mqtt-extensions ${LIBMINIFI})
 include(PahoMqttC)
 target_link_libraries(minifi-mqtt-extensions paho.mqtt.c)
 
-SET (MQTT-EXTENSIONS minifi-mqtt-extensions PARENT_SCOPE)
-
-register_extension(minifi-mqtt-extensions)
+register_extension(minifi-mqtt-extensions "MQTT EXTENSIONS" MQTT-EXTENSIONS "This Enables MQTT functionality including PublishMQTT/ConsumeMQTT" "${TEST_DIR}/mqtt-tests")
 register_extension_linter(minifi-mqtt-extensions-linter)

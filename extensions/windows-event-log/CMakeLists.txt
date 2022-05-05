@@ -17,6 +17,13 @@
 # under the License.
 #
 
+if (NOT (WIN32 AND (ENABLE_ALL OR ENABLE_WEL)))
+  return()
+endif()
+
+include(BundledPugiXml)
+use_bundled_pugixml(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp" "wel/*.cpp")
@@ -26,7 +33,5 @@ add_library(minifi-wel SHARED ${SOURCES})
 target_link_libraries(minifi-wel ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-wel PUGI::libpugixml ZLIB::ZLIB Wevtapi.lib)
 
-SET(WEL-EXTENSION minifi-wel PARENT_SCOPE)
-
-register_extension(minifi-wel)
+register_extension(minifi-wel "WEL EXTENSIONS" WEL-EXTENSION "Enables the suite of Windows Event Log extensions." "extensions/windows-event-log/tests")
 register_extension_linter(minifi-wel-extension-linter)

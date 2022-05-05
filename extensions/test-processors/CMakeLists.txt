@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if (SKIP_TESTS AND NOT ENABLE_TEST_PROCESSORS)
+  return()
+endif()
+
 include(../ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
@@ -25,7 +29,6 @@ add_library(minifi-test-processors SHARED ${SOURCES})
 
 target_link_libraries(minifi-test-processors ${LIBMINIFI})
 
-SET(TEST-PROCESSORS-EXTENSION minifi-test-processors PARENT_SCOPE)
-register_extension(minifi-test-processors)
+register_extension(minifi-test-processors "TEST-PROCESSORS EXTENSION" TEST-PROCESSORS-EXTENSION "This enables processors purely for testing purposes")
 
 register_extension_linter(minifi-test-processors-extensions-linter)

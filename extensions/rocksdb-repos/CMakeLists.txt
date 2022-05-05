@@ -17,6 +17,18 @@
 # under the License.
 #
 
+if (DISABLE_ROCKSDB)
+  return()
+endif()
+
+if (BUILD_ROCKSDB)
+  include(BundledRocksDB)
+  use_bundled_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+else()
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/rocksdb/sys")
+  find_package(RocksDB REQUIRED)
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp" "controllers/*.cpp" "database/*.cpp" "encryption/*.cpp")
@@ -26,6 +38,5 @@ add_library(minifi-rocksdb-repos SHARED ${SOURCES})
 target_link_libraries(minifi-rocksdb-repos ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-rocksdb-repos RocksDB::RocksDB)
 
-SET (ROCKSDB-REPOS minifi-rocksdb-repos PARENT_SCOPE)
-register_extension(minifi-rocksdb-repos)
+register_extension(minifi-rocksdb-repos "ROCKSDB REPOS" ROCKSDB-REPOS "This Enables persistent provenance, flowfile, and content repositories using RocksDB" "${TEST_DIR}/rocksdb-tests")
 register_extension_linter(minifi-rocksdb-repos-linter)

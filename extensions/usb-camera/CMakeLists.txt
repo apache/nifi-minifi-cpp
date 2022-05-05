@@ -17,6 +17,13 @@
 # under the License.
 #
 
+if (NOT (ENABLE_ALL OR ENABLE_USB_CAMERA))
+    return()
+endif()
+
+include(BundledLibUvc)
+use_bundled_libuvc(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 find_package(PNG)
@@ -54,7 +61,5 @@ add_library(minifi-usb-camera-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-usb-camera-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-usb-camera-extensions libuvc PNG::PNG)
 
-SET (USB-CAMERA-EXTENSIONS minifi-usb-camera-extensions PARENT_SCOPE)
-
-register_extension(minifi-usb-camera-extensions)
+register_extension(minifi-usb-camera-extensions "USB CAMERA EXTENSIONS" USB-CAMERA-EXTENSIONS "This enables USB camera support" "${TEST_DIR}/usb-camera-tests")
 register_extension_linter(minifi-usb-camera-extensions-linter)

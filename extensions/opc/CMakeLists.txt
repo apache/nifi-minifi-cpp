@@ -17,6 +17,17 @@
 # under the License.
 #
 
+if (NOT ENABLE_OPC)
+  return()
+endif()
+
+include(BundledMbedTLS)
+use_bundled_mbedtls(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/mbedtls/dummy")
+
+include(BundledOpen62541)
+use_bundled_open62541(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+
 set( CMAKE_VERBOSE_MAKEFILE on )
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
@@ -30,8 +41,5 @@ add_library(minifi-opc-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-opc-extensions ${LIBMINIFI} Threads::Threads)
 target_link_libraries(minifi-opc-extensions ${CMAKE_DL_LIBS} spdlog open62541::open62541)
 
-
-SET (OPC-EXTENSIONS minifi-opc-extensions PARENT_SCOPE)
-
-register_extension(minifi-opc-extensions)
+register_extension(minifi-opc-extensions "OPC EXTENSIONS" OPC-EXTENSIONS "This enables OPC-UA support")
 register_extension_linter(minifi-opc-extensions-linter)

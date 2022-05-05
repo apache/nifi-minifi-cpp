@@ -38,7 +38,8 @@ function(get_build_id_variable_name extension-name output)
   set("${output}" "${result}" PARENT_SCOPE)
 endfunction()
 
-macro(register_extension extension-name)
+macro(register_extension extension-name extension-display-name extension-guard description)
+  set(${extension-guard} ${extension-name} PARENT_SCOPE)
   get_property(extensions GLOBAL PROPERTY EXTENSION-OPTIONS)
   set_property(GLOBAL APPEND PROPERTY EXTENSION-OPTIONS ${extension-name})
   get_build_id_variable_name(${extension-name} build-id-variable-name)
@@ -70,6 +71,13 @@ macro(register_extension extension-name)
     set_target_properties(${extension-name} PROPERTIES INSTALL_RPATH "$ORIGIN")
     install(TARGETS ${extension-name} LIBRARY DESTINATION extensions COMPONENT ${component-name})
   endif()
+
+  ADD_FEATURE_INFO("${extension-display-name}" ${extension-guard} "${description}")
+  mark_as_advanced(${extension-guard})
+  # check for test directory
+  if (${ARGC} GREATER 4)
+    register_extension_test(${ARGV4})
+  endif()
 endmacro()
 
 ### TESTING MACROS
@@ -92,23 +100,6 @@ function(registerTest dirName)
     add_subdirectory(${dirName})
   endif()
 endfunction(registerTest)
-
-### FUNCTION TO CREATE AN EXTENSION
-
-function(createExtension extensionGuard extensionName description dirName)
-  add_subdirectory(${dirName})
-  ADD_FEATURE_INFO("${extensionName}" ${extensionGuard} "${description}")
-  mark_as_advanced(${extensionGuard})
-  if (ARGV4)
-    register_extension_test(${ARGV4})
-  endif(ARGV4)
-  if (ARGV5 AND ARGV6)
-    if (${ARGV5})
-      add_subdirectory(${ARGV6})
-    endif()
-  endif()
-endfunction()
-
 
 macro(register_extension_linter target-name)
   if (ENABLE_LINTER)

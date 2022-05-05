@@ -17,6 +17,10 @@
 # under the License.
 #
 
+if (NOT (ENABLE_ALL OR ENABLE_SPLUNK))
+  return()
+endif()
+
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 file(GLOB SOURCES  "*.cpp")
@@ -27,7 +31,6 @@ target_include_directories(minifi-splunk PRIVATE BEFORE "${CMAKE_SOURCE_DIR}/ext
 target_link_libraries(minifi-splunk ${LIBMINIFI})
 target_link_libraries(minifi-splunk minifi-http-curl)
 
-SET(SPLUNK-EXTENSION minifi-splunk PARENT_SCOPE)
-register_extension(minifi-splunk)
+register_extension(minifi-splunk "SPLUNK EXTENSIONS" SPLUNK-EXTENSIONS "This enables Splunk support" "extensions/splunk/tests")
 
 register_extension_linter(minifi-splunk-extensions-linter)

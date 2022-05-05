@@ -90,7 +90,7 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Create imported targets
     file(MAKE_DIRECTORY ${CIVETWEB_INCLUDE_DIR})
 
-    add_library(CIVETWEB::c-library STATIC IMPORTED)
+    add_library(CIVETWEB::c-library STATIC IMPORTED GLOBAL)
     set_target_properties(CIVETWEB::c-library PROPERTIES IMPORTED_LOCATION "${CIVETWEB_BIN_DIR}/${LIBDIR}/${PREFIX}civetweb.${SUFFIX}")
     set_property(TARGET CIVETWEB::c-library APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CIVETWEB_INCLUDE_DIR})
     add_dependencies(CIVETWEB::c-library civetweb-external)
@@ -98,7 +98,7 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
         target_link_libraries(CIVETWEB::c-library INTERFACE OpenSSL::SSL OpenSSL::Crypto Threads::Threads)
     endif()
 
-    add_library(CIVETWEB::civetweb-cpp STATIC IMPORTED)
+    add_library(CIVETWEB::civetweb-cpp STATIC IMPORTED GLOBAL)
     set_target_properties(CIVETWEB::civetweb-cpp PROPERTIES IMPORTED_LOCATION "${CIVETWEB_BIN_DIR}/${LIBDIR}/${PREFIX}civetweb-cpp.${SUFFIX}")
     target_link_libraries(CIVETWEB::civetweb-cpp INTERFACE CIVETWEB::c-library)
     add_dependencies(CIVETWEB::civetweb-cpp civetweb-external)
