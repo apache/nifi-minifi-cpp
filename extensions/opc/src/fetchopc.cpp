@@ -153,6 +153,10 @@ namespace processors {
       } else if (idType_ == opc::OPCNodeIDType::String) {
         myID.identifierType = UA_NODEIDTYPE_STRING;
         myID.identifier.string = UA_STRING_ALLOC(nodeID_.c_str());
+      } else {
+        logger_->log_error("Unhandled id type: '%d'. No flowfiles are generated.", idType_);
+        yield();
+        return;
       }
       connection_->traverse(myID, f, "", maxDepth_);
     } else {

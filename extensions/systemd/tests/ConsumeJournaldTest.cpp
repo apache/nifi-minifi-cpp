@@ -39,8 +39,9 @@ namespace {
 namespace gsl = minifi::gsl;
 struct JournalEntry final {
   JournalEntry(const char* const identifier, const char* const message, const int pid = 0, std::vector<std::string> extra_fields = {}, const char* const hostname = "test-pc")
-    :fields{std::move(extra_fields)}
+    : fields{std::move(extra_fields)}
   {
+    auto extra_fields_size = fields.size();
     fields.reserve(fields.size() + 4);
     fields.push_back(utils::StringUtils::join_pack("MESSAGE=", message));
     fields.push_back(utils::StringUtils::join_pack("SYSLOG_IDENTIFIER=", identifier));
@@ -48,7 +49,7 @@ struct JournalEntry final {
       // The intention of the long expression below is a simple pseudo-random to test both branches equally
       // without having to pull in complex random logic
       const char* const pid_key =
-          (int{message[0]} + int{identifier[0]} + static_cast<int>(extra_fields.size()) + pid + int{hostname[0]}) % 2 == 0 ? "_PID" : "SYSLOG_PID";
+          (int{message[0]} + int{identifier[0]} + static_cast<int>(extra_fields_size) + pid + int{hostname[0]}) % 2 == 0 ? "_PID" : "SYSLOG_PID";
       fields.push_back(utils::StringUtils::join_pack(pid_key, "=", std::to_string(pid)));
     }
     fields.push_back(utils::StringUtils::join_pack("_HOSTNAME=", hostname));

@@ -115,7 +115,7 @@ int FlowControlProtocol::readHdr(FlowControlProtocolHeader *hdr) {
   data = this->decode(data, value);
   hdr->status = value;
 
-  data = this->decode(data, value);
+  this->decode(data, value);
   hdr->payloadLen = value;
 
   return sizeof(FlowControlProtocolHeader);
@@ -190,7 +190,7 @@ int FlowControlProtocol::sendRegisterReq() {
 
   // encode the YAML name
   data = this->encode(data, FLOW_YML_NAME);
-  data = this->encode(data, this->_controller->getName());
+  this->encode(data, this->_controller->getName());
 
   // send it
   int status = sendData(buffer.data(), gsl::narrow<int>(size));
@@ -280,7 +280,7 @@ int FlowControlProtocol::sendReportReq() {
   data = this->encode(data, hdr.msgType);
   data = this->encode(data, hdr.seqNumber);
   data = this->encode(data, hdr.status);
-  data = this->encode(data, hdr.payloadLen);
+  this->encode(data, hdr.payloadLen);
 
   // encode the YAML name
   data = this->encode(data, FLOW_YML_NAME);

@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <memory>
 #include "sitetosite/HTTPProtocol.h"
 #include "InvokeHTTP.h"
 #include "TestBase.h"
@@ -78,13 +79,15 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 };
 
 struct defaulted_handler{
-  ServerAwareHandler* handler = nullptr;
+  std::unique_ptr<ServerAwareHandler> handler;
   ServerAwareHandler* get(ServerAwareHandler *def) const {
-    if (handler)return handler;
+    if (handler) {
+      return handler.get();
+    }
     return def;
   }
   void set(std::vector<std::chrono::milliseconds>&& timeout) {
-    handler = new TimeoutingHTTPHandler(std::move(timeout));
+    handler = std::make_unique<TimeoutingHTTPHandler>(std::move(timeout));
   }
 };
 
@@ -104,38 +107,38 @@ void run_timeout_variance(std::string test_file_location, bool isSecure, std::st
 
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
 
-  TransactionResponder *transaction_response = new TransactionResponder(url, in_port, true);
+  auto transaction_response = std::make_unique<TransactionResponder>(url, in_port, true);
 
   std::string transaction_id = transaction_response->getTransactionId();
 
   harness.setKeyDir("");
 
   std::string baseUrl = url + "/site-to-site";
-  SiteToSiteBaseResponder *base = new SiteToSiteBaseResponder(baseUrl);
+  auto base = std::make_unique<SiteToSiteBaseResponder>(baseUrl);
 
-  harness.setUrl(baseUrl, profile.base_.get(base));
+  harness.setUrl(baseUrl, profile.base_.get(base.get()));
 
   std::string transaction_url = url + "/data-transfer/input-ports/" + in_port + "/transactions";
   std::string action_url = url + "/site-to-site/input-ports/" + in_port + "/transactions";
 
-  harness.setUrl(transaction_url, profile.transaction_.get(transaction_response));
+  harness.setUrl(transaction_url, profile.transaction_.get(transaction_response.get()));
 
   std::string peer_url = url + "/site-to-site/peers";
 
-  PeerResponder *peer_response = new PeerResponder(url);
+  auto peer_response = std::make_unique<PeerResponder>(url);
 
-  harness.setUrl(peer_url, profile.peer_.get(peer_response));
+  harness.setUrl(peer_url, profile.peer_.get(peer_response.get()));
 
   std::string flow_url = action_url + "/" + transaction_id + "/flow-files";
 
-  FlowFileResponder *flowResponder = new FlowFileResponder(true);
+  auto flowResponder = std::make_unique<FlowFileResponder>(true);
   flowResponder->setFlowUrl(flow_url);
 
-  harness.setUrl(flow_url, profile.flow_.get(flowResponder));
+  harness.setUrl(flow_url, profile.flow_.get(flowResponder.get()));
 
   std::string delete_url = transaction_url + "/" + transaction_id;
-  DeleteTransactionResponder *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
-  harness.setUrl(delete_url, profile.delete_.get(deleteResponse));
+  auto deleteResponse = std::make_unique<DeleteTransactionResponder>(delete_url, "201 OK", 12);
+  harness.setUrl(delete_url, profile.delete_.get(deleteResponse.get()));
 
   harness.run(test_file_location);
 
