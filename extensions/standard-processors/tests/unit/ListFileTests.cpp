@@ -26,6 +26,7 @@
 #include "processors/ListFile.h"
 #include "utils/TestUtils.h"
 #include "utils/IntegrationTestUtils.h"
+#include "utils/file/PathUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -100,10 +101,16 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files only once with default
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_two.txt"));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + empty_file_abs_path_));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + standard_file_abs_path_));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + first_sub_file_abs_path_));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + second_sub_file_abs_path_));
+  std::string file_path;
+  std::string file_name;
+  utils::file::getFileNameAndPath(empty_file_abs_path_, file_path, file_name);
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
+  utils::file::getFileNameAndPath(standard_file_abs_path_, file_path, file_name);
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
+  utils::file::getFileNameAndPath(first_sub_file_abs_path_, file_path, file_name);
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
+  utils::file::getFileNameAndPath(second_sub_file_abs_path_, file_path, file_name);
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
   REQUIRE(LogTestController::getInstance().countOccurrences(std::string("key:path value:.") + utils::file::FileUtils::get_separator() + "\n") == 2);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:first_subdir") + utils::file::FileUtils::get_separator()));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:second_subdir") + utils::file::FileUtils::get_separator()));
