@@ -60,6 +60,7 @@ class Searcher {
   std::experimental::boyer_moore_searcher<It, Hash, BinaryPredicate> impl_;
 
 #else
+
  public:
   Searcher(It begin, It end, Hash hash = {}, BinaryPredicate pred = {})
       : impl_(std::move(begin), std::move(end), std::move(hash), std::move(pred)) {}
