@@ -1,7 +1,7 @@
-Feature: File system operations are handled by the GetFile and PutFile processors
+Feature: File system operations are handled by the GetFile, PutFile, ListFile and FetchFile processors
   In order to store and access data on the local file system
   As a user of MiNiFi
-  I need to have GetFile and PutFile processors
+  I need to have GetFile, PutFile, ListFile and FetchFile processors
 
   Background:
     Given the content of "/tmp/output" is monitored
@@ -38,3 +38,14 @@ Feature: File system operations are handled by the GetFile and PutFile processor
     And a file with the content "test" is present in "/tmp/input"
     When the MiNiFi instance starts up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 10 seconds
+
+  Scenario: List and fetch files from a directory in a simple flow
+    Given a file with filename "test_file.log" and content "Test message" is present in "/tmp/input"
+    And a file with filename "test_file2.log" and content "Another test message" is present in "/tmp/input"
+    And a ListFile processor with the "Input Directory" property set to "/tmp/input"
+    And a FetchFile processor
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And the "success" relationship of the ListFile processor is connected to the FetchFile
+    And the "success" relationship of the FetchFile processor is connected to the PutFile
+    When the MiNiFi instance starts up
+    Then two flowfiles with the contents "Test message" and "Another test message" are placed in the monitored directory in less than 30 seconds

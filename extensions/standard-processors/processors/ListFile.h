@@ -71,6 +71,7 @@ class ListFile : public core::Processor {
     std::string absolute_path;
     std::filesystem::file_time_type last_modified_time;
     std::string relative_path;
+    std::string full_file_path;
     uint64_t file_size = 0;
   };
 
