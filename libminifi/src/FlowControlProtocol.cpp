@@ -284,7 +284,7 @@ int FlowControlProtocol::sendReportReq() {
 
   // encode the YAML name
   data = this->encode(data, FLOW_YML_NAME);
-  data = this->encode(data, this->_controller->getName());
+  this->encode(data, this->_controller->getName());
 
   // send it
   int status = sendData(buffer.data(), gsl::narrow<int>(size));

@@ -251,9 +251,8 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   if (remote_path.empty()) {
     remote_path = ".";
   }
-  if (context->getDynamicProperty(DisableDirectoryListing.getName(), value)) {
-    disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
-  } else if (context->getProperty(DisableDirectoryListing.getName(), value)) {
+  if (context->getDynamicProperty(DisableDirectoryListing.getName(), value) ||
+      context->getProperty(DisableDirectoryListing.getName(), value)) {
     disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
   }
   context->getProperty(TempFilename, temp_file_name, flow_file);
@@ -387,9 +386,6 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
         context->yield();
         return false;
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_A_DIRECTORY:
-        session->transfer(flow_file, Failure);
-        put_connection_back_to_cache();
-        return true;
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_NOT_FOUND:
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_PERMISSION_DENIED:
         session->transfer(flow_file, Failure);

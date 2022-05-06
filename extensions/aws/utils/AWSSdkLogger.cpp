@@ -44,7 +44,7 @@ Aws::Utils::Logging::LogLevel AWSSdkLogger::GetLogLevel() const {
   return Aws::Utils::Logging::LogLevel::Off;
 }
 
-void AWSSdkLogger::Log(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, ...) {
+void AWSSdkLogger::Log(Aws::Utils::Logging::LogLevel log_level, const char* tag, const char* format_str, ...) { // NOLINT (cert-dcl50-cpp)
   switch (log_level) {
     case Aws::Utils::Logging::LogLevel::Trace:
       logger_->log_trace("[%s] %s", tag, format_str);
@@ -59,8 +59,6 @@ void AWSSdkLogger::Log(Aws::Utils::Logging::LogLevel log_level, const char* tag,
       logger_->log_warn("[%s] %s", tag, format_str);
       break;
     case Aws::Utils::Logging::LogLevel::Error:
-      logger_->log_error("[%s] %s", tag, format_str);
-      break;
     case Aws::Utils::Logging::LogLevel::Fatal:
       logger_->log_error("[%s] %s", tag, format_str);
       break;

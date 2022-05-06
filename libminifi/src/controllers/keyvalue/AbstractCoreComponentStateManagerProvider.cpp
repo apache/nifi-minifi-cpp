@@ -165,7 +165,7 @@ bool AbstractCoreComponentStateManagerProvider::AbstractCoreComponentStateManage
       success = false;
     }
   } else if (change_type_ == ChangeType::CLEAR) {
-    if (!state_valid_) {
+    if (!state_valid_) { // NOLINT (bugprone-branch-clone)
       success = false;
     } else if (provider_->removeImpl(id_)) {
       state_valid_ = false;

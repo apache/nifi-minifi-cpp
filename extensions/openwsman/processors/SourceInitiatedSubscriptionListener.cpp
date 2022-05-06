@@ -887,7 +887,7 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
 }
 
 void SourceInitiatedSubscriptionListener::notifyStop() {
-  server_.release();
+  server_.release(); // NOLINT (bugprone-unused-return-value)
 }
 
 REGISTER_RESOURCE(SourceInitiatedSubscriptionListener, "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "

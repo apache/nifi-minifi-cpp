@@ -417,7 +417,7 @@ int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::Bas
     return 0;
   }
 
-  if (setjmp(png_jmpbuf(png))) {
+  if (setjmp(png_jmpbuf(png))) { // NOLINT (cert-err52-cpp)
     logger_->log_error("Failed to set PNG jmpbuf");
     return 0;
   }

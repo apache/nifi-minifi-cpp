@@ -92,7 +92,7 @@ TEST_CASE_METHOD(Fixture, "Can't load extension if the file does not exist") {
 }
 
 TEST_CASE_METHOD(Fixture, "Can't load extension if the file has zero length") {
-  std::ofstream{extension_};
+  std::ofstream{extension_}; // NOLINT (bugprone-unused-raii)
 
   auto lib = minifi::core::extension::internal::asDynamicLibrary(extension_);
   REQUIRE(lib);

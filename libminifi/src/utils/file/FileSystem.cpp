@@ -30,7 +30,7 @@ namespace file {
 FileSystem::FileSystem(bool should_encrypt_on_write, std::optional<utils::crypto::EncryptionProvider> encryptor)
     : should_encrypt_on_write_(should_encrypt_on_write),
       encryptor_(std::move(encryptor)) {
-  if (should_encrypt_on_write_ && !encryptor) {
+  if (should_encrypt_on_write_ && !encryptor_) {
     std::string err_message = "Requested file encryption but no encryption utility was provided";
     logger_->log_error(err_message.c_str());
     throw std::invalid_argument(err_message);

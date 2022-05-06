@@ -52,7 +52,8 @@ TEST_CASE("Invalid paths") {
   REQUIRE_THROWS(FilePatternSegment("!."));
   REQUIRE_THROWS(FilePatternSegment("!.."));
   // parent accessor after wildcard
-  FilePatternSegment("./../file.txt");  // sanity check
+  // sanity check
+  FilePatternSegment("./../file.txt"); // NOLINT (bugprone-unused-raii)
   REQUIRE_THROWS(FilePatternSegment("./*/../file.txt"));
 }
 
@@ -66,7 +67,7 @@ TEST_CASE("FilePattern reports error in correct subpattern") {
   };
   auto pattern = invalid_subpattern | ranges::views::keys | ranges::views::join(',') | ranges::to<std::string>;
   size_t idx = 0;
-  FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error) {
+  FilePattern(pattern, [&] (std::string_view subpattern, std::string_view error) { // NOLINT (bugprone-unused-raii)
     REQUIRE(invalid_subpattern[idx].first == subpattern);
     REQUIRE(invalid_subpattern[idx++].second == error);
   });

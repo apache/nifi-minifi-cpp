@@ -47,7 +47,7 @@ void SystemCpuUsageTracker::queryCpuTimes() {
   previous_total_sys_ = total_sys_;
   previous_total_idle_ = total_idle_;
   FILE* file = fopen("/proc/stat", "r");
-  if (fscanf(file, "cpu %lu %lu %lu %lu", &total_user_, &total_user_low_, &total_sys_, &total_idle_) != 4) {
+  if (fscanf(file, "cpu %lu %lu %lu %lu", &total_user_, &total_user_low_, &total_sys_, &total_idle_) != 4) { // NOLINT (cert-err34-c)
     total_user_ = previous_total_user_;
     total_user_low_ = previous_total_user_low_;
     total_idle_ = previous_total_idle_;

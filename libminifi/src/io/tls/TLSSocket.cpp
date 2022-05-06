@@ -179,12 +179,12 @@ TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::stri
 TLSSocket::TLSSocket(TLSSocket &&other)
     : Socket(std::move(other)),
       context_{ std::exchange(other.context_, nullptr) } {
-  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
+  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ }; // NOLINT (bugprone-use-after-move)
 
-  connected_.exchange(other.connected_.load());
-  other.connected_.exchange(false);
-  ssl_ = std::exchange(other.ssl_, nullptr);
-  ssl_map_ = std::exchange(other.ssl_map_, {});
+  connected_.exchange(other.connected_.load()); // NOLINT (bugprone-use-after-move)
+  other.connected_.exchange(false); // NOLINT (bugprone-use-after-move)
+  ssl_ = std::exchange(other.ssl_, nullptr); // NOLINT (bugprone-use-after-move)
+  ssl_map_ = std::exchange(other.ssl_map_, {}); // NOLINT (bugprone-use-after-move)
 }
 
 TLSSocket& TLSSocket::operator=(TLSSocket&& other) {
@@ -228,7 +228,7 @@ int16_t TLSSocket::initialize(bool blocking) {
       ERR_print_errors_fp(stderr);
       int ssl_error = SSL_get_error(ssl_, rez);
       if (ssl_error == SSL_ERROR_WANT_WRITE) {
-        logger_->log_trace("want read");
+        logger_->log_trace("want write");
         return 0;
       } else if (ssl_error == SSL_ERROR_WANT_READ) {
         logger_->log_trace("want read");
