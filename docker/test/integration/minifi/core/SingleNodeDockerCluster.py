@@ -44,13 +44,13 @@ class SingleNodeDockerCluster(Cluster):
     testing or use-cases which do not span multiple compute nodes.
     """
 
-    def __init__(self, image_store, kind):
+    def __init__(self, context):
         self.vols = {}
         self.network = self.create_docker_network()
         self.containers = {}
-        self.image_store = image_store
+        self.image_store = context.image_store
         self.data_directories = {}
-        self.kind = kind
+        self.kubernetes_proxy = context.kubernetes_proxy
 
         # Get docker client
         self.client = docker.from_env()
@@ -92,7 +92,7 @@ class SingleNodeDockerCluster(Cluster):
         elif engine == 'minifi-cpp':
             return self.containers.setdefault(name, MinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'kubernetes':
-            return self.containers.setdefault(name, MinifiAsPodInKubernetesCluster(self.kind, self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
+            return self.containers.setdefault(name, MinifiAsPodInKubernetesCluster(self.kubernetes_proxy, self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'transient-minifi':
             return self.containers.setdefault(name, TransientMinifiContainer(self.data_directories["minifi_config_dir"], name, self.vols, self.network, self.image_store, command))
         elif engine == 'minifi-cpp-with-provenance-repo':

@@ -37,16 +37,16 @@ from minifi.core.utils import decode_escaped_str
 
 
 class MiNiFi_integration_test:
-    def __init__(self, test_id, image_store, directory_bindings, kind):
-        self.test_id = test_id
-        self.cluster = DockerTestCluster(image_store, kind)
+    def __init__(self, context):
+        self.test_id = context.test_id
+        self.cluster = DockerTestCluster(context)
 
         self.connectable_nodes = []
         # Remote process groups are not connectables
         self.remote_process_groups = []
         self.file_system_observer = None
 
-        self.docker_directory_bindings = directory_bindings
+        self.docker_directory_bindings = context.directory_bindings
         self.cluster.set_directory_bindings(self.docker_directory_bindings.get_directory_bindings(self.test_id), self.docker_directory_bindings.get_data_directories(self.test_id))
 
     def __del__(self):

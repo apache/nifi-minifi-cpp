@@ -27,9 +27,9 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
     MINIFI_IMAGE_NAME = 'apacheminificpp'
     MINIFI_IMAGE_TAG = 'docker_test'
 
-    def __init__(self, kind, config_dir, name, vols, network, image_store, command=None):
+    def __init__(self, kubernetes_proxy, config_dir, name, vols, network, image_store, command=None):
         super().__init__(config_dir, name, vols, network, image_store, command)
-        self.kind = kind
+        self.kubernetes_proxy = kubernetes_proxy
 
         test_dir = os.environ['TEST_DIRECTORY']
         shutil.copy(os.path.join(test_dir, os.pardir, os.pardir, os.pardir, 'conf', 'minifi.properties'), self.config_dir)
@@ -47,8 +47,8 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
 
         self._create_config()
 
-        self.kind.load_docker_image(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
-        self.kind.create_objects()
+        self.kubernetes_proxy.load_docker_image(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
+        self.kubernetes_proxy.create_objects()
 
         logging.info('Finished setting up container: %s', self.name)
 
@@ -56,8 +56,8 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
         return LogSource.FROM_GET_APP_LOG_METHOD
 
     def get_app_log(self):
-        return 'OK', self.kind.get_logs('daemon', 'log-collector')
+        return 'OK', self.kubernetes_proxy.get_logs('daemon', 'log-collector')
 
     def cleanup(self):
-        # cleanup is done through the kind cluster in the environment.py
+        # cleanup is done through the kubernetes cluster in the environment.py
         pass

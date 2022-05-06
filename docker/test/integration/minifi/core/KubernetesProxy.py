@@ -23,7 +23,7 @@ import time
 from textwrap import dedent
 
 
-class KindProxy:
+class KubernetesProxy:
     def __init__(self, temp_directory, resources_directory):
         self.temp_directory = temp_directory
         self.resources_directory = resources_directory
