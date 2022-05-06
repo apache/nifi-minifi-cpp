@@ -40,7 +40,7 @@ const core::Property ListenSyslog::ProtocolProperty(
 const core::Property ListenSyslog::MaxBatchSize(
     core::PropertyBuilder::createProperty("Max Batch Size")
         ->withDescription("The maximum number of Syslog events to process at a time.")
-        ->withDefaultValue<uint64_t>(500, std::make_shared<core::UnsignedLongValidator>("Greater or equal than 1 validator", 1))
+        ->withDefaultValue<uint64_t>(500)
         ->build());
 
 const core::Property ListenSyslog::ParseMessages(
@@ -86,6 +86,9 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   gsl_Expects(context && !server_thread_.joinable() && !server_);
 
   context->getProperty(MaxBatchSize.getName(), max_batch_size_);
+  if (max_batch_size_ < 1)
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max Batch Size property is invalid");
+
   context->getProperty(ParseMessages.getName(), parse_messages_);
 
   uint64_t max_queue_size = 0;
