@@ -510,7 +510,7 @@ std::string StringUtils::escapeUnprintableBytes(gsl::span<const std::byte> data)
   return result;
 }
 
-bool StringUtils::matchesSequence(const std::string_view str, const std::vector<std::string>& patterns) {
+bool StringUtils::matchesSequence(std::string_view str, const std::vector<std::string>& patterns) {
   size_t pos = 0;
 
   for (const auto& pattern : patterns) {

@@ -502,7 +502,7 @@ class StringUtils {
    * @param patterns sequence of patterns to search
    * @return success of string sequence matching
    */
-  static bool matchesSequence(const std::string_view str, const std::vector<std::string>& patterns);
+  static bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns);
 
  private:
 };
