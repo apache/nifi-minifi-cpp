@@ -93,7 +93,7 @@ TEST_CASE("BT2", "[TPT2]") {
     utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
 
     std::future<int> fut;
-    pool.execute(std::move(functor), fut);  // NOLINT (bugprone-use-after-move)
+    pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
   }
 
   std::function<int()> f_ex = counterFunction;
@@ -101,7 +101,7 @@ TEST_CASE("BT2", "[TPT2]") {
   utils::Worker<int> functor(f_ex, "id", std::move(after_execute));
 
   std::future<int> fut;
-  pool.execute(std::move(functor), fut);  // NOLINT (bugprone-use-after-move)
+  pool.execute(std::move(functor), fut);  // NOLINT(bugprone-use-after-move)
 
   std::vector<BackTrace> traces = pool.getTraces();
   for (const auto &trace : traces) {

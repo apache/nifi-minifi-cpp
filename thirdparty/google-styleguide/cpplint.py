@@ -361,6 +361,25 @@ _LEGACY_ERROR_CATEGORIES = [
     'readability/function',
     ]
 
+# https://github.com/cpplint/cpplint/pull/196
+# These prefixes for categories should be ignored since they relate to other
+# tools which also use the NOLINT syntax, e.g. clang-tidy.
+_OTHER_NOLINT_CATEGORY_PREFIXES = [
+    'boost-',
+    'bugprone-',
+    'cert-',
+    'clang-analyzer-',
+    'concurrency-'
+    'cppcoreguidelines-',
+    'google-',
+    'hicpp-',
+    'misc-',
+    'modernize-',
+    'performance-',
+    'portability-',
+    'readability-',
+    ]
+
 # The default state of the category filter. This is overridden by the --filter=
 # flag. By default all errors are on, so only add here categories that should be
 # off by default (i.e., categories that must be enabled by the --filter= flags).
@@ -763,6 +782,9 @@ def ParseNolintSuppressions(filename, raw_line, linenum, error):
         category = category[1:-1]
         if category in _ERROR_CATEGORIES:
           _error_suppressions.setdefault(category, set()).add(suppressed_line)
+        elif any(c for c in _OTHER_NOLINT_CATEGORY_PREFIXES if category.startswith(c)):
+          # Ignore any categories from other tools.
+          pass
         elif category not in _LEGACY_ERROR_CATEGORIES:
           error(filename, linenum, 'readability/nolint', 5,
                 'Unknown NOLINT error category: %s' % category)

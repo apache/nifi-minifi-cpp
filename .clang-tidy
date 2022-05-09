@@ -1,0 +1,2 @@
+Checks: 'boost*,bugprone*,cert*,portability*,-clang-analyzer-optin.cplusplus.VirtualCall,-bugprone-narrowing-conversions,-bugprone-implicit-widening-of-multiplication-result,-bugprone-macro-parentheses,-bugprone-easily-swappable-parameters,-bugprone-exception-escape,-cert-err58-cpp,-cert-err33-c'
+FormatStyle: 'file'

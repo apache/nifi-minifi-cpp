@@ -327,7 +327,7 @@ class ReadCallback {
       // in case of failure, rd_kafka_producev doesn't take ownership of the headers, so we need to delete them
       rd_kafka_headers_destroy(hdrs_copy);
     }
-    logger_->log_trace("produce enqueued flow file #%zu/segment #%zu: %s", flow_file_index_, segment_num, rd_kafka_err2str(err)); // NOLINT
+    logger_->log_trace("produce enqueued flow file #%zu/segment #%zu: %s", flow_file_index_, segment_num, rd_kafka_err2str(err));
     return err;
   }
 

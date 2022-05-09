@@ -28,7 +28,7 @@ file(GLOB SOURCES "*.cpp" "controllerservices/*.cpp" "processors/*.cpp")
 add_library(minifi-gcp SHARED ${SOURCES})
 
 target_link_libraries(minifi-gcp ${LIBMINIFI} google-cloud-cpp::storage)
-target_include_directories(minifi-gcp PUBLIC ${google-cloud-cpp_INCLUDE_DIRS})
+target_include_directories(minifi-gcp SYSTEM PUBLIC ${google-cloud-cpp_INCLUDE_DIRS})
 
 register_extension(minifi-gcp "GCP EXTENSIONS" GCP-EXTENSIONS "This enables Google Cloud Platform support" "extensions/gcp/tests")
 

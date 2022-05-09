@@ -97,7 +97,9 @@ function(use_bundled_opencv SOURCE_DIR BINARY_DIR)
             "-DWITH_OPENEXR=OFF"
             "-DWITH_WEBP=OFF"
             "-DWITH_OPENJPEG=OFF"
-            "-DWITH_TIFF=OFF")
+            "-DWITH_TIFF=OFF"
+            "-DCMAKE_CXX_STANDARD=17"  # OpenCV fails to build in C++20 mode on Clang-14
+    )
 
     append_third_party_passthrough_args(OPENCV_CMAKE_ARGS "${OPENCV_CMAKE_ARGS}")
 

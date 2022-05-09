@@ -179,12 +179,12 @@ TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::stri
 TLSSocket::TLSSocket(TLSSocket &&other)
     : Socket(std::move(other)),
       context_{ std::exchange(other.context_, nullptr) } {
-  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ }; // NOLINT (bugprone-use-after-move)
+  std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };  // NOLINT(bugprone-use-after-move)
 
-  connected_.exchange(other.connected_.load()); // NOLINT (bugprone-use-after-move)
-  other.connected_.exchange(false); // NOLINT (bugprone-use-after-move)
-  ssl_ = std::exchange(other.ssl_, nullptr); // NOLINT (bugprone-use-after-move)
-  ssl_map_ = std::exchange(other.ssl_map_, {}); // NOLINT (bugprone-use-after-move)
+  connected_.exchange(other.connected_.load());  // NOLINT(bugprone-use-after-move)
+  other.connected_.exchange(false);  // NOLINT(bugprone-use-after-move)
+  ssl_ = std::exchange(other.ssl_, nullptr);  // NOLINT(bugprone-use-after-move)
+  ssl_map_ = std::exchange(other.ssl_map_, {});  // NOLINT(bugprone-use-after-move)
 }
 
 TLSSocket& TLSSocket::operator=(TLSSocket&& other) {
