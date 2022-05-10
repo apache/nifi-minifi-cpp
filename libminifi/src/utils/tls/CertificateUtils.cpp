@@ -19,11 +19,15 @@
 #include "utils/tls/CertificateUtils.h"
 
 #include <openssl/rsa.h>
+#include <openssl/err.h>
 
 #ifdef WIN32
 #pragma comment(lib, "ncrypt.lib")
 #pragma comment(lib, "Ws2_32.lib")
 #endif  // WIN32
+
+#include "utils/StringUtils.h"
+#include "utils/tls/TLSUtils.h"
 
 namespace org {
 namespace apache {
@@ -33,6 +37,29 @@ namespace utils {
 namespace tls {
 
 #ifdef WIN32
+WindowsCertStore::WindowsCertStrore(const WindowsCertStoreLocation& loc, const std::string& cert_store) {
+  store_ptr_ = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, NULL,
+                             CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | loc.getBitfieldValue(),
+                             cert_store.data());
+}
+
+bool WindowsCertStore::isOpen() const {
+  return store_ptr_;
+}
+
+PCCERT_CONTEXT WindowsCertStore::nextCert() {
+  return cert_ctx_ptr_ = CertEnumCertificatesInStore(store_ptr_, cert_ctx_ptr_);
+}
+
+WidnowsCertStore::~WindowsCertStore() {
+  if (cert_ctx_ptr_) {
+    CertFreeCertificateContext(cert_ctx_ptr_);
+  }
+  if (store_ptr_) {
+    CertCloseStore(store_ptr_, 0);
+  }
+}
+
 X509_unique_ptr convertWindowsCertificate(const PCCERT_CONTEXT certificate) {
   const unsigned char *certificate_binary = certificate->pbCertEncoded;
   long certificate_length = certificate->cbCertEncoded;  // NOLINT: cpplint hates `long`, but that is the param type in the API
@@ -115,6 +142,117 @@ EVP_PKEY_unique_ptr extractPrivateKey(const PCCERT_CONTEXT certificate) {
   return pkey;
 }
 #endif  // WIN32
+
+std::string getLatestOpenSSLErrorString() {
+  unsigned long err = ERR_peek_last_error(); // NOLINT
+  if (err == 0U) {
+    return "";
+  }
+  char buf[4096];
+  ERR_error_string_n(err, buf, sizeof(buf));
+  return buf;
+}
+
+std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(const X509_unique_ptr& cert) {
+  const ASN1_TIME* asn1_end = X509_get0_notAfter(cert.get());
+  if (!asn1_end) {
+    return {};
+  }
+  std::tm end;
+//  BIO_unique_ptr buf{BIO_new(BIO_s_mem())};
+//  if (!buf) {
+//    return {};
+//  }
+//  if (ASN1_TIME_print(buf.get(), asn1_end) != 1) {
+//    return {};
+//  }
+  int ret = ASN1_time_parse(reinterpret_cast<const char*>(asn1_end->data), asn1_end->length, &end, 0);
+  if (ret == -1) {
+    return {};
+  }
+  return std::chrono::system_clock::from_time_t(std::mktime(&end));
+}
+
+std::optional<std::string> processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler) {
+  utils::tls::BIO_unique_ptr fp{BIO_new(BIO_s_file())};
+  if (fp == nullptr) {
+    return StringUtils::join_pack("Failed create new file BIO, ", getLatestOpenSSLErrorString());
+  }
+  if (BIO_read_filename(fp.get(), cert_file.c_str()) <= 0) {
+    return StringUtils::join_pack("Failed to read certificate file ", cert_file, ", ", getLatestOpenSSLErrorString());
+  }
+  utils::tls::PKCS12_unique_ptr  p12{d2i_PKCS12_bio(fp.get(), nullptr)};
+  if (p12 == nullptr) {
+    return StringUtils::join_pack("Failed to DER decode certificate file ", cert_file, ", ", getLatestOpenSSLErrorString());
+  }
+
+  EVP_PKEY* pkey = nullptr;
+  X509* cert = nullptr;
+  STACK_OF(X509)* ca = nullptr;
+  if (!PKCS12_parse(p12.get(), passphrase.c_str(), &pkey, &cert, &ca)) {
+    return StringUtils::join_pack("Failed to parse certificate file ", cert_file, " as PKCS#12, ", getLatestOpenSSLErrorString());
+  }
+  utils::tls::EVP_PKEY_unique_ptr pkey_ptr{pkey};
+  utils::tls::X509_unique_ptr cert_ptr{cert};
+  const auto ca_deleter = gsl::finally([ca] { sk_X509_pop_free(ca, X509_free); });
+
+  if (handler.cert_cb) {
+    if (auto error = handler.cert_cb(cert_ptr)) {
+      return error;
+    }
+  }
+
+  if (handler.chain_cert_cb) {
+    while (ca != nullptr && sk_X509_num(ca) > 0) {
+      if (auto error = handler.chain_cert_cb(utils::tls::X509_unique_ptr{sk_X509_pop(ca)})) {
+        return error;
+      }
+    }
+  }
+
+  if (handler.priv_key_cb) {
+    return handler.priv_key_cb(pkey_ptr);
+  }
+
+  return {};
+}
+
+std::optional<std::string> processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler) {
+  utils::tls::BIO_unique_ptr fp{BIO_new(BIO_s_file())};
+  if (fp == nullptr) {
+    return StringUtils::join_pack("Failed create new file BIO, ", getLatestOpenSSLErrorString());
+  }
+  if (BIO_read_filename(fp.get(), cert_file.c_str()) <= 0) {
+    return StringUtils::join_pack("Failed to read certificate file ", cert_file, ", ", getLatestOpenSSLErrorString());
+  }
+  std::decay_t<decltype(pemPassWordCb)> pwd_cb = nullptr;
+  void* pwd_data = nullptr;
+  if (passphrase) {
+    pwd_cb = pemPassWordCb;
+    pwd_data = const_cast<std::string*>(&passphrase.value());
+  };
+
+  X509_unique_ptr cert{PEM_read_bio_X509_AUX(fp.get(), nullptr, pwd_cb, pwd_data)};
+  if (!cert) {
+    return StringUtils::join_pack("Failed to read certificate from ", cert_file, ", ", getLatestOpenSSLErrorString());
+  }
+
+  if (handler.cert_cb) {
+    if (auto error = handler.cert_cb(cert)) {
+      return error;
+    }
+  }
+
+  if (handler.chain_cert_cb) {
+    while (X509_unique_ptr chain_cert{PEM_read_bio_X509(fp.get(), nullptr, pwd_cb, pwd_data)}) {
+      if (auto error = handler.chain_cert_cb(std::move(chain_cert))) {
+        return error;
+      }
+    }
+  }
+
+  return {};
+}
 
 }  // namespace tls
 }  // namespace utils
