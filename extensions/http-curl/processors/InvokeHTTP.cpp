@@ -233,8 +233,13 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   std::string context_name;
   if (context->getProperty(SSLContext.getName(), context_name) && !IsNullOrEmpty(context_name)) {
     std::shared_ptr<core::controller::ControllerService> service = context->getControllerService(context_name);
-    if (nullptr != service) {
-      ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+    if (!service) {
+      logger_->log_error("Couldn't find controller service with name '%s'", context_name);
+    } else {
+      ssl_context_service_ = std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(service);
+      if (!ssl_context_service_) {
+        logger_->log_error("Controller service '%s' is not an SSLContextService", context_name);
+      }
     }
   }
 

@@ -50,7 +50,7 @@ class TestServer{
   };
 
  public:
-  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string& /*cert*/, std::string &ca_cert) {
+  TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string& cert, std::string &ca_cert) {
     if (!mg_check_feature(2)) {
       throw std::runtime_error("Error: Embedded example built with SSL support, "
                                "but civetweb library build without.\n");
@@ -59,8 +59,8 @@ class TestServer{
 
     // ECDH+AESGCM+AES256:!aNULL:!MD5:!DSS
     const std::vector<std::string> cpp_options{ "document_root", ".", "listening_ports", port, "error_log_file",
-                              "error.log", "ssl_certificate", ca_cert, "ssl_protocol_version", "4", "ssl_cipher_list",
-                              "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "no"};
+                              "error.log", "ssl_certificate", cert, "ssl_ca_file", ca_cert, "ssl_protocol_version", "4", "ssl_cipher_list",
+                              "ALL", "request_timeout_ms", "10000", "enable_auth_domain_check", "no", "ssl_verify_peer", "yes"};
     server_ = std::make_unique<CivetServer>(cpp_options, callbacks);
     addHandler(rooturi, handler);
   }
