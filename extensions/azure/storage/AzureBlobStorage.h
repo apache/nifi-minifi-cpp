@@ -44,13 +44,13 @@ struct ListContainerResultElement : public minifi::utils::ListedObject {
   std::string primary_uri;
   std::string etag;
   int64_t length = 0;
-  std::chrono::time_point<std::chrono::system_clock> timestamp;
+  std::chrono::time_point<std::chrono::system_clock> last_modified;
   std::string mime_type;
   std::string language;
   std::string blob_type;
 
   std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
-    return timestamp;
+    return last_modified;
   }
 
   std::string getKey() const override {
