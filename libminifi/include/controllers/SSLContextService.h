@@ -42,6 +42,7 @@
 #include "../core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
+#include "utils/tls/CertificateUtils.h"
 
 namespace org {
 namespace apache {
@@ -231,8 +232,8 @@ class SSLContextService : public core::controller::ControllerService {
   using ClientCertCallback = std::function<bool(const utils::tls::X509_unique_ptr& cert, const utils::tls::EVP_PKEY_unique_ptr& priv_key)>;
   using ServerCertCallback = std::function<bool(const utils::tls::X509_unique_ptr& cert)>;
 
-  bool findClientCertificate(ClientCertCallback cb);
-  bool findServerCertificate(ServerCertCallback cb);
+  bool findClientCertificate(ClientCertCallback cb) const;
+  bool findServerCertificate(ServerCertCallback cb) const;
 
   bool useClientCertificate(PCCERT_CONTEXT certificate, ClientCertCallback cb) const;
   bool useServerCertificate(PCCERT_CONTEXT certificate, ServerCertCallback cb) const;

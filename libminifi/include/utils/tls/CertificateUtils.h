@@ -28,6 +28,7 @@
 #include <memory>
 #include <filesystem>
 #include <optional>
+#include <functional>
 
 #include "WindowsCertStoreLocation.h"
 

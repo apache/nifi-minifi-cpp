@@ -228,7 +228,7 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
 }
 
 #ifdef WIN32
-bool SSLContextService::findClientCertificate(ClientCertCallback cb) {
+bool SSLContextService::findClientCertificate(ClientCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, client_cert_store_);
   if (!cert_store.isOpen()) {
     logger_->log_error("Could not open system certificate store %s/%s (client certificates)", cert_store_location_, client_cert_store_);
@@ -308,7 +308,7 @@ bool SSLContextService::useClientCertificate(PCCERT_CONTEXT certificate, ClientC
 
   if (cb(x509_cert, private_key)) {
     logger_->log_debug("Found client certificate %s", x509_cert->name);
-    retrun true;
+    return true;
   }
 
   return false;
@@ -349,7 +349,7 @@ bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX
 }
 
 #ifdef WIN32
-bool SSLContextService::findServerCertificate(ServerCertCallback cb) {
+bool SSLContextService::findServerCertificate(ServerCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, server_cert_store_);
   if (!cert_store.isOpen()) {
     logger_->log_error("Could not open system certificate store %s/%s (server certificates)", cert_store_location_, server_cert_store_);

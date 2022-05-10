@@ -37,7 +37,7 @@ namespace utils {
 namespace tls {
 
 #ifdef WIN32
-WindowsCertStore::WindowsCertStrore(const WindowsCertStoreLocation& loc, const std::string& cert_store) {
+WindowsCertStore::WindowsCertStore(const WindowsCertStoreLocation& loc, const std::string& cert_store) {
   store_ptr_ = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, NULL,
                              CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | loc.getBitfieldValue(),
                              cert_store.data());
@@ -51,7 +51,7 @@ PCCERT_CONTEXT WindowsCertStore::nextCert() {
   return cert_ctx_ptr_ = CertEnumCertificatesInStore(store_ptr_, cert_ctx_ptr_);
 }
 
-WidnowsCertStore::~WindowsCertStore() {
+WindowsCertStore::~WindowsCertStore() {
   if (cert_ctx_ptr_) {
     CertFreeCertificateContext(cert_ctx_ptr_);
   }
