@@ -45,8 +45,7 @@ class ListAzureBlobStorageTestsFixture {
     plan_ = test_controller_.createPlan();
     auto mock_blob_storage = std::make_unique<MockBlobStorage>();
     mock_blob_storage_ptr_ = mock_blob_storage.get();
-    list_azure_blob_storage_ = std::shared_ptr<minifi::azure::processors::ListAzureBlobStorage>(
-      new minifi::azure::processors::ListAzureBlobStorage("ListAzureBlobStorage", std::move(mock_blob_storage)));
+    list_azure_blob_storage_ = std::make_shared<minifi::azure::processors::ListAzureBlobStorage>("ListAzureBlobStorage", std::move(mock_blob_storage));
 
     plan_->addProcessor(list_azure_blob_storage_, "ListAzureBlobStorage", { {"success", "d"} });
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
