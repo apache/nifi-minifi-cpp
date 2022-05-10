@@ -455,7 +455,7 @@ void HTTPClient::setFollowRedirects(bool follow) {
   curl_easy_setopt(http_session_, CURLOPT_FOLLOWLOCATION, follow);
 }
 
-bool HTTPClient::isValidHTTPHeaderField(std::string_view field_name) {
+bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
   if (field_name.size() == 0) {
     return false;
   }
@@ -470,9 +470,9 @@ bool HTTPClient::isValidHTTPHeaderField(std::string_view field_name) {
   return true;
 }
 
-std::string HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName(std::string_view field_name) {
+std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::string_view field_name) {
   if (field_name.size() == 0) {
-    return "";
+    return "X-MiNiFi-Empty-Attribute-Name";
   }
 
   std::string result;

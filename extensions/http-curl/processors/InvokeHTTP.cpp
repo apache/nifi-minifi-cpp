@@ -111,9 +111,9 @@ core::Property InvokeHTTP::DisablePeerVerification("Disable Peer Verification", 
 core::Property InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy(
     core::PropertyBuilder::createProperty("Invalid HTTP Header Field Handling Strategy")
       ->withDescription("Indicates what should happen when an attribute's name is not a valid HTTP header field name. "
-        "Options: fail - flow file is transferred to failure, transform - invalid characters are replaced, drop - drops invalid attributes from HTTP message")
+        "Options: transform - invalid characters are replaced, fail - flow file is transferred to failure, drop - drops invalid attributes from HTTP message")
       ->isRequired(true)
-      ->withDefaultValue<std::string>(toString(InvalidHTTPHeaderFieldHandlingOption::FAIL))
+      ->withDefaultValue<std::string>(toString(InvalidHTTPHeaderFieldHandlingOption::TRANSFORM))
       ->withAllowableValues<std::string>(InvalidHTTPHeaderFieldHandlingOption::values())
       ->build());
 
@@ -267,10 +267,10 @@ bool InvokeHTTP::shouldEmitFlowFile() const {
 std::optional<std::map<std::string, std::string>> InvokeHTTP::validateAttributesAgainstHTTPHeaderRules(const std::map<std::string, std::string>& attributes) const {
   std::map<std::string, std::string> result;
   for (const auto& [attribute_name, attribute_value] : attributes) {
-    if (utils::HTTPClient::isValidHTTPHeaderField(attribute_name)) {
+    if (utils::HTTPClient::isValidHttpHeaderField(attribute_name)) {
       result.emplace(attribute_name, attribute_value);
     } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::TRANSFORM) {
-      result.emplace(utils::HTTPClient::replaceInvalidCharactersInHTTPHeaderFieldName(attribute_name), attribute_value);
+      result.emplace(utils::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(attribute_name), attribute_value);
     } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::FAIL) {
       return std::nullopt;
     }
