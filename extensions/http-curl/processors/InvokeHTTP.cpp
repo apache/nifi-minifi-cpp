@@ -17,11 +17,7 @@
  */
 
 #include "InvokeHTTP.h"
-#ifdef WIN32
-#include <regex>
-#else
-#include <regex.h>
-#endif
+
 #include <memory>
 #include <cinttypes>
 #include <cstdint>
@@ -39,14 +35,10 @@
 #include "ResourceClaim.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
+#include "utils/ProcessorConfigUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
-const char *InvokeHTTP::ProcessorName = "InvokeHTTP";
 std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 
 core::Property InvokeHTTP::Method("HTTP Method", "HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). "
@@ -115,6 +107,16 @@ core::Property InvokeHTTP::AlwaysOutputResponse("Always Output Response", "Will 
 core::Property InvokeHTTP::PenalizeOnNoRetry("Penalize on \"No Retry\"", "Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.", "false");
 
 core::Property InvokeHTTP::DisablePeerVerification("Disable Peer Verification", "Disables peer verification for the SSL session", "false");
+
+core::Property InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy(
+    core::PropertyBuilder::createProperty("Invalid HTTP Header Field Handling Strategy")
+      ->withDescription("Indicates what should happen when an attribute's name is not a valid HTTP header field name. "
+        "Options: transform - invalid characters are replaced, fail - flow file is transferred to failure, drop - drops invalid attributes from HTTP message")
+      ->isRequired(true)
+      ->withDefaultValue<std::string>(toString(InvalidHTTPHeaderFieldHandlingOption::TRANSFORM))
+      ->withAllowableValues<std::string>(InvalidHTTPHeaderFieldHandlingOption::values())
+      ->build());
+
 const char* InvokeHTTP::STATUS_CODE = "invokehttp.status.code";
 const char* InvokeHTTP::STATUS_MESSAGE = "invokehttp.status.message";
 const char* InvokeHTTP::RESPONSE_BODY = "invokehttp.response.body";
@@ -142,32 +144,29 @@ core::Relationship InvokeHTTP::RelFailure("failure", "The original FlowFile will
 
 void InvokeHTTP::initialize() {
   logger_->log_trace("Initializing InvokeHTTP");
-
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(Method);
-  properties.insert(URL);
-  properties.insert(ConnectTimeout);
-  properties.insert(ReadTimeout);
-  properties.insert(DateHeader);
-  properties.insert(AttributesToSend);
-  properties.insert(SSLContext);
-  properties.insert(ProxyHost);
-  properties.insert(ProxyPort);
-  properties.insert(ProxyUsername);
-  properties.insert(ProxyPassword);
-  properties.insert(UseChunkedEncoding);
-  properties.insert(ContentType);
-  properties.insert(SendBody);
-  properties.insert(SendMessageBody);
-  properties.insert(DisablePeerVerification);
-  properties.insert(AlwaysOutputResponse);
-  properties.insert(FollowRedirects);
-  properties.insert(PropPutOutputAttributes);
-  properties.insert(PenalizeOnNoRetry);
-
-  setSupportedProperties(properties);
-  // Set the supported relationships
+  setSupportedProperties({
+    Method,
+    URL,
+    ConnectTimeout,
+    ReadTimeout,
+    DateHeader,
+    AttributesToSend,
+    SSLContext,
+    ProxyHost,
+    ProxyPort,
+    ProxyUsername,
+    ProxyPassword,
+    UseChunkedEncoding,
+    ContentType,
+    SendBody,
+    SendMessageBody,
+    DisablePeerVerification,
+    AlwaysOutputResponse,
+    FollowRedirects,
+    PropPutOutputAttributes,
+    PenalizeOnNoRetry,
+    InvalidHTTPHeaderFieldHandlingStrategy
+  });
   setSupportedRelationships({Success, RelResponse, RelFailure, RelRetry, RelNoRetry});
 }
 
@@ -182,7 +181,6 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-
   if (auto connect_timeout = context->getProperty<core::TimePeriodValue>(ConnectTimeout)) {
     connect_timeout_ms_ =  connect_timeout->getMilliseconds();
   } else {
@@ -190,9 +188,9 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     return;
   }
 
-  std::string contentTypeStr;
-  if (context->getProperty(ContentType.getName(), contentTypeStr)) {
-    content_type_ = contentTypeStr;
+  std::string content_type_str;
+  if (context->getProperty(ContentType.getName(), content_type_str)) {
+    content_type_ = content_type_str;
   }
 
   if (auto read_timeout = context->getProperty<core::TimePeriodValue>(ReadTimeout)) {
@@ -201,12 +199,12 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", ReadTimeout.getName(), ReadTimeout.getValue());
   }
 
-  std::string dateHeaderStr;
-  if (!context->getProperty(DateHeader.getName(), dateHeaderStr)) {
+  std::string date_header_str;
+  if (!context->getProperty(DateHeader.getName(), date_header_str)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", DateHeader.getName(), DateHeader.getValue());
   }
 
-  date_header_include_ = utils::StringUtils::toBool(dateHeaderStr).value_or(DateHeader.getValue());
+  date_header_include_ = utils::StringUtils::toBool(date_header_str).value_or(DateHeader.getValue());
 
   if (!context->getProperty(PropPutOutputAttributes.getName(), put_attribute_name_)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", PropPutOutputAttributes.getName(), PropPutOutputAttributes.getValue());
@@ -238,15 +236,15 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     }
   }
 
-  std::string useChunkedEncoding = "false";
-  if (!context->getProperty(UseChunkedEncoding.getName(), useChunkedEncoding)) {
+  std::string use_chunked_encoding = "false";
+  if (!context->getProperty(UseChunkedEncoding.getName(), use_chunked_encoding)) {
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", UseChunkedEncoding.getName(), UseChunkedEncoding.getValue());
   }
 
-  use_chunked_encoding_ = utils::StringUtils::toBool(useChunkedEncoding).value_or(false);
+  use_chunked_encoding_ = utils::StringUtils::toBool(use_chunked_encoding).value_or(false);
 
-  std::string disablePeerVerification;
-  disable_peer_verification_ = (context->getProperty(DisablePeerVerification.getName(), disablePeerVerification) && utils::StringUtils::toBool(disablePeerVerification).value_or(false));
+  std::string disable_peer_verification;
+  disable_peer_verification_ = (context->getProperty(DisablePeerVerification.getName(), disable_peer_verification) && utils::StringUtils::toBool(disable_peer_verification).value_or(false));
 
   proxy_ = {};
   context->getProperty(ProxyHost.getName(), proxy_.host);
@@ -258,27 +256,35 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
   context->getProperty(ProxyPassword.getName(), proxy_.password);
   context->getProperty(FollowRedirects.getName(), follow_redirects_);
   context->getProperty(SendMessageBody.getName(), send_body_);
+
+  invalid_http_header_field_handling_strategy_ = utils::parseEnumProperty<InvalidHTTPHeaderFieldHandlingOption>(*context, InvalidHTTPHeaderFieldHandlingStrategy);
 }
 
-InvokeHTTP::~InvokeHTTP() = default;
-
-std::string InvokeHTTP::generateId() {
-  return utils::IdGenerator::getIdGenerator()->generate().to_string();
+bool InvokeHTTP::shouldEmitFlowFile() const {
+  return ("POST" == method_ || "PUT" == method_ || "PATCH" == method_);
 }
 
-bool InvokeHTTP::emitFlowFile(const std::string &method) {
-  return ("POST" == method || "PUT" == method || "PATCH" == method);
+std::optional<std::map<std::string, std::string>> InvokeHTTP::validateAttributesAgainstHTTPHeaderRules(const std::map<std::string, std::string>& attributes) const {
+  std::map<std::string, std::string> result;
+  for (const auto& [attribute_name, attribute_value] : attributes) {
+    if (utils::HTTPClient::isValidHttpHeaderField(attribute_name)) {
+      result.emplace(attribute_name, attribute_value);
+    } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::TRANSFORM) {
+      result.emplace(utils::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(attribute_name), attribute_value);
+    } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::FAIL) {
+      return std::nullopt;
+    }
+  }
+  return result;
 }
 
 void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
-  auto flowFile = session->get();
+  auto flow_file = session->get();
 
-  std::string url = url_;
-
-  if (flowFile == nullptr) {
-    if (!emitFlowFile(method_)) {
+  if (flow_file == nullptr) {
+    if (!shouldEmitFlowFile()) {
       logger_->log_debug("InvokeHTTP -- create flow file with  %s", method_);
-      flowFile = session->create();
+      flow_file = session->create();
     } else {
       logger_->log_debug("Exiting because method is %s and there is no flowfile available to execute it, yielding", method_);
       yield();
@@ -291,11 +297,11 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   logger_->log_debug("onTrigger InvokeHTTP with %s to %s", method_, url_);
 
   // create a transaction id
-  std::string tx_id = generateId();
+  std::string tx_id = utils::IdGenerator::getIdGenerator()->generate().to_string();
 
-  // Note: callback must be declared before callbackObj so that they are destructed in the correct order
-  std::unique_ptr<utils::ByteInputCallback> callback = nullptr;
-  std::unique_ptr<utils::HTTPUploadCallback> callbackObj = nullptr;
+  // Note: callback must be declared before callback_obj so that they are destructed in the correct order
+  std::unique_ptr<utils::ByteInputCallback> callback;
+  std::unique_ptr<utils::HTTPUploadCallback> callback_obj;
 
   // Client declared after the callbacks to make sure the callbacks are still available when the client is destructed
   utils::HTTPClient client(url_, ssl_context_service_);
@@ -320,25 +326,25 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
   client.setHTTPProxy(proxy_);
 
-  if (emitFlowFile(method_)) {
+  if (shouldEmitFlowFile()) {
     logger_->log_trace("InvokeHTTP -- reading flowfile");
-    std::shared_ptr<ResourceClaim> claim = flowFile->getResourceClaim();
+    std::shared_ptr<ResourceClaim> claim = flow_file->getResourceClaim();
     if (claim) {
       callback = std::make_unique<utils::ByteInputCallback>();
       if (send_body_) {
-        session->read(flowFile, std::ref(*callback));
+        session->read(flow_file, std::ref(*callback));
       }
-      callbackObj = std::make_unique<utils::HTTPUploadCallback>();
-      callbackObj->ptr = callback.get();
-      callbackObj->pos = 0;
+      callback_obj = std::make_unique<utils::HTTPUploadCallback>();
+      callback_obj->ptr = callback.get();
+      callback_obj->pos = 0;
       logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback->getBufferSize());
       if (!send_body_) {
         client.appendHeader("Content-Length", "0");
       } else if (!use_chunked_encoding_) {
-        client.appendHeader("Content-Length", std::to_string(flowFile->getSize()));
+        client.appendHeader("Content-Length", std::to_string(flow_file->getSize()));
       }
-      client.setUploadCallback(callbackObj.get());
-      client.setSeekFunction(callbackObj.get());
+      client.setUploadCallback(callback_obj.get());
+      client.setSeekFunction(callback_obj.get());
     } else {
       logger_->log_error("InvokeHTTP -- no resource claim");
     }
@@ -348,14 +354,19 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
   }
 
   // append all headers
-  client.build_header_list(attribute_to_send_regex_, flowFile->getAttributes());
+  auto attributes_in_headers = validateAttributesAgainstHTTPHeaderRules(flow_file->getAttributes());
+  if (!attributes_in_headers) {
+    session->transfer(flow_file, RelFailure);
+    return;
+  }
+  client.build_header_list(attribute_to_send_regex_, *attributes_in_headers);
 
   logger_->log_trace("InvokeHTTP -- curl performed");
   if (client.submit()) {
     logger_->log_trace("InvokeHTTP -- curl successful");
 
-    bool putToAttribute = !IsNullOrEmpty(put_attribute_name_);
-    if (putToAttribute) {
+    bool put_to_attribute = !IsNullOrEmpty(put_attribute_name_);
+    if (put_to_attribute) {
       logger_->log_debug("Adding http response body to flow file attribute %s", put_attribute_name_);
     }
 
@@ -364,21 +375,21 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
 
     int64_t http_code = client.getResponseCode();
     const char *content_type = client.getContentType();
-    flowFile->addAttribute(STATUS_CODE, std::to_string(http_code));
+    flow_file->addAttribute(STATUS_CODE, std::to_string(http_code));
     if (!response_headers.empty())
-      flowFile->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-    flowFile->addAttribute(REQUEST_URL, url_);
-    flowFile->addAttribute(TRANSACTION_ID, tx_id);
+      flow_file->addAttribute(STATUS_MESSAGE, response_headers.at(0));
+    flow_file->addAttribute(REQUEST_URL, url_);
+    flow_file->addAttribute(TRANSACTION_ID, tx_id);
 
-    bool isSuccess = (static_cast<int32_t>(http_code / 100) == 2);
-    bool output_body_to_content = isSuccess && !putToAttribute;
+    bool is_success = (static_cast<int32_t>(http_code / 100) == 2);
+    bool output_body_to_content = is_success && !put_to_attribute;
 
-    logger_->log_debug("isSuccess: %d, response code %" PRId64, isSuccess, http_code);
+    logger_->log_debug("isSuccess: %d, response code %" PRId64, is_success, http_code);
     std::shared_ptr<core::FlowFile> response_flow = nullptr;
 
     if (output_body_to_content) {
-      if (flowFile != nullptr) {
-        response_flow = session->create(flowFile);
+      if (flow_file != nullptr) {
+        response_flow = session->create(flow_file);
       } else {
         response_flow = session->create();
       }
@@ -389,47 +400,47 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
       response_flow->addAttribute(STATUS_CODE, std::to_string(http_code));
       if (!response_headers.empty())
         response_flow->addAttribute(STATUS_MESSAGE, response_headers.at(0));
-      response_flow->addAttribute(REQUEST_URL, url);
+      response_flow->addAttribute(REQUEST_URL, url_);
       response_flow->addAttribute(TRANSACTION_ID, tx_id);
       io::BufferStream stream(gsl::make_span(response_body).as_span<const std::byte>());
       // need an import from the data stream.
       session->importFrom(stream, response_flow);
     }
-    route(flowFile, response_flow, session, context, isSuccess, http_code);
+    route(flow_file, response_flow, session, context, is_success, http_code);
   } else {
-    session->penalize(flowFile);
-    session->transfer(flowFile, RelFailure);
+    session->penalize(flow_file);
+    session->transfer(flow_file, RelFailure);
   }
 }
 
 void InvokeHTTP::route(const std::shared_ptr<core::FlowFile> &request, const std::shared_ptr<core::FlowFile> &response, const std::shared_ptr<core::ProcessSession> &session,
-                       const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode) {
+                       const std::shared_ptr<core::ProcessContext> &context, bool is_success, int64_t status_code) {
   // check if we should yield the processor
-  if (!isSuccess && request == nullptr) {
+  if (!is_success && request == nullptr) {
     context->yield();
   }
 
   // If the property to output the response flowfile regardless of status code is set then transfer it
-  bool responseSent = false;
+  bool response_sent = false;
   if (always_output_response_ && response != nullptr) {
     logger_->log_debug("Outputting success and response");
     session->transfer(response, RelResponse);
-    responseSent = true;
+    response_sent = true;
   }
 
   // transfer to the correct relationship
   // 2xx -> SUCCESS
-  if (isSuccess) {
+  if (is_success) {
     // we have two flowfiles to transfer
     if (request != nullptr) {
       session->transfer(request, Success);
     }
-    if (response != nullptr && !responseSent) {
+    if (response != nullptr && !response_sent) {
       logger_->log_debug("Outputting success and response");
       session->transfer(response, RelResponse);
     }
     // 5xx -> RETRY
-  } else if (statusCode / 100 == 5) {
+  } else if (status_code / 100 == 5) {
     if (request != nullptr) {
       session->penalize(request);
       session->transfer(request, RelRetry);
@@ -449,8 +460,4 @@ REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with 
     "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
     "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

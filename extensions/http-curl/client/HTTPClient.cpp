@@ -455,6 +455,39 @@ void HTTPClient::setFollowRedirects(bool follow) {
   curl_easy_setopt(http_session_, CURLOPT_FOLLOWLOCATION, follow);
 }
 
+bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
+  if (field_name.size() == 0) {
+    return false;
+  }
+
+  // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
+  // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
+  for (auto ch : field_name) {
+    if (ch < 33 || ch > 126 || ch == ':') {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::string_view field_name) {
+  if (field_name.size() == 0) {
+    return "X-MiNiFi-Empty-Attribute-Name";
+  }
+
+  std::string result;
+  // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
+  // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
+  for (auto ch : field_name) {
+    if (ch < 33 || ch > 126 || ch == ':') {
+      result += '-';
+    } else {
+      result += ch;
+    }
+  }
+  return result;
+}
+
 REGISTER_INTERNAL_RESOURCE(HTTPClient);
 
 }  // namespace utils
