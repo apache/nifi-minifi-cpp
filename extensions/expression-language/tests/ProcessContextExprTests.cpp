@@ -31,8 +31,14 @@ namespace org::apache::nifi::minifi {
 class DummyProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
-  EXTENSIONAPI static core::Property SimpleProperty;
-  EXTENSIONAPI static core::Property ExpressionLanguageProperty;
+#ifdef WIN32
+  __declspec(dllexport)
+#endif
+  static core::Property SimpleProperty;
+#ifdef WIN32
+  __declspec(dllexport)
+#endif
+  static core::Property ExpressionLanguageProperty;
   void initialize() override { setSupportedProperties({SimpleProperty, ExpressionLanguageProperty}); }
   bool supportsDynamicProperties() override { return true; }
 };

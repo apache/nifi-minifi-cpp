@@ -1251,11 +1251,9 @@ TEST_CASE("Now Date", "[expressionNowDate]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("message", "2014/03/14");
-  time_t t = time(nullptr);
-  struct tm lt;
-  localtime_r(&t, &lt);
+  date::year_month_day date{std::chrono::floor<std::chrono::days>(std::chrono::system_clock::now())};
 
-  REQUIRE(gsl::narrow<uint64_t>(lt.tm_year + 1900) == expr(expression::Parameters{ flow_file_a }).asUnsignedLong());
+  REQUIRE(date.year().operator int() == expr(expression::Parameters{ flow_file_a }).asSignedLong());
 }
 
 TEST_CASE("Format Date", "[expressionFormatDate]") {
