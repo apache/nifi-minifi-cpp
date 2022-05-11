@@ -100,3 +100,12 @@ TEST_CASE("Manifest indicates property type requirement") {
   REQUIRE(get(type, "group").value == GROUP_STR);  // fix string
   REQUIRE(get(type, "artifact").value == "minifi-system");
 }
+
+TEST_CASE("Processors do not get instantiated during manifest creation") {
+  LogTestController::getInstance().setDebug<core::Processor>();
+
+  minifi::state::response::ComponentManifest manifest("minifi-system");
+  manifest.serialize();
+
+  CHECK_FALSE(LogTestController::getInstance().contains("Processor ExampleProcessor created"));
+}
