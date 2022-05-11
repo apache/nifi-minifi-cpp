@@ -21,35 +21,9 @@
 
 #include <algorithm>
 #include <iostream>
-#include <version>
 
 #include "utils/Literals.h"
-
-#ifdef _LIBCPP_VERSION
-
-template<typename ...Args>
-static auto make_searcher(Args&& ...args) {
-  return std::default_searcher(std::forward<Args>(args)...);
-}
-
-#elif __cpp_lib_boyer_moore_searcher < 201603L
-#include <experimental/functional>
-
-template<typename ...Args>
-static auto make_searcher(Args&& ...args) {
-  return std::experimental::boyer_moore_searcher(std::forward<Args>(args)...);
-}
-
-#else
-#include <functional>
-
-template<typename ...Args>
-static auto make_searcher(Args&& ...args) {
-  return std::boyer_moore_searcher(std::forward<Args>(args)...);
-}
-
-#endif
-
+#include "utils/Searcher.h"
 
 namespace org {
 namespace apache {
@@ -82,7 +56,7 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
   std::array<char, 16_KiB> buf{};
 
-  auto searcher = make_searcher(text_to_search.begin(), text_to_search.end());
+  Searcher searcher(text_to_search.begin(), text_to_search.end());
 
   std::ifstream ifs{file_path, std::ios::binary};
   do {
