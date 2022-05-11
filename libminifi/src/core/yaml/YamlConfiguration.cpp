@@ -124,22 +124,23 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
 }
 
 std::unique_ptr<core::ProcessGroup> YamlConfiguration::getYamlRoot(const YAML::Node& rootYamlNode) {
-    YAML::Node controllerServiceNode = rootYamlNode[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
-    YAML::Node provenanceReportNode = rootYamlNode[CONFIG_YAML_PROVENANCE_REPORT_KEY];
+  uuids_.clear();
+  YAML::Node controllerServiceNode = rootYamlNode[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
+  YAML::Node provenanceReportNode = rootYamlNode[CONFIG_YAML_PROVENANCE_REPORT_KEY];
 
-    parseControllerServices(controllerServiceNode);
-    // Create the root process group
-    std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroupYaml(rootYamlNode);
-    parseProvenanceReportingYaml(provenanceReportNode, root.get());
+  parseControllerServices(controllerServiceNode);
+  // Create the root process group
+  std::unique_ptr<core::ProcessGroup> root = parseRootProcessGroupYaml(rootYamlNode);
+  parseProvenanceReportingYaml(provenanceReportNode, root.get());
 
-    // set the controller services into the root group.
-    for (const auto& controller_service : controller_services_->getAllControllerServices()) {
-      root->addControllerService(controller_service->getName(), controller_service);
-      root->addControllerService(controller_service->getUUIDStr(), controller_service);
-    }
-
-    return root;
+  // set the controller services into the root group.
+  for (const auto& controller_service : controller_services_->getAllControllerServices()) {
+    root->addControllerService(controller_service->getName(), controller_service);
+    root->addControllerService(controller_service->getUUIDStr(), controller_service);
   }
+
+  return root;
+}
 
 void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode, core::ProcessGroup* parentGroup) {
   int64_t runDurationNanos = -1;
@@ -505,7 +506,6 @@ void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServ
     const auto controllerServiceNode = iter.as<YAML::Node>();
     try {
       yaml::checkRequiredField(controllerServiceNode, "name", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
-      yaml::checkRequiredField(controllerServiceNode, "id", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
 
       auto type = yaml::getRequiredField(controllerServiceNode, std::vector<std::string>{"class", "type"}, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
       logger_->log_debug("Using type %s for controller service node", type);
@@ -518,7 +518,7 @@ void YamlConfiguration::parseControllerServices(const YAML::Node& controllerServ
       }
 
       auto name = controllerServiceNode["name"].as<std::string>();
-      auto id = controllerServiceNode["id"].as<std::string>();
+      auto id = getRequiredIdField(controllerServiceNode, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
 
       utils::Identifier uuid;
       uuid = id;
@@ -595,13 +595,12 @@ void YamlConfiguration::parsePortYaml(const YAML::Node& portNode, core::ProcessG
   // Check for required fields
   yaml::checkRequiredField(inputPortsObj, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
   auto nameStr = inputPortsObj["name"].as<std::string>();
-  yaml::checkRequiredField(inputPortsObj, "id", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
-                     "The field 'id' is required for "
-                         "the port named '" + nameStr + "' in the YAML Config. If this port "
-                         "is an input port for a NiFi Remote Process Group, the port "
-                         "id should match the corresponding id specified in the NiFi configuration. "
-                         "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
-  auto portId = inputPortsObj["id"].as<std::string>();
+  auto portId = getRequiredIdField(inputPortsObj, CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
+    "The field 'id' is required for "
+    "the port named '" + nameStr + "' in the YAML Config. If this port "
+    "is an input port for a NiFi Remote Process Group, the port "
+    "id should match the corresponding id specified in the NiFi configuration. "
+    "This is a UUID of the format XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX.");
   uuid = portId;
 
   auto port = std::make_unique<minifi::RemoteProcessorGroupPort>(
@@ -873,14 +872,21 @@ std::string YamlConfiguration::getOrGenerateId(const YAML::Node& yamlNode, const
   if (node[idField]) {
     if (YAML::NodeType::Scalar == node[idField].Type()) {
       id = node[idField].as<std::string>();
-    } else {
-      throw std::invalid_argument("getOrGenerateId: idField is expected to reference YAML::Node "
-                                  "of YAML::NodeType::Scalar.");
+      addNewId(id);
+      return id;
     }
-  } else {
-    id = id_generator_->generate().to_string();
-    logger_->log_debug("Generating random ID: id => [%s]", id);
+    throw std::invalid_argument("getOrGenerateId: idField is expected to reference YAML::Node of YAML::NodeType::Scalar.");
   }
+
+  id = id_generator_->generate().to_string();
+  logger_->log_debug("Generating random ID: id => [%s]", id);
+  return id;
+}
+
+std::string YamlConfiguration::getRequiredIdField(const YAML::Node& yaml_node, std::string_view yaml_section, std::string_view error_message) {
+  yaml::checkRequiredField(yaml_node, "id", yaml_section, error_message);
+  auto id = yaml_node["id"].as<std::string>();
+  addNewId(id);
   return id;
 }
 
@@ -906,6 +912,13 @@ YAML::Node YamlConfiguration::getOptionalField(const YAML::Node& yamlNode, const
   }
 
   return result;
+}
+
+void YamlConfiguration::addNewId(const std::string& uuid) {
+  const auto [_, success] = uuids_.insert(uuid);
+  if (!success) {
+    throw Exception(ExceptionType::GENERAL_EXCEPTION, "UUID " + uuid + " is duplicated in the flow configuration");
+  }
 }
 
 } /* namespace core */
