@@ -158,14 +158,7 @@ std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(co
   if (!asn1_end) {
     return {};
   }
-  std::tm end;
-//  BIO_unique_ptr buf{BIO_new(BIO_s_mem())};
-//  if (!buf) {
-//    return {};
-//  }
-//  if (ASN1_TIME_print(buf.get(), asn1_end) != 1) {
-//    return {};
-//  }
+  std::tm end{};
   int ret = ASN1_time_parse(reinterpret_cast<const char*>(asn1_end->data), asn1_end->length, &end, 0);
   if (ret == -1) {
     return {};
