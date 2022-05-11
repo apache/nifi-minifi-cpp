@@ -57,11 +57,6 @@ const core::Property AzureBlobStorageProcessorBase::ConnectionString(
     ->withDescription("Connection string used to connect to Azure Storage service. This overrides all other set credential properties if Managed Identity is not used.")
     ->supportsExpressionLanguage(true)
     ->build());
-const core::Property AzureBlobStorageProcessorBase::Blob(
-  core::PropertyBuilder::createProperty("Blob")
-    ->withDescription("The filename of the blob. If left empty the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
 const core::Property AzureBlobStorageProcessorBase::UseManagedIdentityCredentials(
   core::PropertyBuilder::createProperty("Use Managed Identity Credentials")
     ->withDescription("If true Managed Identity credentials will be used together with the Storage Account Name for authentication.")
@@ -147,12 +142,6 @@ bool AzureBlobStorageProcessorBase::setCommonStorageParameters(
 
   if (!context.getProperty(ContainerName, params.container_name, flow_file) || params.container_name.empty()) {
     logger_->log_error("Container Name is invalid or empty!");
-    return false;
-  }
-
-  context.getProperty(Blob, params.blob_name, flow_file);
-  if (params.blob_name.empty() && (!flow_file->getAttribute("filename", params.blob_name) || params.blob_name.empty())) {
-    logger_->log_error("Blob is not set and default 'filename' attribute could not be found!");
     return false;
   }
 

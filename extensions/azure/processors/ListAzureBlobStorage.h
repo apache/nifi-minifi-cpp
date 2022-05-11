@@ -1,6 +1,6 @@
 /**
- * @file ListAzureDataLakeStorage.h
- * ListAzureDataLakeStorage class declaration
+ * @file ListAzureBlobStorage.h
+ * ListAzureBlobStorage class declaration
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -20,55 +20,54 @@
 
 #pragma once
 
+#include <memory>
+#include <optional>
 #include <string>
 #include <utility>
-#include <memory>
+#include <vector>
 
-#include "AzureDataLakeStorageProcessorBase.h"
-
-class ListAzureDataLakeStorageTestsFixture;
+#include "core/Property.h"
+#include "AzureBlobStorageProcessorBase.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase {
+class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
  public:
   SMART_ENUM(EntityTracking,
     (NONE, "none"),
     (TIMESTAMPS, "timestamps")
   )
 
-  EXTENSIONAPI static const core::Property RecurseSubdirectories;
-  EXTENSIONAPI static const core::Property FileFilter;
-  EXTENSIONAPI static const core::Property PathFilter;
+  // Supported Properties
   EXTENSIONAPI static const core::Property ListingStrategy;
+  EXTENSIONAPI static const core::Property Prefix;
 
+  // Supported Relationships
   static const core::Relationship Success;
 
-  explicit ListAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
-    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger()) {
+  explicit ListAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : ListAzureBlobStorage(name, nullptr, uuid) {
   }
 
-  ~ListAzureDataLakeStorage() override = default;
+  explicit ListAzureBlobStorage(const std::string& name, std::unique_ptr<storage::BlobStorageClient> blob_storage_client, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
+    : AzureBlobStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {
+  }
 
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &session_factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  friend class ::ListAzureDataLakeStorageTestsFixture;
-
   core::annotation::Input getInputRequirement() const override {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
-  explicit ListAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
-    : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {
-  }
+  std::optional<storage::ListAzureBlobStorageParameters> buildListAzureBlobStorageParameters(core::ProcessContext &context);
+  std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session, const storage::ListContainerResultElement &element);
 
-  std::optional<storage::ListAzureDataLakeStorageParameters> buildListParameters(core::ProcessContext& context);
-
+  storage::ListAzureBlobStorageParameters list_parameters_;
   EntityTracking tracking_strategy_ = EntityTracking::TIMESTAMPS;
-  storage::ListAzureDataLakeStorageParameters list_parameters_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
 };
 

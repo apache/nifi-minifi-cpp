@@ -29,6 +29,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
+#include "utils/ListingStateManager.h"
 
 namespace org::apache::nifi::minifi::azure::storage {
 
@@ -38,6 +39,27 @@ struct UploadBlobResult {
   std::string timestamp;
 };
 
+struct ListContainerResultElement : public minifi::utils::ListedObject {
+  std::string blob_name;
+  std::string primary_uri;
+  std::string etag;
+  int64_t length = 0;
+  std::chrono::time_point<std::chrono::system_clock> last_modified;
+  std::string mime_type;
+  std::string language;
+  std::string blob_type;
+
+  std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
+    return last_modified;
+  }
+
+  std::string getKey() const override {
+    return blob_name;
+  }
+};
+
+using ListContainerResult = std::vector<ListContainerResultElement>;
+
 class AzureBlobStorage {
  public:
   explicit AzureBlobStorage(std::unique_ptr<BlobStorageClient> blob_storage_client = nullptr);
@@ -45,6 +67,7 @@ class AzureBlobStorage {
   std::optional<UploadBlobResult> uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer);
   bool deleteBlob(const DeleteAzureBlobStorageParameters& params);
   std::optional<uint64_t> fetchBlob(const FetchAzureBlobStorageParameters& params, io::BaseStream& stream);
+  std::optional<ListContainerResult> listContainer(const ListAzureBlobStorageParameters& params);
 
  private:
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<AzureBlobStorage>::getLogger()};

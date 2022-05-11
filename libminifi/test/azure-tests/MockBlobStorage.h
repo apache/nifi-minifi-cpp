@@ -32,6 +32,8 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   const std::string PRIMARY_URI = "http://test-uri/file";
   const std::string TEST_TIMESTAMP = "Sun, 21 Oct 2018 12:16:24 GMT";
   const std::string FETCHED_DATA = "test azure data for stream";
+  const std::string ITEM1_LAST_MODIFIED = "1631292120000";
+  const std::string ITEM2_LAST_MODIFIED = "1634127120000";
 
   bool createContainerIfNotExists(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
     put_params_ = params;
@@ -53,8 +55,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return result;
   }
 
-  std::string getUrl(const minifi::azure::storage::PutAzureBlobStorageParameters& params) override {
-    put_params_ = params;
+  std::string getUrl(const minifi::azure::storage::AzureBlobStorageParameters& /*params*/) override {
     return RETURNED_PRIMARY_URI;
   }
 
@@ -89,6 +90,33 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
     return std::make_unique<org::apache::nifi::minifi::io::BufferStream>(gsl::make_span(buffer_).as_span<const std::byte>());
   }
 
+  std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const minifi::azure::storage::ListAzureBlobStorageParameters& params) override {
+    list_params_ = params;
+    std::vector<Azure::Storage::Blobs::Models::BlobItem> result;
+
+    Azure::Storage::Blobs::Models::BlobItem item1;
+    item1.Name = "testdir/item1.log";
+    item1.Details.LastModified = Azure::DateTime(2021, 9, 10, 16, 42, 0);
+    item1.Details.ETag = Azure::ETag("etag1");
+    item1.Details.HttpHeaders.ContentType = "application/zip";
+    item1.Details.HttpHeaders.ContentLanguage = "en-US";
+    item1.BlobSize = 128;
+    item1.BlobType = Azure::Storage::Blobs::Models::BlobType::BlockBlob;
+
+    Azure::Storage::Blobs::Models::BlobItem item2;
+    item2.Name = "testdir/item2.log";
+    item2.Details.LastModified = Azure::DateTime(2021, 10, 13, 12, 12, 0);
+    item2.Details.ETag = Azure::ETag("etag2");
+    item2.Details.HttpHeaders.ContentType = "text/html";
+    item2.Details.HttpHeaders.ContentLanguage = "de-DE";
+    item2.BlobSize = 256;
+    item2.BlobType = Azure::Storage::Blobs::Models::BlobType::PageBlob;
+
+    result.push_back(item1);
+    result.push_back(item2);
+    return result;
+  }
+
   minifi::azure::storage::PutAzureBlobStorageParameters getPassedPutParams() const {
     return put_params_;
   }
@@ -99,6 +127,10 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
 
   minifi::azure::storage::FetchAzureBlobStorageParameters getPassedFetchParams() const {
     return fetch_params_;
+  }
+
+  minifi::azure::storage::ListAzureBlobStorageParameters getPassedListParams() const {
+    return list_params_;
   }
 
   bool getContainerCreated() const {
@@ -126,6 +158,7 @@ class MockBlobStorage : public minifi::azure::storage::BlobStorageClient {
   minifi::azure::storage::PutAzureBlobStorageParameters put_params_;
   minifi::azure::storage::DeleteAzureBlobStorageParameters delete_params_;
   minifi::azure::storage::FetchAzureBlobStorageParameters fetch_params_;
+  minifi::azure::storage::ListAzureBlobStorageParameters list_params_;
   bool container_created_ = false;
   bool upload_fails_ = false;
   bool delete_fails_ = false;

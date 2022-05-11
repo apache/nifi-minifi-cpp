@@ -85,4 +85,28 @@ std::optional<uint64_t> AzureBlobStorage::fetchBlob(const FetchAzureBlobStorageP
   }
 }
 
+std::optional<ListContainerResult> AzureBlobStorage::listContainer(const ListAzureBlobStorageParameters& params) {
+  try {
+    ListContainerResult result;
+    auto blobs = blob_storage_client_->listContainer(params);
+    auto primary_uri = blob_storage_client_->getUrl(params);
+    for (const auto& blob : blobs) {
+      ListContainerResultElement element;
+      element.blob_name = blob.Name;
+      element.primary_uri = primary_uri;
+      element.etag = blob.Details.ETag.ToString();
+      element.length = blob.BlobSize;
+      element.last_modified = static_cast<std::chrono::system_clock::time_point>(blob.Details.LastModified);
+      element.mime_type = blob.Details.HttpHeaders.ContentType;
+      element.language = blob.Details.HttpHeaders.ContentLanguage;
+      element.blob_type = blob.BlobType.ToString();
+      result.push_back(element);
+    }
+    return result;
+  } catch (const std::exception& ex) {
+    logger_->log_error("An exception occurred while listing container: %s", ex.what());
+    return std::nullopt;
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::azure::storage

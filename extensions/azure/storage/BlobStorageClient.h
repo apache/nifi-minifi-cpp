@@ -42,27 +42,35 @@ SMART_ENUM(OptionalDeletion,
 struct AzureBlobStorageParameters {
   AzureStorageCredentials credentials;
   std::string container_name;
+};
+
+struct AzureBlobStorageBlobOperationParameters : public AzureBlobStorageParameters {
   std::string blob_name;
 };
 
-using PutAzureBlobStorageParameters = AzureBlobStorageParameters;
+using PutAzureBlobStorageParameters = AzureBlobStorageBlobOperationParameters;
 
-struct DeleteAzureBlobStorageParameters : public AzureBlobStorageParameters {
+struct DeleteAzureBlobStorageParameters : public AzureBlobStorageBlobOperationParameters {
   OptionalDeletion optional_deletion;
 };
 
-struct FetchAzureBlobStorageParameters : public AzureBlobStorageParameters {
+struct FetchAzureBlobStorageParameters : public AzureBlobStorageBlobOperationParameters {
   std::optional<uint64_t> range_start;
   std::optional<uint64_t> range_length;
+};
+
+struct ListAzureBlobStorageParameters : public AzureBlobStorageParameters {
+  std::string prefix;
 };
 
 class BlobStorageClient {
  public:
   virtual bool createContainerIfNotExists(const PutAzureBlobStorageParameters& params) = 0;
   virtual Azure::Storage::Blobs::Models::UploadBlockBlobResult uploadBlob(const PutAzureBlobStorageParameters& params, gsl::span<const std::byte> buffer) = 0;
-  virtual std::string getUrl(const PutAzureBlobStorageParameters& params) = 0;
+  virtual std::string getUrl(const AzureBlobStorageParameters& params) = 0;
   virtual bool deleteBlob(const DeleteAzureBlobStorageParameters& params) = 0;
   virtual std::unique_ptr<io::InputStream> fetchBlob(const FetchAzureBlobStorageParameters& params) = 0;
+  virtual std::vector<Azure::Storage::Blobs::Models::BlobItem> listContainer(const ListAzureBlobStorageParameters& params) = 0;
   virtual ~BlobStorageClient() = default;
 };
 
