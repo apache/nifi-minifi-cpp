@@ -105,7 +105,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     | test/#                 |
     | test/+/topic           |
 
-  Scenario: Subscription and publishing with disconnecting clients in durable sessions
+  Scenario: Subscription and publishing with disconnecting clients in persistent sessions
     # publishing MQTT client
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "publisher-client" flow
     And a PublishMQTT processor in the "publisher-client" flow
@@ -132,3 +132,31 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     And "consumer-client" flow is restarted
     And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
+  Scenario Outline: UTF-8 topics and messages
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "<message>" is present in "/tmp/input"
+    And a PublishMQTT processor set up to communicate with an MQTT broker instance
+    And the "Topic" property of the PublishMQTT processor is set to "<topic>"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+
+    And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
+    And the "Topic" property of the ConsumeMQTT processor is set to "<topic>"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And "ConsumeMQTT" processor is a start node
+    And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+
+    And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
+
+    When both instances start up
+    Then a flowfile with the content "<message>" is placed in the monitored directory in less than 60 seconds
+    And the MQTT broker has a log line matching "Received PUBLISH from .*"
+    #TODO fix above
+    And the MQTT broker has a log line matching "Received SUBSCRIBE from"
+
+    Examples: Topic wildcard patterns
+    | topic                  | message     |
+    | Лев Николаевич Толстой | Война и мир |
+    | 孙子                    | 孫子兵法     |
+    | محمد بن موسی خوارزمی   | ٱلْجَبْر       |
+    | תַּלְמוּד                  | תּוֹרָה        |
