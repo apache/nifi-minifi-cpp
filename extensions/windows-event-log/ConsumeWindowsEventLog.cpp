@@ -696,8 +696,8 @@ void ConsumeWindowsEventLog::putEventRenderFlowFileToSession(const EventRender& 
   auto commitFlowFile = [&] (const std::shared_ptr<core::FlowFile>& flowFile, const std::string& content, const std::string& mimeType) {
     session.writeBuffer(flowFile, content);
     session.putAttribute(flowFile, core::SpecialFlowAttribute::MIME_TYPE, mimeType);
-    session.putAttribute(flowFile, "Timezone name", timezone_name_);
-    session.putAttribute(flowFile, "Timezone offset", timezone_offset_);
+    session.putAttribute(flowFile, "timezone.name", timezone_name_);
+    session.putAttribute(flowFile, "timezone.offset", timezone_offset_);
     session.getProvenanceReporter()->receive(flowFile, provenanceUri_, getUUIDStr(), "Consume windows event logs", 0ms);
     session.transfer(flowFile, Success);
   };
