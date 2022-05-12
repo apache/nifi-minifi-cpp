@@ -628,13 +628,13 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
     changeUpdateState(update_property(entry.first, entry.second.to_string(), lifetime));
   }
   // apply changes and persist properties requested to be persisted
-  auto propertyWasUpdated = [&](){ return result == state::UpdateState::FULLY_APPLIED || result == state::UpdateState::PARTIALLY_APPLIED; };
-  if (propertyWasUpdated() && !configuration_->commitChanges()) {
+  const bool propertyWasUpdated = result == state::UpdateState::FULLY_APPLIED || result == state::UpdateState::PARTIALLY_APPLIED;
+  if (propertyWasUpdated && !configuration_->commitChanges()) {
     result = state::UpdateState::PARTIALLY_APPLIED;
   }
   C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
   enqueue_c2_response(std::move(response));
-  if (propertyWasUpdated()) { restart_needed_ = true; }
+  if (propertyWasUpdated) { restart_needed_ = true; }
 }
 
 /**
