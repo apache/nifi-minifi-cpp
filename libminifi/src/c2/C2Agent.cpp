@@ -1018,7 +1018,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   }
 
   auto raw_data = std::move(file_response).moveRawData();
-  uint32_t input_checksum = gsl::narrow<uint32_t>(utils::file::computeChecksum(gsl::span<const std::byte>(raw_data)));
+  uint32_t input_checksum = gsl::narrow<uint32_t>(utils::file::computeDataChecksum(gsl::span<const std::byte>(raw_data)));
   if (input_checksum != checksum) {
     send_error("Received data checksum does not match expected, received '"
         + utils::StringUtils::to_hex(utils::StringUtils::to_bytes(input_checksum)) + "', expected '"
@@ -1036,7 +1036,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     file.write(reinterpret_cast<const char*>(raw_data.data()), raw_data.size());
   }
 
-  if (utils::file::computeChecksum(file_path) != checksum) {
+  if (utils::file::computeChecksum(file_path.string()) != checksum) {
     send_error("File corruption while writing the file, checksum mismatch");
     return;
   }

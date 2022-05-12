@@ -48,7 +48,7 @@ uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) 
   return checksum;
 }
 
-uint64_t computeChecksum(gsl::span<const std::byte> data) {
+uint64_t computeDataChecksum(gsl::span<const std::byte> data) {
   return crc32(0, reinterpret_cast<const unsigned char*>(data.data()), data.size());
 }
 
