@@ -120,6 +120,7 @@ option(ENABLE_GCP "Enable Google Cloud support" ON)
 option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Ideal for systems without an up-to-date compiler." OFF)
 option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." OFF)
 option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
+option(ENABLE_PROMETHEUS "Enables Prometheus support." OFF)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	option(ENABLE_PROCFS "Enables the procfs extension." ON)
