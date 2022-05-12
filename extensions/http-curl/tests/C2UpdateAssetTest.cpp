@@ -127,6 +127,7 @@ int main() {
     .state = "NOT_APPLIED",
     .details = "Couldn't find 'file' argument"
   });
+
   operations.push_back({
     .id = "2",
     .args = {
@@ -175,7 +176,8 @@ int main() {
         {"url", "/api/file/A.txt"},
         {"checksum", file_A_checksum}
     },
-    .state = "FULLY_APPLIED"
+    .state = "FULLY_APPLIED",
+    .details = std::nullopt
   });
 
   operations.push_back({
@@ -185,7 +187,8 @@ int main() {
         {"url", "/api/file/A.txt"},
         {"checksum", file_A_checksum}
     },
-    .state = "NO_OPERATION"
+    .state = "NO_OPERATION",
+    .details = std::nullopt
   });
 
   operations.push_back({
@@ -207,7 +210,8 @@ int main() {
         {"checksum", file_B_checksum},
         {"forceDownload", "true"}
     },
-    .state = "FULLY_APPLIED"
+    .state = "FULLY_APPLIED",
+    .details = std::nullopt
   });
 
   operations.push_back({
@@ -217,7 +221,8 @@ int main() {
         {"url", "/api/file/A.txt"},
         {"checksum", file_A_checksum}
     },
-    .state = "FULLY_APPLIED"
+    .state = "FULLY_APPLIED",
+    .details = std::nullopt
   });
 
   operations.push_back({
@@ -249,7 +254,8 @@ int main() {
         {"url", absolute_file_A_url},
         {"checksum", file_A_checksum}
     },
-    .state = "FULLY_APPLIED"
+    .state = "FULLY_APPLIED",
+    .details = std::nullopt
   });
 
   for (auto& op : operations) {
