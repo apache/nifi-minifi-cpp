@@ -822,22 +822,35 @@ class RetryHttpGetResponder : public ServerAwareHandler {
 };
 
 class C2AcknowledgeHandler : public ServerAwareHandler {
+  struct OpResult {
+    std::string state;
+    std::string details;
+  };
+
  public:
   bool handlePost(CivetServer* /*server*/, struct mg_connection* conn) override {
     std::string req = readPayload(conn);
     rapidjson::Document root;
     root.Parse(req.data(), req.size());
-    if (root.IsObject() && root.HasMember("operationId")) {
-      std::lock_guard<std::mutex> guard(ack_operations_mtx_);
-      acknowledged_operations_.insert(root["operationId"].GetString());
-    }
+
+    std::string result_state;
+    std::string details;
 
     if (root.IsObject() && root.HasMember("operationState")) {
-      if (root["operationState"].IsObject() && root["operationState"].HasMember("state")) {
-        std::lock_guard<std::mutex> guard(apply_count_mtx_);
-        auto result_state = root["operationState"]["state"].GetString();
-        ++apply_count_[result_state];
+      if (root["operationState"].IsObject()) {
+        if (root["operationState"].HasMember("state")) {
+          result_state = root["operationState"]["state"].GetString();
+          std::lock_guard<std::mutex> guard(apply_count_mtx_);
+          ++apply_count_[result_state];
+        }
+        if (root["operationState"].HasMember("details")) {
+          details = root["operationState"]["details"].GetString();
+        }
       }
+    }
+    if (root.IsObject() && root.HasMember("operationId")) {
+      std::lock_guard<std::mutex> guard(ack_operations_mtx_);
+      acknowledged_operations_.insert({root["operationId"].GetString(), OpResult{result_state, details}});
     }
 
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
@@ -850,6 +863,14 @@ class C2AcknowledgeHandler : public ServerAwareHandler {
     return acknowledged_operations_.count(operation_id) > 0;
   }
 
+  std::optional<OpResult> getState(const std::string& operation_id) const {
+    std::lock_guard<std::mutex> guard(ack_operations_mtx_);
+    if (auto it = acknowledged_operations_.find(operation_id); it != acknowledged_operations_.end()) {
+      return it->second;
+    }
+    return std::nullopt;
+  }
+
   uint32_t getApplyCount(const std::string& result_state) const {
     std::lock_guard<std::mutex> guard(apply_count_mtx_);
     return apply_count_.find(result_state) != apply_count_.end() ? apply_count_.at(result_state) : 0;
@@ -858,6 +879,6 @@ class C2AcknowledgeHandler : public ServerAwareHandler {
  private:
   mutable std::mutex ack_operations_mtx_;
   mutable std::mutex apply_count_mtx_;
-  std::set<std::string> acknowledged_operations_;
+  std::unordered_map<std::string, OpResult> acknowledged_operations_;
   std::unordered_map<std::string, uint32_t> apply_count_;
 };

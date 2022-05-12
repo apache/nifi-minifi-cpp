@@ -496,6 +496,43 @@ class StringUtils {
    */
   static bool matchesSequence(std::string_view str, const std::vector<std::string>& patterns);
 
+  template<typename T>
+  static auto to_bytes(T num, bool big_endian = true) {
+    std::array<std::byte, sizeof(T)> result;
+    if (big_endian) {
+      for (auto it = result.rbegin(); it != result.rend(); ++it) {
+        *it = static_cast<std::byte>(num & 0xff);
+        num >>= 8;
+      }
+    } else {
+      for (auto it = result.begin(); it != result.end(); ++it) {
+        *it = static_cast<std::byte>(num & 0xff);
+        num >>= 8;
+      }
+    }
+    return result;
+  }
+
+  template<typename T>
+  static T from_bytes(gsl::span<const std::byte> data, bool big_endian = true) {
+    if (data.size() != sizeof(T)) {
+      throw std::invalid_argument("Invalid number of bytes");
+    }
+    T result{0};
+    if (big_endian) {
+      for (auto it = data.begin(); it != data.end(); ++it) {
+        result <<= 8;
+        result |= static_cast<T>(*it);
+      }
+    } else {
+      for (auto it = data.rbegin(); it != data.rend(); ++it) {
+        result <<= 8;
+        result |= static_cast<T>(*it);
+      }
+    }
+    return result;
+  }
+
  private:
 };
 

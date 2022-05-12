@@ -48,6 +48,10 @@ uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) 
   return checksum;
 }
 
+uint64_t computeChecksum(gsl::span<const std::byte> data) {
+  return crc32(0, reinterpret_cast<const unsigned char*>(data.data()), data.size());
+}
+
 bool contains(const std::filesystem::path& file_path, std::string_view text_to_search) {
   gsl_Expects(text_to_search.size() <= 8192);
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
