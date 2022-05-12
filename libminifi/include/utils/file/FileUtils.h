@@ -26,6 +26,7 @@
 #include <vector>
 #include <cstdio>
 #include <algorithm>
+#include <limits>
 
 #ifndef WIN32
 #include <unistd.h>
