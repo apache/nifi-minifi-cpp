@@ -542,3 +542,25 @@ TEST_CASE("StringUtils::matchesSequence works correctly", "[matchesSequence]") {
   REQUIRE(StringUtils::matchesSequence("xxxabcxxxabcxxxdefxxx", {"abc", "abc", "def"}));
   REQUIRE(!StringUtils::matchesSequence("xxxabcxxxdefxxx", {"abc", "abc", "def"}));
 }
+
+TEST_CASE("StringUtils::to_bytes works", "[to_bytes]") {
+  // big-endian
+  REQUIRE(StringUtils::to_hex(StringUtils::to_bytes<uint32_t>(5)) == "00000005");
+  REQUIRE(StringUtils::to_hex(StringUtils::to_bytes<uint32_t>(1000'000'001)) == "3b9aca01");
+  // little-endian
+  REQUIRE(StringUtils::to_hex(StringUtils::to_bytes<uint32_t>(5, false)) == "05000000");
+  REQUIRE(StringUtils::to_hex(StringUtils::to_bytes<uint32_t>(1000'000'001, false)) == "01ca9a3b");
+}
+
+TEST_CASE("StringUtils::from_bytes works", "[from_bytes]") {
+  // big-endian
+  REQUIRE(StringUtils::from_bytes<uint32_t>(StringUtils::to_bytes<uint32_t>(5)) == 5);
+  REQUIRE(StringUtils::from_bytes<uint32_t>(StringUtils::to_bytes<uint32_t>(1000'000'001)) == 1000'000'001);
+  // little-endian
+  REQUIRE(StringUtils::from_bytes<uint32_t>(StringUtils::to_bytes<uint32_t>(5, false), false) == 5);
+  REQUIRE(StringUtils::from_bytes<uint32_t>(StringUtils::to_bytes<uint32_t>(1000'000'001, false), false) == 1000'000'001);
+
+  // input and expected output size mismatch
+  REQUIRE_THROWS(StringUtils::from_bytes<uint64_t>(StringUtils::to_bytes<uint32_t>(5)));
+  REQUIRE_THROWS(StringUtils::from_bytes<uint16_t>(StringUtils::to_bytes<uint32_t>(5)));
+}
