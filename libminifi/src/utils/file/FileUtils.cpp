@@ -55,6 +55,7 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   gsl_Expects(text_to_search.size() <= 8_KiB);
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
   std::array<char, 16_KiB> buf{};
+  gsl::span<char> view;
 
   Searcher searcher(text_to_search.begin(), text_to_search.end());
 
@@ -62,11 +63,12 @@ bool contains(const std::filesystem::path& file_path, std::string_view text_to_s
   do {
     std::copy(buf.end() - text_to_search.size(), buf.end(), buf.begin());
     ifs.read(buf.data() + text_to_search.size(), buf.size() - text_to_search.size());
-    if (std::search(buf.begin(), buf.end(), searcher) != buf.end()) {
+    view = gsl::span<char>(buf.data(), text_to_search.size() + gsl::narrow<size_t>(ifs.gcount()));
+    if (std::search(view.begin(), view.end(), searcher) != view.end()) {
       return true;
     }
   } while (ifs);
-  return std::search(buf.begin(), buf.end(), searcher) != buf.end();
+  return std::search(view.begin(), view.end(), searcher) != view.end();
 }
 
 time_t to_time_t(std::filesystem::file_time_type file_time) {
