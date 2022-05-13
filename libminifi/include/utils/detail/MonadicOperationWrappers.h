@@ -40,6 +40,10 @@ struct value_or_else_wrapper {
   T function;
 };
 
+template<typename T>
+struct filter_wrapper {
+  T function;
+};
 }  // namespace detail
 
 template<typename T>
@@ -53,4 +57,7 @@ detail::or_else_wrapper<T&&> orElse(T&& func) noexcept { return {std::forward<T>
 
 template<typename T>
 detail::value_or_else_wrapper<T&&> valueOrElse(T&& func) noexcept { return {std::forward<T>(func)}; }
+
+template<typename T>
+detail::filter_wrapper<T&&> filter(T&& func) noexcept { return {std::forward<T>(func)}; }
 }  // namespace org::apache::nifi::minifi::utils

@@ -113,6 +113,18 @@ auto operator|(std::optional<SourceType> o, value_or_else_wrapper<F> f) noexcept
     return std::invoke(std::forward<F>(f.function));
   }
 }
+
+// filter implementation
+template<typename SourceType, typename F>
+requires std::is_convertible_v<std::invoke_result_t<F, SourceType>, bool>
+auto operator|(std::optional<SourceType> o, filter_wrapper<F> f) noexcept(noexcept(std::invoke(std::forward<F>(f.function), *o)))
+    -> std::optional<SourceType> {
+  if (o && std::invoke(std::forward<F>(f.function), *o)) {
+    return o;
+  } else {
+    return std::nullopt;
+  }
+}
 }  // namespace detail
 }  // namespace org::apache::nifi::minifi::utils
 

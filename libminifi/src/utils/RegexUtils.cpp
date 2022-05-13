@@ -37,10 +37,10 @@ namespace org::apache::nifi::minifi::utils {
 
 #ifndef NO_MORE_REGFREEE
 SMatch::SuffixWrapper SMatch::suffix() const {
-  if ((size_t) matches_[0].match.rm_eo >= pattern_.size()) {
+  if ((size_t) matches_[0].match.rm_eo >= string_.size()) {
     return SuffixWrapper{std::string()};
   } else {
-    return SuffixWrapper{pattern_.substr(matches_[0].match.rm_eo)};
+    return SuffixWrapper{string_.substr(matches_[0].match.rm_eo)};
   }
 }
 
@@ -73,7 +73,7 @@ std::size_t SMatch::length(std::size_t index) const {
 
 void SMatch::clear() {
   matches_.clear();
-  pattern_.clear();
+  string_.clear();
 }
 #endif
 
@@ -198,73 +198,73 @@ void Regex::compileRegex(regex_t& regex, const std::string& regex_string) const 
 }
 #endif
 
-bool regexSearch(const std::string &pattern, const Regex& regex) {
+bool regexSearch(const std::string &string, const Regex& regex) {
   if (!regex.valid_) {
     return false;
   }
 #ifdef NO_MORE_REGFREEE
-  return std::regex_search(pattern, regex.compiled_regex_);
+  return std::regex_search(string, regex.compiled_regex_);
 #else
   std::vector<regmatch_t> match;
   match.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  return regexec(&regex.compiled_regex_, pattern.c_str(), match.size(), match.data(), 0) == 0;
+  return regexec(&regex.compiled_regex_, string.c_str(), match.size(), match.data(), 0) == 0;
 #endif
 }
 
-bool regexSearch(const std::string &pattern, SMatch& match, const Regex& regex) {
+bool regexSearch(const std::string &string, SMatch& match, const Regex& regex) {
   if (!regex.valid_) {
     return false;
   }
 #ifdef NO_MORE_REGFREEE
-  return std::regex_search(pattern, match, regex.compiled_regex_);
+  return std::regex_search(string, match, regex.compiled_regex_);
 #else
   match.clear();
   std::vector<regmatch_t> regmatches;
   regmatches.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  bool result = regexec(&regex.compiled_regex_, pattern.c_str(), regmatches.size(), regmatches.data(), 0) == 0;
-  match.pattern_ = pattern;
+  bool result = regexec(&regex.compiled_regex_, string.c_str(), regmatches.size(), regmatches.data(), 0) == 0;
+  match.string_ = string;
   for (const auto& regmatch : regmatches) {
-    match.matches_.push_back(SMatch::Regmatch{regmatch, match.pattern_});
+    match.matches_.push_back(SMatch::Regmatch{regmatch, match.string_});
   }
   return result;
 #endif
 }
 
-bool regexMatch(const std::string &pattern, const Regex& regex) {
+bool regexMatch(const std::string &string, const Regex& regex) {
   if (!regex.valid_) {
     return false;
   }
 #ifdef NO_MORE_REGFREEE
-  return std::regex_match(pattern, regex.compiled_regex_);
+  return std::regex_match(string, regex.compiled_regex_);
 #else
   std::vector<regmatch_t> match;
   match.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  return regexec(&regex.compiled_full_input_regex_, pattern.c_str(), match.size(), match.data(), 0) == 0;
+  return regexec(&regex.compiled_full_input_regex_, string.c_str(), match.size(), match.data(), 0) == 0;
 #endif
 }
 
-bool regexMatch(const std::string &pattern, SMatch& match, const Regex& regex) {
+bool regexMatch(const std::string &string, SMatch& match, const Regex& regex) {
   if (!regex.valid_) {
     return false;
   }
 #ifdef NO_MORE_REGFREEE
-  return std::regex_match(pattern, match, regex.compiled_regex_);
+  return std::regex_match(string, match, regex.compiled_regex_);
 #else
   match.clear();
   std::vector<regmatch_t> regmatches;
   regmatches.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  bool result = regexec(&regex.compiled_full_input_regex_, pattern.c_str(), regmatches.size(), regmatches.data(), 0) == 0;
-  match.pattern_ = pattern;
+  bool result = regexec(&regex.compiled_full_input_regex_, string.c_str(), regmatches.size(), regmatches.data(), 0) == 0;
+  match.string_ = string;
   for (const auto& regmatch : regmatches) {
-    match.matches_.push_back(SMatch::Regmatch{regmatch, match.pattern_});
+    match.matches_.push_back(SMatch::Regmatch{regmatch, match.string_});
   }
   return result;
 #endif
 }
 
-SMatch getLastRegexMatch(const std::string& pattern, const utils::Regex& regex) {
+SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex) {
 #ifdef NO_MORE_REGFREEE
-  auto matches = std::sregex_iterator(pattern.begin(), pattern.end(), regex.compiled_regex_);
+  auto matches = std::sregex_iterator(string.begin(), string.end(), regex.compiled_regex_);
   std::smatch last_match;
   while (matches != std::sregex_iterator()) {
     last_match = *matches;
@@ -274,14 +274,14 @@ SMatch getLastRegexMatch(const std::string& pattern, const utils::Regex& regex) 
 #else
   SMatch search_result;
   SMatch last_match;
-  auto current_str = pattern;
+  auto current_str = string;
   while (regexSearch(current_str, search_result, regex)) {
     last_match = search_result;
     current_str = search_result.suffix();
   }
 
-  auto diff = pattern.size() - last_match.pattern_.size();
-  last_match.pattern_ = pattern;
+  auto diff = string.size() - last_match.string_.size();
+  last_match.string_ = string;
   for (auto& match : last_match.matches_) {
     if (match.match.rm_so >= 0) {
       match.match.rm_so += diff;

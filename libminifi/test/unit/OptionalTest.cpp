@@ -72,3 +72,8 @@ TEST_CASE("optional valueOrElse", "[optional][valueOrElse]") {
   REQUIRE(0 == test2);
   REQUIRE_THROWS_AS(std::optional<int>{} | utils::valueOrElse([]() -> int { throw std::exception{}; }), std::exception);
 }
+
+TEST_CASE("optional filter", "[optional][filter]") {
+  REQUIRE(7 == (std::make_optional(7) | utils::filter([](int i) { return i % 2 == 1; })).value());
+  REQUIRE(std::nullopt == (std::make_optional(8) | utils::filter([](int i) { return i % 2 == 1; })));
+}

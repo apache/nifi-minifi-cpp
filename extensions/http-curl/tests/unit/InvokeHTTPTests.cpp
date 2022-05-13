@@ -315,6 +315,7 @@ TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in H
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
   invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
   invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "fail");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::Success, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   test_controller.enqueueFlowFile("data", {{"invalid header", "value"}});
   const auto result = test_controller.trigger();
@@ -333,6 +334,7 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
 
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
   invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   test_controller.enqueueFlowFile("data", {{"invalid header", "value"}, {"", "value2"}});
   const auto result = test_controller.trigger();
@@ -355,6 +357,7 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
   invokehttp->setProperty(InvokeHTTP::Method, "GET");
   invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
   invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
   test_controller.enqueueFlowFile("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
   const auto result = test_controller.trigger();
@@ -366,4 +369,50 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
 }
 
+TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[httptest1]") {
+  using minifi::processors::InvokeHTTP;
+  TestHTTPServer http_server;
+
+  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invokehttp};
+  LogTestController::getInstance().setTrace<InvokeHTTP>();
+
+  invokehttp->setProperty(InvokeHTTP::Method, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend, "");
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
+  test_controller.enqueueFlowFile("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
+  const auto result = test_controller.trigger();
+  auto file_contents = result.at(InvokeHTTP::Success);
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
+  http_server.trigger();
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:legit-header value:value1"));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
+}
+
+TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substring", "[httptest1]") {
+  using minifi::processors::InvokeHTTP;
+  TestHTTPServer http_server;
+
+  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invokehttp};
+  LogTestController::getInstance().setTrace<InvokeHTTP>();
+
+  invokehttp->setProperty(InvokeHTTP::Method, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend, "he.*er");
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
+  test_controller.enqueueFlowFile("data", {{"header1", "value1"}, {"header", "value2"}});
+  const auto result = test_controller.trigger();
+  auto file_contents = result.at(InvokeHTTP::Success);
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
+  http_server.trigger();
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:header1 value:value1"));
+  REQUIRE(LogTestController::getInstance().contains("key:header value:value2"));
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
+}
 }  // namespace org::apache::nifi::minifi::test

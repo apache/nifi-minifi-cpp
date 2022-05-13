@@ -18,11 +18,12 @@
 
 #include "InvokeHTTP.h"
 
-#include <memory>
 #include <cinttypes>
 #include <cstdint>
+#include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "utils/ByteArrayCallback.h"
@@ -36,6 +37,9 @@
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/ProcessorConfigUtils.h"
+#include "utils/OptionalUtils.h"
+#include "range/v3/view/filter.hpp"
+#include "range/v3/algorithm/any_of.hpp"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -210,9 +214,10 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context
     logger_->log_debug("%s attribute is missing, so default value of %s will be used", PropPutOutputAttributes.getName(), PropPutOutputAttributes.getValue());
   }
 
-  if (!context->getProperty(AttributesToSend.getName(), attribute_to_send_regex_)) {
-    logger_->log_debug("%s attribute is missing, so default value of %s will be used", AttributesToSend.getName(), AttributesToSend.getValue());
-  }
+  attributes_to_send_ = context->getProperty(AttributesToSend)
+      | utils::filter([](const std::string& s) { return !s.empty(); })  // avoid compiling an empty string to regex
+      | utils::map([](const std::string& regex_str) { return utils::Regex{regex_str}; })
+      | utils::orElse([this] { logger_->log_debug("%s is missing, so the default value will be used", AttributesToSend.getName()); });
 
   std::string always_output_response;
   if (!context->getProperty(AlwaysOutputResponse.getName(), always_output_response)) {
@@ -264,18 +269,36 @@ bool InvokeHTTP::shouldEmitFlowFile() const {
   return ("POST" == method_ || "PUT" == method_ || "PATCH" == method_);
 }
 
-std::optional<std::map<std::string, std::string>> InvokeHTTP::validateAttributesAgainstHTTPHeaderRules(const std::map<std::string, std::string>& attributes) const {
-  std::map<std::string, std::string> result;
-  for (const auto& [attribute_name, attribute_value] : attributes) {
-    if (utils::HTTPClient::isValidHttpHeaderField(attribute_name)) {
-      result.emplace(attribute_name, attribute_value);
-    } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::TRANSFORM) {
-      result.emplace(utils::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(attribute_name), attribute_value);
-    } else if (invalid_http_header_field_handling_strategy_ == InvalidHTTPHeaderFieldHandlingOption::FAIL) {
-      return std::nullopt;
-    }
+/**
+ * Calls append_header with valid HTTP header keys, based on attributes_to_send_. Returns whether the flow file should be routed to Failure.
+ * @param flow_file
+ * @param append_header Callback to append HTTP header to the request
+ * @return Whether the flow file should be routed to failure
+ */
+bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header) {
+  if (!attributes_to_send_) return true;
+  const auto key_fn = [](const std::pair<std::string, std::string>& pair) { return pair.first; };
+  const auto original_attributes = flow_file.getAttributes();
+  // non-const views, because otherwise it doesn't satisfy viewable_range, and transform would fail
+  ranges::viewable_range auto matching_attributes = original_attributes
+      | ranges::views::filter([this](const auto& key) { return utils::regexMatch(key, *attributes_to_send_); }, key_fn);
+  switch (invalid_http_header_field_handling_strategy_.value()) {
+    case InvalidHTTPHeaderFieldHandlingOption::FAIL:
+      if (ranges::any_of(original_attributes, std::not_fn(&utils::HTTPClient::isValidHttpHeaderField), key_fn)) return false;
+      for (const auto& header: matching_attributes) append_header(header.first, header.second);
+      return true;
+    case InvalidHTTPHeaderFieldHandlingOption::DROP:
+      for (const auto& header: matching_attributes | ranges::views::filter(&utils::HTTPClient::isValidHttpHeaderField, key_fn)) {
+        append_header(header.first, header.second);
+      }
+      return true;
+    case InvalidHTTPHeaderFieldHandlingOption::TRANSFORM:
+      for (const auto& header: matching_attributes) {
+        append_header(utils::HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(header.first), header.second);
+      }
+      return true;
   }
-  return result;
+  return true;
 }
 
 void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
@@ -353,13 +376,11 @@ void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
     logger_->log_trace("InvokeHTTP -- Not emitting flowfile to HTTP Server");
   }
 
-  // append all headers
-  auto attributes_in_headers = validateAttributesAgainstHTTPHeaderRules(flow_file->getAttributes());
-  if (!attributes_in_headers) {
+  const auto append_header = [&client](const std::string& key, const std::string& value) { client.appendHeader(key, value); };
+  if (!appendHeaders(*flow_file, append_header)) {
     session->transfer(flow_file, RelFailure);
     return;
   }
-  client.build_header_list(attribute_to_send_regex_, *attributes_in_headers);
 
   logger_->log_trace("InvokeHTTP -- curl performed");
   if (client.submit()) {
