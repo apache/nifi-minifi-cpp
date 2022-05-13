@@ -78,6 +78,8 @@ active_pid() {
   pid=${1}
   if [ "${pid}" -eq -1 ]; then
     echo 1
+  elif [ "${pid}" -eq $$ ]; then
+    echo 1
   else
     kill -s 0 "${pid}" > /dev/null 2>&1
     echo $?
@@ -154,6 +156,8 @@ get_pid() {
 active_pid() {
   pid=\${1}
   if [ \${pid} -eq -1 ]; then
+    echo 1
+  elif [ "${pid}" -eq $$ ]; then
     echo 1
   else
     kill -s 0 \${pid} > /dev/null 2>&1

@@ -855,6 +855,11 @@ def step_impl(context, log_pattern):
     context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 10, count=1)
 
 
+@then("the MQTT broker has {log_count} log lines matching \"{log_pattern}\"")
+def step_impl(context, log_count, log_pattern):
+    context.test.check_container_log_matches_regex('mqtt-broker', log_pattern, 10, count=int(log_count))
+
+
 @then("the \"{minifi_container_name}\" flow has a log line matching \"{log_pattern}\" in less than {duration}")
 def step_impl(context, minifi_container_name, log_pattern, duration):
     context.test.check_container_log_matches_regex(minifi_container_name, log_pattern, timeparse(duration), count=1)

@@ -97,7 +97,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     When both instances start up
     Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has a log line matching "Received PUBLISH from .*test/my/topic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*test/my/topic.*\(4 bytes\)"
     And the MQTT broker has a log line matching "Received SUBSCRIBE from"
 
     Examples: Topic wildcard patterns
@@ -128,9 +128,10 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the MQTT broker has a log line matching "Received DISCONNECT from consumer-client"
 
     And a file with the content "test" is placed in "/tmp/input"
-    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\\(4 bytes\\)"
+    And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
 
     And "consumer-client" flow is restarted
+    And the MQTT broker has 2 log lines matching "New client connected from .* as consumer-client"
     And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
 
   Scenario Outline: UTF-8 topics and messages
@@ -150,8 +151,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     When both instances start up
     Then a flowfile with the content "<message>" is placed in the monitored directory in less than 60 seconds
-    And the MQTT broker has a log line matching "Received PUBLISH from .*"
-    #TODO fix above
+    And the MQTT broker has a log line matching "Received PUBLISH from .*<topic>"
     And the MQTT broker has a log line matching "Received SUBSCRIBE from"
 
     Examples: Topic wildcard patterns
