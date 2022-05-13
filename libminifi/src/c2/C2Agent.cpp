@@ -933,12 +933,6 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     response.setRawData(gsl::span<const char>(error).as_span<const std::byte>());
     enqueue_c2_response(std::move(response));
   };
-  auto get_arg = [&] (const std::string arg_name)-> std::optional<std::string> {
-    if (auto it = resp.operation_arguments.find(arg_name); it != resp.operation_arguments.end()) {
-      return it->second.to_string();
-    }
-    return std::nullopt;
-  };
   std::filesystem::path asset_dir = std::filesystem::path(configuration_->getHome()) / "asset";
   if (auto asset_dir_str = configuration_->get(Configuration::nifi_asset_directory)) {
     asset_dir = asset_dir_str.value();
@@ -946,7 +940,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // output file
   std::filesystem::path file_path;
-  if (auto file_rel = get_arg("file") | utils::map(make_path)) {
+  if (auto file_rel = resp.getArgument("file") | utils::map(make_path)) {
     if (auto error = validateFilePath(file_rel.value())) {
       send_error(error.value());
       return;
@@ -959,11 +953,11 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // source url
   std::string url;
-  if (auto url_str = get_arg("url")) {
+  if (auto url_str = resp.getArgument("url")) {
     if (auto resolved_url = resolveUrl(*url_str)) {
       url = resolved_url.value();
     } else {
-      send_error("Couldn't resolve relative url");
+      send_error("Couldn't resolve url");
       return;
     }
   } else {
@@ -973,7 +967,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // checksum
   uint32_t checksum = 0;
-  if (auto checksum_str = get_arg("checksum")) {
+  if (auto checksum_str = resp.getArgument("checksum")) {
     try {
       checksum = utils::StringUtils::from_bytes<uint32_t>(utils::StringUtils::from_hex(*checksum_str));
     } catch (...) {
@@ -987,7 +981,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
 
   // forceDownload
   bool force_download = false;
-  if (auto force_download_str = get_arg("forceDownload")) {
+  if (auto force_download_str = resp.getArgument("forceDownload")) {
     if (utils::StringUtils::equalsIgnoreCase(force_download_str.value(), "true")) {
       force_download = true;
     } else if (utils::StringUtils::equalsIgnoreCase(force_download_str.value(), "false")) {

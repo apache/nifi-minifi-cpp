@@ -119,6 +119,13 @@ struct C2ContentResponse {
 
   friend std::ostream& operator<<(std::ostream& out, const C2ContentResponse& response);
 
+  std::optional<std::string> getArgument(const std::string& arg_name) const {
+    if (auto it = operation_arguments.find(arg_name); it != operation_arguments.end()) {
+      return it->second.to_string();
+    }
+    return std::nullopt;
+  }
+
   Operation op;
   // determines if the operation is required
   bool required{ false };
