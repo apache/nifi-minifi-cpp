@@ -55,11 +55,7 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 /**
  * Purpose and Justification: Pull the basics for an HTTPClient into a self contained class. Simply provide
@@ -112,8 +108,6 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   void setSeekFunction(HTTPUploadCallback *callbackObj) override;
 
   virtual void setReadCallback(HTTPReadCallback *callbackObj);
-
-  struct curl_slist *build_header_list(std::string regex, const std::map<std::string, std::string> &attributes);
 
   void setContentType(std::string content_type) override;
 
@@ -307,11 +301,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HTTPClient>::getLogger()};
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
 
 #ifdef WIN32
 #pragma warning(pop)

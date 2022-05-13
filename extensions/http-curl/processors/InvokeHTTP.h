@@ -33,6 +33,7 @@
 #include "../client/HTTPClient.h"
 #include "utils/Export.h"
 #include "utils/Enum.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -104,13 +105,13 @@ class InvokeHTTP : public core::Processor {
   void route(const std::shared_ptr<core::FlowFile> &request, const std::shared_ptr<core::FlowFile> &response, const std::shared_ptr<core::ProcessSession> &session,
              const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode);
   bool shouldEmitFlowFile() const;
-  std::optional<std::map<std::string, std::string>> validateAttributesAgainstHTTPHeaderRules(const std::map<std::string, std::string>& attributes) const;
+  [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::string method_;
   std::string url_;
   bool date_header_include_{true};
-  std::string attribute_to_send_regex_;
+  std::optional<utils::Regex> attributes_to_send_;
   std::chrono::milliseconds connect_timeout_ms_{20000};
   std::chrono::milliseconds read_timeout_ms_{20000};
   // attribute in which response body will be added

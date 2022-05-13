@@ -90,11 +90,11 @@ class SMatch {
       if (match.rm_so == -1) {
         return "";
       }
-      return std::string(pattern.begin() + match.rm_so, pattern.begin() + match.rm_eo);
+      return std::string(string.begin() + match.rm_so, string.begin() + match.rm_eo);
     }
 
     regmatch_t match;
-    std::string_view pattern;
+    std::string_view string;
   };
 
   struct SuffixWrapper {
@@ -112,11 +112,11 @@ class SMatch {
   void clear();
 
   std::vector<Regmatch> matches_;
-  std::string pattern_;
+  std::string string_;
 
-  friend bool regexMatch(const std::string &pattern, SMatch& match, const Regex& regex);
-  friend bool regexSearch(const std::string &pattern, SMatch& match, const Regex& regex);
-  friend utils::SMatch getLastRegexMatch(const std::string& str, const utils::Regex& pattern);
+  friend bool regexMatch(const std::string& string, SMatch& match, const Regex& regex);
+  friend bool regexSearch(const std::string& string, SMatch& match, const Regex& regex);
+  friend utils::SMatch getLastRegexMatch(const std::string& string, const utils::Regex& pattern);
 };
 #endif
 
@@ -149,25 +149,25 @@ class Regex {
   int regex_mode_;
 #endif
 
-  friend bool regexMatch(const std::string &pattern, const Regex& regex);
-  friend bool regexMatch(const std::string &pattern, SMatch& match, const Regex& regex);
-  friend bool regexSearch(const std::string &pattern, const Regex& regex);
-  friend bool regexSearch(const std::string &pattern, SMatch& match, const Regex& regex);
-  friend SMatch getLastRegexMatch(const std::string& pattern, const utils::Regex& regex);
+  friend bool regexMatch(const std::string &string, const Regex& regex);
+  friend bool regexMatch(const std::string &string, SMatch& match, const Regex& regex);
+  friend bool regexSearch(const std::string &string, const Regex& regex);
+  friend bool regexSearch(const std::string &string, SMatch& match, const Regex& regex);
+  friend SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex);
 };
 
-bool regexMatch(const std::string &pattern, const Regex& regex);
-bool regexMatch(const std::string &pattern, SMatch& match, const Regex& regex);
+bool regexMatch(const std::string &string, const Regex& regex);
+bool regexMatch(const std::string &string, SMatch& match, const Regex& regex);
 
-bool regexSearch(const std::string &pattern, const Regex& regex);
-bool regexSearch(const std::string &pattern, SMatch& match, const Regex& regex);
+bool regexSearch(const std::string &string, const Regex& regex);
+bool regexSearch(const std::string &string, SMatch& match, const Regex& regex);
 
 /**
  * Returns the last match of a regular expression within the given string
- * @param pattern incoming string
+ * @param string incoming string
  * @param regex the regex to be matched
  * @return the last valid SMatch or a default constructed SMatch (ready() != true) if no matches have been found
  */
-SMatch getLastRegexMatch(const std::string& pattern, const utils::Regex& regex);
+SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex);
 
 }  // namespace org::apache::nifi::minifi::utils

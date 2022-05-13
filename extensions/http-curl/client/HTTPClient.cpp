@@ -17,12 +17,12 @@
  */
 #include "HTTPClient.h"
 
-#include <memory>
+#include <algorithm>
 #include <cinttypes>
 #include <map>
-#include <vector>
+#include <memory>
 #include <string>
-#include <algorithm>
+#include <vector>
 
 #include "Exception.h"
 #include "utils/gsl.h"
@@ -30,11 +30,7 @@
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
     : core::Connectable("HTTPClient"),
@@ -212,18 +208,6 @@ void HTTPClient::setSeekFunction(HTTPUploadCallback *callbackObj) {
   curl_easy_setopt(http_session_, CURLOPT_SEEKFUNCTION, &utils::HTTPRequestResponse::seek_callback);
 }
 
-struct curl_slist *HTTPClient::build_header_list(std::string regex, const std::map<std::string, std::string> &attributes) {
-  if (http_session_) {
-    for (auto attribute : attributes) {
-      if (matches(attribute.first, regex)) {
-        std::string attr = attribute.first + ":" + attribute.second;
-        headers_ = curl_slist_append(headers_, attr.c_str());
-      }
-    }
-  }
-  return headers_;
-}
-
 void HTTPClient::setContentType(std::string content_type) {
   content_type_ = "Content-Type: " + content_type;
   headers_ = curl_slist_append(headers_, content_type_.c_str());
@@ -254,9 +238,7 @@ void HTTPClient::appendHeader(const std::string &new_header) {
 }
 
 void HTTPClient::appendHeader(const std::string &key, const std::string &value) {
-  std::stringstream new_header;
-  new_header << key << ": " << value;
-  headers_ = curl_slist_append(headers_, new_header.str().c_str());
+  headers_ = curl_slist_append(headers_, utils::StringUtils::join_pack(key, ": ", value).c_str());
 }
 
 void HTTPClient::setUseChunkedEncoding() {
@@ -490,8 +472,4 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
 
 REGISTER_INTERNAL_RESOURCE(HTTPClient);
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
