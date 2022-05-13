@@ -611,9 +611,10 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
       if (update_result == UpdateResult::UPDATE_SUCCESSFUL) {
         result = state::UpdateState::FULLY_APPLIED;
       } else if (update_result == UpdateResult::UPDATE_FAILED) {
-        result = state::UpdateState::PARTIALLY_APPLIED;
+        result = state::UpdateState::NOT_APPLIED;
       }
-    } else if (result == state::UpdateState::FULLY_APPLIED && update_result == UpdateResult::UPDATE_FAILED) {
+    } else if ((result == state::UpdateState::FULLY_APPLIED && update_result == UpdateResult::UPDATE_FAILED) ||
+               (result == state::UpdateState::NOT_APPLIED && update_result == UpdateResult::UPDATE_SUCCESSFUL)) {
       result = state::UpdateState::PARTIALLY_APPLIED;
     }
   };
@@ -627,19 +628,21 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
     changeUpdateState(update_property(entry.first, entry.second.to_string(), lifetime));
   }
   // apply changes and persist properties requested to be persisted
-  if (result != state::UpdateState::NO_OPERATION && !configuration_->commitChanges()) {
+  const bool propertyWasUpdated = result == state::UpdateState::FULLY_APPLIED || result == state::UpdateState::PARTIALLY_APPLIED;
+  if (propertyWasUpdated && !configuration_->commitChanges()) {
     result = state::UpdateState::PARTIALLY_APPLIED;
   }
   C2Payload response(Operation::ACKNOWLEDGE, result, resp.ident, true);
   enqueue_c2_response(std::move(response));
-  if (result != state::UpdateState::NO_OPERATION) { restart_needed_ = true; }
+  if (propertyWasUpdated) { restart_needed_ = true; }
 }
 
 /**
  * Updates a property
  */
 C2Agent::UpdateResult C2Agent::update_property(const std::string &property_name, const std::string &property_value, PropertyChangeLifetime lifetime) {
-  if (update_service_ && !update_service_->canUpdate(property_name)) {
+  if (!Configuration::validatePropertyValue(property_name, property_value) ||
+      (update_service_ && !update_service_->canUpdate(property_name))) {
     return UpdateResult::UPDATE_FAILED;
   }
 
