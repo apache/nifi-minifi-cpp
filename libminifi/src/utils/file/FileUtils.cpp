@@ -22,6 +22,9 @@
 #include <algorithm>
 #include <iostream>
 
+#include "utils/Literals.h"
+#include "utils/Searcher.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -49,41 +52,23 @@ uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) 
 }
 
 bool contains(const std::filesystem::path& file_path, std::string_view text_to_search) {
-  gsl_Expects(text_to_search.size() <= 8192);
+  gsl_Expects(text_to_search.size() <= 8_KiB);
   gsl_ExpectsAudit(std::filesystem::exists(file_path));
-  std::array<char, 8192> buf1{};
-  std::array<char, 8192> buf2{};
-  gsl::span<char> left = buf1;
-  gsl::span<char> right = buf2;
+  std::array<char, 16_KiB> buf{};
+  gsl::span<char> view;
 
-  const auto charat = [&](size_t idx) {
-    if (idx < left.size()) {
-      return left[idx];
-    } else if (idx < left.size() + right.size()) {
-      return right[idx - left.size()];
-    } else {
-      return '\0';
-    }
-  };
-  const auto check_range = [&](size_t start, size_t end) -> size_t {
-    for (size_t i = start; i < end; ++i) {
-      size_t j{};
-      for (j = 0; j < text_to_search.size(); ++j) {
-        if (charat(i + j) != text_to_search[j]) break;
-      }
-      if (j == text_to_search.size()) return true;
-    }
-    return false;
-  };
+  Searcher searcher(text_to_search.begin(), text_to_search.end());
 
   std::ifstream ifs{file_path, std::ios::binary};
-  ifs.read(right.data(), gsl::narrow<std::streamsize>(right.size()));
   do {
-    std::swap(left, right);
-    ifs.read(right.data(), gsl::narrow<std::streamsize>(right.size()));
-    if (check_range(0, left.size())) return true;
+    std::copy(buf.end() - text_to_search.size(), buf.end(), buf.begin());
+    ifs.read(buf.data() + text_to_search.size(), buf.size() - text_to_search.size());
+    view = gsl::span<char>(buf.data(), text_to_search.size() + gsl::narrow<size_t>(ifs.gcount()));
+    if (std::search(view.begin(), view.end(), searcher) != view.end()) {
+      return true;
+    }
   } while (ifs);
-  return check_range(left.size(), left.size() + right.size());
+  return std::search(view.begin(), view.end(), searcher) != view.end();
 }
 
 time_t to_time_t(std::filesystem::file_time_type file_time) {
