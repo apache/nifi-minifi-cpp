@@ -108,7 +108,6 @@ Processors:
   - failure
   Properties:
     invoke_http: failure
-Controller Services: []
 Process Groups: []
 Input Ports: []
 Output Ports: []
