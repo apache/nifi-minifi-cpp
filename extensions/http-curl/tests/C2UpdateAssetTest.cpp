@@ -78,7 +78,7 @@ class VerifyC2AssetUpdate : public VerifyC2Base {
   }
 
   void runAssertions() override {
-    assert(utils::verifyEventHappenedInPollTime(std::chrono::seconds(3), verify_));
+    assert(utils::verifyEventHappenedInPollTime(std::chrono::seconds(10), verify_));
   }
 
   void setVerifier(std::function<bool()> verify) {
@@ -275,7 +275,6 @@ int main() {
             assert(false);
           }
         }
-        return true;
       } else {
         return false;
       }
