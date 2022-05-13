@@ -107,10 +107,8 @@ int main() {
   C2AcknowledgeHandler ack_handler;
   std::string file_A = "hello from file A";
   FileProvider file_A_provider{file_A};
-  std::string file_A_checksum = "233BB9DE";
   std::string file_B = "hello from file B";
   FileProvider file_B_provider{file_B};
-  std::string file_B_checksum = "BA32E864";
   C2HeartbeatHandler hb_handler{std::make_shared<minifi::Configure>()};
 
   VerifyC2AssetUpdate harness;
@@ -143,38 +141,36 @@ int main() {
         {"file", "my_file.txt"},
         {"url", "/api/file/A.txt"}
     },
-    .state = "NOT_APPLIED",
-    .details = "Couldn't find 'checksum' argument"
+    .state = "FULLY_APPLIED",
+    .details = std::nullopt
   });
 
   operations.push_back({
     .id = "4",
     .args = {
         {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"},
-        {"checksum", "banana"}
+        {"url", "/api/file/A.txt"}
     },
-    .state = "NOT_APPLIED",
-    .details = "Checksum is not a hexadecimal CRC32"
+    .state = "NO_OPERATION",
+    .details = std::nullopt
   });
 
   operations.push_back({
     .id = "5",
     .args = {
         {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"},
-        {"checksum", file_B_checksum}
+        {"url", "/api/file/B.txt"},
+        {"forceDownload", "true"}
     },
-    .state = "NOT_APPLIED",
-    .details = "Received data checksum does not match expected"
+    .state = "FULLY_APPLIED",
+    .details = std::nullopt
   });
 
   operations.push_back({
     .id = "6",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"},
-        {"checksum", file_A_checksum}
+        {"file", "new_dir/inner/my_file.txt"},
+        {"url", "/api/file/A.txt"}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -183,76 +179,28 @@ int main() {
   operations.push_back({
     .id = "7",
     .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"},
-        {"checksum", file_A_checksum}
-    },
-    .state = "NO_OPERATION",
-    .details = std::nullopt
-  });
-
-  operations.push_back({
-    .id = "8",
-    .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/A.txt"},
-        {"checksum", file_B_checksum}
-    },
-    .state = "NOT_APPLIED",
-    .details = "File already exists and has a different checksum"
-  });
-
-  operations.push_back({
-    .id = "9",
-    .args = {
-        {"file", "my_file.txt"},
-        {"url", "/api/file/B.txt"},
-        {"checksum", file_B_checksum},
-        {"forceDownload", "true"}
-    },
-    .state = "FULLY_APPLIED",
-    .details = std::nullopt
-  });
-
-  operations.push_back({
-    .id = "10",
-    .args = {
-        {"file", "new_dir/inner/my_file.txt"},
-        {"url", "/api/file/A.txt"},
-        {"checksum", file_A_checksum}
-    },
-    .state = "FULLY_APPLIED",
-    .details = std::nullopt
-  });
-
-  operations.push_back({
-    .id = "11",
-    .args = {
         {"file", "dummy.txt"},
-        {"url", "/not_existing_api/file.txt"},
-        {"checksum", file_A_checksum}
+        {"url", "/not_existing_api/file.txt"}
     },
     .state = "NOT_APPLIED",
     .details = "Failed to fetch asset"
   });
 
   operations.push_back({
-    .id = "12",
+    .id = "8",
     .args = {
         {"file", "../../system_lib.dll"},
-        {"url", "/not_existing_api/file.txt"},
-        {"checksum", file_A_checksum}
+        {"url", "/not_existing_api/file.txt"}
     },
     .state = "NOT_APPLIED",
     .details = "Accessing parent directory is forbidden in file path"
   });
 
   operations.push_back({
-    .id = "13",
+    .id = "9",
     .args = {
         {"file", "other_dir/A.txt"},
-        {"url", absolute_file_A_url},
-        {"checksum", file_A_checksum}
+        {"url", absolute_file_A_url}
     },
     .state = "FULLY_APPLIED",
     .details = std::nullopt
@@ -295,7 +243,7 @@ int main() {
       // this op failed no file made on the disk
       continue;
     }
-    expected_files[(asset_dir / op.args["file"]).string()] = op.args["checksum"] == file_A_checksum ? file_A : file_B;
+    expected_files[(asset_dir / op.args["file"]).string()] = utils::StringUtils::endsWith(op.args["url"], "A.txt") ? file_A : file_B;
   }
 
   size_t file_count = utils::file::list_dir_all(asset_dir.string(), controller.getLogger()).size();

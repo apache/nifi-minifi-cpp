@@ -965,20 +965,6 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     return;
   }
 
-  // checksum
-  uint32_t checksum = 0;
-  if (auto checksum_str = resp.getArgument("checksum")) {
-    try {
-      checksum = utils::StringUtils::from_bytes<uint32_t>(utils::StringUtils::from_hex(*checksum_str));
-    } catch (...) {
-      send_error("Checksum is not a hexadecimal CRC32");
-      return;
-    }
-  } else {
-    send_error("Couldn't find 'checksum' argument");
-    return;
-  }
-
   // forceDownload
   bool force_download = false;
   if (auto force_download_str = resp.getArgument("forceDownload")) {
@@ -993,11 +979,6 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   }
 
   if (!force_download && std::filesystem::exists(file_path)) {
-    uint32_t existing_checksum = gsl::narrow<uint32_t>(utils::file::computeChecksum(file_path.string()));
-    if (checksum != existing_checksum) {
-      send_error("File already exists and has a different checksum");
-      return;
-    }
     logger_->log_info("File already exists");
     C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NO_OPERATION, resp.ident, true);
     enqueue_c2_response(std::move(response));
@@ -1012,13 +993,6 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   }
 
   auto raw_data = std::move(file_response).moveRawData();
-  uint32_t input_checksum = gsl::narrow<uint32_t>(utils::file::computeDataChecksum(gsl::span<const std::byte>(raw_data)));
-  if (input_checksum != checksum) {
-    send_error("Received data checksum does not match expected, received '"
-        + utils::StringUtils::to_hex(utils::StringUtils::to_bytes(input_checksum)) + "', expected '"
-        + utils::StringUtils::to_hex(utils::StringUtils::to_bytes(checksum)) + "'");
-    return;
-  }
   // ensure directory exists for file
   if (utils::file::create_dir(file_path.parent_path().string()) != 0) {
     send_error("Failed to create directory '" + file_path.parent_path().string() + "'");
@@ -1028,11 +1002,6 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
   {
     std::ofstream file{file_path, std::ofstream::binary};
     file.write(reinterpret_cast<const char*>(raw_data.data()), raw_data.size());
-  }
-
-  if (utils::file::computeChecksum(file_path.string()) != checksum) {
-    send_error("File corruption while writing the file, checksum mismatch");
-    return;
   }
 
   C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
