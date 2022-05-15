@@ -17,15 +17,6 @@
 
 #pragma once
 
-#define EXPRESSION_LANGUAGE_USE_REGEX
-
-// Disable regex in EL for incompatible compilers
-#if !defined(WIN32) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9))
-#undef EXPRESSION_LANGUAGE_USE_REGEX
-#endif
-
-#define EXPRESSION_LANGUAGE_USE_DATE
-
 #include <string>
 #include <memory>
 #include <functional>

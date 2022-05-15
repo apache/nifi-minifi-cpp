@@ -390,8 +390,6 @@ TEST_CASE("Substring After No Args", "[expressionLanguageSubstringAfterNoArgs]")
   REQUIRE_THROWS_WITH(expression::compile("${attr:substringAfter()}"), "Expression language function substringAfter called with 1 argument(s), but 2 are required");
 }
 
-#ifdef EXPRESSION_LANGUAGE_USE_REGEX
-
 TEST_CASE("Replace", "[expressionLanguageReplace]") {
   auto expr = expression::compile("${attr:replace('.', '_')}");
 
@@ -599,8 +597,6 @@ TEST_CASE("LastIndexOf4", "[expressionLanguageLastIndexOf4]") {
   flow_file_a->addAttribute("attr", "a brand new filename.txt");
   REQUIRE("11" == expr(expression::Parameters{ flow_file_a }).asString());
 }
-
-#endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
 TEST_CASE("Plus Integer", "[expressionLanguagePlusInteger]") {
   auto expr = expression::compile("${attr:plus(13)}");
@@ -1227,8 +1223,6 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURLExcept]") {
 }
 #endif
 
-#ifdef EXPRESSION_LANGUAGE_USE_DATE
-
 TEST_CASE("Parse Date", "[expressionParseDate]") {
 #ifdef WIN32
   expression::dateSetInstall(TZ_DATA_DIR);
@@ -1250,8 +1244,6 @@ TEST_CASE("Reformat Date", "[expressionReformatDate]") {
   flow_file_a->addAttribute("message", "2014/03/14");
   REQUIRE("03-13-2014" == expr(expression::Parameters{ flow_file_a }).asString());
 }
-
-#endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 TEST_CASE("Now Date", "[expressionNowDate]") {
 #ifdef WIN32
@@ -1389,8 +1381,6 @@ TEST_CASE("Any Contains 2", "[expressionAnyContains2]") {
   REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
 }
 
-#ifdef EXPRESSION_LANGUAGE_USE_REGEX
-
 TEST_CASE("All Matching Contains", "[expressionAllMatchingContains]") {
   auto expr = expression::compile("${allMatchingAttributes('xyz_.*'):contains('hello')}");
 
@@ -1462,8 +1452,6 @@ TEST_CASE("Any Matching Contains 4", "[expressionAnyMatchingContains4]") {
   flow_file_a->addAttribute("xyz_2", "mello 2");
   REQUIRE(!expr(expression::Parameters{ flow_file_a }).asBoolean());
 }
-
-#endif  // EXPRESSION_LANGUAGE_USE_REGEX
 
 TEST_CASE("All Delineated Contains", "[expressionAllDelineatedContains]") {
   auto expr = expression::compile("${allDelineatedValues(${word_list}, \",\"):contains('hello')}");
