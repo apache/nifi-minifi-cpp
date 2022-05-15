@@ -1665,6 +1665,12 @@ Expression Expression::make_aggregate(std::function<Value(const Parameters &para
   });
 }
 
+#ifdef WIN32
+void dateSetInstall(const std::string& install) {
+  date::set_install(install);
+}
+#endif
+
 } /* namespace expression */
 } /* namespace minifi */
 } /* namespace nifi */

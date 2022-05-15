@@ -40,6 +40,7 @@
 #include "TestBase.h"
 #include "Catch.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "date/tz.h"
 
 namespace expression = org::apache::nifi::minifi::expression;
 
@@ -630,7 +631,7 @@ TEST_CASE("Plus Exponent 2", "[expressionLanguagePlusExponent2]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.345678901234");
-  REQUIRE("10000011.345678901234351" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(10000011.345678901234 == Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
 }
 
 TEST_CASE("Minus Integer", "[expressionLanguageMinusInteger]") {
@@ -662,7 +663,7 @@ TEST_CASE("Multiply Decimal", "[expressionLanguageMultiplyDecimal]") {
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "11.1");
-  REQUIRE("-148.136937" == expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(-148.136937 == Approx(expr(expression::Parameters{ flow_file_a }).asLongDouble()));
 }
 
 TEST_CASE("Divide Integer", "[expressionLanguageDivideInteger]") {
@@ -1229,6 +1230,9 @@ TEST_CASE("Encode Decode URL", "[expressionEncodeDecodeURLExcept]") {
 #ifdef EXPRESSION_LANGUAGE_USE_DATE
 
 TEST_CASE("Parse Date", "[expressionParseDate]") {
+#ifdef WIN32
+  expression::dateSetInstall(TZ_DATA_DIR);
+#endif
   auto expr = expression::compile("${message:toDate('%Y/%m/%d', 'America/Los_Angeles')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
@@ -1237,6 +1241,9 @@ TEST_CASE("Parse Date", "[expressionParseDate]") {
 }
 
 TEST_CASE("Reformat Date", "[expressionReformatDate]") {
+#ifdef WIN32
+  expression::dateSetInstall(TZ_DATA_DIR);
+#endif
   auto expr = expression::compile("${message:toDate('%Y/%m/%d', 'GMT'):format('%m-%d-%Y', 'America/New_York')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
@@ -1247,6 +1254,9 @@ TEST_CASE("Reformat Date", "[expressionReformatDate]") {
 #endif  // EXPRESSION_LANGUAGE_USE_DATE
 
 TEST_CASE("Now Date", "[expressionNowDate]") {
+#ifdef WIN32
+  expression::dateSetInstall(TZ_DATA_DIR);
+#endif
   auto expr = expression::compile("${now():format('%Y')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
