@@ -584,7 +584,8 @@ void SSLContextService::verifyCertificateExpiration() {
           .chain_cert_cb = [&](auto cert) -> std::optional<std::string> {
             verify(certificate_, cert);
             return {};
-          }
+          },
+          .priv_key_cb = {}
       });
       if (error) {
         core::logging::LOG_ERROR(logger_) << error.value();
@@ -598,7 +599,8 @@ void SSLContextService::verifyCertificateExpiration() {
           .chain_cert_cb = [&](auto cert) -> std::optional<std::string> {
             verify(certificate_, cert);
             return {};
-          }
+          },
+          .priv_key_cb = {}
       });
       if (error) {
         core::logging::LOG_ERROR(logger_) << error.value();
@@ -615,7 +617,8 @@ void SSLContextService::verifyCertificateExpiration() {
         .chain_cert_cb = [&](auto cert) -> std::optional<std::string> {
           verify(ca_certificate_, cert);
           return {};
-        }
+        },
+        .priv_key_cb = {}
     });
     if (error) {
       core::logging::LOG_ERROR(logger_) << error.value();
