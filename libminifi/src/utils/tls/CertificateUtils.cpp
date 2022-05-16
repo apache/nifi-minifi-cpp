@@ -223,7 +223,7 @@ std::optional<std::string> processPEMCertificate(const std::string& cert_file, c
   if (passphrase) {
     pwd_cb = pemPassWordCb;
     pwd_data = const_cast<std::string*>(&passphrase.value());
-  };
+  }
 
   X509_unique_ptr cert{PEM_read_bio_X509_AUX(fp.get(), nullptr, pwd_cb, pwd_data)};
   if (!cert) {
