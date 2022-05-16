@@ -15,31 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
+#pragma once
 
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
-#include <sstream>
-#include <map>
 
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+#include "../ConnectionMonitor.h"
+
+namespace org::apache::nifi::minifi::state::response {
 
 /**
  * Justification and Purpose: Provides Connection queue metrics. Provides critical information to the
  * C2 server.
  *
  */
-class QueueMetrics : public ResponseNode {
+class QueueMetrics : public ResponseNode, public ConnectionMonitor {
  public:
   QueueMetrics(const std::string &name, const utils::Identifier &uuid)
       : ResponseNode(name, uuid) {
@@ -57,15 +51,9 @@ class QueueMetrics : public ResponseNode {
     return "QueueMetrics";
   }
 
-  void addConnection(std::unique_ptr<minifi::Connection> connection) {
-    if (nullptr != connection) {
-      connections.insert(std::make_pair(connection->getName(), std::move(connection)));
-    }
-  }
-
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
-    for (const auto& [_, connection] : connections) {
+    for (const auto& [_, connection] : connections_) {
       SerializedResponseNode parent;
       parent.name = connection->getName();
       SerializedResponseNode datasize;
@@ -93,16 +81,6 @@ class QueueMetrics : public ResponseNode {
     }
     return serialized;
   }
-
- protected:
-  std::map<std::string, std::unique_ptr<minifi::Connection>> connections;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_QUEUEMETRICS_H_
+}  // namespace org::apache::nifi::minifi::state::response

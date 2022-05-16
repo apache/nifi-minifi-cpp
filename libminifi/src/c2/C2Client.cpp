@@ -132,6 +132,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
         }
         flowMonitor->setStateMonitor(update_sink);
         flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
+        connection_monitors_.insert(flowMonitor);
       }
       const auto responseNodeName = response_node->getName();
       std::lock_guard<std::mutex> guard(metrics_mutex_);
@@ -226,6 +227,23 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
             }
           }
           auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
+          auto repository_metrics = dynamic_cast<state::response::RepositoryMetrics*>(node.get());
+          if (repository_metrics != nullptr) {
+            repository_metrics->addRepository(provenance_repo_);
+            repository_metrics->addRepository(flow_file_repo_);
+          }
+
+          auto queue_metrics = dynamic_cast<state::response::QueueMetrics*>(node.get());
+          if (queue_metrics != nullptr) {
+            std::map<std::string, Connection*> connections;
+            if (root_ != nullptr) {
+              root_->getConnections(connections);
+            }
+            for (auto &con : connections) {
+              queue_metrics->updateConnection(con.second);
+            }
+            connection_monitors_.insert(queue_metrics);
+          }
           std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
         }
 
@@ -290,6 +308,23 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
             }
 
             auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
+            auto repository_metrics = dynamic_cast<state::response::RepositoryMetrics*>(node.get());
+            if (repository_metrics != nullptr) {
+              repository_metrics->addRepository(provenance_repo_);
+              repository_metrics->addRepository(flow_file_repo_);
+            }
+
+            auto queue_metrics = dynamic_cast<state::response::QueueMetrics*>(node.get());
+            if (queue_metrics != nullptr) {
+              std::map<std::string, Connection*> connections;
+              if (root_ != nullptr) {
+                root_->getConnections(connections);
+              }
+              for (auto &con : connections) {
+                queue_metrics->updateConnection(con.second);
+              }
+              connection_monitors_.insert(queue_metrics);
+            }
             std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
           }
           if (!new_node->isEmpty())
@@ -350,13 +385,10 @@ void C2Client::updateResponseNodeConnections() {
   }
 
   std::lock_guard<std::mutex> lock(metrics_mutex_);
-  for (auto& [_, responseNode] : root_response_nodes_) {
-    auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(responseNode.get());
-    if (flowMonitor != nullptr) {
-      flowMonitor->clearConnections();
-      for (const auto &con: connections) {
-        flowMonitor->updateConnection(con.second);
-      }
+  for (auto& connection_monitor : connection_monitors_) {
+    connection_monitor->clearConnections();
+    for (const auto &con: connections) {
+      connection_monitor->updateConnection(con.second);
     }
   }
 }

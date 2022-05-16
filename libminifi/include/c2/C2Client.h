@@ -24,6 +24,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include "c2/C2Agent.h"
 #include "core/controller/ControllerServiceProvider.h"
@@ -35,6 +36,7 @@
 #include "core/ProcessGroup.h"
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
+#include "core/state/ConnectionMonitor.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -78,6 +80,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   mutable std::mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
+  std::unordered_set<state::response::ConnectionMonitor*> connection_monitors_;
 
  protected:
   std::atomic<bool> flow_update_{false};

@@ -51,7 +51,7 @@ TEST_CASE("QueueMetricsTestConnections", "[c2m3]") {
   connection->setMaxQueueDataSize(1024);
   connection->setMaxQueueSize(1024);
 
-  metrics.addConnection(std::move(connection));
+  metrics.updateConnection(connection.get());
 
   REQUIRE(1 == metrics.serialize().size());
 

@@ -39,6 +39,7 @@
 #include "../nodes/StateMonitor.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
+#include "../ConnectionMonitor.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -124,7 +125,7 @@ class FlowVersion : public DeviceInformation {
   std::shared_ptr<FlowIdentifier> identifier;
 };
 
-class FlowMonitor : public StateMonitorNode {
+class FlowMonitor : public StateMonitorNode, public ConnectionMonitor {
  public:
   FlowMonitor(const std::string &name, const utils::Identifier &uuid)
       : StateMonitorNode(name, uuid) {
@@ -134,23 +135,12 @@ class FlowMonitor : public StateMonitorNode {
       : StateMonitorNode(name) {
   }
 
-  void updateConnection(minifi::Connection* connection) {
-    if (nullptr != connection) {
-      connections_[connection->getUUIDStr()] = connection;
-    }
-  }
-
-  void clearConnections() {
-    connections_.clear();
-  }
-
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
     flow_version_ = std::move(flow_version);
   }
 
  protected:
   std::shared_ptr<state::response::FlowVersion> flow_version_;
-  std::map<std::string, minifi::Connection*> connections_;
 };
 
 /**
