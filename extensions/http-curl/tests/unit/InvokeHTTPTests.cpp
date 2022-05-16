@@ -324,6 +324,30 @@ TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in H
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
 }
 
+TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that would be invalid as an HTTP header, and the policy is FAIL, but the attribute is not matched",
+    "[httptest1][invokehttp][httpheader][attribute]") {
+  using minifi::processors::InvokeHTTP;
+  TestHTTPServer http_server;
+
+  LogTestController::getInstance().setDebug<InvokeHTTP>();
+  auto invokehttp = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invokehttp};
+
+  invokehttp->setProperty(InvokeHTTP::Method, "GET");
+  invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "fail");
+  invokehttp->setProperty(InvokeHTTP::AttributesToSend, "valid.*");
+  invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::Success, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
+  test_controller.enqueueFlowFile("data", {{"invalid header", "value"}, {"valid-header", "value2"}});
+  const auto result = test_controller.trigger();
+  REQUIRE(result.at(InvokeHTTP::RelFailure).empty());
+  const auto& success_contents = result.at(InvokeHTTP::Success);
+  REQUIRE(success_contents.size() == 1);
+  http_server.trigger();
+  REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid"));
+  REQUIRE(LogTestController::getInstance().contains("key:valid-header value:value2"));
+}
+
 TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;

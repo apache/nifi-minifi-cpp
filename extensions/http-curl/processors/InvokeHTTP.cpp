@@ -270,12 +270,13 @@ bool InvokeHTTP::shouldEmitFlowFile() const {
 }
 
 /**
- * Calls append_header with valid HTTP header keys, based on attributes_to_send_. Returns whether the flow file should be routed to Failure.
+ * Calls append_header with valid HTTP header keys, based on attributes_to_send_
  * @param flow_file
  * @param append_header Callback to append HTTP header to the request
- * @return Whether the flow file should be routed to failure
+ * @return false when the flow file should be routed to failure, true otherwise
  */
 bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header) {
+  static_assert(std::is_invocable_v<decltype(append_header), std::string, std::string>);
   if (!attributes_to_send_) return true;
   const auto key_fn = [](const std::pair<std::string, std::string>& pair) { return pair.first; };
   const auto original_attributes = flow_file.getAttributes();
@@ -284,7 +285,7 @@ bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable
       | ranges::views::filter([this](const auto& key) { return utils::regexMatch(key, *attributes_to_send_); }, key_fn);
   switch (invalid_http_header_field_handling_strategy_.value()) {
     case InvalidHTTPHeaderFieldHandlingOption::FAIL:
-      if (ranges::any_of(original_attributes, std::not_fn(&utils::HTTPClient::isValidHttpHeaderField), key_fn)) return false;
+      if (ranges::any_of(matching_attributes, std::not_fn(&utils::HTTPClient::isValidHttpHeaderField), key_fn)) return false;
       for (const auto& header: matching_attributes) append_header(header.first, header.second);
       return true;
     case InvalidHTTPHeaderFieldHandlingOption::DROP:
