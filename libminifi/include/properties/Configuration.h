@@ -112,7 +112,6 @@ class Configuration : public Properties {
   static constexpr const char *nifi_c2_rest_listener_cacert = "nifi.c2.rest.listener.cacert";
   static constexpr const char *nifi_c2_rest_url = "nifi.c2.rest.url";
   static constexpr const char *nifi_c2_rest_url_ack = "nifi.c2.rest.url.ack";
-  static constexpr const char *nifi_c2_rest_url_alert = "nifi.c2.rest.url.alert";
   static constexpr const char *nifi_c2_rest_ssl_context_service = "nifi.c2.rest.ssl.context.service";
   static constexpr const char *nifi_c2_rest_heartbeat_minimize_updates = "nifi.c2.rest.heartbeat.minimize.updates";
   static constexpr const char *nifi_c2_mqtt_connector_service = "nifi.c2.mqtt.connector.service";
