@@ -17,29 +17,17 @@
  */
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <string>
-
-#include "Connection.h"
 
 namespace org::apache::nifi::minifi::state {
 
-class ConnectionMonitor {
+class PublishedMetric {
  public:
-  void clearConnections() {
-    connections_.clear();
+  virtual std::unordered_map<std::string, double> calculateMetrics() {
+    return {};
   }
-
-  void updateConnection(minifi::Connection* connection) {
-    if (nullptr != connection) {
-      connections_[connection->getUUIDStr()] = connection;
-    }
-  }
-
-  virtual ~ConnectionMonitor() = default;
-
- protected:
-  std::map<std::string, minifi::Connection*> connections_;
+  virtual ~PublishedMetric() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::state

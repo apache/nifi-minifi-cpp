@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,31 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
-#include <map>
-#include <string>
+namespace org::apache::nifi::minifi::extensions::prometheus {
 
-#include "Connection.h"
-
-namespace org::apache::nifi::minifi::state {
-
-class ConnectionMonitor {
- public:
-  void clearConnections() {
-    connections_.clear();
-  }
-
-  void updateConnection(minifi::Connection* connection) {
-    if (nullptr != connection) {
-      connections_[connection->getUUIDStr()] = connection;
-    }
-  }
-
-  virtual ~ConnectionMonitor() = default;
-
- protected:
-  std::map<std::string, minifi::Connection*> connections_;
+class PrometheusMetricsPublisher {
+  PrometheusMetricsPublisher();
 };
 
-}  // namespace org::apache::nifi::minifi::state
+}  // namespace org::apache::nifi::minifi::extensions::prometheus

@@ -28,8 +28,6 @@
 
 #include "FlowController.h"
 #include "core/state/nodes/AgentInformation.h"
-#include "core/state/nodes/FlowInformation.h"
-#include "core/state/nodes/RepositoryMetrics.h"
 #include "core/state/ProcessorController.h"
 #include "c2/C2Agent.h"
 #include "core/ProcessGroup.h"
@@ -70,6 +68,8 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   initialized_ = false;
 
   protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
+  response_node_manager_.setControllerServiceProvider(this);
+  response_node_manager_.setStateMonitor(this);
 }
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
@@ -126,7 +126,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
   processor_to_controller_.clear();
-  updateResponseNodeConnections();
+  response_node_manager_.updateResponseNodeConnections(root_.get());
   initialized_ = false;
   bool started = false;
   try {
@@ -248,6 +248,7 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   // since we don't have access to the flow definition, the C2 communication
   // won't be able to use the services defined there, e.g. SSLContextService
   controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
+  response_node_manager_.initializeComponentMetrics(root.get());
   C2Client::initialize(this, this, this);
   auto opt_source = fetchFlow(*opt_flow_url);
   if (!opt_source) {
@@ -278,7 +279,7 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
       logger_->log_info("Load Flow Controller from provided root");
       this->root_ = std::move(root);
       processor_to_controller_.clear();
-      updateResponseNodeConnections();
+      response_node_manager_.updateResponseNodeConnections(root_.get());
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = loadInitialFlow();

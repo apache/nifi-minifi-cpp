@@ -37,6 +37,7 @@
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
 #include "core/state/ConnectionMonitor.h"
+#include "core/state/nodes/ResponseNodeManager.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -60,10 +61,8 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
  protected:
   bool isC2Enabled() const;
   std::optional<std::string> fetchFlow(const std::string& uri) const;
-  void updateResponseNodeConnections();
 
  private:
-  void initializeComponentMetrics();
   void loadC2ResponseConfiguration(const std::string &prefix);
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
 
@@ -79,12 +78,11 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
   mutable std::mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
-  std::unordered_set<state::response::ConnectionMonitor*> connection_monitors_;
 
  protected:
   std::atomic<bool> flow_update_{false};
   std::function<void()> request_restart_;
+  state::response::ResponseNodeManager response_node_manager_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

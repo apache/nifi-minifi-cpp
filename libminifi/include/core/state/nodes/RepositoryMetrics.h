@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -27,12 +26,8 @@
 
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+
+namespace org::apache::nifi::minifi::state::response {
 
 /**
  * Justification and Purpose: Provides repository metrics. Provides critical information to the
@@ -94,11 +89,4 @@ class RepositoryMetrics : public ResponseNode {
   std::map<std::string, std::shared_ptr<core::Repository>> repositories;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
+}  // namespace org::apache::nifi::minifi::state::response

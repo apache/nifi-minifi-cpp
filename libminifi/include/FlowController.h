@@ -57,6 +57,7 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "utils/Id.h"
 #include "utils/file/FileSystem.h"
+#include "core/state/nodes/ResponseNodeManager.h"
 
 namespace org::apache::nifi::minifi {
 

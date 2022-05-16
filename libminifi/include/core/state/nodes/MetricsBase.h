@@ -24,6 +24,7 @@
 #include <string>
 
 #include "../Value.h"
+#include "../PublishedMetric.h"
 #include "core/Core.h"
 #include "core/Connectable.h"
 
@@ -37,7 +38,7 @@ namespace response {
 /**
  * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
-class ResponseNode : public core::Connectable {
+class ResponseNode : public core::Connectable, public PublishedMetric {
  public:
   ResponseNode()
       : core::Connectable("metric"),
