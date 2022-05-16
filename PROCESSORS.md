@@ -9,10 +9,12 @@
 - [BinFiles](#binfiles)
 - [CapturePacket](#capturepacket)
 - [CaptureRTSPFrame](#capturertspframe)
+- [CollectorInitiatedSubscription](#collectorinitiatedsubscription)
 - [CompressContent](#compresscontent)
 - [ConsumeJournald](#consumejournald)
 - [ConsumeKafka](#consumekafka)
 - [ConsumeMQTT](#consumemqtt)
+- [ConsumeWindowsEventLog](#consumewindowseventlog)
 - [DefragmentText](#defragmenttext)
 - [DeleteAzureBlobStorage](#deleteazureblobstorage)
 - [DeleteAzureDataLakeStorage](#deleteazuredatalakestorage)
@@ -70,6 +72,7 @@
 - [RetryFlowFile](#retryflowfile)
 - [RouteOnAttribute](#routeonattribute)
 - [RouteText](#routetext)
+- [TailEventLog](#taileventlog)
 - [TailFile](#tailfile)
 - [UnfocusArchiveEntry](#unfocusarchiveentry)
 - [UpdateAttribute](#updateattribute)
@@ -206,6 +209,36 @@ In the list below, the names of required properties appear in bold. Any other pr
 | failure | Failures to capture RTSP frame   |
 | success | Successful capture of RTSP frame |
 
+## CollectorInitiatedSubscription
+
+### Description
+
+Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                               | Default Value   | Allowable Values | Description                                                                                                                                                                                                                                                                                                                                                          |
+|------------------------------------|-----------------|------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Subscription Name**              |                 |                  | The name of the subscription. The value provided for this parameter should be unique within the computer's scope.<br/>**Supports Expression Language: true**                                                                                                                                                                                                         |
+| **Subscription Description**       |                 |                  | A description of the subscription.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                                                        |
+| **Source Address**                 |                 |                  | The IP address or fully qualified domain name (FQDN) of the local or remote computer (event source) from which the events are collected.<br/>**Supports Expression Language: true**                                                                                                                                                                                  |
+| **Source User Name**               |                 |                  | The user name, which is used by the remote computer (event source) to authenticate the user.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                              |
+| **Source Password**                |                 |                  | The password, which is used by the remote computer (event source) to authenticate the user.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                               |
+| **Source Channels**                |                 |                  | The Windows Event Log Channels (on domain computer(s)) from which events are transferred.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                 |
+| **Max Delivery Items**             | 1000            |                  | Determines the maximum number of items that will forwarded from an event source for each request.                                                                                                                                                                                                                                                                    |
+| **Delivery MaxLatency Time**       | 10 min          |                  | How long, in milliseconds, the event source should wait before sending events.                                                                                                                                                                                                                                                                                       |
+| **Heartbeat Interval**             | 10 min          |                  | Time interval, in milliseconds, which is observed between the sent heartbeat messages.  The event collector uses this property to determine the interval between queries to the event source.                                                                                                                                                                        |
+| **Channel**                        | ForwardedEvents |                  | The Windows Event Log Channel (on local machine) to which events are transferred.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                         |
+| **Query**                          | *               |                  | XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)<br/>**Supports Expression Language: true**                                                                                                                                                                                         |
+| **Max Buffer Size**                | 1 MB            |                  | The individual Event Log XMLs are rendered to a buffer. This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)                                                                                                                                                                 |
+| **Inactive Duration To Reconnect** | 10 min          |                  | If no new event logs are processed for the specified time period, this processor will try reconnecting to recover from a state where any further messages cannot be consumed. Such situation can happen if Windows Event Log service is restarted, or ERROR_EVT_QUERY_RESULT_STALE (15011) is returned. Setting no duration, e.g. '0 ms' disables auto-reconnection. |
+### Relationships
+
+| Name    | Description                                    |
+|---------|------------------------------------------------|
+| success | Relationship for successfully consumed events. |
+
 
 ## CompressContent
 
@@ -319,6 +352,40 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name    | Description                                                                                  |
 |---------|----------------------------------------------------------------------------------------------|
 | success | FlowFiles that are sent successfully to the destination are transferred to this relationship |
+
+
+## ConsumeWindowsEventLog
+
+### Description
+
+Windows Event Log Subscribe Callback to receive FlowFiles from Events on Windows.
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                               | Default Value                                                                                                                                                                                                               | Allowable Values                 | Description                                                                                                                                                                                                                                                                                                                                                          |
+|------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Channel**                        | System                                                                                                                                                                                                                      |                                  | The Windows Event Log Channel to listen to.<br/>**Supports Expression Language: true**                                                                                                                                                                                                                                                                               |
+| **Query**                          | *                                                                                                                                                                                                                           |                                  | XPath Query to filter events. (See https://msdn.microsoft.com/en-us/library/windows/desktop/dd996910(v=vs.85).aspx for examples.)<br/>**Supports Expression Language: true**                                                                                                                                                                                         |
+| **Max Buffer Size**                | 1 MB                                                                                                                                                                                                                        |                                  | The individual Event Log XMLs are rendered to a buffer. This specifies the maximum size in bytes that the buffer will be allowed to grow to. (Limiting the maximum size of an individual Event XML.)                                                                                                                                                                 |
+| **Inactive Duration To Reconnect** | 10 min                                                                                                                                                                                                                      |                                  | If no new event logs are processed for the specified time period, this processor will try reconnecting to recover from a state where any further messages cannot be consumed. Such situation can happen if Windows Event Log service is restarted, or ERROR_EVT_QUERY_RESULT_STALE (15011) is returned. Setting no duration, e.g. '0 ms' disables auto-reconnection. |
+| Identifier Match Regex             | .*Sid                                                                                                                                                                                                                       |                                  | Regular Expression to match Subject Identifier Fields. These will be placed into the attributes of the FlowFile                                                                                                                                                                                                                                                      |
+| Apply Identifier Function          | true                                                                                                                                                                                                                        | true<br>false                    | If true it will resolve SIDs matched in the 'Identifier Match Regex' to the DOMAIN\USERNAME associated with that ID                                                                                                                                                                                                                                                  |
+| Resolve Metadata in Attributes     | true                                                                                                                                                                                                                        | true<br>false                    | If true, any metadata that is resolved ( such as IDs or keyword metadata ) will be placed into attributes, otherwise it will be replaced in the XML or text output                                                                                                                                                                                                   |
+| Event Header Delimiter             |                                                                                                                                                                                                                             |                                  | If set, the chosen delimiter will be used in the Event output header. Otherwise, a colon followed by spaces will be used.                                                                                                                                                                                                                                            |
+| Event Header                       | LOG_NAME=Log Name, SOURCE = Source, TIME_CREATED = Date,EVENT_RECORDID=Record ID,EVENTID = Event ID,TASK_CATEGORY = Task Category,LEVEL = Level,KEYWORDS = Keywords,USER = User,COMPUTER = Computer, EVENT_TYPE = EventType |                                  | Comma seperated list of key/value pairs with the following keys LOG_NAME, SOURCE, TIME_CREATED,EVENT_RECORDID,EVENTID,TASK_CATEGORY,LEVEL,KEYWORDS,USER,COMPUTER, and EVENT_TYPE. Eliminating fields will remove them from the header.                                                                                                                               |
+| **Output Format**                  | Both                                                                                                                                                                                                                        | XML<br>Plaintext<br>JSON<br>Both | Set the output format type. In case 'Both' is selected the processor generates two flow files for every event captured in format XML and Plaintext                                                                                                                                                                                                                   |
+| **JSON Format**                    | Simple                                                                                                                                                                                                                      | Simple<br>Raw<br>Flattened       | Set the json format type. Only applicable if Output Format is set to 'JSON'                                                                                                                                                                                                                                                                                          |
+| Batch Commit Size                  | 1000                                                                                                                                                                                                                        |                                  | Maximum number of Events to consume and create to Flow Files from before committing.                                                                                                                                                                                                                                                                                 |
+| **Process Old Events**             | false                                                                                                                                                                                                                       | true<br>false                    | This property defines if old events (which are created before first time server is started) should be processed.                                                                                                                                                                                                                                                     |
+| State Directory                    | CWELState                                                                                                                                                                                                                   |                                  | DEPRECATED. Only use it for state migration from the state file, supplying the legacy state directory.                                                                                                                                                                                                                                                               |
+
+### Relationships
+
+| Name    | Description                                    |
+|---------|------------------------------------------------|
+| success | Relationship for successfully consumed events. |
+
 
 ## DefragmentText
 
@@ -2223,6 +2290,26 @@ Routes textual data based on a set of user-defined rules. Each segment in an inc
 | Name            | Description                                                                                                                                              |
 |-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | RouteText.Group | The value captured by all capturing groups in the 'Grouping Regular Expression' property. If this property is not set, this attribute will not be added. |
+
+## TailEventLog
+
+### Description
+
+Windows event log reader that functions as a stateful tail of the provided Windows event log name
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                    | Default Value | Allowable Values | Description                          |
+|-------------------------|---------------|------------------|--------------------------------------|
+| Log Source              |               |                  | Log Source from which to read events |
+| Max Events Per FlowFile | 1             |                  | Events per flow file                 |
+### Relationships
+
+| Name    | Description                                             |
+|---------|---------------------------------------------------------|
+| success | All files, containing log events, are routed to success |
+
 
 ## TailFile
 
