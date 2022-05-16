@@ -28,6 +28,7 @@
 #include "HTTPClient.h"
 #include "InvokeHTTP.h"
 #include "processors/LogAttribute.h"
+#include "controllers/SSLContextService.h"
 #include "core/state/ProcessorController.h"
 #include "HTTPIntegrationBase.h"
 
@@ -46,6 +47,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     LogTestController::getInstance().setTrace<minifi::processors::LogAttribute>();
     LogTestController::getInstance().setDebug<core::Processor>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
+    LogTestController::getInstance().setDebug<minifi::controllers::SSLContextService>();
   }
 
   void setUrl(const std::string &url, ServerAwareHandler *handler) override {
