@@ -43,7 +43,7 @@ const core::Property DeleteGCSObject::Key(
 
 const core::Property DeleteGCSObject::Generation(
     core::PropertyBuilder::createProperty("Object Generation")
-        ->withDescription("The generation of the object to be deleted. If null, will use latest version of the object.")
+        ->withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
         ->supportsExpressionLanguage(false)
         ->build());
 

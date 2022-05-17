@@ -45,7 +45,7 @@ const core::Property FetchGCSObject::Key(
 
 const core::Property FetchGCSObject::ObjectGeneration(
     core::PropertyBuilder::createProperty("Object Generation")
-        ->withDescription("The generation of the Object to download. If null, will download latest generation.")
+        ->withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
         ->supportsExpressionLanguage(false)
         ->build());
 
