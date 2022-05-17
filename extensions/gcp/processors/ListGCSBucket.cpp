@@ -65,12 +65,14 @@ void ListGCSBucket::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
   auto use_generations = context->getProperty<bool>(UseVersions);
   gcs::Versions versions = (use_generations && *use_generations) ? gcs::Versions(true) : gcs::Versions(false);
   auto objects_in_bucket = client.ListObjects(bucket_, versions);
-  for (auto& object_in_bucket : objects_in_bucket) {
+  for (const auto& object_in_bucket : objects_in_bucket) {
     if (object_in_bucket.ok()) {
       auto flow_file = session->create();
       flow_file->updateAttribute(core::SpecialFlowAttribute::FILENAME, object_in_bucket->name());
       setAttributesFromObjectMetadata(*flow_file, *object_in_bucket);
       session->transfer(flow_file, Success);
+    } else {
+      logger_->log_error("Invalid object in bucket %s", bucket_);
     }
   }
 }
