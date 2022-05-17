@@ -1125,9 +1125,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 | _gcs.generated.id_         | success      | The service-generated ID for the object                            |
 | _gcs.generation_           | success      | The content generation of this object. Used for object versioning. |
 | _gcs.metageneration_       | success      | The metageneration of the object.                                  |
-| _gcs.create.time_          | success      | The creation time of the object (milliseconds)                     |
-| _gcs.update.time_          | success      | The last modification time of the object (milliseconds)            |
-| _gcs.delete.time_          | success      | The deletion time of the object (milliseconds)                     |
+| _gcs.create.time_          | success      | Unix timestamp of the object's creation in milliseconds            |
+| _gcs.update.time_          | success      | Unix timestamp of the object's last modification in milliseconds   |
+| _gcs.delete.time_          | success      | Unix timestamp of the object's deletion in milliseconds            |
 | _gcs.encryption.algorithm_ | success      | The algorithm used to encrypt the object.                          |
 | _gcs.encryption.sha256_    | success      | The SHA256 hash of the key used to encrypt the object              |
 
@@ -1782,9 +1782,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 | _gcs.generated.id_         | success      | The service-generated ID for the object                            |
 | _gcs.generation_           | success      | The content generation of this object. Used for object versioning. |
 | _gcs.metageneration_       | success      | The metageneration of the object.                                  |
-| _gcs.create.time_          | success      | The creation time of the object (milliseconds)                     |
-| _gcs.update.time_          | success      | The last modification time of the object (milliseconds)            |
-| _gcs.delete.time_          | success      | The deletion time of the object (milliseconds)                     |
+| _gcs.create.time_          | success      | Unix timestamp of the object's creation in milliseconds            |
+| _gcs.update.time_          | success      | Unix timestamp of the object's last modification in milliseconds   |
+| _gcs.delete.time_          | success      | Unix timestamp of the object's deletion in milliseconds            |
 | _gcs.encryption.algorithm_ | success      | The algorithm used to encrypt the object.                          |
 | _gcs.encryption.sha256_    | success      | The SHA256 hash of the key used to encrypt the object              |
 
