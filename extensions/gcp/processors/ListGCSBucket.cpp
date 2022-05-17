@@ -34,7 +34,7 @@ const core::Property ListGCSBucket::Bucket(
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property ListGCSBucket::UseVersions(
+const core::Property ListGCSBucket::ListAllVersions(
     core::PropertyBuilder::createProperty("List all versions")
         ->withDescription("Set this option to `true` to get all the previous versions separately.")
         ->withDefaultValue<bool>(false)
@@ -47,7 +47,7 @@ void ListGCSBucket::initialize() {
                           Bucket,
                           NumberOfRetries,
                           EndpointOverrideURL,
-                          UseVersions});
+                          ListAllVersions});
   setSupportedRelationships({Success});
 }
 
@@ -62,8 +62,8 @@ void ListGCSBucket::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
   gsl_Expects(context && session && gcp_credentials_);
 
   gcs::Client client = getClient();
-  auto use_generations = context->getProperty<bool>(UseVersions);
-  gcs::Versions versions = (use_generations && *use_generations) ? gcs::Versions(true) : gcs::Versions(false);
+  auto list_all_versions = context->getProperty<bool>(ListAllVersions);
+  gcs::Versions versions = (list_all_versions && *list_all_versions) ? gcs::Versions(true) : gcs::Versions(false);
   auto objects_in_bucket = client.ListObjects(bucket_, versions);
   for (const auto& object_in_bucket : objects_in_bucket) {
     if (object_in_bucket.ok()) {

@@ -43,7 +43,7 @@ const core::Property FetchGCSObject::Key(
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property FetchGCSObject::Generation(
+const core::Property FetchGCSObject::ObjectGeneration(
     core::PropertyBuilder::createProperty("Object Generation")
         ->withDescription("The generation of the Object to download. If null, will download latest generation.")
         ->supportsExpressionLanguage(false)
@@ -119,7 +119,7 @@ void FetchGCSObject::initialize() {
   setSupportedProperties({GCPCredentials,
                           Bucket,
                           Key,
-                          Generation,
+                          ObjectGeneration,
                           NumberOfRetries,
                           EncryptionKey,
                           EndpointOverrideURL});
@@ -162,7 +162,7 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
   gcs::Client client = getClient();
   FetchFromGCSCallback callback(client, *bucket, *object_name);
   callback.setEncryptionKey(encryption_key_);
-  auto generation_str = context->getProperty(Generation, flow_file);
+  auto generation_str = context->getProperty(ObjectGeneration, flow_file);
   if (generation_str) {
     try {
       auto generation = std::stol(*generation_str);

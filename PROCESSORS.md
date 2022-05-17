@@ -413,7 +413,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Number of retries**                | 6             | integers                                                                          | How many retry attempts should be made before routing to the failure relationship.                                               |
 | **GCP Credentials Provider Service** |               | [GCPCredentialsControllerService](CONTROLLERS.md#GCPCredentialsControllerService) | The Controller Service used to obtain Google Cloud Platform credentials.                                                         |
 | Server Side Encryption Key           |               |                                                                                   | An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.<br>**Supports Expression Language: true** |
-| Generation                           |               |                                                                                   | The generation of the Object to download. If null, will download latest generation.                                              |
+| Object Generation                    |               |                                                                                   | The generation of the Object to download. If null, will download latest generation.                                              |
 | Endpoint Override URL                |               |                                                                                   | Overrides the default Google Cloud Storage endpoints                                                                             |
 
 
@@ -659,7 +659,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | **Number of retries**                | 6             | integers                                                                          | How many retry attempts should be made before routing to the failure relationship.                                               |
 | **GCP Credentials Provider Service** |               | [GCPCredentialsControllerService](CONTROLLERS.md#GCPCredentialsControllerService) | The Controller Service used to obtain Google Cloud Platform credentials.                                                         |
 | Server Side Encryption Key           |               |                                                                                   | An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.<br>**Supports Expression Language: true** |
-| Generation                           |               |                                                                                   | The generation of the Object to download. If null, will download latest generation.                                              |
+| Object Generation                    |               |                                                                                   | The generation of the Object to download. If null, will download latest generation.                                              |
 | Endpoint Override URL                |               |                                                                                   | Overrides the default Google Cloud Storage endpoints                                                                             |
 
 

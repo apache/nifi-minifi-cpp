@@ -41,7 +41,7 @@ class ListGCSBucket : public GCSProcessor {
   ~ListGCSBucket() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;
-  EXTENSIONAPI static const core::Property UseVersions;
+  EXTENSIONAPI static const core::Property ListAllVersions;
 
   EXTENSIONAPI static const core::Relationship Success;
 

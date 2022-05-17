@@ -121,7 +121,7 @@ TEST_F(FetchGCSObjectTests, HappyPath) {
             std::unique_ptr<gcs::internal::ObjectReadSource>(
                 std::move(mock_source)));
       });
-  EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::Generation.getName(), "23"));
+  EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::ObjectGeneration.getName(), "23"));
   const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
   ASSERT_EQ(1, result.at(FetchGCSObject::Success).size());
   EXPECT_EQ(0, result.at(FetchGCSObject::Failure).size());
