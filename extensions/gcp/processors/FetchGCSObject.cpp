@@ -61,7 +61,7 @@ const core::Relationship FetchGCSObject::Failure("failure", "FlowFiles are route
 
 
 namespace {
-class FetchFromGCSCallback : public OutputStreamCallback {
+class FetchFromGCSCallback {
  public:
   FetchFromGCSCallback(gcs::Client& client, std::string bucket, std::string key)
       : bucket_(std::move(bucket)),
@@ -69,7 +69,7 @@ class FetchFromGCSCallback : public OutputStreamCallback {
         client_(client) {
   }
 
-  int64_t process(const std::shared_ptr<io::BaseStream>& stream) override {
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
     auto reader = client_.ReadObject(bucket_, key_, encryption_key_, generation_, gcs::IfGenerationNotMatch(0));
     auto set_members = gsl::finally([&]{
       status_ = reader.status();
@@ -173,7 +173,7 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
   }
 
 
-  session->write(flow_file, &callback);
+  session->write(flow_file, std::ref(callback));
   if (!callback.getStatus().ok()) {
     flow_file->setAttribute(GCS_STATUS_MESSAGE, callback.getStatus().message());
     flow_file->setAttribute(GCS_ERROR_REASON, callback.getStatus().error_info().reason());
