@@ -40,7 +40,7 @@ class DeleteGCSObject : public GCSProcessor {
   EXTENSIONAPI static const core::Property Bucket;
   EXTENSIONAPI static const core::Property Key;
   EXTENSIONAPI static const core::Property EncryptionKey;
-  EXTENSIONAPI static const core::Property Generation;
+  EXTENSIONAPI static const core::Property ObjectGeneration;
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;

@@ -41,10 +41,11 @@ const core::Property DeleteGCSObject::Key(
         ->supportsExpressionLanguage(true)
         ->build());
 
-const core::Property DeleteGCSObject::Generation(
+const core::Property DeleteGCSObject::ObjectGeneration(
     core::PropertyBuilder::createProperty("Object Generation")
         ->withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
         ->supportsExpressionLanguage(false)
+        ->withType(core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR)
         ->build());
 
 const core::Property DeleteGCSObject::EncryptionKey(
@@ -61,7 +62,7 @@ void DeleteGCSObject::initialize() {
   setSupportedProperties({GCPCredentials,
                           Bucket,
                           Key,
-                          Generation,
+                          ObjectGeneration,
                           NumberOfRetries,
                           EncryptionKey,
                           EndpointOverrideURL});
@@ -91,16 +92,8 @@ void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& con
   }
 
   gcs::Generation generation;
-  auto generation_str = context->getProperty(Generation, flow_file);
-  if (generation_str) {
-    try {
-      generation = gcs::Generation(std::stol(*generation_str));
-    } catch (const std::invalid_argument&) {
-      logger_->log_error("Invalid generation %s", *generation_str);
-      session->transfer(flow_file, Failure);
-      return;
-    }
-  }
+  if (auto gen = context->getProperty<uint64_t>(ObjectGeneration, flow_file))
+    generation = gcs::Generation(*gen);
 
   auto status = getClient().DeleteObject(*bucket, *object_name, generation, gcs::IfGenerationNotMatch(0));
 
