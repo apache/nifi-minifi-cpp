@@ -61,8 +61,7 @@ class FetchGCSObjectTests : public ::testing::Test {
 TEST_F(FetchGCSObjectTests, MissingBucket) {
   EXPECT_CALL(*fetch_gcs_object_->mock_client_, CreateResumableSession).Times(0);
   EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::Bucket.getName(), ""));
-  test_controller_.enqueueFlowFile("hello world");
-  const auto& result = test_controller_.trigger();
+  const auto& result = test_controller_.trigger("hello world");
   EXPECT_EQ(0, result.at(FetchGCSObject::Success).size());
   ASSERT_EQ(1, result.at(FetchGCSObject::Failure).size());
   EXPECT_EQ(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
@@ -88,8 +87,7 @@ TEST_F(FetchGCSObjectTests, ServerError) {
         return google::cloud::make_status_or(std::move(result));
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::Bucket.getName(), "bucket-from-property"));
-  test_controller_.enqueueFlowFile("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
-  const auto& result = test_controller_.trigger();
+  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
   EXPECT_EQ(0, result.at(FetchGCSObject::Success).size());
   ASSERT_EQ(1, result.at(FetchGCSObject::Failure).size());
   EXPECT_NE(std::nullopt, result.at(FetchGCSObject::Failure)[0]->getAttribute(minifi_gcp::GCS_ERROR_DOMAIN));
@@ -124,8 +122,7 @@ TEST_F(FetchGCSObjectTests, HappyPath) {
                 std::move(mock_source)));
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::Generation.getName(), "23"));
-  test_controller_.enqueueFlowFile("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
-  const auto& result = test_controller_.trigger();
+  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
   ASSERT_EQ(1, result.at(FetchGCSObject::Success).size());
   EXPECT_EQ(0, result.at(FetchGCSObject::Failure).size());
   EXPECT_EQ("stored text", test_controller_.plan->getContent(result.at(FetchGCSObject::Success)[0]));

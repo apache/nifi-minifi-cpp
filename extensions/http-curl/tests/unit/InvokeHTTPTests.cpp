@@ -317,8 +317,7 @@ TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in H
   invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "fail");
   invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::Success, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
-  test_controller.enqueueFlowFile("data", {{"invalid header", "value"}});
-  const auto result = test_controller.trigger();
+  const auto result = test_controller.trigger("data", {{"invalid header", "value"}});
   auto file_contents = result.at(InvokeHTTP::RelFailure);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
@@ -360,8 +359,7 @@ TEST_CASE("InvokeHTTP replaces invalid characters of attributes", "[httptest1]")
   invokehttp->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
   invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
-  test_controller.enqueueFlowFile("data", {{"invalid header", "value"}, {"", "value2"}});
-  const auto result = test_controller.trigger();
+  const auto result = test_controller.trigger("data", {{"invalid header", "value"}, {"", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
@@ -383,8 +381,7 @@ TEST_CASE("InvokeHTTP drops invalid attributes from HTTP headers", "[httptest1]"
   invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
   invokehttp->setProperty(InvokeHTTP::AttributesToSend, ".*");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
-  test_controller.enqueueFlowFile("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
-  const auto result = test_controller.trigger();
+  const auto result = test_controller.trigger("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");

@@ -139,7 +139,7 @@ TEST_F(ListGCSBucketTests, WithVersions) {
         return response;
       });
   EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::Bucket.getName(), "bucket-from-property"));
-  EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::UseVersions.getName(), "true"));
+  EXPECT_TRUE(test_controller_.plan->setProperty(list_gcs_bucket_, ListGCSBucket::ListAllVersions.getName(), "true"));
   const auto& result = test_controller_.trigger();
   EXPECT_EQ(3, result.at(ListGCSBucket::Success).size());
 }
