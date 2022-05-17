@@ -68,10 +68,6 @@ void DeleteGCSObject::initialize() {
   setSupportedRelationships({Success, Failure});
 }
 
-void DeleteGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
-  GCSProcessor::onSchedule(context, session_factory);
-}
-
 void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session && gcp_credentials_);
 

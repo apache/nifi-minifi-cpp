@@ -50,7 +50,6 @@ class DeleteGCSObject : public GCSProcessor {
   EXTENSIONAPI static const core::Relationship Failure;
 
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
 
   core::annotation::Input getInputRequirement() const override {
