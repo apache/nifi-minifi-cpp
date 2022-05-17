@@ -404,7 +404,7 @@ inline std::enable_if_t<std::is_default_constructible_v<T>, std::optional<T>> Pr
   std::string string_value;
   if (!getProperty(property, string_value, flow_file)) return std::nullopt;
   try {
-    if (!state::response::Value{string_value}.template convertValue(value)) return std::nullopt;
+    if (!state::response::Value{string_value}.template convertValue<>(value)) return std::nullopt;
   } catch (const utils::internal::ValueException&) {
     return std::nullopt;
   }
