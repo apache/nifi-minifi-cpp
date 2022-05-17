@@ -44,10 +44,6 @@ class PutGCSObject : public GCSProcessor {
   explicit PutGCSObject(const std::string& name, const utils::Identifier& uuid = {})
       : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
   }
-  PutGCSObject(const PutGCSObject&) = delete;
-  PutGCSObject(PutGCSObject&&) = delete;
-  PutGCSObject& operator=(const PutGCSObject&) = delete;
-  PutGCSObject& operator=(PutGCSObject&&) = delete;
   ~PutGCSObject() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;

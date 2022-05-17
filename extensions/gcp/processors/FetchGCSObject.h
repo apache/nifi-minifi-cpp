@@ -35,10 +35,6 @@ class FetchGCSObject : public GCSProcessor {
   explicit FetchGCSObject(const std::string& name, const utils::Identifier& uuid = {})
       : GCSProcessor(name, uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger()) {
   }
-  FetchGCSObject(const FetchGCSObject&) = delete;
-  FetchGCSObject(FetchGCSObject&&) = delete;
-  FetchGCSObject& operator=(const FetchGCSObject&) = delete;
-  FetchGCSObject& operator=(FetchGCSObject&&) = delete;
   ~FetchGCSObject() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;

@@ -34,10 +34,6 @@ class ListGCSBucket : public GCSProcessor {
   explicit ListGCSBucket(const std::string& name, const utils::Identifier& uuid = {})
       : GCSProcessor(name, uuid, core::logging::LoggerFactory<ListGCSBucket>::getLogger()) {
   }
-  ListGCSBucket(const ListGCSBucket&) = delete;
-  ListGCSBucket(ListGCSBucket&&) = delete;
-  ListGCSBucket& operator=(const ListGCSBucket&) = delete;
-  ListGCSBucket& operator=(ListGCSBucket&&) = delete;
   ~ListGCSBucket() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;

@@ -35,10 +35,6 @@ class DeleteGCSObject : public GCSProcessor {
   explicit DeleteGCSObject(const std::string& name, const utils::Identifier& uuid = {})
       : GCSProcessor(name, uuid, core::logging::LoggerFactory<DeleteGCSObject>::getLogger()) {
   }
-  DeleteGCSObject(const DeleteGCSObject&) = delete;
-  DeleteGCSObject(DeleteGCSObject&&) = delete;
-  DeleteGCSObject& operator=(const DeleteGCSObject&) = delete;
-  DeleteGCSObject& operator=(DeleteGCSObject&&) = delete;
   ~DeleteGCSObject() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;
