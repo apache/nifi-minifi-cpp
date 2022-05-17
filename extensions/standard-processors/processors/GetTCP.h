@@ -135,6 +135,14 @@ class GetTCPMetrics : public state::response::ResponseNode {
     return resp;
   }
 
+  std::unordered_map<std::string, double> calculateMetrics() override {
+    return {
+      {"onTrigger_invocations", static_cast<double>(iterations_.load())},
+      {"accepted_files", static_cast<double>(accepted_files_.load())},
+      {"input_bytes", static_cast<double>(input_bytes_.load())}
+    };
+  }
+
  protected:
   friend class GetTCP;
 

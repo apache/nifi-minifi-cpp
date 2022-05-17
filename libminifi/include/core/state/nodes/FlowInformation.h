@@ -247,7 +247,22 @@ class FlowInformation : public FlowMonitor {
     return serialized;
   }
 
- protected:
+  std::unordered_map<std::string, double> calculateMetrics() override {
+    std::unordered_map<std::string, double> metrics;
+    for (const auto& [_, connection] : connections_) {
+      metrics.insert({"connection_" + connection->getUUIDStr() + "_data_size", static_cast<double>(connection->getQueueDataSize())});
+      metrics.insert({"connection_" + connection->getUUIDStr() + "_data_size_max", static_cast<double>(connection->getMaxQueueDataSize())});
+      metrics.insert({"connection_" + connection->getUUIDStr() + "_size", static_cast<double>(connection->getQueueSize())});
+      metrics.insert({"connection_" + connection->getUUIDStr() + "_size_max", static_cast<double>(connection->getMaxQueueSize())});
+    }
+
+    if (nullptr != monitor_) {
+      monitor_->executeOnAllComponents([&metrics](StateController& component){
+        metrics.insert({"component_" + component.getComponentUUID().to_string() + "_running", (component.isRunning() ? 1.0 : 0.0)});
+      });
+    }
+    return metrics;
+  }
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

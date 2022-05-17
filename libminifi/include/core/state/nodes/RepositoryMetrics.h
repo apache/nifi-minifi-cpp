@@ -85,6 +85,16 @@ class RepositoryMetrics : public ResponseNode {
     return serialized;
   }
 
+  std::unordered_map<std::string, double> calculateMetrics() override {
+    std::unordered_map<std::string, double> metrics;
+    for (const auto& [_, repo] : repositories) {
+      metrics.insert({repo->getName() + "_running", (repo->isRunning() ? 1.0 : 0.0)});
+      metrics.insert({repo->getName() + "_full", (repo->isFull() ? 1.0 : 0.0)});
+      metrics.insert({repo->getName() + "_size", static_cast<double>(repo->getRepoSize())});
+    }
+    return metrics;
+  }
+
  protected:
   std::map<std::string, std::shared_ptr<core::Repository>> repositories;
 };
