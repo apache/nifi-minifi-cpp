@@ -72,7 +72,6 @@ Processors:
     Always Output Response: 'false'
     Connection Timeout: 2 s
     Content-type: application/octet-stream
-    Disable Peer Verification: 'true'
     HTTP Method: POST
     Read Timeout: 1 s
     Remote URL: https://localhost:0/minifi

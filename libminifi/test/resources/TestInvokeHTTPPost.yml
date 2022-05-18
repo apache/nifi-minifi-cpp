@@ -72,7 +72,6 @@ Processors:
     Always Output Response: 'false'
     Connection Timeout: 3 s
     Content-type: application/octet-stream
-    Disable Peer Verification: 'false'
     HTTP Method: POST
     Include Date Header: 'true'
     Read Timeout: 1 s
