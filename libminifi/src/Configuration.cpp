@@ -124,7 +124,10 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_log_logger_root},
   core::ConfigurationProperty{Configuration::nifi_log_compression_cached_log_max_size, gsl::make_not_null(core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_log_compression_compressed_log_max_size, gsl::make_not_null(core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())},
-  core::ConfigurationProperty{Configuration::nifi_asset_directory}
+  core::ConfigurationProperty{Configuration::nifi_asset_directory},
+  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_class},
+  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_port, gsl::make_not_null(core::StandardValidators::get().PORT_VALIDATOR.get())},
+  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_metrics}
 };
 
 const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {Configuration::nifi_security_client_pass_phrase,

@@ -42,6 +42,7 @@
 #include "utils/HTTPClient.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
+#include "core/ClassLoader.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -68,8 +69,8 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   initialized_ = false;
 
   protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
-  response_node_manager_.setControllerServiceProvider(this);
-  response_node_manager_.setStateMonitor(this);
+  response_node_loader_.setControllerServiceProvider(this);
+  response_node_loader_.setStateMonitor(this);
 }
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
@@ -126,7 +127,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
   processor_to_controller_.clear();
-  response_node_manager_.updateResponseNodeConnections(root_.get());
+  response_node_loader_.updateFlowComponents(*root_);
   initialized_ = false;
   bool started = false;
   try {
@@ -248,7 +249,6 @@ std::unique_ptr<core::ProcessGroup> FlowController::loadInitialFlow() {
   // since we don't have access to the flow definition, the C2 communication
   // won't be able to use the services defined there, e.g. SSLContextService
   controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-  response_node_manager_.initializeComponentMetrics(root.get());
   C2Client::initialize(this, this, this);
   auto opt_source = fetchFlow(*opt_flow_url);
   if (!opt_source) {
@@ -279,7 +279,6 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
       logger_->log_info("Load Flow Controller from provided root");
       this->root_ = std::move(root);
       processor_to_controller_.clear();
-      response_node_manager_.updateResponseNodeConnections(root_.get());
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = loadInitialFlow();
@@ -292,6 +291,12 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
     controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
+    if (root) {
+      response_node_loader_.updateFlowComponents(*root_);
+    } else {
+      response_node_loader_.initializeComponentMetrics(*root_);
+      loadMetricsPublisher();
+    }
 
     if (!thread_pool_.isRunning() || reload) {
       thread_pool_.shutdown();
@@ -551,6 +556,22 @@ state::StateController* FlowController::getProcessorController(const std::string
     foundController = controllerFactory(*processor);
   }
   return foundController.get();
+}
+
+void FlowController::loadMetricsPublisher() {
+  if (auto metrics_publisher_class = configuration_->get(minifi::Configure::nifi_metrics_publisher_class)) {
+    auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(*metrics_publisher_class, *metrics_publisher_class);
+    if (!ptr) {
+      logger_->log_error("Configured metrics publisher class \"%s\" could not be instantiated.", *metrics_publisher_class);
+      return;
+    }
+    metrics_publisher_ = utils::dynamic_unique_cast<state::MetricsPublisher>(std::move(ptr));
+    if (!metrics_publisher_) {
+      logger_->log_error("Configured metrics publisher class \"%s\" is not a metrics publisher.", *metrics_publisher_class);
+      return;
+    }
+    metrics_publisher_->initialize(configuration_, response_node_loader_, *root_);
+  }
 }
 
 }  // namespace org::apache::nifi::minifi

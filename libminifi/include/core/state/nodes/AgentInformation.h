@@ -547,34 +547,29 @@ class AgentStatus : public StateMonitorNode {
     return resource_consumption;
   }
 
-  std::unordered_map<std::string, double> calculateMetrics() override {
-    std::unordered_map<std::string, double> metrics;
+  std::vector<PublishedMetric> calculateMetrics() override {
+    std::vector<PublishedMetric> metrics;
     for (const auto& [_, repo] : repositories_) {
-      metrics.insert({repo->getName() + "_running", (repo->isRunning() ? 1.0 : 0.0)});
-      metrics.insert({repo->getName() + "_full", (repo->isFull() ? 1.0 : 0.0)});
-      metrics.insert({repo->getName() + "_size", static_cast<double>(repo->getRepoSize())});
+      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+      metrics.push_back({"repository_size", static_cast<double>(repo->getRepoSize()), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
     }
 
-    if (nullptr != monitor_) {
-      metrics.insert({"uptime", static_cast<double>(monitor_->getUptime())});
-    } else {
-      metrics.insert({"uptime", 0.0});
-    }
-
-    if (nullptr != monitor_) {
-      monitor_->executeOnAllComponents([&metrics](StateController& component){
-        metrics.insert({"component_" + component.getComponentUUID().to_string() + "_running", (component.isRunning() ? 1.0 : 0.0)});
+    if (monitor_ != nullptr) {
+      metrics.push_back({"uptime", static_cast<double>(monitor_->getUptime()), {{"metric_class", getName()}}});
+      monitor_->executeOnAllComponents([this, &metrics](StateController& component){
+        metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"component_uuid", component.getComponentUUID().to_string()}}});
       });
     }
 
-    metrics.insert({"memory_usage", static_cast<double>(utils::OsUtils::getCurrentProcessPhysicalMemoryUsage())});
+    metrics.push_back({"memory_usage", static_cast<double>(utils::OsUtils::getCurrentProcessPhysicalMemoryUsage()), {{"metric_class", getName()}}});
 
     double system_cpu_usage = -1.0;
     {
       std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
       system_cpu_usage = cpu_load_tracker_.getCpuUsageAndRestartCollection();
     }
-    metrics.insert({"cpu_utilization", system_cpu_usage});
+    metrics.push_back({"cpu_utilization", system_cpu_usage, {{"metric_class", getName()}}});
     return metrics;
   }
 

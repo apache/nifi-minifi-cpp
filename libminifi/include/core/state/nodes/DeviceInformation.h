@@ -319,7 +319,7 @@ class DeviceInfoNode : public DeviceInformation {
     return serialized;
   }
 
-  std::unordered_map<std::string, double> calculateMetrics() override {
+  std::vector<PublishedMetric> calculateMetrics() override {
     double system_cpu_usage = -1.0;
     {
       std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
@@ -329,9 +329,9 @@ class DeviceInfoNode : public DeviceInformation {
     cpu_usage.name = "cpuUtilization";
     cpu_usage.value = system_cpu_usage;
     return {
-      {"physical_mem", static_cast<double>(utils::OsUtils::getSystemTotalPhysicalMemory())},
-      {"memory_usage", static_cast<double>(utils::OsUtils::getSystemPhysicalMemoryUsage())},
-      {"cpu_utilization", system_cpu_usage},
+      {"physical_mem", static_cast<double>(utils::OsUtils::getSystemTotalPhysicalMemory()), {{"metric_class", getName()}}},
+      {"memory_usage", static_cast<double>(utils::OsUtils::getSystemPhysicalMemoryUsage()), {{"metric_class", getName()}}},
+      {"cpu_utilization", system_cpu_usage, {{"metric_class", getName()}}},
     };
   }
 

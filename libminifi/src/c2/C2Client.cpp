@@ -45,7 +45,7 @@ C2Client::C2Client(
       filesystem_(std::move(filesystem)),
       logger_(std::move(logger)),
       request_restart_(std::move(request_restart)),
-      response_node_manager_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()) {}
+      response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()) {}
 
 void C2Client::stopC2() {
   if (c2_agent_) {
@@ -96,7 +96,7 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
-      auto response_node = response_node_manager_.loadResponseNode(clazz, root_.get());
+      auto response_node = response_node_loader_.loadResponseNode(clazz, *root_);
       if (!response_node) {
         continue;
       }
@@ -146,7 +146,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       if (configuration_->get(classOption, class_definitions)) {
         std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
         for (const std::string& clazz : classes) {
-          auto response_node = response_node_manager_.loadResponseNode(clazz, root_.get());
+          auto response_node = response_node_loader_.loadResponseNode(clazz, *root_);
           if (!response_node) {
             continue;
           }
@@ -195,7 +195,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
         if (configuration_->get(classOption, class_definitions)) {
           std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
           for (const std::string& clazz : classes) {
-            auto response_node = response_node_manager_.loadResponseNode(clazz, root_.get());
+            auto response_node = response_node_loader_.loadResponseNode(clazz, *root_);
             if (!response_node) {
               continue;
             }
@@ -220,7 +220,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 
 std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
   if (!metrics_class.empty()) {
-    return response_node_manager_.getComponentMetricsNode(metrics_class);
+    return response_node_loader_.getComponentMetricsNode(metrics_class);
   } else {
     std::lock_guard<std::mutex> lock(metrics_mutex_);
     const auto iter = root_response_nodes_.find("metrics");

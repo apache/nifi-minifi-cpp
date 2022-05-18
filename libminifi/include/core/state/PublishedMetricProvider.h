@@ -15,14 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/state/nodes/AgentInformation.h"
-#include "core/Resource.h"
+#pragma once
 
-namespace org::apache::nifi::minifi::state::response {
+#include <unordered_map>
+#include <string>
+#include <vector>
 
-utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
-std::mutex AgentStatus::cpu_load_tracker_mutex_;
+namespace org::apache::nifi::minifi::state {
 
-REGISTER_RESOURCE(AgentInformation, DescriptionOnly);
+struct PublishedMetric {
+  std::string name;
+  double value;
+  std::unordered_map<std::string, std::string> labels;
+};
 
-}  // namespace org::apache::nifi::minifi::state::response
+class PublishedMetricProvider {
+ public:
+  virtual std::vector<PublishedMetric> calculateMetrics() {
+    return {};
+  }
+  virtual ~PublishedMetricProvider() = default;
+};
+
+}  // namespace org::apache::nifi::minifi::state

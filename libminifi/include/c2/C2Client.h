@@ -37,7 +37,7 @@
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
 #include "core/state/ConnectionMonitor.h"
-#include "core/state/nodes/ResponseNodeManager.h"
+#include "core/state/nodes/ResponseNodeLoader.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -82,7 +82,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
  protected:
   std::atomic<bool> flow_update_{false};
   std::function<void()> request_restart_;
-  state::response::ResponseNodeManager response_node_manager_;
+  state::response::ResponseNodeLoader response_node_loader_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

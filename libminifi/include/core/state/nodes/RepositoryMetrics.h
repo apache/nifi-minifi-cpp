@@ -54,13 +54,13 @@ class RepositoryMetrics : public ResponseNode {
 
   void addRepository(const std::shared_ptr<core::Repository> &repo) {
     if (nullptr != repo) {
-      repositories.insert(std::make_pair(repo->getName(), repo));
+      repositories_.insert(std::make_pair(repo->getName(), repo));
     }
   }
 
   std::vector<SerializedResponseNode> serialize() {
     std::vector<SerializedResponseNode> serialized;
-    for (auto conn : repositories) {
+    for (auto conn : repositories_) {
       auto repo = conn.second;
       SerializedResponseNode parent;
       parent.name = repo->getName();
@@ -85,18 +85,18 @@ class RepositoryMetrics : public ResponseNode {
     return serialized;
   }
 
-  std::unordered_map<std::string, double> calculateMetrics() override {
-    std::unordered_map<std::string, double> metrics;
-    for (const auto& [_, repo] : repositories) {
-      metrics.insert({repo->getName() + "_running", (repo->isRunning() ? 1.0 : 0.0)});
-      metrics.insert({repo->getName() + "_full", (repo->isFull() ? 1.0 : 0.0)});
-      metrics.insert({repo->getName() + "_size", static_cast<double>(repo->getRepoSize())});
+  std::vector<PublishedMetric> calculateMetrics() override {
+    std::vector<PublishedMetric> metrics;
+    for (const auto& [_, repo] : repositories_) {
+      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+      metrics.push_back({"repository_size", static_cast<double>(repo->getRepoSize()), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
     }
     return metrics;
   }
 
  protected:
-  std::map<std::string, std::shared_ptr<core::Repository>> repositories;
+  std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 };
 
 }  // namespace org::apache::nifi::minifi::state::response

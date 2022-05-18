@@ -156,6 +156,11 @@ class Configuration : public Properties {
 
   static constexpr const char *nifi_asset_directory = "nifi.asset.directory";
 
+  // Metrics publisher options
+  static constexpr const char *nifi_metrics_publisher_class = "nifi.metrics.publisher.class";
+  static constexpr const char *nifi_metrics_publisher_port = "nifi.metrics.publisher.port";
+  static constexpr const char *nifi_metrics_publisher_metrics = "nifi.metrics.publisher.metrics";
+
   MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 

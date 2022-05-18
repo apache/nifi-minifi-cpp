@@ -247,18 +247,18 @@ class FlowInformation : public FlowMonitor {
     return serialized;
   }
 
-  std::unordered_map<std::string, double> calculateMetrics() override {
-    std::unordered_map<std::string, double> metrics;
+  std::vector<PublishedMetric> calculateMetrics() override {
+    std::vector<PublishedMetric> metrics;
     for (const auto& [_, connection] : connections_) {
-      metrics.insert({"connection_" + connection->getUUIDStr() + "_data_size", static_cast<double>(connection->getQueueDataSize())});
-      metrics.insert({"connection_" + connection->getUUIDStr() + "_data_size_max", static_cast<double>(connection->getMaxQueueDataSize())});
-      metrics.insert({"connection_" + connection->getUUIDStr() + "_size", static_cast<double>(connection->getQueueSize())});
-      metrics.insert({"connection_" + connection->getUUIDStr() + "_size_max", static_cast<double>(connection->getMaxQueueSize())});
+      metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
+      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getMaxQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
+      metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
+      metrics.push_back({"queue_size_max", static_cast<double>(connection->getMaxQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
     }
 
     if (nullptr != monitor_) {
-      monitor_->executeOnAllComponents([&metrics](StateController& component){
-        metrics.insert({"component_" + component.getComponentUUID().to_string() + "_running", (component.isRunning() ? 1.0 : 0.0)});
+      monitor_->executeOnAllComponents([this, &metrics](StateController& component){
+        metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0), {{"component_uuid", component.getComponentUUID().to_string()}, {"metric_class", getName()}}});
       });
     }
     return metrics;

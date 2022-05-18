@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
+#pragma once
 
 #include <utility>
 #include <vector>
@@ -24,21 +23,16 @@
 #include <string>
 
 #include "../Value.h"
-#include "../PublishedMetric.h"
+#include "../PublishedMetricProvider.h"
 #include "core/Core.h"
 #include "core/Connectable.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 /**
  * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
-class ResponseNode : public core::Connectable, public PublishedMetric {
+class ResponseNode : public core::Connectable, public PublishedMetricProvider {
  public:
   ResponseNode()
       : core::Connectable("metric"),
@@ -239,11 +233,4 @@ class ResponseNodeSink {
   virtual int16_t setMetricsNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
+}  // namespace org::apache::nifi::minifi::state::response

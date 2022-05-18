@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,14 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "core/state/nodes/AgentInformation.h"
-#include "core/Resource.h"
+#include <memory>
 
-namespace org::apache::nifi::minifi::state::response {
+#include "state/PublishedMetricProvider.h"
+#include "prometheus/collectable.h"
+#include "prometheus/metric_family.h"
 
-utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
-std::mutex AgentStatus::cpu_load_tracker_mutex_;
+namespace org::apache::nifi::minifi::extensions::prometheus {
 
-REGISTER_RESOURCE(AgentInformation, DescriptionOnly);
+class PublishedMetricGaugeCollection : public ::prometheus::Collectable {
+ public:
+  PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric);
+  std::vector<::prometheus::MetricFamily> Collect() const override;
 
-}  // namespace org::apache::nifi::minifi::state::response
+ private:
+  std::shared_ptr<state::PublishedMetricProvider> metric_;
+};
+
+}  // namespace org::apache::nifi::minifi::extensions::prometheus

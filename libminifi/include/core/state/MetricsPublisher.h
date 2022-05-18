@@ -17,17 +17,17 @@
  */
 #pragma once
 
-#include <unordered_map>
-#include <string>
+#include <memory>
+
+#include "nodes/ResponseNodeLoader.h"
+#include "properties/Configure.h"
 
 namespace org::apache::nifi::minifi::state {
 
-class PublishedMetric {
+class MetricsPublisher {
  public:
-  virtual std::unordered_map<std::string, double> calculateMetrics() {
-    return {};
-  }
-  virtual ~PublishedMetric() = default;
+  virtual void initialize(const std::shared_ptr<Configure>& configuration, response::ResponseNodeLoader& response_node_loader, core::ProcessGroup& root) = 0;
+  virtual ~MetricsPublisher() = default;
 };
 
 }  // namespace org::apache::nifi::minifi::state
