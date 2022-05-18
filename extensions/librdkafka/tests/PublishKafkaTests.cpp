@@ -31,8 +31,7 @@ TEST_CASE("Scheduling should fail when batch size is larger than the max queue m
   publish_kafka->setProperty(processors::PublishKafka::SeedBrokers, "test_seedbroker");
   publish_kafka->setProperty(processors::PublishKafka::QueueBufferMaxMessage, "1000");
   publish_kafka->setProperty(processors::PublishKafka::BatchSize, "1500");
-  test_controller.enqueueFlowFile("");
-  REQUIRE_THROWS_WITH(test_controller.trigger(), "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
+  REQUIRE_THROWS_WITH(test_controller.trigger(""), "Process Schedule Operation: Invalid configuration: Batch Size cannot be larger than Queue Max Message");
 }
 
 }  // namespace org::apache::nifi::minifi::test

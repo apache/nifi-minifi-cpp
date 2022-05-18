@@ -21,36 +21,22 @@
 #include <memory>
 
 #include "GCSProcessor.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "utils/Enum.h"
 #include "google/cloud/storage/well_known_headers.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-class PutGCSObject : public GCSProcessor {
+class FetchGCSObject : public GCSProcessor {
  public:
-  SMART_ENUM(PredefinedAcl,
-             (AUTHENTICATED_READ, "authenticatedRead"),
-             (BUCKET_OWNER_FULL_CONTROL, "bucketOwnerFullControl"),
-             (BUCKET_OWNER_READ_ONLY, "bucketOwnerRead"),
-             (PRIVATE, "private"),
-             (PROJECT_PRIVATE, "projectPrivate"),
-             (PUBLIC_READ_ONLY, "publicRead"),
-             (PUBLIC_READ_WRITE, "publicReadWrite"));
-
-  explicit PutGCSObject(const std::string& name, const utils::Identifier& uuid = {})
-      : GCSProcessor(name, uuid, core::logging::LoggerFactory<PutGCSObject>::getLogger()) {
+  explicit FetchGCSObject(const std::string& name, const utils::Identifier& uuid = {})
+      : GCSProcessor(name, uuid, core::logging::LoggerFactory<FetchGCSObject>::getLogger()) {
   }
-  ~PutGCSObject() override = default;
+  ~FetchGCSObject() override = default;
 
   EXTENSIONAPI static const core::Property Bucket;
   EXTENSIONAPI static const core::Property Key;
-  EXTENSIONAPI static const core::Property ContentType;
-  EXTENSIONAPI static const core::Property MD5Hash;
-  EXTENSIONAPI static const core::Property Crc32cChecksum;
   EXTENSIONAPI static const core::Property EncryptionKey;
-  EXTENSIONAPI static const core::Property ObjectACL;
-  EXTENSIONAPI static const core::Property OverwriteObject;
+  EXTENSIONAPI static const core::Property ObjectGeneration;
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;

@@ -51,9 +51,10 @@ class SingleProcessorTestController : public TestController {
     return result;
   }
 
-  void enqueueFlowFile(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
+  auto trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
     const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
     input_->put(new_flow_file);
+    return trigger();
   }
 
   core::Relationship addDynamicRelationship(std::string name) {

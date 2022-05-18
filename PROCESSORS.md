@@ -16,6 +16,7 @@
 - [DefragmentText](#defragmenttext)
 - [DeleteAzureBlobStorage](#deleteazureblobstorage)
 - [DeleteAzureDataLakeStorage](#deleteazuredatalakestorage)
+- [DeleteGCSObject](#deletegcsobject)
 - [DeleteS3Object](#deletes3object)
 - [ExecuteProcess](#executeprocess)
 - [ExecutePythonProcessor](#executepythonprocessor)
@@ -24,6 +25,7 @@
 - [ExtractText](#extracttext)
 - [FetchAzureBlobStorage](#fetchazureblobstorage)
 - [FetchAzureDataLakeStorage](#fetchazuredatalakestorage)
+- [FetchGCSObject](#fetchgcsobject)
 - [FetchFile](#fetchfile)
 - [FetchOPCProcessor](#fetchopcprocessor)
 - [FetchS3Object](#fetchs3object)
@@ -38,6 +40,7 @@
 - [InvokeHTTP](#invokehttp)
 - [ListAzureBlobStorage](#listazureblobstorage)
 - [ListAzureDataLakeStorage](#listazuredatalakestorage)
+- [ListGCSBucket](#listgcsbucket)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
 - [ListFile](#listfile)
@@ -393,6 +396,42 @@ In the list below, the names of required properties appear in bold. Any other pr
 |failure|If file deletion from Azure Data Lake storage fails the flowfile is transferred to this relationship|
 |success|If file deletion from Azure Data Lake storage succeeds the flowfile is transferred to this relationship|
 
+## DeleteGCSObject
+
+### Description
+
+Deletes an object from a Google Cloud Bucket.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                 | Default Value | Allowable Values                                                                  | Description                                                                                                                                     |
+|--------------------------------------|---------------|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Bucket**                           | ${gcs.bucket} |                                                                                   | Bucket of the object.<br>**Supports Expression Language: true**                                                                                 |
+| **Key**                              | ${filename}   |                                                                                   | Name of the object.<br>**Supports Expression Language: true**                                                                                   |
+| **Number of retries**                | 6             | integers                                                                          | How many retry attempts should be made before routing to the failure relationship.                                                              |
+| **GCP Credentials Provider Service** |               | [GCPCredentialsControllerService](CONTROLLERS.md#GCPCredentialsControllerService) | The Controller Service used to obtain Google Cloud Platform credentials.                                                                        |
+| Server Side Encryption Key           |               |                                                                                   | An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.<br>**Supports Expression Language: true**                |
+| Object Generation                    |               |                                                                                   | The generation of the Object to download. If left empty, then it will download the latest generation.<br>**Supports Expression Language: true** |
+| Endpoint Override URL                |               |                                                                                   | Overrides the default Google Cloud Storage endpoints                                                                                            |
+
+
+### Relationships
+
+| Name    | Description                                                                                  |
+|---------|----------------------------------------------------------------------------------------------|
+| success | FlowFiles are routed to this relationship after a successful Google Cloud Storage operation. |
+| failure | FlowFiles are routed to this relationship if the Google Cloud Storage operation fails.       |
+
+
+### Output Attributes
+
+| Attribute            | Relationship | Description                                             |
+|----------------------|--------------|---------------------------------------------------------|
+| _gcs.status.message_ | failure      | The status message received from google cloud.          |
+| _gcs.error.reason_   | failure      | The description of the error occurred during operation. |
+| _gcs.error.domain_   | failure      | The domain of the error occurred during operation.      |
 
 ## DeleteS3Object
 
@@ -602,6 +641,43 @@ In the list below, the names of required properties appear in bold. Any other pr
 |failure|In case of fetch failure flowfiles are transferred to this relationship|
 |success|Files that have been successfully fetched from Azure storage are transferred to this relationship|
 
+
+## FetchGCSObject
+
+### Description
+
+Fetches a file from a Google Cloud Bucket. Designed to be used in tandem with ListGCSBucket.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                 | Default Value | Allowable Values                                                                  | Description                                                                                                                                     |
+|--------------------------------------|---------------|-----------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Bucket**                           | ${gcs.bucket} |                                                                                   | Bucket of the object.<br>**Supports Expression Language: true**                                                                                 |
+| **Key**                              | ${filename}   |                                                                                   | Name of the object.<br>**Supports Expression Language: true**                                                                                   |
+| **Number of retries**                | 6             | integers                                                                          | How many retry attempts should be made before routing to the failure relationship.                                                              |
+| **GCP Credentials Provider Service** |               | [GCPCredentialsControllerService](CONTROLLERS.md#GCPCredentialsControllerService) | The Controller Service used to obtain Google Cloud Platform credentials.                                                                        |
+| Server Side Encryption Key           |               |                                                                                   | An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.<br>**Supports Expression Language: true**                |
+| Object Generation                    |               |                                                                                   | The generation of the Object to download. If left empty, then it will download the latest generation.<br>**Supports Expression Language: true** |
+| Endpoint Override URL                |               |                                                                                   | Overrides the default Google Cloud Storage endpoints                                                                                            |
+
+
+### Relationships
+
+| Name    | Description                                                                                  |
+|---------|----------------------------------------------------------------------------------------------|
+| success | FlowFiles are routed to this relationship after a successful Google Cloud Storage operation. |
+| failure | FlowFiles are routed to this relationship if the Google Cloud Storage operation fails.       |
+
+
+### Output Attributes
+
+| Attribute            | Relationship | Description                                             |
+|----------------------|--------------|---------------------------------------------------------|
+| _gcs.status.message_ | failure      | The status message received from google cloud.          |
+| _gcs.error.reason_   | failure      | The description of the error occurred during operation. |
+| _gcs.error.domain_   | failure      | The domain of the error occurred during operation.      |
 
 ## FetchFile
 
@@ -1001,6 +1077,59 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Name | Description |
 | - | - |
 |success|All FlowFiles that are received are routed to success|
+
+
+## ListGCSBucket
+
+### Description
+
+Retrieves a listing of objects from an GCS bucket.
+For each object that is listed, creates a FlowFile that represents the object so that it can be fetched or deleted in conjunction with FetchGCSObject/DeleteGCSObject.
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                                 | Default Value | Allowable Values                                                                  | Description                                                                        |
+|--------------------------------------|---------------|-----------------------------------------------------------------------------------|------------------------------------------------------------------------------------|
+| **Bucket**                           |               |                                                                                   | Bucket of the object.<br>**Supports Expression Language: true**                    |
+| **Number of retries**                | 6             | integers                                                                          | How many retry attempts should be made before routing to the failure relationship. |
+| **GCP Credentials Provider Service** |               | [GCPCredentialsControllerService](CONTROLLERS.md#GCPCredentialsControllerService) | The Controller Service used to obtain Google Cloud Platform credentials.           |
+| Endpoint Override URL                |               |                                                                                   | Overrides the default Google Cloud Storage endpoints                               |
+| List all versions                    | false         | false<br>true                                                                     | Set this option to `true` to get all the previous versions separately.             |
+
+
+### Relationships
+
+| Name    | Description                                                                                   |
+|---------|-----------------------------------------------------------------------------------------------|
+| success | FlowFiles are routed to this relationship after a successful Google Cloud Storage operation.  |
+
+### Output Attributes
+
+| Attribute                  | Relationship | Description                                                        |
+|----------------------------|--------------|--------------------------------------------------------------------|
+| _gcs.bucket_               | success      | Bucket of the object.                                              |
+| _gcs.key, filename_        | success      | Name of the object.                                                |
+| _gcs.size_                 | success      | Size of the object.                                                |
+| _gcs.crc32c_               | success      | The CRC32C checksum of object's data, encoded in base64            |
+| _gcs.md5_                  | success      | The MD5 hash of the object's data encoded in base64.               |
+| _gcs.owner.entity_         | success      | The owner entity, in the form "user-emailAddress".                 |
+| _gcs.owner.entity.id_      | success      | The ID for the entity.                                             |
+| _gcs.content.encoding_     | success      | The content encoding of the object.                                |
+| _gcs.content.language_     | success      | The content language of the object.                                |
+| _gcs.content.disposition_  | success      | The data content disposition of the object.                        |
+| _gcs.media.link_           | success      | The media download link to the object.                             |
+| _gcs.self.link_            | success      | The link to this object.                                           |
+| _gcs.etag_                 | success      | The HTTP 1.1 Entity tag for the object.                            |
+| _gcs.generated.id_         | success      | The service-generated ID for the object                            |
+| _gcs.generation_           | success      | The content generation of this object. Used for object versioning. |
+| _gcs.metageneration_       | success      | The metageneration of the object.                                  |
+| _gcs.create.time_          | success      | Unix timestamp of the object's creation in milliseconds            |
+| _gcs.update.time_          | success      | Unix timestamp of the object's last modification in milliseconds   |
+| _gcs.delete.time_          | success      | Unix timestamp of the object's deletion in milliseconds            |
+| _gcs.encryption.algorithm_ | success      | The algorithm used to encrypt the object.                          |
+| _gcs.encryption.sha256_    | success      | The SHA256 hash of the key used to encrypt the object              |
 
 
 ## ListenHTTP
@@ -1614,7 +1743,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |--------------------------------------|---------------|-----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Bucket**                           | ${gcs.bucket} |                                                                                                           | Bucket of the object.<br>**Supports Expression Language: true**                                                                                                                                                                                           |
 | **Key**                              | ${filename}   |                                                                                                           | Name of the object.<br>**Supports Expression Language: true**                                                                                                                                                                                             |
-| **Number Of retries**                | 6             | integers                                                                                                  | How many retry attempts should be made before routing to the failure relationship.                                                                                                                                                                        |
+| **Number of retries**                | 6             | integers                                                                                                  | How many retry attempts should be made before routing to the failure relationship.                                                                                                                                                                        |
 | **GCP Credentials Provider Service** |               | [GCPCredentialsControllerService](CONTROLLERS.md#GCPCredentialsControllerService)                         | The Controller Service used to obtain Google Cloud Platform credentials.                                                                                                                                                                                  |
 | Object ACL                           |               | authenticatedRead<br>bucketOwnerFullControl<br>bucketOwnerRead<br>private<br>projectPrivate<br>publicRead | Access Control to be attached to the object uploaded. Not providing this will revert to bucket defaults. For more information please visit [Google Cloud Access control lists](https://cloud.google.com/storage/docs/access-control/lists#predefined-acl) |
 | Server Side Encryption Key           |               |                                                                                                           | An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.<br>**Supports Expression Language: true**                                                                                                                          |
@@ -1634,6 +1763,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 
 | Attribute                  | Relationship | Description                                                        |
 |----------------------------|--------------|--------------------------------------------------------------------|
+| _gcs.status.message_       | failure      | The status message received from google cloud.                     |
 | _gcs.error.reason_         | failure      | The description of the error occurred during upload.               |
 | _gcs.error.domain_         | failure      | The domain of the error occurred during upload.                    |
 | _gcs.bucket_               | success      | Bucket of the object.                                              |
@@ -1652,9 +1782,9 @@ In the list below, the names of required properties appear in bold. Any other pr
 | _gcs.generated.id_         | success      | The service-generated ID for the object                            |
 | _gcs.generation_           | success      | The content generation of this object. Used for object versioning. |
 | _gcs.metageneration_       | success      | The metageneration of the object.                                  |
-| _gcs.create.time_          | success      | The creation time of the object (milliseconds)                     |
-| _gcs.update.time_          | success      | The last modification time of the object (milliseconds)            |
-| _gcs.delete.time_          | success      | The deletion time of the object (milliseconds)                     |
+| _gcs.create.time_          | success      | Unix timestamp of the object's creation in milliseconds            |
+| _gcs.update.time_          | success      | Unix timestamp of the object's last modification in milliseconds   |
+| _gcs.delete.time_          | success      | Unix timestamp of the object's deletion in milliseconds            |
 | _gcs.encryption.algorithm_ | success      | The algorithm used to encrypt the object.                          |
 | _gcs.encryption.sha256_    | success      | The SHA256 hash of the key used to encrypt the object              |
 

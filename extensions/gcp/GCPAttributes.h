@@ -24,6 +24,7 @@ namespace org::apache::nifi::minifi::extensions::gcp {
 
 constexpr const char* GCS_ERROR_REASON = "gcs.error.reason";
 constexpr const char* GCS_ERROR_DOMAIN = "gcs.error.domain";
+constexpr const char* GCS_STATUS_MESSAGE = "gcs.status.message";
 constexpr const char* GCS_BUCKET_ATTR = "gcs.bucket";
 constexpr const char* GCS_OBJECT_NAME_ATTR = "gcs.key";
 constexpr const char* GCS_SIZE_ATTR = "gcs.size";
