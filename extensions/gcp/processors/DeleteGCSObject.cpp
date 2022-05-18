@@ -90,8 +90,18 @@ void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& con
   }
 
   gcs::Generation generation;
-  if (auto gen = context->getProperty<uint64_t>(ObjectGeneration, flow_file))
-    generation = gcs::Generation(*gen);
+
+  if (auto gen_str = context->getProperty(ObjectGeneration, flow_file); gen_str && !gen_str->empty()) {
+    try {
+      uint64_t gen;
+      utils::internal::ValueParser(*gen_str).parse(gen).parseEnd();
+      generation = gcs::Generation(gen);
+    } catch (const utils::internal::ValueException&) {
+      logger_->log_error("Invalid generation: %s", *gen_str);
+      session->transfer(flow_file, Failure);
+      return;
+    }
+  }
 
   auto status = getClient().DeleteObject(*bucket, *object_name, generation, gcs::IfGenerationNotMatch(0));
 

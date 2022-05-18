@@ -128,3 +128,43 @@ TEST_F(FetchGCSObjectTests, HappyPath) {
   EXPECT_EQ(0, result.at(FetchGCSObject::Failure).size());
   EXPECT_EQ("stored text", test_controller_.plan->getContent(result.at(FetchGCSObject::Success)[0]));
 }
+
+TEST_F(FetchGCSObjectTests, EmptyGeneration) {
+  std::string const text = "stored text";
+  std::size_t offset = 0;
+  // Simulate a Read() call in the MockObjectReadSource object created below
+  auto simulate_read = [&text, &offset](void* buf, std::size_t n) {
+    auto const l = (std::min)(n, text.size() - offset);
+    std::memcpy(buf, text.data() + offset, l);
+    offset += l;
+    return gcs::internal::ReadSourceResult{
+        l, gcs::internal::HttpResponse{200, {}, {}}};
+  };
+  EXPECT_CALL(*fetch_gcs_object_->mock_client_, ReadObject)
+      .WillOnce([&](gcs::internal::ReadObjectRangeRequest const& request) {
+        EXPECT_EQ(request.bucket_name(), "bucket-from-attribute") << request;
+        EXPECT_FALSE(request.HasOption<gcs::Generation>());
+        std::unique_ptr<gcs::testing::MockObjectReadSource> mock_source(new gcs::testing::MockObjectReadSource);
+        ::testing::InSequence seq;
+        EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(true));
+        EXPECT_CALL(*mock_source, Read).WillOnce(simulate_read);
+        EXPECT_CALL(*mock_source, IsOpen()).WillRepeatedly(testing::Return(false));
+
+        return google::cloud::make_status_or(
+            std::unique_ptr<gcs::internal::ObjectReadSource>(
+                std::move(mock_source)));
+      });
+  EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::ObjectGeneration.getName(), "${gcs.generation}"));
+  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}});
+  ASSERT_EQ(1, result.at(FetchGCSObject::Success).size());
+  EXPECT_EQ(0, result.at(FetchGCSObject::Failure).size());
+  EXPECT_EQ("stored text", test_controller_.plan->getContent(result.at(FetchGCSObject::Success)[0]));
+}
+
+TEST_F(FetchGCSObjectTests, InvalidGeneration) {
+  EXPECT_TRUE(test_controller_.plan->setProperty(fetch_gcs_object_, FetchGCSObject::ObjectGeneration.getName(), "${gcs.generation}"));
+  const auto& result = test_controller_.trigger("hello world", {{minifi_gcp::GCS_BUCKET_ATTR, "bucket-from-attribute"}, {minifi_gcp::GCS_GENERATION, "23 banana"}});
+  ASSERT_EQ(0, result.at(FetchGCSObject::Success).size());
+  EXPECT_EQ(1, result.at(FetchGCSObject::Failure).size());
+  EXPECT_EQ("hello world", test_controller_.plan->getContent(result.at(FetchGCSObject::Failure)[0]));
+}

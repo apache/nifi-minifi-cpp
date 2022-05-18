@@ -161,8 +161,18 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
   gcs::Client client = getClient();
   FetchFromGCSCallback callback(client, *bucket, *object_name);
   callback.setEncryptionKey(encryption_key_);
-  if (auto gen = context->getProperty<uint64_t>(ObjectGeneration, flow_file))
-    callback.setGeneration(gcs::Generation(*gen));
+
+  if (auto gen_str = context->getProperty(ObjectGeneration, flow_file); gen_str && !gen_str->empty()) {
+    try {
+      uint64_t gen;
+      utils::internal::ValueParser(*gen_str).parse(gen).parseEnd();
+      callback.setGeneration(gcs::Generation(gen));
+    } catch (const utils::internal::ValueException&) {
+      logger_->log_error("Invalid generation: %s", *gen_str);
+      session->transfer(flow_file, Failure);
+      return;
+    }
+  }
 
   session->write(flow_file, std::ref(callback));
   if (!callback.getStatus().ok()) {
