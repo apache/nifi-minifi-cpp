@@ -337,8 +337,7 @@ TEST_CASE("InvokeHTTP succeeds when the flow file contains an attribute that wou
   invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "fail");
   invokehttp->setProperty(InvokeHTTP::AttributesToSend, "valid.*");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::Success, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
-  test_controller.enqueueFlowFile("data", {{"invalid header", "value"}, {"valid-header", "value2"}});
-  const auto result = test_controller.trigger();
+  const auto result = test_controller.trigger("data", {{"invalid header", "value"}, {"valid-header", "value2"}});
   REQUIRE(result.at(InvokeHTTP::RelFailure).empty());
   const auto& success_contents = result.at(InvokeHTTP::Success);
   REQUIRE(success_contents.size() == 1);
@@ -403,8 +402,7 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
   invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
   invokehttp->setProperty(InvokeHTTP::AttributesToSend, "");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
-  test_controller.enqueueFlowFile("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
-  const auto result = test_controller.trigger();
+  const auto result = test_controller.trigger("data", {{"legit-header", "value1"}, {"invalid header", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
@@ -426,8 +424,7 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
   invokehttp->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
   invokehttp->setProperty(InvokeHTTP::AttributesToSend, "he.*er");
   invokehttp->setAutoTerminatedRelationships({InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
-  test_controller.enqueueFlowFile("data", {{"header1", "value1"}, {"header", "value2"}});
-  const auto result = test_controller.trigger();
+  const auto result = test_controller.trigger("data", {{"header1", "value1"}, {"header", "value2"}});
   auto file_contents = result.at(InvokeHTTP::Success);
   REQUIRE(file_contents.size() == 1);
   REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
