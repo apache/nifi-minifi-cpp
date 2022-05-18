@@ -21,12 +21,8 @@
 #include <memory>
 
 #include "GCSProcessor.h"
-#include "core/logging/Logger.h"
+#include "google/cloud/storage/well_known_headers.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "../controllerservices/GCPCredentialsControllerService.h"
-#include "google/cloud/storage/client.h"
-#include "google/cloud/storage/retry_policy.h"
-#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 

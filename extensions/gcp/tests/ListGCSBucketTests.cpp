@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 #include "../processors/ListGCSBucket.h"
+#include "../controllerservices/GCPCredentialsControllerService.h"
 #include "core/Resource.h"
 #include "SingleProcessorTestController.h"
 #include "google/cloud/storage/testing/mock_client.h"

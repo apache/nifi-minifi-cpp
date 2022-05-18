@@ -21,7 +21,6 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/FlowFile.h"
-#include "utils/OptionalUtils.h"
 #include "../GCPAttributes.h"
 
 namespace gcs = ::google::cloud::storage;

@@ -18,6 +18,7 @@
 #include "GCSProcessor.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "../controllerservices/GCPCredentialsControllerService.h"
 
 namespace gcs = ::google::cloud::storage;
 

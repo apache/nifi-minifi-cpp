@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 #include "../processors/PutGCSObject.h"
+#include "../controllerservices/GCPCredentialsControllerService.h"
 #include "GCPAttributes.h"
 #include "core/Resource.h"
 #include "SingleProcessorTestController.h"

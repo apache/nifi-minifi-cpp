@@ -17,15 +17,12 @@
 
 #include "PutGCSObject.h"
 
-#include <vector>
 #include <utility>
 
 #include "core/Resource.h"
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "io/StreamPipe.h"
-#include "utils/OptionalUtils.h"
 #include "../GCPAttributes.h"
 
 namespace gcs = ::google::cloud::storage;

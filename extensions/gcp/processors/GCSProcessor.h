@@ -21,9 +21,11 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <optional>
 
+#include "core/logging/Logger.h"
 #include "core/Processor.h"
-#include "../controllerservices/GCPCredentialsControllerService.h"
+#include "google/cloud/storage/oauth2/credentials.h"
 #include "google/cloud/storage/client.h"
 #include "google/cloud/storage/retry_policy.h"
 
