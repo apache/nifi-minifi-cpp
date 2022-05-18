@@ -399,7 +399,6 @@ class HeartbeatHandler : public ServerAwareHandler {
 
   bool handlePost(CivetServer *, struct mg_connection *conn) override {
     verify(conn);
-    sendStopOperation(conn);
     return true;
   }
 
@@ -490,17 +489,30 @@ class HeartbeatHandler : public ServerAwareHandler {
     verifySupportedOperations(root, verify_components, disallowed_properties);
   }
 
+  void verify(struct mg_connection *conn) {
+    auto post_data = readPayload(conn);
+    if (!isServerRunning()) {
+      return;
+    }
+    if (!IsNullOrEmpty(post_data)) {
+      rapidjson::Document root;
+      rapidjson::ParseResult result = root.Parse(post_data.data(), post_data.size());
+      if (!result) {
+        throw std::runtime_error(fmt::format("JSON parse error: {0}\n JSON data: {1}", std::string(rapidjson::GetParseError_En(result.Code())), post_data));
+      }
+      std::string operation = root["operation"].GetString();
+      if (operation == "heartbeat") {
+        handleHeartbeat(root, conn);
+      } else if (operation == "acknowledge") {
+        handleAcknowledge(root);
+      } else {
+        throw std::runtime_error("operation not supported " + operation);
+      }
+    }
+  }
+
  private:
   using Metadata = std::unordered_map<std::string, std::vector<std::unordered_map<std::string, std::string>>>;
-
-  static void sendStopOperation(struct mg_connection *conn) {
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
-        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
-    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
-              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
-              resp.length());
-    mg_printf(conn, "%s", resp.c_str());
-  }
 
   static std::set<std::string> getOperandsOfProperties(const rapidjson::Value& operation_node) {
     std::set<std::string> operands;
@@ -613,29 +625,28 @@ class HeartbeatHandler : public ServerAwareHandler {
     assert(operations == minifi::c2::Operation::values());
   }
 
-  void verify(struct mg_connection *conn) {
-    auto post_data = readPayload(conn);
-    if (!isServerRunning()) {
-      return;
-    }
-    if (!IsNullOrEmpty(post_data)) {
-      rapidjson::Document root;
-      rapidjson::ParseResult result = root.Parse(post_data.data(), post_data.size());
-      if (!result) {
-        throw std::runtime_error(fmt::format("JSON parse error: {0}\n JSON data: {1}", std::string(rapidjson::GetParseError_En(result.Code())), post_data));
-      }
-      std::string operation = root["operation"].GetString();
-      if (operation == "heartbeat") {
-        handleHeartbeat(root, conn);
-      } else if (operation == "acknowledge") {
-        handleAcknowledge(root);
-      } else {
-        throw std::runtime_error("operation not supported " + operation);
-      }
-    }
+  std::shared_ptr<minifi::Configure> configuration_;
+};
+
+class StoppingHeartbeatHandler : public HeartbeatHandler {
+ public:
+  explicit StoppingHeartbeatHandler(std::shared_ptr<minifi::Configure> configuration) : HeartbeatHandler(std::move(configuration)) {}
+
+  bool handlePost(CivetServer *, struct mg_connection *conn) override {
+    verify(conn);
+    sendStopOperation(conn);
+    return true;
   }
 
-  std::shared_ptr<minifi::Configure> configuration_;
+ private:
+  static void sendStopOperation(struct mg_connection *conn) {
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
+        "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
+    mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
+              "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",
+              resp.length());
+    mg_printf(conn, "%s", resp.c_str());
+  }
 };
 
 class C2FlowProvider : public ServerAwareHandler {

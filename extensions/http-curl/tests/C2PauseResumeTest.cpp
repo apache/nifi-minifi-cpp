@@ -34,7 +34,13 @@
 
 class VerifyC2PauseResume : public VerifyC2Base {
  public:
-  explicit VerifyC2PauseResume(const std::atomic_bool& flow_resumed_successfully) : VerifyC2Base(), flow_resumed_successfully_(flow_resumed_successfully) {}
+  explicit VerifyC2PauseResume(const std::atomic_bool& flow_resumed_successfully) : VerifyC2Base(), flow_resumed_successfully_(flow_resumed_successfully) {
+    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
+    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
+    LogTestController::getInstance().setDebug<minifi::FlowController>();
+    LogTestController::getInstance().setDebug<minifi::core::ProcessContext>();
+    LogTestController::getInstance().setTrace<minifi::core::ProcessSession>();
+  }
 
   void configureC2() override {
     VerifyC2Base::configureC2();
@@ -75,7 +81,7 @@ class PauseResumeHandler: public HeartbeatHandler {
       pause_start_time_ = std::chrono::system_clock::now();
       flow_state_ = FlowState::PAUSED;
       operation = "pause";
-    } else if (get_invoke_count_ == INITIAL_GET_INVOKE_COUNT && flow_state_ == FlowState::STARTED) {
+    } else if (get_invoke_count_ >= INITIAL_GET_INVOKE_COUNT && flow_state_ == FlowState::STARTED) {
       flow_state_ = FlowState::PAUSE_INITIATED;
       operation = "pause";
     } else if (flow_state_ == FlowState::PAUSED) {
