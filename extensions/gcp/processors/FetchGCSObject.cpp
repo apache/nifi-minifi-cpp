@@ -45,8 +45,7 @@ const core::Property FetchGCSObject::Key(
 const core::Property FetchGCSObject::ObjectGeneration(
     core::PropertyBuilder::createProperty("Object Generation")
         ->withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
-        ->supportsExpressionLanguage(false)
-        ->withType(core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR)
+        ->supportsExpressionLanguage(true)
         ->build());
 
 const core::Property FetchGCSObject::EncryptionKey(
@@ -164,7 +163,6 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
   callback.setEncryptionKey(encryption_key_);
   if (auto gen = context->getProperty<uint64_t>(ObjectGeneration, flow_file))
     callback.setGeneration(gcs::Generation(*gen));
-
 
   session->write(flow_file, std::ref(callback));
   if (!callback.getStatus().ok()) {

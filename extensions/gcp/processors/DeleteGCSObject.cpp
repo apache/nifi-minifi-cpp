@@ -43,8 +43,7 @@ const core::Property DeleteGCSObject::Key(
 const core::Property DeleteGCSObject::ObjectGeneration(
     core::PropertyBuilder::createProperty("Object Generation")
         ->withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
-        ->supportsExpressionLanguage(false)
-        ->withType(core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR)
+        ->supportsExpressionLanguage(true)
         ->build());
 
 const core::Property DeleteGCSObject::EncryptionKey(
