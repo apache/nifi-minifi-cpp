@@ -190,7 +190,7 @@ std::optional<std::string> processP12Certificate(const std::string& cert_file, c
   const auto ca_deleter = gsl::finally([ca] { sk_X509_pop_free(ca, X509_free); });
 
   if (handler.cert_cb) {
-    if (auto error = handler.cert_cb(cert_ptr)) {
+    if (auto error = handler.cert_cb(std::move(cert_ptr))) {
       return error;
     }
   }
@@ -204,7 +204,7 @@ std::optional<std::string> processP12Certificate(const std::string& cert_file, c
   }
 
   if (handler.priv_key_cb) {
-    return handler.priv_key_cb(pkey_ptr);
+    return handler.priv_key_cb(std::move(pkey_ptr));
   }
 
   return {};
@@ -231,7 +231,7 @@ std::optional<std::string> processPEMCertificate(const std::string& cert_file, c
   }
 
   if (handler.cert_cb) {
-    if (auto error = handler.cert_cb(cert)) {
+    if (auto error = handler.cert_cb(std::move(cert))) {
       return error;
     }
   }

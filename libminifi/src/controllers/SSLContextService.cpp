@@ -177,7 +177,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
 
 bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
   auto error = utils::tls::processP12Certificate(certificate_, passphrase_, {
-    .cert_cb = [&] (auto& cert) -> std::optional<std::string> {
+    .cert_cb = [&] (auto cert) -> std::optional<std::string> {
       if (SSL_CTX_use_certificate(ctx, cert.get()) != 1) {
         return utils::StringUtils::join_pack("Failed to set certificate from ", certificate_, ", ", getLatestOpenSSLErrorString());
       }
@@ -190,7 +190,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
       cacert.release();  // a successful SSL_CTX_add_extra_chain_cert() takes ownership of cacert
       return {};
     },
-    .priv_key_cb = [&] (auto& priv_key) -> std::optional<std::string> {
+    .priv_key_cb = [&] (auto priv_key) -> std::optional<std::string> {
       if (SSL_CTX_use_PrivateKey(ctx, priv_key.get()) != 1) {
         return utils::StringUtils::join_pack("Failed to set private key from ", certificate_, ", ", getLatestOpenSSLErrorString());
       }
@@ -251,7 +251,7 @@ bool SSLContextService::findClientCertificate(ClientCertCallback cb) const {
 
 #ifdef WIN32
 bool SSLContextService::addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const {
-  return findClientCertificate([&] (auto& cert, auto& priv_key) -> bool {
+  return findClientCertificate([&] (auto cert, auto priv_key) -> bool {
     if (SSL_CTX_use_certificate(ctx, cert.get()) != 1) {
       logger_->log_error("Failed to set certificate from %s, %s", cert->name, getLatestOpenSSLErrorString);
       return false;
@@ -306,8 +306,9 @@ bool SSLContextService::useClientCertificate(PCCERT_CONTEXT certificate, ClientC
     return false;
   }
 
-  if (cb(x509_cert, private_key)) {
-    logger_->log_debug("Found client certificate %s", x509_cert->name);
+  std::string cert_name = x509_cert->name;
+  if (cb(std::move(x509_cert), std::move(private_key))) {
+    logger_->log_debug("Found client certificate %s", cert_name);
     return true;
   }
 
@@ -323,7 +324,7 @@ bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX
     return false;
   }
 
-  findServerCertificate([&] (auto& cert) -> bool {
+  findServerCertificate([&] (auto cert) -> bool {
     // return false to indicate that we wish to iterate over all subsequent certificates as well
     int success = X509_STORE_add_cert(ssl_store, cert.get());
     if (success == 1) {
@@ -376,7 +377,7 @@ bool SSLContextService::useServerCertificate(PCCERT_CONTEXT certificate, ServerC
     return false;
   }
 
-  return cb(x509_cert);
+  return cb(std::move(x509_cert));
 }
 #endif  // WIN32
 #endif  // OPENSSL_SUPPORT
@@ -565,19 +566,19 @@ void SSLContextService::verifyCertificateExpiration() {
       std::string end_date_str = getTimeStr(std::chrono::duration_cast<std::chrono::milliseconds>(end_date->time_since_epoch()).count());
       if (end_date.value() < std::chrono::system_clock::now()) {
         core::logging::LOG_ERROR(logger_) << "Certificate in '" << cert_file << "' expired at " << end_date_str;
-      } else if (auto diff = end_date.value() - std::chrono::system_clock::now(); diff < std::chrono::months{3}) {
+      } else if (auto diff = end_date.value() - std::chrono::system_clock::now(); diff < std::chrono::weeks{2}) {
         core::logging::LOG_WARN(logger_) << "Certificate in '" << cert_file << "' will expire at " << end_date_str;
       } else {
         core::logging::LOG_DEBUG(logger_) << "Certificate in '" << cert_file << "' will expire at " << end_date_str;
       }
     } else {
-      core::logging::LOG_ERROR(logger_) << "Could not determine expiration date for certificate in '" << certificate_ << "'";
+      core::logging::LOG_ERROR(logger_) << "Could not determine expiration date for certificate in '" << cert_file << "'";
     }
   };
   if (!IsNullOrEmpty(certificate_)) {
     if (isFileTypeP12(certificate_)) {
       auto error = utils::tls::processP12Certificate(certificate_, passphrase_, {
-          .cert_cb = [&](auto &cert) -> std::optional<std::string> {
+          .cert_cb = [&](auto cert) -> std::optional<std::string> {
             verify(certificate_, cert);
             return {};
           },
@@ -592,7 +593,7 @@ void SSLContextService::verifyCertificateExpiration() {
       }
     } else {
       auto error = utils::tls::processPEMCertificate(certificate_, passphrase_, {
-          .cert_cb = [&](auto &cert) -> std::optional<std::string> {
+          .cert_cb = [&](auto cert) -> std::optional<std::string> {
             verify(certificate_, cert);
             return {};
           },
@@ -610,7 +611,7 @@ void SSLContextService::verifyCertificateExpiration() {
 
   if (!IsNullOrEmpty(ca_certificate_)) {
     auto error = utils::tls::processPEMCertificate(ca_certificate_, std::nullopt, {
-        .cert_cb = [&](auto &cert) -> std::optional<std::string> {
+        .cert_cb = [&](auto cert) -> std::optional<std::string> {
           verify(ca_certificate_, cert);
           return {};
         },
@@ -627,14 +628,14 @@ void SSLContextService::verifyCertificateExpiration() {
 
 #ifdef WIN32
   if (use_system_cert_store_ && IsNullOrEmpty(certificate_)) {
-    findClientCertificate([&] (auto& cert, auto& /*priv_key*/) -> bool {
+    findClientCertificate([&] (auto cert, auto /*priv_key*/) -> bool {
       verify(cert->name, cert);
       return false;  // keep on iterating, check all
     });
   }
 
   if (use_system_cert_store_ && IsNullOrEmpty(ca_certificate_)) {
-    findServerCertificate([&] (auto& cert) -> bool {
+    findServerCertificate([&] (auto cert) -> bool {
       verify(cert->name, cert);
       return false;  // keep on iterating, check all
     });

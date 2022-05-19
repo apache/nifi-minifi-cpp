@@ -88,9 +88,9 @@ std::string getLatestOpenSSLErrorString();
 std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(const X509_unique_ptr& cert);
 
 struct CertHandler {
-  std::function<std::optional<std::string>(const X509_unique_ptr& cert)> cert_cb;
+  std::function<std::optional<std::string>(X509_unique_ptr cert)> cert_cb;
   std::function<std::optional<std::string>(X509_unique_ptr cert)> chain_cert_cb;
-  std::function<std::optional<std::string>(const EVP_PKEY_unique_ptr& priv_key)> priv_key_cb;
+  std::function<std::optional<std::string>(EVP_PKEY_unique_ptr priv_key)> priv_key_cb;
 };
 
 std::optional<std::string> processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler);

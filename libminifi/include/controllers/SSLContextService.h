@@ -229,8 +229,8 @@ class SSLContextService : public core::controller::ControllerService {
   bool addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const;
   bool addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX* ctx) const;
 #ifdef WIN32
-  using ClientCertCallback = std::function<bool(const utils::tls::X509_unique_ptr& cert, const utils::tls::EVP_PKEY_unique_ptr& priv_key)>;
-  using ServerCertCallback = std::function<bool(const utils::tls::X509_unique_ptr& cert)>;
+  using ClientCertCallback = std::function<bool(utils::tls::X509_unique_ptr cert, utils::tls::EVP_PKEY_unique_ptr priv_key)>;
+  using ServerCertCallback = std::function<bool(utils::tls::X509_unique_ptr cert)>;
 
   bool findClientCertificate(ClientCertCallback cb) const;
   bool findServerCertificate(ServerCertCallback cb) const;
