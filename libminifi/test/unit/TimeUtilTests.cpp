@@ -21,79 +21,60 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace {
-  constexpr int ONE_HOUR = 60 * 60;
-  constexpr int ONE_DAY = 24 * ONE_HOUR;
+template <class TimePointType>
+void testParseDateTimeStr() {
+  using org::apache::nifi::minifi::utils::timeutils::parseDateTimeStr;
 
-  struct tm createTm(int year, int month, int day, int hour, int minute, int second, bool is_dst = false) {
-    struct tm date_time;
-    date_time.tm_year = year - 1900;
-    date_time.tm_mon = month - 1;
-    date_time.tm_mday = day;
-    date_time.tm_hour = hour;
-    date_time.tm_min = minute;
-    date_time.tm_sec = second;
-    date_time.tm_isdst = is_dst ? 1 : 0;
-    return date_time;
-  }
+  CHECK(*parseDateTimeStr<TimePointType>("1970-01-01T00:00:00Z") == TimePointType{0s});
+  CHECK(*parseDateTimeStr<TimePointType>("1970-01-01T00:59:59Z") == TimePointType{1h - 1s});
 
-  void mkgmtimeTestHelper(time_t expected, int year, int month, int day, int hour, int minute, int second) {
-    using org::apache::nifi::minifi::utils::timeutils::mkgmtime;
-    struct tm date_time = createTm(year, month, day, hour, minute, second);
-    REQUIRE(mkgmtime(&date_time) == expected);
-  }
-}  // namespace
+  CHECK(*parseDateTimeStr<TimePointType>("1970-01-02T00:00:00Z") == TimePointType{std::chrono::days(1)});
+  CHECK(*parseDateTimeStr<TimePointType>("1970-02-01T00:00:00Z") == TimePointType{31 * std::chrono::days(1)});
+  CHECK(*parseDateTimeStr<TimePointType>("1971-01-01T00:00:00Z") == TimePointType{365 * std::chrono::days(1)});
 
-TEST_CASE("mkgmtime() works correctly", "[mkgmtime]") {
-  mkgmtimeTestHelper(0, 1970, 1, 1, 0, 0, 0);
-  for (int hour = 0; hour < 24; ++hour) {
-    mkgmtimeTestHelper((hour + 1) * ONE_HOUR - 1, 1970, 1, 1, hour, 59, 59);
-  }
+  CHECK(*parseDateTimeStr<TimePointType>("1995-02-28T00:00:00Z") == TimePointType{793929600s});
+  CHECK(*parseDateTimeStr<TimePointType>("1995-03-01T00:00:00Z") == TimePointType{793929600s + std::chrono::days(1)});
+  CHECK(*parseDateTimeStr<TimePointType>("1996-02-28T00:00:00Z") == TimePointType{825465600s});
+  CHECK(*parseDateTimeStr<TimePointType>("1996-02-29T00:00:00Z") == TimePointType{825465600s + std::chrono::days(1)});
+  CHECK(*parseDateTimeStr<TimePointType>("2000-02-28T00:00:00Z") == TimePointType{951696000s});
+  CHECK(*parseDateTimeStr<TimePointType>("2000-02-29T00:00:00Z") == TimePointType{951696000s + std::chrono::days(1)});
+  CHECK(*parseDateTimeStr<TimePointType>("2100-02-28T00:00:00Z") == TimePointType{4107456000s});
+  CHECK(*parseDateTimeStr<TimePointType>("2100-03-01T00:00:00Z") == TimePointType{4107456000s + std::chrono::days(1)});
 
-  mkgmtimeTestHelper(ONE_DAY,       1970, 1, 2, 0, 0, 0);
-  mkgmtimeTestHelper(31 * ONE_DAY,  1970, 2, 1, 0, 0, 0);
-  mkgmtimeTestHelper(365 * ONE_DAY, 1971, 1, 1, 0, 0, 0);
-
-  mkgmtimeTestHelper(793929600,            1995, 2, 28, 0, 0, 0);
-  mkgmtimeTestHelper(793929600 + ONE_DAY,  1995, 3,  1, 0, 0, 0);
-  mkgmtimeTestHelper(825465600,            1996, 2, 28, 0, 0, 0);
-  mkgmtimeTestHelper(825465600 + ONE_DAY,  1996, 2, 29, 0, 0, 0);
-  mkgmtimeTestHelper(951696000,            2000, 2, 28, 0, 0, 0);
-  mkgmtimeTestHelper(951696000 + ONE_DAY,  2000, 2, 29, 0, 0, 0);
-  mkgmtimeTestHelper(4107456000,           2100, 2, 28, 0, 0, 0);
-  mkgmtimeTestHelper(4107456000 + ONE_DAY, 2100, 3,  1, 0, 0, 0);
-
-  mkgmtimeTestHelper(1513104856,  2017, 12, 12, 18, 54, 16);
-  mkgmtimeTestHelper(1706655675,  2024,  1, 30, 23, 01, 15);
-  mkgmtimeTestHelper(3710453630,  2087,  7, 31, 01, 33, 50);
+  CHECK(*parseDateTimeStr<TimePointType>("2017-12-12T18:54:16Z") == TimePointType{1513104856s});
+  CHECK(*parseDateTimeStr<TimePointType>("2024-01-30T23:01:15Z") == TimePointType{1706655675s});
+  CHECK(*parseDateTimeStr<TimePointType>("2087-07-31T01:33:50Z") == TimePointType{3710453630s});
 }
 
 TEST_CASE("parseDateTimeStr() works correctly", "[parseDateTimeStr]") {
-  using org::apache::nifi::minifi::utils::timeutils::parseDateTimeStr;
-  REQUIRE(parseDateTimeStr("1970-01-01T00:00:00Z") == 0);
-  REQUIRE(parseDateTimeStr("1970-01-01T00:59:59Z") == ONE_HOUR - 1);
-
-  REQUIRE(parseDateTimeStr("1970-01-02T00:00:00Z") == ONE_DAY);
-  REQUIRE(parseDateTimeStr("1970-02-01T00:00:00Z") == 31 * ONE_DAY);
-  REQUIRE(parseDateTimeStr("1971-01-01T00:00:00Z") == 365 * ONE_DAY);
-
-  REQUIRE(parseDateTimeStr("1995-02-28T00:00:00Z") == 793929600);
-  REQUIRE(parseDateTimeStr("1995-03-01T00:00:00Z") == 793929600 + ONE_DAY);
-  REQUIRE(parseDateTimeStr("1996-02-28T00:00:00Z") == 825465600);
-  REQUIRE(parseDateTimeStr("1996-02-29T00:00:00Z") == 825465600 + ONE_DAY);
-  REQUIRE(parseDateTimeStr("2000-02-28T00:00:00Z") == 951696000);
-  REQUIRE(parseDateTimeStr("2000-02-29T00:00:00Z") == 951696000 + ONE_DAY);
-  REQUIRE(parseDateTimeStr("2100-02-28T00:00:00Z") == 4107456000);
-  REQUIRE(parseDateTimeStr("2100-03-01T00:00:00Z") == 4107456000 + ONE_DAY);
-
-  REQUIRE(parseDateTimeStr("2017-12-12T18:54:16Z") == 1513104856);
-  REQUIRE(parseDateTimeStr("2024-01-30T23:01:15Z") == 1706655675);
-  REQUIRE(parseDateTimeStr("2087-07-31T01:33:50Z") == 3710453630);
+  testParseDateTimeStr<date::sys_seconds>();
+  testParseDateTimeStr<date::local_seconds>();
 }
 
 TEST_CASE("Test time conversion", "[testtimeconversion]") {
   using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
-  REQUIRE("2017-02-16 20:14:56.196" == getTimeStr(1487276096196, true));
+  CHECK("2017-02-16 20:14:56.196" == getTimeStr(std::chrono::system_clock::time_point{1487276096196ms}));
+}
+
+TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
+  using namespace date::literals;
+  using namespace std::literals::chrono_literals;
+  using date::year_month_day;
+  using date::sys_days;
+  using utils::timeutils::parseDateTimeStr;
+
+  CHECK(sys_days(date::year_month_day(1970_y/01/01)) == parseDateTimeStr<date::sys_seconds>("1970-01-01T00:00:00Z"));
+  CHECK(sys_days(year_month_day(1970_y/01/01)) + 0h + 59min + 59s == parseDateTimeStr<date::sys_seconds>("1970-01-01T00:59:59Z"));
+  CHECK(sys_days(year_month_day(2000_y/06/17)) + 12h + 34min + 21s == parseDateTimeStr<date::sys_seconds>("2000-06-17T12:34:21Z"));
+  CHECK(sys_days(year_month_day(2038_y/01/19)) + 3h + 14min + 7s == parseDateTimeStr<date::sys_seconds>("2038-01-19T03:14:07Z"));
+  CHECK(sys_days(year_month_day(2065_y/01/24)) + 5h + 20min + 0s == parseDateTimeStr<date::sys_seconds>("2065-01-24T05:20:00Z"));
+  CHECK(sys_days(year_month_day(1969_y/01/01)) == parseDateTimeStr<date::sys_seconds>("1969-01-01T00:00:00Z"));
+
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-01-01A00:00:00Z"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-01-01T00:00:00"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-01-01T00:00:00Zfoo"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-13-01T00:00:00Z"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("foobar"));
 }
 
 TEST_CASE("Test system_clock epoch", "[systemclockepoch]") {
@@ -107,7 +88,7 @@ TEST_CASE("Test system_clock epoch", "[systemclockepoch]") {
 TEST_CASE("Test clock resolutions", "[clockresolutiontests]") {
   using namespace std::chrono;
   CHECK(std::is_constructible<system_clock::duration, std::chrono::microseconds>::value);  // The resolution of the system_clock is at least microseconds
-  CHECK(std::is_constructible<steady_clock::duration, std::chrono::microseconds>::value);  // The resolution of the system_clock is at least microseconds
+  CHECK(std::is_constructible<steady_clock::duration, std::chrono::microseconds>::value);  // The resolution of the steady_clock is at least microseconds
   CHECK(std::is_constructible<high_resolution_clock::duration, std::chrono::nanoseconds>::value);  // The resolution of the high_resolution_clock is at least nanoseconds
 }
 

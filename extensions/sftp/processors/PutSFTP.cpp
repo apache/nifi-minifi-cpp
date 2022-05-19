@@ -117,8 +117,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   std::string remote_path;
   bool disable_directory_listing = false;
   std::string temp_file_name;
-  bool last_modified_time_set = false;
-  int64_t last_modified_time = 0U;
+  std::optional<std::chrono::system_clock::time_point> last_modified_;
   bool permissions_set = false;
   uint32_t permissions = 0U;
   bool remote_owner_set = false;
@@ -143,11 +142,9 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
   }
   context->getProperty(TempFilename, temp_file_name, flow_file);
-  if (context->getProperty(LastModifiedTime, value, flow_file)) {
-    if (core::Property::StringToDateTime(value, last_modified_time)) {
-      last_modified_time_set = true;
-    }
-  }
+  if (context->getProperty(LastModifiedTime, value, flow_file))
+    last_modified_ = utils::timeutils::parseDateTimeStr<date::sys_seconds>(value);
+
   if (context->getProperty(Permissions, value, flow_file)) {
     if (core::Property::StringToPermissions(value, permissions)) {
       permissions_set = true;
@@ -328,21 +325,21 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   }
 
   /* Set file attributes if needed */
-  if (last_modified_time_set ||
+  if (last_modified_ ||
       permissions_set ||
       remote_owner_set ||
       remote_group_set) {
     utils::SFTPClient::SFTPAttributes attrs;
     attrs.flags = 0U;
-    if (last_modified_time_set) {
+    if (last_modified_) {
       /*
        * NiFi doesn't set atime, only mtime, but because they can only be set together,
        * if we don't want to modify atime, we first have to get it.
        * Therefore setting them both saves an extra protocol round.
        */
       attrs.flags |= utils::SFTPClient::SFTP_ATTRIBUTE_MTIME | utils::SFTPClient::SFTP_ATTRIBUTE_ATIME;
-      attrs.mtime = last_modified_time;
-      attrs.atime = last_modified_time;
+      attrs.mtime = std::chrono::duration_cast<std::chrono::seconds>(last_modified_->time_since_epoch()).count();
+      attrs.atime = std::chrono::duration_cast<std::chrono::seconds>(last_modified_->time_since_epoch()).count();
     }
     if (permissions_set) {
       attrs.flags |= utils::SFTPClient::SFTP_ATTRIBUTE_PERMISSIONS;

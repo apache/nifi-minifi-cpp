@@ -323,8 +323,8 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
     logger_->log_error("Modification date %lu of \"%s/%s\" larger than int64_t max", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
     return true;
   }
-  std::string mtime_str;
-  if (!utils::timeutils::getDateTimeStr(gsl::narrow<int64_t>(child.attrs.mtime), mtime_str)) {
+  auto mtime_str = utils::timeutils::getDateTimeStr(date::sys_seconds{std::chrono::seconds(child.attrs.mtime)});
+  if (!mtime_str) {
     logger_->log_error("Failed to convert modification date %lu of \"%s/%s\" to string", child.attrs.mtime, child.parent_path.c_str(), child.filename.c_str());
     return true;
   }
@@ -354,7 +354,7 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
   session->putAttribute(flow_file, ATTRIBUTE_FILE_SIZE, std::to_string(child.attrs.filesize));
 
   /* mtime */
-  session->putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
+  session->putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, *mtime_str);
 
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child.filename);
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, child.parent_path);

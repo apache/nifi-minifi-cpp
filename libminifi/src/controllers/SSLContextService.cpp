@@ -545,7 +545,7 @@ void SSLContextService::initializeProperties() {
 void SSLContextService::verifyCertificateExpiration() {
   auto verify = [&] (const std::string& cert_file, const utils::tls::X509_unique_ptr& cert) {
     if (auto end_date = utils::tls::getCertificateExpiration(cert)) {
-      std::string end_date_str = utils::timeutils::getTimeStr(std::chrono::duration_cast<std::chrono::milliseconds>(end_date->time_since_epoch()).count());
+      std::string end_date_str = utils::timeutils::getTimeStr(*end_date);
       if (end_date.value() < std::chrono::system_clock::now()) {
         core::logging::LOG_ERROR(logger_) << "Certificate in '" << cert_file << "' expired at " << end_date_str;
       } else if (auto diff = end_date.value() - std::chrono::system_clock::now(); diff < std::chrono::weeks{2}) {

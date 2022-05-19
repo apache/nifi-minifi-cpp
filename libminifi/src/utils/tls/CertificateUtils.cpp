@@ -181,7 +181,7 @@ std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(co
   if (ret == -1) {
     return {};
   }
-  return std::chrono::system_clock::from_time_t(utils::timeutils::mkgmtime(&end));
+  return utils::timeutils::to_sys_time(end);
 }
 
 std::error_code processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler) {
