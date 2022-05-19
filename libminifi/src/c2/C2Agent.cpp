@@ -985,7 +985,7 @@ void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
     return;
   }
 
-  C2Payload&& file_response = protocol_.load()->consumePayload(url, C2Payload(Operation::TRANSFER, true), RECEIVE, false);
+  C2Payload file_response = protocol_.load()->consumePayload(url, C2Payload(Operation::TRANSFER, true), RECEIVE, false);
 
   if (file_response.getStatus().getState() != state::UpdateState::READ_COMPLETE) {
     send_error("Failed to fetch asset from '" + url + "'");
