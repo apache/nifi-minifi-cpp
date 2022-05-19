@@ -28,6 +28,7 @@
 
 #include "utils/StringUtils.h"
 #include "utils/tls/TLSUtils.h"
+#include "utils/TimeUtil.h"
 
 namespace org {
 namespace apache {
@@ -163,7 +164,7 @@ std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(co
   if (ret == -1) {
     return {};
   }
-  return std::chrono::system_clock::from_time_t(std::mktime(&end));
+  return std::chrono::system_clock::from_time_t(utils::timeutils::mkgmtime(&end));
 }
 
 std::optional<std::string> processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler) {
