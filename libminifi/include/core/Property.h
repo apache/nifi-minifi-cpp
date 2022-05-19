@@ -165,16 +165,6 @@ class Property {
 // Compare
   bool operator <(const Property & right) const;
 
-
-  static bool StringToDateTime(const std::string& input, int64_t& output) {
-    int64_t temp = utils::timeutils::parseDateTimeStr(input);
-    if (temp == -1) {
-      return false;
-    }
-    output = temp;
-    return true;
-  }
-
   static bool StringToPermissions(const std::string& input, uint32_t& output) {
     uint32_t temp = 0U;
     if (input.size() == 9U) {

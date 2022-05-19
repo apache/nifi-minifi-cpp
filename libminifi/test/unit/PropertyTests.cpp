@@ -19,10 +19,10 @@
 #include <string>
 
 #include "core/Property.h"
-#include "../../include/core/Property.h"
 #include "utils/StringUtils.h"
 #include "../TestBase.h"
 #include "../Catch.h"
+
 namespace {
 enum class ConversionTestTarget { MS, NS };
 
@@ -125,36 +125,5 @@ TEST_CASE("Test Permissions Conversion", "[testPermissions]") {
   REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("foobarfoo", permissions));
 
   REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToPermissions("foobar", permissions));
-}
-
-TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
-  int64_t timestamp = 0LL;
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:00:00Z", timestamp));
-  REQUIRE(0LL == timestamp);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:59:59Z", timestamp));
-  REQUIRE(3600 - 1 == timestamp);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("2000-06-17T12:34:21Z", timestamp));
-  REQUIRE(961245261LL == timestamp);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("2038-01-19T03:14:07Z", timestamp));
-  REQUIRE(2147483647LL == timestamp);
-
-  REQUIRE(true == org::apache::nifi::minifi::core::Property::StringToDateTime("2065-01-24T05:20:00Z", timestamp));
-  REQUIRE(3000000000LL == timestamp);
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01A00:00:00Z", timestamp));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:00:00", timestamp));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-01-01T00:00:00Zfoo", timestamp));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1969-01-01T00:00:00Z", timestamp));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("1970-13-01T00:00:00Z", timestamp));
-
-  REQUIRE(false == org::apache::nifi::minifi::core::Property::StringToDateTime("foobar", timestamp));
 }
 }   // namespace

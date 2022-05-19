@@ -144,7 +144,7 @@ class ListSFTP : public SFTPProcessorBase {
   struct Child {
     Child();
     Child(const std::string& parent_path_, std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>&& sftp_child);
-    std::string getPath() const;
+    [[nodiscard]] std::string getPath() const;
 
     bool directory;
     std::string parent_path;
@@ -155,8 +155,8 @@ class ListSFTP : public SFTPProcessorBase {
   bool already_loaded_from_cache_;
 
   std::chrono::steady_clock::time_point last_run_time_;
-  uint64_t last_listed_latest_entry_timestamp_;
-  uint64_t last_processed_latest_entry_timestamp_;
+  std::optional<std::chrono::system_clock::time_point> last_listed_latest_entry_timestamp_;
+  std::optional<std::chrono::system_clock::time_point> last_processed_latest_entry_timestamp_;
   std::set<std::string> latest_identifiers_processed_;
 
   bool initial_listing_complete_;

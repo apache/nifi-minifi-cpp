@@ -149,7 +149,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
 
   if (!IsNullOrEmpty(ca_certificate_)) {
-    if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0) == 0) {
+    if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), nullptr) == 0) {
       core::logging::LOG_ERROR(logger_) << "Cannot load CA certificate, exiting, " << getLatestOpenSSLErrorString();
       return false;
     }
@@ -545,7 +545,7 @@ void SSLContextService::initializeProperties() {
 void SSLContextService::verifyCertificateExpiration() {
   auto verify = [&] (const std::string& cert_file, const utils::tls::X509_unique_ptr& cert) {
     if (auto end_date = utils::tls::getCertificateExpiration(cert)) {
-      std::string end_date_str = utils::timeutils::getTimeStr(std::chrono::duration_cast<std::chrono::milliseconds>(end_date->time_since_epoch()).count());
+      std::string end_date_str = utils::timeutils::getTimeStr(*end_date);
       if (end_date.value() < std::chrono::system_clock::now()) {
         core::logging::LOG_ERROR(logger_) << "Certificate in '" << cert_file << "' expired at " << end_date_str;
       } else if (auto diff = end_date.value() - std::chrono::system_clock::now(); diff < std::chrono::weeks{2}) {
