@@ -127,7 +127,8 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
   processor_to_controller_.clear();
-  response_node_loader_.updateFlowComponents(*root_);
+  response_node_loader_.initializeComponentMetrics(root_.get());
+  response_node_container_.updateResponseNodeConnections(root_.get());
   initialized_ = false;
   bool started = false;
   try {
@@ -291,10 +292,10 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
     controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
+    response_node_loader_.initializeComponentMetrics(root_.get());
     if (root) {
-      response_node_loader_.updateFlowComponents(*root_);
+      response_node_container_.updateResponseNodeConnections(root_.get());
     } else {
-      response_node_loader_.initializeComponentMetrics(*root_);
       loadMetricsPublisher();
     }
 
@@ -570,7 +571,7 @@ void FlowController::loadMetricsPublisher() {
       logger_->log_error("Configured metrics publisher class \"%s\" is not a metrics publisher.", *metrics_publisher_class);
       return;
     }
-    metrics_publisher_->initialize(configuration_, response_node_loader_, *root_);
+    metrics_publisher_->initialize(configuration_, response_node_loader_, root_.get());
   }
 }
 

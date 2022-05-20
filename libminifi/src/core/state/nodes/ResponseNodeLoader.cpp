@@ -37,14 +37,18 @@ ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration,
     flow_configuration_(flow_configuration) {
 }
 
-void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup& root) {
+void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
   {
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     component_metrics_.clear();
   }
 
+  if (!root) {
+    return;
+  }
+
   std::vector<core::Processor*> processors;
-  root.getAllProcessors(processors);
+  root->getAllProcessors(processors);
   for (const auto processor : processors) {
     auto rep = dynamic_cast<ResponseNodeSource*>(processor);
     if (rep == nullptr) {
@@ -76,16 +80,18 @@ void ResponseNodeLoader::initializeRepositoryMetrics(const std::shared_ptr<Respo
   }
 }
 
-void ResponseNodeLoader::initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup& root) {
+void ResponseNodeLoader::initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) {
+  if (!root) {
+    return;
+  }
+
   auto queue_metrics = dynamic_cast<QueueMetrics*>(response_node.get());
   if (queue_metrics != nullptr) {
     std::map<std::string, Connection*> connections;
-    root.getConnections(connections);
+    root->getConnections(connections);
     for (const auto &con : connections) {
       queue_metrics->updateConnection(con.second);
     }
-    std::lock_guard<std::mutex> guard{component_metrics_mutex_};
-    connection_monitors_.insert(queue_metrics);
   }
 }
 
@@ -127,11 +133,13 @@ void ResponseNodeLoader::initializeConfigurationChecksums(const std::shared_ptr<
   }
 }
 
-void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup& root) {
+void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) {
   auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
   if (flowMonitor != nullptr) {
     std::map<std::string, Connection*> connections;
-    root.getConnections(connections);
+    if (root) {
+      root->getConnections(connections);
+    }
 
     for (auto &con : connections) {
       flowMonitor->updateConnection(con.second);
@@ -140,12 +148,10 @@ void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNod
     if (flow_configuration_) {
       flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
     }
-    std::lock_guard<std::mutex> guard{component_metrics_mutex_};
-    connection_monitors_.insert(flowMonitor);
   }
 }
 
-std::shared_ptr<ResponseNode> ResponseNodeLoader::loadResponseNode(const std::string& clazz, core::ProcessGroup& root) {
+std::shared_ptr<ResponseNode> ResponseNodeLoader::loadResponseNode(const std::string& clazz, core::ProcessGroup* root) {
   auto response_node = getResponseNode(clazz);
   if (!response_node) {
     logger_->log_error("No metric defined for %s", clazz);
@@ -171,24 +177,6 @@ std::shared_ptr<state::response::ResponseNode> ResponseNodeLoader::getComponentM
     }
   }
   return nullptr;
-}
-
-void ResponseNodeLoader::updateResponseNodeConnections(core::ProcessGroup& root) {
-  std::map<std::string, Connection*> connections;
-  root.getConnections(connections);
-
-  std::lock_guard<std::mutex> lock(component_metrics_mutex_);
-  for (auto& connection_monitor : connection_monitors_) {
-    connection_monitor->clearConnections();
-    for (const auto &con: connections) {
-      connection_monitor->updateConnection(con.second);
-    }
-  }
-}
-
-void ResponseNodeLoader::updateFlowComponents(core::ProcessGroup& root) {
-  updateResponseNodeConnections(root);
-  initializeComponentMetrics(root);
 }
 
 void ResponseNodeLoader::setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) {

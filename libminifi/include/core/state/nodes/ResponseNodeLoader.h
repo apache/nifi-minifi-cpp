@@ -36,27 +36,24 @@ class ResponseNodeLoader {
  public:
   ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo, core::FlowConfiguration* flow_configuration);
-  std::shared_ptr<ResponseNode> loadResponseNode(const std::string& clazz, core::ProcessGroup& root);
+  std::shared_ptr<ResponseNode> loadResponseNode(const std::string& clazz, core::ProcessGroup* root);
   std::shared_ptr<state::response::ResponseNode> getComponentMetricsNode(const std::string& metrics_class) const;
-  void initializeComponentMetrics(core::ProcessGroup& root);
-  void updateFlowComponents(core::ProcessGroup& root);
+  void initializeComponentMetrics(core::ProcessGroup* root);
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
 
  private:
-  void updateResponseNodeConnections(core::ProcessGroup& root);
   std::shared_ptr<ResponseNode> getResponseNode(const std::string& clazz);
   void initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node);
-  void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup& root);
+  void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
   void initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node);
   void initializeAgentMonitor(const std::shared_ptr<ResponseNode>& response_node);
   void initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node);
   void initializeConfigurationChecksums(const std::shared_ptr<ResponseNode>& response_node);
-  void initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup& root);
+  void initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
 
   mutable std::mutex component_metrics_mutex_;
   std::unordered_map<std::string, std::shared_ptr<ResponseNode>> component_metrics_;
-  std::unordered_set<state::ConnectionMonitor*> connection_monitors_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;

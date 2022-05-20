@@ -36,8 +36,8 @@
 #include "core/ProcessGroup.h"
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
-#include "core/state/ConnectionMonitor.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
+#include "core/state/nodes/ResponseNodeContainer.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -75,14 +75,13 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   std::mutex initialization_mutex_;
   bool initialized_ = false;
   std::shared_ptr<core::logging::Logger> logger_;
-
-  mutable std::mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
 
  protected:
   std::atomic<bool> flow_update_{false};
   std::function<void()> request_restart_;
   state::response::ResponseNodeLoader response_node_loader_;
+  state::response::ResponseNodeContainer response_node_container_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

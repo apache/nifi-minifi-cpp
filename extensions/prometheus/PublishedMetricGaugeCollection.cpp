@@ -35,10 +35,10 @@ std::vector<::prometheus::MetricFamily> PublishedMetricGaugeCollection::Collect(
     client_metric.gauge = ::prometheus::ClientMetric::Gauge{metric.value};
     collection.push_back(
       {
-        name: metric.name,
-        help: "",
-        type: ::prometheus::MetricType::Gauge,
-        metric: std::vector<::prometheus::ClientMetric>{ client_metric }
+        .name = metric.name,
+        .help = "",
+        .type = ::prometheus::MetricType::Gauge,
+        .metric = std::vector<::prometheus::ClientMetric>{ client_metric }
       }
     );
   }

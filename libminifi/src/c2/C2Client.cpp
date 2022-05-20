@@ -45,7 +45,8 @@ C2Client::C2Client(
       filesystem_(std::move(filesystem)),
       logger_(std::move(logger)),
       request_restart_(std::move(request_restart)),
-      response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()) {}
+      response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()),
+      response_node_container_(response_node_loader_) {}
 
 void C2Client::stopC2() {
   if (c2_agent_) {
@@ -84,24 +85,17 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     }
   }
 
-  // root_response_nodes_ was not cleared before, it is unclear if that was intentional
-
-  std::map<std::string, Connection*> connections;
-  if (root_ != nullptr) {
-    root_->getConnections(connections);
-  }
-
   std::string class_csv;
   if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
-      auto response_node = response_node_loader_.loadResponseNode(clazz, *root_);
+      auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
       if (!response_node) {
         continue;
       }
-      std::lock_guard<std::mutex> guard{metrics_mutex_};
-      root_response_nodes_[response_node->getName()] = std::move(response_node);
+
+      response_node_container_.addRootResponseNode(response_node->getName(), response_node);
     }
   }
 
@@ -146,7 +140,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       if (configuration_->get(classOption, class_definitions)) {
         std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
         for (const std::string& clazz : classes) {
-          auto response_node = response_node_loader_.loadResponseNode(clazz, *root_);
+          auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
           if (!response_node) {
             continue;
           }
@@ -157,8 +151,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
         auto node = loadC2ResponseConfiguration(optionName, new_node);
       }
 
-      std::lock_guard<std::mutex> guard{metrics_mutex_};
-      root_response_nodes_[name] = new_node;
+      response_node_container_.addRootResponseNode(name, new_node);
     } catch (...) {
       logger_->log_error("Could not create metrics class %s", metricsClass);
     }
@@ -195,7 +188,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
         if (configuration_->get(classOption, class_definitions)) {
           std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
           for (const std::string& clazz : classes) {
-            auto response_node = response_node_loader_.loadResponseNode(clazz, *root_);
+            auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
             if (!response_node) {
               continue;
             }
@@ -221,14 +214,9 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
   if (!metrics_class.empty()) {
     return response_node_loader_.getComponentMetricsNode(metrics_class);
-  } else {
-    std::lock_guard<std::mutex> lock(metrics_mutex_);
-    const auto iter = root_response_nodes_.find("metrics");
-    if (iter != root_response_nodes_.end()) {
-      return iter->second;
-    }
   }
-  return nullptr;
+
+  return response_node_container_.getRootResponseNode("metrics");
 }
 
 std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
@@ -238,8 +226,7 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbe
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
   nodes.reserve(root_response_nodes_.size());
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
-  for (const auto &entry : root_response_nodes_) {
+  for (const auto &entry : response_node_container_.getRootResponseNodes()) {
     auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
     if (identifier) {
       identifier->includeAgentManifest(include);

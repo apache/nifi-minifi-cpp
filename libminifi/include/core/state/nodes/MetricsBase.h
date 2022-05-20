@@ -103,6 +103,10 @@ class ObjectNode : public ResponseNode {
     nodes_.push_back(node);
   }
 
+  const std::vector<std::shared_ptr<ResponseNode>>& get_child_nodes() const {
+    return nodes_;
+  }
+
   virtual std::string getName() const {
     return Connectable::getName();
   }
