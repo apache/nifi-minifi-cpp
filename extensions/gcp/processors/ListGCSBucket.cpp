@@ -26,28 +26,9 @@
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-const core::Property ListGCSBucket::Bucket(
-    core::PropertyBuilder::createProperty("Bucket")
-        ->withDescription("Bucket of the object.")
-        ->isRequired(true)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property ListGCSBucket::ListAllVersions(
-    core::PropertyBuilder::createProperty("List all versions")
-        ->withDescription("Set this option to `true` to get all the previous versions separately.")
-        ->withDefaultValue<bool>(false)
-        ->build());
-
-const core::Relationship ListGCSBucket::Success("success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation.");
-
 void ListGCSBucket::initialize() {
-  setSupportedProperties({GCPCredentials,
-                          Bucket,
-                          NumberOfRetries,
-                          EndpointOverrideURL,
-                          ListAllVersions});
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 
@@ -75,7 +56,4 @@ void ListGCSBucket::onTrigger(const std::shared_ptr<core::ProcessContext>& conte
     }
   }
 }
-
-REGISTER_RESOURCE(ListGCSBucket, "Retrieves a listing of objects from an GCS bucket. "
-                                 "For each object that is listed, creates a FlowFile that represents the object so that it can be fetched in conjunction with FetchGCSObject.");
 }  // namespace org::apache::nifi::minifi::extensions::gcp

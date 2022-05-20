@@ -22,6 +22,7 @@
 
 #include "GCSProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 #include "utils/Enum.h"
 #include "google/cloud/storage/well_known_headers.h"
 
@@ -54,7 +55,7 @@ class PutGCSObject : public GCSProcessor {
   EXTENSIONAPI static const core::Property ObjectACL;
   EXTENSIONAPI static const core::Property OverwriteObject;
   static auto properties() {
-    return std::array{
+    return utils::array_cat(GCSProcessor::properties(), std::array{
       Bucket,
       Key,
       NumberOfRetries,
@@ -64,7 +65,7 @@ class PutGCSObject : public GCSProcessor {
       EncryptionKey,
       ObjectACL,
       OverwriteObject
-    };
+    });
   }
 
   EXTENSIONAPI static const core::Relationship Success;

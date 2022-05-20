@@ -40,6 +40,13 @@ class GCSProcessor : public core::Processor {
   EXTENSIONAPI static const core::Property GCPCredentials;
   EXTENSIONAPI static const core::Property NumberOfRetries;
   EXTENSIONAPI static const core::Property EndpointOverrideURL;
+  static auto properties() {
+    return std::array{
+      GCPCredentials,
+      NumberOfRetries,
+      EndpointOverrideURL
+    };
+  }
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 

@@ -23,71 +23,11 @@
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "../GCPAttributes.h"
 
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-const core::Property PutGCSObject::Bucket(
-    core::PropertyBuilder::createProperty("Bucket")
-        ->withDescription("Bucket of the object.")
-        ->withDefaultValue("${gcs.bucket}")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGCSObject::Key(
-    core::PropertyBuilder::createProperty("Key")
-        ->withDescription("Name of the object.")
-        ->withDefaultValue("${filename}")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGCSObject::ContentType(
-    core::PropertyBuilder::createProperty("Content Type")
-        ->withDescription("Content Type for the file, i.e. text/plain ")
-        ->isRequired(false)
-        ->withDefaultValue("${mime.type}")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGCSObject::MD5Hash(
-    core::PropertyBuilder::createProperty("MD5 Hash")
-        ->withDescription("MD5 Hash (encoded in Base64) of the file for server-side validation.")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGCSObject::Crc32cChecksum(
-    core::PropertyBuilder::createProperty("CRC32C Checksum")
-        ->withDescription("CRC32C Checksum (encoded in Base64, big-Endian order) of the file for server-side validation.")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGCSObject::EncryptionKey(
-    core::PropertyBuilder::createProperty("Server Side Encryption Key")
-        ->withDescription("An AES256 Encryption Key (encoded in base64) for server-side encryption of the object.")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property PutGCSObject::ObjectACL(
-    core::PropertyBuilder::createProperty("Object ACL")
-        ->withDescription("Access Control to be attached to the object uploaded. Not providing this will revert to bucket defaults.")
-        ->isRequired(false)
-        ->withAllowableValues(PredefinedAcl::values())
-        ->build());
-
-const core::Property PutGCSObject::OverwriteObject(
-    core::PropertyBuilder::createProperty("Overwrite Object")
-        ->withDescription("If false, the upload to GCS will succeed only if the object does not exist.")
-        ->withDefaultValue<bool>(true)
-        ->build());
-
-const core::Relationship PutGCSObject::Success("success", "Files that have been successfully written to Google Cloud Storage are transferred to this relationship");
-const core::Relationship PutGCSObject::Failure("failure", "Files that could not be written to Google Cloud Storage for some reason are transferred to this relationship");
-
 namespace {
 class UploadToGCSCallback {
  public:
@@ -235,6 +175,4 @@ void PutGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& contex
     session->transfer(flow_file, Success);
   }
 }
-
-REGISTER_RESOURCE(PutGCSObject, Processor);
 }  // namespace org::apache::nifi::minifi::extensions::gcp

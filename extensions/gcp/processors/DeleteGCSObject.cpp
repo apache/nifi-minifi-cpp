@@ -26,45 +26,9 @@
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-const core::Property DeleteGCSObject::Bucket(
-    core::PropertyBuilder::createProperty("Bucket")
-        ->withDescription("Bucket of the object.")
-        ->withDefaultValue("${gcs.bucket}")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property DeleteGCSObject::Key(
-    core::PropertyBuilder::createProperty("Key")
-        ->withDescription("Name of the object.")
-        ->withDefaultValue("${filename}")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property DeleteGCSObject::ObjectGeneration(
-    core::PropertyBuilder::createProperty("Object Generation")
-        ->withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property DeleteGCSObject::EncryptionKey(
-    core::PropertyBuilder::createProperty("Server Side Encryption Key")
-        ->withDescription("The AES256 Encryption Key (encoded in base64) for server-side decryption of the object.")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Relationship DeleteGCSObject::Success("success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation.");
-const core::Relationship DeleteGCSObject::Failure("failure", "FlowFiles are routed to this relationship if the Google Cloud Storage operation fails.");
-
 void DeleteGCSObject::initialize() {
-  setSupportedProperties({GCPCredentials,
-                          Bucket,
-                          Key,
-                          ObjectGeneration,
-                          NumberOfRetries,
-                          EncryptionKey,
-                          EndpointOverrideURL});
-  setSupportedRelationships({Success, Failure});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
@@ -116,6 +80,4 @@ void DeleteGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& con
 
   session->transfer(flow_file, Success);
 }
-
-REGISTER_RESOURCE(DeleteGCSObject, "Deletes an object from a Google Cloud Bucket.");
 }  // namespace org::apache::nifi::minifi::extensions::gcp

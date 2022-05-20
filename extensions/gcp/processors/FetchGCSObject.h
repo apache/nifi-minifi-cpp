@@ -23,6 +23,7 @@
 #include "GCSProcessor.h"
 #include "google/cloud/storage/well_known_headers.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
@@ -33,25 +34,35 @@ class FetchGCSObject : public GCSProcessor {
   }
   ~FetchGCSObject() override = default;
 
+  EXTENSIONAPI static constexpr const char* Description = "Fetches a file from a Google Cloud Bucket. Designed to be used in tandem with ListGCSBucket.";
+
   EXTENSIONAPI static const core::Property Bucket;
   EXTENSIONAPI static const core::Property Key;
   EXTENSIONAPI static const core::Property EncryptionKey;
   EXTENSIONAPI static const core::Property ObjectGeneration;
+  static auto properties() {
+    return utils::array_cat(GCSProcessor::properties(), std::array{
+      Bucket,
+      Key,
+      EncryptionKey,
+      ObjectGeneration
+    });
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
  private:
   google::cloud::storage::EncryptionKey encryption_key_;

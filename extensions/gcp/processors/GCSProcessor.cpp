@@ -24,28 +24,6 @@ namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
 
-const core::Property GCSProcessor::GCPCredentials(
-    core::PropertyBuilder::createProperty("GCP Credentials Provider Service")
-        ->withDescription("The Controller Service used to obtain Google Cloud Platform credentials.")
-        ->isRequired(true)
-        ->asType<GCPCredentialsControllerService>()
-        ->build());
-
-const core::Property GCSProcessor::NumberOfRetries(
-    core::PropertyBuilder::createProperty("Number of retries")
-        ->withDescription("How many retry attempts should be made before routing to the failure relationship.")
-        ->withDefaultValue<uint64_t>(6)
-        ->isRequired(true)
-        ->supportsExpressionLanguage(false)
-        ->build());
-
-const core::Property GCSProcessor::EndpointOverrideURL(
-    core::PropertyBuilder::createProperty("Endpoint Override URL")
-        ->withDescription("Overrides the default Google Cloud Storage endpoints")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
 namespace {
 std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core::ProcessContext& context) {
   std::string service_name;
@@ -58,7 +36,6 @@ std::shared_ptr<google::cloud::storage::oauth2::Credentials> getCredentials(core
   return nullptr;
 }
 }  // namespace
-
 
 void GCSProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
