@@ -601,6 +601,10 @@ void C2Agent::handle_update(const C2ContentResponse &resp) {
       handlePropertyUpdate(resp);
       break;
     }
+    case UpdateOperand::ASSET: {
+      handleAssetUpdate(resp);
+      break;
+    }
   }
 }
 
@@ -898,6 +902,113 @@ bool C2Agent::handleConfigurationUpdate(const C2ContentResponse &resp) {
   }
 
   return true;
+}
+
+static auto make_path(const std::string& str) {
+  return std::filesystem::path(str);
+}
+
+static std::optional<std::string> validateFilePath(const std::filesystem::path& path) {
+  if (path.empty()) {
+    return "Empty file path";
+  }
+  if (!path.is_relative()) {
+    return "File path must be a relative path '" + path.string() + "'";
+  }
+  if (!path.has_filename()) {
+    return "Filename missing in output path '" + path.string() + "'";
+  }
+  if (path.filename() == "." || path.filename() == "..") {
+    return "Invalid filename '" + path.filename().string() + "'";
+  }
+  for (const auto& segment : path) {
+    if (segment == "..") {
+      return "Accessing parent directory is forbidden in file path '" + path.string() + "'";
+    }
+  }
+  return std::nullopt;
+}
+
+void C2Agent::handleAssetUpdate(const C2ContentResponse& resp) {
+  auto send_error = [&] (std::string_view error) {
+    logger_->log_error("%s", std::string(error));
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::SET_ERROR, resp.ident, true);
+    response.setRawData(gsl::span<const char>(error).as_span<const std::byte>());
+    enqueue_c2_response(std::move(response));
+  };
+  std::filesystem::path asset_dir = std::filesystem::path(configuration_->getHome()) / "asset";
+  if (auto asset_dir_str = configuration_->get(Configuration::nifi_asset_directory)) {
+    asset_dir = asset_dir_str.value();
+  }
+
+  // output file
+  std::filesystem::path file_path;
+  if (auto file_rel = resp.getArgument("file") | utils::map(make_path)) {
+    if (auto error = validateFilePath(file_rel.value())) {
+      send_error(error.value());
+      return;
+    }
+    file_path = asset_dir / file_rel.value();
+  } else {
+    send_error("Couldn't find 'file' argument");
+    return;
+  }
+
+  // source url
+  std::string url;
+  if (auto url_str = resp.getArgument("url")) {
+    if (auto resolved_url = resolveUrl(*url_str)) {
+      url = resolved_url.value();
+    } else {
+      send_error("Couldn't resolve url");
+      return;
+    }
+  } else {
+    send_error("Couldn't find 'url' argument");
+    return;
+  }
+
+  // forceDownload
+  bool force_download = false;
+  if (auto force_download_str = resp.getArgument("forceDownload")) {
+    if (utils::StringUtils::equalsIgnoreCase(force_download_str.value(), "true")) {
+      force_download = true;
+    } else if (utils::StringUtils::equalsIgnoreCase(force_download_str.value(), "false")) {
+      force_download = false;
+    } else {
+      send_error("Argument 'forceDownload' must be either 'true' or 'false'");
+      return;
+    }
+  }
+
+  if (!force_download && std::filesystem::exists(file_path)) {
+    logger_->log_info("File already exists");
+    C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::NO_OPERATION, resp.ident, true);
+    enqueue_c2_response(std::move(response));
+    return;
+  }
+
+  C2Payload file_response = protocol_.load()->consumePayload(url, C2Payload(Operation::TRANSFER, true), RECEIVE, false);
+
+  if (file_response.getStatus().getState() != state::UpdateState::READ_COMPLETE) {
+    send_error("Failed to fetch asset from '" + url + "'");
+    return;
+  }
+
+  auto raw_data = std::move(file_response).moveRawData();
+  // ensure directory exists for file
+  if (utils::file::create_dir(file_path.parent_path().string()) != 0) {
+    send_error("Failed to create directory '" + file_path.parent_path().string() + "'");
+    return;
+  }
+
+  {
+    std::ofstream file{file_path, std::ofstream::binary};
+    file.write(reinterpret_cast<const char*>(raw_data.data()), raw_data.size());
+  }
+
+  C2Payload response(Operation::ACKNOWLEDGE, state::UpdateState::FULLY_APPLIED, resp.ident, true);
+  enqueue_c2_response(std::move(response));
 }
 
 void C2Agent::enqueue_c2_server_response(C2Payload &&resp) {

@@ -173,6 +173,7 @@ class C2Agent : public state::UpdateController {
 
   bool handleConfigurationUpdate(const C2ContentResponse &resp);
   void handlePropertyUpdate(const C2ContentResponse &resp);
+  void handleAssetUpdate(const C2ContentResponse &resp);
 
   std::optional<std::string> resolveFlowUrl(const std::string& url) const;
 

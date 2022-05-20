@@ -60,7 +60,8 @@ SMART_ENUM(DescribeOperand,
 
 SMART_ENUM(UpdateOperand,
   (CONFIGURATION, "configuration"),
-  (PROPERTIES, "properties")
+  (PROPERTIES, "properties"),
+  (ASSET, "asset")
 )
 
 SMART_ENUM(TransferOperand,
@@ -117,6 +118,13 @@ struct C2ContentResponse {
   bool operator!=(const C2ContentResponse &rhs) const { return !(*this == rhs); }
 
   friend std::ostream& operator<<(std::ostream& out, const C2ContentResponse& response);
+
+  std::optional<std::string> getArgument(const std::string& arg_name) const {
+    if (auto it = operation_arguments.find(arg_name); it != operation_arguments.end()) {
+      return it->second.to_string();
+    }
+    return std::nullopt;
+  }
 
   Operation op;
   // determines if the operation is required
@@ -199,6 +207,7 @@ class C2Payload : public state::Update {
    */
   [[nodiscard]] std::vector<std::byte> getRawData() const noexcept { return raw_data_; }
   [[nodiscard]] std::string getRawDataAsString() const { return utils::span_to<std::string>(gsl::make_span(getRawData()).as_span<const char>()); }
+  [[nodiscard]] std::vector<std::byte> moveRawData() && {return std::move(raw_data_);}
 
   /**
    * Add a nested payload.

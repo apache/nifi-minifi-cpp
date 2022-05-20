@@ -160,7 +160,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
   }
   const auto response_body_bytes = gsl::make_span(client.getResponseBody()).as_span<const std::byte>();
   logger_->log_trace("Received response: \"%s\"", [&] {return utils::StringUtils::escapeUnprintableBytes(response_body_bytes);});
-  if (isOkay && respCode) {
+  if (isOkay && !clientError && !serverError) {
     if (payload.isRaw()) {
       C2Payload response_payload(payload.getOperation(), state::UpdateState::READ_COMPLETE, true);
       response_payload.setRawData(response_body_bytes);
