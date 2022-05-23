@@ -177,28 +177,28 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
 
 bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
   auto error = utils::tls::processP12Certificate(certificate_, passphrase_, {
-    .cert_cb = [&] (auto cert) -> std::optional<std::string> {
+    .cert_cb = [&] (auto cert) -> std::error_code {
       if (SSL_CTX_use_certificate(ctx, cert.get()) != 1) {
-        return utils::StringUtils::join_pack("Failed to set certificate from ", certificate_, ", ", getLatestOpenSSLErrorString());
+        return utils::tls::get_last_ssl_error_code();
       }
       return {};
     },
-    .chain_cert_cb = [&] (auto cacert) -> std::optional<std::string> {
+    .chain_cert_cb = [&] (auto cacert) -> std::error_code {
       if (SSL_CTX_add_extra_chain_cert(ctx, cacert.get()) != 1) {
-        return utils::StringUtils::join_pack("Failed to set additional certificate from ", certificate_, ", ", getLatestOpenSSLErrorString());
+        return utils::tls::get_last_ssl_error_code();
       }
       cacert.release();  // a successful SSL_CTX_add_extra_chain_cert() takes ownership of cacert
       return {};
     },
-    .priv_key_cb = [&] (auto priv_key) -> std::optional<std::string> {
+    .priv_key_cb = [&] (auto priv_key) -> std::error_code {
       if (SSL_CTX_use_PrivateKey(ctx, priv_key.get()) != 1) {
-        return utils::StringUtils::join_pack("Failed to set private key from ", certificate_, ", ", getLatestOpenSSLErrorString());
+        return utils::tls::get_last_ssl_error_code();
       }
       return {};
     }
   });
   if (error) {
-    core::logging::LOG_ERROR(logger_) << error.value();
+    core::logging::LOG_ERROR(logger_) << error.message();
     return false;
   }
   return true;
@@ -230,8 +230,8 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
 #ifdef WIN32
 bool SSLContextService::findClientCertificate(ClientCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, client_cert_store_);
-  if (!cert_store.isOpen()) {
-    logger_->log_error("Could not open system certificate store %s/%s (client certificates)", cert_store_location_, client_cert_store_);
+  if (auto error = cert_store.error()) {
+    logger_->log_error("Could not open system certificate store %s/%s (client certificates): %s", cert_store_location_, client_cert_store_, error.message());
     return false;
   }
 
@@ -352,8 +352,8 @@ bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX
 #ifdef WIN32
 bool SSLContextService::findServerCertificate(ServerCertCallback cb) const {
   utils::tls::WindowsCertStore cert_store(utils::tls::WindowsCertStoreLocation{cert_store_location_}, server_cert_store_);
-  if (!cert_store.isOpen()) {
-    logger_->log_error("Could not open system certificate store %s/%s (server certificates)", cert_store_location_, server_cert_store_);
+  if (auto error = cert_store.error()) {
+    logger_->log_error("Could not open system certificate store %s/%s (server certificates): %s", cert_store_location_, server_cert_store_, error.message());
     return false;
   }
 
@@ -578,11 +578,11 @@ void SSLContextService::verifyCertificateExpiration() {
   if (!IsNullOrEmpty(certificate_)) {
     if (isFileTypeP12(certificate_)) {
       auto error = utils::tls::processP12Certificate(certificate_, passphrase_, {
-          .cert_cb = [&](auto cert) -> std::optional<std::string> {
+          .cert_cb = [&](auto cert) -> std::error_code {
             verify(certificate_, cert);
             return {};
           },
-          .chain_cert_cb = [&](auto cert) -> std::optional<std::string> {
+          .chain_cert_cb = [&](auto cert) -> std::error_code {
             verify(certificate_, cert);
             return {};
           },
@@ -593,11 +593,11 @@ void SSLContextService::verifyCertificateExpiration() {
       }
     } else {
       auto error = utils::tls::processPEMCertificate(certificate_, passphrase_, {
-          .cert_cb = [&](auto cert) -> std::optional<std::string> {
+          .cert_cb = [&](auto cert) -> std::error_code {
             verify(certificate_, cert);
             return {};
           },
-          .chain_cert_cb = [&](auto cert) -> std::optional<std::string> {
+          .chain_cert_cb = [&](auto cert) -> std::error_code {
             verify(certificate_, cert);
             return {};
           },
@@ -611,18 +611,18 @@ void SSLContextService::verifyCertificateExpiration() {
 
   if (!IsNullOrEmpty(ca_certificate_)) {
     auto error = utils::tls::processPEMCertificate(ca_certificate_, std::nullopt, {
-        .cert_cb = [&](auto cert) -> std::optional<std::string> {
+        .cert_cb = [&](auto cert) -> std::error_code {
           verify(ca_certificate_, cert);
           return {};
         },
-        .chain_cert_cb = [&](auto cert) -> std::optional<std::string> {
+        .chain_cert_cb = [&](auto cert) -> std::error_code {
           verify(ca_certificate_, cert);
           return {};
         },
         .priv_key_cb = {}
     });
     if (error) {
-      core::logging::LOG_ERROR(logger_) << error.value();
+      core::logging::LOG_ERROR(logger_) << error.message();
     }
   }
 

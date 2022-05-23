@@ -40,6 +40,21 @@ namespace minifi {
 namespace utils {
 namespace tls {
 
+class ssl_error_category : public std::error_category {
+ public:
+  [[nodiscard]]
+  const char* name() const noexcept override {
+    return "ssl_error";
+  }
+
+  static const ssl_error_category& get();
+
+  [[nodiscard]]
+  std::string message(int value) const override;
+};
+
+std::error_code get_last_ssl_error_code();
+
 struct EVP_PKEY_deleter {
   void operator()(EVP_PKEY* pkey) const { EVP_PKEY_free(pkey); }
 };
@@ -65,13 +80,14 @@ class WindowsCertStore {
  public:
   WindowsCertStore(const WindowsCertStoreLocation& loc, const std::string& cert_store);
 
-  bool isOpen() const;
+  std::error_code error() const;
 
   PCCERT_CONTEXT nextCert();
 
   ~WindowsCertStore();
 
  private:
+  std::error_code error_;
   HCERTSTORE store_ptr_;
   PCCERT_CONTEXT cert_ctx_ptr_ = nullptr;
 };
@@ -88,14 +104,14 @@ std::string getLatestOpenSSLErrorString();
 std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(const X509_unique_ptr& cert);
 
 struct CertHandler {
-  std::function<std::optional<std::string>(X509_unique_ptr cert)> cert_cb;
-  std::function<std::optional<std::string>(X509_unique_ptr cert)> chain_cert_cb;
-  std::function<std::optional<std::string>(EVP_PKEY_unique_ptr priv_key)> priv_key_cb;
+  std::function<std::error_code(X509_unique_ptr cert)> cert_cb;
+  std::function<std::error_code(X509_unique_ptr cert)> chain_cert_cb;
+  std::function<std::error_code(EVP_PKEY_unique_ptr priv_key)> priv_key_cb;
 };
 
-std::optional<std::string> processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler);
+std::error_code processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler);
 
-std::optional<std::string> processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler);
+std::error_code processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler);
 
 }  // namespace tls
 }  // namespace utils

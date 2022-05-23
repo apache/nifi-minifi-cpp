@@ -37,15 +37,38 @@ namespace minifi {
 namespace utils {
 namespace tls {
 
+const ssl_error_category& ssl_error_category::get() {
+  static ssl_error_category instance;
+  return instance;
+}
+
+std::string ssl_error_category::message(int value) const {
+  auto err = gsl::narrow<unsigned long>(value);  // NOLINT
+  if (err == 0) {
+    return "";
+  }
+  char buf[4096];
+  ERR_error_string_n(err, buf, sizeof(buf));
+  return buf;
+}
+
+std::error_code get_last_ssl_error_code() {
+  return std::error_code{gsl::narrow<int>(ERR_peek_last_error()), ssl_error_category::get()};
+}
+
 #ifdef WIN32
 WindowsCertStore::WindowsCertStore(const WindowsCertStoreLocation& loc, const std::string& cert_store) {
   store_ptr_ = CertOpenStore(CERT_STORE_PROV_SYSTEM_A, 0, NULL,
                              CERT_STORE_OPEN_EXISTING_FLAG | CERT_STORE_READONLY_FLAG | loc.getBitfieldValue(),
                              cert_store.data());
+
+  if (!store_ptr_) {
+    error_ = std::error_code{WSAGetLastError(), std::system_category()};
+  }
 }
 
-bool WindowsCertStore::isOpen() const {
-  return store_ptr_;
+std::error_code WindowsCertStore::error() const {
+  return error_;
 }
 
 PCCERT_CONTEXT WindowsCertStore::nextCert() {
@@ -145,13 +168,7 @@ EVP_PKEY_unique_ptr extractPrivateKey(const PCCERT_CONTEXT certificate) {
 #endif  // WIN32
 
 std::string getLatestOpenSSLErrorString() {
-  unsigned long err = ERR_peek_last_error(); // NOLINT
-  if (err == 0U) {
-    return "";
-  }
-  char buf[4096];
-  ERR_error_string_n(err, buf, sizeof(buf));
-  return buf;
+  return get_last_ssl_error_code().message();
 }
 
 std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(const X509_unique_ptr& cert) {
@@ -167,24 +184,24 @@ std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(co
   return std::chrono::system_clock::from_time_t(utils::timeutils::mkgmtime(&end));
 }
 
-std::optional<std::string> processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler) {
+std::error_code processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler) {
   utils::tls::BIO_unique_ptr fp{BIO_new(BIO_s_file())};
   if (fp == nullptr) {
-    return StringUtils::join_pack("Failed create new file BIO, ", getLatestOpenSSLErrorString());
+    return get_last_ssl_error_code();
   }
   if (BIO_read_filename(fp.get(), cert_file.c_str()) <= 0) {
-    return StringUtils::join_pack("Failed to read certificate file ", cert_file, ", ", getLatestOpenSSLErrorString());
+    return get_last_ssl_error_code();
   }
   utils::tls::PKCS12_unique_ptr  p12{d2i_PKCS12_bio(fp.get(), nullptr)};
   if (p12 == nullptr) {
-    return StringUtils::join_pack("Failed to DER decode certificate file ", cert_file, ", ", getLatestOpenSSLErrorString());
+    return get_last_ssl_error_code();
   }
 
   EVP_PKEY* pkey = nullptr;
   X509* cert = nullptr;
   STACK_OF(X509)* ca = nullptr;
   if (!PKCS12_parse(p12.get(), passphrase.c_str(), &pkey, &cert, &ca)) {
-    return StringUtils::join_pack("Failed to parse certificate file ", cert_file, " as PKCS#12, ", getLatestOpenSSLErrorString());
+    return get_last_ssl_error_code();
   }
   utils::tls::EVP_PKEY_unique_ptr pkey_ptr{pkey};
   utils::tls::X509_unique_ptr cert_ptr{cert};
@@ -211,13 +228,13 @@ std::optional<std::string> processP12Certificate(const std::string& cert_file, c
   return {};
 }
 
-std::optional<std::string> processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler) {
+std::error_code processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler) {
   utils::tls::BIO_unique_ptr fp{BIO_new(BIO_s_file())};
   if (fp == nullptr) {
-    return StringUtils::join_pack("Failed create new file BIO, ", getLatestOpenSSLErrorString());
+    return get_last_ssl_error_code();
   }
   if (BIO_read_filename(fp.get(), cert_file.c_str()) <= 0) {
-    return StringUtils::join_pack("Failed to read certificate file ", cert_file, ", ", getLatestOpenSSLErrorString());
+    return get_last_ssl_error_code();
   }
   std::decay_t<decltype(pemPassWordCb)> pwd_cb = nullptr;
   void* pwd_data = nullptr;
@@ -228,7 +245,7 @@ std::optional<std::string> processPEMCertificate(const std::string& cert_file, c
 
   X509_unique_ptr cert{PEM_read_bio_X509_AUX(fp.get(), nullptr, pwd_cb, pwd_data)};
   if (!cert) {
-    return StringUtils::join_pack("Failed to read certificate from ", cert_file, ", ", getLatestOpenSSLErrorString());
+    return get_last_ssl_error_code();
   }
 
   if (handler.cert_cb) {
