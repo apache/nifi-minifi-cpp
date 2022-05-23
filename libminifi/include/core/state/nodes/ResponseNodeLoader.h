@@ -18,10 +18,11 @@
 #pragma once
 
 #include <unordered_map>
+#include <map>
 #include <string>
 #include <memory>
 #include <mutex>
-#include <unordered_set>
+#include <functional>
 
 #include "MetricsBase.h"
 #include "core/ProcessGroup.h"
@@ -29,6 +30,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/FlowConfiguration.h"
 #include "utils/gsl.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -38,11 +40,14 @@ class ResponseNodeLoader {
     std::shared_ptr<core::Repository> flow_file_repo, core::FlowConfiguration* flow_configuration);
   std::shared_ptr<ResponseNode> loadResponseNode(const std::string& clazz, core::ProcessGroup* root);
   std::shared_ptr<state::response::ResponseNode> getComponentMetricsNode(const std::string& metrics_class) const;
-  void initializeComponentMetrics(core::ProcessGroup* root);
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
+  utils::Identifier registerFlowChangeCallback(const std::function<void(core::ProcessGroup*)> cb);
+  void unregisterFlowChangeCallback(const utils::Identifier& uuid);
+  void flowChanged(core::ProcessGroup* root);
 
  private:
+  void initializeComponentMetrics(core::ProcessGroup* root);
   std::shared_ptr<ResponseNode> getResponseNode(const std::string& clazz);
   void initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node);
   void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
@@ -60,6 +65,8 @@ class ResponseNodeLoader {
   core::FlowConfiguration* flow_configuration_ = nullptr;
   core::controller::ControllerServiceProvider* controller_ = nullptr;
   state::StateMonitor* update_sink_ = nullptr;
+  std::mutex callback_mutex_;
+  std::map<utils::Identifier, std::function<void(core::ProcessGroup*)>> flow_change_callbacks_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<ResponseNodeLoader>::getLogger()};
 };
 

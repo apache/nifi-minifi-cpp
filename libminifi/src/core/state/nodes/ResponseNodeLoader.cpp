@@ -187,5 +187,26 @@ void ResponseNodeLoader::setStateMonitor(state::StateMonitor* update_sink) {
   update_sink_ = update_sink;
 }
 
+utils::Identifier ResponseNodeLoader::registerFlowChangeCallback(const std::function<void(core::ProcessGroup*)> cb) {
+  std::lock_guard<std::mutex> guard(callback_mutex_);
+  auto uuid = utils::IdGenerator::getIdGenerator()->generate();
+  flow_change_callbacks_.emplace(uuid, cb);
+  return uuid;
+}
+
+void ResponseNodeLoader::unregisterFlowChangeCallback(const utils::Identifier& uuid) {
+  std::lock_guard<std::mutex> guard(callback_mutex_);
+  flow_change_callbacks_.erase(uuid);
+}
+
+void ResponseNodeLoader::flowChanged(core::ProcessGroup* root) {
+  initializeComponentMetrics(root);
+
+  std::lock_guard<std::mutex> guard(callback_mutex_);
+  for (const auto& [_, cb] : flow_change_callbacks_) {
+    cb(root);
+  }
+}
+
 }  // namespace org::apache::nifi::minifi::state::response
 

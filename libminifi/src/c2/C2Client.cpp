@@ -45,8 +45,13 @@ C2Client::C2Client(
       filesystem_(std::move(filesystem)),
       logger_(std::move(logger)),
       request_restart_(std::move(request_restart)),
-      response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()),
-      response_node_container_(response_node_loader_) {}
+      response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()) {}
+
+C2Client::~C2Client() {
+  if (!flow_change_callback_uuid_.isNil()) {
+    response_node_loader_.unregisterFlowChangeCallback(flow_change_callback_uuid_);
+  }
+}
 
 void C2Client::stopC2() {
   if (c2_agent_) {
@@ -85,21 +90,11 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     }
   }
 
-  std::string class_csv;
-  if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
-
-    for (const std::string& clazz : classes) {
-      auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
-      if (!response_node) {
-        continue;
-      }
-
-      response_node_container_.addRootResponseNode(response_node->getName(), response_node);
-    }
-  }
-
-  loadC2ResponseConfiguration(Configuration::nifi_c2_root_class_definitions);
+  initializeResponseNodes(root_.get());
+  flow_change_callback_uuid_ = response_node_loader_.registerFlowChangeCallback([this](core::ProcessGroup* root) {
+    root_response_nodes_.clear();
+    initializeResponseNodes(root);
+  });
 
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (!initialized_) {
@@ -151,7 +146,8 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
         auto node = loadC2ResponseConfiguration(optionName, new_node);
       }
 
-      response_node_container_.addRootResponseNode(name, new_node);
+      std::lock_guard<std::mutex> guard{metrics_mutex_};
+      root_response_nodes_[name] = new_node;
     } catch (...) {
       logger_->log_error("Could not create metrics class %s", metricsClass);
     }
@@ -214,9 +210,14 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
   if (!metrics_class.empty()) {
     return response_node_loader_.getComponentMetricsNode(metrics_class);
+  } else {
+    std::lock_guard<std::mutex> lock(metrics_mutex_);
+    const auto iter = root_response_nodes_.find("metrics");
+    if (iter != root_response_nodes_.end()) {
+      return iter->second;
+    }
   }
-
-  return response_node_container_.getRootResponseNode("metrics");
+  return nullptr;
 }
 
 std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
@@ -226,7 +227,8 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbe
 
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
   nodes.reserve(root_response_nodes_.size());
-  for (const auto &entry : response_node_container_.getRootResponseNodes()) {
+  std::lock_guard<std::mutex> lock(metrics_mutex_);
+  for (const auto &entry : root_response_nodes_) {
     auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
     if (identifier) {
       identifier->includeAgentManifest(include);
@@ -234,6 +236,25 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbe
     nodes.push_back(entry.second);
   }
   return nodes;
+}
+
+void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
+  std::string class_csv;
+  if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
+    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
+
+    for (const std::string& clazz : classes) {
+      auto response_node = response_node_loader_.loadResponseNode(clazz, root);
+      if (!response_node) {
+        continue;
+      }
+
+      std::lock_guard<std::mutex> guard{metrics_mutex_};
+      root_response_nodes_[response_node->getName()] = std::move(response_node);
+    }
+  }
+
+  loadC2ResponseConfiguration(Configuration::nifi_c2_root_class_definitions);
 }
 
 }  // namespace org::apache::nifi::minifi::c2

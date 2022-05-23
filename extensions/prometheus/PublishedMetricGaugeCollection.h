@@ -14,7 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#pragma once
+
 #include <memory>
+#include <vector>
 
 #include "state/PublishedMetricProvider.h"
 #include "prometheus/collectable.h"
@@ -24,7 +27,7 @@ namespace org::apache::nifi::minifi::extensions::prometheus {
 
 class PublishedMetricGaugeCollection : public ::prometheus::Collectable {
  public:
-  PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric);
+  explicit PublishedMetricGaugeCollection(std::shared_ptr<state::PublishedMetricProvider> metric);
   std::vector<::prometheus::MetricFamily> Collect() const override;
 
  private:

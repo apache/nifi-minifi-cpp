@@ -37,7 +37,7 @@
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
 #include "core/state/nodes/ResponseNodeLoader.h"
-#include "core/state/nodes/ResponseNodeContainer.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -49,6 +49,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
       std::unique_ptr<core::FlowConfiguration> flow_configuration, std::shared_ptr<utils::file::FileSystem> filesystem,
       std::function<void()> request_restart,
       std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger());
+  ~C2Client() override;
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
 
@@ -65,6 +66,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
  private:
   void loadC2ResponseConfiguration(const std::string &prefix);
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
+  void initializeResponseNodes(core::ProcessGroup* root);
 
  protected:
   std::shared_ptr<Configure> configuration_;
@@ -75,13 +77,14 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   std::mutex initialization_mutex_;
   bool initialized_ = false;
   std::shared_ptr<core::logging::Logger> logger_;
+  mutable std::mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
+  utils::Identifier flow_change_callback_uuid_;
 
  protected:
   std::atomic<bool> flow_update_{false};
   std::function<void()> request_restart_;
   state::response::ResponseNodeLoader response_node_loader_;
-  state::response::ResponseNodeContainer response_node_container_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

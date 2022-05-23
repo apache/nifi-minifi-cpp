@@ -16,6 +16,9 @@
  */
 #include "PublishedMetricGaugeCollection.h"
 
+#include <utility>
+#include <algorithm>
+
 #include "prometheus/client_metric.h"
 #include "state/PublishedMetricProvider.h"
 #include "range/v3/range/conversion.hpp"
@@ -33,14 +36,12 @@ std::vector<::prometheus::MetricFamily> PublishedMetricGaugeCollection::Collect(
     client_metric.label = ranges::views::transform(metric.labels, [](auto&& kvp) { return ::prometheus::ClientMetric::Label{kvp.first, kvp.second}; })
       | ranges::to<std::vector<::prometheus::ClientMetric::Label>>;
     client_metric.gauge = ::prometheus::ClientMetric::Gauge{metric.value};
-    collection.push_back(
-      {
-        .name = metric.name,
-        .help = "",
-        .type = ::prometheus::MetricType::Gauge,
-        .metric = std::vector<::prometheus::ClientMetric>{ client_metric }
-      }
-    );
+    collection.push_back({
+      .name = metric.name,
+      .help = "",
+      .type = ::prometheus::MetricType::Gauge,
+      .metric = std::vector<::prometheus::ClientMetric>{ client_metric }
+    });
   }
   return collection;
 }

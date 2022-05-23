@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 
 #include "core/state/MetricsPublisher.h"
 #include "PublishedMetricGaugeCollection.h"
@@ -26,23 +27,26 @@
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/state/nodes/ResponseNodeContainer.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
 class PrometheusMetricsPublisher : public core::CoreComponent, public state::MetricsPublisher {
  public:
   explicit PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid = {});
-  void initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) override;
+  ~PrometheusMetricsPublisher() override;
+  void initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader* response_node_loader, core::ProcessGroup* root) override;
 
  private:
-  uint32_t readPort(const std::shared_ptr<Configure>& configuration);
-  void loadMetricNodes(
-    const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root);
+  uint32_t readPort();
+  std::vector<std::shared_ptr<state::response::ResponseNode>> loadMetricNodes(core::ProcessGroup* root);
+  void registerCollectables(core::ProcessGroup* root);
 
   std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> gauge_collections_;
   std::unique_ptr<::prometheus::Exposer> exposer_;
-  std::unique_ptr<state::response::ResponseNodeContainer> response_node_container_;
+  std::shared_ptr<Configure> configuration_;
+  state::response::ResponseNodeLoader* response_node_loader_ = nullptr;
+  utils::Identifier flow_change_callback_uuid_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusMetricsPublisher>::getLogger()};
 };
 
