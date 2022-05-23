@@ -47,6 +47,7 @@ class ssl_error_category : public std::error_category {
     return "ssl_error";
   }
 
+  [[nodiscard]]
   static const ssl_error_category& get();
 
   [[nodiscard]]
