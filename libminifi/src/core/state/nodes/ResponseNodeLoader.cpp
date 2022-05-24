@@ -169,7 +169,7 @@ std::shared_ptr<ResponseNode> ResponseNodeLoader::loadResponseNode(const std::st
 }
 
 std::shared_ptr<state::response::ResponseNode> ResponseNodeLoader::getComponentMetricsNode(const std::string& metrics_class) const {
-  if (metrics_class.empty()) {
+  if (!metrics_class.empty()) {
     std::lock_guard<std::mutex> lock(component_metrics_mutex_);
     const auto citer = component_metrics_.find(metrics_class);
     if (citer != component_metrics_.end()) {

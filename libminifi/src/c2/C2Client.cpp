@@ -83,21 +83,17 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     configuration_->set(Configuration::nifi_c2_agent_identifier_fallback, agent_id, PropertyChangeLifetime::PERSISTENT);
   }
 
-  {
-    std::lock_guard<std::mutex> lock(initialization_mutex_);
-    if (initialized_ && !flow_update_) {
-      return;
-    }
+  std::lock_guard<std::mutex> lock(initialization_mutex_);
+  if (initialized_ && !flow_update_) {
+    return;
   }
 
-  initializeResponseNodes(root_.get());
-  flow_change_callback_uuid_ = response_node_loader_.registerFlowChangeCallback([this](core::ProcessGroup* root) {
-    root_response_nodes_.clear();
-    initializeResponseNodes(root);
-  });
-
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
   if (!initialized_) {
+    initializeResponseNodes(root_.get());
+    flow_change_callback_uuid_ = response_node_loader_.registerFlowChangeCallback([this](core::ProcessGroup* root) {
+      root_response_nodes_.clear();
+      initializeResponseNodes(root);
+    });
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart
     c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_, request_restart_);

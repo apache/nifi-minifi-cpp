@@ -127,7 +127,6 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
   processor_to_controller_.clear();
-  response_node_loader_.flowChanged(root_.get());
   initialized_ = false;
   bool started = false;
   try {
