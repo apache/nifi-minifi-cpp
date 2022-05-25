@@ -107,11 +107,11 @@ class ObjectNode : public ResponseNode {
     return nodes_;
   }
 
-  virtual std::string getName() const {
+  std::string getName() const override {
     return Connectable::getName();
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
 //    SerializedResponseNode outer_node;
     //  outer_node.name = getName();
@@ -127,7 +127,7 @@ class ObjectNode : public ResponseNode {
     return serialized;
   }
 
-  virtual bool isEmpty() {
+  bool isEmpty() override {
     return nodes_.empty();
   }
 

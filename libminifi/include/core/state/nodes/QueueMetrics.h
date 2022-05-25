@@ -47,11 +47,11 @@ class QueueMetrics : public ResponseNode, public ConnectionMonitor {
       : ResponseNode("QueueMetrics") {
   }
 
-  virtual std::string getName() const {
+  std::string getName() const override {
     return "QueueMetrics";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
     for (const auto& [_, connection] : connections_) {
       SerializedResponseNode parent;

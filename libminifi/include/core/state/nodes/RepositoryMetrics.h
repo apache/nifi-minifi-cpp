@@ -48,7 +48,7 @@ class RepositoryMetrics : public ResponseNode {
       : ResponseNode("RepositoryMetrics") {
   }
 
-  virtual std::string getName() const {
+  std::string getName() const override {
     return "RepositoryMetrics";
   }
 
@@ -58,7 +58,7 @@ class RepositoryMetrics : public ResponseNode {
     }
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
     for (auto conn : repositories_) {
       auto repo = conn.second;
