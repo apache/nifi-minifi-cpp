@@ -16,6 +16,8 @@
  */
 #include "PrometheusMetricsPublisher.h"
 
+#include <utility>
+
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "PrometheusMetricsExposer.h"

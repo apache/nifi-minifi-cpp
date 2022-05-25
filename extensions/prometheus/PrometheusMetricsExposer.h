@@ -16,8 +16,9 @@
  */
 #pragma once
 
-#include "MetricsExposer.h"
+#include <memory>
 
+#include "MetricsExposer.h"
 #include "prometheus/exposer.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -26,7 +27,7 @@ namespace org::apache::nifi::minifi::extensions::prometheus {
 
 class PrometheusMetricsExposer : public MetricsExposer  {
  public:
-  PrometheusMetricsExposer(uint32_t port);
+  explicit PrometheusMetricsExposer(uint32_t port);
   void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
   void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
 

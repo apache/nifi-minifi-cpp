@@ -205,7 +205,7 @@ int main(int argc, char **argv) {
   std::string path;
   std::string file;
   utils::file::getFileNameAndPath(args.test_file, path, file);
-  std::string replacement_path = (std::filesystem::path{path} / "TestC2MetricsUpdate.yml").string();
+  std::string replacement_path = (std::filesystem::path(path) / "TestC2MetricsUpdate.yml").string();
   org::apache::nifi::minifi::test::MetricsHandler handler(metrics_updated_successfully, harness.getConfiguration(), replacement_path);
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);
