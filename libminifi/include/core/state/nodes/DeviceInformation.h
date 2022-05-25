@@ -329,9 +329,9 @@ class DeviceInfoNode : public DeviceInformation {
     cpu_usage.name = "cpuUtilization";
     cpu_usage.value = system_cpu_usage;
     return {
-      {"physical_mem", static_cast<double>(utils::OsUtils::getSystemTotalPhysicalMemory()), {{"metric_class", getName()}}},
-      {"memory_usage", static_cast<double>(utils::OsUtils::getSystemPhysicalMemoryUsage()), {{"metric_class", getName()}}},
-      {"cpu_utilization", system_cpu_usage, {{"metric_class", getName()}}},
+      {"physical_mem", static_cast<double>(utils::OsUtils::getSystemTotalPhysicalMemory()), {{"metric_class", "DeviceInfoNode"}}},
+      {"memory_usage", static_cast<double>(utils::OsUtils::getSystemPhysicalMemoryUsage()), {{"metric_class", "DeviceInfoNode"}}},
+      {"cpu_utilization", system_cpu_usage, {{"metric_class", "DeviceInfoNode"}}},
     };
   }
 

@@ -250,15 +250,15 @@ class FlowInformation : public FlowMonitor {
   std::vector<PublishedMetric> calculateMetrics() override {
     std::vector<PublishedMetric> metrics;
     for (const auto& [_, connection] : connections_) {
-      metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
-      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getMaxQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
-      metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
-      metrics.push_back({"queue_size_max", static_cast<double>(connection->getMaxQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", getName()}}});
+      metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
+      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getMaxQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
+      metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
+      metrics.push_back({"queue_size_max", static_cast<double>(connection->getMaxQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
     }
 
     if (nullptr != monitor_) {
       monitor_->executeOnAllComponents([this, &metrics](StateController& component){
-        metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0), {{"component_uuid", component.getComponentUUID().to_string()}, {"metric_class", getName()}}});
+        metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0), {{"component_uuid", component.getComponentUUID().to_string()}, {"metric_class", "FlowInformation"}}});
       });
     }
     return metrics;
