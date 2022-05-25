@@ -42,6 +42,7 @@
 #include "../core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
+#include "utils/tls/CertificateUtils.h"
 
 namespace org {
 namespace apache {
@@ -228,10 +229,18 @@ class SSLContextService : public core::controller::ControllerService {
   bool addClientCertificateFromSystemStoreToSSLContext(SSL_CTX* ctx) const;
   bool addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX* ctx) const;
 #ifdef WIN32
-  bool useClientCertificate(SSL_CTX* ctx, PCCERT_CONTEXT certificate) const;
-  void addServerCertificateToSSLStore(X509_STORE* ssl_store, PCCERT_CONTEXT certificate) const;
+  using ClientCertCallback = std::function<bool(utils::tls::X509_unique_ptr cert, utils::tls::EVP_PKEY_unique_ptr priv_key)>;
+  using ServerCertCallback = std::function<bool(utils::tls::X509_unique_ptr cert)>;
+
+  bool findClientCertificate(ClientCertCallback cb) const;
+  bool findServerCertificate(ServerCertCallback cb) const;
+
+  bool useClientCertificate(PCCERT_CONTEXT certificate, ClientCertCallback cb) const;
+  bool useServerCertificate(PCCERT_CONTEXT certificate, ServerCertCallback cb) const;
 #endif  // WIN32
 #endif  // OPENSSL_SUPPORT
+
+  void verifyCertificateExpiration();
 
   std::shared_ptr<core::logging::Logger> logger_;
 };
