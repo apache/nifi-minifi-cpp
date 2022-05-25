@@ -21,10 +21,6 @@ if (DISABLE_CIVET)
   return()
 endif()
 
-include(BundledCivetWeb)
-use_bundled_civetweb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
-
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
 include_directories(${CMAKE_SOURCE_DIR}/libminifi/include

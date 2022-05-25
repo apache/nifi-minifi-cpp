@@ -250,10 +250,14 @@ class FlowInformation : public FlowMonitor {
   std::vector<PublishedMetric> calculateMetrics() override {
     std::vector<PublishedMetric> metrics;
     for (const auto& [_, connection] : connections_) {
-      metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
-      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getMaxQueueDataSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
-      metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
-      metrics.push_back({"queue_size_max", static_cast<double>(connection->getMaxQueueSize()), {{"connection_uuid", connection->getUUIDStr()}, {"metric_class", "FlowInformation"}}});
+      metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
+      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getMaxQueueDataSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
+      metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
+      metrics.push_back({"queue_size_max", static_cast<double>(connection->getMaxQueueSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
     }
 
     if (nullptr != monitor_) {

@@ -1,0 +1,13 @@
+diff --git a/pull/CMakeLists.txt b/pull/CMakeLists.txt
+index 8de1069..1322ab8 100644
+--- a/pull/CMakeLists.txt
++++ b/pull/CMakeLists.txt
+@@ -8,7 +8,7 @@ if(USE_THIRDPARTY_LIBRARIES)
+     PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/prometheus
+   )
+ else()
+-  find_package(civetweb CONFIG REQUIRED)
++  # find_package(civetweb CONFIG REQUIRED)
+ 
+   # work-around https://github.com/civetweb/civetweb/pull/918
+   if(WIN32 AND NOT TARGET WINSOCK::WINSOCK)

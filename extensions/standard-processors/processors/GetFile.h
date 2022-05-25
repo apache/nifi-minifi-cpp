@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
+#pragma once
 
 #include <memory>
 #include <queue>
 #include <string>
 #include <vector>
 #include <atomic>
+#include <utility>
 
 #include "core/state/nodes/MetricsBase.h"
 #include "FlowFileRecord.h"
@@ -32,11 +32,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 struct GetFileRequest {
   bool recursive = true;
@@ -54,20 +50,11 @@ struct GetFileRequest {
 
 class GetFileMetrics : public state::response::ResponseNode {
  public:
-  GetFileMetrics()
-      : state::response::ResponseNode("GetFileMetrics") {
-    iterations_ = 0;
-    accepted_files_ = 0;
-    input_bytes_ = 0;
+  explicit GetFileMetrics(const CoreComponent& source_component)
+    : state::response::ResponseNode("GetFileMetrics"),
+      source_component_(source_component) {
   }
 
-  GetFileMetrics(const std::string& name, const utils::Identifier& uuid)
-      : state::response::ResponseNode(name, uuid) {
-    iterations_ = 0;
-    accepted_files_ = 0;
-    input_bytes_ = 0;
-  }
-  virtual ~GetFileMetrics() = default;
   std::string getName() const override {
     return core::Connectable::getName();
   }
@@ -98,25 +85,29 @@ class GetFileMetrics : public state::response::ResponseNode {
 
   std::vector<state::PublishedMetric> calculateMetrics() override {
     return {
-      {"onTrigger_invocations", static_cast<double>(iterations_.load()), {{"metric_class", getName()}}},
-      {"accepted_files", static_cast<double>(accepted_files_.load()), {{"metric_class", getName()}}},
-      {"input_bytes", static_cast<double>(input_bytes_.load()), {{"metric_class", getName()}}}
+      {"onTrigger_invocations", static_cast<double>(iterations_.load()),
+        {{"metric_class", "GetFileMetrics"}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
+      {"accepted_files", static_cast<double>(accepted_files_.load()),
+        {{"metric_class", "GetFileMetrics"}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
+      {"input_bytes", static_cast<double>(input_bytes_.load()),
+        {{"metric_class", "GetFileMetrics"}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}}
     };
   }
 
  protected:
   friend class GetFile;
 
-  std::atomic<size_t> iterations_;
-  std::atomic<size_t> accepted_files_;
-  std::atomic<size_t> input_bytes_;
+  const CoreComponent& source_component_;
+  std::atomic<size_t> iterations_{0};
+  std::atomic<size_t> accepted_files_{0};
+  std::atomic<size_t> input_bytes_{0};
 };
 
 class GetFile : public core::Processor, public state::response::MetricsNodeSource {
  public:
   explicit GetFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
-        metrics_(std::make_shared<GetFileMetrics>()) {
+        metrics_(std::make_shared<GetFileMetrics>(*this)) {
   }
   ~GetFile() override = default;
 
@@ -186,10 +177,4 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger();
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETFILE_H_
+}  // namespace org::apache::nifi::minifi::processors

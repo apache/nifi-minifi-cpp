@@ -99,14 +99,11 @@ class DataHandler {
 
 class GetTCPMetrics : public state::response::ResponseNode {
  public:
-  GetTCPMetrics()
-      : state::response::ResponseNode("GetTCPMetrics") {
+  explicit GetTCPMetrics(const CoreComponent& source_component)
+    : state::response::ResponseNode("GetTCPMetrics"),
+      source_component_(source_component) {
   }
 
-  GetTCPMetrics(const std::string& name, const utils::Identifier& uuid)
-      : state::response::ResponseNode(name, uuid) {
-  }
-  ~GetTCPMetrics() override = default;
   std::string getName() const override {
     return core::Connectable::getName();
   }
@@ -137,15 +134,19 @@ class GetTCPMetrics : public state::response::ResponseNode {
 
   std::vector<state::PublishedMetric> calculateMetrics() override {
     return {
-      {"onTrigger_invocations", static_cast<double>(iterations_.load()), {{"metric_class", getName()}}},
-      {"accepted_files", static_cast<double>(accepted_files_.load()), {{"metric_class", getName()}}},
-      {"input_bytes", static_cast<double>(input_bytes_.load()), {{"metric_class", getName()}}}
+      {"onTrigger_invocations", static_cast<double>(iterations_.load()),
+        {{"metric_class", getName()}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
+      {"accepted_files", static_cast<double>(accepted_files_.load()),
+        {{"metric_class", getName()}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
+      {"input_bytes", static_cast<double>(input_bytes_.load()),
+        {{"metric_class", getName()}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}}
     };
   }
 
  protected:
   friend class GetTCP;
 
+  const CoreComponent& source_component_;
   std::atomic<size_t> iterations_{0};
   std::atomic<size_t> accepted_files_{0};
   std::atomic<size_t> input_bytes_{0};
@@ -154,15 +155,14 @@ class GetTCPMetrics : public state::response::ResponseNode {
 class GetTCP : public core::Processor, public state::response::MetricsNodeSource {
  public:
   explicit GetTCP(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
-        running_(false),
-        stay_connected_(true),
-        concurrent_handlers_(2),
-        endOfMessageByte(static_cast<std::byte>(13)),
-        receive_buffer_size_(16 * 1024 * 1024),
-        connection_attempt_limit_(3),
-        ssl_service_(nullptr) {
-    metrics_ = std::make_shared<GetTCPMetrics>();
+    : Processor(name, uuid),
+      running_(false),
+      stay_connected_(true),
+      concurrent_handlers_(2),
+      endOfMessageByte(static_cast<std::byte>(13)),
+      receive_buffer_size_(16 * 1024 * 1024),
+      connection_attempt_limit_(3),
+      metrics_(std::make_shared<GetTCPMetrics>(*this)) {
   }
 
   ~GetTCP() override {

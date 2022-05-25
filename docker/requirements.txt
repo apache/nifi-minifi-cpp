@@ -8,3 +8,4 @@ m2crypto==0.37.1
 watchdog==2.1.2
 pyopenssl==21.0.0
 azure-storage-blob==12.9.0
+prometheus-api-client==0.5.0

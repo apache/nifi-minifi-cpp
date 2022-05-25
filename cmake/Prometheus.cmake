@@ -22,11 +22,15 @@ set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(USE_THIRDPARTY_LIBRARIES OFF CACHE BOOL "" FORCE)
 set(ENABLE_COMPRESSION OFF CACHE BOOL "" FORCE)
 
+set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/prometheus-cpp/remove-find_package.patch")
+set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
+        (\\\"${Patch_EXECUTABLE}\\\" -p1 -R -s -f --dry-run -i \\\"${PATCH_FILE}\\\" || \\\"${Patch_EXECUTABLE}\\\" -p1 -N -i \\\"${PATCH_FILE}\\\")")
+
 FetchContent_Declare(
     prometheus-cpp
     URL "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.0.1.tar.gz"
     URL_HASH "SHA256=593e028d401d3298eada804d252bc38d8cab3ea1c9e88bcd72095281f85e6d16"
-    UPDATE_COMMAND git submodule update --init
+    PATCH_COMMAND "${PC}"
 )
 
 FetchContent_MakeAvailable(prometheus-cpp)
