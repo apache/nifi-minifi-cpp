@@ -567,7 +567,7 @@ void FlowController::loadMetricsPublisher() {
       logger_->log_error("Configured metrics publisher class \"%s\" is not a metrics publisher.", *metrics_publisher_class);
       return;
     }
-    metrics_publisher_->initialize(configuration_, &response_node_loader_, root_.get());
+    metrics_publisher_->initialize(configuration_, response_node_loader_, root_.get());
   }
 }
 

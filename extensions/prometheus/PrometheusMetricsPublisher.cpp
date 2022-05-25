@@ -14,15 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "PrometheusMetricsPublisher.h"
 
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
+#include "PrometheusMetricsExposer.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
-PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid) : CoreComponent(name, uuid) {}
+PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid, std::unique_ptr<MetricsExposer> exposer)
+  : CoreComponent(name, uuid),
+    exposer_(std::move(exposer)) {}
 
 PrometheusMetricsPublisher::~PrometheusMetricsPublisher() {
   if (!flow_change_callback_uuid_.isNil() && response_node_loader_) {
@@ -30,17 +32,17 @@ PrometheusMetricsPublisher::~PrometheusMetricsPublisher() {
   }
 }
 
-void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader* response_node_loader, core::ProcessGroup* root) {
-  gsl_Expects(configuration && response_node_loader);
+void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) {
+  gsl_Expects(configuration);
   configuration_ = configuration;
-  response_node_loader_ = response_node_loader;
-  auto port = readPort();
-  logger_->log_info("Starting Prometheus metrics publisher on port %u", port);
-  exposer_ = std::make_unique<::prometheus::Exposer>(std::to_string(port));
+  response_node_loader_ = &response_node_loader;
+  if (!exposer_) {
+    exposer_ = std::make_unique<PrometheusMetricsExposer>(readPort());
+  }
   registerCollectables(root);
   flow_change_callback_uuid_ = response_node_loader_->registerFlowChangeCallback([this](core::ProcessGroup* root) {
     for (const auto& collection : gauge_collections_) {
-      exposer_->RemoveCollectable(collection);
+      exposer_->removeMetric(collection);
     }
     gauge_collections_.clear();
     registerCollectables(root);
@@ -76,7 +78,7 @@ void PrometheusMetricsPublisher::registerCollectables(core::ProcessGroup* root) 
 
   for (const auto& metric_node : nodes) {
     gauge_collections_.push_back(std::make_shared<PublishedMetricGaugeCollection>(metric_node));
-    exposer_->RegisterCollectable(gauge_collections_.back());
+    exposer_->registerMetric(gauge_collections_.back());
   }
 }
 

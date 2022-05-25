@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,19 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
-
 #include <memory>
 
-#include "nodes/ResponseNodeLoader.h"
+#include "Catch.h"
+#include "PrometheusMetricsPublisher.h"
 #include "properties/Configure.h"
 
-namespace org::apache::nifi::minifi::state {
+namespace org::apache::nifi::minifi::extensions::prometheus::test {
 
-class MetricsPublisher {
- public:
-  virtual void initialize(const std::shared_ptr<Configure>& configuration, response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) = 0;
-  virtual ~MetricsPublisher() = default;
-};
+TEST_CASE("Test prometheus", "[prometheuspublishertest]") {
+  auto configuration = std::make_shared<Configure>();
+}
 
-}  // namespace org::apache::nifi::minifi::state
+}  // namespace org::apache::nifi::minifi::extensions::prometheus::test

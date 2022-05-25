@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,15 +18,15 @@
 
 #include <memory>
 
-#include "nodes/ResponseNodeLoader.h"
-#include "properties/Configure.h"
+#include "PublishedMetricGaugeCollection.h"
 
-namespace org::apache::nifi::minifi::state {
+namespace org::apache::nifi::minifi::extensions::prometheus {
 
-class MetricsPublisher {
+class MetricsExposer  {
  public:
-  virtual void initialize(const std::shared_ptr<Configure>& configuration, response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) = 0;
-  virtual ~MetricsPublisher() = default;
+  virtual void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) = 0;
+  virtual void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) = 0;
+  virtual ~MetricsExposer() = default;
 };
 
-}  // namespace org::apache::nifi::minifi::state
+}  // namespace org::apache::nifi::minifi::extensions::prometheus

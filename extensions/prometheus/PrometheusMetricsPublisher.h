@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #pragma once
 
 #include <memory>
@@ -23,19 +22,20 @@
 
 #include "core/state/MetricsPublisher.h"
 #include "PublishedMetricGaugeCollection.h"
-#include "prometheus/exposer.h"
 #include "core/Core.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "MetricsExposer.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
 class PrometheusMetricsPublisher : public core::CoreComponent, public state::MetricsPublisher {
  public:
-  explicit PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid = {});
+  explicit PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid = {}, std::unique_ptr<MetricsExposer> exposer = nullptr);
+
   ~PrometheusMetricsPublisher() override;
-  void initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader* response_node_loader, core::ProcessGroup* root) override;
+  void initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) override;
 
  private:
   uint32_t readPort();
@@ -43,7 +43,7 @@ class PrometheusMetricsPublisher : public core::CoreComponent, public state::Met
   void registerCollectables(core::ProcessGroup* root);
 
   std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> gauge_collections_;
-  std::unique_ptr<::prometheus::Exposer> exposer_;
+  std::unique_ptr<MetricsExposer> exposer_;
   std::shared_ptr<Configure> configuration_;
   state::response::ResponseNodeLoader* response_node_loader_ = nullptr;
   utils::Identifier flow_change_callback_uuid_;

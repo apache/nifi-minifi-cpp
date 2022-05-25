@@ -24,8 +24,8 @@ set(ENABLE_COMPRESSION OFF CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
     prometheus-cpp
-    URL "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.0.0.tar.gz"
-    URL_HASH "SHA256=07018db604ea3e61f5078583e87c80932ea10c300d979061490ee1b7dc8e3a41"
+    URL "https://github.com/jupp0r/prometheus-cpp/archive/refs/tags/v1.0.1.tar.gz"
+    URL_HASH "SHA256=593e028d401d3298eada804d252bc38d8cab3ea1c9e88bcd72095281f85e6d16"
     UPDATE_COMMAND git submodule update --init
 )
 

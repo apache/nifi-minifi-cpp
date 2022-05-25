@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -17,17 +16,23 @@
  */
 #pragma once
 
-#include <memory>
+#include "MetricsExposer.h"
 
-#include "nodes/ResponseNodeLoader.h"
-#include "properties/Configure.h"
+#include "prometheus/exposer.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
-namespace org::apache::nifi::minifi::state {
+namespace org::apache::nifi::minifi::extensions::prometheus {
 
-class MetricsPublisher {
+class PrometheusMetricsExposer : public MetricsExposer  {
  public:
-  virtual void initialize(const std::shared_ptr<Configure>& configuration, response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) = 0;
-  virtual ~MetricsPublisher() = default;
+  PrometheusMetricsExposer(uint32_t port);
+  void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
+  void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
+
+ private:
+  ::prometheus::Exposer exposer_;
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusMetricsExposer>::getLogger()};
 };
 
-}  // namespace org::apache::nifi::minifi::state
+}  // namespace org::apache::nifi::minifi::extensions::prometheus
