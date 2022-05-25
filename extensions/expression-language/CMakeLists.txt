@@ -106,7 +106,7 @@ endif()
 add_library(minifi-expression-language-extensions SHARED ${SOURCES} ${BISON_el-parser_OUTPUTS} ${FLEX_el-scanner_OUTPUTS})
 
 target_link_libraries(minifi-expression-language-extensions ${LIBMINIFI})
-target_link_libraries(minifi-expression-language-extensions date::tz RapidJSON CURL::libcurl)
+target_link_libraries(minifi-expression-language-extensions RapidJSON CURL::libcurl)
 
 register_extension(minifi-expression-language-extensions "EXPRESSION LANGUAGE EXTENSIONS" EXPRESSION-LANGUAGE-EXTENSIONS "This enables NiFi expression language" "extensions/expression-language/tests")
 register_extension_linter(minifi-expression-language-extensions-linter)
