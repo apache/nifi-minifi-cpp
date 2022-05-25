@@ -19,6 +19,7 @@
 #include <asm-generic/param.h>
 #include <istream>
 #include <chrono>
+#include "utils/TimeUtil.h"  // for libc++ duration operator<=> workaround
 
 namespace org::apache::nifi::minifi::extensions::procfs {
 

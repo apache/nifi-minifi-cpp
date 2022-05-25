@@ -34,12 +34,7 @@ class CpuStatData {
  public:
   static std::optional<CpuStatData> parseCpuStatLine(std::istream& iss);
 
-  bool operator<=(const CpuStatData& rhs) const;
-  bool operator>(const CpuStatData& rhs) const;
-  bool operator>=(const CpuStatData& rhs) const;
-  bool operator<(const CpuStatData& rhs) const;
-  bool operator==(const CpuStatData& rhs) const;
-  bool operator!=(const CpuStatData& rhs) const;
+  auto operator<=>(const CpuStatData& rhs) const = default;
   CpuStatData operator-(const CpuStatData& rhs) const;
 
   [[nodiscard]] SystemClockDuration getUser() const noexcept { return user_; }

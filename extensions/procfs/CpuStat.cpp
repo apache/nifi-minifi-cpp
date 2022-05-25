@@ -29,57 +29,6 @@ std::optional<CpuStatData> CpuStatData::parseCpuStatLine(std::istream& iss) {
   return data;
 }
 
-bool CpuStatData::operator<=(const CpuStatData& rhs) const {
-  return user_ <= rhs.user_ &&
-    nice_ <= rhs.nice_ &&
-    system_ <= rhs.system_ &&
-    idle_ <= rhs.idle_ &&
-    io_wait_ <= rhs.io_wait_ &&
-    irq_ <= rhs.irq_ &&
-    soft_irq_ <= rhs.soft_irq_ &&
-    steal_ <= rhs.steal_ &&
-    guest_ <= rhs.guest_ &&
-    guest_nice_ <= rhs.guest_nice_;
-}
-
-bool CpuStatData::operator>(const CpuStatData& rhs) const {
-  return !(*this <= rhs);
-}
-
-bool CpuStatData::operator>=(const CpuStatData& rhs) const {
-  return user_ >= rhs.user_ &&
-    nice_ >= rhs.nice_ &&
-    system_ >= rhs.system_ &&
-    idle_ >= rhs.idle_ &&
-    io_wait_ >= rhs.io_wait_ &&
-    irq_ >= rhs.irq_ &&
-    soft_irq_ >= rhs.soft_irq_ &&
-    steal_ >= rhs.steal_ &&
-    guest_ >= rhs.guest_ &&
-    guest_nice_ >= rhs.guest_nice_;
-}
-
-bool CpuStatData::operator<(const CpuStatData& rhs) const {
-  return !(*this >= rhs);
-}
-
-bool CpuStatData::operator==(const CpuStatData& rhs) const {
-  return user_ == rhs.user_ &&
-    nice_ == rhs.nice_ &&
-    system_ == rhs.system_ &&
-    idle_ == rhs.idle_ &&
-    io_wait_ == rhs.io_wait_ &&
-    irq_ == rhs.irq_ &&
-    soft_irq_ == rhs.soft_irq_ &&
-    steal_ == rhs.steal_ &&
-    guest_ == rhs.guest_ &&
-    guest_nice_ == rhs.guest_nice_;
-}
-
-bool CpuStatData::operator!=(const CpuStatData& rhs) const {
-  return !(*this == rhs);
-}
-
 CpuStatData CpuStatData::operator-(const CpuStatData& rhs) const {
   CpuStatData result;
   result.user_ = user_ - rhs.user_;
