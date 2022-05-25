@@ -36,6 +36,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
 #include "core/logging/internal/LogCompressorSink.h"
+#include "core/logging/alert/AlertSink.h"
 #include "utils/Literals.h"
 #include "core/TypedValues.h"
 
@@ -108,6 +109,8 @@ LoggerConfiguration& LoggerConfiguration::getConfiguration() {
 
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
   std::lock_guard<std::mutex> lock(mutex);
+  alert_sink_ = std::make_shared<AlertSink>(logger_properties, logger_);
+  logger_properties->add_sink("alert", alert_sink_);
   root_namespace_ = initialize_namespaces(logger_properties);
   initializeCompression(lock, logger_properties);
   std::string spdlog_pattern;

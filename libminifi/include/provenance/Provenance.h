@@ -36,7 +36,7 @@
 #include "properties/Configure.h"
 #include "Connection.h"
 #include "FlowFileRecord.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "ResourceClaim.h"
 #include "utils/gsl.h"
 #include "utils/Id.h"

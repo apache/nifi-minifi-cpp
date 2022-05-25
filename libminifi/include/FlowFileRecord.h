@@ -34,7 +34,7 @@
 #include "io/BaseStream.h"
 #include "core/FlowFile.h"
 #include "utils/TimeUtil.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "ResourceClaim.h"
 #include "Connection.h"
 #include "io/OutputStream.h"

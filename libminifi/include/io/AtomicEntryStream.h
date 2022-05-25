@@ -27,7 +27,7 @@
 #include "BaseStream.h"
 #include "core/repository/AtomicRepoEntries.h"
 #include "Exception.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/gsl.h"
 
 namespace org {

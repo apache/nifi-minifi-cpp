@@ -33,7 +33,7 @@
 #include "core/repository/FileSystemRepository.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/controller/ControllerServiceLookup.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "controllers/keyvalue/AbstractAutoPersistingKeyValueStoreService.h"
 #include "ProcessorNode.h"
 #include "core/Repository.h"

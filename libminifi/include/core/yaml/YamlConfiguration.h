@@ -24,7 +24,7 @@
 #include <unordered_set>
 
 #include "core/FlowConfiguration.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/ProcessorConfig.h"
 #include "Exception.h"
 #include "io/StreamFactory.h"

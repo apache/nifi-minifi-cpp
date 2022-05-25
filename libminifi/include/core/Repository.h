@@ -34,7 +34,7 @@
 #include "core/ContentRepository.h"
 #include "core/SerializableComponent.h"
 #include "properties/Configure.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Property.h"
 #include "ResourceClaim.h"
 #include "utils/TimeUtil.h"

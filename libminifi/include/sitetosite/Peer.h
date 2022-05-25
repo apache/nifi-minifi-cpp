@@ -27,7 +27,7 @@
 #include <string>
 #include <utility>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Property.h"
 #include "io/BaseStream.h"
 #include "io/ClientSocket.h"

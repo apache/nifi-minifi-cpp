@@ -23,7 +23,7 @@
 #include "utils/StringUtils.h"
 #include "io/validation.h"
 #include "core/controller/ControllerService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/state/UpdatePolicy.h"
 #include "utils/Export.h"
 

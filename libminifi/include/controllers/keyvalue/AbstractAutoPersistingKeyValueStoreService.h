@@ -26,7 +26,7 @@
 #include "core/Core.h"
 #include "properties/Configure.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
 
 namespace org::apache::nifi::minifi::controllers {

@@ -70,7 +70,7 @@
 
 #endif
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/StringUtils.h"
 #include "utils/file/PathUtils.h"
 #include "utils/gsl.h"

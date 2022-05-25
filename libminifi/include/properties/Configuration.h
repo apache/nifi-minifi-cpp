@@ -154,6 +154,15 @@ class Configuration : public Properties {
   static constexpr const char *nifi_log_compression_cached_log_max_size = "nifi.log.compression.cached.log.max.size";
   static constexpr const char *nifi_log_compression_compressed_log_max_size = "nifi.log.compression.compressed.log.max.size";
 
+  // alert options
+  static constexpr const char *nifi_log_alert_url = "nifi.log.alert.url";
+  static constexpr const char *nifi_log_alert_ssl_context_service = "nifi.log.alert.ssl.context.service";
+  static constexpr const char *nifi_log_alert_batch_size = "nifi.log.alert.batch.size";
+  static constexpr const char *nifi_log_alert_flush_period = "nifi.log.alert.flush.period";
+  static constexpr const char *nifi_log_alert_filter = "nifi.log.alert.filter";
+  static constexpr const char *nifi_log_alert_rate_limit = "nifi.log.alert.rate.limit";
+  static constexpr const char *nifi_log_alert_buffer_limit = "nifi.log.alert.buffer.limit";
+
   static constexpr const char *nifi_asset_directory = "nifi.asset.directory";
 
   // Metrics publisher options

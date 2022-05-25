@@ -21,7 +21,7 @@
 #include <memory>
 #include <vector>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "yaml-cpp/yaml.h"
 
 namespace org {

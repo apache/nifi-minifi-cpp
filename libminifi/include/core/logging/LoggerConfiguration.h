@@ -37,6 +37,8 @@
 #include "core/logging/Logger.h"
 #include "LoggerProperties.h"
 #include "internal/CompressionManager.h"
+#include "core/logging/LoggerFactory.h"
+#include "alert/AlertSink.h"
 
 class LoggerTestAccessor;
 
@@ -96,6 +98,11 @@ class LoggerConfiguration {
     return getCompressedLog(std::chrono::milliseconds{0}, flush);
   }
 
+  std::shared_ptr<AlertSink> getAlertSink() {
+    std::lock_guard<std::mutex> guard(mutex);
+    return alert_sink_;
+  }
+
   template<class Rep, class Period>
   static std::unique_ptr<io::InputStream> getCompressedLog(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
     return getConfiguration().compression_manager_.getCompressedLog(time, flush);
@@ -149,24 +156,8 @@ class LoggerConfiguration {
   std::mutex mutex;
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
+  std::shared_ptr<AlertSink> alert_sink_;
   bool shorten_names_;
-};
-
-template<typename T>
-class LoggerFactory {
- public:
-  /**
-   * Gets an initialized logger for the template class.
-   */
-  static std::shared_ptr<Logger> getLogger() {
-    static std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(core::getClassName<T>());
-    return logger;
-  }
-
-  static std::shared_ptr<Logger> getAliasedLogger(const std::string &alias) {
-    std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(alias);
-    return logger;
-  }
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging

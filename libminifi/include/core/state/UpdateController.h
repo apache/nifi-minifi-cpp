@@ -25,6 +25,7 @@
 #include <map>
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
+#include "io/InputStream.h"
 
 namespace org {
 namespace apache {

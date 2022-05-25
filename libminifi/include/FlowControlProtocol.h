@@ -32,7 +32,7 @@
 #include <thread>
 #include <vector>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Property.h"
 #include "properties/Configure.h"
 #include "utils/file/FileUtils.h"

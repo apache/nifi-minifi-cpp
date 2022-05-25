@@ -32,7 +32,7 @@
 #include <unistd.h>
 #endif
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "io/BaseStream.h"
 #include "io/EndianCheck.h"
 

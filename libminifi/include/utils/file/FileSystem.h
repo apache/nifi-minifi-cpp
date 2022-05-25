@@ -21,7 +21,7 @@
 #include <optional>
 #include <string>
 #include "utils/crypto/EncryptionProvider.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org {
 namespace apache {
