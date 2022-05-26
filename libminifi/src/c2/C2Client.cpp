@@ -109,6 +109,17 @@ std::optional<std::string> C2Client::fetchFlow(const std::string& uri) const {
   return c2_agent_->fetchFlow(uri);
 }
 
+void C2Client::loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node) {
+  auto classes = utils::StringUtils::split(class_definitions, ",");
+  for (const std::string& clazz : classes) {
+    auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
+    if (!response_node) {
+      continue;
+    }
+    std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
+  }
+}
+
 void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
   std::string class_definitions;
   if (!configuration_->get(prefix, class_definitions)) {
@@ -129,17 +140,10 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       }
       std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
       if (configuration_->get(classOption, class_definitions)) {
-        std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-        for (const std::string& clazz : classes) {
-          auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
-          if (!response_node) {
-            continue;
-          }
-          std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
-        }
+        loadNodeClasses(class_definitions, new_node);
       } else {
         std::string optionName = option + "." + name;
-        auto node = loadC2ResponseConfiguration(optionName, new_node);
+        loadC2ResponseConfiguration(optionName, new_node);
       }
 
       std::lock_guard<std::mutex> guard{metrics_mutex_};
@@ -178,15 +182,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
         }
       } else {
         if (configuration_->get(classOption, class_definitions)) {
-          std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-          for (const std::string& clazz : classes) {
-            auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
-            if (!response_node) {
-              continue;
-            }
-            std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
-          }
-
+          loadNodeClasses(class_definitions, new_node);
           if (!new_node->isEmpty()) {
             std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
           }

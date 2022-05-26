@@ -67,6 +67,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   void loadC2ResponseConfiguration(const std::string &prefix);
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
   void initializeResponseNodes(core::ProcessGroup* root);
+  void loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node);
 
  protected:
   std::shared_ptr<Configure> configuration_;
