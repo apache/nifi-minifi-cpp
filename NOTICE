@@ -67,6 +67,7 @@ This software includes third party software subject to the following copyrights:
 - nlohmann json - Copyright (c) 2013-2022 Niels Lohmann
 - abseil-cpp - Google Inc.
 - crc32c - Google Inc., Fangming Fang, Vadim Skipin, Rodrigo Tobar, Harry Mallon
+- prometheus-cpp - Copyright (c) 2016-2021 Jupp Mueller, Copyright (c) 2017-2022 Gregor Jasny
 
 The licenses for these third party components are included in LICENSE.txt
 
