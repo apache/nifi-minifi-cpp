@@ -95,7 +95,7 @@ TEST_CASE("SchedulingAgentTests", "[SchedulingAgent]") {
   }
 
   SECTION("Cron Driven every year") {
-    count_proc->setCronPeriod("0 0 0 1 1/12 ?");
+    count_proc->setCronPeriod("0 0 0 1 1 ?");
     auto cron_driven_agent = std::make_shared<CronDrivenSchedulingAgent>(gsl::make_not_null(controller_services_provider_.get()), test_repo, test_repo, content_repo, configuration, thread_pool);
     cron_driven_agent->start();
     auto first_task_reschedule_info = cron_driven_agent->run(count_proc.get(), context, factory);
