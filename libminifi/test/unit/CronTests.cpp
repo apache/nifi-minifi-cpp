@@ -41,6 +41,25 @@ TEST_CASE("Cron expression ctor tests", "[cron]") {
   REQUIRE_THROWS(Cron("0 0 24 * * *"));
   REQUIRE_THROWS(Cron("0 0 0 32 * *"));
 
+  REQUIRE_THROWS(Cron("1banana * * * * * *"));
+  REQUIRE_THROWS(Cron("* 1banana * * * * *"));
+  REQUIRE_THROWS(Cron("* * 1banana * * * *"));
+  REQUIRE_THROWS(Cron("* * * 1banana * * *"));
+  REQUIRE_THROWS(Cron("* * * * 1banana * *"));
+  REQUIRE_THROWS(Cron("* * * * DECbanana * *"));
+  REQUIRE_THROWS(Cron("* * * * * WEDbanana *"));
+
+  REQUIRE_THROWS(Cron("* * * * * * 1banana"));
+  REQUIRE_THROWS(Cron("* * * * * * 2000banana"));
+
+  REQUIRE_THROWS(Cron("1G * * * * * *"));
+  REQUIRE_THROWS(Cron("* 1G * * * * *"));
+  REQUIRE_THROWS(Cron("* * 1G * * * *"));
+  REQUIRE_THROWS(Cron("* * * 1G * * *"));
+  REQUIRE_THROWS(Cron("* * * * 1G * *"));
+  REQUIRE_THROWS(Cron("* * * * * 1G *"));
+  REQUIRE_THROWS(Cron("* * * * * * 1G"));
+
   // Number of fields must be 6 or 7
   REQUIRE_THROWS(Cron("* * * * *"));
   REQUIRE_NOTHROW(Cron("* * * * * *"));
@@ -371,6 +390,10 @@ TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   checkNext("0 0 0 31W * ? *",
             sys_days(2022_y / 07 / 15) + 00h + 00min + 00s,
             sys_days(2022_y / 07 / 29) + 00h + 00min + 00s);
+
+  checkNext("0 15 10 ? * 6L",
+            sys_days(2022_y / 07 / 15) + 00h + 00min + 00s,
+            sys_days(2022_y / 07 / 29) + 10h + 15min + 00s);
 }
 
 TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
@@ -642,5 +665,15 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
     checkNext("0 0 0 31W * ? *",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 02 / 01) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 03 / 31) + 00h + 00min + 00s));
+    checkNext("0 0 0 1W * ? *",
+              make_zoned(locate_zone(time_zone), local_days(2021_y / 12 / 15) + 00h + 00min + 00s),
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 01 / 03) + 00h + 00min + 00s));
+    checkNext("0 0 0 31W * ? *",
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 15) + 00h + 00min + 00s),
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 29) + 00h + 00min + 00s));
+
+    checkNext("0 15 10 ? * 6L",
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 15) + 00h + 00min + 00s),
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 29) + 10h + 15min + 00s));
   }
 }

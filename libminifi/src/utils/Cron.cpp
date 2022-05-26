@@ -16,6 +16,7 @@
  */
 
 #include "utils/Cron.h"
+#include <charconv>
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "date/date.h"
@@ -44,6 +45,16 @@ using date::Friday; using date::Saturday; using date::Sunday;
 namespace org::apache::nifi::minifi::utils {
 namespace {
 
+template<class T>
+std::optional<T> fromChars(const std::string& input) {
+  T t;
+  const auto last_char = &*std::cend(input);
+  const auto result = std::from_chars(&*std::cbegin(input), last_char, t);
+  if (result.ptr != last_char)
+    return std::nullopt;
+  return t;
+}
+
 bool operator<=(const weekday& lhs, const weekday& rhs) {
   return lhs.c_encoding() <= rhs.c_encoding();
 }
@@ -53,38 +64,36 @@ FieldType parse(const std::string&);
 
 template <>
 seconds parse<seconds>(const std::string& second_str) {
-  auto sec_int = std::stoul(second_str);
-  if (sec_int <= 59)
-    return seconds(sec_int);
+  if (auto sec_int = fromChars<uint64_t>(second_str); sec_int && *sec_int <= 59)
+    return seconds(*sec_int);
   throw BadCronExpression("Invalid second " + second_str);
 }
 
 template <>
 minutes parse<minutes>(const std::string& minute_str) {
-  auto min_int = std::stoul(minute_str);
-  if (min_int <= 59)
-    return minutes(min_int);
+  if (auto min_int = fromChars<uint64_t>(minute_str); min_int && *min_int <= 59)
+    return minutes(*min_int);
   throw BadCronExpression("Invalid minute " + minute_str);
 }
 
 template <>
 hours parse<hours>(const std::string& hour_str) {
-  auto hour_int = std::stoul(hour_str);
-  if (hour_int <= 23)
-    return hours(hour_int);
+  if (auto hour_int = fromChars<uint64_t>(hour_str); hour_int && *hour_int <= 23)
+    return hours(*hour_int);
   throw BadCronExpression("Invalid hour " + hour_str);
 }
 
 template <>
 days parse<days>(const std::string& days_str) {
-  return days(std::stoul(days_str));
+  if (auto days_int = fromChars<uint64_t>(days_str))
+    return days(*days_int);
+  throw BadCronExpression("Invalid days " + days_str);
 }
 
 template <>
 day parse<day>(const std::string& day_str) {
-  auto day_int = std::stoul(day_str);
-  if (day_int >= 1 && day_int <= 31)
-    return day(day_int);
+  if (auto day_int = fromChars<uint64_t>(day_str); day_int && day_int >= 1 && day_int <= 31)
+    return day(*day_int);
   throw BadCronExpression("Invalid day " + day_str);
 }
 
@@ -107,11 +116,11 @@ month parse<month>(const std::string& month_str) {
   month parsed_month{};
   if (month_str.size() > 2) {
     from_stream(stream, "%b", parsed_month);
-    if (parsed_month.ok())
+    if (!stream.fail() && parsed_month.ok() && stream.peek() == EOF)
       return parsed_month;
   } else {
     from_stream(stream, "%m", parsed_month);
-    if (parsed_month.ok())
+    if (!stream.fail() && parsed_month.ok() && stream.peek() == EOF)
       return parsed_month;
   }
 
@@ -126,12 +135,12 @@ weekday parse<weekday>(const std::string& weekday_str) {
   if (weekday_str.size() > 2) {
     weekday parsed_weekday{};
     from_stream(stream, "%a", parsed_weekday);
-    if (parsed_weekday.ok())
+    if (!stream.fail() && parsed_weekday.ok() && stream.peek() == EOF)
       return parsed_weekday;
   } else {
     unsigned weekday_num;
     stream >> weekday_num;
-    if (!stream.bad() && weekday_num < 7)
+    if (!stream.fail() && weekday_num < 7 && stream.peek() == EOF)
       return weekday(weekday_num-1);
   }
   throw BadCronExpression("Invalid weekday: " + weekday_str);
@@ -139,9 +148,8 @@ weekday parse<weekday>(const std::string& weekday_str) {
 
 template <>
 year parse<year>(const std::string& year_str) {
-  auto year_int = std::stoi(year_str);
-  if (year_int >= 1970 && year_int <= 2099)
-    return year(year_int);
+  if (auto year_int = fromChars<uint64_t>(year_str); year_int && *year_int >= 1970 && *year_int <= 2999)
+    return year(*year_int);
   throw BadCronExpression("Invalid year: " + year_str);
 }
 
@@ -286,7 +294,7 @@ class LastNthDayInMonthField : public CronField {
 
 class NthWeekdayField : public CronField {
  public:
-  NthWeekdayField(weekday weekday, uint8_t n) : weekday_(weekday), n_(n) {}
+  NthWeekdayField(weekday wday, uint8_t n) : weekday_(wday), n_(n) {}
 
   [[nodiscard]] bool matches(local_seconds tp) const override {
     year_month_day date(floor<days>(tp));
@@ -311,6 +319,19 @@ class LastWeekDayField : public CronField {
     year_month_day last_friday_of_the_month_date = year_month_day(local_days(date.year()/date.month()/Friday[last]));
     return date == last_friday_of_the_month_date;
   }
+};
+
+class LastSpecificDayOfTheWeekOfTheMonth : public CronField {
+ public:
+  explicit LastSpecificDayOfTheWeekOfTheMonth(weekday wday) : weekday_(wday) {}
+
+  [[nodiscard]] bool matches(local_seconds value) const override {
+    year_month_day date(floor<days>(value));
+    year_month_day last_weekday_of_month_date = year_month_day(local_days(date.year()/date.month()/weekday_[last]));
+    return date == last_weekday_of_month_date;
+  }
+ private:
+  weekday weekday_;
 };
 
 class ClosestWeekdayToTheNthDayOfTheMonth : public CronField {
@@ -357,13 +378,6 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
       return std::make_unique<LastWeekDayField>();
     }
 
-    if (field_str.find('L') != std::string::npos) {
-      auto operands = StringUtils::split(field_str, "L");
-      if (operands.size() != 2)
-        throw BadCronExpression("Invalid field " + field_str);
-    }
-
-
     if (field_str.find('#') != std::string::npos) {
       if (!std::is_same<weekday, FieldType>())
         throw BadCronExpression("# can only be used in the Day of week field");
@@ -371,7 +385,8 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
 
-      return std::make_unique<NthWeekdayField>(parse<weekday>(operands[0]), std::stoi(operands[1]));
+      if (auto second_operand = fromChars<uint64_t>(operands[1]))
+        return std::make_unique<NthWeekdayField>(parse<weekday>(operands[0]), *second_operand);
     }
 
     if (field_str.find('-') != std::string::npos) {
@@ -385,13 +400,21 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
       return std::make_unique<RangeField<FieldType>>(parse<FieldType>(operands[0]), parse<FieldType>(operands[1]));
     }
 
+    if (field_str.ends_with('L')) {
+      if (!std::is_same<weekday, FieldType>())
+        throw BadCronExpression("<X>L can only be used in the Day of week field");
+      auto prefix = field_str.substr(0, field_str.size()-1);
+      return std::make_unique<LastSpecificDayOfTheWeekOfTheMonth>(parse<weekday>(prefix));
+    }
+
     if (field_str.find('/') != std::string::npos) {
       auto operands = StringUtils::split(field_str, "/");
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
       if (operands[0] == "*")
         operands[0] = "0";
-      return std::make_unique<IncrementField<FieldType>>(parse<FieldType>(operands[0]), std::stoi(operands[1]));
+      if (auto second_operand = fromChars<int>(operands[1]))
+        return std::make_unique<IncrementField<FieldType>>(parse<FieldType>(operands[0]), *second_operand);
     }
 
     if (field_str.find(',') != std::string::npos) {
