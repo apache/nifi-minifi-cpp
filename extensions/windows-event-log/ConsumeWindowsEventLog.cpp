@@ -320,7 +320,7 @@ void ConsumeWindowsEventLog::onSchedule(const std::shared_ptr<core::ProcessConte
   }
 
   context->getProperty(MaxBufferSize.getName(), maxBufferSize_);
-  logger_->log_debug("ConsumeWindowsEventLog: maxBufferSize_ %" PRIu64, maxBufferSize_);
+  logger_->log_debug("ConsumeWindowsEventLog: MaxBufferSize %" PRIu64, maxBufferSize_);
 
   provenanceUri_ = "winlog://" + computerName_ + "/" + channel_ + "?" + query;
   logger_->log_trace("Successfully configured CWEL");
