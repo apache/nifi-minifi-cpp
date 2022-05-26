@@ -39,7 +39,7 @@ class CronField {
  public:
   virtual ~CronField() = default;
 
-  [[nodiscard]] virtual bool isValid(date::local_seconds time_point) const = 0;
+  [[nodiscard]] virtual bool matches(date::local_seconds time_point) const = 0;
 };
 
 class Cron {

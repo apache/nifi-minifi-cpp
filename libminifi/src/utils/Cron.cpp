@@ -203,7 +203,7 @@ class SingleValueField : public CronField {
  public:
   explicit SingleValueField(FieldType value) : value_(value) {}
 
-  [[nodiscard]] bool isValid(local_seconds time_point) const override {
+  [[nodiscard]] bool matches(local_seconds time_point) const override {
     return value_ == getFieldType<FieldType>(time_point);
   }
 
@@ -215,14 +215,14 @@ class NotCheckedField : public CronField {
  public:
   NotCheckedField() = default;
 
-  [[nodiscard]] bool isValid(local_seconds) const override { return true; }
+  [[nodiscard]] bool matches(local_seconds) const override { return true; }
 };
 
 class AllValuesField : public CronField {
  public:
   AllValuesField() = default;
 
-  [[nodiscard]] bool isValid(local_seconds) const override { return true; }
+  [[nodiscard]] bool matches(local_seconds) const override { return true; }
 };
 
 template <typename FieldType>
@@ -233,7 +233,7 @@ class RangeField : public CronField {
         upper_bound_(std::move(upper_bound)) {
   }
 
-  [[nodiscard]] bool isValid(local_seconds value) const override {
+  [[nodiscard]] bool matches(local_seconds value) const override {
     return lower_bound_ <= getFieldType<FieldType>(value) && getFieldType<FieldType>(value) <= upper_bound_;
   }
 
@@ -247,7 +247,7 @@ class ListField : public CronField {
  public:
   explicit ListField(std::vector<FieldType> valid_values) : valid_values_(std::move(valid_values)) {}
 
-  [[nodiscard]] bool isValid(local_seconds value) const override {
+  [[nodiscard]] bool matches(local_seconds value) const override {
     return std::find(valid_values_.begin(), valid_values_.end(), getFieldType<FieldType>(value)) != valid_values_.end();
   }
 
@@ -260,7 +260,7 @@ class IncrementField : public CronField {
  public:
   IncrementField(FieldType start, int increment) : start_(start), increment_(increment) {}
 
-  [[nodiscard]] bool isValid(local_seconds value) const override {
+  [[nodiscard]] bool matches(local_seconds value) const override {
     return (getFieldType<FieldType>(value) - start_).count() % increment_ == 0;
   }
 
@@ -273,7 +273,7 @@ class LastNthDayInMonthField : public CronField {
  public:
   explicit LastNthDayInMonthField(days offset) : offset_(offset) {}
 
-  [[nodiscard]] bool isValid(local_seconds tp) const override {
+  [[nodiscard]] bool matches(local_seconds tp) const override {
     year_month_day date(floor<days>(tp));
     auto last_day = date.year()/date.month()/last;
     auto target_date = local_days(last_day)-offset_;
@@ -288,7 +288,7 @@ class NthWeekdayField : public CronField {
  public:
   NthWeekdayField(weekday weekday, uint8_t n) : weekday_(weekday), n_(n) {}
 
-  [[nodiscard]] bool isValid(local_seconds tp) const override {
+  [[nodiscard]] bool matches(local_seconds tp) const override {
     year_month_day date(floor<days>(tp));
     auto target_date = date.year()/date.month()/(weekday_[n_]);
     return local_days(date) == local_days(target_date);
@@ -303,7 +303,7 @@ class LastWeekDayField : public CronField {
  public:
   LastWeekDayField() = default;
 
-  [[nodiscard]] bool isValid(local_seconds value) const override {
+  [[nodiscard]] bool matches(local_seconds value) const override {
     year_month_day date(floor<days>(value));
     year_month_day last_day_of_the_month_date = year_month_day(local_days(date.year()/date.month()/last));
     if (isWeekday(last_day_of_the_month_date))
@@ -313,58 +313,48 @@ class LastWeekDayField : public CronField {
   }
 };
 
-class ClosestWeekdayToX : public CronField {
+class ClosestWeekdayToTheNthDayOfTheMonth : public CronField {
  public:
-  explicit ClosestWeekdayToX(day x) : x_(x) {}
+  explicit ClosestWeekdayToTheNthDayOfTheMonth(day day_number) : day_number_(day_number) {}
 
-  [[nodiscard]] bool isValid(local_seconds value) const override {
+  [[nodiscard]] bool matches(local_seconds value) const override {
     year_month_day date(floor<days>(value));
-    year_month_day target_date = year_month_day(local_days(date.year()/date.month()/x_));
-    if (target_date.ok() && isWeekday(target_date))
-      return target_date == date;
-
-    target_date = year_month_day(local_days(date.year()/date.month()/(x_-days(1))));
-    if (target_date.ok() && isWeekday(target_date))
-      return target_date == date;
-
-    target_date = year_month_day(local_days(date.year()/date.month()/(x_+days(1))));
-    if (target_date.ok() && isWeekday(target_date))
-      return target_date == date;
-
-    target_date = year_month_day(local_days(date.year()/date.month()/(x_+days(2))));
-    if (target_date.ok() && isWeekday(target_date))
-      return target_date == date;
+    for (auto diff : {0, -1, 1, -2, 2}) {
+      auto target_date = date.year() / date.month() / (day_number_ + days(diff));
+      if (target_date.ok() && isWeekday(target_date))
+        return target_date == date;
+    }
 
     return false;
   }
 
  private:
-  day x_;
+  day day_number_;
 };
 
 template <typename FieldType>
-CronField* parseCronField(const std::string& field_str) {
+std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
   try {
     if (field_str == "*") {
-      return new AllValuesField();
+      return std::make_unique<AllValuesField>();
     }
 
     if (field_str == "?") {
-      return new NotCheckedField();
+      return std::make_unique<NotCheckedField>();
     }
 
     if (field_str == "L") {
       if (std::is_same<day, FieldType>())
-        return new LastNthDayInMonthField(days(0));
+        return std::make_unique<LastNthDayInMonthField>(days(0));
       if (std::is_same<weekday, FieldType>())
-        return new SingleValueField(Saturday);
+        return std::make_unique<SingleValueField<weekday>>(Saturday);
       throw BadCronExpression("L can only be used in the Day of month/Day of week fields");
     }
 
     if (field_str == "LW") {
       if (!std::is_same<day, FieldType>())
         throw BadCronExpression("LW can only be used in the Day of month field");
-      return new LastWeekDayField();
+      return std::make_unique<LastWeekDayField>();
     }
 
     if (field_str.find('L') != std::string::npos) {
@@ -381,7 +371,7 @@ CronField* parseCronField(const std::string& field_str) {
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
 
-      return new NthWeekdayField(parse<weekday>(operands[0]), std::stoi(operands[1]));
+      return std::make_unique<NthWeekdayField>(parse<weekday>(operands[0]), std::stoi(operands[1]));
     }
 
     if (field_str.find('-') != std::string::npos) {
@@ -390,9 +380,9 @@ CronField* parseCronField(const std::string& field_str) {
         throw BadCronExpression("Invalid field " + field_str);
       if (operands[0] == "L") {
         if (std::is_same<day, FieldType>())
-          return new LastNthDayInMonthField(parse<days>(operands[1]));
+          return std::make_unique<LastNthDayInMonthField>(parse<days>(operands[1]));
       }
-      return new RangeField(parse<FieldType>(operands[0]), parse<FieldType>(operands[1]));
+      return std::make_unique<RangeField<FieldType>>(parse<FieldType>(operands[0]), parse<FieldType>(operands[1]));
     }
 
     if (field_str.find('/') != std::string::npos) {
@@ -401,14 +391,14 @@ CronField* parseCronField(const std::string& field_str) {
         throw BadCronExpression("Invalid field " + field_str);
       if (operands[0] == "*")
         operands[0] = "0";
-      return new IncrementField(parse<FieldType>(operands[0]), std::stoi(operands[1]));
+      return std::make_unique<IncrementField<FieldType>>(parse<FieldType>(operands[0]), std::stoi(operands[1]));
     }
 
     if (field_str.find(',') != std::string::npos) {
       auto operands_str = StringUtils::split(field_str, ",");
       std::vector<FieldType> operands;
       std::transform(operands_str.begin(), operands_str.end(), std::back_inserter(operands), parse<FieldType>);
-      return new ListField(std::move(operands));
+      return std::make_unique<ListField<FieldType>>(std::move(operands));
     }
 
     if (field_str.ends_with('W')) {
@@ -417,10 +407,10 @@ CronField* parseCronField(const std::string& field_str) {
       auto operands_str = StringUtils::split(field_str, "W");
       if (operands_str.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
-      return new ClosestWeekdayToX(parse<day>(operands_str[0]));
+      return std::make_unique<ClosestWeekdayToTheNthDayOfTheMonth>(parse<day>(operands_str[0]));
     }
 
-    return new SingleValueField<FieldType>(parse<FieldType>(field_str));
+    return std::make_unique<SingleValueField<FieldType>>(parse<FieldType>(field_str));
   } catch (const std::exception& e) {
     throw BadCronExpression("Couldn't parse cron field: " + field_str + " " + e.what());
   }
@@ -433,45 +423,45 @@ Cron::Cron(const std::string& expression) {
   if (tokens.size() != 6 && tokens.size() != 7)
     throw BadCronExpression("malformed cron string (must be 6 or 7 fields): " + expression);
 
-  second_.reset(parseCronField<seconds>(tokens[0]));
-  minute_.reset(parseCronField<minutes>(tokens[1]));
-  hour_.reset(parseCronField<hours>(tokens[2]));
-  day_.reset(parseCronField<day>(tokens[3]));
-  month_.reset(parseCronField<month>(tokens[4]));
-  day_of_week_.reset(parseCronField<weekday>(tokens[5]));
+  second_ = parseCronField<seconds>(tokens[0]);
+  minute_ = parseCronField<minutes>(tokens[1]);
+  hour_ = parseCronField<hours>(tokens[2]);
+  day_ = parseCronField<day>(tokens[3]);
+  month_ = parseCronField<month>(tokens[4]);
+  day_of_week_ = parseCronField<weekday>(tokens[5]);
   if (tokens.size() == 7)
-    year_.reset(parseCronField<year>(tokens[6]));
+    year_ = parseCronField<year>(tokens[6]);
 }
 
 std::optional<local_seconds> Cron::calculateNextTrigger(const local_seconds start) const {
   gsl_Expects(second_ && minute_ && hour_ && day_ && month_ && day_of_week_);
   auto next = timeutils::roundToNextSecond(start);
   while (next < date::local_days((year(2999)/1/1))) {
-    if (year_ && !year_->isValid(next)) {
+    if (year_ && !year_->matches(next)) {
       next = timeutils::roundToNextYear(next);
       continue;
     }
-    if (!month_->isValid(next)) {
+    if (!month_->matches(next)) {
       next = timeutils::roundToNextMonth(next);
       continue;
     }
-    if (!day_->isValid(next)) {
+    if (!day_->matches(next)) {
       next = timeutils::roundToNextDay(next);
       continue;
     }
-    if (!day_of_week_->isValid(next)) {
+    if (!day_of_week_->matches(next)) {
       next = timeutils::roundToNextDay(next);
       continue;
     }
-    if (!hour_->isValid(next)) {
+    if (!hour_->matches(next)) {
       next = timeutils::roundToNextHour(next);
       continue;
     }
-    if (!minute_->isValid(next)) {
+    if (!minute_->matches(next)) {
       next = timeutils::roundToNextMinute(next);
       continue;
     }
-    if (!second_->isValid(next)) {
+    if (!second_->matches(next)) {
       next = timeutils::roundToNextSecond(next);
       continue;
     }

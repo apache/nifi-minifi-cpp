@@ -41,11 +41,8 @@ utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* proces
     auto current_time = date::make_zoned<seconds>(date::current_zone(), time_point_cast<seconds>(system_clock::now()));
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (!schedules_.contains(uuid))
-      schedules_.insert(std::make_pair(uuid, utils::Cron(processor->getCronPeriod())));
-
-    if (!last_exec_.contains(uuid))
-      last_exec_.insert(std::make_pair(uuid, current_time.get_local_time()));
+    schedules_.emplace(uuid, utils::Cron(processor->getCronPeriod()));
+    last_exec_.emplace(uuid, current_time.get_local_time());
 
     auto last_trigger = last_exec_[uuid];
     auto next_to_last_trigger = schedules_.at(uuid).calculateNextTrigger(last_trigger);
