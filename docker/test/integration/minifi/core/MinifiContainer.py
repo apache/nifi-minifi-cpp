@@ -51,7 +51,6 @@ class MinifiContainer(FlowContainer):
             detach=True,
             name=self.name,
             network=self.network.name,
-            ports={'9100/tcp': 9100},
             entrypoint=self.command,
             volumes=self.vols)
         logging.info('Added container \'%s\'', self.name)
