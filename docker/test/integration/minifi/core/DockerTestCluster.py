@@ -350,7 +350,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             self.verify_metric_exists(prom, 'queue_data_size_max', 'FlowInformation') and \
             self.verify_metric_exists(prom, 'queue_size', 'FlowInformation') and \
             self.verify_metric_exists(prom, 'queue_size_max', 'FlowInformation') and \
-            self.verify_metric_exists(prom, 'is_running', 'FlowInformation')
+            self.verify_metric_exists(prom, 'is_running', 'FlowInformation', {'component_name': 'FlowController'})
 
     def verify_device_info_node_metrics(self):
         prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
