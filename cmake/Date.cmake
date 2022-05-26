@@ -28,12 +28,21 @@ if (WIN32)
         FetchContent_Populate(tzdata)
     endif()
 
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tzdata)
+
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
-        DESTINATION ${tzdata_SOURCE_DIR})
+        DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
+
+    file(COPY ${tzdata_SOURCE_DIR}/
+        DESTINATION ${CMAKE_BINARY_DIR}/tzdata)
 
     install(DIRECTORY ${tzdata_SOURCE_DIR}/
         DESTINATION tzdata
-        COMPONENT tzdata)
+        COMPONENT bin)
+
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cldr-common-38.1/common/supplemental/windowsZones.xml
+        DESTINATION tzdata
+        COMPONENT bin)
 endif()
 
 FetchContent_Declare(date_src
@@ -57,7 +66,7 @@ if (NOT date_src_POPULATED)
     target_compile_options(date-tz PRIVATE $<IF:$<CXX_COMPILER_ID:MSVC>,/w,-w>)
     target_compile_definitions(date-tz PRIVATE AUTO_DOWNLOAD=0 HAS_REMOTE_API=0)
     if (WIN32)
-        target_compile_definitions(date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=0 PUBLIC TZ_DATA_DIR="${tzdata_SOURCE_DIR}")
+        target_compile_definitions(date-tz PRIVATE INSTALL=. PUBLIC USE_OS_TZDB=0)
     else()
         target_compile_definitions(date-tz PUBLIC USE_OS_TZDB=1)
     endif()
