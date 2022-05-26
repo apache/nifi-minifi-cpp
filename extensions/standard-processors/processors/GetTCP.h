@@ -117,28 +117,12 @@ class GetTCPMetrics : public state::response::ResponseNode {
 
     resp.push_back(iter);
 
-    state::response::SerializedResponseNode accepted_files;
-    accepted_files.name = "AcceptedFiles";
-    accepted_files.value = (uint32_t)accepted_files_.load();
-
-    resp.push_back(accepted_files);
-
-    state::response::SerializedResponseNode input_bytes;
-    input_bytes.name = "InputBytes";
-    input_bytes.value = (uint32_t)input_bytes_.load();
-
-    resp.push_back(input_bytes);
-
     return resp;
   }
 
   std::vector<state::PublishedMetric> calculateMetrics() override {
     return {
       {"onTrigger_invocations", static_cast<double>(iterations_.load()),
-        {{"metric_class", getName()}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
-      {"accepted_files", static_cast<double>(accepted_files_.load()),
-        {{"metric_class", getName()}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}},
-      {"input_bytes", static_cast<double>(input_bytes_.load()),
         {{"metric_class", getName()}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}}
     };
   }
@@ -148,8 +132,6 @@ class GetTCPMetrics : public state::response::ResponseNode {
 
   const CoreComponent& source_component_;
   std::atomic<size_t> iterations_{0};
-  std::atomic<size_t> accepted_files_{0};
-  std::atomic<size_t> input_bytes_{0};
 };
 
 class GetTCP : public core::Processor, public state::response::MetricsNodeSource {

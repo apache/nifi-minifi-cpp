@@ -554,6 +554,9 @@ Antivirus software can take a long time to scan directories and the files within
 ## Operations
 See our [operations documentation for additional information on how to manage instances](OPS.md)
 
+## Monitoring
+See our [metrics documentation for information about self published metrics](METRICS.md)
+
 ## Issue Tracking
 See https://issues.apache.org/jira/projects/MINIFICPP/issues for the issue tracker.
 

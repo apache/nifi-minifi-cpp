@@ -93,7 +93,7 @@ class MetricsHandler: public HeartbeatHandler {
     VERIFY_UPDATED_METRICS
   };
 
-  void sendEmptyHeartbeatResponse(struct mg_connection* conn) {
+  static void sendEmptyHeartbeatResponse(struct mg_connection* conn) {
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
   }
 
@@ -126,7 +126,7 @@ class MetricsHandler: public HeartbeatHandler {
     }
   }
 
-  bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
+  static bool verifyRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
     return runtime_metrics.HasMember("deviceInfo") &&
       runtime_metrics.HasMember("flowInfo") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
@@ -138,7 +138,7 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute");
   }
 
-  bool verifyUpdatedRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
+  static bool verifyUpdatedRuntimeMetrics(const rapidjson::Value& runtime_metrics) {
     return runtime_metrics.HasMember("deviceInfo") &&
       runtime_metrics.HasMember("flowInfo") &&
       runtime_metrics["flowInfo"].HasMember("versionedFlowSnapshotURI") &&
@@ -150,7 +150,7 @@ class MetricsHandler: public HeartbeatHandler {
       runtime_metrics["flowInfo"]["components"].HasMember("LogAttribute");
   }
 
-  bool verifyLoadMetrics(const rapidjson::Value& load_metrics) {
+  static bool verifyLoadMetrics(const rapidjson::Value& load_metrics) {
     return load_metrics.HasMember("RepositoryMetrics") &&
       load_metrics.HasMember("QueueMetrics") &&
       load_metrics["RepositoryMetrics"].HasMember("ff") &&
@@ -158,7 +158,7 @@ class MetricsHandler: public HeartbeatHandler {
       load_metrics["QueueMetrics"].HasMember("GetTCP/success/LogAttribute");
   }
 
-  bool verifyUpdatedLoadMetrics(const rapidjson::Value& load_metrics) {
+  static bool verifyUpdatedLoadMetrics(const rapidjson::Value& load_metrics) {
     return load_metrics.HasMember("RepositoryMetrics") &&
       load_metrics.HasMember("QueueMetrics") &&
       load_metrics["RepositoryMetrics"].HasMember("ff") &&
@@ -167,13 +167,13 @@ class MetricsHandler: public HeartbeatHandler {
       std::stoi(load_metrics["QueueMetrics"]["GenerateFlowFile/success/LogAttribute"]["queued"].GetString()) > 0;
   }
 
-  bool verifyProcessorMetrics(const rapidjson::Value& processor_metrics) {
+  static bool verifyProcessorMetrics(const rapidjson::Value& processor_metrics) {
     return processor_metrics.HasMember("GetTCPMetrics") &&
       processor_metrics["GetTCPMetrics"].HasMember("OnTriggerInvocations") &&
       processor_metrics["GetTCPMetrics"]["OnTriggerInvocations"].GetUint() > 0;
   }
 
-  std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) const {
+  [[nodiscard]] static std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) {
     std::ifstream is(replacement_config_path);
     auto content = std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
     content = utils::StringUtils::replaceAll(content, "\n", "\\n");

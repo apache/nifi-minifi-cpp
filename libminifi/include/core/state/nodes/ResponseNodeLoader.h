@@ -42,15 +42,15 @@ class ResponseNodeLoader {
   std::shared_ptr<state::response::ResponseNode> getComponentMetricsNode(const std::string& metrics_class) const;
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
-  utils::Identifier registerFlowChangeCallback(const std::function<void(core::ProcessGroup*)> cb);
+  utils::Identifier registerFlowChangeCallback(const std::function<void(core::ProcessGroup*)>& cb);
   void unregisterFlowChangeCallback(const utils::Identifier& uuid);
   void flowChanged(core::ProcessGroup* root);
 
  private:
   void initializeComponentMetrics(core::ProcessGroup* root);
-  std::shared_ptr<ResponseNode> getResponseNode(const std::string& clazz);
+  std::shared_ptr<ResponseNode> getResponseNode(const std::string& clazz) const;
   void initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node);
-  void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
+  static void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
   void initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node);
   void initializeAgentMonitor(const std::shared_ptr<ResponseNode>& response_node);
   void initializeAgentNode(const std::shared_ptr<ResponseNode>& response_node);

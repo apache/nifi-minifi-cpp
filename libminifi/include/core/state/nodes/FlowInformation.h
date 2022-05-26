@@ -262,7 +262,8 @@ class FlowInformation : public FlowMonitor {
 
     if (nullptr != monitor_) {
       monitor_->executeOnAllComponents([&metrics](StateController& component){
-        metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0), {{"component_uuid", component.getComponentUUID().to_string()}, {"metric_class", "FlowInformation"}}});
+        metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0),
+          {{"component_uuid", component.getComponentUUID().to_string()}, {"component_name", component.getComponentName()}, {"metric_class", "FlowInformation"}}});
       });
     }
     return metrics;

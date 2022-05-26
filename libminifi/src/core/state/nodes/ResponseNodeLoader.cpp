@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::state::response {
 
 ResponseNodeLoader::ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo, core::FlowConfiguration* flow_configuration)
-  : configuration_(configuration),
+  : configuration_(std::move(configuration)),
     provenance_repo_(std::move(provenance_repo)),
     flow_file_repo_(std::move(flow_file_repo)),
     flow_configuration_(flow_configuration) {
@@ -64,7 +64,7 @@ void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
   }
 }
 
-std::shared_ptr<ResponseNode> ResponseNodeLoader::getResponseNode(const std::string& clazz) {
+std::shared_ptr<ResponseNode> ResponseNodeLoader::getResponseNode(const std::string& clazz) const {
   std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
   if (ptr == nullptr) {
     return getComponentMetricsNode(clazz);
@@ -187,7 +187,7 @@ void ResponseNodeLoader::setStateMonitor(state::StateMonitor* update_sink) {
   update_sink_ = update_sink;
 }
 
-utils::Identifier ResponseNodeLoader::registerFlowChangeCallback(const std::function<void(core::ProcessGroup*)> cb) {
+utils::Identifier ResponseNodeLoader::registerFlowChangeCallback(const std::function<void(core::ProcessGroup*)>& cb) {
   std::lock_guard<std::mutex> guard(callback_mutex_);
   auto uuid = utils::IdGenerator::getIdGenerator()->generate();
   flow_change_callbacks_.emplace(uuid, cb);

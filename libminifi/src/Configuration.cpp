@@ -148,7 +148,7 @@ std::vector<std::string> Configuration::mergeProperties(std::vector<std::string>
   return properties;
 }
 
-std::vector<std::string> Configuration::getSensitiveProperties(std::function<std::optional<std::string>(const std::string&)> reader) {
+std::vector<std::string> Configuration::getSensitiveProperties(const std::function<std::optional<std::string>(const std::string&)>& reader) {
   std::vector<std::string> sensitive_properties(Configuration::DEFAULT_SENSITIVE_PROPERTIES.begin(), Configuration::DEFAULT_SENSITIVE_PROPERTIES.end());
   if (reader) {
     const auto additional_sensitive_props_list = reader(Configuration::nifi_sensitive_props_additional_keys);

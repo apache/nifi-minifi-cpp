@@ -37,7 +37,7 @@ class DummyMetricsExposer : public MetricsExposer {
   void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>&) override {
   }
 
-  std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> getMetrics() const {
+  [[nodiscard]] std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> getMetrics() const {
     return metrics_;
   }
 
