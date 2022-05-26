@@ -47,7 +47,7 @@ namespace {
 
 template<class T>
 std::optional<T> fromChars(const std::string& input) {
-  T t;
+  T t{};
   const auto last_char = &*std::cend(input);
   const auto result = std::from_chars(&*std::cbegin(input), last_char, t);
   if (result.ptr != last_char)
@@ -129,7 +129,18 @@ month parse<month>(const std::string& month_str) {
 
 template <>
 weekday parse<weekday>(const std::string& weekday_str) {
+// https://github.com/HowardHinnant/date/issues/550
+// TODO(gcc11): Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
+// the weekday parsing with '%a' is case sensitive in gcc11
+// This has been fixed in gcc12
+#if defined(__GNUC__) && __GNUC__ < 12
+  auto patched_weekday_str = StringUtils::toLower(weekday_str);
+  if (!patched_weekday_str.empty())
+    patched_weekday_str[0] = std::toupper(patched_weekday_str[0]);
+  std::stringstream stream(patched_weekday_str);
+#else
   std::stringstream stream(weekday_str);
+#endif
   stream.imbue(std::locale("en_US.UTF-8"));
 
   if (weekday_str.size() > 2) {
