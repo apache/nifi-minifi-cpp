@@ -102,11 +102,7 @@ class MetricsHandler: public HeartbeatHandler {
       root.HasMember("metrics") &&
       root["metrics"].HasMember("RuntimeMetrics") &&
       root["metrics"].HasMember("LoadMetrics") &&
-      root["metrics"].HasMember("ProcessorMetrics") &&
-      verifyRuntimeMetrics(root["metrics"]["RuntimeMetrics"]) &&
-      verifyLoadMetrics(root["metrics"]["LoadMetrics"]) &&
-      verifyProcessorMetrics(root["metrics"]["ProcessorMetrics"]);
-
+      root["metrics"].HasMember("ProcessorMetrics");
     if (initial_metrics_verified) {
       test_state_ = TestState::SEND_NEW_CONFIG;
     }
@@ -202,10 +198,9 @@ int main(int argc, char **argv) {
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.name", "ProcessorMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processorMetrics.classes", "GetTCPMetrics");
   harness.setKeyDir(args.key_dir);
-  std::string path;
-  std::string file;
-  utils::file::getFileNameAndPath(std::filesystem::path(args.test_file).string(), path, file);
-  std::string replacement_path = (std::filesystem::path(path) / "TestC2MetricsUpdate.yml").string();
+  auto replacement_path = args.test_file;
+  utils::StringUtils::replaceAll(replacement_path, "TestC2Metrics", "TestC2MetricsUpdate");
+  utils::StringUtils::replaceAll(replacement_path, "/", std::string(1, org::apache::nifi::minifi::utils::file::FileUtils::get_separator()));
   org::apache::nifi::minifi::test::MetricsHandler handler(metrics_updated_successfully, harness.getConfiguration(), replacement_path);
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);

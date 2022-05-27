@@ -41,6 +41,7 @@ set redist=
 set build_linter=OFF
 set build_nanofi=OFF
 set build_opencv=OFF
+set build_prometheus=OFF
 set real_odbc=OFF
 
 set arg_counter=0
@@ -63,6 +64,7 @@ for %%x in (%*) do (
     if [%%~x] EQU [/Z]           set build_azure=ON
     if [%%~x] EQU [/N]           set build_nanofi=ON
     if [%%~x] EQU [/O]           set build_opencv=ON
+    if [%%~x] EQU [/PR]          set build_prometheus=ON
     if [%%~x] EQU [/64]          set build_platform=x64
     if [%%~x] EQU [/D]           set cmake_build_type=RelWithDebInfo
     if [%%~x] EQU [/DD]          set cmake_build_type=Debug
@@ -75,7 +77,7 @@ for %%x in (%*) do (
 mkdir %builddir%
 pushd %builddir%\
 
-cmake -G %generator% -A %build_platform% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%build_SQL% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF -DENABLE_COAP=%build_coap% -DENABLE_AWS=%build_AWS% -DENABLE_PDH=%build_PDH% -DENABLE_AZURE=%build_azure% -DENABLE_SFTP=%build_SFTP% -DENABLE_SPLUNK=%build_SPLUNK% -DENABLE_GCP=%build_GCP% -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_SCRIPTING=OFF -DEXCLUDE_BOOST=ON -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% %strict_gsl_checks% %redist% -DENABLE_LINTER=%build_linter% "%scriptdir%" && msbuild /m nifi-minifi-cpp.sln /property:Configuration=%cmake_build_type% /property:Platform=%build_platform% && copy bin\%cmake_build_type%\minifi.exe main\
+cmake -G %generator% -A %build_platform% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%build_SQL% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF -DENABLE_COAP=%build_coap% -DENABLE_AWS=%build_AWS% -DENABLE_PDH=%build_PDH% -DENABLE_AZURE=%build_azure% -DENABLE_SFTP=%build_SFTP% -DENABLE_SPLUNK=%build_SPLUNK% -DENABLE_GCP=%build_GCP% -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DENABLE_PROMETHEUS=%build_prometheus% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_SCRIPTING=OFF -DEXCLUDE_BOOST=ON -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% %strict_gsl_checks% %redist% -DENABLE_LINTER=%build_linter% "%scriptdir%" && msbuild /m nifi-minifi-cpp.sln /property:Configuration=%cmake_build_type% /property:Platform=%build_platform% && copy bin\%cmake_build_type%\minifi.exe main\
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 if [%cpack%] EQU [ON] (
     cpack -C %cmake_build_type%

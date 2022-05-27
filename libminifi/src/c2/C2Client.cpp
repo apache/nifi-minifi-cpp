@@ -91,7 +91,10 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
   if (!initialized_) {
     initializeResponseNodes(root_.get());
     flow_change_callback_uuid_ = response_node_loader_.registerFlowChangeCallback([this](core::ProcessGroup* root) {
-      root_response_nodes_.clear();
+      {
+        std::lock_guard<std::mutex> guard{metrics_mutex_};
+        root_response_nodes_.clear();
+      }
       initializeResponseNodes(root);
     });
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
