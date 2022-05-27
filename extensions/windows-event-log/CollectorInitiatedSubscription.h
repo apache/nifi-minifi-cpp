@@ -30,7 +30,6 @@
 #include "concurrentqueue.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
-#include "SupportedProperty.h"
 
 namespace org::apache::nifi::minifi::processors {
 
