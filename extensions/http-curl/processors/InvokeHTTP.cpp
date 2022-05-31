@@ -138,15 +138,6 @@ const core::Relationship InvokeHTTP::RelNoRetry("no retry", "The original FlowFi
 const core::Relationship InvokeHTTP::RelFailure("failure", "The original FlowFile will be routed on any type of connection failure, "
                                           "timeout or general exception. It will have new attributes detailing the request.");
 
-const char* InvokeHTTP::STATUS_CODE = "invokehttp.status.code";
-const char* InvokeHTTP::STATUS_MESSAGE = "invokehttp.status.message";
-const char* InvokeHTTP::RESPONSE_BODY = "invokehttp.response.body";
-const char* InvokeHTTP::REQUEST_URL = "invokehttp.request.url";
-const char* InvokeHTTP::TRANSACTION_ID = "invokehttp.tx.id";
-const char* InvokeHTTP::REMOTE_DN = "invokehttp.remote.dn";
-const char* InvokeHTTP::EXCEPTION_CLASS = "invokehttp.java.exception.class";
-const char* InvokeHTTP::EXCEPTION_MESSAGE = "invokehttp.java.exception.message";
-
 void InvokeHTTP::initialize() {
   logger_->log_trace("Initializing InvokeHTTP");
   setSupportedProperties(properties());

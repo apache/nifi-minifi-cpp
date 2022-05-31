@@ -125,14 +125,14 @@ class InvokeHTTP : public core::Processor {
 
   EXTENSIONAPI static std::string DefaultContentType;
 
-  EXTENSIONAPI static const char* STATUS_CODE;
-  EXTENSIONAPI static const char* STATUS_MESSAGE;
-  EXTENSIONAPI static const char* RESPONSE_BODY;
-  EXTENSIONAPI static const char* REQUEST_URL;
-  EXTENSIONAPI static const char* TRANSACTION_ID;
-  EXTENSIONAPI static const char* REMOTE_DN;
-  EXTENSIONAPI static const char* EXCEPTION_CLASS;
-  EXTENSIONAPI static const char* EXCEPTION_MESSAGE;
+  EXTENSIONAPI static constexpr const char* STATUS_CODE = "invokehttp.status.code";
+  EXTENSIONAPI static constexpr const char* STATUS_MESSAGE = "invokehttp.status.message";
+  EXTENSIONAPI static constexpr const char* RESPONSE_BODY = "invokehttp.response.body";
+  EXTENSIONAPI static constexpr const char* REQUEST_URL = "invokehttp.request.url";
+  EXTENSIONAPI static constexpr const char* TRANSACTION_ID = "invokehttp.tx.id";
+  EXTENSIONAPI static constexpr const char* REMOTE_DN = "invokehttp.remote.dn";
+  EXTENSIONAPI static constexpr const char* EXCEPTION_CLASS = "invokehttp.java.exception.class";
+  EXTENSIONAPI static constexpr const char* EXCEPTION_MESSAGE = "invokehttp.java.exception.message";
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
