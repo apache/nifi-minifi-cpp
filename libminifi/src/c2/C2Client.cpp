@@ -202,25 +202,36 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
   return prev_node;
 }
 
-std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
+std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
   if (!metrics_class.empty()) {
-    return response_node_loader_.getComponentMetricsNode(metrics_class);
+    auto metrics_node = response_node_loader_.getComponentMetricsNode(metrics_class);
+    if (metrics_node) {
+      state::response::NodeReporter::ReportedNode reported_node;
+      reported_node.is_array = metrics_node->isArray();
+      reported_node.name = metrics_node->getName();
+      reported_node.serialized_nodes = metrics_node->serialize();
+      return reported_node;
+    }
   } else {
     std::lock_guard<std::mutex> lock(metrics_mutex_);
     const auto iter = root_response_nodes_.find("metrics");
     if (iter != root_response_nodes_.end()) {
-      return iter->second;
+      state::response::NodeReporter::ReportedNode reported_node;
+      reported_node.is_array = iter->second->isArray();
+      reported_node.name = iter->second->getName();
+      reported_node.serialized_nodes = iter->second->serialize();
+      return reported_node;
     }
   }
-  return nullptr;
+  return std::nullopt;
 }
 
-std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
+std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatNodes(bool include_manifest) const {
   std::string fullHb{"true"};
   configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
   const bool include = include_manifest || fullHb == "true";
 
-  std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
+  std::vector<state::response::NodeReporter::ReportedNode> nodes;
   nodes.reserve(root_response_nodes_.size());
   std::lock_guard<std::mutex> lock(metrics_mutex_);
   for (const auto &entry : root_response_nodes_) {
@@ -228,7 +239,13 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbe
     if (identifier) {
       identifier->includeAgentManifest(include);
     }
-    nodes.push_back(entry.second);
+    if (entry.second) {
+      state::response::NodeReporter::ReportedNode reported_node;
+      reported_node.name = entry.second->getName();
+      reported_node.is_array = entry.second->isArray();
+      reported_node.serialized_nodes = entry.second->serialize();
+      nodes.push_back(reported_node);
+    }
   }
   return nodes;
 }

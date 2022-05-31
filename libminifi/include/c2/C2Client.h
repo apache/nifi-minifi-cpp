@@ -53,9 +53,9 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
 
-  std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metrics_class) const override;
+  std::optional<state::response::NodeReporter::ReportedNode> getMetricsNode(const std::string& metrics_class) const override;
 
-  std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool include_manifest) const override;
+  std::vector<state::response::NodeReporter::ReportedNode> getHeartbeatNodes(bool include_manifest) const override;
 
   void stopC2();
 

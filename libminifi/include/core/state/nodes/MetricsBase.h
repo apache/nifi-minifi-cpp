@@ -21,6 +21,7 @@
 #include <vector>
 #include <memory>
 #include <string>
+#include <optional>
 
 #include "../Value.h"
 #include "../PublishedMetricProvider.h"
@@ -185,6 +186,12 @@ class MetricsNodeSource : public ResponseNodeSource {
 
 class NodeReporter {
  public:
+  struct ReportedNode {
+    std::string name;
+    bool is_array;
+    std::vector<SerializedResponseNode> serialized_nodes;
+  };
+
   NodeReporter() = default;
 
   virtual ~NodeReporter() = default;
@@ -193,20 +200,20 @@ class NodeReporter {
    * Retrieves metrics node
    * @return metrics response node
    */
-  virtual std::shared_ptr<ResponseNode> getMetricsNode(const std::string& metricsClass) const = 0;
+  virtual std::optional<ReportedNode> getMetricsNode(const std::string& metricsClass) const = 0;
 
   /**
    * Retrieves root nodes configured to be included in heartbeat
    * @param includeManifest -- determines if manifest is to be included
    * @return a list of response nodes
    */
-  virtual std::vector<std::shared_ptr<ResponseNode>> getHeartbeatNodes(bool includeManifest) const = 0;
+  virtual std::vector<ReportedNode> getHeartbeatNodes(bool includeManifest) const = 0;
 
   /**
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
-  virtual std::shared_ptr<state::response::ResponseNode> getAgentManifest() = 0;
+  virtual ReportedNode getAgentManifest() = 0;
 };
 
 /**

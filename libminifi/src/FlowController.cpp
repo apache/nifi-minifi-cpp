@@ -428,16 +428,20 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() {
-  auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
-  agentInfo->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)).get());
-  agentInfo->setAgentIdentificationProvider(configuration_);
-  agentInfo->setConfigurationReader([this](const std::string& key){
+state::response::NodeReporter::ReportedNode FlowController::getAgentManifest() {
+  state::response::AgentInformation agentInfo("agentInfo");
+  agentInfo.setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)).get());
+  agentInfo.setAgentIdentificationProvider(configuration_);
+  agentInfo.setConfigurationReader([this](const std::string& key){
     return configuration_->getRawValue(key);
   });
-  agentInfo->setStateMonitor(this);
-  agentInfo->includeAgentStatus(false);
-  return agentInfo;
+  agentInfo.setStateMonitor(this);
+  agentInfo.includeAgentStatus(false);
+  state::response::NodeReporter::ReportedNode reported_node;
+  reported_node.name = agentInfo.getName();
+  reported_node.is_array = agentInfo.isArray();
+  reported_node.serialized_nodes = agentInfo.serialize();
+  return reported_node;
 }
 
 void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
