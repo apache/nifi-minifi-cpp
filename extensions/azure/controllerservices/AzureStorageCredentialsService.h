@@ -50,7 +50,6 @@ class AzureStorageCredentialsService : public core::controller::ControllerServic
   }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   explicit AzureStorageCredentialsService(const std::string& name, const minifi::utils::Identifier& uuid = {})

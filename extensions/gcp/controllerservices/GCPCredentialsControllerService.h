@@ -52,7 +52,6 @@ class GCPCredentialsControllerService : public core::controller::ControllerServi
   }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   using ControllerService::ControllerService;

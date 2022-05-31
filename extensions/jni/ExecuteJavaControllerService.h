@@ -62,7 +62,6 @@ class ExecuteJavaControllerService : public ConfigurationContext, public std::en
   EXTENSIONAPI static const core::Property NiFiControllerService;
   static auto properties() { return std::array{NiFiControllerService}; }
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
-  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void onEnable() override;

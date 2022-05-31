@@ -43,7 +43,6 @@ class UnorderedMapKeyValueStoreService : virtual public PersistableKeyValueStore
   EXTENSIONAPI static const core::Property LinkedServices;
   static auto properties() { return std::array{LinkedServices}; }
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   bool set(const std::string& key, const std::string& value) override;

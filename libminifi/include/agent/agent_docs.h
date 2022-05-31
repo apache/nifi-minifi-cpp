@@ -104,7 +104,6 @@ class AgentDocs {
         .description_ = Class::Description,
         .class_properties_ = detail::toVector(Class::properties()),
         .dynamic_properties_ = Class::SupportsDynamicProperties,
-        .dynamic_relationships_ = Class::SupportsDynamicRelationships
       });
     } else if constexpr (Type == ResourceType::InternalResource) {
       components.other_components_.push_back(ClassDescription{
@@ -113,7 +112,6 @@ class AgentDocs {
         .full_name_ = detail::classNameWithDots<Class>(),
         .class_properties_ = detail::toVector(Class::properties()),
         .dynamic_properties_ = Class::SupportsDynamicProperties,
-        .dynamic_relationships_ = Class::SupportsDynamicRelationships
       });
     } else if constexpr (Type == ResourceType::DescriptionOnly) {
       components.other_components_.push_back(ClassDescription{

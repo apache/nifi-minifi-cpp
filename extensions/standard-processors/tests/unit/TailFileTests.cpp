@@ -1778,7 +1778,6 @@ class TestAttributeProviderService : public minifi::controllers::AttributeProvid
   static constexpr const char* Description = "An attribute provider service which provides a constant set of records.";
   static auto properties() { return std::array<core::Property, 0>{}; }
   static constexpr bool SupportsDynamicProperties = false;
-  static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {};

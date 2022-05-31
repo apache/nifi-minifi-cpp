@@ -44,7 +44,6 @@ class ExampleService : public core::controller::ControllerService {
   static constexpr const char* Description = "An example service";
   static auto properties() { return std::array<core::Property, 0>{}; }
   static constexpr bool SupportsDynamicProperties = false;
-  static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   bool canEdit() override { return false; }

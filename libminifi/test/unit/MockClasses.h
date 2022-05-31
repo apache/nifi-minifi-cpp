@@ -45,7 +45,6 @@ class MockControllerService : public minifi::core::controller::ControllerService
   static constexpr const char* Description = "An example service";
   static auto properties() { return std::array<minifi::core::Property, 0>{}; }
   static constexpr bool SupportsDynamicProperties = false;
-  static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override {

@@ -27,8 +27,7 @@
 #include "core/Connectable.h"
 
 #define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES \
-  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; } \
-  bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; }
+  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; }
 
 namespace org {
 namespace apache {
@@ -93,6 +92,10 @@ class ControllerService : public ConfigurableComponent, public Connectable {
 
   void initialize() override {
     current_state_ = ENABLED;
+  }
+
+  bool supportsDynamicRelationships() const final {
+    return false;
   }
 
   ~ControllerService() override {

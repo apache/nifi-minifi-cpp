@@ -46,7 +46,6 @@ class ODBCService : public DatabaseService {
   EXTENSIONAPI static constexpr const char* Description = "Controller service that provides ODBC database connection";
   static auto properties() { return DatabaseService::properties(); }
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   std::unique_ptr<sql::Connection> getConnection() const override;

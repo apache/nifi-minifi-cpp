@@ -73,7 +73,6 @@ class LinuxPowerManagerService : public ThreadManagementService {
   }
 
   MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
-  MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   /**
