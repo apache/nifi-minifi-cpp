@@ -47,12 +47,6 @@ C2Client::C2Client(
       request_restart_(std::move(request_restart)),
       response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()) {}
 
-C2Client::~C2Client() {
-  if (!flow_change_callback_uuid_.isNil()) {
-    response_node_loader_.unregisterFlowChangeCallback(flow_change_callback_uuid_);
-  }
-}
-
 void C2Client::stopC2() {
   if (c2_agent_) {
     c2_agent_->stop();
@@ -90,13 +84,6 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
 
   if (!initialized_) {
     initializeResponseNodes(root_.get());
-    flow_change_callback_uuid_ = response_node_loader_.registerFlowChangeCallback([this](core::ProcessGroup* root) {
-      {
-        std::lock_guard<std::mutex> guard{metrics_mutex_};
-        root_response_nodes_.clear();
-      }
-      initializeResponseNodes(root);
-    });
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart
     c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_, request_restart_);
@@ -149,7 +136,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
         loadC2ResponseConfiguration(optionName, new_node);
       }
 
-      std::lock_guard<std::mutex> guard{metrics_mutex_};
+      // We don't need to lock here we do it in the initializeResponseNodes
       root_response_nodes_[name] = new_node;
     } catch (...) {
       logger_->log_error("Could not create metrics class %s", metricsClass);
@@ -203,6 +190,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 }
 
 std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
   if (!metrics_class.empty()) {
     auto metrics_node = response_node_loader_.getComponentMetricsNode(metrics_class);
     if (metrics_node) {
@@ -213,7 +201,6 @@ std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsN
       return reported_node;
     }
   } else {
-    std::lock_guard<std::mutex> lock(metrics_mutex_);
     const auto iter = root_response_nodes_.find("metrics");
     if (iter != root_response_nodes_.end()) {
       state::response::NodeReporter::ReportedNode reported_node;
@@ -232,8 +219,8 @@ std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatN
   const bool include = include_manifest || fullHb == "true";
 
   std::vector<state::response::NodeReporter::ReportedNode> nodes;
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
   nodes.reserve(root_response_nodes_.size());
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
   for (const auto &entry : root_response_nodes_) {
     auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
     if (identifier) {
@@ -252,6 +239,7 @@ std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatN
 
 void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
   std::string class_csv;
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
   if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
@@ -261,12 +249,16 @@ void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
         continue;
       }
 
-      std::lock_guard<std::mutex> guard{metrics_mutex_};
       root_response_nodes_[response_node->getName()] = std::move(response_node);
     }
   }
 
   loadC2ResponseConfiguration(Configuration::nifi_c2_root_class_definitions);
+}
+
+void C2Client::clearResponseNodes() {
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
+  root_response_nodes_.clear();
 }
 
 }  // namespace org::apache::nifi::minifi::c2

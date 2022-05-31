@@ -120,10 +120,14 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
 
   updating_ = true;
 
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+  std::unique_lock<std::recursive_mutex> flow_lock(mutex_);
   stop();
   unload();
   controller_map_->clear();
+  clearResponseNodes();
+  if (metrics_publisher_) {
+    metrics_publisher_->clearMetricNodes();
+  }
   auto prevRoot = std::move(this->root_);
   this->root_ = std::move(newRoot);
   processor_to_controller_.clear();
@@ -133,7 +137,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     load(std::move(root_), true);
     flow_update_ = true;
     started = start() == 0;
-
+    flow_lock.unlock();
     updating_ = false;
 
     if (started) {
@@ -150,6 +154,7 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
     this->root_ = std::move(prevRoot);
     load(std::move(this->root_), true);
     flow_update_ = true;
+    flow_lock.unlock();
     updating_ = false;
   }
 
@@ -290,8 +295,11 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
     controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
-    response_node_loader_.flowChanged(root_.get());
-    if (!root) {
+    response_node_loader_.initializeComponentMetrics(root_.get());
+    initializeResponseNodes(root_.get());
+    if (metrics_publisher_) {
+      metrics_publisher_->reloadMetricNodes(root_.get());
+    } else {
       loadMetricsPublisher();
     }
 
@@ -445,6 +453,9 @@ state::response::NodeReporter::ReportedNode FlowController::getAgentManifest() {
 }
 
 void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
+  if (updating_) {
+    return;
+  }
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto* component: getAllComponents()) {
     func(*component);
@@ -452,6 +463,9 @@ void FlowController::executeOnAllComponents(std::function<void(state::StateContr
 }
 
 void FlowController::executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) {
+  if (updating_) {
+    return;
+  }
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (auto* component = getComponent(name); component != nullptr) {
     func(*component);

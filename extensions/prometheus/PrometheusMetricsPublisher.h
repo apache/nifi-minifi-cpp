@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <mutex>
 
 #include "core/state/MetricsPublisher.h"
 #include "PublishedMetricGaugeCollection.h"
@@ -33,20 +34,20 @@ namespace org::apache::nifi::minifi::extensions::prometheus {
 class PrometheusMetricsPublisher : public core::CoreComponent, public state::MetricsPublisher {
  public:
   explicit PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid = {}, std::unique_ptr<MetricsExposer> exposer = nullptr);
-
-  ~PrometheusMetricsPublisher() override;
   void initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) override;
+  void clearMetricNodes() override;
+  void reloadMetricNodes(core::ProcessGroup* root) override;
 
  private:
   uint32_t readPort();
   std::vector<std::shared_ptr<state::response::ResponseNode>> loadMetricNodes(core::ProcessGroup* root);
   void registerCollectables(core::ProcessGroup* root);
 
+  std::mutex registered_metrics_mutex_;
   std::vector<std::shared_ptr<PublishedMetricGaugeCollection>> gauge_collections_;
   std::unique_ptr<MetricsExposer> exposer_;
   std::shared_ptr<Configure> configuration_;
   state::response::ResponseNodeLoader* response_node_loader_ = nullptr;
-  utils::Identifier flow_change_callback_uuid_;
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusMetricsPublisher>::getLogger()};
 };
 

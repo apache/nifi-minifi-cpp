@@ -28,12 +28,6 @@ PrometheusMetricsPublisher::PrometheusMetricsPublisher(const std::string &name, 
   : CoreComponent(name, uuid),
     exposer_(std::move(exposer)) {}
 
-PrometheusMetricsPublisher::~PrometheusMetricsPublisher() {
-  if (!flow_change_callback_uuid_.isNil() && response_node_loader_) {
-    response_node_loader_->unregisterFlowChangeCallback(flow_change_callback_uuid_);
-  }
-}
-
 void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) {
   gsl_Expects(configuration);
   configuration_ = configuration;
@@ -42,13 +36,6 @@ void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& co
     exposer_ = std::make_unique<PrometheusMetricsExposer>(readPort());
   }
   registerCollectables(root);
-  flow_change_callback_uuid_ = response_node_loader_->registerFlowChangeCallback([this](core::ProcessGroup* root) {
-    for (const auto& collection : gauge_collections_) {
-      exposer_->removeMetric(collection);
-    }
-    gauge_collections_.clear();
-    registerCollectables(root);
-  });
 }
 
 uint32_t PrometheusMetricsPublisher::readPort() {
@@ -57,6 +44,19 @@ uint32_t PrometheusMetricsPublisher::readPort() {
   }
 
   throw Exception(GENERAL_EXCEPTION, "Port not configured for Prometheus metrics publisher!");
+}
+
+void PrometheusMetricsPublisher::clearMetricNodes() {
+  std::lock_guard<std::mutex> lock(registered_metrics_mutex_);
+  for (const auto& collection : gauge_collections_) {
+    exposer_->removeMetric(collection);
+  }
+  gauge_collections_.clear();
+}
+
+void PrometheusMetricsPublisher::reloadMetricNodes(core::ProcessGroup* root) {
+  std::lock_guard<std::mutex> lock(registered_metrics_mutex_);
+  registerCollectables(root);
 }
 
 std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {

@@ -25,7 +25,7 @@
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
-class PrometheusMetricsExposer : public MetricsExposer  {
+class PrometheusMetricsExposer : public MetricsExposer {
  public:
   explicit PrometheusMetricsExposer(uint32_t port);
   void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;

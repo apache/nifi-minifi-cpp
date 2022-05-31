@@ -86,11 +86,6 @@ class C2Agent : public state::UpdateController {
    */
   void performHeartBeat();
 
-  std::chrono::milliseconds getHeartBeatDelay() {
-    std::lock_guard<std::mutex> lock(heartbeat_mutex);
-    return heart_beat_period_;
-  }
-
   std::optional<std::string> fetchFlow(const std::string& uri) const;
 
  protected:
