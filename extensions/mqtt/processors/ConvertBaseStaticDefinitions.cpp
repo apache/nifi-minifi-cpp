@@ -19,7 +19,6 @@
 #include "ConvertHeartBeat.h"
 #include "ConvertJSONAck.h"
 #include "ConvertUpdate.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 // FIXME(fgerlits): we need to put all these static definitions in a single file so that they are executed in this order at runtime

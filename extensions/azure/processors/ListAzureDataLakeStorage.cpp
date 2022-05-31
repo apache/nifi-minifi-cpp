@@ -22,7 +22,6 @@
 
 #include "utils/ProcessorConfigUtils.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::azure::processors {

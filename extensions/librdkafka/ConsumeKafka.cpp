@@ -21,7 +21,6 @@
 #include <limits>
 
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/PropertyValidation.h"
 #include "core/Resource.h"
 #include "FlowFileRecord.h"

@@ -23,7 +23,6 @@
 #include <utility>
 
 #include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
 #include "S3Wrapper.h"
 #include "AWSCredentialsService.h"
 #include "properties/Properties.h"

@@ -19,8 +19,6 @@
 
 #include <cinttypes>
 
-#include "core/PropertyBuilder.h"
-
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::controllers {

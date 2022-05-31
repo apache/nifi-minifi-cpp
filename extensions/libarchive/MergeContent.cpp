@@ -25,7 +25,6 @@
 #include <numeric>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
 #include "serialization/FlowFileV3Serializer.h"

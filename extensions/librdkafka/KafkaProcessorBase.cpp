@@ -19,7 +19,6 @@
 #include "rdkafka_utils.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "controllers/SSLContextService.h"
-#include "core/PropertyBuilder.h"
 
 namespace org::apache::nifi::minifi::processors {
 

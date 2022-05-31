@@ -20,7 +20,6 @@
 
 #include "AzureDataLakeStorageFileProcessorBase.h"
 
-#include "core/PropertyBuilder.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 

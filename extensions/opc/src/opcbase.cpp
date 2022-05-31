@@ -24,7 +24,6 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Core.h"
-#include "core/PropertyBuilder.h"
 
 namespace org::apache::nifi::minifi::processors {
 

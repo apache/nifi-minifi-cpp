@@ -23,7 +23,6 @@
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/PropertyBuilder.h"
 #include "Exception.h"
 
 #include <soci/error.h>

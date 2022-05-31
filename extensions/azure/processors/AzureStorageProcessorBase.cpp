@@ -24,7 +24,6 @@
 #include <string>
 
 #include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
 #include "controllerservices/AzureStorageCredentialsService.h"
 
 namespace org::apache::nifi::minifi::azure::processors {

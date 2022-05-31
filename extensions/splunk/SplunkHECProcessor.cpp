@@ -17,7 +17,6 @@
 
 #include "SplunkHECProcessor.h"
 #include "core/ProcessContext.h"
-#include "core/PropertyBuilder.h"
 #include "client/HTTPClient.h"
 #include "utils/HTTPClient.h"
 
