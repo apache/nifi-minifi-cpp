@@ -1,0 +1,147 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+apiVersion: v1
+data:
+  minifi-log.properties: |
+    spdlog.pattern=[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v
+    appender.stderr=stderr
+    logger.root=INFO,stderr
+    logger.org::apache::nifi::minifi=INFO,stderr
+  minifi.properties: |
+    nifi.flow.configuration.file=./conf/config.yml
+    nifi.administrative.yield.duration=30 sec
+    nifi.bored.yield.duration=100 millis
+    nifi.extension.path=../extensions/*
+
+    nifi.provenance.repository.directory.default=${MINIFI_HOME}/provenance_repository
+    nifi.provenance.repository.max.storage.time=1 MIN
+    nifi.provenance.repository.max.storage.size=1 MB
+    nifi.flowfile.repository.directory.default=${MINIFI_HOME}/flowfile_repository
+    nifi.database.content.repository.directory.default=${MINIFI_HOME}/content_repository
+    nifi.provenance.repository.class.name=NoOpRepository
+    nifi.content.repository.class.name=DatabaseContentRepository
+  config.yml: |
+    Flow Controller:
+      name: minifi-logging
+    Processors:
+    - id: 94b8e610-b4ed-1ec9-b26f-c839931bf3e2
+      name: TailFile
+      class: org.apache.nifi.processors.standard.TailFile
+      scheduling strategy: TIMER_DRIVEN
+      scheduling period: 5 sec
+      auto-terminated relationships list: []
+      Properties:
+        File to Tail: /nifi-logs/nifi-app.log
+        Lookup frequency: 1 min
+    - id: 261e8cf1-71ba-af86-fb2b-bc95764f91f8
+      name: MergeContent
+      class: org.apache.nifi.processors.standard.MergeContent
+      scheduling strategy: EVENT_DRIVEN
+      auto-terminated relationships list:
+        - original
+      Properties:
+        Attribute Strategy: Keep Only Common Attributes
+        Maximum number of Bins: 100
+        Minimum Group Size: 0
+        Max Bin Age: 1 min
+        Minimum Number of Entries: 1000000
+        Maximum Group Size: 1000000
+        Maximum Number of Entries: 1000000
+        Merge Strategy: Bin-Packing Algorithm
+    - id: 69335770-ee29-11eb-9a03-0242ac130003
+      name: CompressContent
+      class: org.apache.nifi.processors.standard.CompressContent
+      scheduling strategy: EVENT_DRIVEN
+      auto-terminated relationships list:
+        - failure
+      Properties:
+        Compression Level: 6
+        Compression Format: gzip
+        UpdateFileName: false
+    - id: fe198bd9-2a1c-316e-0000-000000000000
+      name: PutS3Object
+      class: org.apache.nifi.minifi.azure.processors.PutS3Object
+      scheduling strategy: EVENT_DRIVEN
+      auto-terminated relationships list:
+        - success
+      Properties:
+        Bucket: test-bucket
+        AWS Credentials Provider service: AWSCredentialsService
+    Controller Services:
+    - name: AWSCredentialsService
+      id: 2094d776-2006-4d02-9bb9-28eac9d0fc95
+      class: org.apache.nifi.minifi.aws.controllers.AWSCredentialsService
+      Properties:
+        Use Default Credentials: 'true' # Can be used in Amazon EKS to retrieve credentials from metadata otherwise use your AWS Access Key and Secret Key
+    Connections:
+    - id: 99f617e7-49a1-6078-8534-26af7d56ca08
+      name: TailFile/success/MergeContent
+      source name: TailFile
+      source relationship names:
+      - success
+      destination name: MergeContent
+    - id: 24d6be1e-ee29-11eb-9a03-0242ac130003
+      name: MergeContent/merged/CompressContent
+      source name: MergeContent
+      source relationship names:
+      - merged
+      destination name: CompressContent
+    - id: 67ea5c91-446a-393b-6274-b6fae2f475a2
+      name: CompressContent/success/PutS3Object
+      source name: CompressContent
+      source relationship names:
+      - success
+      destination name: PutS3Object
+    Remote Process Groups: []
+kind: ConfigMap
+metadata:
+  labels:
+    k8s-app: minifi-log-collection
+  name: minifi-log-collection-config
+  namespace: default
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: log-collection-minifi-pod
+  namespace: default
+spec:
+  containers:
+  - name: nifi
+    image: apache/nifi:latest
+    volumeMounts:
+    - name: nifi-logs
+      mountPath: /opt/nifi/nifi-current/logs
+  - name: sidecar-minifi
+    image: apache/nifi-minifi-cpp:latest
+    volumeMounts:
+    - name: nifi-logs
+      mountPath: /nifi-logs
+    - name: minificonfig
+      mountPath: /opt/minifi/minifi-current/conf/config.yml
+      subPath: config.yml
+    - name: minificonfig
+      mountPath: /opt/minifi/minifi-current/conf/minifi-log.properties
+      subPath: minifi-log.properties
+  volumes:
+  - name: nifi-logs
+    emptyDir: {}
+  - configMap:
+      defaultMode: 420
+      name: minifi-log-collection-config
+    name: minificonfig
