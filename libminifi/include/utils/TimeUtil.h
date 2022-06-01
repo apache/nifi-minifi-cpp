@@ -31,16 +31,29 @@
 #include <functional>
 #include <algorithm>
 
+// libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
+#include <compare>
+#endif
+
 #include "date/date.h"
 
 #define TIME_FORMAT "%Y-%m-%d %H:%M:%S"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace timeutils {
+#if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
+template<typename Rep1, typename Period1, typename Rep2, typename Period2>
+std::strong_ordering operator<=>(std::chrono::duration<Rep1, Period1> lhs, std::chrono::duration<Rep2, Period2> rhs) {
+  if (lhs < rhs) {
+    return std::strong_ordering::less;
+  } else if (lhs == rhs) {
+    return std::strong_ordering::equal;
+  } else {
+    return std::strong_ordering::greater;
+  }
+}
+#endif
+
+namespace org::apache::nifi::minifi::utils::timeutils {
 
 /**
  * Gets the current time in nanoseconds
@@ -295,12 +308,7 @@ std::optional<TargetDuration> StringToDuration(const std::string& input) {
     std::chrono::days>(unit, value);
 }
 
-} /* namespace timeutils */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils::timeutils
 
 // for backwards compatibility, to be removed after 0.8
 using org::apache::nifi::minifi::utils::timeutils::getTimeNano;

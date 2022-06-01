@@ -102,7 +102,6 @@ core::logging::LOG_LEVEL MapOPCLogLevel(UA_LogLevel ualvl) {
     case UA_LOGLEVEL_ERROR:
       return core::logging::err;
     case UA_LOGLEVEL_FATAL:
-      return core::logging::critical;
     default:
       return core::logging::critical;
   }

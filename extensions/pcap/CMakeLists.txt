@@ -26,8 +26,8 @@ find_package(PCAP REQUIRED)
 include(FetchContent)
 
 FetchContent_Declare(pcapplusplus
-		URL      https://github.com/seladb/PcapPlusPlus/archive/refs/tags/v21.05.tar.gz
-		URL_HASH SHA256=f7bc2caea72544f42e3547c8acf65fca07ddd4cd45f7be2f5132dd1826ea27bb
+		URL      https://github.com/seladb/PcapPlusPlus/archive/refs/tags/v22.05.tar.gz
+		URL_HASH SHA256=5f299c4503bf5d3c29f82b8d876a19be7dea29c2aadcb52f2f3b394846c21da9
 		)
 FetchContent_MakeAvailable(pcapplusplus)
 

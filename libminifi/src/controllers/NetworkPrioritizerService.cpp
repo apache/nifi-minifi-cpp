@@ -215,7 +215,7 @@ void NetworkPrioritizerService::onEnable() {
     if (getProperty(DefaultPrioritizer.getName(), is_default)) {
       if (is_default) {
         if (io::NetworkPrioritizerFactory::getInstance()->setPrioritizer(shared_from_this()) < 0) {
-          std::runtime_error("Can only have one prioritizer");
+          throw std::runtime_error("Can only have one prioritizer");
         }
       }
     }

@@ -53,6 +53,9 @@ FlowFile::FlowFile()
 }
 
 FlowFile& FlowFile::operator=(const FlowFile& other) {
+  if (this == &other) {
+    return *this;
+  }
   uuid_ = other.uuid_;
   stored = other.stored;
   marked_delete_ = other.marked_delete_;

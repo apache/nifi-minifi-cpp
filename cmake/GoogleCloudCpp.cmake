@@ -42,9 +42,14 @@ set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
 set(GOOGLE_CLOUD_CPP_ENABLE storage CACHE INTERNAL storage-api)
 set(GOOGLE_CLOUD_CPP_ENABLE_MACOS_OPENSSL_CHECK OFF CACHE INTERNAL macos-openssl-check)
 set(BUILD_TESTING OFF CACHE INTERNAL testing-off)
+set(GOOGLE_CLOUD_CPP_ENABLE_WERROR OFF CACHE INTERNAL warnings-off)
 FetchContent_Declare(google-cloud-cpp
         URL      https://github.com/googleapis/google-cloud-cpp/archive/refs/tags/v1.37.0.tar.gz
         URL_HASH SHA256=a7269b21d5e95bebff7833ebb602bcd5bcc79e82a59449cc5d5b350ff2f50bbc
         PATCH_COMMAND "${PC}")
 add_compile_definitions(_SILENCE_CXX20_REL_OPS_DEPRECATION_WARNING _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING CURL_STATICLIB)
 FetchContent_MakeAvailable(google-cloud-cpp)
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL "14.0.0" )
+    target_compile_options(google_cloud_cpp_common PUBLIC -Wno-error=deprecated-pragma)
+endif()

@@ -187,7 +187,7 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
       if (SSL_CTX_add_extra_chain_cert(ctx, cacert.get()) != 1) {
         return utils::tls::get_last_ssl_error_code();
       }
-      cacert.release();  // a successful SSL_CTX_add_extra_chain_cert() takes ownership of cacert
+      static_cast<void>(cacert.release());  // a successful SSL_CTX_add_extra_chain_cert() takes ownership of cacert
       return {};
     },
     .priv_key_cb = [&] (auto priv_key) -> std::error_code {

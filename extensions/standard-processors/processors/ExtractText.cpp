@@ -162,7 +162,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::BaseStre
     ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
 
     const size_t maxCaptureSize = [this] {
-      uint64_t val;
+      uint64_t val = 0;
       ctx_->getProperty(MaxCaptureGroupLen.getName(), val);
       return gsl::narrow<size_t>(val);
     }();

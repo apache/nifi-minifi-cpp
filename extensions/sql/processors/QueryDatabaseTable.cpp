@@ -109,7 +109,7 @@ void QueryDatabaseTable::initialize() {
 void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
   context.getProperty(OutputFormat.getName(), output_format_);
   max_rows_ = [&] {
-    uint64_t max_rows;
+    uint64_t max_rows = 0;
     context.getProperty(MaxRowsPerFlowFile.getName(), max_rows);
     return gsl::narrow<size_t>(max_rows);
   }();

@@ -296,7 +296,7 @@ spdlog::sink_ptr LoggerConfiguration::create_syslog_sink() {
 #ifdef WIN32
   return std::make_shared<internal::windowseventlog_sink>("ApacheNiFiMiNiFi");
 #else
-  return std::dynamic_pointer_cast<spdlog::sinks::sink>(spdlog::syslog_logger_mt("ApacheNiFiMiNiFi", 0, LOG_USER, false));
+  return std::dynamic_pointer_cast<spdlog::sinks::sink>(spdlog::syslog_logger_mt("ApacheNiFiMiNiFi", "", 0, LOG_USER, false));
 #endif
 }
 

@@ -281,7 +281,7 @@ bool SiteToSiteClient::confirm(const utils::Identifier& transactionID) {
           return true;
         } else {
           logger_->log_debug("Site2Site transaction %s CRC not matched %s", transactionID.to_string(), crc);
-          ret = writeResponse(transaction, BAD_CHECKSUM, "BAD_CHECKSUM");
+          writeResponse(transaction, BAD_CHECKSUM, "BAD_CHECKSUM");
           return false;
         }
       }
