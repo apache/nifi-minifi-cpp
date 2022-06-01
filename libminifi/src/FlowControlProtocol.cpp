@@ -280,7 +280,7 @@ int FlowControlProtocol::sendReportReq() {
   data = this->encode(data, hdr.msgType);
   data = this->encode(data, hdr.seqNumber);
   data = this->encode(data, hdr.status);
-  this->encode(data, hdr.payloadLen);
+  data = this->encode(data, hdr.payloadLen);
 
   // encode the YAML name
   data = this->encode(data, FLOW_YML_NAME);
