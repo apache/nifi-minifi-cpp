@@ -113,6 +113,13 @@ TEST_CASE("Cron expression ctor tests", "[cron]") {
   REQUIRE_NOTHROW(Cron("0 15 10 ? * 6#3"));
   REQUIRE_NOTHROW(Cron("0 0 12 1/5 * ?"));
   REQUIRE_NOTHROW(Cron("0 11 11 11 11 ?"));
+
+  REQUIRE_THROWS(Cron("15-10 * * * * * *"));
+  REQUIRE_THROWS(Cron("* 4-3 * * * * *"));
+  REQUIRE_THROWS(Cron("* * 4-3 * * * *"));
+  REQUIRE_THROWS(Cron("* * * 31-29 * * *"));
+  REQUIRE_THROWS(Cron("0 0 0 ? * MON-SUN"));
+  REQUIRE_NOTHROW(Cron("0 0 0 ? * SUN-MON"));
 }
 
 TEST_CASE("Cron allowed nonnumerical inputs", "[cron]") {

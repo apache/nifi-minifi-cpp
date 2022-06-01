@@ -39,8 +39,9 @@ using date::last;
 using date::local_days;
 using date::from_stream;
 using date::make_time;
-
-using date::Friday; using date::Saturday; using date::Sunday;
+using date::Friday;
+using date::Saturday;
+using date::Sunday;
 
 namespace org::apache::nifi::minifi::utils {
 namespace {
@@ -250,6 +251,8 @@ class RangeField : public CronField {
   explicit RangeField(FieldType lower_bound, FieldType upper_bound)
       : lower_bound_(std::move(lower_bound)),
         upper_bound_(std::move(upper_bound)) {
+    if (!(lower_bound_ <= upper_bound_))
+      throw std::out_of_range("lower bound must be smaller or equal to upper bound");
   }
 
   [[nodiscard]] bool matches(local_seconds value) const override {
@@ -470,7 +473,7 @@ Cron::Cron(const std::string& expression) {
 std::optional<local_seconds> Cron::calculateNextTrigger(const local_seconds start) const {
   gsl_Expects(second_ && minute_ && hour_ && day_ && month_ && day_of_week_);
   auto next = timeutils::roundToNextSecond(start);
-  while (next < date::local_days((year(2999)/1/1))) {
+  while (next < local_days((year(2999)/1/1))) {
     if (year_ && !year_->matches(next)) {
       next = timeutils::roundToNextYear(next);
       continue;

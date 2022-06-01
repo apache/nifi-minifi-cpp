@@ -49,7 +49,13 @@ class Cron {
 
   [[nodiscard]] std::optional<date::local_seconds> calculateNextTrigger(date::local_seconds start) const;
 
-  std::unique_ptr<CronField> second_, minute_, hour_, day_, month_, day_of_week_, year_;
+  std::unique_ptr<CronField> second_;
+  std::unique_ptr<CronField> minute_;
+  std::unique_ptr<CronField> hour_;
+  std::unique_ptr<CronField> day_;
+  std::unique_ptr<CronField> month_;
+  std::unique_ptr<CronField> day_of_week_;
+  std::unique_ptr<CronField> year_;
 };
 
 }  // namespace org::apache::nifi::minifi::utils
