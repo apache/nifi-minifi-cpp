@@ -346,7 +346,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Password              |               |                  | Password to use when connecting to the broker                                                           |
 | Quality of Service    | MQTT_QOS_0    |                  | The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'             |
 | Queue Max Message     |               |                  | Maximum number of messages allowed on the received MQTT queue                                           |
-| Session state         | true          |                  | Whether to start afresh or resume previous flows. See the allowable value descriptions for more details |
+| Clean Session         | true          |                  | Whether to start afresh rather than remembering previous subscriptions                                  |
 | Topic                 |               |                  | The topic to publish the message to                                                                     |
 | Username              |               |                  | Username to use when connecting to the broker                                                           |
 ### Relationships
@@ -1780,7 +1780,6 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Password              |               |                  | Password to use when connecting to the broker                                                           |
 | Quality of Service    | MQTT_QOS_0    |                  | The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'             |
 | Retain                | false         |                  | Retain MQTT published record in broker                                                                  |
-| Session state         | true          |                  | Whether to start afresh or resume previous flows. See the allowable value descriptions for more details |
 | Topic                 |               |                  | The topic to publish the message to                                                                     |
 | Username              |               |                  | Username to use when connecting to the broker                                                           |
 ### Relationships
