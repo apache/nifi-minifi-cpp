@@ -54,19 +54,12 @@ class Connectable : public CoreComponent {
 
   void setSupportedRelationships(const auto& relationships);
 
-  // Whether the relationship is supported
   bool isSupportedRelationship(const Relationship &relationship);
 
   std::vector<Relationship> getSupportedRelationships() const;
 
-  /**
-   * Sets auto terminated relationships
-   * @param relationships
-   * @return result of set operation.
-   */
-  bool setAutoTerminatedRelationships(const std::vector<Relationship> &relationships);
+  void setAutoTerminatedRelationships(const auto& relationships);
 
-  // Check whether the relationship is auto terminated
   bool isAutoTerminated(const Relationship &relationship);
 
   std::chrono::milliseconds getPenalizationPeriod() const {
@@ -204,6 +197,21 @@ void Connectable::setSupportedRelationships(const auto& relationships) {
   for (const auto& item : relationships) {
     relationships_[item.getName()] = item;
     logger_->log_debug("Processor %s supported relationship name %s", name_, item.getName());
+  }
+}
+
+void Connectable::setAutoTerminatedRelationships(const auto& relationships) {
+  if (isRunning()) {
+    logger_->log_warn("Can not set processor auto terminated relationship while the process %s is running", name_);
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(relationship_mutex_);
+
+  auto_terminated_relationships_.clear();
+  for (const auto& item : relationships) {
+    auto_terminated_relationships_[item.getName()] = item;
+    logger_->log_debug("Processor %s auto terminated relationship name %s", name_, item.getName());
   }
 }
 

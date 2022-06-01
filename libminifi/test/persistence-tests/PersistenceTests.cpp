@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #undef NDEBUG
+
+#include <array>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -150,7 +151,7 @@ struct TestFlow{
 std::unique_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {
   auto processor = std::make_unique<MergeContent>("MergeContent", id);
   processor->initialize();
-  processor->setAutoTerminatedRelationships({{"original", "d"}});
+  processor->setAutoTerminatedRelationships(std::array{core::Relationship{"original", "d"}});
 
   processor->setProperty(MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
   processor->setProperty(MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);

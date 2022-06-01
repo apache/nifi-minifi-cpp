@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <array>
 #include <memory>
 #include <optional>
 #include <string>
@@ -111,11 +111,11 @@ class RetryFlowFileTest {
     plan_->addConnection(putfile_on_failure, success, log_attribute);
 
 
-    update->setAutoTerminatedRelationships({failure});
-    putfile_on_retry->setAutoTerminatedRelationships({failure});
-    putfile_on_retries_exceeded->setAutoTerminatedRelationships({failure});
-    putfile_on_failure->setAutoTerminatedRelationships({failure});
-    log_attribute->setAutoTerminatedRelationships({success});
+    update->setAutoTerminatedRelationships(std::array{failure});
+    putfile_on_retry->setAutoTerminatedRelationships(std::array{failure});
+    putfile_on_retries_exceeded->setAutoTerminatedRelationships(std::array{failure});
+    putfile_on_failure->setAutoTerminatedRelationships(std::array{failure});
+    log_attribute->setAutoTerminatedRelationships(std::array{success});
 
     // Properties
     if (retry_attribute_value_before_processing) { plan_->setProperty(update, retry_attr_name_on_flowfile.value_or("flowfile.retries"), retry_attribute_value_before_processing.value(), true); }

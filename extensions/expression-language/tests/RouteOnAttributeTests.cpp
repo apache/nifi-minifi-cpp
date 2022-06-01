@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <array>
 #include <memory>
 #include "TestBase.h"
 #include "Catch.h"
@@ -38,7 +39,7 @@ TEST_CASE("RouteOnAttributeMatchedTest", "[routeOnAttributeMatchedTest]") {
   plan->setProperty(update_proc, "route_condition_attr", "true", true);
 
   const auto &route_proc = plan->addProcessor("RouteOnAttribute", "route", core::Relationship("success", "description"), true);
-  route_proc->setAutoTerminatedRelationships({ { core::Relationship("unmatched", "description") } });
+  route_proc->setAutoTerminatedRelationships(std::array{core::Relationship("unmatched", "description")});
   plan->setProperty(route_proc, "route_matched", "${route_condition_attr}", true);
 
   const auto &update_matched_proc = plan->addProcessor("UpdateAttribute", "update_matched", core::Relationship("route_matched", "description"), true);

@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include <sys/stat.h>
-
+#include <array>
 #include <cstdio>
 #include <utility>
 #include <memory>
@@ -494,7 +492,7 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
 
   SECTION("with an empty file and create directory property set to false") {
     plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "false");
-    putfile->setAutoTerminatedRelationships({core::Relationship("failure", "description")});
+    putfile->setAutoTerminatedRelationships(std::array{core::Relationship("failure", "description")});
 
     std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
     of.close();
@@ -526,7 +524,7 @@ TEST_CASE("PutFileCreateDirectoryTest", "[PutFileProperties]") {
 
   SECTION("with a non-empty file and create directory property set to false") {
     plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::CreateDirs.getName(), "false");
-    putfile->setAutoTerminatedRelationships({core::Relationship("failure", "description")});
+    putfile->setAutoTerminatedRelationships(std::array{core::Relationship("failure", "description")});
 
     std::ofstream of(std::string(dir) + utils::file::FileUtils::get_separator() + "tstFile.ext");
     of << "tempFile";

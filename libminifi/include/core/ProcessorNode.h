@@ -166,8 +166,8 @@ class ProcessorNode : public ConfigurableComponent, public Connectable {
     return ret;
   }
 
-  bool setAutoTerminatedRelationships(std::vector<Relationship> relationships) {
-    return processor_->setAutoTerminatedRelationships(relationships);
+  void setAutoTerminatedRelationships(std::vector<Relationship> relationships) {
+    processor_->setAutoTerminatedRelationships(relationships);
   }
 
   bool isAutoTerminated(Relationship relationship) {
