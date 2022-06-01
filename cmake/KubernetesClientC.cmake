@@ -36,8 +36,8 @@ set(WEBSOCKETS_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/libwebsockets/fix-incl
 set(WEBSOCKETS_PC ${Bash_EXECUTABLE} -c "set -x &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${WEBSOCKETS_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${WEBSOCKETS_PATCH_FILE})")
 FetchContent_Declare(websockets
-        GIT_REPOSITORY  https://libwebsockets.org/repo/libwebsockets.git
-        GIT_TAG         v4.3.1
+        GIT_REPOSITORY  https://github.com/warmcat/libwebsockets.git
+        GIT_TAG         b0a749c8e7a8294b68581ce4feac0e55045eb00b  # v4.3.2
         PATCH_COMMAND "${WEBSOCKETS_PC}"
 )
 

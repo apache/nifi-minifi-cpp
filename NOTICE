@@ -62,7 +62,7 @@ This software includes third party software subject to the following copyrights:
 - asio - Copyright (c) 2003-2022 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 - TartanLlama/expected - public domain, thanks to Sy Brand
 - libyaml - Copyright (c) 2006-2016 Kirill Simonov, Copyright (c) 2017-2020 Ingy döt Net
-- libwebsockets - Copyright (C) 2010 - 2020 Andy Green <andy@warmcat.com>
+- libwebsockets - Copyright (C) 2010 - 2022 Andy Green <andy@warmcat.com>
 - kubernetes-client/c - Brendan Burns, Hui Yu and other contributors
 - nlohmann json - Copyright (c) 2013-2022 Niels Lohmann
 - abseil-cpp - Google Inc.
