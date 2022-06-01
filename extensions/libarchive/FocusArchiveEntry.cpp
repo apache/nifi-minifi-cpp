@@ -176,7 +176,7 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::Ba
   archive_read_support_filter_all(inputArchive);
 
   // Read each item in the archive
-  if ((archive_read_open(inputArchive, &data, ok_cb, read_cb, ok_cb))) {
+  if (archive_read_open(inputArchive, &data, ok_cb, read_cb, ok_cb)) {
     logger_->log_error("FocusArchiveEntry can't open due to archive error: %s", archive_error_string(inputArchive));
     return nlen;
   }
