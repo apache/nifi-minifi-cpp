@@ -20,7 +20,7 @@
 
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
-#include "PrometheusMetricsExposer.h"
+#include "PrometheusExposerWrapper.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
@@ -33,9 +33,9 @@ void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& co
   configuration_ = configuration;
   response_node_loader_ = &response_node_loader;
   if (!exposer_) {
-    exposer_ = std::make_unique<PrometheusMetricsExposer>(readPort());
+    exposer_ = std::make_unique<PrometheusExposerWrapper>(readPort());
   }
-  registerCollectables(root);
+  loadMetricNodes(root);
 }
 
 uint32_t PrometheusMetricsPublisher::readPort() {
@@ -48,18 +48,25 @@ uint32_t PrometheusMetricsPublisher::readPort() {
 
 void PrometheusMetricsPublisher::clearMetricNodes() {
   std::lock_guard<std::mutex> lock(registered_metrics_mutex_);
+  logger_->log_debug("Clearing all metric nodes.");
   for (const auto& collection : gauge_collections_) {
     exposer_->removeMetric(collection);
   }
   gauge_collections_.clear();
 }
 
-void PrometheusMetricsPublisher::reloadMetricNodes(core::ProcessGroup* root) {
+void PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
   std::lock_guard<std::mutex> lock(registered_metrics_mutex_);
-  registerCollectables(root);
+  auto nodes = getMetricNodes(root);
+
+  for (const auto& metric_node : nodes) {
+    logger_->log_debug("Registering metric node '%s'", metric_node->getName());
+    gauge_collections_.push_back(std::make_shared<PublishedMetricGaugeCollection>(metric_node));
+    exposer_->registerMetric(gauge_collections_.back());
+  }
 }
 
-std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::loadMetricNodes(core::ProcessGroup* root) {
+std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPublisher::getMetricNodes(core::ProcessGroup* root) {
   std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
   if (auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics)) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
@@ -73,15 +80,6 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPub
     }
   }
   return nodes;
-}
-
-void PrometheusMetricsPublisher::registerCollectables(core::ProcessGroup* root) {
-  auto nodes = loadMetricNodes(root);
-
-  for (const auto& metric_node : nodes) {
-    gauge_collections_.push_back(std::make_shared<PublishedMetricGaugeCollection>(metric_node));
-    exposer_->registerMetric(gauge_collections_.back());
-  }
 }
 
 REGISTER_RESOURCE(PrometheusMetricsPublisher, "HTTP server that exposes MiNiFi metrics for Prometheus to scrape");

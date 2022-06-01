@@ -14,21 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "PrometheusMetricsExposer.h"
+#pragma once
+
+#include <memory>
+
+#include "MetricsExposer.h"
+#include "prometheus/exposer.h"
+#include "core/logging/Logger.h"
+#include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
-PrometheusMetricsExposer::PrometheusMetricsExposer(uint32_t port)
-    : exposer_(std::to_string(port)) {
-  logger_->log_info("Started Prometheus metrics publisher on port %u", port);
-}
+class PrometheusExposerWrapper : public MetricsExposer {
+ public:
+  explicit PrometheusExposerWrapper(uint32_t port);
+  void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
+  void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
 
-void PrometheusMetricsExposer::registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) {
-  exposer_.RegisterCollectable(metric);
-}
-
-void PrometheusMetricsExposer::removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) {
-  exposer_.RemoveCollectable(metric);
-}
+ private:
+  ::prometheus::Exposer exposer_;
+  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusExposerWrapper>::getLogger()};
+};
 
 }  // namespace org::apache::nifi::minifi::extensions::prometheus

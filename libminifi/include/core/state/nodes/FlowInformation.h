@@ -39,7 +39,7 @@
 #include "../nodes/StateMonitor.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
-#include "../ConnectionMonitor.h"
+#include "../ConnectionStore.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -125,7 +125,7 @@ class FlowVersion : public DeviceInformation {
   std::shared_ptr<FlowIdentifier> identifier;
 };
 
-class FlowMonitor : public StateMonitorNode, public ConnectionMonitor {
+class FlowMonitor : public StateMonitorNode, public ConnectionStore {
  public:
   FlowMonitor(const std::string &name, const utils::Identifier &uuid)
       : StateMonitorNode(name, uuid) {

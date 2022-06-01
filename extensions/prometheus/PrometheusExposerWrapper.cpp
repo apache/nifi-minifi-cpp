@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,31 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#include "PrometheusExposerWrapper.h"
 
-#include <map>
-#include <string>
+namespace org::apache::nifi::minifi::extensions::prometheus {
 
-#include "Connection.h"
+PrometheusExposerWrapper::PrometheusExposerWrapper(uint32_t port)
+    : exposer_(std::to_string(port)) {
+  logger_->log_info("Started Prometheus metrics publisher on port %u", port);
+}
 
-namespace org::apache::nifi::minifi::state {
+void PrometheusExposerWrapper::registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) {
+  exposer_.RegisterCollectable(metric);
+}
 
-class ConnectionMonitor {
- public:
-  void clearConnections() {
-    connections_.clear();
-  }
+void PrometheusExposerWrapper::removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) {
+  exposer_.RemoveCollectable(metric);
+}
 
-  void updateConnection(minifi::Connection* connection) {
-    if (nullptr != connection) {
-      connections_[connection->getUUIDStr()] = connection;
-    }
-  }
-
-  virtual ~ConnectionMonitor() = default;
-
- protected:
-  std::map<std::string, minifi::Connection*> connections_;
-};
-
-}  // namespace org::apache::nifi::minifi::state
+}  // namespace org::apache::nifi::minifi::extensions::prometheus

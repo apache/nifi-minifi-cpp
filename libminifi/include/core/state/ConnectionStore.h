@@ -1,4 +1,5 @@
 /**
+ *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,24 +17,25 @@
  */
 #pragma once
 
-#include <memory>
+#include <map>
+#include <string>
 
-#include "MetricsExposer.h"
-#include "prometheus/exposer.h"
-#include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "Connection.h"
 
-namespace org::apache::nifi::minifi::extensions::prometheus {
+namespace org::apache::nifi::minifi::state {
 
-class PrometheusMetricsExposer : public MetricsExposer {
+class ConnectionStore {
  public:
-  explicit PrometheusMetricsExposer(uint32_t port);
-  void registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
-  void removeMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) override;
+  void updateConnection(minifi::Connection* connection) {
+    if (nullptr != connection) {
+      connections_[connection->getUUIDStr()] = connection;
+    }
+  }
 
- private:
-  ::prometheus::Exposer exposer_;
-  std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PrometheusMetricsExposer>::getLogger()};
+  virtual ~ConnectionStore() = default;
+
+ protected:
+  std::map<std::string, minifi::Connection*> connections_;
 };
 
-}  // namespace org::apache::nifi::minifi::extensions::prometheus
+}  // namespace org::apache::nifi::minifi::state

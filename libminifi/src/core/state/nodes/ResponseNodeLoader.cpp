@@ -50,13 +50,13 @@ void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
   std::vector<core::Processor*> processors;
   root->getAllProcessors(processors);
   for (const auto processor : processors) {
-    auto rep = dynamic_cast<ResponseNodeSource*>(processor);
-    if (rep == nullptr) {
+    auto node_source = dynamic_cast<ResponseNodeSource*>(processor);
+    if (node_source == nullptr) {
       continue;
     }
     // we have a metrics source.
     std::vector<std::shared_ptr<ResponseNode>> metric_vector;
-    rep->getResponseNodes(metric_vector);
+    node_source->getResponseNodes(metric_vector);
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     for (const auto& metric : metric_vector) {
       component_metrics_[metric->getName()] = metric;
@@ -135,19 +135,21 @@ void ResponseNodeLoader::initializeConfigurationChecksums(const std::shared_ptr<
 
 void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root) {
   auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
-  if (flowMonitor != nullptr) {
-    std::map<std::string, Connection*> connections;
-    if (root) {
-      root->getConnections(connections);
-    }
+  if (flowMonitor == nullptr) {
+    return;
+  }
 
-    for (auto &con : connections) {
-      flowMonitor->updateConnection(con.second);
-    }
-    flowMonitor->setStateMonitor(update_sink_);
-    if (flow_configuration_) {
-      flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
-    }
+  std::map<std::string, Connection*> connections;
+  if (root) {
+    root->getConnections(connections);
+  }
+
+  for (auto &con : connections) {
+    flowMonitor->updateConnection(con.second);
+  }
+  flowMonitor->setStateMonitor(update_sink_);
+  if (flow_configuration_) {
+    flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
   }
 }
 

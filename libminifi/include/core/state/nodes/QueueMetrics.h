@@ -24,7 +24,7 @@
 
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
-#include "../ConnectionMonitor.h"
+#include "../ConnectionStore.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::state::response {
  * C2 server.
  *
  */
-class QueueMetrics : public ResponseNode, public ConnectionMonitor {
+class QueueMetrics : public ResponseNode, public ConnectionStore {
  public:
   QueueMetrics(const std::string &name, const utils::Identifier &uuid)
       : ResponseNode(name, uuid) {

@@ -28,7 +28,7 @@ class MetricsPublisher {
  public:
   virtual void initialize(const std::shared_ptr<Configure>& configuration, response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) = 0;
   virtual void clearMetricNodes() = 0;
-  virtual void reloadMetricNodes(core::ProcessGroup* root) = 0;
+  virtual void loadMetricNodes(core::ProcessGroup* root) = 0;
   virtual ~MetricsPublisher() = default;
 };
 

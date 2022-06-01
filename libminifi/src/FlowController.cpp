@@ -298,7 +298,7 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     response_node_loader_.initializeComponentMetrics(root_.get());
     initializeResponseNodes(root_.get());
     if (metrics_publisher_) {
-      metrics_publisher_->reloadMetricNodes(root_.get());
+      metrics_publisher_->loadMetricNodes(root_.get());
     } else {
       loadMetricsPublisher();
     }
