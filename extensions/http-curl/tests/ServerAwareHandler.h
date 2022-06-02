@@ -18,7 +18,7 @@
 
 #pragma once
 
-class ServerAwareHandler: public CivetHandler{
+class ServerAwareHandler: public CivetHandler {
  protected:
   void sleep_for(std::chrono::milliseconds time) {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -33,6 +33,10 @@ class ServerAwareHandler: public CivetHandler{
   void stop() {
     terminate_ = true;
     stop_signal_.notify_all();
+  }
+
+  virtual std::string readPayload(struct mg_connection* conn) {
+
   }
 
  private:

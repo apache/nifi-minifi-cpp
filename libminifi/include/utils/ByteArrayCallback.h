@@ -52,6 +52,10 @@ class ByteInputCallback {
     vec = utils::span_to<std::vector>(gsl::make_span(content).as_span<std::byte>());
   }
 
+  void setBuffer(std::vector<std::byte> data) {
+    vec = std::move(data);
+  }
+
   virtual std::byte* getBuffer(size_t pos) {
     gsl_Expects(pos <= vec.size());
     return vec.data() + pos;

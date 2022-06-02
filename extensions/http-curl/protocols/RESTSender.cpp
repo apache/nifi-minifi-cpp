@@ -27,12 +27,9 @@
 #include "utils/file/FileUtils.h"
 #include "core/Resource.h"
 #include "properties/Configuration.h"
+#include "io/ZlibStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 RESTSender::RESTSender(const std::string &name, const utils::Identifier &uuid)
     : C2Protocol(name, uuid) {
@@ -52,6 +49,18 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
         ssl_context_service_ = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
       }
     }
+    if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
+      if (auto req_encoding = RequestEncoding::parse(req_encoding_str->c_str(), RequestEncoding{})) {
+        req_encoding_ = req_encoding;
+      } else {
+        logger_->log_error("Invalid request encoding '%s'", req_encoding_str.value());
+        req_encoding_ = RequestEncoding::None;
+      }
+    } else {
+      logger_->log_debug("Request encoding is not specified, using default '%s'", toString(RequestEncoding::None));
+      req_encoding_ = RequestEncoding::None;
+    }
+    gzip_request_ = (req_encoding_ == RequestEncoding::Gzip);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
@@ -124,10 +133,30 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
     } else {
       auto data_input = std::make_unique<utils::ByteInputCallback>();
       auto data_cb = std::make_unique<utils::HTTPUploadCallback>();
-      data_input->write(data.value_or(""));
+      if (data && gzip_request_) {
+        io::BufferStream compressed_payload;
+        bool compression_success = [&] {
+          io::ZlibCompressStream compressor(gsl::make_not_null(&compressed_payload), io::ZlibCompressionFormat::GZIP, Z_BEST_COMPRESSION);
+          auto ret = compressor.write(gsl::span<const char>(data.value()).as_span<const std::byte>());
+          if (ret != data->length()) {
+            return false;
+          }
+          compressor.close();
+          return compressor.isFinished();
+        }();
+        if (compression_success) {
+          data_input->setBuffer(compressed_payload.moveBuffer());
+          client.appendHeader("Content-Encoding", "gzip");
+        } else {
+          logger_->log_error("Failed to compress request body, falling back to no compression");
+          data_input->write(data.value());
+        }
+      } else {
+        data_input->write(data.value_or(""));
+      }
       data_cb->ptr = data_input.get();
       client.setUploadCallback(data_cb.get());
-      client.setPostSize(data ? data->size() : 0);
+      client.setPostSize(data_input->getBufferSize());
       inputs.push_back(std::move(data_input));
       callbacks.push_back(std::move(data_cb));
     }
@@ -150,6 +179,9 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
     client.setContentType("application/json");
   }
   bool isOkay = client.submit();
+  if (isOkay && req_encoding_ == RequestEncoding::Dynamic) {
+    gzip_request_ = client.getHeaderValue("Accept-Encoding").find("gzip") != std::string::npos;
+  }
   int64_t respCode = client.getResponseCode();
   const bool clientError = 400 <= respCode && respCode < 500;
   const bool serverError = 500 <= respCode && respCode < 600;
@@ -174,8 +206,4 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
 
 REGISTER_RESOURCE(RESTSender, "Encapsulates the restful protocol that is built upon C2Protocol.");
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

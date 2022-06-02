@@ -24,12 +24,9 @@
 #include "c2/protocols/RESTProtocol.h"
 #include "controllers/SSLContextService.h"
 #include "../client/HTTPClient.h"
+#include "utils/Enum.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Purpose and Justification: Encapsulates the restful protocol that is built upon C2Protocol.
@@ -40,6 +37,12 @@ namespace c2 {
  *
  */
 class RESTSender : public RESTProtocol, public C2Protocol {
+  SMART_ENUM(RequestEncoding,
+    (None, "none"),
+    (Gzip, "gzip"),
+    (Dynamic, "dynamic")
+  )
+
  public:
   explicit RESTSender(const std::string &name, const utils::Identifier &uuid = utils::Identifier());
 
@@ -66,13 +69,11 @@ class RESTSender : public RESTProtocol, public C2Protocol {
 
   std::string rest_uri_;
   std::string ack_uri_;
+  RequestEncoding req_encoding_;
+  std::atomic_bool gzip_request_{false};
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTSender>::getLogger();
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

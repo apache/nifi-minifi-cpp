@@ -92,6 +92,7 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_c2_rest_url},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_url_ack},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_ssl_context_service},
+  core::ConfigurationProperty{Configuration::nifi_c2_rest_request_encoding},
   core::ConfigurationProperty{Configuration::nifi_c2_rest_heartbeat_minimize_updates, gsl::make_not_null(core::StandardValidators::get().BOOLEAN_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_c2_mqtt_connector_service},
   core::ConfigurationProperty{Configuration::nifi_c2_mqtt_heartbeat_topic},
