@@ -256,6 +256,28 @@ class DockerTestCluster(SingleNodeDockerCluster):
         (code, output) = self.client.containers.get(container_name).exec_run(["ls", "/storage/test-bucket"])
         return code == 0 and output == b''
 
+    def is_elasticsearch_empty(self, container_name):
+        (code, output) = self.client.containers.get(container_name).exec_run(["curl", "-u", "elastic:password", "-k", "-XGET", "https://localhost:9200/_search"])
+        return code == 0 and b'"hits":[]' in output
+
+    def create_doc_elasticsearch(self, container_name, index_name, doc_id):
+        (code, output) = self.client.containers.get(container_name).exec_run(["/bin/bash", "-c",
+                                                                              "curl -u elastic:password -k -XPUT https://localhost:9200/" + index_name + "/_doc/" + doc_id + " -H Content-Type:application/json -d'{\"field1\":\"value1\"}'"])
+        return code == 0 and ('"_id":"' + doc_id + '"').encode() in output
+
+    def check_elastic_field_value(self, container_name, index_name, doc_id, field_name, field_value):
+        (code, output) = self.client.containers.get(container_name).exec_run(["/bin/bash", "-c",
+                                                                              "curl -u elastic:password -k -XGET https://localhost:9200/" + index_name + "/_doc/" + doc_id])
+        return code == 0 and (field_name + '":"' + field_value).encode() in output
+
+    def elastic_generate_apikey(self, elastic_container_name):
+        (code, output) = self.client.containers.get(elastic_container_name).exec_run(["/bin/bash", "-c",
+                                                                                      "curl -u elastic:password -k -XPOST https://localhost:9200/_security/api_key -H Content-Type:application/json -d'{\"name\":\"my-api-key\",\"expiration\":\"1d\",\"role_descriptors\":{\"role-a\": {\"cluster\": [\"all\"],\"index\": [{\"names\": [\"my_index\"],\"privileges\": [\"all\"]}]}}}'"])
+        output = output.decode(self.get_stdout_encoding())
+        output_lines = output.splitlines()
+        result = json.loads(output_lines[-1])
+        return result["encoded"]
+
     def query_postgres_server(self, postgresql_container_name, query, number_of_rows):
         (code, output) = self.client.containers.get(postgresql_container_name).exec_run(["psql", "-U", "postgres", "-c", query])
         output = output.decode(self.get_stdout_encoding())

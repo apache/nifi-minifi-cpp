@@ -20,6 +20,7 @@
 - [AWSCredentialsService](#AWSCredentialsService)
 - [AzureStorageCredentialsService](#AzureStorageCredentialsService)
 - [GCPCredentialsControllerService](#GCPCredentialsControllerService)
+- [ElasticsearchCredentialsControllerService](#ElasticsearchCredentialsControllerService)
 - [KubernetesControllerService](#kubernetesControllerService)
 
 ## AWSCredentialsService
@@ -82,6 +83,26 @@ properties (not in bold) are considered optional.
 | **Credentials Location**  | Google Application Default Credentials | Google Application Default Credentials<br> Use Compute Engine Credentials<br>Service Account JSON File<br>Service Account JSON<br>Use Anonymous credentials | The location of the credentials.                                     |
 | Service Account JSON File |                                        |                                                                                                                                                             | Path to a file containing a Service Account key file in JSON format. |
 | Service Account JSON      |                                        |                                                                                                                                                             | The raw JSON containing a Service Account keyfile.                   |
+
+
+## ElasticsearchCredentialsControllerService
+
+### Description
+
+Elasticsearch Credentials Controller Service
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other
+properties (not in bold) are considered optional.
+
+
+| Name                   | Default Value | Allowable Values                 | Description                           |
+|------------------------|---------------|----------------------------------|---------------------------------------|
+| **Authorization Type** | API Key       | Basic authentication</br>API Key | Authorization Type                    |
+| Username               |               |                                  | The username for basic authentication |
+| Password               |               |                                  | The password for basic authentication |
+| API Key                |               |                                  | The API Key to use                    |
 
 
 ## KubernetesControllerService

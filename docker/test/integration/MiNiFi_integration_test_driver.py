@@ -77,6 +77,11 @@ class MiNiFi_integration_test:
         assert self.wait_for_container_startup_to_finish('splunk')
         assert self.cluster.enable_splunk_hec_indexer('splunk', 'splunk_hec_token')
 
+    def start_elasticsearch(self):
+        self.cluster.acquire_container('elasticsearch', 'elasticsearch')
+        self.cluster.deploy('elasticsearch')
+        assert self.wait_for_container_startup_to_finish('elasticsearch')
+
     def start(self):
         logging.info("MiNiFi_integration_test start")
         self.cluster.deploy_flow()
@@ -219,6 +224,18 @@ class MiNiFi_integration_test:
 
     def check_empty_gcs_bucket(self, gcs_container_name):
         assert self.cluster.is_gcs_bucket_empty(gcs_container_name)
+
+    def check_empty_elastic(self, elastic_container_name):
+        assert self.cluster.is_elasticsearch_empty(elastic_container_name)
+
+    def elastic_generate_apikey(self, elastic_container_name):
+        return self.cluster.elastic_generate_apikey(elastic_container_name)
+
+    def create_doc_elasticsearch(self, elastic_container_name, index_name, doc_id):
+        assert self.cluster.create_doc_elasticsearch(elastic_container_name, index_name, doc_id)
+
+    def check_elastic_field_value(self, elastic_container_name, index_name, doc_id, field_name, field_value):
+        assert self.cluster.check_elastic_field_value(elastic_container_name, index_name, doc_id, field_name, field_value)
 
     def check_minifi_log_contents(self, line, timeout_seconds=60, count=1):
         self.check_container_log_contents("minifi-cpp", line, timeout_seconds, count)

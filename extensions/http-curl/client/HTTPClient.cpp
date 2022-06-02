@@ -135,6 +135,14 @@ void HTTPClient::setDisableHostVerification() {
   curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYHOST, 0L);
 }
 
+void HTTPClient::setBasicAuth(std::string username, std::string password) {
+  username_password_.emplace(std::move(username), std::move(password));
+}
+
+void HTTPClient::clearBasicAuth() {
+  username_password_.reset();
+}
+
 bool HTTPClient::setSpecificSSLVersion(SSLVersion specific_version) {
 #if CURL_AT_LEAST_VERSION(7, 54, 0)
   // bitwise or of different enum types is deprecated in C++20, but the curl api explicitly supports ORing one of CURL_SSLVERSION and one of CURL_SSLVERSION_MAX
@@ -267,6 +275,11 @@ bool HTTPClient::submit() {
   if (headers_ != nullptr) {
     headers_ = curl_slist_append(headers_, "Expect:");
     curl_easy_setopt(http_session_, CURLOPT_HTTPHEADER, headers_);
+  }
+
+  if (username_password_) {
+    curl_easy_setopt(http_session_, CURLOPT_USERNAME, username_password_->first.c_str());
+    curl_easy_setopt(http_session_, CURLOPT_PASSWORD, username_password_->second.c_str());
   }
 
   curl_easy_setopt(http_session_, CURLOPT_URL, url_.c_str());

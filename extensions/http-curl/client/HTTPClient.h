@@ -38,6 +38,7 @@
 #include <map>
 #include <chrono>
 #include <string>
+#include <utility>
 #ifdef WIN32
 #include <regex>
 #else
@@ -137,6 +138,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   void setDisablePeerVerification() override;
 
   void setDisableHostVerification() override;
+
+  void setBasicAuth(std::string username, std::string password) override;
+  void clearBasicAuth() override;
 
   bool setSpecificSSLVersion(SSLVersion specific_version) override;
 
@@ -296,6 +300,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   std::chrono::milliseconds keep_alive_probe_{-1};
 
   std::chrono::milliseconds keep_alive_idle_{-1};
+
+  std::optional<std::pair<std::string, std::string>> username_password_;
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HTTPClient>::getLogger()};
 };

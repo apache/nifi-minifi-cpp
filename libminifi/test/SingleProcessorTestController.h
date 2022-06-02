@@ -63,6 +63,14 @@ class SingleProcessorTestController : public TestController {
     return trigger();
   }
 
+  auto trigger(std::initializer_list<std::tuple<const std::string_view, std::unordered_map<std::string, std::string>>> flow_files) {
+    for (const auto& flow_file : flow_files) {
+      const auto new_flow_file = createFlowFile(std::get<const std::string_view>(flow_file), std::get<std::unordered_map<std::string, std::string>>(flow_file));
+      input_->put(new_flow_file);
+    }
+    return trigger();
+  }
+
   bool triggerUntil(const std::unordered_map<core::Relationship, size_t>& expected_quantities,
                     ProcessorTriggerResult& result,
                     const std::chrono::milliseconds max_duration,

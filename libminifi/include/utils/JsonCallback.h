@@ -33,6 +33,26 @@ namespace nifi {
 namespace minifi {
 namespace utils {
 
+class JsonInputCallback {
+ public:
+  explicit JsonInputCallback(rapidjson::Document& document) : document_(document) {}
+  int64_t operator()(const std::shared_ptr<io::BaseStream>& stream) {
+    std::string content;
+    content.resize(stream->size());
+    const auto read_ret = stream->read(gsl::make_span(content).as_span<std::byte>());
+    if (io::isError(read_ret)) {
+      return -1;
+    }
+    rapidjson::ParseResult parse_result = document_.Parse<rapidjson::kParseStopWhenDoneFlag>(content.data());
+    if (parse_result.IsError())
+      return -1;
+
+    return read_ret;
+  }
+ private:
+  rapidjson::Document& document_;
+};
+
 class JsonOutputCallback {
  public:
   explicit JsonOutputCallback(rapidjson::Document&& root, std::optional<uint8_t> decimal_places)
