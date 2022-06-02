@@ -147,7 +147,8 @@ bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& l
 }
 
 void UnorderedMapPersistableKeyValueStoreService::initialize() {
-  ControllerService::initialize();
+  // UnorderedMapKeyValueStoreService::initialize() also calls setSupportedProperties, and we don't want that
+  ControllerService::initialize();  // NOLINT(bugprone-parent-virtual-call)
   setSupportedProperties(properties());
 }
 
