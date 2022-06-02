@@ -24,12 +24,14 @@
 #include <set>
 #include <unordered_set>
 #include <unordered_map>
+
 #include "Core.h"
 #include <condition_variable>
 #include "core/logging/Logger.h"
 #include "Relationship.h"
 #include "Scheduling.h"
 #include "core/state/FlowIdentifier.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -52,13 +54,13 @@ class Connectable : public CoreComponent {
   Connectable& operator=(const Connectable &other) = delete;
   Connectable& operator=(Connectable&& other) = delete;
 
-  void setSupportedRelationships(const auto& relationships);
+  void setSupportedRelationships(gsl::span<const core::Relationship> relationships);
 
   bool isSupportedRelationship(const Relationship &relationship);
 
   std::vector<Relationship> getSupportedRelationships() const;
 
-  void setAutoTerminatedRelationships(const auto& relationships);
+  void setAutoTerminatedRelationships(gsl::span<const core::Relationship> relationships);
 
   bool isAutoTerminated(const Relationship &relationship);
 
@@ -184,35 +186,5 @@ class Connectable : public CoreComponent {
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
-
-void Connectable::setSupportedRelationships(const auto& relationships) {
-  if (isRunning()) {
-    logger_->log_warn("Can not set processor supported relationship while the process %s is running", name_);
-    return;
-  }
-
-  std::lock_guard<std::mutex> lock(relationship_mutex_);
-
-  relationships_.clear();
-  for (const auto& item : relationships) {
-    relationships_[item.getName()] = item;
-    logger_->log_debug("Processor %s supported relationship name %s", name_, item.getName());
-  }
-}
-
-void Connectable::setAutoTerminatedRelationships(const auto& relationships) {
-  if (isRunning()) {
-    logger_->log_warn("Can not set processor auto terminated relationship while the process %s is running", name_);
-    return;
-  }
-
-  std::lock_guard<std::mutex> lock(relationship_mutex_);
-
-  auto_terminated_relationships_.clear();
-  for (const auto& item : relationships) {
-    auto_terminated_relationships_[item.getName()] = item;
-    logger_->log_debug("Processor %s auto terminated relationship name %s", name_, item.getName());
-  }
-}
 
 }  // namespace org::apache::nifi::minifi::core

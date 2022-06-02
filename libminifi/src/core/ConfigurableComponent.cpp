@@ -172,6 +172,19 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
   }
 }
 
+void ConfigurableComponent::setSupportedProperties(gsl::span<const core::Property> properties) {
+  if (!canEdit()) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> lock(configuration_mutex_);
+
+  properties_.clear();
+  for (const auto& item : properties) {
+    properties_[item.getName()] = item;
+  }
+}
+
 bool ConfigurableComponent::getDynamicProperty(const std::string name, std::string &value) const {
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 

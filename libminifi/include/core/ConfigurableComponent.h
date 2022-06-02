@@ -32,6 +32,7 @@
 
 #include "logging/Logger.h"
 #include "Property.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
@@ -91,7 +92,7 @@ class ConfigurableComponent {
      */
   bool setProperty(const Property& prop, PropertyValue &value);
 
-  void setSupportedProperties(const auto& properties);
+  void setSupportedProperties(gsl::span<const core::Property> properties);
 
   /**
    * Gets whether or not this processor supports dynamic properties.
@@ -219,19 +220,6 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
   } else {
     logger_->log_warn("Could not find property %s", name);
     return false;
-  }
-}
-
-void ConfigurableComponent::setSupportedProperties(const auto& properties) {
-  if (!canEdit()) {
-    return;
-  }
-
-  std::lock_guard<std::mutex> lock(configuration_mutex_);
-
-  properties_.clear();
-  for (const auto& item : properties) {
-    properties_[item.getName()] = item;
   }
 }
 
