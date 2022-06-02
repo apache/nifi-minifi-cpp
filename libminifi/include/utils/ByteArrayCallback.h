@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "concurrentqueue.h"
 #include "FlowFileRecord.h"

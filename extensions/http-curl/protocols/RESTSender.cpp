@@ -51,6 +51,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
     }
     if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
       if (auto req_encoding = RequestEncoding::parse(req_encoding_str->c_str(), RequestEncoding{})) {
+        logger_->log_debug("Using request encoding '%s'", req_encoding.toString());
         req_encoding_ = req_encoding;
       } else {
         logger_->log_error("Invalid request encoding '%s'", req_encoding_str.value());
@@ -60,7 +61,6 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
       logger_->log_debug("Request encoding is not specified, using default '%s'", toString(RequestEncoding::None));
       req_encoding_ = RequestEncoding::None;
     }
-    gzip_request_ = (req_encoding_ == RequestEncoding::Gzip);
   }
   logger_->log_debug("Submitting to %s", rest_uri_);
 }
@@ -133,7 +133,7 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
     } else {
       auto data_input = std::make_unique<utils::ByteInputCallback>();
       auto data_cb = std::make_unique<utils::HTTPUploadCallback>();
-      if (data && gzip_request_) {
+      if (data && req_encoding_ == RequestEncoding::Gzip) {
         io::BufferStream compressed_payload;
         bool compression_success = [&] {
           io::ZlibCompressStream compressor(gsl::make_not_null(&compressed_payload), io::ZlibCompressionFormat::GZIP, Z_BEST_COMPRESSION);
@@ -179,9 +179,6 @@ C2Payload RESTSender::sendPayload(const std::string url, const Direction directi
     client.setContentType("application/json");
   }
   bool isOkay = client.submit();
-  if (isOkay && req_encoding_ == RequestEncoding::Dynamic) {
-    gzip_request_ = client.getHeaderValue("Accept-Encoding").find("gzip") != std::string::npos;
-  }
   int64_t respCode = client.getResponseCode();
   const bool clientError = 400 <= respCode && respCode < 500;
   const bool serverError = 500 <= respCode && respCode < 600;

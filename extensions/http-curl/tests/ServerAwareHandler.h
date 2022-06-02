@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <string>
+#include <array>
+
 class ServerAwareHandler: public CivetHandler {
  protected:
   void sleep_for(std::chrono::milliseconds time) {
@@ -29,14 +32,21 @@ class ServerAwareHandler: public CivetHandler {
     return !terminate_.load();
   }
 
+  virtual std::string readPayload(struct mg_connection* conn) {
+    std::string response;
+    int readBytes;
+
+    std::array<char, 1024> buffer;
+    while ((readBytes = mg_read(conn, buffer.data(), buffer.size())) > 0) {
+      response.append(buffer.data(), readBytes);
+    }
+    return response;
+  }
+
  public:
   void stop() {
     terminate_ = true;
     stop_signal_.notify_all();
-  }
-
-  virtual std::string readPayload(struct mg_connection* conn) {
-
   }
 
  private:
