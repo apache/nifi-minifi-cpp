@@ -141,10 +141,12 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
 }
 
 bool AbstractMQTTProcessor::reconnect() {
-  if (!client_)
+  if (!client_) {
     return false;
-  if (MQTTClient_isConnected(client_))
+  }
+  if (MQTTClient_isConnected(client_)) {
     return true;
+  }
   MQTTClient_connectOptions conn_opts = MQTTClient_connectOptions_initializer;
   conn_opts.keepAliveInterval = std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count();
   conn_opts.cleansession = getCleanSession();
@@ -164,6 +166,7 @@ bool AbstractMQTTProcessor::reconnect() {
     return false;
   }
   return true;
+  //TODO do something about return values at calls
 }
 
   void AbstractMQTTProcessor::notifyStop() {
