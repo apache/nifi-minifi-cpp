@@ -100,15 +100,17 @@ TEST_CASE("SchedulingAgentTests", "[SchedulingAgent]") {
     cron_driven_agent->start();
     auto first_task_reschedule_info = cron_driven_agent->run(count_proc.get(), context, factory);
     CHECK(!first_task_reschedule_info.finished_);
-    auto next_run_time_point = std::chrono::round<std::chrono::years>(std::chrono::system_clock::now() + first_task_reschedule_info.wait_time_);
-    CHECK(next_run_time_point == std::chrono::ceil<std::chrono::years>(std::chrono::system_clock::now()));
-    CHECK(count_proc->getNumberOfTriggers() == 0);
+    if (first_task_reschedule_info.wait_time_ > 1min) {  // To avoid possibly failing around dec 31 23:59:59
+      auto next_run_time_point = std::chrono::round<std::chrono::years>(std::chrono::system_clock::now() + first_task_reschedule_info.wait_time_);
+      CHECK(next_run_time_point == std::chrono::ceil<std::chrono::years>(std::chrono::system_clock::now()));
+      CHECK(count_proc->getNumberOfTriggers() == 0);
 
-    auto second_task_reschedule_info = cron_driven_agent->run(count_proc.get(), context, factory);
-    CHECK(!second_task_reschedule_info.finished_);
-    next_run_time_point = std::chrono::round<std::chrono::years>(std::chrono::system_clock::now() + first_task_reschedule_info.wait_time_);
-    CHECK(next_run_time_point == std::chrono::ceil<std::chrono::years>(std::chrono::system_clock::now()));
-    CHECK(count_proc->getNumberOfTriggers() == 0);
+      auto second_task_reschedule_info = cron_driven_agent->run(count_proc.get(), context, factory);
+      CHECK(!second_task_reschedule_info.finished_);
+      next_run_time_point = std::chrono::round<std::chrono::years>(std::chrono::system_clock::now() + first_task_reschedule_info.wait_time_);
+      CHECK(next_run_time_point == std::chrono::ceil<std::chrono::years>(std::chrono::system_clock::now()));
+      CHECK(count_proc->getNumberOfTriggers() == 0);
+    }
   }
 
   SECTION("Cron Driven every sec") {
