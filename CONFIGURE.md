@@ -288,6 +288,11 @@ It does require more configuration.  uid.minifi.device.segment.bits is used to s
 
 Additionally, a unique hexadecimal uid.minifi.device.segment should be assigned to each MiNiFi instance.
 
+### Asset directory
+
+It is possible to make agents download an asset (triggered through the c2 protocol). The target directory can be specified
+using the `nifi.asset.directory` agent property, which defaults to `${MINIFI_HOME}/asset`.
+
 ### Controller Services
  If you need to reference a controller service in your config.yml file, use the following template. In the example, below, ControllerServiceClass is the name of the class defining the controller Service. ControllerService1
  is linked to ControllerService2, and requires the latter to be started for ControllerService1 to start.
