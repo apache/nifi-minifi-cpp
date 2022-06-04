@@ -23,16 +23,12 @@
 #include <memory>
 #include <utility>
 #include "date/tz.h"
+#include "Exception.h"
 
 namespace org::apache::nifi::minifi::utils {
-class BadCronExpression : public std::exception {
+class BadCronExpression : public minifi::Exception {
  public:
-  explicit BadCronExpression(std::string msg) : msg_(std::move(msg)) {}
-
-  [[nodiscard]] const char* what() const noexcept override { return (msg_.c_str()); }
-
- private:
-  std::string msg_;
+  explicit BadCronExpression(const std::string& errmsg) : minifi::Exception(errmsg) {}
 };
 
 class CronField {

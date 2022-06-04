@@ -69,7 +69,10 @@ class ManualClock : public timeutils::Clock {
   std::chrono::milliseconds time_{0};
 };
 
+
 #ifdef WIN32
+// The tzdata location is set as a global variable in date-tz library
+// We need to set it from from libminifi to effect calls made from libminifi (on Windows)
 void dateSetInstall(const std::string& install);
 #endif
 
