@@ -50,7 +50,7 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
       }
     }
     if (auto req_encoding_str = configure->get(Configuration::nifi_c2_rest_request_encoding)) {
-      if (auto req_encoding = RequestEncoding::parse(req_encoding_str->c_str(), RequestEncoding{})) {
+      if (auto req_encoding = RequestEncoding::parse(req_encoding_str->c_str(), RequestEncoding{}, false)) {
         logger_->log_debug("Using request encoding '%s'", req_encoding.toString());
         req_encoding_ = req_encoding;
       } else {
