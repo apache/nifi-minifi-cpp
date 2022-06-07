@@ -117,6 +117,9 @@ TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]"
               utils::Environment::unsetEnvironmentVariable(env_name.c_str());
               break;
             }
+          default: {
+            throw std::runtime_error("Operation value must be modulo 3");
+          }
         }
       }
       });

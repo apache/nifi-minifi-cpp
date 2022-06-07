@@ -180,8 +180,9 @@ minifi::c2::Operation CoapProtocol::getOperation(int type) const {
       return minifi::c2::Operation::PAUSE;
     case 9:
       return minifi::c2::Operation::RESUME;
+    default:
+      return minifi::c2::Operation::ACKNOWLEDGE;
   }
-  return minifi::c2::Operation::ACKNOWLEDGE;
 }
 
 minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &payload) {

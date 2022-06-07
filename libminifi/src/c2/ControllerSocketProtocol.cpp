@@ -232,6 +232,8 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           }
         }
         break;
+        default:
+          throw std::runtime_error("Unhandled operation: " + std::to_string(head));
       }
     };
     server_socket_->registerCallback(check, handler);

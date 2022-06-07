@@ -478,9 +478,9 @@ TEST_CASE("expected valueOrElse", "[expected][valueOrElse]") {
   using namespace std::literals;  // NOLINT
   nonstd::expected<int, std::string> ex{nonstd::unexpect, "hello"};
   REQUIRE(42 == (ex | utils::valueOrElse([] { return 42; })));
-  REQUIRE_THROWS_AS(ex | utils::valueOrElse([]{ throw 42; }), int);
+  REQUIRE_THROWS_AS(ex | utils::valueOrElse([]{ throw std::exception(); }), std::exception);
   REQUIRE(gsl::narrow<int>("hello"sv.size()) == (ex | utils::valueOrElse([](const std::string& err) { return gsl::narrow<int>(err.size()); })));
-  REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw 42; }), int);
-  REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw 42; }), int);
-  REQUIRE_THROWS_AS(std::move(ex) | utils::valueOrElse([](std::string&&) -> int { throw 42; }), int);
+  REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);
+  REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw std::exception(); }), std::exception);
+  REQUIRE_THROWS_AS(std::move(ex) | utils::valueOrElse([](std::string&&) -> int { throw std::exception(); }), std::exception);
 }
