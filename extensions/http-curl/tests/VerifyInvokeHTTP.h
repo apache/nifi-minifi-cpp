@@ -32,7 +32,7 @@
 #include "core/state/ProcessorController.h"
 #include "HTTPIntegrationBase.h"
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 class VerifyInvokeHTTP : public HTTPIntegrationBase {
  public:

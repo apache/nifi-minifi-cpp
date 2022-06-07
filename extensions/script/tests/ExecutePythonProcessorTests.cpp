@@ -36,7 +36,6 @@ using org::apache::nifi::minifi::utils::putFileToDir;
 using org::apache::nifi::minifi::utils::getFileContent;
 using org::apache::nifi::minifi::utils::file::getFileNameAndPath;
 using org::apache::nifi::minifi::utils::file::concat_path;
-using org::apache::nifi::minifi::utils::file::get_separator;
 using org::apache::nifi::minifi::utils::file::resolve;
 using org::apache::nifi::minifi::utils::file::getFullPath;
 

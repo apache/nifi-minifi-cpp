@@ -36,7 +36,7 @@
 #include "client/HTTPStream.h"
 #include "properties/Configuration.h"
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 class SiteToSiteTestHarness : public HTTPIntegrationBase {
  public:

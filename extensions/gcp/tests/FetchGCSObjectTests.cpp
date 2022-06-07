@@ -28,8 +28,6 @@ namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
 
 using FetchGCSObject = org::apache::nifi::minifi::extensions::gcp::FetchGCSObject;
 using GCPCredentialsControllerService = org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService;
-using ::google::cloud::storage::testing::canonical_errors::TransientError;
-using ::google::cloud::storage::testing::canonical_errors::PermanentError;
 
 namespace {
 class FetchGCSObjectMocked : public FetchGCSObject {

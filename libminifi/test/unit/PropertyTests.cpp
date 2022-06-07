@@ -26,9 +26,6 @@
 namespace {
 enum class ConversionTestTarget { MS, NS };
 
-namespace core = minifi::core;
-
-
 TEST_CASE("Test Trimmer Right", "[testTrims]") {
   std::string test = "a quick brown fox jumped over the road\t\n";
 

@@ -27,7 +27,7 @@
 #include "StreamPipe.h"
 #include "utils/IntegrationTestUtils.h"
 
-using std::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 TEST_CASE("Test log Levels", "[ttl1]") {
   LogTestController::getInstance().setTrace<logging::Logger>();

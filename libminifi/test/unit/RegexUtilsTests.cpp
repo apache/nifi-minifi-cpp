@@ -19,13 +19,11 @@
 #include <string>
 #include <vector>
 
-#include "Exception.h"
 #include "utils/RegexUtils.h"
 #include "../TestBase.h"
 #include "../Catch.h"
 
 using org::apache::nifi::minifi::utils::Regex;
-using org::apache::nifi::minifi::Exception;
 namespace minifi = org::apache::nifi::minifi;
 
 TEST_CASE("TestRegexUtils::single_match", "[regex1]") {

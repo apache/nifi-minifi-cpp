@@ -26,7 +26,7 @@
 #include "CivetServer.h"
 #include "integration/IntegrationBase.h"
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 int log_message(const struct mg_connection* /*conn*/, const char *message) {
   puts(message);

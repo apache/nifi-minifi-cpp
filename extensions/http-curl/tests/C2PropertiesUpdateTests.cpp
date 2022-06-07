@@ -115,7 +115,7 @@ static const std::string properties_file =
 static const std::string log_properties_file =
     "logger.root=INFO,ostream\n";
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 struct DummyClass1 {};
 struct DummyClass2 {};

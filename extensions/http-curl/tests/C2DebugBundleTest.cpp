@@ -30,7 +30,7 @@
 #include "EmptyFlow.h"
 #include "properties/Configuration.h"
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 class VerifyDebugInfo : public VerifyC2Base {
  public:

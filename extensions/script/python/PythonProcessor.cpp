@@ -29,7 +29,6 @@ namespace nifi {
 namespace minifi {
 namespace python {
 
-namespace py = pybind11;
 namespace core = org::apache::nifi::minifi::core;
 
 PythonProcessor::PythonProcessor(core::Processor* proc) {

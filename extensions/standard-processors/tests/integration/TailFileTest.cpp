@@ -34,7 +34,7 @@
 #include "utils/IntegrationTestUtils.h"
 #include "utils/TestUtils.h"
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 class TailFileTestHarness : public IntegrationBase {
  public:
