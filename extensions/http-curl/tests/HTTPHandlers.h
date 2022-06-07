@@ -375,17 +375,6 @@ class DeleteTransactionResponder : public ServerAwareHandler {
   std::string response_code;
 };
 
-std::string readPayload(struct mg_connection *conn) {
-  std::string response;
-  int readBytes;
-
-  std::array<char, 1024> buffer;
-  while ((readBytes = mg_read(conn, buffer.data(), buffer.size())) > 0) {
-    response.append(buffer.data(), readBytes);
-  }
-  return response;
-}
-
 class HeartbeatHandler : public ServerAwareHandler {
  public:
   explicit HeartbeatHandler(std::shared_ptr<minifi::Configure> configuration) : configuration_(std::move(configuration)) {}

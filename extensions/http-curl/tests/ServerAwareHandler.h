@@ -18,7 +18,10 @@
 
 #pragma once
 
-class ServerAwareHandler: public CivetHandler{
+#include <string>
+#include <array>
+
+class ServerAwareHandler: public CivetHandler {
  protected:
   void sleep_for(std::chrono::milliseconds time) {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -27,6 +30,17 @@ class ServerAwareHandler: public CivetHandler{
 
   bool isServerRunning() const {
     return !terminate_.load();
+  }
+
+  virtual std::string readPayload(struct mg_connection* conn) {
+    std::string response;
+    int readBytes;
+
+    std::array<char, 1024> buffer;
+    while ((readBytes = mg_read(conn, buffer.data(), buffer.size())) > 0) {
+      response.append(buffer.data(), readBytes);
+    }
+    return response;
   }
 
  public:
