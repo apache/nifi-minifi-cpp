@@ -24,18 +24,18 @@
 #include "core/ProcessContext.h"
 #include "core/ProcessSessionFactory.h"
 
-using namespace std::literals::chrono_literals;
-using std::chrono::ceil;
-using std::chrono::seconds;
-using std::chrono::milliseconds;
-using std::chrono::time_point_cast;
-using std::chrono::system_clock;
-
 namespace org::apache::nifi::minifi {
 
 utils::TaskRescheduleInfo CronDrivenSchedulingAgent::run(core::Processor* processor,
                                                          const std::shared_ptr<core::ProcessContext>& processContext,
                                                          const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
+  using namespace std::literals::chrono_literals;
+  using std::chrono::ceil;
+  using std::chrono::seconds;
+  using std::chrono::milliseconds;
+  using std::chrono::time_point_cast;
+  using std::chrono::system_clock;
+
   if (this->running_ && processor->isRunning()) {
     auto uuid = processor->getUUID();
     auto current_time = date::make_zoned<seconds>(date::current_zone(), time_point_cast<seconds>(system_clock::now()));

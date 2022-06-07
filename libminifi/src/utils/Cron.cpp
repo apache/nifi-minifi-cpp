@@ -28,7 +28,6 @@ using std::chrono::minutes;
 using std::chrono::hours;
 using std::chrono::days;
 
-// TODO(C++20): move to std::chrono when calendar is fully supported
 using date::local_seconds;
 using date::day;
 using date::weekday;
@@ -50,7 +49,7 @@ template<class T>
 std::optional<T> fromChars(const std::string& input) {
   T t{};
   const auto last_char = &*std::cend(input);
-  const auto result = std::from_chars(&*std::cbegin(input), last_char, t);
+  const auto result = std::from_chars(input.data(), input.data() + input.size(), t);
   if (result.ptr != last_char)
     return std::nullopt;
   return t;
@@ -101,13 +100,13 @@ day parse<day>(const std::string& day_str) {
 template <>
 month parse<month>(const std::string& month_str) {
 // https://github.com/HowardHinnant/date/issues/550
-// TODO(gcc11): Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
+// Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
 // the month parsing with '%b' is case sensitive in gcc11
 // This has been fixed in gcc12
 #if defined(__GNUC__) && __GNUC__ < 12
   auto patched_month_str = StringUtils::toLower(month_str);
   if (!patched_month_str.empty())
-    patched_month_str[0] = std::toupper(patched_month_str[0]);
+    patched_month_str[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(patched_month_str[0])));
   std::stringstream stream(patched_month_str);
 #else
   std::stringstream stream(month_str);
@@ -131,13 +130,13 @@ month parse<month>(const std::string& month_str) {
 template <>
 weekday parse<weekday>(const std::string& weekday_str) {
 // https://github.com/HowardHinnant/date/issues/550
-// TODO(gcc11): Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
+// Due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78714
 // the weekday parsing with '%a' is case sensitive in gcc11
 // This has been fixed in gcc12
 #if defined(__GNUC__) && __GNUC__ < 12
   auto patched_weekday_str = StringUtils::toLower(weekday_str);
   if (!patched_weekday_str.empty())
-    patched_weekday_str[0] = std::toupper(patched_weekday_str[0]);
+    patched_weekday_str[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(patched_weekday_str[0])));
   std::stringstream stream(patched_weekday_str);
 #else
   std::stringstream stream(weekday_str);
@@ -293,7 +292,10 @@ class IncrementField : public CronField {
 
 class LastNthDayInMonthField : public CronField {
  public:
-  explicit LastNthDayInMonthField(days offset) : offset_(offset) {}
+  explicit LastNthDayInMonthField(days offset) : offset_(offset) {
+    if (!(offset_ <= std::chrono::days(30)))
+      throw BadCronExpression("Offset from last day must be <= 30");
+  }
 
   [[nodiscard]] bool matches(local_seconds tp) const override {
     year_month_day date(floor<days>(tp));
@@ -379,21 +381,21 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
     }
 
     if (field_str == "L") {
-      if (std::is_same<day, FieldType>())
+      if constexpr (std::is_same<day, FieldType>())
         return std::make_unique<LastNthDayInMonthField>(days(0));
-      if (std::is_same<weekday, FieldType>())
+      if constexpr (std::is_same<weekday, FieldType>())
         return std::make_unique<SingleValueField<weekday>>(Saturday);
       throw BadCronExpression("L can only be used in the Day of month/Day of week fields");
     }
 
     if (field_str == "LW") {
-      if (!std::is_same<day, FieldType>())
+      if constexpr (!std::is_same<day, FieldType>())
         throw BadCronExpression("LW can only be used in the Day of month field");
       return std::make_unique<LastWeekDayField>();
     }
 
     if (field_str.find('#') != std::string::npos) {
-      if (!std::is_same<weekday, FieldType>())
+      if constexpr (!std::is_same<weekday, FieldType>())
         throw BadCronExpression("# can only be used in the Day of week field");
       auto operands = StringUtils::split(field_str, "#");
       if (operands.size() != 2)
@@ -408,14 +410,14 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
       if (operands.size() != 2)
         throw BadCronExpression("Invalid field " + field_str);
       if (operands[0] == "L") {
-        if (std::is_same<day, FieldType>())
+        if constexpr (std::is_same<day, FieldType>())
           return std::make_unique<LastNthDayInMonthField>(parse<days>(operands[1]));
       }
       return std::make_unique<RangeField<FieldType>>(parse<FieldType>(operands[0]), parse<FieldType>(operands[1]));
     }
 
     if (field_str.ends_with('L')) {
-      if (!std::is_same<weekday, FieldType>())
+      if constexpr (!std::is_same<weekday, FieldType>())
         throw BadCronExpression("<X>L can only be used in the Day of week field");
       auto prefix = field_str.substr(0, field_str.size()-1);
       return std::make_unique<LastSpecificDayOfTheWeekOfTheMonth>(parse<weekday>(prefix));
@@ -439,7 +441,7 @@ std::unique_ptr<CronField> parseCronField(const std::string& field_str) {
     }
 
     if (field_str.ends_with('W')) {
-      if (!std::is_same<day, FieldType>())
+      if constexpr (!std::is_same<day, FieldType>())
         throw BadCronExpression("W can only be used in the Day of month field");
       auto operands_str = StringUtils::split(field_str, "W");
       if (operands_str.size() != 2)

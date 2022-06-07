@@ -32,7 +32,6 @@ void checkNext(const std::string& expr, const date::zoned_time<seconds>& from, c
   CHECK(next_trigger == next.get_local_time());
 }
 
-
 TEST_CASE("Cron expression ctor tests", "[cron]") {
   REQUIRE_THROWS(Cron("1600 ms"));
   REQUIRE_THROWS(Cron("foo"));
@@ -84,7 +83,7 @@ TEST_CASE("Cron expression ctor tests", "[cron]") {
   REQUIRE_NOTHROW(Cron("* * * * * 2#1 *"));
   REQUIRE_THROWS(Cron("* * * * * * 2#1"));
 
-  // L can only be used in 4th, 5th, 6th fields
+  // L can only be used in 4th, 6th fields
   REQUIRE_THROWS(Cron("L * * * * * *"));
   REQUIRE_THROWS(Cron("* L * * * * *"));
   REQUIRE_THROWS(Cron("* * L * * * *"));
@@ -114,6 +113,7 @@ TEST_CASE("Cron expression ctor tests", "[cron]") {
   REQUIRE_NOTHROW(Cron("0 0 12 1/5 * ?"));
   REQUIRE_NOTHROW(Cron("0 11 11 11 11 ?"));
 
+  REQUIRE_THROWS(Cron("0 15 10 L-32 * ?"));
   REQUIRE_THROWS(Cron("15-10 * * * * * *"));
   REQUIRE_THROWS(Cron("* 4-3 * * * * *"));
   REQUIRE_THROWS(Cron("* * 4-3 * * * *"));
@@ -401,6 +401,14 @@ TEST_CASE("Cron::calculateNextTrigger", "[cron]") {
   checkNext("0 15 10 ? * 6L",
             sys_days(2022_y / 07 / 15) + 00h + 00min + 00s,
             sys_days(2022_y / 07 / 29) + 10h + 15min + 00s);
+
+  checkNext("0 0 0 L-3 * ?",
+            sys_days(2022_y / 01 / 10) + 00h + 00min + 00s,
+            sys_days(2022_y / 01 / 28) + 00h + 00min + 00s);
+
+  checkNext("0 0 0 L-30 * ?",
+            sys_days(2022_y / 01 / 10) + 00h + 00min + 00s,
+            sys_days(2022_y / 03 / 01) + 00h + 00min + 00s);
 }
 
 TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
@@ -682,5 +690,13 @@ TEST_CASE("Cron::calculateNextTrigger with timezones", "[cron]") {
     checkNext("0 15 10 ? * 6L",
               make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 15) + 00h + 00min + 00s),
               make_zoned(locate_zone(time_zone), local_days(2022_y / 07 / 29) + 10h + 15min + 00s));
+
+    checkNext("0 0 0 L-3 * ?",
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 01 / 10) + 00h + 00min + 00s),
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 01 / 28) + 00h + 00min + 00s));
+
+    checkNext("0 0 0 L-30 * ?",
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 01 / 10) + 00h + 00min + 00s),
+              make_zoned(locate_zone(time_zone), local_days(2022_y / 03 / 01) + 00h + 00min + 00s));
   }
 }
