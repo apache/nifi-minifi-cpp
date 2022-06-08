@@ -61,7 +61,7 @@ namespace minifi {
 namespace core {
 
 std::string detail::to_string(const detail::ReadBufferResult& read_buffer_result) {
-  return std::string(reinterpret_cast<const char*>(read_buffer_result.buffer.data()), read_buffer_result.buffer.size());
+  return {reinterpret_cast<const char*>(read_buffer_result.buffer.data()), read_buffer_result.buffer.size()};
 }
 
 std::shared_ptr<utils::IdGenerator> ProcessSession::id_generator_ = utils::IdGenerator::getIdGenerator();

@@ -33,13 +33,12 @@ class TestStateController : public minifi::state::StateController {
   TestStateController()
       : is_running(false) {
   }
-  virtual ~TestStateController() = default;
 
-  virtual std::string getComponentName() const {
+  std::string getComponentName() const override {
     return "TestStateController";
   }
 
-  virtual utils::Identifier getComponentUUID() const {
+  utils::Identifier getComponentUUID() const override {
     static auto dummyUUID = utils::Identifier::parse("12345678-1234-1234-1234-123456789abc").value();
     return dummyUUID;
   }
@@ -47,27 +46,27 @@ class TestStateController : public minifi::state::StateController {
   /**
    * Start the client
    */
-  virtual int16_t start() {
+  int16_t start() override {
     is_running = true;
     return 0;
   }
   /**
    * Stop the client
    */
-  virtual int16_t stop() {
+  int16_t stop() override {
     is_running = false;
     return 0;
   }
 
-  virtual bool isRunning() {
+  bool isRunning() override {
     return is_running;
   }
 
-  virtual int16_t pause() {
+  int16_t pause() override {
     return 0;
   }
 
-  virtual int16_t resume() {
+  int16_t resume() override {
     return 0;
   }
 

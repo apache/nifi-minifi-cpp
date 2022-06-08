@@ -80,7 +80,7 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, gsl::span<co
 
       // neither must be there. We don't want assign array yet and cause an assertion error
       if (size == 0)
-        return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
+        return {payload.getOperation(), state::UpdateState::READ_COMPLETE};
 
       C2Payload new_payload(payload.getOperation(), state::UpdateState::NESTED);
       if (!identifier.empty())
@@ -136,7 +136,7 @@ C2Payload RESTProtocol::parseJsonResponse(const C2Payload &payload, gsl::span<co
     }
   } catch (...) {
   }
-  return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
+  return {payload.getOperation(), state::UpdateState::READ_COMPLETE};
 }
 
 RESTProtocol::RESTProtocol() = default;

@@ -72,7 +72,7 @@ class HttpStreamingCallbackTestsFixture {
 
   std::string getContent() {
     std::unique_lock<std::mutex> lock(content_mutex_);
-    return std::string(content_.data(), content_.size());
+    return {content_.data(), content_.size()};
   }
 
   std::string waitForCompletionAndGetContent() {

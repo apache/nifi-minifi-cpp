@@ -260,7 +260,7 @@ class DecompressTestController : public CompressDecompressionTestController{
   DecompressTestController() {
     setupFlow();
   }
-  ~DecompressTestController() {
+  ~DecompressTestController() override {
     tempDir_ = "";
     raw_content_path_ = "";
     compressed_content_path_ = "";

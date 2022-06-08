@@ -71,13 +71,13 @@ C2Payload MQTTC2Protocol::consumePayload(const std::string &url, const C2Payload
     response_payload.setRawData(response);
     return response_payload;
   } else {
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
+    return {payload.getOperation(), state::UpdateState::READ_COMPLETE};
   }
 }
 
 C2Payload MQTTC2Protocol::serialize(const C2Payload &payload) {
   if (mqtt_service_ == nullptr || !mqtt_service_->isRunning()) {
-    return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
+    return {payload.getOperation(), state::UpdateState::READ_ERROR};
   }
 
   std::lock_guard<std::mutex> lock(input_mutex_);
@@ -89,7 +89,7 @@ C2Payload MQTTC2Protocol::serialize(const C2Payload &payload) {
   if (transmit_id > 0 && mqtt_service_->awaitResponse(5000, transmit_id, in_topic_, response)) {
     return c2::PayloadSerializer::deserialize(response);
   }
-  return C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
+  return {payload.getOperation(), state::UpdateState::READ_ERROR};
 }
 
 REGISTER_RESOURCE(MQTTC2Protocol, InternalResource);

@@ -99,7 +99,7 @@ Expression make_dynamic_attr(const std::string &attribute_id) {
         return Value(result);
       }
     }
-    return Value();
+    return {};
   });
 }
 
@@ -180,7 +180,7 @@ Value expr_ip(const std::vector<Value>& /*args*/) {
   }
 
   freeaddrinfo(result);
-  return Value();
+  return {};
 }
 
 Value expr_uuid(const std::vector<Value>& /*args*/) {
@@ -202,11 +202,11 @@ Value expr_toLower(const std::vector<Value> &args) {
 Value expr_substring(const std::vector<Value> &args) {
   if (args.size() < 3) {
     size_t offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
-    return Value(args[0].asString().substr(offset));
+    return Value{args[0].asString().substr(offset)};
   } else {
     size_t offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
     size_t count = gsl::narrow<size_t>(args[2].asUnsignedLong());
-    return Value(args[0].asString().substr(offset, count));
+    return Value{args[0].asString().substr(offset, count)};
   }
 }
 
@@ -434,7 +434,7 @@ Value expr_unescapeJson(const std::vector<Value> &args) {
   if (doc.IsArray() && doc.Size() == 1 && doc[0].IsString()) {
     return Value(std::string(doc[0].GetString()));
   } else {
-    return Value();
+    return {};
   }
 }
 
@@ -808,7 +808,7 @@ Value expr_binary_op(const std::vector<Value> &args, long double (*ldop)(long do
       return Value(ldop(args[0].asLongDouble(), args[1].asLongDouble()));
     }
   } catch (const std::exception &) {
-    return Value();
+    return {};
   }
 }
 
@@ -1048,7 +1048,7 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
                 if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
                   return Value(attr_val);
                 } else {
-                  return Value();
+                  return {};
                 }
               }));
     }
@@ -1093,7 +1093,7 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
                 if (cur_flow_file && cur_flow_file->getAttribute(attr_id, attr_val)) {
                   return Value(attr_val);
                 } else {
-                  return Value();
+                  return {};
                 }
               }));
     }
@@ -1144,7 +1144,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
                     if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
                       return Value(attr_val);
                     } else {
-                      return Value();
+                      return {};
                     }
                   }));
         }
@@ -1197,7 +1197,7 @@ Expression make_anyMatchingAttribute(const std::string &function_name, const std
                     if (cur_flow_file && cur_flow_file->getAttribute(attr.first, attr_val)) {
                       return Value(attr_val);
                     } else {
-                      return Value();
+                      return {};
                     }
                   }));
         }

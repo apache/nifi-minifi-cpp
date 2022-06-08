@@ -38,8 +38,6 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
         tasks(std::move(other.tasks)) {
   }
 
-  ~WorkerNumberExecutions() = default;
-
   bool isFinished(const int &result) override {
     if (result > 0 && ++runs < tasks) {
       return false;
