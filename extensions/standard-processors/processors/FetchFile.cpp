@@ -16,7 +16,7 @@
  */
 #include "FetchFile.h"
 
-#include <errno.h>
+#include <cerrno>
 #include <filesystem>
 #include <utility>
 

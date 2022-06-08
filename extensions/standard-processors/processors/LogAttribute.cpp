@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 #include "LogAttribute.h"
-#include <time.h>
-#include <string.h>
+#include <ctime>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>

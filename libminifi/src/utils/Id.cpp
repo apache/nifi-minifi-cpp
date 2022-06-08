@@ -24,7 +24,7 @@
 #include "utils/Id.h"
 
 #define __STDC_FORMAT_MACROS 1  // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
-#include <inttypes.h>
+#include <cinttypes>
 #include <algorithm>
 #include <chrono>
 #include <cmath>

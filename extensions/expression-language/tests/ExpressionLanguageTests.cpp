@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-#include <time.h>
+#include <ctime>
 
 #include <memory>
 #include <string>

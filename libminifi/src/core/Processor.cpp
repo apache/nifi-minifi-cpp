@@ -19,7 +19,7 @@
  */
 #include "core/Processor.h"
 
-#include <time.h>
+#include <ctime>
 
 #include <memory>
 #include <set>

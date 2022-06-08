@@ -20,7 +20,7 @@
 
 #include "GenerateFlowFile.h"
 
-#include <time.h>
+#include <ctime>
 
 #include <chrono>
 #include <limits>

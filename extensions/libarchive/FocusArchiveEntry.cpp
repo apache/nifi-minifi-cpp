@@ -22,7 +22,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 
-#include <string.h>
+#include <cstring>
 
 #include <array>
 #include <string>

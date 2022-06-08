@@ -29,8 +29,8 @@
 #include <netdb.h>
 #include <unistd.h>
 #endif
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 #include "utils/StringUtils.h"
 #include "core/TypedValues.h"

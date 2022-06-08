@@ -16,7 +16,7 @@
  */
 #include "HTTPProtocol.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <chrono>
 #include <map>
 #include <string>

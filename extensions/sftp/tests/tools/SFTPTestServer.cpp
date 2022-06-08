@@ -24,7 +24,7 @@
 #include <thread>
 
 #ifndef WIN32
-#include <signal.h>
+#include <csignal>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>

@@ -18,7 +18,7 @@
 #ifndef WIN32
 #include <arpa/inet.h>
 #endif
-#include <signal.h>
+#include <csignal>
 #include <sys/stat.h>
 #include <chrono>
 #include <thread>

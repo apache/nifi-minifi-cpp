@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "AbstractMQTTProcessor.h"
-#include <stdio.h>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <cinttypes>

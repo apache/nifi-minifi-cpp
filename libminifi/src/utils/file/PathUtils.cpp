@@ -21,8 +21,8 @@
 #ifdef WIN32
 #include <Windows.h>
 #else
-#include <limits.h>
-#include <stdlib.h>
+#include <climits>
+#include <cstdlib>
 #include <sys/statvfs.h>
 #endif
 

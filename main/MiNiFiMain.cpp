@@ -38,9 +38,9 @@
 #endif
 
 #include <fcntl.h>
-#include <stdio.h>
+#include <cstdio>
 #include <semaphore.h>
-#include <signal.h>
+#include <csignal>
 #include <sodium.h>
 
 #include <atomic>

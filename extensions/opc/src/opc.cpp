@@ -17,7 +17,7 @@
 
 #include "opc.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
 #include <vector>
 #include <string>

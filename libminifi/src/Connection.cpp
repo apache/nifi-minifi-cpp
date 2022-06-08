@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 #include "Connection.h"
-#include <time.h>
+#include <ctime>
 #include <vector>
 #include <queue>
 #include <memory>

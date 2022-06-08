@@ -16,8 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <stdio.h>
-#include <time.h>
+#include <cstdio>
+#include <ctime>
 #include <chrono>
 #include <utility>
 #include <map>
