@@ -24,11 +24,11 @@
 #include <thread>
 
 #ifndef WIN32
-#include <csignal>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include <csignal>
 #include <cstring>
 #include <cerrno>
 #endif

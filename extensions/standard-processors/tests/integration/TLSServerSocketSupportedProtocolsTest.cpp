@@ -18,8 +18,8 @@
 #ifndef WIN32
 #include <arpa/inet.h>
 #endif
-#include <csignal>
 #include <sys/stat.h>
+#include <csignal>
 #include <chrono>
 #include <thread>
 #include <cerrno>

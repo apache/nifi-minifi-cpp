@@ -21,9 +21,9 @@
 #ifdef WIN32
 #include <Windows.h>
 #else
+#include <sys/statvfs.h>
 #include <climits>
 #include <cstdlib>
-#include <sys/statvfs.h>
 #endif
 
 #include <iostream>
