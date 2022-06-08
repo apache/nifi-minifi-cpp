@@ -132,7 +132,7 @@ jobs:
   ubuntu_20_04_clang:
     name: "ubuntu-20.04-clang"
     runs-on: ubuntu-20.04
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - id: checkout
         uses: actions/checkout@v2
