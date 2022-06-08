@@ -79,6 +79,7 @@ class AbstractMQTTProcessor : public core::Processor {
 
   // MQTT async callbacks
   static void msgDelivered(void *context, MQTTClient_deliveryToken dt) {
+    // TODO(amarkovics) this needs mutex because it's called on a separate thread
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
     processor->delivered_token_ = dt;
   }
