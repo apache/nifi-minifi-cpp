@@ -41,7 +41,6 @@ class CronField {
 class Cron {
  public:
   explicit Cron(const std::string& expression);
-  Cron(Cron&& cron) = default;
 
   [[nodiscard]] std::optional<date::local_seconds> calculateNextTrigger(date::local_seconds start) const;
 
