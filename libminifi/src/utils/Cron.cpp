@@ -48,9 +48,8 @@ namespace {
 template<class T>
 std::optional<T> fromChars(const std::string& input) {
   T t{};
-  const auto last_char = &*std::cend(input);
   const auto result = std::from_chars(input.data(), input.data() + input.size(), t);
-  if (result.ptr != last_char)
+  if (result.ptr != input.data() + input.size())
     return std::nullopt;
   return t;
 }
