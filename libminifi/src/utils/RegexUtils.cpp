@@ -177,14 +177,14 @@ Regex& Regex::operator=(Regex&& other) {
   return *this;
 }
 
-Regex::~Regex() {
 #ifndef NO_MORE_REGFREEE
+Regex::~Regex() {
   if (valid_) {
     regfree(&compiled_regex_);
     regfree(&compiled_full_input_regex_);
   }
-#endif
 }
+#endif
 
 #ifndef NO_MORE_REGFREEE
 void Regex::compileRegex(regex_t& regex, const std::string& regex_string) const {

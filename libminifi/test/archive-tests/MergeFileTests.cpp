@@ -74,12 +74,12 @@ class FixedBuffer {
     other.size_ = 0;
     other.capacity_ = 0;
   }
-  std::size_t size() const { return size_; }
-  std::size_t capacity() const { return capacity_; }
-  uint8_t* begin() const { return buf_.get(); }
-  uint8_t* end() const { return buf_.get() + size_; }
+  [[nodiscard]] std::size_t size() const { return size_; }
+  [[nodiscard]] std::size_t capacity() const { return capacity_; }
+  [[nodiscard]] uint8_t* begin() const { return buf_.get(); }
+  [[nodiscard]] uint8_t* end() const { return buf_.get() + size_; }
 
-  std::string to_string() const {
+  [[nodiscard]] std::string to_string() const {
     return {begin(), end()};
   }
 

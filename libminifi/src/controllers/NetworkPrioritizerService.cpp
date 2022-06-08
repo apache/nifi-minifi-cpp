@@ -87,8 +87,8 @@ io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) 
       return newifc;
     }
   }
-  for (size_t i = 0; i < linked_services_.size(); i++) {
-    auto np = std::dynamic_pointer_cast<NetworkPrioritizerService>(linked_services_.at(i));
+  for (const auto& service : linked_services_) {
+    auto np = std::dynamic_pointer_cast<NetworkPrioritizerService>(service);
     if (np != nullptr) {
       auto ifcs = np->getInterfaces(size);
       ifc = get_nearest_interface(ifcs);

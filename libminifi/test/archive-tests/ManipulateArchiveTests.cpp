@@ -43,7 +43,7 @@ const char* MODIFY_SRC = FILE_NAMES[0];
 const char* ORDER_ANCHOR = FILE_NAMES[1];
 const char* MODIFY_DEST = "modified";
 
-typedef std::map<std::string, std::string> PROP_MAP_T;
+using PROP_MAP_T = std::map<std::string, std::string>;
 
 bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive output_archive, PROP_MAP_T properties, bool check_attributes = true) {
     TestController testController;

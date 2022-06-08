@@ -132,7 +132,9 @@ class Regex {
   Regex& operator=(const Regex &);
   Regex(Regex&& other);
   Regex& operator=(Regex&& other);
+#ifndef NO_MORE_REGFREEE
   ~Regex();
+#endif
 
  private:
   std::string regex_str_;

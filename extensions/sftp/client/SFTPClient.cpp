@@ -633,7 +633,7 @@ bool SFTPClient::rename(const std::string& source_path, const std::string& targe
       continue;
     }
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_error("Failed to rename remote file \"%s\" to \"%s\", error: %s",
+    logger_->log_error(R"(Failed to rename remote file "%s" to "%s", error: %s)",
         source_path.c_str(),
         target_path.c_str(),
         sftp_strerror(last_error_));

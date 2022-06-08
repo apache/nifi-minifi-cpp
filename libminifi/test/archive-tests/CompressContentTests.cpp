@@ -192,22 +192,20 @@ class CompressDecompressionTestController : public TestController{
     }
   };
 
-  std::string rawContentPath() const {
+  [[nodiscard]] std::string rawContentPath() const {
     return raw_content_path_;
   }
 
-  std::string compressedPath() const {
+  [[nodiscard]] std::string compressedPath() const {
     return compressed_content_path_;
   }
 
-  RawContent getRawContent() const {
+  [[nodiscard]] RawContent getRawContent() const {
     std::ifstream file;
     file.open(raw_content_path_, std::ios::binary);
     std::string contents{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};
     return RawContent{std::move(contents)};
   }
-
-
 
   virtual ~CompressDecompressionTestController() = 0;
 

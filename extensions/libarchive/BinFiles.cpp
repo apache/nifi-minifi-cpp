@@ -97,8 +97,8 @@ void BinFiles::preprocessFlowFile(core::ProcessContext* /*context*/, core::Proce
 void BinManager::gatherReadyBins() {
   std::lock_guard < std::mutex > lock(mutex_);
   std::vector< std::string > emptyQueue;
-  for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>> >::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
-    std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
+  for (auto& kvp : groupBinMap_) {
+    auto &queue = kvp.second;
     while (!queue->empty()) {
       std::unique_ptr<Bin> &bin = queue->front();
       if (bin->isReadyForMerge() || (binAge_ != std::chrono::milliseconds::max() && bin->isOlderThan(binAge_))) {
@@ -111,7 +111,7 @@ void BinManager::gatherReadyBins() {
       }
     }
     if (queue->empty()) {
-      emptyQueue.push_back(it->first);
+      emptyQueue.push_back(kvp.first);
     }
   }
   for (auto group : emptyQueue) {
@@ -125,8 +125,8 @@ void BinManager::removeOldestBin() {
   std::lock_guard < std::mutex > lock(mutex_);
   std::chrono::system_clock::time_point olddate = std::chrono::system_clock::time_point::max();
   std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue;
-  for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>>>::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
-    std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
+  for (auto& kvp : groupBinMap_) {
+    auto &queue = kvp.second;
     if (!queue->empty()) {
       std::unique_ptr<Bin> &bin = queue->front();
       if (bin->getCreationDate() < olddate) {

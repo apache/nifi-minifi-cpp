@@ -385,8 +385,8 @@ TEST_CASE("Speed", "[speed]") {
   generator->generate();
 
   auto before = std::chrono::high_resolution_clock::now();
-  for (size_t i = 0U; i < uuids.size(); i++) {
-    uuids[i] = generator->generate();
+  for (auto& uuid : uuids) {
+    uuid = generator->generate();
   }
   auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - before).count();
   std::cerr << "Generating one " << implementation << " UUID took " << (duration / uuids.size()) << "ns" << std::endl;

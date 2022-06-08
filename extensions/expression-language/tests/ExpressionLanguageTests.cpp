@@ -311,7 +311,7 @@ TEST_CASE("Get Delimited 2", "[expressionLanguageGetDelimited2]") {
 }
 
 TEST_CASE("Get Delimited 3", "[expressionLanguageGetDelimited3]") {
-  auto expr = expression::compile("${attr:getDelimitedField(1, ',', '\\\"', '\\\\', 'true')}");
+  auto expr = expression::compile(R"(${attr:getDelimitedField(1, ',', '\"', '\\', 'true')})");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
   flow_file_a->addAttribute("attr", "\"Jacobson, John\", 32, Mr.");
@@ -1057,7 +1057,7 @@ TEST_CASE("Decode JSON", "[expressionDecodeJSON]") {
   auto expr = expression::compile("${message:unescapeJson()}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  flow_file_a->addAttribute("message", "This is a \\\"test!\\\"");
+  flow_file_a->addAttribute("message", R"(This is a \"test!\")");
   REQUIRE("This is a \"test!\"" == expr(expression::Parameters{ flow_file_a }).asString());
 }
 

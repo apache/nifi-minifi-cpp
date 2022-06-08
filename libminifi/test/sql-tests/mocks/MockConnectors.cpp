@@ -186,7 +186,7 @@ std::unique_ptr<Rowset> MockDB::execute(const std::string& query, const std::vec
 
 void MockDB::createTable(const std::string& query) {
   std::smatch match;
-  std::regex expr("create table (\\w+)\\s*\\((.*)\\);", std::regex_constants::icase);
+  std::regex expr(R"(create table (\w+)\s*\((.*)\);)", std::regex_constants::icase);
   std::regex_search(query, match, expr);
   std::string table_name = match[1];
   auto columns_with_type = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[2], ",");
@@ -208,7 +208,7 @@ void MockDB::insertInto(const std::string& query, const std::vector<std::string>
   }
 
   std::smatch match;
-  std::regex expr("insert into (\\w+)\\s*(\\((.*)\\))*\\s*values\\s*\\((.+)\\)", std::regex_constants::icase);
+  std::regex expr(R"(insert into (\w+)\s*(\((.*)\))*\s*values\s*\((.+)\))", std::regex_constants::icase);
   std::regex_search(replaced_query, match, expr);
   std::string table_name = match[1];
   std::vector<std::string> values = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[4], ",");
@@ -242,7 +242,7 @@ std::unique_ptr<Rowset> MockDB::select(const std::string& query, const std::vect
   }
 
   std::smatch match;
-  std::regex expr("select\\s+(.+)\\s+from\\s+(\\w+)\\s*(where ((.+(?= order by))|.+$))*\\s*(order by (.+))*", std::regex_constants::icase);
+  std::regex expr(R"(select\s+(.+)\s+from\s+(\w+)\s*(where ((.+(?= order by))|.+$))*\s*(order by (.+))*)", std::regex_constants::icase);
   std::regex_search(replaced_query, match, expr);
   auto cols = minifi::utils::StringUtils::splitAndTrimRemovingEmpty(match[1], ",");
   if (cols[0] == "*") {

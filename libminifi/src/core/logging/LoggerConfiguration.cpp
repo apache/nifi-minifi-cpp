@@ -103,8 +103,7 @@ LoggerConfiguration::LoggerConfiguration()
       formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)),
       shorten_names_(false) {
   controller_ = std::make_shared<LoggerControl>();
-  logger_ = std::shared_ptr<LoggerImpl>(
-      new LoggerImpl(core::getClassName<LoggerConfiguration>(), controller_, get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_)));
+  logger_ = std::make_shared<LoggerImpl>(core::getClassName<LoggerConfiguration>(), controller_, get_logger(nullptr, root_namespace_, core::getClassName<LoggerConfiguration>(), formatter_));
   loggers.push_back(logger_);
 }
 

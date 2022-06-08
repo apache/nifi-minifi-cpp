@@ -128,7 +128,7 @@ void ThreadPool<T>::manageWorkers() {
     std::stringstream thread_name;
     thread_name << name_ << " #" << i;
     auto worker_thread = std::make_shared<WorkerThread>(thread_name.str());
-    worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
+    worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
     thread_queue_.push_back(worker_thread);
     current_workers_++;
   }
@@ -159,7 +159,7 @@ void ThreadPool<T>::manageWorkers() {
         } else if (thread_manager_->canIncrease() && max_worker_threads_ > current_workers_) {  // increase slowly
           std::unique_lock<std::mutex> lock(worker_queue_mutex_);
           auto worker_thread = std::make_shared<WorkerThread>();
-          worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
+          worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
           if (daemon_threads_) {
             worker_thread->thread_.detach();
           }

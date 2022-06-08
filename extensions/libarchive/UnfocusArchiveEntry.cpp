@@ -143,9 +143,9 @@ UnfocusArchiveEntry::WriteCallback::WriteCallback(ArchiveMetadata *archiveMetada
   _archiveMetadata = archiveMetadata;
 }
 
-typedef struct {
+struct UnfocusArchiveEntryWriteData {
   std::shared_ptr<io::BaseStream> stream;
-} UnfocusArchiveEntryWriteData;
+};
 
 la_ssize_t UnfocusArchiveEntry::WriteCallback::write_cb(struct archive *, void *d, const void *buffer, size_t length) {
   auto* const data = static_cast<UnfocusArchiveEntryWriteData *>(d);

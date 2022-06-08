@@ -37,7 +37,7 @@ class MockItem {
     return std::move(*this);
   }
 
-  size_t size() const {
+  [[nodiscard]] size_t size() const {
     return data_.size();
   }
 

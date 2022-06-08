@@ -54,7 +54,7 @@ TEST_CASE("basic IntervalSwitch", "[intervalswitch.basic]") {
 }
 
 TEST_CASE("IntervalSwitch comparator", "[intervalswitch.comp]") {
-  utils::IntervalSwitch<uint32_t, std::greater<uint32_t>> interval_switch{250, 100};
+  utils::IntervalSwitch<uint32_t, std::greater<>> interval_switch{250, 100};
   REQUIRE(interval_switch(99) == expected(State::UPPER, false));
   REQUIRE(interval_switch(120) == expected(State::UPPER, false));
   REQUIRE(interval_switch(250) == expected(State::UPPER, false));

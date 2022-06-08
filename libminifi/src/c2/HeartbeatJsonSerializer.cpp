@@ -241,7 +241,7 @@ class NamedValueMap {
     }
     return data_.end();
   }
-  Container::const_iterator find(const std::string& key) const {
+  [[nodiscard]] Container::const_iterator find(const std::string& key) const {
     for (auto it = data_.begin(); it != data_.end(); ++it) {
       if (it->name == key) return it;
     }

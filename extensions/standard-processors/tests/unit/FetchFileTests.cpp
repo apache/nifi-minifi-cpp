@@ -40,7 +40,7 @@ class FetchFileTestFixture {
   ~FetchFileTestFixture();
 
  protected:
-  std::unordered_multiset<std::string> getDirContents(const std::string& dir_path) const;
+  [[nodiscard]] std::unordered_multiset<std::string> getDirContents(const std::string& dir_path) const;
 
   std::shared_ptr<minifi::processors::FetchFile> fetch_file_processor_;
   std::shared_ptr<minifi::test::SingleProcessorTestController> test_controller_;

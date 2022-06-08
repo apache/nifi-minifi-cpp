@@ -130,11 +130,11 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   session->transfer(flowFile, Success);
 }
 
-typedef struct {
+struct FocusArchiveEntryReadData {
   std::shared_ptr<io::BaseStream> stream;
   core::Processor *processor;
   std::array<std::byte, 8196> buf;
-} FocusArchiveEntryReadData;
+};
 
 // Read callback which reads from the flowfile stream
 la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d, const void **buf) {

@@ -77,28 +77,20 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 };
 
 struct test_profile {
-  test_profile()
-      : flow_url_broken(false),
-        transaction_url_broken(false),
-        empty_transaction_url(false),
-        no_delete(false),
-        invalid_checksum(false) {
-  }
-
-  bool allFalse() const {
+  [[nodiscard]] bool allFalse() const {
     return !flow_url_broken && !transaction_url_broken &&
       !empty_transaction_url && !no_delete && !invalid_checksum;
   }
   // tests for a broken flow file url
-  bool flow_url_broken;
+  bool flow_url_broken{false};
   // transaction url will return incorrect information
-  bool transaction_url_broken;
+  bool transaction_url_broken{false};
   // Location will be absent within the
-  bool empty_transaction_url;
+  bool empty_transaction_url{false};
   // delete url is not supported.
-  bool no_delete;
+  bool no_delete{false};
   // invalid checksum error
-  bool invalid_checksum;
+  bool invalid_checksum{false};
 };
 
 void run_variance(std::string test_file_location, bool isSecure, std::string url, const struct test_profile &profile) {

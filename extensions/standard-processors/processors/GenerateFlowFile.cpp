@@ -87,7 +87,7 @@ void generateData(std::vector<char>& data, bool textData = false) {
     std::generate_n(data.begin(), data.size(), [&] { return TEXT_CHARS[static_cast<uint8_t>(distr(eng))]; });
   } else {
     std::uniform_int_distribution<> distr(std::numeric_limits<char>::min(), std::numeric_limits<char>::max());
-    auto rand = std::bind(distr, eng);
+    auto rand = [&distr, &eng] { return distr(eng); };
     std::generate_n(data.begin(), data.size(), rand);
   }
 }

@@ -36,7 +36,7 @@ class AzureBlobStorageInputStream : public io::InputStream {
     : result_(std::move(result)) {
   }
 
-  size_t size() const override {
+  [[nodiscard]] size_t size() const override {
     return result_.BodyStream->Length();
   }
 

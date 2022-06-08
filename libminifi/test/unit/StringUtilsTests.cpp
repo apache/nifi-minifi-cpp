@@ -134,7 +134,7 @@ TEST_CASE("StringUtils::splitAndTrimRemovingEmpty", "[test split with trim remov
 }
 
 TEST_CASE("StringUtils::replaceEnvironmentVariables works correctly", "[replaceEnvironmentVariables]") {
-  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer", 0);
+  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist", "computer", false);
 
   REQUIRE("hello world computer" == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist}"));
   REQUIRE("hello world ${blahblahnamenamenotexist" == StringUtils::replaceEnvironmentVariables("hello world ${blahblahnamenamenotexist"));
@@ -144,7 +144,7 @@ TEST_CASE("StringUtils::replaceEnvironmentVariables works correctly", "[replaceE
   REQUIRE("computer bug" == StringUtils::replaceEnvironmentVariables("${blahblahnamenamenotexist} bug"));
   REQUIRE("O computer! My computer!" == StringUtils::replaceEnvironmentVariables("O ${blahblahnamenamenotexist}! My ${blahblahnamenamenotexist}!"));
 
-  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist_2", "no", 0);
+  utils::Environment::setEnvironmentVariable("blahblahnamenamenotexist_2", "no", false);
   REQUIRE("computer says 'no'" == StringUtils::replaceEnvironmentVariables("${blahblahnamenamenotexist} says '${blahblahnamenamenotexist_2}'"));
   REQUIRE("no computer can say no to computer nougats" == StringUtils::replaceEnvironmentVariables(
       "${blahblahnamenamenotexist_2} ${blahblahnamenamenotexist} can say ${blahblahnamenamenotexist_2} to ${blahblahnamenamenotexist} ${blahblahnamenamenotexist_2}ugats"));

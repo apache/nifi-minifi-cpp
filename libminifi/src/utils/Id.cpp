@@ -193,8 +193,8 @@ IdGenerator::~IdGenerator() = default;
 
 uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) const {
   uint64_t deviceSegment = 0;
-  for (size_t i = 0; i < str.length(); i++) {
-    unsigned char c = toupper(str[i]);
+  for (auto ch : str) {
+    unsigned char c = toupper(ch);
     if (c >= '0' && c <= '9') {
       deviceSegment = deviceSegment + (c - '0');
     } else if (c >= 'A' && c <= 'F') {
