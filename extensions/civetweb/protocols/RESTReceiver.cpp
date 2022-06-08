@@ -85,7 +85,7 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
   for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
-  std::unique_ptr<CivetServer> server = std::unique_ptr<CivetServer>(new CivetServer(cpp_options));
+  auto server = std::make_unique<CivetServer>(cpp_options);
 
   server->addHandler(rooturi, handler);
 
@@ -99,7 +99,7 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
   for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
     cpp_options.push_back(options[i]);
   }
-  std::unique_ptr<CivetServer> server = std::unique_ptr<CivetServer>(new CivetServer(cpp_options));
+  auto server = std::make_unique<CivetServer>(cpp_options);
 
   server->addHandler(rooturi, handler);
 

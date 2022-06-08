@@ -200,12 +200,12 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
     }
   }
 
-  server_.reset(new CivetServer(options, &callbacks_, &logger_));
+  server_ = std::make_unique<CivetServer>(options, &callbacks_, &logger_);
 
   context->getProperty(BatchSize.getName(), batch_size_);
   logger_->log_debug("ListenHTTP using %s: %zu", BatchSize.getName(), batch_size_);
 
-  handler_.reset(new Handler(basePath, context, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
+  handler_ = std::make_unique<Handler>(basePath, context, std::move(authDNPattern), std::move(headersAsAttributesPattern));
   server_->addHandler(basePath, handler_.get());
 
   if (randomPort) {

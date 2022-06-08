@@ -291,9 +291,9 @@ std::unique_ptr<utils::SFTPClient> SFTPProcessorBase::getOrCreateConnection(
     const std::string& proxy_password) {
   auto client = getConnectionFromCache(connection_cache_key);
   if (client == nullptr) {
-    client = std::unique_ptr<utils::SFTPClient>(new utils::SFTPClient(connection_cache_key.hostname,
-                                                                      connection_cache_key.port,
-                                                                      connection_cache_key.username));
+    client = std::make_unique<utils::SFTPClient>(connection_cache_key.hostname,
+                                                 connection_cache_key.port,
+                                                 connection_cache_key.username);
     if (!IsNullOrEmpty(host_key_file_)) {
       if (!client->setHostKeyFile(host_key_file_, strict_host_checking_)) {
         logger_->log_error("Cannot set host key file");

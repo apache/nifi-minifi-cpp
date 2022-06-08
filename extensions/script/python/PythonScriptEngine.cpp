@@ -37,7 +37,7 @@ PythonScriptEngine::PythonScriptEngine() {
   getInterpreter();
   py::gil_scoped_acquire gil { };
   py::module::import("minifi_native");
-  bindings_.reset(new py::dict());
+  bindings_ = std::make_unique<py::dict>();
   (*bindings_) = py::globals().attr("copy")();
 }
 

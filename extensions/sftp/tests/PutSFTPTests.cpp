@@ -82,7 +82,7 @@ class PutSFTPTestsFixture {
     REQUIRE(plan);
 
     // Start SFTP server
-    sftp_server = std::unique_ptr<SFTPTestServer>(new SFTPTestServer(dst_dir));
+    sftp_server = std::make_unique<SFTPTestServer>(dst_dir);
     REQUIRE(true == sftp_server->start());
 
     // Build MiNiFi processing graph

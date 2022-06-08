@@ -142,7 +142,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     logger_->log_debug("Reconnect interval using default value of %" PRId64 " ms", reconnect_interval_.count());
   }
 
-  handler_ = std::unique_ptr<DataHandler>(new DataHandler(sessionFactory));
+  handler_ = std::make_unique<DataHandler>(sessionFactory);
 
   f_ex = [&] {
     std::unique_ptr<io::Socket> socket_ptr;

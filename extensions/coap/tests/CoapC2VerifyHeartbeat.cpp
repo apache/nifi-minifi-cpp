@@ -108,7 +108,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     uint16_t newport = std::stoi(port) + 2;
     auto new_port_str = std::to_string(newport);
 
-    server = std::unique_ptr<minifi::coap::CoapServer>(new minifi::coap::CoapServer("127.0.0.1", newport));
+    server = std::make_unique<minifi::coap::CoapServer>("127.0.0.1", newport);
 
 
     server->add_endpoint(minifi::coap::Method::Post, [](minifi::coap::CoapQuery)->minifi::coap::CoapResponse {
