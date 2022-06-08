@@ -49,8 +49,8 @@ function(use_bundled_mbedtls SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             mbedtls-external
-            URL "https://tls.mbed.org/download/mbedtls-2.16.3-apache.tgz"
-            URL_HASH "SHA256=ec1bee6d82090ed6ea2690784ea4b294ab576a65d428da9fe8750f932d2da661"
+            URL "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-2.16.3.tar.gz"
+            URL_HASH "SHA256=ec72ecf39275327f52b5ee9787271313a0d2960e7342b488d223a118ba164caa"
             SOURCE_DIR "${BINARY_DIR}/thirdparty/mbedtls-src"
             CMAKE_ARGS ${MBEDTLS_CMAKE_ARGS}
             BUILD_BYPRODUCTS ${MBEDTLS_LIBRARIES_LIST}
