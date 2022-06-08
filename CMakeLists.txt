@@ -351,10 +351,6 @@ target_include_directories(concurrentqueue SYSTEM INTERFACE "${CMAKE_CURRENT_SOU
 add_library(RapidJSON INTERFACE)
 target_include_directories(RapidJSON SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/rapidjson-48fbd8cd202ca54031fe799db2ad44ffa8e77c13/include")
 
-# Cron
-add_library(cron INTERFACE)
-target_include_directories(cron SYSTEM INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/cron")
-
 # cxxopts
 include(CxxOpts)
 

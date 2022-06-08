@@ -25,7 +25,7 @@ Processors:
       class: org.apache.nifi.processors.standard.TailFile
       max concurrent tasks: 1
       scheduling strategy: CRON_DRIVEN
-      scheduling period: "* * * * *"
+      scheduling period: "* * * * * *"
       penalization period: 30 sec
       yield period: 1 sec
       run duration nanos: 0
@@ -58,7 +58,7 @@ Connections:
       source relationship name: success
       max work queue size: 0
       max work queue data size: 1 MB
-      flowfile expiration: 60 sec      
+      flowfile expiration: 60 sec
 
 Remote Processing Groups:
-    
+

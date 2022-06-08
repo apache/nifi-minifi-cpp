@@ -28,6 +28,10 @@
 #include "utils/Id.h"
 #include "utils/TimeUtil.h"
 
+#ifdef WIN32
+#include "date/tz.h"
+#endif
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -64,6 +68,13 @@ class ManualClock : public timeutils::Clock {
  private:
   std::chrono::milliseconds time_{0};
 };
+
+
+#ifdef WIN32
+// The tzdata location is set as a global variable in date-tz library
+// We need to set it from from libminifi to effect calls made from libminifi (on Windows)
+void dateSetInstall(const std::string& install);
+#endif
 
 }  // namespace utils
 }  // namespace minifi

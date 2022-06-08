@@ -150,3 +150,94 @@ TEST_CASE("Test string to duration conversion", "[timedurationtests]") {
   REQUIRE_FALSE(StringToDuration<std::chrono::seconds>("5 apples") == 1s);
   REQUIRE_FALSE(StringToDuration<std::chrono::seconds>("1 year") == 1s);
 }
+
+namespace {
+date::local_time<std::chrono::seconds> parseLocalTimePoint(const std::string& str) {
+  date::local_time<std::chrono::seconds> tp;
+  std::stringstream stream(str);
+  date::from_stream(stream, "%Y-%m-%d %T", tp);
+  return tp;
+}
+}  // namespace
+
+TEST_CASE("Test roundToNextYear", "[roundingTests]") {
+  using org::apache::nifi::minifi::utils::timeutils::roundToNextYear;
+
+  CHECK(parseLocalTimePoint("2022-01-01 00:00:00") == roundToNextYear(parseLocalTimePoint("2021-12-21 08:20:53")));
+  CHECK(parseLocalTimePoint("2023-01-01 00:00:00") == roundToNextYear(parseLocalTimePoint("2022-01-01 13:59:59")));
+  CHECK(parseLocalTimePoint("1974-01-01 00:00:00") == roundToNextYear(parseLocalTimePoint("1973-02-01 00:00:01")));
+  CHECK(parseLocalTimePoint("1971-01-01 00:00:00") == roundToNextYear(parseLocalTimePoint("1970-11-03 23:59:59")));
+  CHECK(parseLocalTimePoint("2023-01-01 00:00:00") == roundToNextYear(parseLocalTimePoint("2022-12-03 15:22:22")));
+  CHECK(parseLocalTimePoint("2254-01-01 00:00:00") == roundToNextYear(parseLocalTimePoint("2253-05-01 23:59:59")));
+  CHECK(parseLocalTimePoint("1951-01-01 00:00:00") == roundToNextYear(parseLocalTimePoint("1950-11-03 23:59:59")));
+}
+
+TEST_CASE("Test roundToNextMonth", "[roundingTests]") {
+  using org::apache::nifi::minifi::utils::timeutils::roundToNextMonth;
+
+  CHECK(parseLocalTimePoint("2022-01-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2021-12-21 01:00:00")));
+  CHECK(parseLocalTimePoint("2022-02-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-01-31 02:00:00")));
+  CHECK(parseLocalTimePoint("2022-03-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-02-01 12:00:00")));
+  CHECK(parseLocalTimePoint("2022-12-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-11-30 00:00:00")));
+  CHECK(parseLocalTimePoint("2023-01-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-12-31 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-06-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-05-12 23:00:58")));
+  CHECK(parseLocalTimePoint("2022-07-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-06-21 11:00:00")));
+  CHECK(parseLocalTimePoint("2022-08-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-07-21 12:12:00")));
+  CHECK(parseLocalTimePoint("2022-09-01 00:00:00") == roundToNextMonth(parseLocalTimePoint("2022-08-31 06:00:00")));
+}
+
+TEST_CASE("Test roundToNextDay", "[roundingTests]") {
+  using org::apache::nifi::minifi::utils::timeutils::roundToNextDay;
+
+  CHECK(parseLocalTimePoint("2021-02-01 00:00:00") == roundToNextDay(parseLocalTimePoint("2021-01-31 01:00:00")));
+  CHECK(parseLocalTimePoint("2022-03-01 00:00:00") == roundToNextDay(parseLocalTimePoint("2022-02-28 02:00:00")));
+  CHECK(parseLocalTimePoint("2024-02-29 00:00:00") == roundToNextDay(parseLocalTimePoint("2024-02-28 02:00:00")));
+  CHECK(parseLocalTimePoint("2023-01-01 00:00:00") == roundToNextDay(parseLocalTimePoint("2022-12-31 12:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-11 00:00:00") == roundToNextDay(parseLocalTimePoint("2022-07-10 00:00:00")));
+  CHECK(parseLocalTimePoint("2023-01-01 00:00:00") == roundToNextDay(parseLocalTimePoint("2022-12-31 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-05-13 00:00:00") == roundToNextDay(parseLocalTimePoint("2022-05-12 23:00:58")));
+  CHECK(parseLocalTimePoint("2022-06-22 00:00:00") == roundToNextDay(parseLocalTimePoint("2022-06-21 11:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-22 00:00:00") == roundToNextDay(parseLocalTimePoint("2022-07-21 12:12:00")));
+}
+
+TEST_CASE("Test roundToNextHour", "[roundingTests]") {
+  using org::apache::nifi::minifi::utils::timeutils::roundToNextHour;
+
+  CHECK(parseLocalTimePoint("2021-01-31 02:00:00") == roundToNextHour(parseLocalTimePoint("2021-01-31 01:00:00")));
+  CHECK(parseLocalTimePoint("2022-03-01 00:00:00") == roundToNextHour(parseLocalTimePoint("2022-02-28 23:00:00")));
+  CHECK(parseLocalTimePoint("2024-02-29 00:00:00") == roundToNextHour(parseLocalTimePoint("2024-02-28 23:00:00")));
+  CHECK(parseLocalTimePoint("2022-12-31 13:00:00") == roundToNextHour(parseLocalTimePoint("2022-12-31 12:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-10 01:00:00") == roundToNextHour(parseLocalTimePoint("2022-07-10 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-12-31 01:00:00") == roundToNextHour(parseLocalTimePoint("2022-12-31 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-05-13 00:00:00") == roundToNextHour(parseLocalTimePoint("2022-05-12 23:00:58")));
+  CHECK(parseLocalTimePoint("2022-06-21 12:00:00") == roundToNextHour(parseLocalTimePoint("2022-06-21 11:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-21 13:00:00") == roundToNextHour(parseLocalTimePoint("2022-07-21 12:12:00")));
+}
+
+TEST_CASE("Test roundToNextMinute", "[roundingTests]") {
+  using org::apache::nifi::minifi::utils::timeutils::roundToNextMinute;
+
+  CHECK(parseLocalTimePoint("2021-01-31 01:24:00") == roundToNextMinute(parseLocalTimePoint("2021-01-31 01:23:00")));
+  CHECK(parseLocalTimePoint("2022-03-01 00:00:00") == roundToNextMinute(parseLocalTimePoint("2022-02-28 23:59:59")));
+  CHECK(parseLocalTimePoint("2024-02-28 23:01:00") == roundToNextMinute(parseLocalTimePoint("2024-02-28 23:00:00")));
+  CHECK(parseLocalTimePoint("2022-12-31 12:01:00") == roundToNextMinute(parseLocalTimePoint("2022-12-31 12:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-10 00:01:00") == roundToNextMinute(parseLocalTimePoint("2022-07-10 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-12-31 00:01:00") == roundToNextMinute(parseLocalTimePoint("2022-12-31 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-05-12 23:01:00") == roundToNextMinute(parseLocalTimePoint("2022-05-12 23:00:58")));
+  CHECK(parseLocalTimePoint("2022-06-21 11:01:00") == roundToNextMinute(parseLocalTimePoint("2022-06-21 11:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-21 12:13:00") == roundToNextMinute(parseLocalTimePoint("2022-07-21 12:12:00")));
+}
+
+TEST_CASE("Test roundToNextSecond", "[roundingTests]") {
+  using org::apache::nifi::minifi::utils::timeutils::roundToNextSecond;
+
+  CHECK(parseLocalTimePoint("2021-01-31 01:23:01") == roundToNextSecond(parseLocalTimePoint("2021-01-31 01:23:00")));
+  CHECK(parseLocalTimePoint("2022-03-01 00:00:00") == roundToNextSecond(parseLocalTimePoint("2022-02-28 23:59:59")));
+  CHECK(parseLocalTimePoint("2024-02-28 23:00:01") == roundToNextSecond(parseLocalTimePoint("2024-02-28 23:00:00")));
+  CHECK(parseLocalTimePoint("2022-12-31 12:00:01") == roundToNextSecond(parseLocalTimePoint("2022-12-31 12:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-10 00:00:01") == roundToNextSecond(parseLocalTimePoint("2022-07-10 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-12-31 00:00:01") == roundToNextSecond(parseLocalTimePoint("2022-12-31 00:00:00")));
+  CHECK(parseLocalTimePoint("2022-05-12 23:00:59") == roundToNextSecond(parseLocalTimePoint("2022-05-12 23:00:58")));
+  CHECK(parseLocalTimePoint("2022-06-21 11:00:01") == roundToNextSecond(parseLocalTimePoint("2022-06-21 11:00:00")));
+  CHECK(parseLocalTimePoint("2022-07-21 12:12:01") == roundToNextSecond(parseLocalTimePoint("2022-07-21 12:12:00")));
+}

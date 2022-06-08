@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
-#define LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_
+#pragma once
 
 #include <cstring>
 #include <ctime>
@@ -308,12 +307,32 @@ std::optional<TargetDuration> StringToDuration(const std::string& input) {
     std::chrono::days>(unit, value);
 }
 
+inline date::local_seconds roundToNextYear(date::local_seconds tp) {
+  date::year_month_day date(std::chrono::floor<std::chrono::days>(tp));
+  auto start_of_year = date.year()/1/1;
+  return date::local_days(start_of_year + std::chrono::years(1));
+}
+
+inline date::local_seconds roundToNextMonth(date::local_seconds tp) {
+  date::year_month_day date(std::chrono::floor<std::chrono::days>(tp));
+  auto start_of_month = date.year()/date.month()/1;
+  return date::local_days(start_of_month + std::chrono::months(1));
+}
+
+inline date::local_seconds roundToNextDay(date::local_seconds tp) {
+  return std::chrono::floor<std::chrono::days>(tp) + std::chrono::days(1);
+}
+
+inline date::local_seconds roundToNextHour(date::local_seconds tp) {
+  return std::chrono::floor<std::chrono::hours>(tp) + std::chrono::hours(1);
+}
+
+inline date::local_seconds roundToNextMinute(date::local_seconds tp) {
+  return std::chrono::floor<std::chrono::minutes>(tp) + std::chrono::minutes(1);
+}
+
+inline date::local_seconds roundToNextSecond(date::local_seconds tp) {
+  return std::chrono::floor<std::chrono::seconds>(tp) + std::chrono::seconds(1);
+}
+
 }  // namespace org::apache::nifi::minifi::utils::timeutils
-
-// for backwards compatibility, to be removed after 0.8
-using org::apache::nifi::minifi::utils::timeutils::getTimeNano;
-using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
-using org::apache::nifi::minifi::utils::timeutils::parseDateTimeStr;
-using org::apache::nifi::minifi::utils::timeutils::getDateTimeStr;
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_TIMEUTIL_H_

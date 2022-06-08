@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,21 +15,12 @@
  * limitations under the License.
  */
 
-#include <memory>
-#include <string>
-#include <vector>
-#include "io/CRCStream.h"
-#include "io/BufferStream.h"
-#include "TestBase.h"
-#include "Catch.h"
-#include "GetFile.h"
-#include "LogAttribute.h"
-#include "SchedulingAgent.h"
-#include "TimerDrivenSchedulingAgent.h"
+#include "utils/TestUtils.h"
 
-
-TEST_CASE("TestTDAgent", "[test1]") {
-  std::shared_ptr<core::Processor> procA = std::make_shared<minifi::processors::GetFile>("getFile");
-  std::shared_ptr<core::Processor> procB = std::make_shared<minifi::processors::LogAttribute>("logAttribute");
-  // agent.run()
+namespace org::apache::nifi::minifi::utils {
+#ifdef WIN32
+void dateSetInstall(const std::string& install) {
+  date::set_install(install);
 }
+#endif
+}  // namespace org::apache::nifi::minifi::utils
