@@ -28,9 +28,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Enum.h"
 
-#include "asio/ts/buffer.hpp"
-#include "asio/ts/internet.hpp"
-#include "asio/streambuf.hpp"
+#include "utils/net/Server.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -88,93 +86,14 @@ class ListenSyslog : public core::Processor {
   }
 
  private:
-  SMART_ENUM(Protocol,
-             (TCP, "TCP"),
-             (UDP, "UDP")
-  )
-
   void stopServer();
+  static void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session, bool should_parse);
 
-  class SyslogMessage {
-   public:
-    SyslogMessage() = default;
-    SyslogMessage(std::string message, Protocol protocol, asio::ip::address sender_address, asio::ip::port_type server_port);
+  static const std::regex rfc5424_pattern_;
+  static const std::regex rfc3164_pattern_;
 
-    void transferAsFlowFile(core::ProcessSession& session, bool should_parse);
-
-   private:
-    std::string message_;
-    Protocol protocol_;
-    asio::ip::port_type server_port_{514};
-    asio::ip::address sender_address_;
-
-    static const std::regex rfc5424_pattern_;
-    static const std::regex rfc3164_pattern_;
-  };
-
-  class Server {
-   public:
-    virtual ~Server() = default;
-
-   protected:
-    Server(asio::io_context& io_context, utils::ConcurrentQueue<SyslogMessage>& concurrent_queue, std::optional<size_t> max_queue_size)
-        : concurrent_queue_(concurrent_queue), io_context_(io_context), max_queue_size_(max_queue_size) {}
-
-    utils::ConcurrentQueue<SyslogMessage>& concurrent_queue_;
-    asio::io_context& io_context_;
-    std::optional<size_t> max_queue_size_;
-  };
-
-  class TcpSession : public std::enable_shared_from_this<TcpSession> {
-   public:
-    TcpSession(asio::io_context& io_context, utils::ConcurrentQueue<SyslogMessage>& concurrent_queue, std::optional<size_t> max_queue_size);
-
-    asio::ip::tcp::socket& getSocket();
-    void start();
-    void handleReadUntilNewLine(std::error_code error_code);
-
-   private:
-    utils::ConcurrentQueue<SyslogMessage>& concurrent_queue_;
-    std::optional<size_t> max_queue_size_;
-    asio::ip::tcp::socket socket_;
-    asio::basic_streambuf<std::allocator<char>> buffer_;
-    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenSyslog>::getLogger();
-  };
-
-  class TcpServer : public Server {
-   public:
-    TcpServer(asio::io_context& io_context,
-              utils::ConcurrentQueue<SyslogMessage>& concurrent_queue,
-              std::optional<size_t> max_queue_size,
-              uint16_t port);
-
-   private:
-    void startAccept();
-    void handleAccept(const std::shared_ptr<TcpSession>& session, const std::error_code& error);
-
-    asio::ip::tcp::acceptor acceptor_;
-  };
-
-  class UdpServer : public Server {
-   public:
-    UdpServer(asio::io_context& io_context,
-              utils::ConcurrentQueue<SyslogMessage>& concurrent_queue,
-              std::optional<size_t> max_queue_size,
-              uint16_t port);
-
-   private:
-    void doReceive();
-
-    asio::ip::udp::socket socket_;
-    asio::ip::udp::endpoint sender_endpoint_;
-    std::string buffer_;
-
-    std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenSyslog>::getLogger();
-    static inline constexpr size_t MAX_UDP_PACKET_SIZE = 65535;
-  };
-
-  utils::ConcurrentQueue<SyslogMessage> queue_;
-  std::unique_ptr<Server> server_;
+  utils::ConcurrentQueue<utils::net::Message> queue_;
+  std::unique_ptr<utils::net::Server> server_;
   asio::io_context io_context_;
   std::thread server_thread_;
 
