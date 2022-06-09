@@ -64,7 +64,7 @@ void sunny_path_bootstrap(SiteToSiteResponder *collector) {
 }
 
 TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
-  SiteToSiteResponder *collector = new SiteToSiteResponder();
+  auto *collector = new SiteToSiteResponder();
 
   sunny_path_bootstrap(collector);
 
@@ -125,7 +125,7 @@ TEST_CASE("TestSiteToSiteVerifySend", "[S2S3]") {
 }
 
 TEST_CASE("TestSiteToSiteVerifyNegotiationFail", "[S2S4]") {
-  SiteToSiteResponder *collector = new SiteToSiteResponder();
+  auto *collector = new SiteToSiteResponder();
 
   char a = '\xFF';
   std::string resp_code;

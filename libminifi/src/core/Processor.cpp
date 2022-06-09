@@ -37,11 +37,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 Processor::Processor(const std::string& name)
     : Connectable(name),
@@ -397,8 +393,4 @@ std::chrono::milliseconds Processor::getYieldTime() const {
     return 0ms;
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

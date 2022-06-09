@@ -40,11 +40,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const char *DataHandler::SOURCE_ENDPOINT_ATTRIBUTE = "source.endpoint";
 
@@ -300,8 +296,4 @@ int16_t GetTCP::getMetricNodes(std::vector<std::shared_ptr<state::response::Resp
 
 REGISTER_RESOURCE(GetTCP, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -18,11 +18,7 @@
 #include "utils/ThreadPool.h"
 #include "core/state/UpdateController.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
 void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
@@ -282,8 +278,4 @@ template class utils::ThreadPool<int>;
 template class utils::ThreadPool<bool>;
 template class utils::ThreadPool<state::Update>;
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

@@ -22,11 +22,7 @@
 #include "PythonScriptEngine.h"
 #include "utils/file/FileUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 Interpreter *getInterpreter() {
   static Interpreter interpreter;
@@ -87,9 +83,4 @@ void PythonScriptEngine::initialize() {
   getInterpreter();
 }
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::python

@@ -112,7 +112,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
 
     server->add_endpoint(minifi::coap::Method::Post, [](minifi::coap::CoapQuery)->minifi::coap::CoapResponse {
-      minifi::coap::CoapResponse response(205, 0x00, 0);
+      minifi::coap::CoapResponse response(205, nullptr, 0);
       return response;
     });
 
@@ -149,11 +149,11 @@ class VerifyCoAPServer : public CoapIntegrationBase {
 
     server->add_endpoint("heartbeat", minifi::coap::Method::Post, [&](minifi::coap::CoapQuery)-> minifi::coap::CoapResponse {
       if (responses.size_approx() > 0) {
-        minifi::coap::CoapResponse resp(500, 0, 0);;
+        minifi::coap::CoapResponse resp(500, nullptr, 0);;
         responses.try_dequeue(resp);
         return resp;
       }
-      minifi::coap::CoapResponse response(500, 0, 0);
+      minifi::coap::CoapResponse response(500, nullptr, 0);
       return response;
     });
     server->start();

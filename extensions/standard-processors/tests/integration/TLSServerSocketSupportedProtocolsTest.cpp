@@ -119,9 +119,9 @@ void log_addrinfo(addrinfo* const ai, minifi::core::logging::Logger& logger) {
 
 class SimpleSSLTestClient  {
  public:
-  SimpleSSLTestClient(const SSL_METHOD* method, const std::string& host, const std::string& port) :
-    host_(host),
-    port_(port) {
+  SimpleSSLTestClient(const SSL_METHOD* method, std::string host, std::string port) :
+    host_(std::move(host)),
+    port_(std::move(port)) {
       ctx_ = SSL_CTX_new(method);
       sfd_ = openConnection(host_.c_str(), port_.c_str(), *logger_);
       if (ctx_ != nullptr)
@@ -213,8 +213,8 @@ class SimpleSSLTestClientTLSv1_2  : public SimpleSSLTestClient {
 
 class TLSServerSocketSupportedProtocolsTest {
  public:
-    explicit TLSServerSocketSupportedProtocolsTest(const std::string& key_dir)
-        : is_running_(false), key_dir_(key_dir), configuration_(std::make_shared<minifi::Configure>()) {
+    explicit TLSServerSocketSupportedProtocolsTest(std::string key_dir)
+        : is_running_(false), key_dir_(std::move(key_dir)), configuration_(std::make_shared<minifi::Configure>()) {
     }
 
     ~TLSServerSocketSupportedProtocolsTest() {

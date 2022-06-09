@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONNECTION_H_
-#define LIBMINIFI_INCLUDE_CONNECTION_H_
+#pragma once
 
 #include <memory>
 #include <set>
@@ -36,18 +35,15 @@
 #include "core/Repository.h"
 #include "utils/FlowFileQueue.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class Connection : public core::Connectable {
  public:
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name);
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid);
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID);
-  explicit Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
+  explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
                       const utils::Identifier &srcUUID, const utils::Identifier &destUUID);
   // Destructor
   ~Connection() override = default;
@@ -208,8 +204,4 @@ class Connection : public core::Connectable {
   Connection(const Connection &parent);
   Connection &operator=(const Connection &parent);
 };
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CONNECTION_H_
+}  // namespace org::apache::nifi::minifi

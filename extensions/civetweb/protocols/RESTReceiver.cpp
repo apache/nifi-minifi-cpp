@@ -79,7 +79,7 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
   my_port += "s";
   callback.log_message = log_message;
   const char *options[] = { "listening_ports", port.c_str(), "ssl_certificate", ca_cert.c_str(), "ssl_protocol_version", "4", "ssl_cipher_list", "ALL",
-      "ssl_verify_peer", "no", "num_threads", "1", 0 };
+      "ssl_verify_peer", "no", "num_threads", "1", nullptr };
 
   std::vector<std::string> cpp_options;
   for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {
@@ -93,7 +93,7 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
 }
 
 std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler) {
-  const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "num_threads", "1", 0 };
+  const char *options[] = { "document_root", ".", "listening_ports", port.c_str(), "num_threads", "1", nullptr };
 
   std::vector<std::string> cpp_options;
   for (uint32_t i = 0; i < (sizeof(options) / sizeof(options[0]) - 1); i++) {

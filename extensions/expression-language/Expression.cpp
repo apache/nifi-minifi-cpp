@@ -65,11 +65,7 @@
 
 #include "date/tz.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace expression {
+namespace org::apache::nifi::minifi::expression {
 
 Expression compile(const std::string &expr_str) {
   std::stringstream expr_str_stream(expr_str);
@@ -201,11 +197,11 @@ Value expr_toLower(const std::vector<Value> &args) {
 
 Value expr_substring(const std::vector<Value> &args) {
   if (args.size() < 3) {
-    size_t offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
+    auto offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
     return Value{args[0].asString().substr(offset)};
   } else {
-    size_t offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
-    size_t count = gsl::narrow<size_t>(args[2].asUnsignedLong());
+    auto offset = gsl::narrow<size_t>(args[1].asUnsignedLong());
+    auto count = gsl::narrow<size_t>(args[2].asUnsignedLong());
     return Value{args[0].asString().substr(offset, count)};
   }
 }
@@ -1609,8 +1605,4 @@ void dateSetInstall(const std::string& install) {
 }
 #endif
 
-} /* namespace expression */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::expression

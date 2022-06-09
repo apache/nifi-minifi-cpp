@@ -142,5 +142,4 @@ class AbstractMQTTProcessor : public core::Processor {
   std::string securityPrivateKeyPassWord_;
 };
 
-
 }  // namespace org::apache::nifi::minifi::processors

@@ -35,11 +35,7 @@
 #include "Exception.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> FocusArchiveEntry::id_generator_ = utils::IdGenerator::getIdGenerator();
 
@@ -247,8 +243,4 @@ FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, utils:
 
 REGISTER_RESOURCE(FocusArchiveEntry, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

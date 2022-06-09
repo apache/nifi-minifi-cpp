@@ -43,11 +43,7 @@
 
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 #ifdef WIN32
 namespace {
@@ -330,8 +326,4 @@ Identifier IdGenerator::generate() {
   return Identifier{output};
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

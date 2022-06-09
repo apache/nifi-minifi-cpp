@@ -24,11 +24,7 @@
 
 #include "rapidjson/document.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 class HeartbeatJsonSerializer {
  public:
@@ -41,8 +37,4 @@ class HeartbeatJsonSerializer {
   virtual ~HeartbeatJsonSerializer() = default;
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

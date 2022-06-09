@@ -54,8 +54,8 @@ class SimpleSSLTestServerTLSv1_2  : public SimpleSSLTestServer {
 
 class TLSClientSocketSupportedProtocolsTest {
  public:
-  explicit TLSClientSocketSupportedProtocolsTest(const std::filesystem::path& key_dir)
-      : key_dir_(key_dir), configuration_(std::make_shared<minifi::Configure>()) {
+  explicit TLSClientSocketSupportedProtocolsTest(std::filesystem::path key_dir)
+      : key_dir_(std::move(key_dir)), configuration_(std::make_shared<minifi::Configure>()) {
   }
 
   void run() {

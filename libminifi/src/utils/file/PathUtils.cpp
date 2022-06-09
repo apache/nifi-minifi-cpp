@@ -30,12 +30,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 bool getFileNameAndPath(const std::string &path, std::string &filePath, std::string &fileName) {
   const std::size_t found = path.find_last_of(FileUtils::get_separator());
@@ -138,9 +133,4 @@ space_info space(const path path) {
   return result;
 }
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::file

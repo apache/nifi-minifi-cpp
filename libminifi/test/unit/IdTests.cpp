@@ -26,19 +26,11 @@
 #include "utils/Id.h"
 #include "../Utils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 struct IdentifierTestAccessor {
   FIELD_ACCESSOR(data_)
 };
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
 
 using org::apache::nifi::minifi::utils::IdentifierTestAccessor;
 

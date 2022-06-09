@@ -42,11 +42,7 @@
 #include "WriteArchiveStream.h"
 #include "ReadArchiveStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class CompressContent : public core::Processor {
  public:
@@ -182,8 +178,4 @@ class CompressContent : public core::Processor {
   static const std::map<io::CompressionFormat, std::string> fileExtension_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

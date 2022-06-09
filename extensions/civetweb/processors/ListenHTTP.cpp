@@ -30,11 +30,7 @@
 #include "core/Resource.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const uint64_t ListenHTTP::DEFAULT_BUFFER_SIZE = 20000;
 
@@ -510,8 +506,4 @@ void ListenHTTP::notifyStop() {
 
 REGISTER_RESOURCE(ListenHTTP, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

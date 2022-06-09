@@ -54,11 +54,7 @@ int getpagesize(void) {
 }
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 std::string detail::to_string(const detail::ReadBufferResult& read_buffer_result) {
   return {reinterpret_cast<const char*>(read_buffer_result.buffer.data()), read_buffer_result.buffer.size()};
@@ -1098,8 +1094,4 @@ bool ProcessSession::existsFlowFileInRelationship(const Relationship &relationsh
   });
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

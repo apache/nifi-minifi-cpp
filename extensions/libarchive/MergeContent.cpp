@@ -273,10 +273,10 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   return true;
 }
 
-BinaryConcatenationMerge::BinaryConcatenationMerge(const std::string &header, const std::string& footer, const std::string &demarcator)
-  : header_(header),
-    footer_(footer),
-    demarcator_(demarcator) {}
+BinaryConcatenationMerge::BinaryConcatenationMerge(std::string header, std::string footer, std::string demarcator)
+  : header_(std::move(header)),
+    footer_(std::move(footer)),
+    demarcator_(std::move(demarcator)) {}
 
 void BinaryConcatenationMerge::merge(core::ProcessContext* /*context*/, core::ProcessSession *session,
     std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) {

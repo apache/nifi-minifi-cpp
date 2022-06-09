@@ -34,11 +34,7 @@
 
 #pragma GCC visibility push(hidden)
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 namespace py = pybind11;
 
@@ -233,10 +229,6 @@ class __attribute__((visibility("default"))) PythonScriptEngine : public script:
   std::unique_ptr<py::dict> bindings_;
 };
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python
 
 #pragma GCC visibility pop

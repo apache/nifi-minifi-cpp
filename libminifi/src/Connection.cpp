@@ -35,40 +35,36 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name)
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name)
     : core::Connectable(name),
-      flow_repository_(flow_repository),
-      content_repo_(content_repo) {
+      flow_repository_(std::move(flow_repository)),
+      content_repo_(std::move(content_repo)) {
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid)
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid)
     : core::Connectable(name, uuid),
-      flow_repository_(flow_repository),
-      content_repo_(content_repo) {
+      flow_repository_(std::move(flow_repository)),
+      content_repo_(std::move(content_repo)) {
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID)
     : core::Connectable(name, uuid),
-      flow_repository_(flow_repository),
-      content_repo_(content_repo) {
+      flow_repository_(std::move(flow_repository)),
+      content_repo_(std::move(content_repo)) {
   src_uuid_ = srcUUID;
   logger_->log_debug("Connection %s created", name_);
 }
 
-Connection::Connection(const std::shared_ptr<core::Repository> &flow_repository, const std::shared_ptr<core::ContentRepository> &content_repo, const std::string &name, const utils::Identifier &uuid,
+Connection::Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid,
                        const utils::Identifier& srcUUID, const utils::Identifier& destUUID)
     : core::Connectable(name, uuid),
-      flow_repository_(flow_repository),
-      content_repo_(content_repo) {
-
+      flow_repository_(std::move(flow_repository)),
+      content_repo_(std::move(content_repo)) {
   src_uuid_ = srcUUID;
   dest_uuid_ = destUUID;
   logger_->log_debug("Connection %s created", name_);
@@ -187,7 +183,4 @@ void Connection::drain(bool delete_permanently) {
   logger_->log_debug("Drain connection %s", name_);
 }
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

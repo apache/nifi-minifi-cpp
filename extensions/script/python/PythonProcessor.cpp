@@ -23,11 +23,7 @@
 #include "ExecutePythonProcessor.h"
 #include "PythonProcessor.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 namespace core = org::apache::nifi::minifi::core;
 
@@ -48,8 +44,4 @@ void PythonProcessor::addProperty(const std::string &name, const std::string &de
   processor_->addProperty(name, description, defaultvalue, required, el);
 }
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python

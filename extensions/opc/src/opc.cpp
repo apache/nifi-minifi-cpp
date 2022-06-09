@@ -32,11 +32,7 @@
 #include "open62541/client_highlevel.h"
 #include "open62541/client_config_default.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace opc {
+namespace org::apache::nifi::minifi::opc {
 
 /*
  * The following functions are only used internally in OPC lib, not to be exported
@@ -227,7 +223,7 @@ NodeData Client::getNodeData(const UA_ReferenceDescription *ref, const std::stri
     nodedata.attributes["Full path"] = basePath + "/" + browsename;
     nodedata.dataTypeID = UA_TYPES_COUNT;
     UA_Variant* var = UA_Variant_new();
-    if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != NULL && var->data != NULL) {
+    if (UA_Client_readValueAttribute(client_, ref->nodeId.nodeId, var) == UA_STATUSCODE_GOOD && var->type != nullptr && var->data != nullptr) {
       // Because the timestamps are eliminated in readValueAttribute for simplification
       // We need to call the inner function UA_Client_Service_read.
       UA_ReadValueId item;
@@ -568,8 +564,4 @@ void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, cons
   loggerPtr->log_string(MapOPCLogLevel(level), buffer);
 }
 
-} /* namespace opc */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::opc

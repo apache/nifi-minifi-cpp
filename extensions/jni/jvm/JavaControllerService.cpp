@@ -29,12 +29,7 @@
 #include "utils/file/FileUtils.h"
 #include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
-namespace controllers {
+namespace org::apache::nifi::minifi::jni::controllers {
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
@@ -101,9 +96,4 @@ void JavaControllerService::onEnable() {
 
 REGISTER_RESOURCE(JavaControllerService, ControllerService);
 
-} /* namespace controllers */
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni::controllers

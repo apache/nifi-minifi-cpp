@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_LIBRDKAFKA_PUBLISHKAFKA_H_
-#define EXTENSIONS_LIBRDKAFKA_PUBLISHKAFKA_H_
+#pragma once
 
 #include <atomic>
 #include <cstdint>
@@ -157,5 +156,3 @@ class PublishKafka : public KafkaProcessorBase {
 };
 
 }  // namespace org::apache::nifi::minifi::processors
-
-#endif  // EXTENSIONS_LIBRDKAFKA_PUBLISHKAFKA_H_

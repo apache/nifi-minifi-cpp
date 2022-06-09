@@ -125,9 +125,8 @@ class Regex {
   enum class Mode { ICASE };
 
   Regex();
-  explicit Regex(const std::string &value);
-  explicit Regex(const std::string &value,
-                const std::vector<Mode> &mode);
+  explicit Regex(std::string value);
+  Regex(std::string value, const std::vector<Mode> &mode);
   Regex(const Regex &);
   Regex& operator=(const Regex &);
   Regex(Regex&& other);

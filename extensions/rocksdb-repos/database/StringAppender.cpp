@@ -18,12 +18,7 @@
 #include "StringAppender.h"
 #include "rocksdb/utilities/object_registry.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 bool StringAppender::Merge(const rocksdb::Slice& /*key*/, const rocksdb::Slice* existing_value, const rocksdb::Slice& value, std::string* new_value, rocksdb::Logger* /*logger*/) const {
   // Clear the *new_value for writing.
@@ -51,9 +46,4 @@ static auto string_appender_registrar = rocksdb::ObjectLibrary::Default()->Regis
       return out->get();
     });
 
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::repository

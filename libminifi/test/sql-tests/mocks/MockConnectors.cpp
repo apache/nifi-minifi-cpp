@@ -24,11 +24,7 @@
 #include <string>
 #include <memory>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 std::size_t MockRow::size() const {
   return column_names_->size();
@@ -413,8 +409,4 @@ std::unique_ptr<Session> MockODBCConnection::getSession() const {
   return std::make_unique<sql::MockSession>();
 }
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql

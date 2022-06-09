@@ -27,11 +27,7 @@
 #include "FlowFile.h"
 #include "VariableRegistry.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace expression {
+namespace org::apache::nifi::minifi::expression {
 
 struct Parameters {
   std::weak_ptr<core::FlowFile> flow_file;
@@ -184,8 +180,4 @@ Expression make_function_composition(const Expression &arg, const std::vector<st
 void dateSetInstall(const std::string& install);
 #endif
 
-} /* namespace expression */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::expression

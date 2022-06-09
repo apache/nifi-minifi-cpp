@@ -99,9 +99,9 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
   std::string out_port = "471deef6-2a6e-4a7d-912a-81cc17e3a203";
 
-  SiteToSiteLocationResponder *responder = new SiteToSiteLocationResponder(isSecure);
+  auto *responder = new SiteToSiteLocationResponder(isSecure);
 
-  TransactionResponder *transaction_response = new TransactionResponder(url, in_port,
+  auto *transaction_response = new TransactionResponder(url, in_port,
       true, profile.transaction_url_broken, profile.empty_transaction_url);
 
   std::string transaction_id = transaction_response->getTransactionId();
@@ -111,7 +111,7 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
   std::string controller_loc = url + "/controller";
 
   std::string basesitetosite = url + "/site-to-site";
-  SiteToSiteBaseResponder *base = new SiteToSiteBaseResponder(basesitetosite);
+  auto *base = new SiteToSiteBaseResponder(basesitetosite);
 
   harness.setUrl(basesitetosite, base);
 
@@ -127,17 +127,17 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
 
   std::string peer_url = url + "/site-to-site/peers";
 
-  PeerResponder *peer_response = new PeerResponder(url);
+  auto *peer_response = new PeerResponder(url);
 
   harness.setUrl(peer_url, peer_response);
 
   std::string flow_url = action_url + "/" + transaction_id + "/flow-files";
 
-  FlowFileResponder *flowResponder = new FlowFileResponder(true, profile.flow_url_broken, profile.invalid_checksum);
+  auto *flowResponder = new FlowFileResponder(true, profile.flow_url_broken, profile.invalid_checksum);
   flowResponder->setFlowUrl(flow_url);
   auto producedFlows = flowResponder->getFlows();
 
-  TransactionResponder *transaction_response_output = new TransactionResponder(url, out_port,
+  auto *transaction_response_output = new TransactionResponder(url, out_port,
       false, profile.transaction_url_broken, profile.empty_transaction_url);
   std::string transaction_output_id = transaction_response_output->getTransactionId();
   transaction_response_output->setFeed(producedFlows);
@@ -146,7 +146,7 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
 
   std::string flow_output_url = action_output_url + "/" + transaction_output_id + "/flow-files";
 
-  FlowFileResponder* flowOutputResponder = new FlowFileResponder(false, profile.flow_url_broken, profile.invalid_checksum);
+  auto* flowOutputResponder = new FlowFileResponder(false, profile.flow_url_broken, profile.invalid_checksum);
   flowOutputResponder->setFlowUrl(flow_output_url);
   flowOutputResponder->setFeed(producedFlows);
 
@@ -155,11 +155,11 @@ void run_variance(std::string test_file_location, bool isSecure, std::string url
 
   if (!profile.no_delete) {
     std::string delete_url = transaction_url + "/" + transaction_id;
-    DeleteTransactionResponder *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
+    auto *deleteResponse = new DeleteTransactionResponder(delete_url, "201 OK", 12);
     harness.setUrl(delete_url, deleteResponse);
 
     std::string delete_output_url = transaction_output_url + "/" + transaction_output_id;
-    DeleteTransactionResponder *deleteOutputResponse = new DeleteTransactionResponder(delete_output_url, "201 OK", producedFlows);
+    auto *deleteOutputResponse = new DeleteTransactionResponder(delete_output_url, "201 OK", producedFlows);
     harness.setUrl(delete_output_url, deleteOutputResponse);
   }
 

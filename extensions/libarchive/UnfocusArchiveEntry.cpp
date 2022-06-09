@@ -34,11 +34,7 @@
 #include "core/Resource.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Relationship UnfocusArchiveEntry::Success("success", "success operational on the flow record");
 
@@ -203,7 +199,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
 
       while (ifs.good()) {
         ifs.read(buf, sizeof(buf));
-        size_t len = gsl::narrow<size_t>(ifs.gcount());
+        auto len = gsl::narrow<size_t>(ifs.gcount());
         int64_t written = archive_write_data(outputArchive, buf, len);
         if (written < 0) {
           logger_->log_error("UnfocusArchiveEntry failed to write data to "
@@ -231,8 +227,4 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
 
 REGISTER_RESOURCE(UnfocusArchiveEntry, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

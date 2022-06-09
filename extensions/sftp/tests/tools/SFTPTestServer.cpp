@@ -22,6 +22,7 @@
 #include <fstream>
 #include <vector>
 #include <thread>
+#include <utility>
 
 #ifndef WIN32
 #include <unistd.h>
@@ -37,10 +38,10 @@
 
 namespace utils = org::apache::nifi::minifi::utils;
 
-SFTPTestServer::SFTPTestServer(const std::string& working_directory,
+SFTPTestServer::SFTPTestServer(std::string working_directory,
                                const std::string& host_key_file /*= "resources/host.pem"*/,
                                const std::string& jar_path /*= "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar"*/)
-    : working_directory_(working_directory),
+    : working_directory_(std::move(working_directory)),
       started_(false),
       port_(0U)
 #ifndef WIN32

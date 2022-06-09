@@ -19,11 +19,7 @@
 
 #include <memory>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 KafkaConnection::KafkaConnection(const KafkaConnectionKey &key)
     : logger_(core::logging::LoggerFactory<KafkaConnection>::getLogger()),
@@ -130,8 +126,4 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, int level, const char* /
   }
 }
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

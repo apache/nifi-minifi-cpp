@@ -84,9 +84,9 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
   logger_->log_trace("Writing heartbeat");
 
   try {
-    const std::string deviceIdent = minifi::c2::PayloadParser::getInstance(payload).in("deviceInfo").getAs<std::string>("identifier");
+    const auto deviceIdent = minifi::c2::PayloadParser::getInstance(payload).in("deviceInfo").getAs<std::string>("identifier");
 
-    const std::string agentIdent = minifi::c2::PayloadParser::getInstance(payload).in("agentInfo").getAs<std::string>("identifier");
+    const auto agentIdent = minifi::c2::PayloadParser::getInstance(payload).in("agentInfo").getAs<std::string>("identifier");
 
     stream->write(deviceIdent, false);
 

@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_ID_H_
-#define LIBMINIFI_INCLUDE_UTILS_ID_H_
+#pragma once
 
 #include <atomic>
 #include <cstddef>
@@ -45,11 +44,7 @@ class uuid;
 #define UUID_TIME_STR "time"
 #define UUID_WINDOWS_STR "windows"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 class Identifier {
   friend struct IdentifierTestAccessor;
@@ -136,10 +131,4 @@ class NonRepeatingStringGenerator {
   std::string prefix_{std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count()) + "-"};
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_ID_H_
+}  // namespace org::apache::nifi::minifi::utils

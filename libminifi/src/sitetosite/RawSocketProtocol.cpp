@@ -35,11 +35,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 std::shared_ptr<utils::IdGenerator> RawSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<utils::IdGenerator> Transaction::id_generator_ = utils::IdGenerator::getIdGenerator();
@@ -536,13 +532,13 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDire
         return transaction;
       default:
         logger_->log_warn("Site2Site got unexpected response %d when asking for data", code);
-        return NULL;
+        return nullptr;
     }
   } else {
     ret = writeRequestType(SEND_FLOWFILES);
 
     if (ret <= 0) {
-      return NULL;
+      return nullptr;
     } else {
       org::apache::nifi::minifi::io::CRCStream<SiteToSitePeer> crcstream(gsl::make_not_null(peer_.get()));
       transaction = std::make_shared<Transaction>(direction, std::move(crcstream));
@@ -555,7 +551,7 @@ std::shared_ptr<Transaction> RawSiteToSiteClient::createTransaction(TransferDire
 
 bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session, const std::string &payload,
                                           std::map<std::string, std::string> attributes) {
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction;
 
   if (payload.length() <= 0)
     return false;
@@ -575,7 +571,7 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
   // Create the transaction
   transaction = createTransaction(SEND);
 
-  if (transaction == NULL) {
+  if (transaction == nullptr) {
     context->yield();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
@@ -621,8 +617,4 @@ bool RawSiteToSiteClient::transmitPayload(const std::shared_ptr<core::ProcessCon
   return true;
 }
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sitetosite
