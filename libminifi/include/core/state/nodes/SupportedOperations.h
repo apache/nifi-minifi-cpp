@@ -33,7 +33,7 @@ class SupportedOperations : public DeviceInformation {
   SupportedOperations(const std::string &name, const utils::Identifier &uuid);
   explicit SupportedOperations(const std::string &name);
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines the supported C2 operations in the Agent Manifest.";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines the supported C2 operations in the Agent Manifest.";
 
   std::string getName() const override;
   std::vector<SerializedResponseNode> serialize() override;

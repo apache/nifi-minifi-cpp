@@ -156,7 +156,7 @@ class FlowInformation : public FlowMonitor {
       : FlowMonitor(name) {
   }
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines the flow ID and flow URL deployed to this agent";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines the flow ID and flow URL deployed to this agent";
 
   std::string getName() const override {
     return "flowInfo";
@@ -248,17 +248,7 @@ class FlowInformation : public FlowMonitor {
   }
 
   std::vector<PublishedMetric> calculateMetrics() override {
-    std::vector<PublishedMetric> metrics;
-    for (const auto& [_, connection] : connections_) {
-      metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()),
-        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
-      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getMaxQueueDataSize()),
-        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
-      metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()),
-        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
-      metrics.push_back({"queue_size_max", static_cast<double>(connection->getMaxQueueSize()),
-        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", "FlowInformation"}}});
-    }
+    std::vector<PublishedMetric> metrics = calculateConnectionMetrics("FlowInformation");
 
     if (nullptr != monitor_) {
       monitor_->executeOnAllComponents([&metrics](StateController& component){

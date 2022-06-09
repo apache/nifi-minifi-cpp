@@ -67,7 +67,7 @@ class BuildInformation : public DeviceInformation {
       : DeviceInformation(name) {
   }
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines the pertinent build information for this agent binary";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines the pertinent build information for this agent binary";
 
   std::string getName() const override {
     return "BuildInformation";

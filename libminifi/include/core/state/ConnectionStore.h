@@ -19,8 +19,10 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "Connection.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::state {
 
@@ -30,6 +32,23 @@ class ConnectionStore {
     if (nullptr != connection) {
       connections_[connection->getUUIDStr()] = connection;
     }
+  }
+
+  std::vector<PublishedMetric> calculateConnectionMetrics(const std::string& metric_class) {
+    std::vector<PublishedMetric> metrics;
+
+    for (const auto& [_, connection] : connections_) {
+      metrics.push_back({"queue_data_size", static_cast<double>(connection->getQueueDataSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
+      metrics.push_back({"queue_data_size_max", static_cast<double>(connection->getMaxQueueDataSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
+      metrics.push_back({"queue_size", static_cast<double>(connection->getQueueSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
+      metrics.push_back({"queue_size_max", static_cast<double>(connection->getMaxQueueSize()),
+        {{"connection_uuid", connection->getUUIDStr()}, {"connection_name", connection->getName()}, {"metric_class", metric_class}}});
+    }
+
+    return metrics;
   }
 
   virtual ~ConnectionStore() = default;

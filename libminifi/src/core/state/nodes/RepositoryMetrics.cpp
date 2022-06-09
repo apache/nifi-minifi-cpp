@@ -21,7 +21,7 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-REGISTER_RESOURCE(RepositoryMetrics, "Node part of an AST that defines repository metric information");
+REGISTER_RESOURCE(RepositoryMetrics, "Metric node that defines repository metric information");
 
 }  // namespace org::apache::nifi::minifi::state::response
 

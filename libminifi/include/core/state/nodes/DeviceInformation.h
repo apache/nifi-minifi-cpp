@@ -303,7 +303,7 @@ class DeviceInfoNode : public DeviceInformation {
     device_id_ = device.device_id_;
   }
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines device characteristics to the C2 protocol";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines device characteristics to the C2 protocol";
 
   std::string getName() const override {
     return "deviceInfo";

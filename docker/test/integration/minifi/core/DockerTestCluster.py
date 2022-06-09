@@ -286,7 +286,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             with open(os.path.join(td, 'content.tar'), 'rb') as data:
                 return container.put_archive(os.path.dirname(dst_path), data.read())
 
-    def check_metric_class_on_prometheus(self, metric_class, timeout_seconds):
+    def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
         start_time = time.perf_counter()
         while (time.perf_counter() - start_time) < timeout_seconds:
             if self.verify_metric_class(metric_class):
@@ -294,7 +294,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
             time.sleep(1)
         return False
 
-    def check_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
+    def wait_for_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
         start_time = time.perf_counter()
         while (time.perf_counter() - start_time) < timeout_seconds:
             if self.verify_processor_metric(metric_class, processor_name):

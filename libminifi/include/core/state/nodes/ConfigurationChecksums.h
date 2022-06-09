@@ -31,7 +31,7 @@ class ConfigurationChecksums : public ResponseNode {
   ConfigurationChecksums() = default;
   explicit ConfigurationChecksums(const std::string& name, const utils::Identifier& uuid = {}) : ResponseNode(name, uuid) {}
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines checksums of configuration files in the C2 protocol";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines checksums of configuration files in the C2 protocol";
 
   void addChecksumCalculator(utils::ChecksumCalculator& checksum_calculator);
 

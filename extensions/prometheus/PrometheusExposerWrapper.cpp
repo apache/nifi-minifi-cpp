@@ -16,11 +16,13 @@
  */
 #include "PrometheusExposerWrapper.h"
 
+#include <cinttypes>
+
 namespace org::apache::nifi::minifi::extensions::prometheus {
 
 PrometheusExposerWrapper::PrometheusExposerWrapper(uint32_t port)
     : exposer_(std::to_string(port)) {
-  logger_->log_info("Started Prometheus metrics publisher on port %u", port);
+  logger_->log_info("Started Prometheus metrics publisher on port %" PRIu32, port);
 }
 
 void PrometheusExposerWrapper::registerMetric(const std::shared_ptr<PublishedMetricGaugeCollection>& metric) {

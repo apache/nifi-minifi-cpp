@@ -263,7 +263,7 @@ class MiNiFi_integration_test:
         assert self.cluster.check_azure_blob_and_snapshot_count(blob_and_snapshot_count, timeout_seconds)
 
     def check_metric_class_on_prometheus(self, metric_class, timeout_seconds):
-        assert self.cluster.check_metric_class_on_prometheus(metric_class, timeout_seconds)
+        assert self.cluster.wait_for_metric_class_on_prometheus(metric_class, timeout_seconds)
 
     def check_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
-        assert self.cluster.check_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
+        assert self.cluster.wait_for_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
