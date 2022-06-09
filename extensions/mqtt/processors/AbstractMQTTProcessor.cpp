@@ -136,7 +136,6 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   if (client_) {
     MQTTClient_setCallbacks(client_, this, connectionLost, msgReceived, msgDelivered);
     // TODO(amarkovics) we are running in asynchronous mode, we need to do something
-    // TODO(amarkovics) MQTTClient_yield also needs to be called frequently
     // call reconnect to bootstrap
     this->reconnect();
   }

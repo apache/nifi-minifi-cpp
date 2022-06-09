@@ -72,25 +72,31 @@ class AbstractMQTTProcessor : public core::Processor {
     };
   }
 
- public:
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& factory) override;
 
   void notifyStop() override;
 
   // MQTT async callbacks
+  // TODO(amarkovics) this should only be in PublishMQTT
   static void msgDelivered(void *context, MQTTClient_deliveryToken dt) {
+    // TODO(amarkovics) why do we set delivered_token_ at all?
     // TODO(amarkovics) this needs mutex because it's called on a separate thread
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    // TODO(amarkovics) can there be more than 1 message being delivered (asynchronously)?
     processor->delivered_token_ = dt;
   }
+
+  // TODO(amarkovics) this should only be in ConsumeMQTT
   static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTClient_message *message) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
     processor->onMessageReceived(message);
     MQTTClient_free(topicName);
     return 1;
+    // TODO(amarkovics) why always return with 1?
   }
   static void connectionLost(void *context, char* /*cause*/) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    // TODO(amarkovics) log cause
     processor->reconnect();
   }
   bool reconnect();

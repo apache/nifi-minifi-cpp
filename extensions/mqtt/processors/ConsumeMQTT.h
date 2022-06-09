@@ -45,6 +45,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
     maxQueueSize_ = 100;
     maxSegSize_ = ULLONG_MAX;
   }
+
   ~ConsumeMQTT() override {
     MQTTClient_message *message;
     while (queue_.try_dequeue(message)) {
@@ -100,6 +101,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   }
 
   void onMessageReceived(MQTTClient_message* message) override {
+    // TODO(amarkovics) MQTT messages should be stored in a unique_ptr with custom deleter
     if (!enqueueReceiveMQTTMsg(message)) {
       MQTTClient_freeMessage(&message);
     }

@@ -44,6 +44,8 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     max_seg_size_ = ULLONG_MAX;
   }
   ~PublishMQTT() override = default;
+  static core::Property Retain;
+  static core::Property MaxFlowSegSize;
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
 
@@ -123,7 +125,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     MQTTClient_deliveryToken &token_;
   };
 
- public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
