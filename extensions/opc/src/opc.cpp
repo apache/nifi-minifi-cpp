@@ -554,7 +554,7 @@ std::string OPCDateTime2String(UA_DateTime raw_date) {
 
   int sz = snprintf(charBuf.data(), charBuf.size(), "%02hu-%02hu-%04hu %02hu:%02hu:%02hu.%03hu", dts.day, dts.month, dts.year, dts.hour, dts.min, dts.sec, dts.milliSec);
 
-  return {charBuf.data(), static_cast<std::size_t>(sz)};
+  return {charBuf.data(), gsl::narrow<std::size_t>(sz)};
 }
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory /*category*/, const char *msg, va_list args) {

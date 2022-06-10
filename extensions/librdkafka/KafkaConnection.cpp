@@ -122,7 +122,7 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, int level, const char* /
       core::logging::LOG_DEBUG(logger) << buf;
       break;
     default:
-      throw std::runtime_error("Unknown log level: " + std::to_string(level));
+      abort();
   }
 }
 

@@ -42,6 +42,7 @@
 #endif
 
 #include "utils/StringUtils.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -190,7 +191,7 @@ IdGenerator::~IdGenerator() = default;
 uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) const {
   uint64_t deviceSegment = 0;
   for (auto ch : str) {
-    unsigned char c = toupper(ch);
+    auto c = gsl::narrow<unsigned char>(std::toupper(gsl::narrow<unsigned char>(ch)));
     if (c >= '0' && c <= '9') {
       deviceSegment = deviceSegment + (c - '0');
     } else if (c >= 'A' && c <= 'F') {

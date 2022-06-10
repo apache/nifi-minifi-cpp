@@ -181,7 +181,7 @@ minifi::c2::Operation CoapProtocol::getOperation(int type) const {
     case 9:
       return minifi::c2::Operation::RESUME;
     default:
-      return minifi::c2::Operation::ACKNOWLEDGE;
+      abort();
   }
 }
 

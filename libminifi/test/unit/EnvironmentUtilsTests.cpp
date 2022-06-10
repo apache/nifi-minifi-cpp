@@ -118,7 +118,7 @@ TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]"
               break;
             }
           default: {
-            throw std::runtime_error("Operation value must be modulo 3");
+            abort();
           }
         }
       }
