@@ -18,13 +18,11 @@
 
 namespace org::apache::nifi::minifi::utils::net {
 
-UdpServer::UdpServer(asio::io_context& io_context,
-                     utils::ConcurrentQueue<utils::net::Message>& concurrent_queue,
-                     std::optional<size_t> max_queue_size,
+UdpServer::UdpServer(std::optional<size_t> max_queue_size,
                      uint16_t port,
                      std::shared_ptr<core::logging::Logger> logger)
-    : Server(io_context, concurrent_queue, max_queue_size, std::move(logger)),
-      socket_(io_context, asio::ip::udp::endpoint(asio::ip::udp::v4(), port)) {
+    : Server(max_queue_size, std::move(logger)),
+      socket_(io_context_, asio::ip::udp::endpoint(asio::ip::udp::v4(), port)) {
   doReceive();
 }
 

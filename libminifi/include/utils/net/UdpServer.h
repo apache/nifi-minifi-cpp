@@ -32,9 +32,7 @@ namespace org::apache::nifi::minifi::utils::net {
 
 class UdpServer : public Server {
  public:
-  UdpServer(asio::io_context& io_context,
-            utils::ConcurrentQueue<Message>& concurrent_queue,
-            std::optional<size_t> max_queue_size,
+  UdpServer(std::optional<size_t> max_queue_size,
             uint16_t port,
             std::shared_ptr<core::logging::Logger> logger);
 

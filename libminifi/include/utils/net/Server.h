@@ -52,14 +52,29 @@ struct Message {
 
 class Server {
  public:
-  virtual ~Server() = default;
+  void run() {
+    io_context_.restart();
+    io_context_.run();
+  }
+  void stop() {
+    io_context_.stop();
+  }
+  bool queueEmpty() {
+    return concurrent_queue_.empty();
+  }
+  bool tryDequeue(utils::net::Message& received_message) {
+    return concurrent_queue_.tryDequeue(received_message);
+  }
+  virtual ~Server() {
+    stop();
+  }
 
  protected:
-  Server(asio::io_context& io_context, utils::ConcurrentQueue<Message>& concurrent_queue, std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger)
-      : concurrent_queue_(concurrent_queue), io_context_(io_context), max_queue_size_(max_queue_size), logger_(logger) {}
+  Server(std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger)
+      : max_queue_size_(max_queue_size), logger_(logger) {}
 
-  utils::ConcurrentQueue<Message>& concurrent_queue_;
-  asio::io_context& io_context_;
+  utils::ConcurrentQueue<Message> concurrent_queue_;
+  asio::io_context io_context_;
   std::optional<size_t> max_queue_size_;
   std::shared_ptr<core::logging::Logger> logger_;
 };

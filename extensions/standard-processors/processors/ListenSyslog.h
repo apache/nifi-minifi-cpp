@@ -92,13 +92,10 @@ class ListenSyslog : public core::Processor {
   static const std::regex rfc5424_pattern_;
   static const std::regex rfc3164_pattern_;
 
-  utils::ConcurrentQueue<utils::net::Message> queue_;
   std::unique_ptr<utils::net::Server> server_;
-  asio::io_context io_context_;
   std::thread server_thread_;
 
   uint64_t max_batch_size_ = 500;
-  std::optional<uint64_t> max_queue_size_;
   bool parse_messages_ = false;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenSyslog>::getLogger();

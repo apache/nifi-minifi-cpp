@@ -96,7 +96,7 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
 
   uint64_t max_queue_size = 0;
   context->getProperty(MaxQueueSize.getName(), max_queue_size);
-  max_queue_size_ = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
+  auto max_queue_size_opt = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
 
   utils::net::Protocol protocol;
   context->getProperty(ProtocolProperty.getName(), protocol);
@@ -105,27 +105,27 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   context->getProperty(Port.getName(), port);
 
   if (protocol == utils::net::Protocol::UDP) {
-    server_ = std::make_unique<utils::net::UdpServer>(io_context_, queue_, max_queue_size_, port, logger_);
+    server_ = std::make_unique<utils::net::UdpServer>(max_queue_size_opt, port, logger_);
   } else if (protocol == utils::net::Protocol::TCP) {
-    server_ = std::make_unique<utils::net::TcpServer>(io_context_, queue_, max_queue_size_, port, logger_);
+    server_ = std::make_unique<utils::net::TcpServer>(max_queue_size_opt, port, logger_);
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid protocol");
   }
 
-  server_thread_ = std::thread([this]() { io_context_.run(); });
+  server_thread_ = std::thread([this]() { server_->run(); });
   logger_->log_debug("Started %s syslog server on port %d with %s max queue size and %zu max batch size",
                      protocol.toString(),
                      port,
-                     max_queue_size ? std::to_string(*max_queue_size_) : "no",
+                     max_queue_size_opt ? std::to_string(*max_queue_size_opt) : "no",
                      max_batch_size_);
 }
 
 void ListenSyslog::onTrigger(const std::shared_ptr<core::ProcessContext>&, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(session && max_batch_size_ > 0);
   size_t logs_processed = 0;
-  while (!queue_.empty() && logs_processed < max_batch_size_) {
+  while (!server_->queueEmpty() && logs_processed < max_batch_size_) {
     utils::net::Message received_message;
-    if (!queue_.tryDequeue(received_message))
+    if (!server_->tryDequeue(received_message))
       break;
     transferAsFlowFile(received_message, *session, parse_messages_);
     ++logs_processed;
@@ -133,11 +133,12 @@ void ListenSyslog::onTrigger(const std::shared_ptr<core::ProcessContext>&, const
 }
 
 void ListenSyslog::stopServer() {
-  io_context_.stop();
+  if (server_) {
+    server_->stop();
+  }
   if (server_thread_.joinable())
     server_thread_.join();
   server_.reset();
-  io_context_.reset();
   logger_->log_debug("Stopped syslog server");
 }
 

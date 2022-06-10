@@ -48,9 +48,7 @@ class TcpSession : public std::enable_shared_from_this<TcpSession> {
 
 class TcpServer : public Server {
  public:
-  TcpServer(asio::io_context& io_context,
-            utils::ConcurrentQueue<Message>& concurrent_queue,
-            std::optional<size_t> max_queue_size,
+  TcpServer(std::optional<size_t> max_queue_size,
             uint16_t port,
             std::shared_ptr<core::logging::Logger> logger);
 

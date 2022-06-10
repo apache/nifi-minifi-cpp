@@ -56,10 +56,9 @@ void TcpSession::handleReadUntilNewLine(std::error_code error_code) {
                          });
 }
 
-TcpServer::TcpServer(
-  asio::io_context& io_context, utils::ConcurrentQueue<Message>& concurrent_queue, std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
-    : Server(io_context, concurrent_queue, max_queue_size, std::move(logger)),
-      acceptor_(io_context, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)) {
+TcpServer::TcpServer(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
+    : Server(max_queue_size, std::move(logger)),
+      acceptor_(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)) {
   startAccept();
 }
 
