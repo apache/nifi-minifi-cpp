@@ -82,6 +82,29 @@ std::optional<spdlog::level::level_enum> parse_log_level(const std::string& leve
 }
 }  // namespace
 
+namespace internal {
+
+bool LoggerNamespace::findSink(std::function<bool(const std::shared_ptr<spdlog::sinks::sink>&)> filter) const {
+  for (auto& sink : sinks) {
+    if (filter(sink)) {
+      return true;
+    }
+  }
+  for (auto& sink : exported_sinks) {
+    if (filter(sink)) {
+      return true;
+    }
+  }
+  for (auto& [name, child] : children) {
+    if (child->findSink(filter)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace internal
+
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;
   std::string prefix = type + ".";
@@ -109,9 +132,14 @@ LoggerConfiguration& LoggerConfiguration::getConfiguration() {
 
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
   std::lock_guard<std::mutex> lock(mutex);
-  alert_sink_ = std::make_shared<AlertSink>(logger_properties, logger_);
-  logger_properties->add_sink("alert", alert_sink_);
-  root_namespace_ = initialize_namespaces(logger_properties);
+  root_namespace_ = initialize_namespaces(logger_properties, logger_);
+  alert_sinks_.clear();
+  root_namespace_->findSink([&] (const std::shared_ptr<spdlog::sinks::sink>& sink) -> bool {
+    if (auto alert_sink = std::dynamic_pointer_cast<AlertSink>(sink)) {
+      alert_sinks_.insert(std::move(alert_sink));
+    }
+    return false;  // check all sinks
+  });
   initializeCompression(lock, logger_properties);
   std::string spdlog_pattern;
   if (!logger_properties->getString("spdlog.pattern", spdlog_pattern)) {
@@ -166,7 +194,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::getSpdlogLogger(const std::
   return spdlog::get(name);
 }
 
-std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties) {
+std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, std::shared_ptr<Logger> logger) {
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sink_map = logger_properties->initial_sinks();
 
   std::string appender_type = "appender";
@@ -188,6 +216,10 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       sink_map[appender_name] = std::make_shared<spdlog::sinks::stderr_sink_mt>();
     } else if ("syslog" == appender_type) {
       sink_map[appender_name] = LoggerConfiguration::create_syslog_sink();
+    } else if ("alert" == appender_type) {
+      if (auto sink = AlertSink::create(appender_key, logger_properties, logger)) {
+        sink_map[appender_name] = sink;
+      }
     } else {
       sink_map[appender_name] = LoggerConfiguration::create_fallback_sink();
     }
@@ -316,6 +348,13 @@ void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex
   if (compression_sink) {
     root_namespace_->sinks.push_back(compression_sink);
     root_namespace_->exported_sinks.push_back(compression_sink);
+  }
+}
+
+void LoggerConfiguration::initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id) {
+  std::lock_guard guard(mutex);
+  for (auto& sink : alert_sinks_) {
+    sink->initialize(controller, agent_id);
   }
 }
 

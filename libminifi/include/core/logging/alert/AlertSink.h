@@ -41,10 +41,16 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
     std::chrono::milliseconds rate_limit;
     int buffer_limit;
     std::regex filter;
+    std::optional<std::regex> discriminator;
   };
+
  public:
-  explicit AlertSink(const std::shared_ptr<LoggerProperties>& logger_properties, std::shared_ptr<Logger> logger);
-  void initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<Configure> agent_config);
+  // must be public for make_shared
+  AlertSink(Config config, std::shared_ptr<Logger> logger);
+
+  static std::shared_ptr<AlertSink> create(const std::string& prop_name_prefix, const std::shared_ptr<LoggerProperties>& logger_properties, std::shared_ptr<Logger> logger);
+
+  void initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<AgentIdentificationProvider> agent_id);
 
  private:
   utils::TaskRescheduleInfo run();
@@ -52,7 +58,7 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
   void sink_it_(const spdlog::details::log_msg& msg) override;
   void flush_() override;
 
-  std::optional<Config> config_;
+  Config config_;
   std::unordered_set<size_t> ignored_hashes_;
   std::deque<std::pair<std::chrono::steady_clock::time_point, size_t>> ordered_hashes_;
   std::mutex log_mtx_;
@@ -64,7 +70,7 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
 
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
 
-  std::shared_ptr<Configure> agent_config_;
+  std::shared_ptr<AgentIdentificationProvider> agent_id_;
   std::shared_ptr<Logger> logger_;
 };
 

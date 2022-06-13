@@ -55,6 +55,8 @@ struct LoggerNamespace {
   std::vector<std::shared_ptr<spdlog::sinks::sink>> exported_sinks;
   std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
 
+  bool findSink(std::function<bool(const std::shared_ptr<spdlog::sinks::sink>&)> filter) const;
+
   LoggerNamespace()
       : level(spdlog::level::off),
         has_level(false),
@@ -98,10 +100,7 @@ class LoggerConfiguration {
     return getCompressedLog(std::chrono::milliseconds{0}, flush);
   }
 
-  std::shared_ptr<AlertSink> getAlertSink() {
-    std::lock_guard<std::mutex> guard(mutex);
-    return alert_sink_;
-  }
+  void initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id);
 
   template<class Rep, class Period>
   static std::unique_ptr<io::InputStream> getCompressedLog(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
@@ -116,7 +115,7 @@ class LoggerConfiguration {
   static const char *spdlog_default_pattern;
 
  protected:
-  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties);
+  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, std::shared_ptr<Logger> logger = {});
   static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
                                                     std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
 
@@ -156,7 +155,7 @@ class LoggerConfiguration {
   std::mutex mutex;
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
-  std::shared_ptr<AlertSink> alert_sink_;
+  std::unordered_set<std::shared_ptr<AlertSink>> alert_sinks_;
   bool shorten_names_;
 };
 

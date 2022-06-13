@@ -376,9 +376,7 @@ int16_t FlowController::start() {
         this->root_->startProcessing(timer_scheduler_, event_scheduler_, cron_scheduler_);
       }
       C2Client::initialize(this, this, this);
-      if (auto alert_sink = core::logging::LoggerConfiguration::getConfiguration().getAlertSink()) {
-        alert_sink->initialize(this, configuration_);
-      }
+      core::logging::LoggerConfiguration::getConfiguration().initializeAlertSinks(this, configuration_);
       running_ = true;
       this->protocol_->start();
       this->provenance_repo_->start();
