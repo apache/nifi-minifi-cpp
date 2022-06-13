@@ -16,14 +16,16 @@
  */
 #pragma once
 
+#include <memory>
+#include <string>
+
 #include "core/Processor.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
 #include "utils/Enum.h"
-
-// #include "asio/ts/buffer.hpp"
-// #include "asio/ts/internet.hpp"
-// #include "asio/streambuf.hpp"
+#include "utils/net/TcpServer.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -36,12 +38,11 @@ class ListenTCP : public core::Processor {
   ListenTCP(ListenTCP&&) = delete;
   ListenTCP& operator=(const ListenTCP&) = delete;
   ListenTCP& operator=(ListenTCP&&) = delete;
+  ~ListenTCP() override;
 
-  EXTENSIONAPI static const core::Property LocalNetworkInterface;
   EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property MaxSizeOfMessageQueue;
+  EXTENSIONAPI static const core::Property MaxQueueSize;
   EXTENSIONAPI static const core::Property MaxBatchSize;
-  EXTENSIONAPI static const core::Property BatchingMessageDelimiter;
 
   EXTENSIONAPI static const core::Relationship Success;
 
@@ -57,10 +58,17 @@ class ListenTCP : public core::Processor {
     return core::annotation::Input::INPUT_FORBIDDEN;
   }
 
- private:
-  uint64_t max_batch_size_ = 500;
-  std::optional<uint64_t> max_queue_size_;
+  void notifyStop() override {
+    stopServer();
+  }
 
+ private:
+  void stopServer();
+  void createFlowFile(const utils::net::Message& message, core::ProcessSession& session);
+
+  uint64_t max_batch_size_{500};
+  std::unique_ptr<utils::net::TcpServer> server_;
+  std::thread server_thread_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenTCP>::getLogger();
 };
 

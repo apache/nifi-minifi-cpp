@@ -53,8 +53,10 @@ struct Message {
 class Server {
  public:
   void run() {
-    io_context_.restart();
     io_context_.run();
+  }
+  void reset() {
+    io_context_.restart();
   }
   void stop() {
     io_context_.stop();
