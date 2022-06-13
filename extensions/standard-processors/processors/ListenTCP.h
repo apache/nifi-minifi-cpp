@@ -19,26 +19,20 @@
 #include <memory>
 #include <string>
 
-#include "core/Processor.h"
-#include "core/logging/Logger.h"
+#include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "core/ProcessContext.h"
-#include "core/ProcessSession.h"
-#include "utils/Enum.h"
-#include "utils/net/TcpServer.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class ListenTCP : public core::Processor {
+class ListenTCP : public NetworkListenerProcessor {
  public:
   explicit ListenTCP(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger()) {
   }
   ListenTCP(const ListenTCP&) = delete;
   ListenTCP(ListenTCP&&) = delete;
   ListenTCP& operator=(const ListenTCP&) = delete;
   ListenTCP& operator=(ListenTCP&&) = delete;
-  ~ListenTCP() override;
 
   EXTENSIONAPI static const core::Property Port;
   EXTENSIONAPI static const core::Property MaxQueueSize;
@@ -46,30 +40,11 @@ class ListenTCP : public core::Processor {
 
   EXTENSIONAPI static const core::Relationship Success;
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
-  bool isSingleThreaded() const override {
-    return false;
-  }
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
-  void notifyStop() override {
-    stopServer();
-  }
-
  private:
-  void stopServer();
-  void createFlowFile(const utils::net::Message& message, core::ProcessSession& session);
-
-  uint64_t max_batch_size_{500};
-  std::unique_ptr<utils::net::TcpServer> server_;
-  std::thread server_thread_;
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenTCP>::getLogger();
+  void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) override;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

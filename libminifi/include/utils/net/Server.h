@@ -19,6 +19,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <memory>
 
 #include "utils/Enum.h"
 #include "utils/MinifiConcurrentQueue.h"

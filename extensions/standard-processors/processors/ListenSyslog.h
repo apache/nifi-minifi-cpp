@@ -23,27 +23,20 @@
 #include <memory>
 #include <regex>
 
-#include "core/Processor.h"
-#include "core/logging/Logger.h"
+#include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "utils/Enum.h"
-
-#include "utils/net/Server.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class ListenSyslog : public core::Processor {
+class ListenSyslog : public NetworkListenerProcessor {
  public:
   explicit ListenSyslog(const std::string& name, const utils::Identifier& uuid = {})
-      : core::Processor(name, uuid) {
+      : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenSyslog>::getLogger()) {
   }
   ListenSyslog(const ListenSyslog&) = delete;
   ListenSyslog(ListenSyslog&&) = delete;
   ListenSyslog& operator=(const ListenSyslog&) = delete;
   ListenSyslog& operator=(ListenSyslog&&) = delete;
-  ~ListenSyslog() override {
-    stopServer();
-  }
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for Syslog messages being sent to a given port over TCP or UDP. "
       "Incoming messages are optionally checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
@@ -77,27 +70,15 @@ class ListenSyslog : public core::Processor {
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
-  void notifyStop() override {
-    stopServer();
-  }
-
  private:
-  void stopServer();
-  static void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session, bool should_parse);
+  void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) override;
 
   static const std::regex rfc5424_pattern_;
   static const std::regex rfc3164_pattern_;
 
-  std::unique_ptr<utils::net::Server> server_;
-  std::thread server_thread_;
-
-  uint64_t max_batch_size_ = 500;
   bool parse_messages_ = false;
-
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenSyslog>::getLogger();
 };
 }  // namespace org::apache::nifi::minifi::processors
