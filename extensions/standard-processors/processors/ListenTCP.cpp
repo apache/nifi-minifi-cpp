@@ -21,7 +21,7 @@
 namespace org::apache::nifi::minifi::processors {
 
 const core::Property ListenTCP::Port(
-    core::PropertyBuilder::createProperty("Port")
+    core::PropertyBuilder::createProperty("Listening Port")
         ->withDescription("The port to listen on for communication.")
         ->withType(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR)
         ->isRequired(true)
@@ -31,7 +31,9 @@ const core::Property ListenTCP::MaxQueueSize(
     core::PropertyBuilder::createProperty("Max Size of Message Queue")
         ->withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
                           "If the buffer full, the message is ignored. If set to zero the buffer is unlimited.")
-        ->withDefaultValue<uint64_t>(0)->build());
+        ->withDefaultValue<uint64_t>(0)
+        ->isRequired(true)
+        ->build());
 
 const core::Property ListenTCP::MaxBatchSize(
     core::PropertyBuilder::createProperty("Max Batch Size")
