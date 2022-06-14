@@ -57,11 +57,6 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 }
 
 void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
-  if (!reconnect()) {
-    logger_->log_error("MQTT connect to %s failed", uri_);
-    yield();
-    return;
-  }
   std::shared_ptr<core::FlowFile> flowFile = session->get();
 
   if (!flowFile) {

@@ -105,7 +105,18 @@ class AbstractMQTTProcessor : public core::Processor {
     // TODO(amarkovics) might neex mutex
     processor->reconnect();
   }
-  bool reconnect();
+
+  static void connectionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionFailure(response);
+  }
+
+  static void connectionSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionSuccess(response);
+  }
+
+  void reconnect();
 
  protected:
   MQTTAsync client_ = nullptr;
@@ -125,6 +136,17 @@ class AbstractMQTTProcessor : public core::Processor {
   virtual bool startupClient() = 0;
 
   void freeResources();
+
+  void onConnectionFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Failed to connect to MQTT broker %s (%d)", uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for connection failure: %s", response->message);
+    }
+  }
+
+  void onConnectionSuccess(MQTTAsync_successData* /*response*/) {
+    startupClient();
+  }
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
   MQTTAsync_SSLOptions sslOpts_ = MQTTAsync_SSLOptions_initializer;
