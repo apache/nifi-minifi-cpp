@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <array>
 
 #include "TestBase.h"
 #include "Catch.h"
@@ -45,8 +46,8 @@ TEST_CASE("DefragmentText Single source tests", "[defragmenttextsinglesource]") 
   plan->addConnection(defrag_text_flow_files, DefragmentText::Success, read_from_success_relationship);
   plan->addConnection(defrag_text_flow_files, DefragmentText::Failure, read_from_failure_relationship);
 
-  read_from_success_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
-  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
+  read_from_failure_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
 
 
   SECTION("Throws on empty pattern") {
@@ -238,8 +239,8 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
 
   read_from_failure_relationship->disableClearOnTrigger();
   read_from_success_relationship->disableClearOnTrigger();
-  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
-  read_from_success_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_failure_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
   plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "%");
 
   SECTION("Multiple Sources with different fragment attributes") {
@@ -311,7 +312,16 @@ TEST_CASE("DefragmentTextMultipleSources", "[defragmenttextinvalidsources]") {
 
 class FragmentGenerator : public core::Processor {
  public:
-  static inline const core::Relationship Success = core::Relationship("success", "success operational on the flow record");
+  static constexpr const char* Description = "FragmentGenerator (only for testing purposes)";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static inline const core::Relationship Success{"success", "success operational on the flow record"};
+  static auto relationships() { return std::array{Success}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   explicit FragmentGenerator(const std::string& name, const utils::Identifier& uuid = utils::Identifier())
       : Processor(name, uuid) {
   }
@@ -333,8 +343,7 @@ class FragmentGenerator : public core::Processor {
       session->transfer(flow_file, Success);
     }
   }
-  void initialize() override { setSupportedRelationships({Success});}
-
+  void initialize() override { setSupportedRelationships(std::array{Success});}
 
   void setFragments(std::vector<std::string>&& fragments) {fragment_contents_ = std::move(fragments);}
   void setBatchSize(const size_t batch_size) {batch_size_ = batch_size;}
@@ -355,7 +364,7 @@ class FragmentGenerator : public core::Processor {
   std::vector<std::string> fragment_contents_;
 };
 
-REGISTER_RESOURCE(FragmentGenerator, "FragmentGenerator (only for testing purposes)");
+REGISTER_RESOURCE(FragmentGenerator, Processor);
 
 TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattributes]") {
   TestController testController;
@@ -375,8 +384,8 @@ TEST_CASE("DefragmentText with offset attributes", "[defragmenttextoffsetattribu
 
   read_from_failure_relationship->disableClearOnTrigger();
   read_from_success_relationship->disableClearOnTrigger();
-  read_from_failure_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
-  read_from_success_relationship->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_failure_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
+  read_from_success_relationship->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
   plan->setProperty(defrag_text_flow_files, DefragmentText::Pattern.getName(), "%");
   input_1->setBaseNameAttribute("input_1");
   input_2->setBaseNameAttribute("input_2");

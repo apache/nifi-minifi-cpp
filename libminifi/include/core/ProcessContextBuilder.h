@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -41,11 +39,7 @@
 #include "core/FlowFile.h"
 #include "VariableRegistry.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 /**
  * Could use instantiate<T> from core, which uses a simple compile time check to figure out if a destructor is defined
  * and thus that will allow us to know if the context instance exists, but I like using the build because it allows us
@@ -60,7 +54,11 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
 
   ProcessContextBuilder(const std::string &name); // NOLINT
 
-  virtual ~ProcessContextBuilder() = default;
+  ~ProcessContextBuilder() override = default;
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
 
   std::shared_ptr<ProcessContextBuilder> withProvider(core::controller::ControllerServiceProvider* controller_service_provider);
 
@@ -82,9 +80,4 @@ class ProcessContextBuilder : public core::CoreComponent, public std::enable_sha
   std::shared_ptr<core::ContentRepository> content_repo_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXTBUILDER_H_
+}  // namespace org::apache::nifi::minifi::core

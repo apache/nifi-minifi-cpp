@@ -13,53 +13,115 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
-#define LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
-
-#include <stdlib.h>
-#include <utils/StringUtils.h>
+#pragma once
 
 #include <map>
 #include <string>
 #include <utility>
+#include <vector>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+#include "core/Annotation.h"
+#include "core/Property.h"
+#include "core/Relationship.h"
+#include "utils/Export.h"
+#include "utils/StringUtils.h"
+
+namespace org::apache::nifi::minifi {
+
+enum class ResourceType {
+  Processor, ControllerService, InternalResource, DescriptionOnly
+};
+
+struct ClassDescription {
+  ResourceType type_ = ResourceType::Processor;
+  std::string short_name_{};
+  std::string full_name_{};
+  std::string description_{};
+  std::vector<core::Property> class_properties_{};
+  std::vector<core::Relationship> class_relationships_{};
+  bool dynamic_properties_ = false;
+  bool dynamic_relationships_ = false;
+  std::string inputRequirement_{};
+  bool isSingleThreaded_ = false;
+};
+
+struct Components {
+  std::vector<ClassDescription> processors_;
+  std::vector<ClassDescription> controller_services_;
+  std::vector<ClassDescription> other_components_;
+
+  [[nodiscard]] bool empty() const noexcept {
+    return processors_.empty() && controller_services_.empty() && other_components_.empty();
+  }
+};
+
+namespace detail {
+template<typename Container>
+auto toVector(const Container& container) {
+  return std::vector<typename Container::value_type>(container.begin(), container.end());
+}
+
+template<typename T>
+std::string classNameWithDots() {
+  std::string class_name = core::getClassName<T>();
+  return utils::StringUtils::replaceAll(class_name, "::", ".");
+}
+}  // namespace detail
+
 class AgentDocs {
  private:
-  static std::map<std::string, std::string> &getDescriptions();
+  MINIFIAPI static std::map<std::string, Components> class_mappings_;
 
  public:
-  /**
-   * Updates the internal map with the feature description
-   * @param feature feature ( CS or processor ) whose description is being provided.
-   * @param description provided description.
-   * @return true if update occurred.
-   */
-  static bool putDescription(const std::string &feature, const std::string &description) {
-    return getDescriptions().insert(std::make_pair(feature, description)).second;
+  static const std::map<std::string, Components>& getClassDescriptions() {
+    return class_mappings_;
   }
 
-  /**
-   * Gets the description for the provided feature.
-   * @param feature feature whose description we will provide
-   * @return true if found, false otherwise
-   */
-  static bool getDescription(const std::string &feature, std::string &value) {
-    const std::map<std::string, std::string> &extensions = getDescriptions();
-    auto iff = extensions.find(feature);
-    if (iff != extensions.end()) {
-      value = iff->second;
-      return true;
-    } else {
-      return false;
+  static bool getDescription(const std::string &feature, std::string &value);
+
+  template<typename Class, ResourceType Type>
+  static void createClassDescription(const std::string& group, const std::string& name) {
+    Components& components = class_mappings_[group];
+
+    if constexpr (Type == ResourceType::Processor) {
+      components.processors_.push_back(ClassDescription{
+        .type_ = Type,
+        .short_name_ = name,
+        .full_name_ = detail::classNameWithDots<Class>(),
+        .description_ = Class::Description,
+        .class_properties_ = detail::toVector(Class::properties()),
+        .class_relationships_ = detail::toVector(Class::relationships()),
+        .dynamic_properties_ = Class::SupportsDynamicProperties,
+        .dynamic_relationships_ = Class::SupportsDynamicRelationships,
+        .inputRequirement_ = toString(Class::InputRequirement),
+        .isSingleThreaded_ = Class::IsSingleThreaded
+      });
+    } else if constexpr (Type == ResourceType::ControllerService) {
+      components.controller_services_.push_back(ClassDescription{
+        .type_ = Type,
+        .short_name_ = name,
+        .full_name_ = detail::classNameWithDots<Class>(),
+        .description_ = Class::Description,
+        .class_properties_ = detail::toVector(Class::properties()),
+        .dynamic_properties_ = Class::SupportsDynamicProperties,
+      });
+    } else if constexpr (Type == ResourceType::InternalResource) {
+      components.other_components_.push_back(ClassDescription{
+        .type_ = Type,
+        .short_name_ = name,
+        .full_name_ = detail::classNameWithDots<Class>(),
+        .class_properties_ = detail::toVector(Class::properties()),
+        .dynamic_properties_ = Class::SupportsDynamicProperties,
+      });
+    } else if constexpr (Type == ResourceType::DescriptionOnly) {
+      components.other_components_.push_back(ClassDescription{
+        .type_ = Type,
+        .short_name_ = name,
+        .full_name_ = detail::classNameWithDots<Class>(),
+        .description_ = Class::Description
+      });
     }
   }
 };
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_AGENT_AGENT_DOCS_H_
+
+}  // namespace org::apache::nifi::minifi

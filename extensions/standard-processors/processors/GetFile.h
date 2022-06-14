@@ -104,54 +104,57 @@ class GetFileMetrics : public state::response::ResponseNode {
   std::atomic<size_t> input_bytes_;
 };
 
-// GetFile Class
 class GetFile : public core::Processor, public state::response::MetricsNodeSource {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit GetFile(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         metrics_(std::make_shared<GetFileMetrics>()) {
   }
-  // Destructor
   ~GetFile() override = default;
 
-  // Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "GetFile";
-  // Supported Properties
-  EXTENSIONAPI static core::Property Directory;
-  EXTENSIONAPI static core::Property Recurse;
-  EXTENSIONAPI static core::Property KeepSourceFile;
-  EXTENSIONAPI static core::Property MinAge;
-  EXTENSIONAPI static core::Property MaxAge;
-  EXTENSIONAPI static core::Property MinSize;
-  EXTENSIONAPI static core::Property MaxSize;
-  EXTENSIONAPI static core::Property IgnoreHiddenFile;
-  EXTENSIONAPI static core::Property PollInterval;
-  EXTENSIONAPI static core::Property BatchSize;
-  EXTENSIONAPI static core::Property FileFilter;
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
+  EXTENSIONAPI static constexpr const char* Description = "Creates FlowFiles from files in a directory. MiNiFi will ignore files for which it doesn't have read permissions.";
 
- public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static const core::Property Directory;
+  EXTENSIONAPI static const core::Property Recurse;
+  EXTENSIONAPI static const core::Property KeepSourceFile;
+  EXTENSIONAPI static const core::Property MinAge;
+  EXTENSIONAPI static const core::Property MaxAge;
+  EXTENSIONAPI static const core::Property MinSize;
+  EXTENSIONAPI static const core::Property MaxSize;
+  EXTENSIONAPI static const core::Property IgnoreHiddenFile;
+  EXTENSIONAPI static const core::Property PollInterval;
+  EXTENSIONAPI static const core::Property BatchSize;
+  EXTENSIONAPI static const core::Property FileFilter;
+  static auto properties() {
+    return std::array{
+      Directory,
+      Recurse,
+      KeepSourceFile,
+      MinAge,
+      MaxAge,
+      MinSize,
+      MaxSize,
+      IgnoreHiddenFile,
+      PollInterval,
+      BatchSize,
+      FileFilter
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  /**
-   * Execution trigger for the GetFile Processor
-   * @param context processor context
-   * @param session processor session reference.
-   */
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-
-  // Initialize, over write by NiFi GetFile
   void initialize() override;
+
   /**
    * performs a listing on the directory.
    * @param request get file request.
@@ -161,10 +164,6 @@ class GetFile : public core::Processor, public state::response::MetricsNodeSourc
   int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   bool isListingEmpty() const;
   void putListing(std::string fileName);
   std::queue<std::string> pollListing(uint64_t batch_size);

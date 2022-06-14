@@ -41,6 +41,9 @@ class FlowFileSource {
 
   EXTENSIONAPI static const core::Property OutputFormat;
   EXTENSIONAPI static const core::Property MaxRowsPerFlowFile;
+  static auto properties() {
+    return std::array{OutputFormat, MaxRowsPerFlowFile};
+  }
 
   SMART_ENUM(OutputType,
     (JSON, "JSON"),

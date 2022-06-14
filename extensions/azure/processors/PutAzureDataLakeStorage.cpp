@@ -29,31 +29,9 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property PutAzureDataLakeStorage::ConflictResolutionStrategy(
-    core::PropertyBuilder::createProperty("Conflict Resolution Strategy")
-      ->withDescription("Indicates what should happen when a file with the same name already exists in the output directory.")
-      ->isRequired(true)
-      ->withDefaultValue<std::string>(toString(FileExistsResolutionStrategy::FAIL_FLOW))
-      ->withAllowableValues<std::string>(FileExistsResolutionStrategy::values())
-      ->build());
-
-const core::Relationship PutAzureDataLakeStorage::Success("success", "Files that have been successfully written to Azure storage are transferred to this relationship");
-const core::Relationship PutAzureDataLakeStorage::Failure("failure", "Files that could not be written to Azure storage for some reason are transferred to this relationship");
-
 void PutAzureDataLakeStorage::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    FilesystemName,
-    DirectoryName,
-    FileName,
-    ConflictResolutionStrategy
-  });
-  // Set the supported relationships
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PutAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
@@ -149,7 +127,5 @@ int64_t PutAzureDataLakeStorage::ReadCallback::operator()(const std::shared_ptr<
   result_ = azure_data_lake_storage_.uploadFile(params_, buffer);
   return read_ret;
 }
-
-REGISTER_RESOURCE(PutAzureDataLakeStorage, "Puts content into an Azure Data Lake Storage Gen 2");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

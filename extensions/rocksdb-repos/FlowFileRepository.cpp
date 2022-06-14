@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -34,12 +33,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 void FlowFileRepository::flush() {
   auto opendb = db_->open();
@@ -261,11 +255,6 @@ void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentReposi
   initialize_repository();
 }
 
-REGISTER_INTERNAL_RESOURCE_AS(FlowFileRepository, ("FlowFileRepository", "flowfilerepository"));
+REGISTER_RESOURCE_AS(FlowFileRepository, InternalResource, ("FlowFileRepository", "flowfilerepository"));
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::repository

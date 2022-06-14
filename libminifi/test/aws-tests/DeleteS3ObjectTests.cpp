@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <array>
 
 #include "S3TestsFixture.h"
 #include "processors/DeleteS3Object.h"
@@ -127,7 +128,7 @@ TEST_CASE_METHOD(DeleteS3ObjectTestsFixture, "Test failure case", "[awsS3DeleteF
   plan->addConnection(s3_processor, core::Relationship("failure", "d"), log_failure);
   setRequiredProperties();
   plan->setProperty(s3_processor, "Version", "v1");
-  log_failure->setAutoTerminatedRelationships({{core::Relationship("success", "d")}});
+  log_failure->setAutoTerminatedRelationships(std::array{core::Relationship("success", "d")});
   mock_s3_request_sender_ptr->setDeleteObjectResult(false);
   test_controller.runSession(plan, true);
   REQUIRE(mock_s3_request_sender_ptr->delete_object_request.GetBucket() == "testBucket");

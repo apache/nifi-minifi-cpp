@@ -1,7 +1,4 @@
 /**
- * @file GenerateFlowFile.cpp
- * GenerateFlowFile class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -28,6 +25,7 @@
 #include "utils/OpenTelemetryLogDataModelUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -36,31 +34,31 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship PerformanceDataMonitor::Success("success", "All files are routed to success");
+const core::Relationship PerformanceDataMonitor::Success("success", "All files are routed to success");
 
-core::Property PerformanceDataMonitor::PredefinedGroups(
+const core::Property PerformanceDataMonitor::PredefinedGroups(
     core::PropertyBuilder::createProperty("Predefined Groups")->
     withDescription("Comma separated list from the allowable values, to monitor multiple common Windows Performance counters related to these groups")->
     withDefaultValue("")->build());
 
-core::Property PerformanceDataMonitor::CustomPDHCounters(
+const core::Property PerformanceDataMonitor::CustomPDHCounters(
     core::PropertyBuilder::createProperty("Custom PDH Counters")->
     withDescription("Comma separated list of Windows Performance Counters to monitor")->
     withDefaultValue("")->build());
 
-core::Property PerformanceDataMonitor::OutputFormatProperty(
+const core::Property PerformanceDataMonitor::OutputFormatProperty(
     core::PropertyBuilder::createProperty("Output Format")->
     withDescription("Format of the created flowfiles")->
     withAllowableValues<std::string>({ JSON_FORMAT_STR, OPEN_TELEMETRY_FORMAT_STR })->
     withDefaultValue(JSON_FORMAT_STR)->build());
 
-core::Property PerformanceDataMonitor::OutputCompactness(
+const core::Property PerformanceDataMonitor::OutputCompactness(
   core::PropertyBuilder::createProperty("Output Compactness")->
   withDescription("Format of the created flowfiles")->
   withAllowableValues<std::string>({ PRETTY_FORMAT_STR, COMPACT_FORMAT_STR})->
   withDefaultValue(PRETTY_FORMAT_STR)->build());
 
-core::Property PerformanceDataMonitor::DecimalPlaces(
+const core::Property PerformanceDataMonitor::DecimalPlaces(
   core::PropertyBuilder::createProperty("Round to decimal places")->
   withDescription("The number of decimal places to round the values to (blank for no rounding)")->
   withDefaultValue("")->build());
@@ -133,8 +131,8 @@ void PerformanceDataMonitor::onTrigger(core::ProcessContext* context, core::Proc
 }
 
 void PerformanceDataMonitor::initialize() {
-  setSupportedProperties({ CustomPDHCounters, PredefinedGroups, OutputFormatProperty, OutputCompactness, DecimalPlaces });
-  setSupportedRelationships({ PerformanceDataMonitor::Success });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 rapidjson::Value& PerformanceDataMonitor::prepareJSONBody(rapidjson::Document& root) {
@@ -339,7 +337,7 @@ void PerformanceDataMonitor::setupMembersFromProperties(const std::shared_ptr<co
   setupDecimalPlacesFromProperties(context);
 }
 
-REGISTER_RESOURCE(PerformanceDataMonitor, "This processor can create FlowFiles with various performance data through Performance Data Helper. (Windows only)");
+REGISTER_RESOURCE(PerformanceDataMonitor, Processor);
 
 }  // namespace processors
 }  // namespace minifi

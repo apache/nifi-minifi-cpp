@@ -42,34 +42,26 @@ class RouteOnAttribute : public core::Processor {
       : core::Processor(name, uuid) {
   }
 
-  /**
-   * Relationships
-   */
+  EXTENSIONAPI static constexpr const char* Description = "Routes FlowFiles based on their Attributes using the Attribute Expression Language.";
 
-  static core::Relationship Unmatched;
-  static core::Relationship Failure;
+  static auto properties() { return std::array<core::Property, 0>{}; }
 
-  /**
-   * NiFi API implementation
-   */
+  EXTENSIONAPI static const core::Relationship Unmatched;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Unmatched, Failure}; }
 
-  bool supportsDynamicProperties() override {
-    return true;
-  }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = true;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
-  bool supportsDynamicRelationships() override {
-    return true;
-  }
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onDynamicPropertyModified(const core::Property &orig_property, const core::Property &new_property) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RouteOnAttribute>::getLogger();
   std::map<std::string, core::Property> route_properties_;
   std::map<std::string, core::Relationship> route_rels_;

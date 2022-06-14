@@ -1,7 +1,4 @@
 /**
- * @file KafkaProcessorBase.h
- * KafkaProcessorBase class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -29,7 +26,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-// PublishKafka Class
 class KafkaProcessorBase : public core::Processor {
  public:
   EXTENSIONAPI static const core::Property SSLContextService;
@@ -40,6 +36,18 @@ class KafkaProcessorBase : public core::Processor {
   EXTENSIONAPI static const core::Property SASLMechanism;
   EXTENSIONAPI static const core::Property Username;
   EXTENSIONAPI static const core::Property Password;
+  static auto properties() {
+    return std::array{
+      SSLContextService,
+      SecurityProtocol,
+      KerberosServiceName,
+      KerberosPrincipal,
+      KerberosKeytabPath,
+      SASLMechanism,
+      Username,
+      Password
+    };
+  }
 
   SMART_ENUM(SecurityProtocolOption,
     (PLAINTEXT, "plaintext"),

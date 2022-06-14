@@ -24,7 +24,6 @@
 #include <fstream>
 #include <memory>
 #include <string>
-#include <set>
 #include <system_error>
 
 #include "archive.h"
@@ -41,16 +40,11 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship UnfocusArchiveEntry::Success("success", "success operational on the flow record");
+const core::Relationship UnfocusArchiveEntry::Success("success", "success operational on the flow record");
 
 void UnfocusArchiveEntry::initialize() {
-  //! Set the supported properties
-  std::set<core::Property> properties;
-  setSupportedProperties(properties);
-  //! Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -235,7 +229,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
   return nlen;
 }
 
-REGISTER_RESOURCE(UnfocusArchiveEntry, "Restores a FlowFile which has had an archive entry focused via FocusArchiveEntry to its original state.");
+REGISTER_RESOURCE(UnfocusArchiveEntry, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

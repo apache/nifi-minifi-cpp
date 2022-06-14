@@ -34,8 +34,8 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureStorageProcessorBase : public core::Processor {
  public:
-  // Supported Properties
   EXTENSIONAPI static const core::Property AzureStorageCredentialsService;
+  static auto properties() { return std::array{AzureStorageCredentialsService}; }
 
   AzureStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
     : core::Processor(name, uuid),

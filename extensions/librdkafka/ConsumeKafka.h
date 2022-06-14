@@ -29,38 +29,72 @@
 #include "rdkafka.h"
 #include "rdkafka_utils.h"
 #include "KafkaConnection.h"
+#include "utils/ArrayUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class FlowFileRecord;
+
+namespace core {
+class ConsumeKafkaMaxPollTimeValidator : public TimePeriodValidator {
+ public:
+  explicit ConsumeKafkaMaxPollTimeValidator(const std::string &name);
+  ~ConsumeKafkaMaxPollTimeValidator() override = default;
+
+  [[nodiscard]] ValidationResult validate(const std::string& subject, const std::string& input) const override;
+};
+}  // namespace core
 
 namespace processors {
 
 class ConsumeKafka : public KafkaProcessorBase {
  public:
-  EXTENSIONAPI static constexpr char const* ProcessorName = "ConsumeKafka";
+  EXTENSIONAPI static constexpr const char* Description = "Consumes messages from Apache Kafka and transform them into MiNiFi FlowFiles. "
+      "The application should make sure that the processor is triggered at regular intervals, even if no messages are expected, "
+      "to serve any queued callbacks waiting to be called. Rebalancing can also only happen on trigger.";
 
-  // Supported Properties
-  EXTENSIONAPI static core::Property KafkaBrokers;
-  EXTENSIONAPI static core::Property TopicNames;
-  EXTENSIONAPI static core::Property TopicNameFormat;
-  EXTENSIONAPI static core::Property HonorTransactions;
-  EXTENSIONAPI static core::Property GroupID;
-  EXTENSIONAPI static core::Property OffsetReset;
-  EXTENSIONAPI static core::Property KeyAttributeEncoding;
-  EXTENSIONAPI static core::Property MessageDemarcator;
-  EXTENSIONAPI static core::Property MessageHeaderEncoding;
-  EXTENSIONAPI static core::Property HeadersToAddAsAttributes;
-  EXTENSIONAPI static core::Property DuplicateHeaderHandling;
-  EXTENSIONAPI static core::Property MaxPollRecords;
-  EXTENSIONAPI static core::Property MaxPollTime;
-  EXTENSIONAPI static core::Property SessionTimeout;
+  EXTENSIONAPI static const core::Property KafkaBrokers;
+  EXTENSIONAPI static const core::Property TopicNames;
+  EXTENSIONAPI static const core::Property TopicNameFormat;
+  EXTENSIONAPI static const core::Property HonorTransactions;
+  EXTENSIONAPI static const core::Property GroupID;
+  EXTENSIONAPI static const core::Property OffsetReset;
+  EXTENSIONAPI static const core::Property KeyAttributeEncoding;
+  EXTENSIONAPI static const core::Property MessageDemarcator;
+  EXTENSIONAPI static const core::Property MessageHeaderEncoding;
+  EXTENSIONAPI static const core::Property HeadersToAddAsAttributes;
+  EXTENSIONAPI static const core::Property DuplicateHeaderHandling;
+  EXTENSIONAPI static const core::Property MaxPollRecords;
+  EXTENSIONAPI static const core::Property MaxPollTime;
+  EXTENSIONAPI static const core::Property SessionTimeout;
+  static auto properties() {
+    return utils::array_cat(KafkaProcessorBase::properties(), std::array{
+      KafkaBrokers,
+      TopicNames,
+      TopicNameFormat,
+      HonorTransactions,
+      GroupID,
+      OffsetReset,
+      KeyAttributeEncoding,
+      MessageDemarcator,
+      MessageHeaderEncoding,
+      HeadersToAddAsAttributes,
+      DuplicateHeaderHandling,
+      MaxPollRecords,
+      MaxPollTime,
+      SessionTimeout
+    });
+  }
 
-  // Supported Relationships
   EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   // Security Protocol allowable values
   static constexpr char const* SECURITY_PROTOCOL_PLAINTEXT = "plaintext";
@@ -104,25 +138,8 @@ class ConsumeKafka : public KafkaProcessorBase {
 
   ~ConsumeKafka() override = default;
 
- public:
-  bool supportsDynamicProperties() override {
-    return true;
-  }
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
   void onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /* sessionFactory */) override;
-  /**
-   * Execution trigger for the RetryFlowFile Processor
-   * @param context processor context
-   * @param session processor session reference.
-   */
   void onTrigger(core::ProcessContext* context, core::ProcessSession* session) override;
-
-  // Initialize, overwrite by NiFi RetryFlowFile
   void initialize() override;
 
  private:
@@ -141,10 +158,6 @@ class ConsumeKafka : public KafkaProcessorBase {
   void process_pending_messages(core::ProcessSession& session);
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   std::string kafka_brokers_;
   std::vector<std::string> topic_names_;
   std::string topic_name_format_;
@@ -172,7 +185,4 @@ class ConsumeKafka : public KafkaProcessorBase {
 };
 
 }  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

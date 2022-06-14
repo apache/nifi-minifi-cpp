@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -34,27 +33,19 @@ namespace processors {
 /*
  * Purpose: ConvertHeartBeat converts heatbeats into MQTT messages.
  */
-class ConvertHeartBeat: public ConvertBase{
+class ConvertHeartBeat: public ConvertBase {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit ConvertHeartBeat(const std::string& name, const utils::Identifier& uuid = {})
     : ConvertBase(name, uuid) {
   }
-  // Destructor
   ~ConvertHeartBeat() override = default;
-  // Processor Name
-  static constexpr char const* ProcessorName = "ConvertHeartBeat";
 
- public:
-  /**
-   * Function that's executed when the processor is triggered.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 

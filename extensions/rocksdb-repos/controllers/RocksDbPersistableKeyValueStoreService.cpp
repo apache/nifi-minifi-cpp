@@ -16,23 +16,36 @@
  */
 
 #include <fstream>
-#include <set>
 
 #include "RocksDbPersistableKeyValueStoreService.h"
 #include "../encryption/RocksDbEncryptionProvider.h"
 #include "utils/StringUtils.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
+namespace org::apache::nifi::minifi::controllers {
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
-
-core::Property RocksDbPersistableKeyValueStoreService::Directory(
-    core::PropertyBuilder::createProperty("Directory")->withDescription("Path to a directory for the database")
-        ->isRequired(true)->build());
+const core::Property RocksDbPersistableKeyValueStoreService::LinkedServices(
+    core::PropertyBuilder::createProperty("Linked Services")
+    ->withDescription("Referenced Controller Services")
+    ->build());
+const core::Property RocksDbPersistableKeyValueStoreService::AlwaysPersist(
+    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AlwaysPersistPropertyName)
+    ->withDescription("Persist every change instead of persisting it periodically.")
+    ->isRequired(false)
+    ->withDefaultValue<bool>(false)
+    ->build());
+const core::Property RocksDbPersistableKeyValueStoreService::AutoPersistenceInterval(
+    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AutoPersistenceIntervalPropertyName)
+    ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
+    ->isRequired(false)
+    ->withDefaultValue<core::TimePeriodValue>("1 min")
+    ->build());
+const core::Property RocksDbPersistableKeyValueStoreService::Directory(
+    core::PropertyBuilder::createProperty("Directory")
+    ->withDescription("Path to a directory for the database")
+    ->isRequired(true)
+    ->build());
 
 RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
@@ -40,8 +53,8 @@ RocksDbPersistableKeyValueStoreService::RocksDbPersistableKeyValueStoreService(c
 }
 
 void RocksDbPersistableKeyValueStoreService::initialize() {
-  AbstractAutoPersistingKeyValueStoreService::initialize();
-  updateSupportedProperties({Directory});
+  ControllerService::initialize();
+  setSupportedProperties(properties());
 }
 
 void RocksDbPersistableKeyValueStoreService::onEnable() {
@@ -219,11 +232,6 @@ bool RocksDbPersistableKeyValueStoreService::persist() {
   return opendb->FlushWAL(true /*sync*/).ok();
 }
 
-REGISTER_RESOURCE_AS(RocksDbPersistableKeyValueStoreService, "A key-value service implemented by RocksDB",
-                     ("RocksDbPersistableKeyValueStoreService", "rocksdbpersistablekeyvaluestoreservice"));
+REGISTER_RESOURCE_AS(RocksDbPersistableKeyValueStoreService, ControllerService, ("RocksDbPersistableKeyValueStoreService", "rocksdbpersistablekeyvaluestoreservice"));
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

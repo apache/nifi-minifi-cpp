@@ -1,7 +1,4 @@
 /**
- * @file BinFiles.cpp
- * BinFiles class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,43 +29,10 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
-core::Property BinFiles::MinSize(
-    core::PropertyBuilder::createProperty("Minimum Group Size")
-    ->withDescription("The minimum size of for the bundle")
-    ->withDefaultValue<uint64_t>(0)->build());
-core::Property BinFiles::MaxSize(
-    core::PropertyBuilder::createProperty("Maximum Group Size")
-    ->withDescription("The maximum size for the bundle. If not specified, there is no maximum.")
-    ->withType(core::StandardValidators::get().UNSIGNED_LONG_VALIDATOR)->build());
-core::Property BinFiles::MinEntries(
-    core::PropertyBuilder::createProperty("Minimum Number of Entries")
-    ->withDescription("The minimum number of files to include in a bundle")
-    ->withDefaultValue<uint32_t>(1)->build());
-core::Property BinFiles::MaxEntries(
-    core::PropertyBuilder::createProperty("Maximum Number of Entries")
-    ->withDescription("The maximum number of files to include in a bundle. If not specified, there is no maximum.")
-    ->withType(core::StandardValidators::get().UNSIGNED_INT_VALIDATOR)->build());
-core::Property BinFiles::MaxBinAge(
-    core::PropertyBuilder::createProperty("Max Bin Age")
-    ->withDescription("The maximum age of a Bin that will trigger a Bin to be complete. Expected format is <duration> <time unit>")
-    ->withType(core::StandardValidators::get().TIME_PERIOD_VALIDATOR)->build());
-core::Property BinFiles::MaxBinCount(
-    core::PropertyBuilder::createProperty("Maximum number of Bins")
-    ->withDescription("Specifies the maximum number of bins that can be held in memory at any one time")
-    ->withDefaultValue<uint32_t>(100)->build());
-core::Property BinFiles::BatchSize(
-    core::PropertyBuilder::createProperty("Batch Size")
-    ->withDescription("Maximum number of FlowFiles processed in a single session")
-    ->withDefaultValue<uint32_t>(1)->build());
-core::Relationship BinFiles::Original("original", "The FlowFiles that were used to create the bundle");
-core::Relationship BinFiles::Failure("failure", "If the bundle cannot be created, all FlowFiles that would have been used to create the bundle will be transferred to failure");
-core::Relationship BinFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
+const core::Relationship BinFiles::Self("__self__", "Marks the FlowFile to be owned by this processor");
+
 const char *BinFiles::FRAGMENT_COUNT_ATTRIBUTE = "fragment.count";
 const char *BinFiles::FRAGMENT_ID_ATTRIBUTE = "fragment.identifier";
 const char *BinFiles::FRAGMENT_INDEX_ATTRIBUTE = "fragment.index";
@@ -79,21 +43,8 @@ const char *BinFiles::SEGMENT_ORIGINAL_FILENAME = "segment.original.filename";
 const char *BinFiles::TAR_PERMISSIONS_ATTRIBUTE = "tar.permissions";
 
 void BinFiles::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(MinSize);
-  properties.insert(MaxSize);
-  properties.insert(MinEntries);
-  properties.insert(MaxEntries);
-  properties.insert(MaxBinAge);
-  properties.insert(MaxBinCount);
-  properties.insert(BatchSize);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Original);
-  relationships.insert(Failure);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -356,10 +307,4 @@ std::set<core::Connectable*> BinFiles::getOutGoingConnections(const std::string 
   return result;
 }
 
-REGISTER_RESOURCE(BinFiles, "Bins flow files into buckets based on the number of entries or size of entries");
-
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,11 +21,7 @@
 #include "c2/protocols/RESTProtocol.h"
 #include "c2/C2Protocol.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Purpose and Justification: Encapsulates printing agent information.
@@ -37,6 +32,8 @@ namespace c2 {
 class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
  public:
   explicit AgentPrinter(const std::string& name, const utils::Identifier& uuid = {});
+
+  EXTENSIONAPI static constexpr const char* Description = "Encapsulates printing agent information.";
 
   /**
    * Initialize agent printer.
@@ -58,8 +55,4 @@ class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AgentPrinter>::getLogger();
 };
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

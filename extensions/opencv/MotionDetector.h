@@ -38,14 +38,33 @@ class MotionDetector : public core::Processor {
       : Processor(name, uuid) {
   }
 
-  static core::Property ImageEncoding;
-  static core::Property MinInterestArea;
-  static core::Property Threshold;
-  static core::Property DilateIter;
-  static core::Property BackgroundFrame;
+  EXTENSIONAPI static constexpr const char* Description = "Detect motion from captured images.";
 
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static const core::Property ImageEncoding;
+  EXTENSIONAPI static const core::Property MinInterestArea;
+  EXTENSIONAPI static const core::Property Threshold;
+  EXTENSIONAPI static const core::Property DilateIter;
+  EXTENSIONAPI static const core::Property BackgroundFrame;
+  static auto properties() {
+    return std::array{
+      ImageEncoding,
+      MinInterestArea,
+      Threshold,
+      DilateIter,
+      BackgroundFrame
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;

@@ -45,20 +45,19 @@ Connectable::Connectable(const std::string &name)
 
 Connectable::~Connectable() = default;
 
-bool Connectable::setSupportedRelationships(const std::set<core::Relationship> &relationships) {
+void Connectable::setSupportedRelationships(gsl::span<const core::Relationship> relationships) {
   if (isRunning()) {
     logger_->log_warn("Can not set processor supported relationship while the process %s is running", name_);
-    return false;
+    return;
   }
 
   std::lock_guard<std::mutex> lock(relationship_mutex_);
 
   relationships_.clear();
-  for (auto item : relationships) {
+  for (const auto& item : relationships) {
     relationships_[item.getName()] = item;
     logger_->log_debug("Processor %s supported relationship name %s", name_, item.getName());
   }
-  return true;
 }
 
 std::vector<Relationship> Connectable::getSupportedRelationships() const {
@@ -69,7 +68,6 @@ std::vector<Relationship> Connectable::getSupportedRelationships() const {
   return relationships;
 }
 
-// Whether the relationship is supported
 bool Connectable::isSupportedRelationship(const core::Relationship &relationship) {
   // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
   // cannot be executed while we are running
@@ -85,23 +83,21 @@ bool Connectable::isSupportedRelationship(const core::Relationship &relationship
   }
 }
 
-bool Connectable::setAutoTerminatedRelationships(const std::set<Relationship> &relationships) {
+void Connectable::setAutoTerminatedRelationships(gsl::span<const core::Relationship> relationships) {
   if (isRunning()) {
     logger_->log_warn("Can not set processor auto terminated relationship while the process %s is running", name_);
-    return false;
+    return;
   }
 
   std::lock_guard<std::mutex> lock(relationship_mutex_);
 
   auto_terminated_relationships_.clear();
-  for (auto item : relationships) {
+  for (const auto& item : relationships) {
     auto_terminated_relationships_[item.getName()] = item;
     logger_->log_debug("Processor %s auto terminated relationship name %s", name_, item.getName());
   }
-  return true;
 }
 
-// Check whether the relationship is auto terminated
 bool Connectable::isAutoTerminated(const core::Relationship &relationship) {
   // if we are running we do not need a lock since the function to change relationships_ ( setSupportedRelationships)
   // cannot be executed while we are running

@@ -22,6 +22,7 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
 #include "TextFragmentUtils.h"
@@ -58,8 +59,8 @@ const core::Property DefragmentText::MaxBufferAge(
         ->build());
 
 void DefragmentText::initialize() {
-  setSupportedRelationships({Success, Failure});
-  setSupportedProperties({Pattern, PatternLoc, MaxBufferAge, MaxBufferSize});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void DefragmentText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory*) {
@@ -291,8 +292,7 @@ size_t DefragmentText::FragmentSource::Id::hash::operator() (const Id& fragment_
   return std::hash<std::optional<std::string>>{}(fragment_id.absolute_path_);
 }
 
-REGISTER_RESOURCE(DefragmentText, "DefragmentText splits and merges incoming flowfiles so cohesive messages are not split between them. "
-                                  "It can handle multiple inputs differentiated by the absolute.path flow file attribute.");
+REGISTER_RESOURCE(DefragmentText, Processor);
 
 
 }  // namespace org::apache::nifi::minifi::processors

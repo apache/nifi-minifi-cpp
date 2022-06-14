@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_
+#pragma once
 
 #include <string>
 #include <utility>
@@ -29,11 +28,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "ThreadManagementService.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 /**
  * Purpose: Linux power management service uses a path for the battery level
@@ -57,52 +52,68 @@ class LinuxPowerManagerService : public ThreadManagementService {
     initialize();
   }
 
-  static core::Property BatteryCapacityPath;
-  static core::Property BatteryStatusPath;
-  static core::Property BatteryStatusDischargeKeyword;
-  static core::Property TriggerThreshold;
-  static core::Property LowBatteryThreshold;
-  static core::Property WaitPeriod;
+  MINIFIAPI static constexpr const char* Description = "Linux power management service that enables control of power usage in the agent through Linux power management information. "
+      "Use name \"ThreadPoolManager\" to throttle battery consumption";
+
+  MINIFIAPI static const core::Property BatteryCapacityPath;
+  MINIFIAPI static const core::Property BatteryStatusPath;
+  MINIFIAPI static const core::Property BatteryStatusDischargeKeyword;
+  MINIFIAPI static const core::Property TriggerThreshold;
+  MINIFIAPI static const core::Property LowBatteryThreshold;
+  MINIFIAPI static const core::Property WaitPeriod;
+  static auto properties() {
+    return std::array{
+      BatteryCapacityPath,
+      BatteryStatusPath,
+      BatteryStatusDischargeKeyword,
+      TriggerThreshold,
+      LowBatteryThreshold,
+      WaitPeriod
+    };
+  }
+
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   /**
    * Helps to determine if the number of tasks will increase the pools above their threshold.
    * @param new_tasks tasks to be added.
    * @return true if above max, false otherwise.
    */
-  virtual bool isAboveMax(const int new_tasks);
+  bool isAboveMax(int new_tasks) override;
 
   /**
    * Returns the max number of threads allowed by all pools
    * @return max threads.
    */
-  virtual uint16_t getMaxThreads();
+  uint16_t getMaxThreads() override;
 
   /**
    * Function based on cooperative multitasking that will tell a caller whether or not the number of threads should be reduced.
    * @return true if threading impacts QOS.
    */
-  virtual bool shouldReduce();
+  bool shouldReduce() override;
 
   /**
    * Function to indicate to this controller service that we've reduced threads in a threadpool
    */
-  virtual void reduce();
+  void reduce() override;
 
   /**
    * Function to help callers identify if they can increase threads.
    * @return true if QOS won't be breached.
    */
-  virtual bool canIncrease();
+  bool canIncrease() override;
 
-  void initialize();
+  void initialize() override;
 
-  void yield();
+  void yield() override;
 
-  bool isRunning();
+  bool isRunning() override;
 
-  bool isWorkAvailable();
+  bool isWorkAvailable() override;
 
-  virtual void onEnable();
+  void onEnable() override;
 
  protected:
   std::vector<std::pair<std::string, std::string>> paths_;
@@ -125,10 +136,4 @@ class LinuxPowerManagerService : public ThreadManagementService {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LinuxPowerManagerService>::getLogger();
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_LINUXPOWERMANAGEMENTSERVICE_H_
+}  // namespace org::apache::nifi::minifi::controllers

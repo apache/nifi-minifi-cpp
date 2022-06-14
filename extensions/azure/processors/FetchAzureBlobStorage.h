@@ -29,6 +29,7 @@
 #include "core/Property.h"
 #include "AzureBlobStorageSingleBlobProcessorBase.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 
 template<typename T>
 class AzureBlobStorageTestsFixture;
@@ -37,11 +38,27 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBase {
  public:
+  EXTENSIONAPI static constexpr const char* Description = "Retrieves contents of an Azure Storage Blob, writing the contents to the content of the FlowFile";
+
   EXTENSIONAPI static const core::Property RangeStart;
   EXTENSIONAPI static const core::Property RangeLength;
+  static auto properties() {
+    return utils::array_cat(AzureBlobStorageSingleBlobProcessorBase::properties(), std::array{
+      RangeStart,
+      RangeLength
+    });
+  }
 
-  static const core::Relationship Failure;
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit FetchAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : FetchAzureBlobStorage(name, uuid, nullptr) {
@@ -52,10 +69,6 @@ class FetchAzureBlobStorage final : public AzureBlobStorageSingleBlobProcessorBa
 
  private:
   friend class ::AzureBlobStorageTestsFixture<FetchAzureBlobStorage>;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
 
   explicit FetchAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::BlobStorageClient> blob_storage_client)
     : AzureBlobStorageSingleBlobProcessorBase(name, uuid, core::logging::LoggerFactory<FetchAzureBlobStorage>::getLogger(), std::move(blob_storage_client)) {

@@ -32,6 +32,11 @@ namespace org::apache::nifi::minifi::processors {
 
 class RouteText : public core::Processor {
  public:
+  EXTENSIONAPI static constexpr const char* Description = "Routes textual data based on a set of user-defined rules. Each segment in an incoming FlowFile is "
+      "compared against the values specified by user-defined Properties. The mechanism by which the text is compared "
+      "to these user-defined properties is defined by the 'Matching Strategy'. The data is then routed according to "
+      "these rules, routing each segment of the text individually.";
+
   EXTENSIONAPI static const core::Property RoutingStrategy;
   EXTENSIONAPI static const core::Property MatchingStrategy;
   EXTENSIONAPI static const core::Property TrimWhitespace;
@@ -39,28 +44,41 @@ class RouteText : public core::Processor {
   EXTENSIONAPI static const core::Property GroupingRegex;
   EXTENSIONAPI static const core::Property GroupingFallbackValue;
   EXTENSIONAPI static const core::Property SegmentationStrategy;
+  static auto properties() {
+    return std::array{
+      RoutingStrategy,
+      MatchingStrategy,
+      TrimWhitespace,
+      IgnoreCase,
+      GroupingRegex,
+      GroupingFallbackValue,
+      SegmentationStrategy
+    };
+  }
 
   EXTENSIONAPI static const core::Relationship Original;
   EXTENSIONAPI static const core::Relationship Unmatched;
   EXTENSIONAPI static const core::Relationship Matched;
+  static auto relationships() {
+    return std::array{
+      Original,
+      Unmatched,
+      Matched
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = true;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit RouteText(const std::string& name, const utils::Identifier& uuid = {});
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool supportsDynamicProperties() override {
-    return true;
-  }
-
-  bool supportsDynamicRelationships() override {
-    return true;
-  }
 
   void onDynamicPropertyModified(const core::Property& orig_property, const core::Property& new_property) override;
 

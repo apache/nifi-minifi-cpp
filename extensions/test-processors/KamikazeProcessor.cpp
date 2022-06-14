@@ -20,6 +20,7 @@
 
 #include "KamikazeProcessor.h"
 #include "Exception.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -30,20 +31,20 @@ const std::string KamikazeProcessor::OnScheduleLogStr = "KamikazeProcessor::onSc
 const std::string KamikazeProcessor::OnTriggerLogStr = "KamikazeProcessor::onTrigger executed";
 const std::string KamikazeProcessor::OnUnScheduleLogStr = "KamikazeProcessor::onUnSchedule";
 
-core::Property KamikazeProcessor::ThrowInOnSchedule(
+const core::Property KamikazeProcessor::ThrowInOnSchedule(
     core::PropertyBuilder::createProperty("Throw in onSchedule")
     ->withDescription("Set to throw expcetion during onSchedule call")
     ->isRequired(true)
     ->withDefaultValue<bool>(false)->build());
 
-core::Property KamikazeProcessor::ThrowInOnTrigger(
+const core::Property KamikazeProcessor::ThrowInOnTrigger(
     core::PropertyBuilder::createProperty("Throw in onTrigger")
     ->withDescription("Set to throw expcetion during onTrigger call")
     ->isRequired(true)
     ->withDefaultValue<bool>(false)->build());
 
 void KamikazeProcessor::initialize() {
-  setSupportedProperties({ThrowInOnSchedule, ThrowInOnTrigger});
+  setSupportedProperties(properties());
 }
 
 void KamikazeProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -70,6 +71,6 @@ void KamikazeProcessor::onUnSchedule() {
   logger_->log_error("%s", OnUnScheduleLogStr);
 }
 
-REGISTER_RESOURCE(KamikazeProcessor, "This processor can throw exceptions in onTrigger and onSchedule calls based on configration. Only for testing purposes.");
+REGISTER_RESOURCE(KamikazeProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

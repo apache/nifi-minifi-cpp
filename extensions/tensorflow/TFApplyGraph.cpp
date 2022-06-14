@@ -20,49 +20,38 @@
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
-core::Property TFApplyGraph::InputNode(
+const core::Property TFApplyGraph::InputNode(
     core::PropertyBuilder::createProperty("Input Node")
         ->withDescription(
             "The node of the TensorFlow graph to feed tensor inputs to")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFApplyGraph::OutputNode(
+const core::Property TFApplyGraph::OutputNode(
     core::PropertyBuilder::createProperty("Output Node")
         ->withDescription(
             "The node of the TensorFlow graph to read tensor outputs from")
         ->withDefaultValue("")
         ->build());
 
-core::Relationship TFApplyGraph::Success(  // NOLINT
+const core::Relationship TFApplyGraph::Success(  // NOLINT
     "success",
     "Successful graph application outputs");
-core::Relationship TFApplyGraph::Retry(  // NOLINT
+const core::Relationship TFApplyGraph::Retry(  // NOLINT
     "retry",
     "Inputs which fail graph application but may work if sent again");
-core::Relationship TFApplyGraph::Failure(  // NOLINT
+const core::Relationship TFApplyGraph::Failure(  // NOLINT
     "failure",
     "Failures which will not work if retried");
 
 void TFApplyGraph::initialize() {
-  std::set<core::Property> properties;
-  properties.insert(InputNode);
-  properties.insert(OutputNode);
-  setSupportedProperties(std::move(properties));
-
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Retry);
-  relationships.insert(Failure);
-  setSupportedRelationships(std::move(relationships));
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void TFApplyGraph::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -227,12 +216,6 @@ int64_t TFApplyGraph::TensorWriteCallback::process(const std::shared_ptr<io::Bas
   return num_wrote;
 }
 
-REGISTER_RESOURCE(TFApplyGraph, "Applies a TensorFlow graph to the tensor protobuf supplied as input. The tensor is fed into the node specified by the Input Node property. "
-    "The output FlowFile is a tensor protobuf extracted from the node specified by the Output Node property. TensorFlow graphs are read dynamically by feeding a graph "
-    "protobuf to the processor with the tf.type property set to graph."); // NOLINT
+REGISTER_RESOURCE(TFApplyGraph, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

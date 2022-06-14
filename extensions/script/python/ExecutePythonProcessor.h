@@ -30,7 +30,7 @@
 #include "../ScriptEngine.h"
 #include "../ScriptProcessContext.h"
 #include "PythonScriptEngine.h"
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 
 #pragma GCC visibility push(hidden)
 
@@ -50,13 +50,35 @@ class ExecutePythonProcessor : public core::Processor {
         reload_on_script_change_(true) {
   }
 
+  EXTENSIONAPI static constexpr const char* Description = "Executes a script given the flow file and a process session. "
+      "The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) as well as "
+      "any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back.Scripts must define an onTrigger function which accepts NiFi Context "
+      "and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state "
+      "if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the "
+      "concurrent tasks to 1.";
+
   EXTENSIONAPI static const core::Property ScriptFile;
   EXTENSIONAPI static const core::Property ScriptBody;
   EXTENSIONAPI static const core::Property ModuleDirectory;
   EXTENSIONAPI static const core::Property ReloadOnScriptChange;
+  static auto properties() {
+    return std::array{
+      ScriptFile,
+      ScriptBody,
+      ModuleDirectory,
+      ReloadOnScriptChange
+    };
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
@@ -85,14 +107,6 @@ class ExecutePythonProcessor : public core::Processor {
 
   const std::string &getDescription() const {
     return description_;
-  }
-
-  bool supportsDynamicProperties() override {
-    return false;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
   }
 
  private:

@@ -21,7 +21,6 @@
 #include <cinttypes>
 #include <cstdint>
 #include <memory>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -29,6 +28,7 @@
 #include "utils/ByteArrayCallback.h"
 #include "core/FlowFile.h"
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
@@ -45,74 +45,74 @@ namespace org::apache::nifi::minifi::processors {
 
 std::string InvokeHTTP::DefaultContentType = "application/octet-stream";
 
-core::Property InvokeHTTP::Method("HTTP Method", "HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). "
+const core::Property InvokeHTTP::Method("HTTP Method", "HTTP request method (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). "
                                   "Arbitrary methods are also supported. Methods other than POST, PUT and PATCH will be sent without a message body.",
                                   "GET");
-core::Property InvokeHTTP::URL(
+const core::Property InvokeHTTP::URL(
     core::PropertyBuilder::createProperty("Remote URL")->withDescription("Remote URL which will be connected to, including scheme, host, port, path.")->isRequired(false)->supportsExpressionLanguage(
         true)->build());
 
-core::Property InvokeHTTP::ConnectTimeout(
+const core::Property InvokeHTTP::ConnectTimeout(
       core::PropertyBuilder::createProperty("Connection Timeout")->withDescription("Max wait time for connection to remote service")->isRequired(false)
          ->withDefaultValue<core::TimePeriodValue>("5 s")->build());
 
-core::Property InvokeHTTP::ReadTimeout(
+const core::Property InvokeHTTP::ReadTimeout(
       core::PropertyBuilder::createProperty("Read Timeout")->withDescription("Max wait time for response from remote service")->isRequired(false)
          ->withDefaultValue<core::TimePeriodValue>("15 s")->build());
 
-core::Property InvokeHTTP::DateHeader(
+const core::Property InvokeHTTP::DateHeader(
     core::PropertyBuilder::createProperty("Include Date Header")->withDescription("Include an RFC-2616 Date header in the request.")->isRequired(false)->withDefaultValue<bool>(true)->build());
 
-core::Property InvokeHTTP::FollowRedirects(
+const core::Property InvokeHTTP::FollowRedirects(
   core::PropertyBuilder::createProperty("Follow Redirects")
   ->withDescription("Follow HTTP redirects issued by remote server.")
   ->withDefaultValue<bool>(true)
   ->build());
-core::Property InvokeHTTP::AttributesToSend("Attributes to Send", "Regular expression that defines which attributes to send as HTTP"
+const core::Property InvokeHTTP::AttributesToSend("Attributes to Send", "Regular expression that defines which attributes to send as HTTP"
                                             " headers in the request. If not defined, no attributes are sent as headers.",
                                             "");
-core::Property InvokeHTTP::SSLContext(
+const core::Property InvokeHTTP::SSLContext(
     core::PropertyBuilder::createProperty("SSL Context Service")->withDescription("The SSL Context Service used to provide client certificate "
                                                                                   "information for TLS/SSL (https) connections.")->isRequired(false)->withExclusiveProperty("Remote URL", "^http:.*$")
         ->asType<minifi::controllers::SSLContextService>()->build());
-core::Property InvokeHTTP::ProxyHost("Proxy Host", "The fully qualified hostname or IP address of the proxy server", "");
-core::Property InvokeHTTP::ProxyPort(
+const core::Property InvokeHTTP::ProxyHost("Proxy Host", "The fully qualified hostname or IP address of the proxy server", "");
+const core::Property InvokeHTTP::ProxyPort(
     core::PropertyBuilder::createProperty("Proxy Port")->withDescription("The port of the proxy server")
         ->isRequired(false)->build());
-core::Property InvokeHTTP::ProxyUsername(
+const core::Property InvokeHTTP::ProxyUsername(
     core::PropertyBuilder::createProperty("invokehttp-proxy-username", "Proxy Username")->withDescription("Username to set when authenticating against proxy")->isRequired(false)->build());
-core::Property InvokeHTTP::ProxyPassword(
+const core::Property InvokeHTTP::ProxyPassword(
     core::PropertyBuilder::createProperty("invokehttp-proxy-password", "Proxy Password")->withDescription("Password to set when authenticating against proxy")->isRequired(false)->build());
-core::Property InvokeHTTP::ContentType("Content-type", "The Content-Type to specify for when content is being transmitted through a PUT, "
+const core::Property InvokeHTTP::ContentType("Content-type", "The Content-Type to specify for when content is being transmitted through a PUT, "
                                        "POST or PATCH. In the case of an empty value after evaluating an expression language expression, "
                                        "Content-Type defaults to",
                                        "application/octet-stream");
-core::Property InvokeHTTP::SendBody(
+const core::Property InvokeHTTP::SendBody(
     core::PropertyBuilder::createProperty("send-message-body", "Send Body")
       ->withDescription("DEPRECATED. Only kept for backwards compatibility, no functionality is included.")
       ->withDefaultValue<bool>(true)
       ->build());
-core::Property InvokeHTTP::SendMessageBody(
+const core::Property InvokeHTTP::SendMessageBody(
     core::PropertyBuilder::createProperty("Send Message Body")
       ->withDescription("If true, sends the HTTP message body on POST/PUT/PATCH requests (default). "
                         "If false, suppresses the message body and content-type header for these requests.")
       ->withDefaultValue<bool>(true)
       ->build());
-core::Property InvokeHTTP::UseChunkedEncoding("Use Chunked Encoding", "When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
+const core::Property InvokeHTTP::UseChunkedEncoding("Use Chunked Encoding", "When POST'ing, PUT'ing or PATCH'ing content set this property to true in order to not pass the 'Content-length' header"
                                               " and instead send 'Transfer-Encoding' with a value of 'chunked'. This will enable the data transfer mechanism which was introduced in HTTP 1.1 "
                                               "to pass data of unknown lengths in chunks.",
                                               "false");
-core::Property InvokeHTTP::PropPutOutputAttributes("Put Response Body in Attribute", "If set, the response body received back will be put into an attribute of the original "
+const core::Property InvokeHTTP::PropPutOutputAttributes("Put Response Body in Attribute", "If set, the response body received back will be put into an attribute of the original "
                                                    "FlowFile instead of a separate FlowFile. The attribute key to put to is determined by evaluating value of this property. ",
                                                    "");
-core::Property InvokeHTTP::AlwaysOutputResponse("Always Output Response", "Will force a response FlowFile to be generated and routed to the 'Response' relationship "
+const core::Property InvokeHTTP::AlwaysOutputResponse("Always Output Response", "Will force a response FlowFile to be generated and routed to the 'Response' relationship "
                                                 "regardless of what the server status code received is ",
                                                 "false");
-core::Property InvokeHTTP::PenalizeOnNoRetry("Penalize on \"No Retry\"", "Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.", "false");
+const core::Property InvokeHTTP::PenalizeOnNoRetry("Penalize on \"No Retry\"", "Enabling this property will penalize FlowFiles that are routed to the \"No Retry\" relationship.", "false");
 
-core::Property InvokeHTTP::DisablePeerVerification("Disable Peer Verification", "Disables peer verification for the SSL session", "false");
+const core::Property InvokeHTTP::DisablePeerVerification("Disable Peer Verification", "Disables peer verification for the SSL session", "false");
 
-core::Property InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy(
+const core::Property InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy(
     core::PropertyBuilder::createProperty("Invalid HTTP Header Field Handling Strategy")
       ->withDescription("Indicates what should happen when an attribute's name is not a valid HTTP header field name. "
         "Options: transform - invalid characters are replaced, fail - flow file is transferred to failure, drop - drops invalid attributes from HTTP message")
@@ -121,57 +121,27 @@ core::Property InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy(
       ->withAllowableValues<std::string>(InvalidHTTPHeaderFieldHandlingOption::values())
       ->build());
 
-const char* InvokeHTTP::STATUS_CODE = "invokehttp.status.code";
-const char* InvokeHTTP::STATUS_MESSAGE = "invokehttp.status.message";
-const char* InvokeHTTP::RESPONSE_BODY = "invokehttp.response.body";
-const char* InvokeHTTP::REQUEST_URL = "invokehttp.request.url";
-const char* InvokeHTTP::TRANSACTION_ID = "invokehttp.tx.id";
-const char* InvokeHTTP::REMOTE_DN = "invokehttp.remote.dn";
-const char* InvokeHTTP::EXCEPTION_CLASS = "invokehttp.java.exception.class";
-const char* InvokeHTTP::EXCEPTION_MESSAGE = "invokehttp.java.exception.message";
 
-core::Relationship InvokeHTTP::Success("success", "The original FlowFile will be routed upon success (2xx status codes). "
+const core::Relationship InvokeHTTP::Success("success", "The original FlowFile will be routed upon success (2xx status codes). "
                                        "It will have new attributes detailing the success of the request.");
 
-core::Relationship InvokeHTTP::RelResponse("response", "A Response FlowFile will be routed upon success (2xx status codes). "
+const core::Relationship InvokeHTTP::RelResponse("response", "A Response FlowFile will be routed upon success (2xx status codes). "
                                            "If the 'Always Output Response' property is true then the response will be sent "
                                            "to this relationship regardless of the status code received.");
 
-core::Relationship InvokeHTTP::RelRetry("retry", "The original FlowFile will be routed on any status code that can be retried "
+const core::Relationship InvokeHTTP::RelRetry("retry", "The original FlowFile will be routed on any status code that can be retried "
                                         "(5xx status codes). It will have new attributes detailing the request.");
 
-core::Relationship InvokeHTTP::RelNoRetry("no retry", "The original FlowFile will be routed on any status code that should NOT "
+const core::Relationship InvokeHTTP::RelNoRetry("no retry", "The original FlowFile will be routed on any status code that should NOT "
                                           "be retried (1xx, 3xx, 4xx status codes). It will have new attributes detailing the request.");
 
-core::Relationship InvokeHTTP::RelFailure("failure", "The original FlowFile will be routed on any type of connection failure, "
+const core::Relationship InvokeHTTP::RelFailure("failure", "The original FlowFile will be routed on any type of connection failure, "
                                           "timeout or general exception. It will have new attributes detailing the request.");
 
 void InvokeHTTP::initialize() {
   logger_->log_trace("Initializing InvokeHTTP");
-  setSupportedProperties({
-    Method,
-    URL,
-    ConnectTimeout,
-    ReadTimeout,
-    DateHeader,
-    AttributesToSend,
-    SSLContext,
-    ProxyHost,
-    ProxyPort,
-    ProxyUsername,
-    ProxyPassword,
-    UseChunkedEncoding,
-    ContentType,
-    SendBody,
-    SendMessageBody,
-    DisablePeerVerification,
-    AlwaysOutputResponse,
-    FollowRedirects,
-    PropPutOutputAttributes,
-    PenalizeOnNoRetry,
-    InvalidHTTPHeaderFieldHandlingStrategy
-  });
-  setSupportedRelationships({Success, RelResponse, RelFailure, RelRetry, RelNoRetry});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*sessionFactory*/) {
@@ -483,8 +453,6 @@ void InvokeHTTP::route(const std::shared_ptr<core::FlowFile> &request, const std
   }
 }
 
-REGISTER_RESOURCE(InvokeHTTP, "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
-    "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
-    "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).");
+REGISTER_RESOURCE(InvokeHTTP, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

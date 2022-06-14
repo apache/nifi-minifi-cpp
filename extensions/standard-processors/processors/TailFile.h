@@ -89,10 +89,13 @@ class TailFile : public core::Processor {
 
   ~TailFile() override = default;
 
-  // Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "TailFile";
+  EXTENSIONAPI static constexpr const char* Description = "\"Tails\" a file, or a list of files, ingesting data from the file as it is written to the file. The file is expected to be textual."
+      " Data is ingested only when a new line is encountered (carriage return or new-line character or combination). If the file to tail is periodically \"rolled over\","
+      " as is generally the case with log files, an optional Rolling Filename Pattern can be used to retrieve data from files that have rolled over, even if the rollover"
+      " occurred while NiFi was not running (provided that the data still exists upon restart of NiFi). It is generally advisable to set the Run Schedule to a few seconds,"
+      " rather than running with the default value of 0 secs, as this Processor will consume a lot of resources if scheduled very aggressively. At this time, this Processor"
+      " does not support ingesting files that have been compressed when 'rolled over'.";
 
-  // Supported Properties
   EXTENSIONAPI static const core::Property FileName;
   EXTENSIONAPI static const core::Property StateFile;
   EXTENSIONAPI static const core::Property Delimiter;
@@ -104,8 +107,36 @@ class TailFile : public core::Processor {
   EXTENSIONAPI static const core::Property InitialStartPosition;
   EXTENSIONAPI static const core::Property AttributeProviderService;
 
-  // Supported Relationships
+  static auto properties() {
+    return std::array{
+      FileName,
+      StateFile,
+      Delimiter,
+      TailMode,
+      BaseDirectory,
+      RecursiveLookup,
+      LookupFrequency,
+      RollingFilenamePattern,
+      InitialStartPosition,
+      AttributeProviderService
+    };
+  }
+
   EXTENSIONAPI static const core::Relationship Success;
+
+  static auto relationships() {
+    return std::array{Success};
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   /**
    * Function that's executed when the processor is scheduled.
@@ -137,14 +168,6 @@ class TailFile : public core::Processor {
     TailState tail_state_;
     TimePoint mtime_;
   };
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
   void parseAttributeProviderServiceProperty(core::ProcessContext& context);
   void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;

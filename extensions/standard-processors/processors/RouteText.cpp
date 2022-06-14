@@ -21,9 +21,9 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
-#include <set>
 
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/StreamPipe.h"
 #include "logging/LoggerConfiguration.h"
@@ -108,16 +108,8 @@ RouteText::RouteText(const std::string& name, const utils::Identifier& uuid)
     : core::Processor(name, uuid), logger_(core::logging::LoggerFactory<RouteText>::getLogger()) {}
 
 void RouteText::initialize() {
-  setSupportedProperties({
-     RoutingStrategy,
-     MatchingStrategy,
-     TrimWhitespace,
-     IgnoreCase,
-     GroupingRegex,
-     GroupingFallbackValue,
-     SegmentationStrategy
-  });
-  setSupportedRelationships({Original, Unmatched, Matched});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void RouteText::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -450,21 +442,19 @@ std::optional<std::string> RouteText::getGroup(const std::string_view& segment) 
 void RouteText::onDynamicPropertyModified(const core::Property& /*orig_property*/, const core::Property& new_property) {
   dynamic_properties_[new_property.getName()] = new_property;
 
-  std::set<core::Relationship> relationships{Original, Unmatched, Matched};
+  const auto static_relationships = RouteText::relationships();
+  std::vector<core::Relationship> relationships(static_relationships.begin(), static_relationships.end());
 
   for (const auto& [property_name, prop] : dynamic_properties_) {
     core::Relationship rel{property_name, "Dynamic Route"};
     dynamic_relationships_[property_name] = rel;
-    relationships.insert(rel);
+    relationships.push_back(rel);
     logger_->log_info("RouteText registered dynamic route '%s' with expression '%s'", property_name, prop.getValue().to_string());
   }
 
   setSupportedRelationships(relationships);
 }
 
-REGISTER_RESOURCE(RouteText, "Routes textual data based on a set of user-defined rules. Each segment in an incoming FlowFile is "
-                             "compared against the values specified by user-defined Properties. The mechanism by which the text is compared "
-                             "to these user-defined properties is defined by the 'Matching Strategy'. The data is then routed according to "
-                             "these rules, routing each segment of the text individually.");
+REGISTER_RESOURCE(RouteText, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

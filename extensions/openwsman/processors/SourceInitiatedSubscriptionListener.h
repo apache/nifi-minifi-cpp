@@ -46,29 +46,55 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   static constexpr char const *INITIAL_EXISTING_EVENTS_STRATEGY_NONE = "None";
   static constexpr char const *INITIAL_EXISTING_EVENTS_STRATEGY_ALL = "All";
 
-  static constexpr char const* ProcessorName = "SourceInitiatedSubscriptionListener";
-
   explicit SourceInitiatedSubscriptionListener(const std::string& name, const utils::Identifier& uuid = {});
 
-  // Supported Properties
-  static core::Property ListenHostname;
-  static core::Property ListenPort;
-  static core::Property SubscriptionManagerPath;
-  static core::Property SubscriptionsBasePath;
-  static core::Property SSLCertificate;
-  static core::Property SSLCertificateAuthority;
-  static core::Property SSLVerifyPeer;
-  static core::Property XPathXmlQuery;
-  static core::Property InitialExistingEventsStrategy;
-  static core::Property SubscriptionExpirationInterval;
-  static core::Property HeartbeatInterval;
-  static core::Property MaxElements;
-  static core::Property MaxLatency;
-  static core::Property ConnectionRetryInterval;
-  static core::Property ConnectionRetryCount;
+  EXTENSIONAPI static constexpr const char* Description = "This processor implements a Windows Event Forwarding Source Initiated Subscription server with the help of OpenWSMAN. "
+      "Windows hosts can be set up to connect and forward Event Logs to this processor.";
 
-  // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static const core::Property ListenHostname;
+  EXTENSIONAPI static const core::Property ListenPort;
+  EXTENSIONAPI static const core::Property SubscriptionManagerPath;
+  EXTENSIONAPI static const core::Property SubscriptionsBasePath;
+  EXTENSIONAPI static const core::Property SSLCertificate;
+  EXTENSIONAPI static const core::Property SSLCertificateAuthority;
+  EXTENSIONAPI static const core::Property SSLVerifyPeer;
+  EXTENSIONAPI static const core::Property XPathXmlQuery;
+  EXTENSIONAPI static const core::Property InitialExistingEventsStrategy;
+  EXTENSIONAPI static const core::Property SubscriptionExpirationInterval;
+  EXTENSIONAPI static const core::Property HeartbeatInterval;
+  EXTENSIONAPI static const core::Property MaxElements;
+  EXTENSIONAPI static const core::Property MaxLatency;
+  EXTENSIONAPI static const core::Property ConnectionRetryInterval;
+  EXTENSIONAPI static const core::Property ConnectionRetryCount;
+  static auto properties() {
+    return std::array{
+      ListenHostname,
+      ListenPort,
+      SubscriptionManagerPath,
+      SubscriptionsBasePath,
+      SSLCertificate,
+      SSLCertificateAuthority,
+      SSLVerifyPeer,
+      XPathXmlQuery,
+      InitialExistingEventsStrategy,
+      SubscriptionExpirationInterval,
+      HeartbeatInterval,
+      MaxElements,
+      MaxLatency,
+      ConnectionRetryInterval,
+      ConnectionRetryCount
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   // Writes Attributes
   static constexpr char const* ATTRIBUTE_WEF_REMOTE_MACHINEID = "wef.remote.machineid";
@@ -100,10 +126,6 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
   };
 
  protected:
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SourceInitiatedSubscriptionListener>::getLogger();
 
   core::CoreComponentStateManager* state_manager_;

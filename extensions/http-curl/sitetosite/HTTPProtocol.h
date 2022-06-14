@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,46 +31,35 @@
 #include "sitetosite/Peer.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
-/**
- * Site2Site Peer
- */
 typedef struct Site2SitePeerStatus {
   std::string host_;
   int port_;
   bool isSecure_;
 } Site2SitePeerStatus;
 
-// HttpSiteToSiteClient Class
 class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static constexpr char const* PROTOCOL_VERSION_HEADER = "x-nifi-site-to-site-protocol-version";
 
  public:
-  /*!
-   * Create a new http protocol
-   */
   explicit HttpSiteToSiteClient(const std::string& /*name*/, const utils::Identifier& /*uuid*/ = {})
       : SiteToSiteClient(),
         current_code(UNRECOGNIZED_RESPONSE_CODE) {
     peer_state_ = READY;
   }
 
-  /*!
-   * Create a new http protocol
-   */
   explicit HttpSiteToSiteClient(std::unique_ptr<SiteToSitePeer> peer)
       : SiteToSiteClient(),
         current_code(UNRECOGNIZED_RESPONSE_CODE) {
     peer_ = std::move(peer);
     peer_state_ = READY;
   }
-  // Destructor
   ~HttpSiteToSiteClient() override = default;
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
   void setPeer(std::unique_ptr<SiteToSitePeer> peer) override {
     peer_ = std::move(peer);
@@ -175,8 +163,4 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sitetosite

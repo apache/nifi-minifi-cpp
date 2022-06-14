@@ -40,8 +40,8 @@
 #include "integration/IntegrationBase.h"
 #include "utils/IntegrationTestUtils.h"
 
-REGISTER_RESOURCE(MockControllerService, "");
-REGISTER_RESOURCE(MockProcessor, "");
+REGISTER_RESOURCE(MockControllerService, ControllerService);
+REGISTER_RESOURCE(MockProcessor, Processor);
 
 void waitToVerifyProcessor() {
   std::this_thread::sleep_for(std::chrono::seconds(2));

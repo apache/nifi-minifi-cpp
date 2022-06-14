@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_TFCONVERTIMAGETOTENSOR_H
-#define NIFI_MINIFI_CPP_TFCONVERTIMAGETOTENSOR_H
+#pragma once
 
 #include <atomic>
 
@@ -25,11 +24,7 @@
 #include <tensorflow/core/public/session.h>
 #include <concurrentqueue.h>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class TFConvertImageToTensor : public core::Processor {
  public:
@@ -38,19 +33,43 @@ class TFConvertImageToTensor : public core::Processor {
         logger_(logging::LoggerFactory<TFConvertImageToTensor>::getLogger()) {
   }
 
-  static core::Property ImageFormat;
-  static core::Property NumChannels;
-  static core::Property InputWidth;
-  static core::Property InputHeight;
-  static core::Property OutputWidth;
-  static core::Property OutputHeight;
-  static core::Property CropOffsetX;
-  static core::Property CropOffsetY;
-  static core::Property CropSizeX;
-  static core::Property CropSizeY;
+  EXTENSIONAPI static constexpr const char* Description = "Converts the input image file into a tensor protobuf. The image will be resized to the given output tensor dimensions.";
 
-  static core::Relationship Success;
-  static core::Relationship Failure;
+  EXTENSIONAPI static const core::Property ImageFormat;
+  EXTENSIONAPI static const core::Property NumChannels;
+  EXTENSIONAPI static const core::Property InputWidth;
+  EXTENSIONAPI static const core::Property InputHeight;
+  EXTENSIONAPI static const core::Property OutputWidth;
+  EXTENSIONAPI static const core::Property OutputHeight;
+  EXTENSIONAPI static const core::Property CropOffsetX;
+  EXTENSIONAPI static const core::Property CropOffsetY;
+  EXTENSIONAPI static const core::Property CropSizeX;
+  EXTENSIONAPI static const core::Property CropSizeY;
+  static auto properties() {
+    return std::array{
+      ImageFormat,
+      NumChannels,
+      InputWidth,
+      InputHeight,
+      OutputWidth,
+      OutputHeight,
+      CropOffsetX,
+      CropOffsetY,
+      CropSizeX,
+      CropSizeY
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
@@ -107,10 +126,4 @@ class TFConvertImageToTensor : public core::Processor {
   moodycamel::ConcurrentQueue<std::shared_ptr<TFContext>> tf_context_q_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_TFCONVERTIMAGETOTENSOR_H
+}  // namespace org::apache::nifi::minifi::processors

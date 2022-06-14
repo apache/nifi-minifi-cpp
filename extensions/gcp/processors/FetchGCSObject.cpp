@@ -28,37 +28,6 @@
 namespace gcs = ::google::cloud::storage;
 
 namespace org::apache::nifi::minifi::extensions::gcp {
-const core::Property FetchGCSObject::Bucket(
-    core::PropertyBuilder::createProperty("Bucket")
-        ->withDescription("Bucket of the object.")
-        ->withDefaultValue("${gcs.bucket}")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property FetchGCSObject::Key(
-    core::PropertyBuilder::createProperty("Key")
-        ->withDescription("Name of the object.")
-        ->withDefaultValue("${filename}")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property FetchGCSObject::ObjectGeneration(
-    core::PropertyBuilder::createProperty("Object Generation")
-        ->withDescription("The generation of the Object to download. If left empty, then it will download the latest generation.")
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Property FetchGCSObject::EncryptionKey(
-    core::PropertyBuilder::createProperty("Server Side Encryption Key")
-        ->withDescription("The AES256 Encryption Key (encoded in base64) for server-side decryption of the object.")
-        ->isRequired(false)
-        ->supportsExpressionLanguage(true)
-        ->build());
-
-const core::Relationship FetchGCSObject::Success("success", "FlowFiles are routed to this relationship after a successful Google Cloud Storage operation.");
-const core::Relationship FetchGCSObject::Failure("failure", "FlowFiles are routed to this relationship if the Google Cloud Storage operation fails.");
-
-
 namespace {
 class FetchFromGCSCallback {
  public:
@@ -115,14 +84,8 @@ class FetchFromGCSCallback {
 
 
 void FetchGCSObject::initialize() {
-  setSupportedProperties({GCPCredentials,
-                          Bucket,
-                          Key,
-                          ObjectGeneration,
-                          NumberOfRetries,
-                          EncryptionKey,
-                          EndpointOverrideURL});
-  setSupportedRelationships({Success, Failure});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void FetchGCSObject::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
@@ -192,6 +155,4 @@ void FetchGCSObject::onTrigger(const std::shared_ptr<core::ProcessContext>& cont
     flow_file->setAttribute(GCS_STORAGE_CLASS, *storage_class);
   session->transfer(flow_file, Success);
 }
-
-REGISTER_RESOURCE(FetchGCSObject, "Fetches a file from a Google Cloud Bucket. Designed to be used in tandem with ListGCSBucket.");
 }  // namespace org::apache::nifi::minifi::extensions::gcp

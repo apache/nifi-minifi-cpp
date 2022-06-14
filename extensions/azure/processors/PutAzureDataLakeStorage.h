@@ -26,7 +26,7 @@
 
 #include "AzureDataLakeStorageFileProcessorBase.h"
 #include "io/StreamPipe.h"
-
+#include "utils/ArrayUtils.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
 
@@ -37,12 +37,23 @@ namespace org::apache::nifi::minifi::azure::processors {
 
 class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBase {
  public:
-  // Supported Properties
-  EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
+  EXTENSIONAPI static constexpr const char* Description = "Puts content into an Azure Data Lake Storage Gen 2";
 
-  // Supported Relationships
-  EXTENSIONAPI static const core::Relationship Failure;
+  EXTENSIONAPI static const core::Property ConflictResolutionStrategy;
+  static auto properties() {
+    return utils::array_cat(AzureDataLakeStorageFileProcessorBase::properties(), std::array{ConflictResolutionStrategy});
+  }
+
   EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   SMART_ENUM(FileExistsResolutionStrategy,
     (FAIL_FLOW, "fail"),
@@ -77,14 +88,6 @@ class PutAzureDataLakeStorage final : public AzureDataLakeStorageFileProcessorBa
     storage::UploadDataLakeStorageResult result_;
     std::shared_ptr<core::logging::Logger> logger_;
   };
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
   explicit PutAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
     : AzureDataLakeStorageFileProcessorBase(name, uuid, core::logging::LoggerFactory<PutAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {

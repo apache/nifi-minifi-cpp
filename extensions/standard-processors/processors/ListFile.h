@@ -37,6 +37,9 @@ class ListFile : public core::Processor {
     : core::Processor(name, uuid) {
   }
 
+  EXTENSIONAPI static constexpr const char* Description = "Retrieves a listing of files from the local filesystem. For each file that is listed, "
+      "creates a FlowFile that represents the file so that it can be fetched in conjunction with FetchFile.";
+
   EXTENSIONAPI static const core::Property InputDirectory;
   EXTENSIONAPI static const core::Property RecurseSubdirectories;
   EXTENSIONAPI static const core::Property FileFilter;
@@ -46,16 +49,33 @@ class ListFile : public core::Processor {
   EXTENSIONAPI static const core::Property MinimumFileSize;
   EXTENSIONAPI static const core::Property MaximumFileSize;
   EXTENSIONAPI static const core::Property IgnoreHiddenFiles;
+  static auto properties() {
+    return std::array{
+      InputDirectory,
+      RecurseSubdirectories,
+      FileFilter,
+      PathFilter,
+      MinimumFileAge,
+      MaximumFileAge,
+      MinimumFileSize,
+      MaximumFileSize,
+      IgnoreHiddenFiles
+    };
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &session_factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
 
  private:
   struct ListedFile : public utils::ListedObject {

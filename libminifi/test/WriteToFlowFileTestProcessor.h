@@ -40,8 +40,16 @@ class WriteToFlowFileTestProcessor : public core::Processor {
       : Processor(name, uuid) {
   }
 
-  static constexpr char const* const ProcessorName = "WriteToFlowFileTestProcessor";
+  static constexpr const char* Description = "WriteToFlowFileTestProcessor (only for testing purposes)";
+  static auto properties() { return std::array<core::Property, 0>{}; }
   static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
  public:
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;

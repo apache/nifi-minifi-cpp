@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -26,12 +25,9 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "ConvertBase.h"
+#include "utils/ArrayUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 /**
  * Purpose: Converts update messages into the appropriate Restful call
@@ -42,32 +38,22 @@ namespace processors {
  */
 class ConvertUpdate : public ConvertBase {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit ConvertUpdate(const std::string& name, const utils::Identifier& uuid = {})
     : ConvertBase(name, uuid) {
   }
-  // Destructor
   ~ConvertUpdate() override = default;
 
-  static core::Property SSLContext;
-  // Processor Name
-  static constexpr char const* ProcessorName = "ConvertUpdate";
+  EXTENSIONAPI static core::Property SSLContext;
+  static auto properties() { return utils::array_cat(ConvertBase::properties(), std::array{SSLContext}); }
 
- public:
-  /**
-     * Initialization of the processor
-     */
-    void initialize() override;
-  /**
-   * Function that's executed when the processor is triggered.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void initialize() override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  protected:
@@ -77,8 +63,4 @@ class ConvertUpdate : public ConvertBase {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConvertUpdate>::getLogger();
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

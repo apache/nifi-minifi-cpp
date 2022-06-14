@@ -37,13 +37,9 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 namespace processors {
-// GenerateFlowFile Class
+
 class GenerateFlowFile : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   GenerateFlowFile(const std::string& name, const utils::Identifier& uuid = {}) // NOLINT
       : Processor(name, uuid) {
     batchSize_ = 1;
@@ -51,25 +47,41 @@ class GenerateFlowFile : public core::Processor {
     fileSize_ = 1024;
     textData_ = false;
   }
-  // Destructor
   ~GenerateFlowFile() override = default;
-  // Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "GenerateFlowFile";
-  // Supported Properties
-  EXTENSIONAPI static core::Property FileSize;
-  EXTENSIONAPI static core::Property BatchSize;
-  EXTENSIONAPI static core::Property DataFormat;
-  EXTENSIONAPI static core::Property UniqueFlowFiles;
-  EXTENSIONAPI static core::Property CustomText;
+
+  EXTENSIONAPI static constexpr const char* Description = "This processor creates FlowFiles with random data or custom content. "
+      "GenerateFlowFile is useful for load testing, configuration, and simulation.";
+
+  EXTENSIONAPI static const core::Property FileSize;
+  EXTENSIONAPI static const core::Property BatchSize;
+  EXTENSIONAPI static const core::Property DataFormat;
+  EXTENSIONAPI static const core::Property UniqueFlowFiles;
+  EXTENSIONAPI static const core::Property CustomText;
+  static auto properties() {
+    return std::array{
+      FileSize,
+      BatchSize,
+      DataFormat,
+      UniqueFlowFiles,
+      CustomText
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   EXTENSIONAPI static const char *DATA_FORMAT_TEXT;
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
 
  public:
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  // OnTrigger method, implemented by NiFi GenerateFlowFile
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  // Initialize, over write by NiFi GenerateFlowFile
   void initialize() override;
 
  protected:
@@ -81,11 +93,6 @@ class GenerateFlowFile : public core::Processor {
   bool textData_;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
-  // logger instance
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GenerateFlowFile>::getLogger();
 };
 

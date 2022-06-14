@@ -16,103 +16,90 @@
  */
 
 #include "TFConvertImageToTensor.h"
-#include <core/ProcessContext.h>
-#include <core/ProcessSession.h>
-#include <tensorflow/cc/ops/standard_ops.h>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+#include "core/ProcessContext.h"
+#include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
+#include "tensorflow/cc/ops/standard_ops.h"
 
-core::Property TFConvertImageToTensor::ImageFormat(
+namespace org::apache::nifi::minifi::processors {
+
+const core::Property TFConvertImageToTensor::ImageFormat(
     core::PropertyBuilder::createProperty("Input Format")
         ->withDescription(
             "The format of the input image (PNG or RAW). RAW is RGB24.")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::InputWidth(
+const core::Property TFConvertImageToTensor::InputWidth(
     core::PropertyBuilder::createProperty("Input Width")
         ->withDescription("The width, in pixels, of the input image.")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::InputHeight(
+const core::Property TFConvertImageToTensor::InputHeight(
     core::PropertyBuilder::createProperty("Input Height")
         ->withDescription("The height, in pixels, of the input image.")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::OutputWidth(
+const core::Property TFConvertImageToTensor::OutputWidth(
     core::PropertyBuilder::createProperty("Output Width")
         ->withDescription("The width, in pixels, of the output image.")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::OutputHeight(
+const core::Property TFConvertImageToTensor::OutputHeight(
     core::PropertyBuilder::createProperty("Output Height")
         ->withDescription("The height, in pixels, of the output image.")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::NumChannels(
+const core::Property TFConvertImageToTensor::NumChannels(
     core::PropertyBuilder::createProperty("Channels")
         ->withDescription("The number of channels (e.g. 3 for RGB, 4 for RGBA) "
                           "in the input image")
         ->withDefaultValue("3")
         ->build());
 
-core::Property TFConvertImageToTensor::CropOffsetX(
+const core::Property TFConvertImageToTensor::CropOffsetX(
     core::PropertyBuilder::createProperty("Crop Offset X")
         ->withDescription("The X (horizontal) offset, in pixels, to crop the "
                           "input image (relative to top-left corner).")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::CropOffsetY(
+const core::Property TFConvertImageToTensor::CropOffsetY(
     core::PropertyBuilder::createProperty("Crop Offset Y")
         ->withDescription("The Y (vertical) offset, in pixels, to crop the "
                           "input image (relative to top-left corner).")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::CropSizeX(
+const core::Property TFConvertImageToTensor::CropSizeX(
     core::PropertyBuilder::createProperty("Crop Size X")
         ->withDescription(
             "The X (horizontal) size, in pixels, to crop the input image.")
         ->withDefaultValue("")
         ->build());
 
-core::Property TFConvertImageToTensor::CropSizeY(
+const core::Property TFConvertImageToTensor::CropSizeY(
     core::PropertyBuilder::createProperty("Crop Size Y")
         ->withDescription(
             "The Y (vertical) size, in pixels, to crop the input image.")
         ->withDefaultValue("")
         ->build());
 
-core::Relationship TFConvertImageToTensor::Success(  // NOLINT
+const core::Relationship TFConvertImageToTensor::Success(
     "success",
     "Successful graph application outputs");
-core::Relationship TFConvertImageToTensor::Failure(  // NOLINT
+const core::Relationship TFConvertImageToTensor::Failure(
     "failure",
     "Failures which will not work if retried");
 
 void TFConvertImageToTensor::initialize() {
-  std::set<core::Property> properties;
-  properties.insert(ImageFormat);
-  properties.insert(InputWidth);
-  properties.insert(InputHeight);
-  properties.insert(OutputWidth);
-  properties.insert(OutputHeight);
-  properties.insert(NumChannels);
-  setSupportedProperties(std::move(properties));
-
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(std::move(relationships));
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void TFConvertImageToTensor::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -344,10 +331,6 @@ int64_t TFConvertImageToTensor::TensorWriteCallback::process(const std::shared_p
   return num_wrote;
 }
 
-REGISTER_RESOURCE(TFConvertImageToTensor, "Converts the input image file into a tensor protobuf. The image will be resized to the given output tensor dimensions."); // NOLINT
+REGISTER_RESOURCE(TFConvertImageToTensor, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

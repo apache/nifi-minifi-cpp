@@ -26,6 +26,7 @@
 #include "utils/ProcessorConfigUtils.h"
 #include "range/v3/algorithm/find.hpp"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -73,14 +74,8 @@ const core::Property AttributesToJSON::NullValue(
 const core::Relationship AttributesToJSON::Success("success", "All FlowFiles received are routed to success");
 
 void AttributesToJSON::initialize() {
-  setSupportedProperties({
-    AttributesList,
-    AttributesRegularExpression,
-    Destination,
-    IncludeCoreAttributes,
-    NullValue
-  });
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void AttributesToJSON::onSchedule(core::ProcessContext* context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -172,8 +167,7 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
   }
 }
 
-REGISTER_RESOURCE(AttributesToJSON, "Generates a JSON representation of the input FlowFile Attributes. "
-  "The resulting JSON can be written to either a new Attribute 'JSONAttributes' or written to the FlowFile as content.");
+REGISTER_RESOURCE(AttributesToJSON, Processor);
 
 }  // namespace processors
 }  // namespace minifi

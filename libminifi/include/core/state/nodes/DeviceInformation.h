@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
+#pragma once
 
 #ifndef WIN32
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
@@ -61,12 +59,7 @@
 #include "utils/SystemCpuUsageTracker.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 class Device {
  public:
@@ -302,7 +295,7 @@ class DeviceInfoNode : public DeviceInformation {
     device_id_ = device.device_id_;
   }
 
-  DeviceInfoNode(const std::string &name) // NOLINT
+  explicit DeviceInfoNode(const std::string &name)
       : DeviceInformation(name) {
     static Device device;
     hostname_ = device.canonical_hostname_;
@@ -310,11 +303,13 @@ class DeviceInfoNode : public DeviceInformation {
     device_id_ = device.device_id_;
   }
 
-  std::string getName() const {
+  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines device characteristics to the C2 protocol";
+
+  std::string getName() const override {
     return "deviceInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
 
     serialized.push_back(serializeIdentifier());
@@ -443,11 +438,4 @@ class DeviceInfoNode : public DeviceInformation {
   MINIFIAPI static std::mutex cpu_load_tracker_mutex_;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_DEVICEINFORMATION_H_
+}  // namespace org::apache::nifi::minifi::state::response

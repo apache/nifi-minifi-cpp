@@ -40,12 +40,14 @@ namespace {
 class PutGCSObjectMocked : public PutGCSObject {
   using org::apache::nifi::minifi::extensions::gcp::PutGCSObject::PutGCSObject;
  public:
+  static constexpr const char* Description = "PutGCSObjectMocked";
+
   gcs::Client getClient() const override {
     return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
-REGISTER_RESOURCE(PutGCSObjectMocked, "PutGCSObjectMocked");
+REGISTER_RESOURCE(PutGCSObjectMocked, Processor);
 }  // namespace
 
 class PutGCSObjectTests : public ::testing::Test {

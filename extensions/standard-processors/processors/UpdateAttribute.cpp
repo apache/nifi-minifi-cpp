@@ -22,8 +22,8 @@
 
 #include <memory>
 #include <string>
-#include <set>
 
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -36,13 +36,8 @@ const core::Relationship UpdateAttribute::Success("success", "All files are rout
 const core::Relationship UpdateAttribute::Failure("failure", "Failed files are transferred to failure");
 
 void UpdateAttribute::initialize() {
-  std::set<core::Property> properties;
-  setSupportedProperties(properties);
-
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void UpdateAttribute::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -79,8 +74,7 @@ void UpdateAttribute::onTrigger(core::ProcessContext *context, core::ProcessSess
   }
 }
 
-REGISTER_RESOURCE(UpdateAttribute, "This processor updates the attributes of a FlowFile using properties that are added by the user. "
-  "This allows you to set default attribute changes that affect every FlowFile going through the processor, equivalent to the \"basic\" usage in Apache NiFi.");
+REGISTER_RESOURCE(UpdateAttribute, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

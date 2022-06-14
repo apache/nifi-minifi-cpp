@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,18 +24,14 @@
 #include "rapidjson/prettywriter.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 AgentPrinter::AgentPrinter(const std::string& name, const utils::Identifier& uuid)
-    : HeartbeatReporter(name, uuid) {
+: HeartbeatReporter(name, uuid) {
 }
 
 void AgentPrinter::initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
-                              const std::shared_ptr<Configure> &configure) {
+    const std::shared_ptr<Configure> &configure) {
   HeartbeatReporter::initialize(controller, updateSink, configure);
 }
 int16_t AgentPrinter::heartbeat(const C2Payload &payload) {
@@ -60,10 +55,6 @@ rapidjson::Value AgentPrinter::serializeJsonPayload(const C2Payload &payload, ra
   return result;
 }
 
-REGISTER_RESOURCE(AgentPrinter, "Encapsulates printing agent information.");
+REGISTER_RESOURCE(AgentPrinter, DescriptionOnly);
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

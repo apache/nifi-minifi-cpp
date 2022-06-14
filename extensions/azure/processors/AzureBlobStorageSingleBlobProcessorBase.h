@@ -26,13 +26,16 @@
 #include <utility>
 
 #include "AzureBlobStorageProcessorBase.h"
+#include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureBlobStorageSingleBlobProcessorBase : public AzureBlobStorageProcessorBase {
  public:
-  // Supported Properties
   EXTENSIONAPI static const core::Property Blob;
+  static auto properties() {
+    return utils::array_cat(AzureBlobStorageProcessorBase::properties(), std::array{Blob});
+  }
 
   explicit AzureBlobStorageSingleBlobProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger>& logger)
     : AzureBlobStorageSingleBlobProcessorBase(name, uuid, logger, nullptr) {

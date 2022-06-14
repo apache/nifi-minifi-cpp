@@ -25,6 +25,7 @@
 #include <memory>
 
 #include "AzureDataLakeStorageProcessorBase.h"
+#include "utils/ArrayUtils.h"
 
 class ListAzureDataLakeStorageTestsFixture;
 
@@ -37,12 +38,30 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
     (TIMESTAMPS, "timestamps")
   )
 
+  EXTENSIONAPI static constexpr const char* Description = "Lists directory in an Azure Data Lake Storage Gen 2 filesystem";
+
   EXTENSIONAPI static const core::Property RecurseSubdirectories;
   EXTENSIONAPI static const core::Property FileFilter;
   EXTENSIONAPI static const core::Property PathFilter;
   EXTENSIONAPI static const core::Property ListingStrategy;
+  static auto properties() {
+    return utils::array_cat(AzureDataLakeStorageProcessorBase::properties(), std::array{
+      RecurseSubdirectories,
+      FileFilter,
+      PathFilter,
+      ListingStrategy
+    });
+  }
 
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit ListAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger()) {
@@ -56,10 +75,6 @@ class ListAzureDataLakeStorage final : public AzureDataLakeStorageProcessorBase 
 
  private:
   friend class ::ListAzureDataLakeStorageTestsFixture;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
 
   explicit ListAzureDataLakeStorage(const std::string& name, const minifi::utils::Identifier& uuid, std::unique_ptr<storage::DataLakeStorageClient> data_lake_storage_client)
     : AzureDataLakeStorageProcessorBase(name, uuid, core::logging::LoggerFactory<ListAzureDataLakeStorage>::getLogger(), std::move(data_lake_storage_client)) {

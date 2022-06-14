@@ -28,7 +28,7 @@ namespace response {
 utils::ProcessCpuUsageTracker AgentStatus::cpu_load_tracker_;
 std::mutex AgentStatus::cpu_load_tracker_mutex_;
 
-REGISTER_RESOURCE(AgentInformation, "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.");
+REGISTER_RESOURCE(AgentInformation, DescriptionOnly);
 
 } /* namespace response */
 } /* namespace state */

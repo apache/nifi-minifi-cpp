@@ -26,6 +26,7 @@
 #include "utils/OptionalUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
@@ -78,8 +79,8 @@ ConsumeJournald::ConsumeJournald(const std::string &name, const utils::Identifie
 {}
 
 void ConsumeJournald::initialize() {
-  setSupportedProperties({BatchSize, PayloadFormat, IncludeTimestamp, JournalType, ProcessOldMessages, TimestampFormat});
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 
   worker_ = std::make_unique<utils::FifoExecutor>();
 }
@@ -267,8 +268,7 @@ std::string ConsumeJournald::getCursor() const {
   return std::string{cursor.get()};
 }
 
-REGISTER_RESOURCE(ConsumeJournald, "Consume systemd-journald journal messages. Creates one flow file per message."
-    "Fields are mapped to attributes. Realtime timestamp is mapped to the 'timestamp' attribute.");
+REGISTER_RESOURCE(ConsumeJournald, Processor);
 
 }  // namespace systemd
 }  // namespace extensions

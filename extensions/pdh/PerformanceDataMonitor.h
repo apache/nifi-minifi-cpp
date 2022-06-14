@@ -39,7 +39,6 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// PerformanceDataMonitor Class
 class PerformanceDataMonitor : public core::Processor {
  public:
   static constexpr const char* JSON_FORMAT_STR = "JSON";
@@ -53,18 +52,34 @@ class PerformanceDataMonitor : public core::Processor {
         pdh_query_(nullptr), resource_consumption_counters_() {}
 
   ~PerformanceDataMonitor() override;
-  static constexpr char const* ProcessorName = "PerformanceDataMonitor";
-  // Supported Properties
-  EXTENSIONAPI static core::Property PredefinedGroups;
-  EXTENSIONAPI static core::Property CustomPDHCounters;
-  EXTENSIONAPI static core::Property OutputFormatProperty;
-  EXTENSIONAPI static core::Property OutputCompactness;
-  EXTENSIONAPI static core::Property DecimalPlaces;
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
 
+  EXTENSIONAPI static constexpr const char* Description = "This processor can create FlowFiles with various performance data through Performance Data Helper. (Windows only)";
 
- public:
+  EXTENSIONAPI static const core::Property PredefinedGroups;
+  EXTENSIONAPI static const core::Property CustomPDHCounters;
+  EXTENSIONAPI static const core::Property OutputFormatProperty;
+  EXTENSIONAPI static const core::Property OutputCompactness;
+  EXTENSIONAPI static const core::Property DecimalPlaces;
+  static auto properties() {
+    return std::array{
+      PredefinedGroups,
+      CustomPDHCounters,
+      OutputFormatProperty,
+      OutputCompactness,
+      DecimalPlaces
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
@@ -73,14 +88,6 @@ class PerformanceDataMonitor : public core::Processor {
   enum class OutputFormat {
     JSON, OPENTELEMETRY
   };
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
   rapidjson::Value& prepareJSONBody(rapidjson::Document& root);
 

@@ -27,23 +27,9 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Relationship DeleteAzureDataLakeStorage::Success("success", "If file deletion from Azure storage succeeds the flowfile is transferred to this relationship");
-const core::Relationship DeleteAzureDataLakeStorage::Failure("failure", "If file deletion from Azure storage fails the flowfile is transferred to this relationship");
-
 void DeleteAzureDataLakeStorage::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    FilesystemName,
-    DirectoryName,
-    FileName
-  });
-
-  // Set the supported relationships
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 std::optional<storage::DeleteAzureDataLakeStorageParameters> DeleteAzureDataLakeStorage::buildDeleteParameters(
@@ -80,7 +66,5 @@ void DeleteAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCo
     session->transfer(flow_file, Success);
   }
 }
-
-REGISTER_RESOURCE(DeleteAzureDataLakeStorage, "Deletes the provided file from Azure Data Lake Storage");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

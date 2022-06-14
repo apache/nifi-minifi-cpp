@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,11 +24,7 @@
 #include <dirent.h>
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
+namespace org::apache::nifi::minifi::jni {
 
 #ifndef S_ISDIR
 #define S_ISDIR(mode)  (((mode) & S_IFMT) == S_IFDIR)
@@ -41,10 +36,6 @@ namespace jni {
 #endif
 JVMCreator::~JVMCreator() = default;
 
-REGISTER_INTERNAL_RESOURCE(JVMCreator);
+REGISTER_RESOURCE(JVMCreator, InternalResource);
 
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni

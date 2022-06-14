@@ -15,20 +15,14 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_EXPRESSION_LANGUAGE_EXPRESSIONCONTEXTBUILDER_H_
-#define EXTENSIONS_EXPRESSION_LANGUAGE_EXPRESSIONCONTEXTBUILDER_H_
+#pragma once
 
 #include <string>
 #include <memory>
 
 #include "core/ProcessContextBuilder.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace expressions {
+namespace org::apache::nifi::minifi::core::expressions {
 
 /**
  *   Purpose: Creates a context builder that can be used by the class loader to inject EL functionality
@@ -45,14 +39,11 @@ class ExpressionContextBuilder : public core::ProcessContextBuilder {
 
   virtual ~ExpressionContextBuilder();
 
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+
   std::shared_ptr<core::ProcessContext> build(const std::shared_ptr<ProcessorNode> &processor) override;
 };
 
-} /* namespace expressions */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif /* EXTENSIONS_EXPRESSION_LANGUAGE_EXPRESSIONCONTEXTBUILDER_H_ */
+}  // namespace org::apache::nifi::minifi::core::expressions

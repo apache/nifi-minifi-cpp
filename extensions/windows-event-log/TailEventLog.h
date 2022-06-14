@@ -43,26 +43,30 @@ class TailEventLog : public core::Processor {
       : core::Processor(name, uuid) {
   }
   virtual ~TailEventLog() = default;
-  static const std::string ProcessorName;
 
-  // Supported Properties
-  static core::Property LogSourceFileName;
-  static core::Property MaxEventsPerFlowFile;
+  EXTENSIONAPI static constexpr const char* Description = "Windows event log reader that functions as a stateful tail of the provided windows event log name";
 
-  // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static const core::Property LogSourceFileName;
+  EXTENSIONAPI static const core::Property MaxEventsPerFlowFile;
+  static auto properties() {
+    return std::array{
+      LogSourceFileName,
+      MaxEventsPerFlowFile
+    };
+  }
 
- public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-  // OnTrigger method, implemented by NiFi TailEventLog
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-  // Initialize, over write by NiFi TailEventLog
   void initialize(void) override;
 
  protected:
@@ -134,7 +138,6 @@ class TailEventLog : public core::Processor {
   DWORD num_records_;
 
   HANDLE log_handle_;
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TailEventLog>::getLogger();
 };
 

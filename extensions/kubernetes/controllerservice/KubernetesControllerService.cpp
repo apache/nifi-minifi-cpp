@@ -26,6 +26,7 @@ extern "C" {
 #include "api/CoreV1API.h"
 }
 
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "Exception.h"
@@ -103,7 +104,7 @@ void KubernetesControllerService::initialize() {
   if (initialized_) { return; }
 
   ControllerService::initialize();
-  setSupportedProperties({NamespaceFilter, PodNameFilter, ContainerNameFilter});
+  setSupportedProperties(properties());
   initialized_ = true;
 }
 
@@ -207,6 +208,6 @@ bool KubernetesControllerService::matchesRegexFilters(const std::string& name_sp
       matchesFilter(container_name, container_name_filter_);
 }
 
-REGISTER_RESOURCE(KubernetesControllerService, "Controller service that provides access to the Kubernetes API");
+REGISTER_RESOURCE(KubernetesControllerService, ControllerService);
 
 }  // namespace org::apache::nifi::minifi::controllers

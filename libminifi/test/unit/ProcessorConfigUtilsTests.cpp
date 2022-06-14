@@ -18,6 +18,7 @@
 #include "../TestBase.h"
 #include "../Catch.h"
 #include "core/Processor.h"
+#include "core/PropertyBuilder.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/Enum.h"
 
@@ -25,7 +26,14 @@ namespace org::apache::nifi::minifi::core {
 namespace {
 
 class TestProcessor : public Processor {
+ public:
   using Processor::Processor;
+
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 };
 
 SMART_ENUM(TestEnum,
@@ -38,7 +46,7 @@ TEST_CASE("Parse enum property") {
       ->withAllowableValues(TestEnum::values())
       ->build();
   auto proc = std::make_shared<TestProcessor>("test-proc");
-  proc->setSupportedProperties({prop});
+  proc->setSupportedProperties(std::array{prop});
   ProcessContext context(std::make_shared<ProcessorNode>(proc.get()), nullptr, nullptr, nullptr, nullptr, nullptr);
   SECTION("Valid") {
     proc->setProperty(prop, "B");

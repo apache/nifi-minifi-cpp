@@ -30,12 +30,24 @@ namespace org::apache::nifi::minifi::controllers {
 
 class KubernetesControllerService : public AttributeProviderService {
  public:
+  explicit KubernetesControllerService(const std::string& name, const utils::Identifier& uuid = {});
+  KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration);
+
+  EXTENSIONAPI static constexpr const char* Description = "Controller service that provides access to the Kubernetes API";
+
   EXTENSIONAPI static const core::Property NamespaceFilter;
   EXTENSIONAPI static const core::Property PodNameFilter;
   EXTENSIONAPI static const core::Property ContainerNameFilter;
+  static auto properties() {
+    return std::array{
+      NamespaceFilter,
+      PodNameFilter,
+      ContainerNameFilter
+    };
+  }
 
-  explicit KubernetesControllerService(const std::string& name, const utils::Identifier& uuid = {});
-  KubernetesControllerService(const std::string& name, const std::shared_ptr<Configure>& configuration);
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() final;
   void onEnable() override;

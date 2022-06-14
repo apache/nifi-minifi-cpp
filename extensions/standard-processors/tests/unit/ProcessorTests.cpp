@@ -70,7 +70,6 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   std::shared_ptr<TestRepository> repo = std::static_pointer_cast<TestRepository>(test_repo);
 
   auto dir = testController.createTempDirectory();
-
   utils::Identifier processoruuid = processor->getUUID();
   REQUIRE(processoruuid);
 
@@ -499,36 +498,34 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 class TestProcessorNoContent : public minifi::core::Processor {
  public:
   explicit TestProcessorNoContent(const std::string& name, const utils::Identifier& uuid = {})
-      : Processor(name, uuid),
-        Success("success", "All files are routed to success") {
+      : Processor(name, uuid) {
   }
-  // Destructor
   virtual ~TestProcessorNoContent() {
   }
 
-  core::Relationship Success;
+  static constexpr const char* Description = "test resource";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
 
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
-  void onSchedule(core::ProcessContext* /*context*/, core::ProcessSessionFactory* /*sessionFactory*/) {
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void onSchedule(core::ProcessContext* /*context*/, core::ProcessSessionFactory* /*sessionFactory*/) override {
   }
-  /**
-   * Execution trigger for the GetFile Processor
-   * @param context processor context
-   * @param session processor session reference.
-   */
-  virtual void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
+  void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) override {
     auto ff = session->create();
     ff->addAttribute("Attribute", "AttributeValue");
     session->transfer(ff, Success);
   }
 };
 
-REGISTER_RESOURCE(TestProcessorNoContent, "test resource");
+const core::Relationship TestProcessorNoContent::Success("success", "All files are routed to success");
+
+REGISTER_RESOURCE(TestProcessorNoContent, Processor);
 
 TEST_CASE("TestEmptyContent", "[emptyContent]") {
   TestController testController;

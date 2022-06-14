@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
-#define LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_
+#pragma once
 
 #include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
+#include "agent_docs.h"
 #include "core/controller/ControllerService.h"
 #include "core/ClassLoader.h"
 #include "core/expect.h"
@@ -33,46 +33,6 @@
 #include "io/validation.h"
 
 namespace org::apache::nifi::minifi {
-
-class ClassDescription {
- public:
-  explicit ClassDescription(std::string name)
-      : class_name_(std::move(name)) {
-  }
-
-  explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, bool dyn_prop)
-      : class_name_(std::move(name)),
-        class_properties_(std::move(props)),
-        dynamic_properties_(dyn_prop) {
-  }
-
-  explicit ClassDescription(std::string name, std::map<std::string, core::Property> props, std::vector<core::Relationship> class_relationships, bool dyn_prop, bool dyn_rel)
-      : class_name_(std::move(name)),
-        class_properties_(std::move(props)),
-        class_relationships_(std::move(class_relationships)),
-        dynamic_properties_(dyn_prop),
-        dynamic_relationships_(dyn_rel) {
-  }
-
-  std::string class_name_;
-  std::map<std::string, core::Property> class_properties_;
-  std::vector<core::Relationship> class_relationships_;
-  bool dynamic_properties_ = false;
-  std::string inputRequirement_;
-  bool isSingleThreaded_ = false;
-  bool dynamic_relationships_ = false;
-  bool is_controller_service_ = false;
-};
-
-struct Components {
-  std::vector<ClassDescription> processors_;
-  std::vector<ClassDescription> controller_services_;
-  std::vector<ClassDescription> other_components_;
-
-  [[nodiscard]] bool empty() const noexcept {
-    return processors_.empty() && controller_services_.empty() && other_components_.empty();
-  }
-};
 
 struct BundleDetails {
   std::string artifact;
@@ -104,10 +64,12 @@ class ExternalBuildDescription {
     if (!found) {
       getExternal().push_back(details);
     }
-    if (description.is_controller_service_) {
+    if (description.type_ == ResourceType::Processor) {
+      getExternalMappings()[details.artifact].processors_.push_back(description);
+    } else if (description.type_ == ResourceType::ControllerService) {
       getExternalMappings()[details.artifact].controller_services_.push_back(description);
     } else {
-      getExternalMappings()[details.artifact].processors_.push_back(description);
+      getExternalMappings()[details.artifact].other_components_.push_back(description);
     }
   }
 
@@ -122,54 +84,15 @@ class ExternalBuildDescription {
 
 class BuildDescription {
  public:
-  struct Components getClassDescriptions(const std::string& group = "minifi-system") {
-    if (class_mappings_[group].empty()) {
-      for (const auto& clazz : core::ClassLoader::getDefaultClassLoader().getClasses(group)) {
-        std::string class_name = clazz;
-        auto lastOfIdx = clazz.find_last_of("::");
-        if (lastOfIdx != std::string::npos) {
-          lastOfIdx++;  // if a value is found, increment to move beyond the .
-          size_t nameLength = clazz.length() - lastOfIdx;
-          class_name = clazz.substr(lastOfIdx, nameLength);
-        }
-        auto obj = core::ClassLoader::getDefaultClassLoader().instantiate(class_name, class_name);
-
-        std::unique_ptr<core::ConfigurableComponent> component{
-          utils::dynamic_unique_cast<core::ConfigurableComponent>(std::move(obj))
-        };
-
-        std::string classDescriptionName = clazz;
-        utils::StringUtils::replaceAll(classDescriptionName, "::", ".");
-        ClassDescription description(classDescriptionName);
-        if (component) {
-          auto processor = dynamic_cast<core::Processor*>(component.get());
-          const bool is_processor = processor != nullptr;
-          const bool is_controller_service = LIKELY(is_processor == true) ? false : dynamic_cast<core::controller::ControllerService*>(component.get()) != nullptr;
-
-          component->initialize();
-          description.class_properties_ = component->getProperties();
-          description.dynamic_properties_ = component->supportsDynamicProperties();
-          description.dynamic_relationships_ = component->supportsDynamicRelationships();
-          if (is_processor) {
-            description.inputRequirement_ = processor->getInputRequirementAsString();
-            description.isSingleThreaded_ = processor->isSingleThreaded();
-            description.class_relationships_ = processor->getSupportedRelationships();
-            class_mappings_[group].processors_.emplace_back(description);
-          } else if (is_controller_service) {
-            class_mappings_[group].controller_services_.emplace_back(description);
-          } else {
-            class_mappings_[group].other_components_.emplace_back(description);
-          }
-        }
-      }
+  Components getClassDescriptions(const std::string& group = "minifi-system") {
+    if (class_mappings_[group].empty() && AgentDocs::getClassDescriptions().contains(group)) {
+      class_mappings_[group] = AgentDocs::getClassDescriptions().at(group);
     }
     return class_mappings_[group];
   }
 
  private:
-  std::map<std::string, struct Components> class_mappings_;
+  std::map<std::string, Components> class_mappings_;
 };
 
 }  // namespace org::apache::nifi::minifi
-
-#endif  // LIBMINIFI_INCLUDE_AGENT_BUILD_DESCRIPTION_H_

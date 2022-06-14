@@ -40,15 +40,35 @@ class CaptureRTSPFrame : public core::Processor {
       : Processor(name, uuid) {
   }
 
-  EXTENSIONAPI static core::Property RTSPUsername;
-  EXTENSIONAPI static core::Property RTSPPassword;
-  EXTENSIONAPI static core::Property RTSPHostname;
-  EXTENSIONAPI static core::Property RTSPURI;
-  EXTENSIONAPI static core::Property RTSPPort;
-  EXTENSIONAPI static core::Property ImageEncoding;
+  EXTENSIONAPI static constexpr const char* Description = "Captures a frame from the RTSP stream at specified intervals.";
 
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Failure;
+  EXTENSIONAPI static const core::Property RTSPUsername;
+  EXTENSIONAPI static const core::Property RTSPPassword;
+  EXTENSIONAPI static const core::Property RTSPHostname;
+  EXTENSIONAPI static const core::Property RTSPURI;
+  EXTENSIONAPI static const core::Property RTSPPort;
+  EXTENSIONAPI static const core::Property ImageEncoding;
+  static auto properties() {
+    return std::array{
+      RTSPUsername,
+      RTSPPassword,
+      RTSPHostname,
+      RTSPURI,
+      RTSPPort,
+      ImageEncoding
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;

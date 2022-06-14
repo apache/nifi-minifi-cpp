@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -38,12 +37,7 @@
 #include "coap2/address.h"
 #include "protocols/RESTSender.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace coap {
-namespace c2 {
+namespace org::apache::nifi::minifi::coap::c2 {
 
 #define REQUIRE_VALID(x) \
   if (io::isError(x)) { \
@@ -65,12 +59,10 @@ class CoapProtocol : public minifi::c2::RESTSender {
 
   ~CoapProtocol() override;
 
-  /**
-   * Consume the payload.
-   * @param url to evaluate.
-   * @param payload payload to consume.
-   * @param direction direction of operation.
-   */
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+
   minifi::c2::C2Payload consumePayload(const std::string &url, const minifi::c2::C2Payload &payload, minifi::c2::Direction direction, bool async) override;
 
   minifi::c2::C2Payload consumePayload(const minifi::c2::C2Payload &payload, minifi::c2::Direction /*direction*/, bool /*async*/) override {
@@ -82,8 +74,6 @@ class CoapProtocol : public minifi::c2::RESTSender {
   }
 
   void initialize(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<Configure> &configure) override;
-
-  // Supported Properties
 
  protected:
   static bool isRegistrationMessage(controllers::CoapResponse &response) {
@@ -133,9 +123,4 @@ class CoapProtocol : public minifi::c2::RESTSender {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<CoapProtocol>::getLogger();
 };
 
-} /* namespace c2 */
-} /* namespace coap */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::coap::c2

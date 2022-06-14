@@ -26,7 +26,6 @@
 
 #include <array>
 #include <string>
-#include <set>
 
 #include <memory>
 
@@ -44,18 +43,12 @@ namespace processors {
 
 std::shared_ptr<utils::IdGenerator> FocusArchiveEntry::id_generator_ = utils::IdGenerator::getIdGenerator();
 
-core::Property FocusArchiveEntry::Path("Path", "The path within the archive to focus (\"/\" to focus the total archive)", "");
-core::Relationship FocusArchiveEntry::Success("success", "success operational on the flow record");
+const core::Property FocusArchiveEntry::Path("Path", "The path within the archive to focus (\"/\" to focus the total archive)", "");
+const core::Relationship FocusArchiveEntry::Success("success", "success operational on the flow record");
 
 void FocusArchiveEntry::initialize() {
-  //! Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(Path);
-  setSupportedProperties(properties);
-  //! Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -252,9 +245,7 @@ FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, utils:
   _archiveMetadata = archiveMetadata;
 }
 
-REGISTER_RESOURCE(FocusArchiveEntry, "Allows manipulation of entries within an archive (e.g. TAR) by focusing on one entry within the archive at a time. "
-    "When an archive entry is focused, that entry is treated as the content of the FlowFile and may be manipulated independently of the rest of the archive."
-    " To restore the FlowFile to its original state, use UnfocusArchiveEntry.");
+REGISTER_RESOURCE(FocusArchiveEntry, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -1,7 +1,4 @@
 /**
- * @file DeleteS3Object.cpp
- * DeleteS3Object class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -27,33 +24,11 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace processors {
-
-const core::Property DeleteS3Object::ObjectKey(
-  core::PropertyBuilder::createProperty("Object Key")
-    ->withDescription("The key of the S3 object. If none is given the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property DeleteS3Object::Version(
-  core::PropertyBuilder::createProperty("Version")
-    ->withDescription("The Version of the Object to delete")
-    ->supportsExpressionLanguage(true)
-    ->build());
-
-const core::Relationship DeleteS3Object::Success("success", "FlowFiles are routed to success relationship");
-const core::Relationship DeleteS3Object::Failure("failure", "FlowFiles are routed to failure relationship");
+namespace org::apache::nifi::minifi::aws::processors {
 
 void DeleteS3Object::initialize() {
-  // Add new supported properties
-  setSupportedProperties({Bucket, AccessKey, SecretKey, CredentialsFile, CredentialsFile, AWSCredentialsProviderService, Region, CommunicationsTimeout,
-                          EndpointOverrideURL, ProxyHost, ProxyPort, ProxyUsername, ProxyPassword, UseDefaultCredentials, ObjectKey, Version});
-  // Set the supported relationships
-  setSupportedRelationships({Failure, Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 std::optional<aws::s3::DeleteObjectRequestParameters> DeleteS3Object::buildDeleteS3RequestParams(
@@ -106,11 +81,4 @@ void DeleteS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
   }
 }
 
-REGISTER_RESOURCE(DeleteS3Object, "This Processor deletes FlowFiles on an Amazon S3 Bucket.");
-
-}  // namespace processors
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::processors

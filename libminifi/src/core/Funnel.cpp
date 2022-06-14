@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,16 +18,12 @@
 #include "core/Funnel.h"
 #include "core/ProcessSession.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 const Relationship Funnel::Success("success", "FlowFiles are routed to success relationship");
 
 void Funnel::initialize() {
-  setSupportedRelationships({Success});
+  setSupportedRelationships(relationships());
 }
 
 void Funnel::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession>& session) {
@@ -40,9 +35,4 @@ void Funnel::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/,
   session->transfer(flow_file, Success);
 }
 
-
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

@@ -35,15 +35,12 @@ namespace processors {
 
 class SQLProcessor: public core::Processor {
  public:
-  static const core::Property DBControllerService;
+  EXTENSIONAPI static const core::Property DBControllerService;
+  static auto properties() { return std::array{DBControllerService}; }
 
  protected:
   SQLProcessor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<core::logging::Logger> logger)
     : core::Processor(name, uuid), logger_(std::move(logger)) {
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
   }
 
   static std::vector<std::string> collectArguments(const std::shared_ptr<core::FlowFile>& flow_file);

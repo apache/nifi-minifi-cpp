@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,7 +18,6 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include <set>
 
 #include "ConvertUpdate.h"
 #include "utils/HTTPClient.h"
@@ -27,13 +25,7 @@
 #include "io/BufferStream.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-core::Property ConvertUpdate::SSLContext("SSL Context Service", "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.", "");
+namespace org::apache::nifi::minifi::processors {
 
 void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession>& /*session*/) {
   if (nullptr == mqtt_service_) {
@@ -92,22 +84,8 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 }
 
 void ConvertUpdate::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(MQTTControllerService);
-  properties.insert(ListeningTopic);
-  properties.insert(SSLContext);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
-REGISTER_INTERNAL_RESOURCE(ConvertUpdate);
-
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

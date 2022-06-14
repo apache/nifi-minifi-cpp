@@ -1772,7 +1772,14 @@ TEST_CASE("TailFile onSchedule throws if an invalid Attribute Provider Service i
 namespace {
 
 class TestAttributeProviderService : public minifi::controllers::AttributeProviderService {
+ public:
   using AttributeProviderService::AttributeProviderService;
+
+  static constexpr const char* Description = "An attribute provider service which provides a constant set of records.";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
   void initialize() override {};
   void onEnable() override {};
   std::optional<std::vector<AttributeMap>> getAttributes() override {
@@ -1781,7 +1788,7 @@ class TestAttributeProviderService : public minifi::controllers::AttributeProvid
   }
   std::string_view name() const override { return "test"; }
 };
-REGISTER_RESOURCE(TestAttributeProviderService, "An attribute provider service which provides a constant set of records.");
+REGISTER_RESOURCE(TestAttributeProviderService, ControllerService);
 
 }  // namespace
 

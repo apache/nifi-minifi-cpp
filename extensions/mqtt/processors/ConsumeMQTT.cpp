@@ -1,7 +1,4 @@
 /**
- * @file ConsumeMQTT.cpp
- * ConsumeMQTT class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,8 +21,8 @@
 #include <memory>
 #include <string>
 #include <map>
-#include <set>
 #include <cinttypes>
+#include <vector>
 
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
@@ -33,25 +30,11 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-core::Property ConsumeMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
-core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "");
-
-core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
+namespace org::apache::nifi::minifi::processors {
 
 void ConsumeMQTT::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties(AbstractMQTTProcessor::getSupportedProperties());
-  properties.insert(MaxFlowSegSize);
-  properties.insert(QueueBufferMaxMessage);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
@@ -121,10 +104,4 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 }
 
-REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
-
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

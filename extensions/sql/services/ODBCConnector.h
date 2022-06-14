@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,12 +23,7 @@
 #include "DatabaseService.h"
 #include "data/SociConnectors.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
-namespace controllers {
+namespace org::apache::nifi::minifi::sql::controllers {
 
 /**
  * Purpose and Justification: Controller services function as a layerable way to provide
@@ -49,15 +43,15 @@ class ODBCService : public DatabaseService {
     initialize();
   }
 
+  EXTENSIONAPI static constexpr const char* Description = "Controller service that provides ODBC database connection";
+  static auto properties() { return DatabaseService::properties(); }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
   std::unique_ptr<sql::Connection> getConnection() const override;
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ODBCService>::getLogger();
 };
 
-} /* namespace controllers */
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql::controllers

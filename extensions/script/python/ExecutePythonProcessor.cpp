@@ -27,6 +27,7 @@
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -59,16 +60,9 @@ const core::Relationship ExecutePythonProcessor::Failure("failure", "Script fail
 
 void ExecutePythonProcessor::initialize() {
   if (getProperties().empty()) {
-    setSupportedProperties({
-      ScriptFile,
-      ScriptBody,
-      ModuleDirectory
-    });
+    setSupportedProperties(properties());
     setAcceptAllProperties();
-    setSupportedRelationships({
-      Success,
-      Failure
-    });
+    setSupportedRelationships(relationships());
   }
 
   if (processor_initialized_) {
@@ -188,12 +182,7 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
   return engine;
 }
 
-REGISTER_RESOURCE(
-    ExecutePythonProcessor, "Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) "
-    "as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back.Scripts must define an onTrigger function which accepts NiFi Context"
-    " and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state "
-    "if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the "
-    "concurrent tasks to 1.");
+REGISTER_RESOURCE(ExecutePythonProcessor, Processor);
 
 } /* namespace processors */
 } /* namespace python */

@@ -24,13 +24,6 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property AzureBlobStorageSingleBlobProcessorBase::Blob(
-  core::PropertyBuilder::createProperty("Blob")
-    ->withDescription("The filename of the blob. If left empty the filename attribute will be used by default.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-
-
 bool AzureBlobStorageSingleBlobProcessorBase::setBlobOperationParameters(
     storage::AzureBlobStorageBlobOperationParameters& params,
     core::ProcessContext &context,

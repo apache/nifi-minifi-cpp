@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -78,11 +76,11 @@ class ComponentManifest : public DeviceInformation {
       : DeviceInformation(name) {
   }
 
-  std::string getName() const {
+  std::string getName() const override {
     return CoreComponent::getName();
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode resp;
     resp.name = "componentManifest";
@@ -102,54 +100,54 @@ class ComponentManifest : public DeviceInformation {
       std::vector<SerializedResponseNode> serialized;
       for (const auto& group : descriptions) {
         SerializedResponseNode desc;
-        desc.name = group.class_name_;
+        desc.name = group.full_name_;
         SerializedResponseNode className;
         className.name = "type";
-        className.value = group.class_name_;
+        className.value = group.full_name_;
 
         if (!group.class_properties_.empty()) {
           SerializedResponseNode props;
           props.name = "propertyDescriptors";
           for (auto && prop : group.class_properties_) {
             SerializedResponseNode child;
-            child.name = prop.first;
+            child.name = prop.getName();
 
             SerializedResponseNode descriptorName;
             descriptorName.name = "name";
-            descriptorName.value = prop.first;
+            descriptorName.value = prop.getName();
 
             SerializedResponseNode descriptorDescription;
             descriptorDescription.name = "description";
-            descriptorDescription.value = prop.second.getDescription();
+            descriptorDescription.value = prop.getDescription();
 
             SerializedResponseNode validatorName;
             validatorName.name = "validator";
-            if (prop.second.getValidator()) {
-              validatorName.value = prop.second.getValidator()->getName();
+            if (prop.getValidator()) {
+              validatorName.value = prop.getValidator()->getName();
             } else {
               validatorName.value = "VALID";
             }
 
             SerializedResponseNode supportsExpressionLanguageScope;
             supportsExpressionLanguageScope.name = "expressionLanguageScope";
-            supportsExpressionLanguageScope.value = prop.second.supportsExpressionLanguage() ? "FLOWFILE_ATTRIBUTES" : "NONE";
+            supportsExpressionLanguageScope.value = prop.supportsExpressionLanguage() ? "FLOWFILE_ATTRIBUTES" : "NONE";
 
             SerializedResponseNode descriptorRequired;
             descriptorRequired.name = "required";
-            descriptorRequired.value = prop.second.getRequired();
+            descriptorRequired.value = prop.getRequired();
 
             SerializedResponseNode descriptorValidRegex;
             descriptorValidRegex.name = "validRegex";
-            descriptorValidRegex.value = prop.second.getValidRegex();
+            descriptorValidRegex.value = prop.getValidRegex();
 
             SerializedResponseNode descriptorDefaultValue;
             descriptorDefaultValue.name = "defaultValue";
-            descriptorDefaultValue.value = prop.second.getValue();
+            descriptorDefaultValue.value = prop.getValue();
 
             SerializedResponseNode descriptorDependentProperties;
             descriptorDependentProperties.name = "dependentProperties";
 
-            for (const auto &propName : prop.second.getDependentProperties()) {
+            for (const auto &propName : prop.getDependentProperties()) {
               SerializedResponseNode descriptorDependentProperty;
               descriptorDependentProperty.name = propName;
               descriptorDependentProperties.children.push_back(descriptorDependentProperty);
@@ -158,14 +156,14 @@ class ComponentManifest : public DeviceInformation {
             SerializedResponseNode descriptorExclusiveOfProperties;
             descriptorExclusiveOfProperties.name = "exclusiveOfProperties";
 
-            for (const auto &exclusiveProp : prop.second.getExclusiveOfProperties()) {
+            for (const auto &exclusiveProp : prop.getExclusiveOfProperties()) {
               SerializedResponseNode descriptorExclusiveOfProperty;
               descriptorExclusiveOfProperty.name = exclusiveProp.first;
               descriptorExclusiveOfProperty.value = exclusiveProp.second;
               descriptorExclusiveOfProperties.children.push_back(descriptorExclusiveOfProperty);
             }
 
-            const auto &allowed_types = prop.second.getAllowedTypes();
+            const auto &allowed_types = prop.getAllowedTypes();
             if (!allowed_types.empty()) {
               SerializedResponseNode allowed_type;
               allowed_type.name = "typeProvidedByValue";
@@ -193,10 +191,10 @@ class ComponentManifest : public DeviceInformation {
 
             child.children.push_back(descriptorName);
 
-            if (prop.first != prop.second.getDisplayName()) {
+            if (prop.getName() != prop.getDisplayName()) {
               SerializedResponseNode displayName;
               displayName.name = "displayName";
-              displayName.value = prop.second.getDisplayName();
+              displayName.value = prop.getDisplayName();
               child.children.push_back(displayName);
             }
             child.children.push_back(descriptorDescription);
@@ -208,11 +206,11 @@ class ComponentManifest : public DeviceInformation {
             child.children.push_back(descriptorDependentProperties);
             child.children.push_back(descriptorExclusiveOfProperties);
 
-            if (!prop.second.getAllowedValues().empty()) {
+            if (!prop.getAllowedValues().empty()) {
               SerializedResponseNode allowedValues;
               allowedValues.name = "allowableValues";
               allowedValues.array = true;
-              for (const auto &av : prop.second.getAllowedValues()) {
+              for (const auto &av : prop.getAllowedValues()) {
                 SerializedResponseNode allowableValue;
                 allowableValue.name = "allowableValues";
 
@@ -280,19 +278,19 @@ class ComponentManifest : public DeviceInformation {
           desc.children.push_back(relationships);
         }
 
-        auto lastOfIdx = group.class_name_.find_last_of('.');
-        std::string processorName = group.class_name_;
+        auto lastOfIdx = group.full_name_.find_last_of('.');
+        std::string processorName = group.full_name_;
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
-          size_t nameLength = group.class_name_.length() - lastOfIdx;
-          processorName = group.class_name_.substr(lastOfIdx, nameLength);
+          size_t nameLength = group.full_name_.length() - lastOfIdx;
+          processorName = group.full_name_.substr(lastOfIdx, nameLength);
         }
         std::string description;
 
         bool foundDescription = AgentDocs::getDescription(processorName, description);
 
         if (!foundDescription) {
-          foundDescription = AgentDocs::getDescription(group.class_name_, description);
+          foundDescription = AgentDocs::getDescription(group.full_name_, description);
         }
 
         if (foundDescription) {
@@ -326,7 +324,7 @@ class ExternalManifest : public ComponentManifest {
       : ComponentManifest(name) {
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode resp;
     resp.name = "componentManifest";
@@ -350,11 +348,11 @@ class Bundles : public DeviceInformation {
     setArray(true);
   }
 
-  std::string getName() const {
+  std::string getName() const override {
     return "bundles";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
     for (auto group : AgentBuild::getExtensions()) {
       SerializedResponseNode bundle;
@@ -426,7 +424,7 @@ class AgentStatus : public StateMonitorNode {
       : StateMonitorNode(name) {
   }
 
-  std::string getName() const {
+  std::string getName() const override {
     return "status";
   }
 
@@ -434,7 +432,7 @@ class AgentStatus : public StateMonitorNode {
     repositories_ = repositories;
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
     auto serializedRepositories = serializeRepositories();
     if (!serializedRepositories.empty()) {
@@ -761,6 +759,8 @@ class AgentInformation : public AgentNode {
     setArray(false);
   }
 
+  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.";
+
   std::string getName() const override {
     return "agentInfo";
   }
@@ -788,5 +788,3 @@ class AgentInformation : public AgentNode {
 };
 
 }  // namespace org::apache::nifi::minifi::state::response
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_AGENTINFORMATION_H_

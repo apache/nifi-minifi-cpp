@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
-#define LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -26,17 +24,16 @@
 #include <set>
 #include <unordered_set>
 #include <unordered_map>
+
 #include "Core.h"
 #include <condition_variable>
 #include "core/logging/Logger.h"
 #include "Relationship.h"
 #include "Scheduling.h"
 #include "core/state/FlowIdentifier.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+#include "utils/gsl.h"
+
+namespace org::apache::nifi::minifi::core {
 
 class FlowFile;
 
@@ -57,21 +54,14 @@ class Connectable : public CoreComponent {
   Connectable& operator=(const Connectable &other) = delete;
   Connectable& operator=(Connectable&& other) = delete;
 
-  bool setSupportedRelationships(const std::set<Relationship> &relationships);
+  void setSupportedRelationships(gsl::span<const core::Relationship> relationships);
 
-  // Whether the relationship is supported
   bool isSupportedRelationship(const Relationship &relationship);
 
   std::vector<Relationship> getSupportedRelationships() const;
 
-  /**
-   * Sets auto terminated relationships
-   * @param relationships
-   * @return result of set operation.
-   */
-  bool setAutoTerminatedRelationships(const std::set<Relationship> &relationships);
+  void setAutoTerminatedRelationships(gsl::span<const core::Relationship> relationships);
 
-  // Check whether the relationship is auto terminated
   bool isAutoTerminated(const Relationship &relationship);
 
   std::chrono::milliseconds getPenalizationPeriod() const {
@@ -118,7 +108,7 @@ class Connectable : public CoreComponent {
    */
   virtual void yield() = 0;
 
-  virtual ~Connectable();
+  ~Connectable() override;
 
   /**
    * Determines if we are connected and operating
@@ -197,11 +187,4 @@ class Connectable : public CoreComponent {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace core
-/* namespace core */
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONNECTABLE_H_
+}  // namespace org::apache::nifi::minifi::core

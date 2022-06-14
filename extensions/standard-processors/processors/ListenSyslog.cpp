@@ -19,6 +19,7 @@
 #include "ListenSyslog.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org::apache::nifi::minifi::processors {
@@ -78,8 +79,8 @@ const std::regex ListenSyslog::SyslogMessage::rfc3164_pattern_(
     R"((.*)$)", std::regex::ECMAScript);                                                                      // msg
 
 void ListenSyslog::initialize() {
-  setSupportedProperties({Port, ProtocolProperty, MaxBatchSize, ParseMessages, MaxQueueSize});
-  setSupportedRelationships({Success, Invalid});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -275,10 +276,6 @@ void ListenSyslog::UdpServer::doReceive() {
                              });
 }
 
-REGISTER_RESOURCE(ListenSyslog, "Listens for Syslog messages being sent to a given port over TCP or UDP. "
-                                "Incoming messages are optionally checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
-                                "With parsing enabled the individual parts of the message will be placed as FlowFile attributes and "
-                                "valid messages will be transferred to success relationship, while invalid messages will be transferred to invalid relationship. "
-                                "With parsing disabled all message will be routed to the success relationship, but it will only contain the sender, protocol, and port attributes");
+REGISTER_RESOURCE(ListenSyslog, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

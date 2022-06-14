@@ -22,6 +22,7 @@
 
 #include "GCSProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 #include "utils/Enum.h"
 #include "google/cloud/storage/well_known_headers.h"
 
@@ -43,6 +44,8 @@ class PutGCSObject : public GCSProcessor {
   }
   ~PutGCSObject() override = default;
 
+  EXTENSIONAPI static constexpr const char* Description = "Puts flow files to a Google Cloud Storage Bucket.";
+
   EXTENSIONAPI static const core::Property Bucket;
   EXTENSIONAPI static const core::Property Key;
   EXTENSIONAPI static const core::Property ContentType;
@@ -51,21 +54,34 @@ class PutGCSObject : public GCSProcessor {
   EXTENSIONAPI static const core::Property EncryptionKey;
   EXTENSIONAPI static const core::Property ObjectACL;
   EXTENSIONAPI static const core::Property OverwriteObject;
+  static auto properties() {
+    return utils::array_cat(GCSProcessor::properties(), std::array{
+      Bucket,
+      Key,
+      NumberOfRetries,
+      ContentType,
+      MD5Hash,
+      Crc32cChecksum,
+      EncryptionKey,
+      ObjectACL,
+      OverwriteObject
+    });
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
 
  private:
   google::cloud::storage::EncryptionKey encryption_key_;

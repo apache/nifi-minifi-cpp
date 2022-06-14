@@ -75,13 +75,8 @@ struct RPG {
   std::string protocol_;
 };
 
-// RemoteProcessorGroupPort Class
 class RemoteProcessorGroupPort : public core::Processor {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   RemoteProcessorGroupPort(const std::shared_ptr<io::StreamFactory> &stream_factory, const std::string &name, std::string url, const std::shared_ptr<Configure> &configure, const utils::Identifier &uuid = {}) // NOLINT
       : core::Processor(name, uuid),
         configure_(configure),
@@ -99,48 +94,60 @@ class RemoteProcessorGroupPort : public core::Processor {
     // REST API port and host
     setURL(url);
   }
-  // Destructor
   virtual ~RemoteProcessorGroupPort() = default;
 
-  // Processor Name
-  MINIFIAPI static const char *ProcessorName;
-  // Supported Properties
-  MINIFIAPI static core::Property hostName;
-  MINIFIAPI static core::Property SSLContext;
-  MINIFIAPI static core::Property port;
-  MINIFIAPI static core::Property portUUID;
-  MINIFIAPI static core::Property idleTimeout;
-  // Supported Relationships
-  MINIFIAPI static core::Relationship relation;
+  MINIFIAPI static const core::Property hostName;
+  MINIFIAPI static const core::Property SSLContext;
+  MINIFIAPI static const core::Property port;
+  MINIFIAPI static const core::Property portUUID;
+  MINIFIAPI static const core::Property idleTimeout;
+  static auto properties() {
+    return std::array{
+      hostName,
+      SSLContext,
+      port,
+      portUUID,
+      idleTimeout
+    };
+  }
+
+  MINIFIAPI static const core::Relationship relation;
+  static auto relationships() { return std::array{relation}; }
+
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
+  MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  MINIFIAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
  public:
-  virtual void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory);
-  // OnTrigger method, implemented by NiFi RemoteProcessorGroupPort
-  virtual void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
+  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void initialize() override;
 
-  // Initialize, over write by NiFi RemoteProcessorGroupPort
-  virtual void initialize(void);
-  // Set Direction
   void setDirection(sitetosite::TransferDirection direction) {
     direction_ = direction;
     if (direction_ == sitetosite::RECEIVE)
       this->setTriggerWhenEmpty(true);
   }
-  // Set Timeout
+
   void setTimeout(uint64_t timeout) {
     timeout_ = timeout;
   }
-  // SetTransmitting
+
   void setTransmitting(bool val) {
     transmitting_ = val;
   }
-  // setInterface
+
   void setInterface(const std::string &ifc) {
     local_network_interface_ = ifc;
   }
+
   std::string getInterface() {
     return local_network_interface_;
   }
+
   /**
    * Sets the url. Supports a CSV
    */
@@ -169,7 +176,7 @@ class RemoteProcessorGroupPort : public core::Processor {
   // refresh site2site peer list
   void refreshPeerList();
 
-  virtual void notifyStop();
+  void notifyStop() override;
 
   void enableHTTP() {
     client_type_ = sitetosite::HTTP;
@@ -230,7 +237,6 @@ class RemoteProcessorGroupPort : public core::Processor {
   std::shared_ptr<controllers::SSLContextService> ssl_service;
 
  private:
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_;
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };

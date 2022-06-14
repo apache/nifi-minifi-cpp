@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <array>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -177,7 +177,7 @@ class MergeTestController : public TestController {
     input_->setDestinationUUID(processoruuid);
     merge_content_processor_->addConnection(input_.get());
 
-    merge_content_processor_->setAutoTerminatedRelationships({minifi::processors::MergeContent::Original, minifi::processors::MergeContent::Failure});
+    merge_content_processor_->setAutoTerminatedRelationships(std::array{minifi::processors::MergeContent::Original, minifi::processors::MergeContent::Failure});
 
     merge_content_processor_->incrementActiveTasks();
     merge_content_processor_->setScheduledState(core::ScheduledState::RUNNING);

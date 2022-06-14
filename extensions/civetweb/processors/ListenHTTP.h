@@ -42,38 +42,59 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// ListenHTTP Class
 class ListenHTTP : public core::Processor {
  public:
   using FlowFileBufferPair = std::pair<std::shared_ptr<FlowFileRecord>, std::unique_ptr<io::BufferStream>>;
 
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit ListenHTTP(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid),
         batch_size_(0) {
     callbacks_.log_message = &logMessage;
     callbacks_.log_access = &logAccess;
   }
-  // Destructor
   ~ListenHTTP() override;
-  // Processor Name
-  EXTENSIONAPI static constexpr char const *ProcessorName = "ListenHTTP";
-  // Supported Properties
-  EXTENSIONAPI static core::Property BasePath;
-  EXTENSIONAPI static core::Property Port;
-  EXTENSIONAPI static core::Property AuthorizedDNPattern;
-  EXTENSIONAPI static core::Property SSLCertificate;
-  EXTENSIONAPI static core::Property SSLCertificateAuthority;
-  EXTENSIONAPI static core::Property SSLVerifyPeer;
-  EXTENSIONAPI static core::Property SSLMinimumVersion;
-  EXTENSIONAPI static core::Property HeadersAsAttributesRegex;
-  EXTENSIONAPI static core::Property BatchSize;
-  EXTENSIONAPI static core::Property BufferSize;
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
+
+  EXTENSIONAPI static constexpr const char* Description = "Starts an HTTP Server and listens on a given base path to transform incoming requests into FlowFiles. The default URI of the Service "
+      "will be http://{hostname}:{port}/contentListener. Only HEAD, POST, and GET requests are supported. PUT, and DELETE will result in an error and the HTTP response status code 405. "
+      "The response body text for all requests, by default, is empty (length of 0). A static response body can be set for a given URI by sending input files to ListenHTTP with "
+      "the http.type attribute set to response_body. The response body FlowFile filename attribute is appended to the Base Path property (separated by a /) when mapped to incoming requests. "
+      "The mime.type attribute of the response body FlowFile is used for the Content-type header in responses. Response body content can be cleared by sending an empty (size 0) "
+      "FlowFile for a given URI mapping.";
+
+  EXTENSIONAPI static const core::Property BasePath;
+  EXTENSIONAPI static const core::Property Port;
+  EXTENSIONAPI static const core::Property AuthorizedDNPattern;
+  EXTENSIONAPI static const core::Property SSLCertificate;
+  EXTENSIONAPI static const core::Property SSLCertificateAuthority;
+  EXTENSIONAPI static const core::Property SSLVerifyPeer;
+  EXTENSIONAPI static const core::Property SSLMinimumVersion;
+  EXTENSIONAPI static const core::Property HeadersAsAttributesRegex;
+  EXTENSIONAPI static const core::Property BatchSize;
+  EXTENSIONAPI static const core::Property BufferSize;
+  static auto properties() {
+    return std::array{
+      BasePath,
+      Port,
+      AuthorizedDNPattern,
+      SSLCertificate,
+      SSLCertificateAuthority,
+      SSLVerifyPeer,
+      SSLMinimumVersion,
+      HeadersAsAttributesRegex,
+      BatchSize,
+      BufferSize
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void initialize() override;
@@ -167,10 +188,6 @@ class ListenHTTP : public core::Processor {
 
  private:
   static const uint64_t DEFAULT_BUFFER_SIZE;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
 
   void processIncomingFlowFile(core::ProcessSession *session);
   void processRequestBuffer(core::ProcessSession *session);

@@ -22,7 +22,7 @@
 
 #include <memory>
 #include <string>
-#include <set>
+#include <vector>
 
 #include "core/Resource.h"
 
@@ -32,33 +32,28 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship RouteOnAttribute::Unmatched("unmatched", "Files which do not match any expression are routed here");
-core::Relationship RouteOnAttribute::Failure("failure", "Failed files are transferred to failure");
+const core::Relationship RouteOnAttribute::Unmatched("unmatched", "Files which do not match any expression are routed here");
+const core::Relationship RouteOnAttribute::Failure("failure", "Failed files are transferred to failure");
 
 void RouteOnAttribute::initialize() {
-  std::set<core::Property> properties;
-  setSupportedProperties(properties);
-  std::set<core::Relationship> relationships;
-  relationships.insert(Unmatched);
-  relationships.insert(Failure);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void RouteOnAttribute::onDynamicPropertyModified(const core::Property& /*orig_property*/, const core::Property &new_property) {
   // Update the routing table when routes are added via dynamic properties.
   route_properties_[new_property.getName()] = new_property;
 
-  std::set<core::Relationship> relationships;
+  const auto static_relationships = RouteOnAttribute::relationships();
+  std::vector<core::Relationship> relationships(static_relationships.begin(), static_relationships.end());
 
   for (const auto &route : route_properties_) {
     core::Relationship route_rel { route.first, "Dynamic route" };
     route_rels_[route.first] = route_rel;
-    relationships.insert(route_rel);
+    relationships.push_back(route_rel);
     logger_->log_info("RouteOnAttribute registered route '%s' with expression '%s'", route.first, route.second.getValue().to_string());
   }
 
-  relationships.insert(Unmatched);
-  relationships.insert(Failure);
   setSupportedRelationships(relationships);
 }
 
@@ -97,7 +92,7 @@ void RouteOnAttribute::onTrigger(core::ProcessContext *context, core::ProcessSes
   }
 }
 
-REGISTER_RESOURCE(RouteOnAttribute, "Routes FlowFiles based on their Attributes using the Attribute Expression Language.");
+REGISTER_RESOURCE(RouteOnAttribute, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

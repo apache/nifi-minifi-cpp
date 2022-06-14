@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -30,11 +29,7 @@
 #include "MQTTClient.h"
 #include "c2/protocols/RESTProtocol.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 /**
  * Purpose: Provides base functionality for mqtt conversion classes.
@@ -42,45 +37,31 @@ namespace processors {
  */
 class ConvertBase : public core::Processor, public minifi::c2::RESTProtocol {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit ConvertBase(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
   }
-  // Destructor
   virtual ~ConvertBase() = default;
-  // Supported Properties
-  static core::Property MQTTControllerService;
-  static core::Property ListeningTopic;
 
-  static core::Relationship Success;
+  EXTENSIONAPI static const core::Property MQTTControllerService;
+  EXTENSIONAPI static const core::Property ListeningTopic;
+  static auto properties() {
+    return std::array{
+      MQTTControllerService,
+      ListeningTopic
+    };
+  }
+
+  static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
 
  public:
-  /**
-   * Initialization of the processor
-   */
   void initialize() override;
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  protected:
-  /**
-   * MQTT controller service.
-   */
   std::shared_ptr<controllers::MQTTControllerService> mqtt_service_;
 
   std::string listening_topic;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

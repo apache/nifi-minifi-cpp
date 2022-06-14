@@ -25,14 +25,11 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Relationship CallbackProcessor::Success("success", "All files are routed to success");
-core::Relationship CallbackProcessor::Failure("failure", "Failed files (based on callback logic) are transferred to failure");
+const core::Relationship CallbackProcessor::Success("success", "All files are routed to success");
+const core::Relationship CallbackProcessor::Failure("failure", "Failed files (based on callback logic) are transferred to failure");
 
 void CallbackProcessor::initialize() {
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(relationships);
+  setSupportedRelationships(relationships());
 }
 
 void CallbackProcessor::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -47,7 +44,7 @@ void CallbackProcessor::onTrigger(core::ProcessContext *context, core::ProcessSe
  }
 }
 
-REGISTER_RESOURCE(CallbackProcessor, "");
+REGISTER_RESOURCE(CallbackProcessor, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

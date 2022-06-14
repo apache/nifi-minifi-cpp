@@ -44,8 +44,8 @@ TEST_CASE("PutSplunkHTTP tests", "[putsplunkhttp]") {
   plan->addConnection(put_splunk_http, PutSplunkHTTP::Success, read_from_success);
   plan->addConnection(put_splunk_http, PutSplunkHTTP::Failure, read_from_failure);
 
-  read_from_success->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
-  read_from_failure->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_success->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
+  read_from_failure->setAutoTerminatedRelationships(std::array{ReadFromFlowFileTestProcessor::Success});
 
   plan->setProperty(put_splunk_http, PutSplunkHTTP::Hostname.getName(), "localhost");
   plan->setProperty(put_splunk_http, PutSplunkHTTP::Port.getName(), mock_splunk_hec.getPort());
@@ -133,7 +133,7 @@ TEST_CASE("PutSplunkHTTP content type tests", "[putsplunkhttpcontenttype]") {
 
   plan->addConnection(write_to_flow_file, WriteToFlowFileTestProcessor::Success, update_attribute);
   plan->addConnection(update_attribute, UpdateAttribute::Success, put_splunk_http);
-  put_splunk_http->setAutoTerminatedRelationships({PutSplunkHTTP::Success, PutSplunkHTTP::Failure});
+  put_splunk_http->setAutoTerminatedRelationships(std::array{PutSplunkHTTP::Success, PutSplunkHTTP::Failure});
 
   plan->setProperty(put_splunk_http, PutSplunkHTTP::Hostname.getName(), "localhost");
   plan->setProperty(put_splunk_http, PutSplunkHTTP::Port.getName(), mock_splunk_hec.getPort());

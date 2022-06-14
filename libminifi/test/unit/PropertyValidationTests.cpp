@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -19,14 +18,11 @@
 #include "../TestBase.h"
 #include "../Catch.h"
 #include "core/ConfigurableComponent.h"
+#include "core/PropertyBuilder.h"
 #include "utils/PropertyErrors.h"
 #include "core/PropertyValidation.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 using namespace utils::internal;
 /**
@@ -82,7 +78,11 @@ TEST_CASE("Parsing bool has baggage after") {
 
 class TestConfigurableComponent : public ConfigurableComponent {
  public:
-  bool supportsDynamicProperties() override {
+  bool supportsDynamicProperties() const override {
+    return true;
+  }
+
+  bool supportsDynamicRelationships() const override {
     return true;
   }
 
@@ -119,7 +119,7 @@ TEST_CASE("Missing Required With Default") {
       ->withDefaultValue<std::string>("default")
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   std::string value;
   REQUIRE(component.getProperty(prop.getName(), value));
   REQUIRE(value == "default");
@@ -130,7 +130,7 @@ TEST_CASE("Missing Required Without Default") {
       ->isRequired(true)
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   std::string value;
   REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), RequiredPropertyMissingException);
 }
@@ -140,7 +140,7 @@ TEST_CASE("Missing Optional Without Default") {
       ->isRequired(false)
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   std::string value;
   REQUIRE_FALSE(component.getProperty(prop.getName(), value));
 }
@@ -151,7 +151,7 @@ TEST_CASE("Valid Optional Without Default") {
       ->isRequired(false)
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   component.setProperty(prop.getName(), "some data");
   std::string value;
   REQUIRE(component.getProperty(prop.getName(), value));
@@ -163,7 +163,7 @@ TEST_CASE("Invalid With Default") {
       ->withDefaultValue<bool>(true)
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   REQUIRE_THROWS_AS(component.setProperty("prop", "banana"), ParseException);
   std::string value;
   REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), InvalidValueException);
@@ -174,7 +174,7 @@ TEST_CASE("Valid With Default") {
       ->withDefaultValue<int>(55)
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   REQUIRE(component.setProperty("prop", "23"));
   int value;
   REQUIRE(component.getProperty(prop.getName(), value));
@@ -186,7 +186,7 @@ TEST_CASE("Invalid conversion") {
       ->withDefaultValue<std::string>("banana")
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   bool value;
   REQUIRE_THROWS_AS(component.getProperty(prop.getName(), value), ConversionException);
 }
@@ -197,7 +197,7 @@ TEST_CASE("Write Invalid Then Override With Valid") {
       ->withDefaultValue<int>(55)
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   REQUIRE_THROWS_AS(component.setProperty(prop.getName(), "banana"), ConversionException);
   component.setProperty(prop.getName(), "98");
   int value;
@@ -210,7 +210,7 @@ TEST_CASE("Property Change notification gets called even on erroneous assignment
       ->withDefaultValue<bool>(true)
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   int callbackCount = 0;
   component.setPropertyModifiedCallback([&](const Property &, const Property &) {
     ++callbackCount;
@@ -224,7 +224,7 @@ TEST_CASE("Correctly Typed Property With Invalid Validation") {
       ->withDefaultValue<int64_t>(5, std::make_shared<LongValidator>("myValidator", 0, 10))
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   int callbackCount = 0;
   component.setPropertyModifiedCallback([&](const Property &, const Property &) {
     ++callbackCount;
@@ -239,7 +239,7 @@ TEST_CASE("TimePeriodValue Property") {
       ->withDefaultValue<TimePeriodValue>("10 minutes")
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   TimePeriodValue time_period_value;
   REQUIRE(component.getProperty(prop.getName(), time_period_value));
   CHECK(time_period_value.getMilliseconds() == 10min);
@@ -252,7 +252,7 @@ TEST_CASE("TimePeriodValue Property without validator") {
       ->withDefaultValue("60 minutes")
       ->build();
   TestConfigurableComponent component;
-  component.setSupportedProperties({prop});
+  component.setSupportedProperties(std::array{prop});
   TimePeriodValue time_period_value;
   REQUIRE(component.getProperty(prop.getName(), time_period_value));
   CHECK(time_period_value.getMilliseconds() == 1h);
@@ -260,8 +260,4 @@ TEST_CASE("TimePeriodValue Property without validator") {
   REQUIRE_THROWS_AS(component.getProperty(prop.getName(), time_period_value), ValueException);
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

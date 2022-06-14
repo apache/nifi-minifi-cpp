@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -33,46 +32,36 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <set>
 #include "utils/StringUtils.h"
 #include "core/TypedValues.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #if ( defined(__APPLE__) || defined(__MACH__) || defined(BSD))
 #include <net/if_dl.h>
 #include <net/if_types.h>
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
-core::Property NetworkPrioritizerService::NetworkControllers(
+const core::Property NetworkPrioritizerService::NetworkControllers(
     core::PropertyBuilder::createProperty("Network Controllers")->withDescription("Comma separated list of network controllers in order of priority for this prioritizer")->isRequired(false)->build());
 
-core::Property NetworkPrioritizerService::MaxThroughput(
+const core::Property NetworkPrioritizerService::MaxThroughput(
     core::PropertyBuilder::createProperty("Max Throughput")->withDescription("Max throughput ( per second ) for these network controllers")->isRequired(true)->withDefaultValue<core::DataSizeValue>(
         "1 MB")->build());
 
-core::Property NetworkPrioritizerService::MaxPayload(
+const core::Property NetworkPrioritizerService::MaxPayload(
     core::PropertyBuilder::createProperty("Max Payload")->withDescription("Maximum payload for these network controllers")->isRequired(true)->withDefaultValue<core::DataSizeValue>("1 GB")->build());
 
-core::Property NetworkPrioritizerService::VerifyInterfaces(
+const core::Property NetworkPrioritizerService::VerifyInterfaces(
     core::PropertyBuilder::createProperty("Verify Interfaces")->withDescription("Verify that interfaces are operational")->isRequired(true)->withDefaultValue<bool>(true)->build());
 
-core::Property NetworkPrioritizerService::DefaultPrioritizer(
+const core::Property NetworkPrioritizerService::DefaultPrioritizer(
     core::PropertyBuilder::createProperty("Default Prioritizer")->withDescription("Sets this controller service as the default prioritizer for all comms")->isRequired(false)->withDefaultValue<bool>(
         false)->build());
 
 void NetworkPrioritizerService::initialize() {
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(NetworkControllers);
-  supportedProperties.insert(MaxThroughput);
-  supportedProperties.insert(MaxPayload);
-  supportedProperties.insert(VerifyInterfaces);
-  supportedProperties.insert(DefaultPrioritizer);
-  setSupportedProperties(supportedProperties);
+  setSupportedProperties(properties());
 }
 
 void NetworkPrioritizerService::yield() {
@@ -228,10 +217,6 @@ void NetworkPrioritizerService::onEnable() {
   }
 }
 
-REGISTER_RESOURCE(NetworkPrioritizerService, "Enables selection of networking interfaces on defined parameters to include ouput and payload size");
+REGISTER_RESOURCE(NetworkPrioritizerService, ControllerService);
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

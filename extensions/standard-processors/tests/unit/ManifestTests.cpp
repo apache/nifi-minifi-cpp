@@ -21,7 +21,7 @@
 #include "core/state/nodes/AgentInformation.h"
 #include "TestBase.h"
 #include "Catch.h"
-#include "core/ClassLoader.h"
+#include "range/v3/algorithm/find_if.hpp"
 
 // Include some processor headers to make sure they are part of the manifest
 #include "HashContent.h"
@@ -43,26 +43,24 @@ TEST_CASE("Test Required", "[required]") {
   }
   REQUIRE(processorIndex < resp.children.size());
 
-  const auto &processors = resp.children[processorIndex];
-  REQUIRE(processors.children.size() > 0);
-  size_t getFileIndex = processors.children.size();
-  for (size_t i = 0; i < processors.children.size();  ++i) {
-    if (processors.children[i].name == "org.apache.nifi.minifi.processors.GetFile") {
-      getFileIndex = i;
-      break;
-    }
-  }
+  const auto& processors = resp.children[processorIndex];
+  const auto get_file_it = ranges::find_if(processors.children, [](const auto& child) {
+    return child.name == "org.apache.nifi.minifi.processors.GetFile";
+  });
+  REQUIRE(get_file_it != processors.children.end());
 
-  REQUIRE(getFileIndex < processors.children.size());
-  const auto &getFileProc = processors.children[getFileIndex];
-  REQUIRE(getFileProc.children.size() > 0);
-  const auto &prop_descriptors = getFileProc.children[0];
-  REQUIRE(prop_descriptors.children.size() > 0);
-  const auto &prop_0 = prop_descriptors.children[0];
-  REQUIRE(prop_0.children.size() >= 3);
-  const auto &prop_0_required = prop_0.children[3];
-  REQUIRE("required" == prop_0_required.name);
-  REQUIRE(!std::dynamic_pointer_cast<minifi::state::response::BoolValue>(prop_0_required.value.getValue())->getValue());
+  REQUIRE(get_file_it->children.size() > 0);
+  const auto& get_file_property_descriptors = get_file_it->children[0];
+  const auto batch_size_property_it = ranges::find_if(get_file_property_descriptors.children, [](const auto& property) {
+    return property.name == "Batch Size";
+  });
+  REQUIRE(batch_size_property_it != get_file_property_descriptors.children.end());
+
+  const auto& batch_size_property = *batch_size_property_it;
+  REQUIRE(batch_size_property.children.size() >= 4);
+  const auto &batch_size_property_required = batch_size_property.children[3];
+  REQUIRE("required" == batch_size_property_required.name);
+  REQUIRE(false == std::dynamic_pointer_cast<minifi::state::response::BoolValue>(batch_size_property_required.value.getValue())->getValue());
 }
 
 TEST_CASE("Test Valid Regex", "[validRegex]") {
@@ -120,10 +118,10 @@ TEST_CASE("Test Relationships", "[rel1]") {
   // this is because they are now nested
   REQUIRE("supportedRelationships" == relationships.children[0].name);
   REQUIRE("name" == relationships.children[0].children[0].name);
-  REQUIRE("failure" == relationships.children[0].children[0].value.to_string());
+  REQUIRE("success" == relationships.children[0].children[0].value.to_string());
   REQUIRE("description" == relationships.children[0].children[1].name);
 
-  REQUIRE("success" == relationships.children[1].children[0].value.to_string());
+  REQUIRE("failure" == relationships.children[1].children[0].value.to_string());
   REQUIRE("description" == relationships.children[1].children[1].name);
 #endif
 }

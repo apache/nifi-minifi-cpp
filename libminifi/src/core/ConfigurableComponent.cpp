@@ -20,7 +20,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <set>
 
 #include "core/ConfigurableComponent.h"
 #include "core/logging/LoggerConfiguration.h"
@@ -173,36 +172,17 @@ bool ConfigurableComponent::setProperty(const Property& prop, PropertyValue &val
   }
 }
 
-/**
- * Sets supported properties for the ConfigurableComponent
- * @param supported properties
- * @return result of set operation.
- */
-bool ConfigurableComponent::setSupportedProperties(std::set<Property> properties) {
+void ConfigurableComponent::setSupportedProperties(gsl::span<const core::Property> properties) {
   if (!canEdit()) {
-    return false;
+    return;
   }
 
   std::lock_guard<std::mutex> lock(configuration_mutex_);
 
   properties_.clear();
-  for (auto item : properties) {
+  for (const auto& item : properties) {
     properties_[item.getName()] = item;
   }
-  return true;
-}
-
-bool ConfigurableComponent::updateSupportedProperties(std::set<Property> properties) {
-  if (!canEdit()) {
-    return false;
-  }
-
-  std::lock_guard<std::mutex> lock(configuration_mutex_);
-
-  for (auto item : properties) {
-    properties_[item.getName()] = item;
-  }
-  return true;
 }
 
 bool ConfigurableComponent::getDynamicProperty(const std::string name, std::string &value) const {

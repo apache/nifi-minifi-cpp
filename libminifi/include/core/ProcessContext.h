@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
+#pragma once
 
 #include <algorithm>
 #include <atomic>
@@ -45,11 +43,7 @@
 #include "utils/PropertyErrors.h"
 #include "VariableRegistry.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 // ProcessContext Class
 class ProcessContext : public controller::ControllerServiceLookup, public core::VariableRegistry, public std::enable_shared_from_this<VariableRegistry> {
@@ -301,11 +295,11 @@ class ProcessContext : public controller::ControllerServiceLookup, public core::
         return nullptr;
       }
       if (!always_persist.empty() && !provider->setProperty(
-          controllers::AbstractAutoPersistingKeyValueStoreService::AlwaysPersist.getName(), always_persist)) {
+          controllers::AbstractAutoPersistingKeyValueStoreService::AlwaysPersistPropertyName, always_persist)) {
         return nullptr;
       }
       if (!auto_persistence_interval.empty() && !provider->setProperty(
-          controllers::AbstractAutoPersistingKeyValueStoreService::AutoPersistenceInterval.getName(), auto_persistence_interval)) {
+          controllers::AbstractAutoPersistingKeyValueStoreService::AutoPersistenceIntervalPropertyName, auto_persistence_interval)) {
         return nullptr;
       }
       for (const auto& extraProperty : extraProperties) {
@@ -418,9 +412,4 @@ inline std::optional<std::string> ProcessContext::getProperty<std::string>(const
   return value;
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSCONTEXT_H_
+}  // namespace org::apache::nifi::minifi::core

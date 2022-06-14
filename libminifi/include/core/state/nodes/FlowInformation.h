@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
+#pragma once
 
 #include <functional>
 #include <memory>
@@ -42,12 +40,7 @@
 #include "Connection.h"
 #include "io/ClientSocket.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 class FlowVersion : public DeviceInformation {
  public:
@@ -61,16 +54,16 @@ class FlowVersion : public DeviceInformation {
     setFlowVersion(registry_url, bucket_id, flow_id.empty() ? getUUIDStr() : flow_id);
   }
 
-  explicit FlowVersion(FlowVersion &&fv)
+  FlowVersion(FlowVersion &&fv) noexcept
       : DeviceInformation("FlowVersion"),
         identifier(std::move(fv.identifier)) {
   }
 
-  std::string getName() const {
+  std::string getName() const override {
     return "FlowVersion";
   }
 
-  virtual std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const {
+  std::shared_ptr<state::FlowIdentifier> getFlowIdentifier() const override {
     std::lock_guard<std::mutex> lock(guard);
     return identifier;
   }
@@ -99,7 +92,7 @@ class FlowVersion : public DeviceInformation {
     identifier = std::make_shared<FlowIdentifier>(url, bucket_id, flow_id);
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::lock_guard<std::mutex> lock(guard);
     std::vector<SerializedResponseNode> serialized;
     SerializedResponseNode ru;
@@ -120,7 +113,7 @@ class FlowVersion : public DeviceInformation {
     return serialized;
   }
 
-  FlowVersion &operator=(const FlowVersion &&fv) {
+  FlowVersion &operator=(FlowVersion &&fv) noexcept {
     identifier = std::move(fv.identifier);
     return *this;
   }
@@ -173,11 +166,13 @@ class FlowInformation : public FlowMonitor {
       : FlowMonitor(name) {
   }
 
-  std::string getName() const {
+  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines the flow ID and flow URL deployed to this agent";
+
+  std::string getName() const override {
     return "flowInfo";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode fv;
@@ -265,11 +260,4 @@ class FlowInformation : public FlowMonitor {
  protected:
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_FLOWINFORMATION_H_
+}  // namespace org::apache::nifi::minifi::state::response

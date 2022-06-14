@@ -21,31 +21,21 @@
 
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
-core::Relationship TFExtractTopLabels::Success(  // NOLINT
+const core::Relationship TFExtractTopLabels::Success(
     "success",
     "Successful FlowFiles are sent here with labels as attributes");
-core::Relationship TFExtractTopLabels::Retry(  // NOLINT
+const core::Relationship TFExtractTopLabels::Retry(
     "retry",
     "Failures which might work if retried");
-core::Relationship TFExtractTopLabels::Failure(  // NOLINT
+const core::Relationship TFExtractTopLabels::Failure(
     "failure",
     "Failures which will not work if retried");
 
 void TFExtractTopLabels::initialize() {
-  std::set<core::Property> properties;
-  setSupportedProperties(std::move(properties));
-
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Retry);
-  relationships.insert(Failure);
-  setSupportedRelationships(std::move(relationships));
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void TFExtractTopLabels::onSchedule(core::ProcessContext* /*context*/, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -166,10 +156,6 @@ int64_t TFExtractTopLabels::TensorReadCallback::process(const std::shared_ptr<io
   return gsl::narrow<int64_t>(num_read);
 }
 
-REGISTER_RESOURCE(TFExtractTopLabels, "Extracts the top 5 labels for categorical inference models"); // NOLINT
+REGISTER_RESOURCE(TFExtractTopLabels, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

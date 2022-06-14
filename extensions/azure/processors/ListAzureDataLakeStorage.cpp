@@ -26,33 +26,6 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property ListAzureDataLakeStorage::RecurseSubdirectories(
-    core::PropertyBuilder::createProperty("Recurse Subdirectories")
-      ->isRequired(true)
-      ->withDefaultValue<bool>(true)
-      ->withDescription("Indicates whether to list files from subdirectories of the directory")
-      ->build());
-
-const core::Property ListAzureDataLakeStorage::FileFilter(
-  core::PropertyBuilder::createProperty("File Filter")
-    ->withDescription("Only files whose names match the given regular expression will be listed")
-    ->build());
-
-const core::Property ListAzureDataLakeStorage::PathFilter(
-  core::PropertyBuilder::createProperty("Path Filter")
-    ->withDescription("When 'Recurse Subdirectories' is true, then only subdirectories whose paths match the given regular expression will be scanned")
-    ->build());
-
-const core::Property ListAzureDataLakeStorage::ListingStrategy(
-  core::PropertyBuilder::createProperty("Listing Strategy")
-    ->withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to "
-                      "determine new/updated entities. If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
-    ->withDefaultValue<std::string>(toString(EntityTracking::TIMESTAMPS))
-    ->withAllowableValues<std::string>(EntityTracking::values())
-    ->build());
-
-const core::Relationship ListAzureDataLakeStorage::Success("success", "All FlowFiles that are received are routed to success");
-
 namespace {
 std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session, const storage::ListDataLakeStorageElement &element) {
   auto flow_file = session.create();
@@ -68,18 +41,8 @@ std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session,
 }  // namespace
 
 void ListAzureDataLakeStorage::initialize() {
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    FilesystemName,
-    DirectoryName,
-    RecurseSubdirectories,
-    FileFilter,
-    PathFilter,
-    ListingStrategy
-  });
-  setSupportedRelationships({
-    Success
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ListAzureDataLakeStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
@@ -167,7 +130,5 @@ void ListAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCont
     return;
   }
 }
-
-REGISTER_RESOURCE(ListAzureDataLakeStorage, "Lists directory in an Azure Data Lake Storage Gen 2 filesystem");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

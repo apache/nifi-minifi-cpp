@@ -20,7 +20,6 @@
  */
 
 #include <memory>
-#include <set>
 #include <utility>
 
 #ifdef PYTHON_SUPPORT
@@ -28,6 +27,7 @@
 #endif  // PYTHON_SUPPORT
 
 #include "ExecuteScript.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
@@ -38,41 +38,32 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ExecuteScript::ScriptEngine(
+const core::Property ExecuteScript::ScriptEngine(
   core::PropertyBuilder::createProperty("Script Engine")
     ->withDescription(R"(The engine to execute scripts (python, lua))")
     ->isRequired(true)
     ->withAllowableValues(ScriptEngineOption::values())
     ->withDefaultValue(toString(ScriptEngineOption::PYTHON))
     ->build());
-core::Property ExecuteScript::ScriptFile("Script File",
+const core::Property ExecuteScript::ScriptFile("Script File",
     R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecuteScript::ScriptBody("Script Body",
+const core::Property ExecuteScript::ScriptBody("Script Body",
     R"(Body of script to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecuteScript::ModuleDirectory("Module Directory",
+const core::Property ExecuteScript::ModuleDirectory("Module Directory",
     R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
 
-core::Relationship ExecuteScript::Success("success", "Script successes");
-core::Relationship ExecuteScript::Failure("failure", "Script failures");
+const core::Relationship ExecuteScript::Success("success", "Script successes");
+const core::Relationship ExecuteScript::Failure("failure", "Script failures");
 
-ScriptEngineFactory::ScriptEngineFactory(core::Relationship& success, core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
+ScriptEngineFactory::ScriptEngineFactory(const core::Relationship& success, const core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
   : success_(success),
     failure_(failure),
     logger_(logger) {
 }
 
 void ExecuteScript::initialize() {
-  std::set<core::Property> properties;
-  properties.insert(ScriptEngine);
-  properties.insert(ScriptFile);
-  properties.insert(ScriptBody);
-  properties.insert(ModuleDirectory);
-  setSupportedProperties(std::move(properties));
-
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(Failure);
-  setSupportedRelationships(std::move(relationships));
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 
 #ifdef PYTHON_SUPPORT
   python::PythonScriptEngine::initialize();
@@ -156,11 +147,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 }
 
-REGISTER_RESOURCE(ExecuteScript, "Executes a script given the flow file and a process session. The script is responsible for handling the incoming flow file (transfer to SUCCESS or remove, e.g.) "
-    "as well as any flow files created by the script. If the handling is incomplete or incorrect, the session will be rolled back.Scripts must define an onTrigger function which accepts NiFi Context"
-    " and Property objects. For efficiency, scripts are executed once when the processor is run, then the onTrigger method is called for each incoming flowfile. This enables scripts to keep state "
-    "if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the "
-    "concurrent tasks to 1.");
+REGISTER_RESOURCE(ExecuteScript, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

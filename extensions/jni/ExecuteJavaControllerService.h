@@ -1,6 +1,4 @@
 /**
- * ExecuteJavaClass class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -35,6 +33,7 @@
 #include "utils/Id.h"
 #include "jvm/NarClassLoader.h"
 #include "ClassRegistrar.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -54,25 +53,19 @@ namespace controllers {
  */
 class ExecuteJavaControllerService : public ConfigurationContext, public std::enable_shared_from_this<ConfigurationContext> {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit ExecuteJavaControllerService(const std::string& name, const utils::Identifier& uuid = {})
       : ConfigurationContext(name, uuid) {
   }
-  // Destructor
-  virtual ~ExecuteJavaControllerService();
-  // Processor Name
-  static const char *ProcessorName;
-  static core::Property NiFiControllerService;
-  // Supported Relationships
+  ~ExecuteJavaControllerService() override;
+
+  EXTENSIONAPI static constexpr const char* Description = "ExecuteJavaClass runs NiFi Controller services given a provided system path";
+  EXTENSIONAPI static const core::Property NiFiControllerService;
+  static auto properties() { return std::array{NiFiControllerService}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void onEnable() override;
   void initialize() override;
-  bool supportsDynamicProperties() override {
-    return true;
-  }
 
   void yield() override {
   }

@@ -27,7 +27,6 @@
 #include <iostream>
 #include <iterator>
 #include <map>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -35,6 +34,7 @@
 #include "core/FlowFile.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
+#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "ResourceClaim.h"
@@ -49,19 +49,15 @@ namespace minifi {
 namespace jni {
 namespace controllers {
 
-core::Property ExecuteJavaControllerService::NiFiControllerService(
+const core::Property ExecuteJavaControllerService::NiFiControllerService(
     core::PropertyBuilder::createProperty("NiFi Controller Service")->withDescription("Name of NiFi Controller Service to load and run")->isRequired(true)->withDefaultValue<std::string>("")->build());
-
-const char *ExecuteJavaControllerService::ProcessorName = "ExecuteJavaControllerService";
 
 void ExecuteJavaControllerService::initialize() {
   logger_->log_info("Initializing ExecuteJavaControllerService");
-  // Set the supported properties
+
   std::string existingValue;
   getProperty(NiFiControllerService.getName(), existingValue);
-  std::set<core::Property> properties;
-  properties.insert(NiFiControllerService);
-  setSupportedProperties(properties);
+  setSupportedProperties(std::array{NiFiControllerService});
   setAcceptAllProperties();
 
   if (!existingValue.empty()) {
@@ -106,7 +102,7 @@ void ExecuteJavaControllerService::onEnable() {
   }
 }
 
-REGISTER_RESOURCE(ExecuteJavaControllerService, "ExecuteJavaClass runs NiFi Controller services given a provided system path ");
+REGISTER_RESOURCE(ExecuteJavaControllerService, ControllerService);
 
 } /* namespace controllers */
 } /* namespace jni */

@@ -18,12 +18,7 @@
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 void ConfigurationChecksums::addChecksumCalculator(utils::ChecksumCalculator& checksum_calculator) {
   checksum_calculators_.push_back(gsl::make_not_null(&checksum_calculator));
@@ -44,11 +39,6 @@ std::vector<SerializedResponseNode> ConfigurationChecksums::serialize() {
   return std::vector<SerializedResponseNode>{checksums_node};
 }
 
-REGISTER_RESOURCE(ConfigurationChecksums, "Node part of an AST that defines checksums of configuration files in the C2 protocol");
+REGISTER_RESOURCE(ConfigurationChecksums, DescriptionOnly);
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::state::response

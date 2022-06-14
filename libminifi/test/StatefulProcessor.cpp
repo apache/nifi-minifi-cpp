@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -23,11 +22,7 @@
 #include "core/Resource.h"
 #include "core/ProcessContext.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 void StatefulProcessor::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
@@ -60,10 +55,6 @@ bool StatefulProcessor::hasFinishedHooks() const {
   return on_trigger_hook_index_ == on_trigger_hooks_.size();
 }
 
-REGISTER_RESOURCE(StatefulProcessor, "A processor with state for test purposes.");
+REGISTER_RESOURCE(StatefulProcessor, Processor);
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

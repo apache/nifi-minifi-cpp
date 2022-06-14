@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,11 +30,7 @@
 #include "agent/agent_version.h"
 #include "c2/PayloadSerializer.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 /**
  * Purpose: Implementation of the MQTT C2 protocol. Serializes messages to and from
@@ -45,14 +40,12 @@ class MQTTC2Protocol : public C2Protocol {
  public:
   explicit MQTTC2Protocol(const std::string& name, const utils::Identifier& uuid = {});
 
-  virtual ~MQTTC2Protocol();
+  ~MQTTC2Protocol() override;
 
-  /**
-   * Consume the payload.
-   * @param url to evaluate.
-   * @param payload payload to consume.
-   * @direction direction of operation.
-   */
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+
   C2Payload consumePayload(const std::string &url, const C2Payload &payload, Direction direction, bool async) override;
 
   C2Payload consumePayload(const C2Payload &payload, Direction /*direction*/, bool /*async*/) override {
@@ -85,8 +78,4 @@ class MQTTC2Protocol : public C2Protocol {
   std::string controller_service_name_;
 };
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

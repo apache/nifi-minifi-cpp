@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #undef NDEBUG
+
+#include <array>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -42,6 +43,17 @@ using MergeContent = minifi::processors::MergeContent;
 
 namespace {
 
+class TestProcessor : public minifi::core::Processor {
+ public:
+  using Processor::Processor;
+
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+};
+
 #ifdef WIN32
 const std::string PERSISTENCETEST_FLOWFILE_CHECKPOINT_DIR = ".\\persistencetest_flowfile_checkpoint";
 #else
@@ -62,7 +74,7 @@ struct TestFlow{
 
     // setup INPUT processor
     {
-      inputProcessor = std::make_shared<core::Processor>("source", inputProcUUID());
+      inputProcessor = std::make_shared<TestProcessor>("source", inputProcUUID());
       auto node = std::make_shared<core::ProcessorNode>(inputProcessor.get());
       inputContext = std::make_shared<core::ProcessContext>(node, nullptr, prov_repo,
                                                             ff_repository, content_repo);
@@ -139,7 +151,7 @@ struct TestFlow{
 std::unique_ptr<MergeContent> setupMergeProcessor(const utils::Identifier& id) {
   auto processor = std::make_unique<MergeContent>("MergeContent", id);
   processor->initialize();
-  processor->setAutoTerminatedRelationships({{"original", "d"}});
+  processor->setAutoTerminatedRelationships(std::array{core::Relationship{"original", "d"}});
 
   processor->setProperty(MergeContent::MergeFormat, org::apache::nifi::minifi::processors::merge_content_options::MERGE_FORMAT_CONCAT_VALUE);
   processor->setProperty(MergeContent::MergeStrategy, org::apache::nifi::minifi::processors::merge_content_options::MERGE_STRATEGY_BIN_PACK);
@@ -236,9 +248,16 @@ TEST_CASE("Processors Can Store FlowFiles", "[TestP1]") {
   }
 }
 
-class ContentUpdaterProcessor : public core::Processor{
+class ContentUpdaterProcessor : public core::Processor {
  public:
   ContentUpdaterProcessor(const std::string& name, const utils::Identifier& id) : Processor(name, id) {}
+
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) override {
     auto ff = session->get();
     std::string data = "<override>";

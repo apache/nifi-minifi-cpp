@@ -35,38 +35,47 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! ExtractText Class
 class ExtractText : public core::Processor {
  public:
   explicit ExtractText(const std::string& name,  const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
 
-  EXTENSIONAPI static constexpr char const* ProcessorName = "ExtractText";
+  EXTENSIONAPI static constexpr const char* Description = "Extracts the content of a FlowFile and places it into an attribute.";
 
-  //! Supported Properties
   EXTENSIONAPI static core::Property Attribute;
   EXTENSIONAPI static core::Property SizeLimit;
-
   EXTENSIONAPI static core::Property RegexMode;
   EXTENSIONAPI static core::Property IgnoreCaptureGroupZero;
   EXTENSIONAPI static core::Property InsensitiveMatch;
   EXTENSIONAPI static core::Property MaxCaptureGroupLen;
   EXTENSIONAPI static core::Property EnableRepeatingCaptureGroup;
+  static auto properties() {
+    return std::array{
+      Attribute,
+      SizeLimit,
+      RegexMode,
+      IgnoreCaptureGroupZero,
+      InsensitiveMatch,
+      MaxCaptureGroupLen,
+      EnableRepeatingCaptureGroup
+    };
+  }
 
-  //! Supported Relationships
   EXTENSIONAPI static core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   //! Default maximum bytes to read into an attribute
   EXTENSIONAPI static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
 
-  //! OnTrigger method, implemented by NiFi ExtractText
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  //! Initialize, over write by NiFi ExtractText
   void initialize() override;
-
-  bool supportsDynamicProperties() override {
-    return true;
-  }
 
   class ReadCallback {
    public:
@@ -80,11 +89,6 @@ class ExtractText : public core::Processor {
   };
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
-  //! Logger
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExtractText>::getLogger();
 };
 

@@ -36,6 +36,15 @@ class LogOnDestructionProcessor : public core::Processor {
     logger_->log_info("LogOnDestructionProcessor is being destructed");
   }
 
+  EXTENSIONAPI static constexpr const char* Description = "This processor logs a message on destruction. Only for testing purposes.";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogOnDestructionProcessor>::getLogger();
 };

@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -42,6 +41,7 @@ std::string ConvertJSONAck::parseTopicName(const std::string &json) {
   }
   return topic;
 }
+
 void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   if (nullptr == mqtt_service_) {
     context->yield();
@@ -80,7 +80,5 @@ void ConvertJSONAck::onTrigger(const std::shared_ptr<core::ProcessContext> &cont
 
   session->transfer(flow, Success);
 }
-
-REGISTER_INTERNAL_RESOURCE(ConvertJSONAck);
 
 }  // namespace org::apache::nifi::minifi::processors

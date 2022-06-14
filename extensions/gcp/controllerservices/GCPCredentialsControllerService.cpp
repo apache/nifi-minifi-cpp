@@ -18,6 +18,7 @@
 
 #include "GCPCredentialsControllerService.h"
 
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "google/cloud/storage/client.h"
 
@@ -46,7 +47,7 @@ const core::Property GCPCredentialsControllerService::JsonContents(
         ->build());
 
 void GCPCredentialsControllerService::initialize() {
-  setSupportedProperties({CredentialsLoc, JsonFilePath, JsonContents});
+  setSupportedProperties(properties());
 }
 
 std::shared_ptr<gcs::oauth2::Credentials> GCPCredentialsControllerService::createDefaultCredentials() const {
@@ -109,6 +110,6 @@ void GCPCredentialsControllerService::onEnable() {
     logger_->log_error("Couldn't create valid credentials");
 }
 
-REGISTER_RESOURCE(GCPCredentialsControllerService, "Google Cloud Platform Credentials Controller Service");
+REGISTER_RESOURCE(GCPCredentialsControllerService, ControllerService);
 }  // namespace org::apache::nifi::minifi::extensions::gcp
 

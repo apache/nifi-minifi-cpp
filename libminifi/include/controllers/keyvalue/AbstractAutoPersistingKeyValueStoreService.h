@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTAUTOPERSISTINGKEYVALUESTORESERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTAUTOPERSISTINGKEYVALUESTORESERVICE_H_
+#pragma once
 
 #include <string>
 #include <thread>
@@ -30,12 +29,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
 
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKeyValueStoreService {
  public:
@@ -43,10 +37,9 @@ class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKey
 
   ~AbstractAutoPersistingKeyValueStoreService() override;
 
-  MINIFIAPI static core::Property AlwaysPersist;
-  MINIFIAPI static core::Property AutoPersistenceInterval;
+  static constexpr const char* AlwaysPersistPropertyName = "Always Persist";
+  static constexpr const char* AutoPersistenceIntervalPropertyName = "Auto Persistence Interval";
 
-  void initialize() override;
   void onEnable() override;
   void notifyStop() override;
 
@@ -66,10 +59,4 @@ class AbstractAutoPersistingKeyValueStoreService : virtual public PersistableKey
   void stopPersistingThread();
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_KEYVALUE_ABSTRACTAUTOPERSISTINGKEYVALUESTORESERVICE_H_
+}  // namespace org::apache::nifi::minifi::controllers

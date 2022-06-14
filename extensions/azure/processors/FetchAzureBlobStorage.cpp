@@ -27,39 +27,9 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property FetchAzureBlobStorage::RangeStart(
-  core::PropertyBuilder::createProperty("Range Start")
-    ->withDescription("The byte position at which to start reading from the blob. An empty value or a value of zero will start reading at the beginning of the blob.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-const core::Property FetchAzureBlobStorage::RangeLength(
-  core::PropertyBuilder::createProperty("Range Length")
-    ->withDescription("The number of bytes to download from the blob, starting from the Range Start. "
-                      "An empty value or a value that extends beyond the end of the blob will read to the end of the blob.")
-    ->supportsExpressionLanguage(true)
-    ->build());
-
-const core::Relationship FetchAzureBlobStorage::Success("success", "All successfully processed FlowFiles are routed to this relationship");
-const core::Relationship FetchAzureBlobStorage::Failure("failure", "Unsuccessful operations will be transferred to the failure relationship");
-
 void FetchAzureBlobStorage::initialize() {
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    ContainerName,
-    StorageAccountName,
-    StorageAccountKey,
-    SASToken,
-    CommonStorageAccountEndpointSuffix,
-    ConnectionString,
-    Blob,
-    UseManagedIdentityCredentials,
-    RangeStart,
-    RangeLength
-  });
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 std::optional<storage::FetchAzureBlobStorageParameters> FetchAzureBlobStorage::buildFetchAzureBlobStorageParameters(
@@ -118,7 +88,5 @@ void FetchAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext
     session->remove(flow_file);
   }
 }
-
-REGISTER_RESOURCE(FetchAzureBlobStorage, "Retrieves contents of an Azure Storage Blob, writing the contents to the content of the FlowFile");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

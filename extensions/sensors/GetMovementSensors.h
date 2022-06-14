@@ -38,22 +38,23 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// GetMovementSensors Class
 class GetMovementSensors : public SensorBase {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit GetMovementSensors(const std::string& name, const utils::Identifier& uuid = {})
       : SensorBase(name, uuid) {
   }
-  // Destructor
   virtual ~GetMovementSensors();
-  // Processor Name
-  static const char *ProcessorName;
-  static core::Relationship Success;
-  // Supported Properties
+
+  EXTENSIONAPI static constexpr const char* Description = "Defines a processor that is able to retrieve sensor information from a class of known servo sensors";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;

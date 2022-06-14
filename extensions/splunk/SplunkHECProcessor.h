@@ -36,6 +36,15 @@ class SplunkHECProcessor : public core::Processor {
   EXTENSIONAPI static const core::Property Token;
   EXTENSIONAPI static const core::Property SplunkRequestChannel;
   EXTENSIONAPI static const core::Property SSLContext;
+  static auto properties() {
+    return std::array{
+      Hostname,
+      Port,
+      Token,
+      SplunkRequestChannel,
+      SSLContext
+    };
+  }
 
   explicit SplunkHECProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
@@ -44,10 +53,6 @@ class SplunkHECProcessor : public core::Processor {
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
 
  protected:
   std::string getNetworkLocation() const;

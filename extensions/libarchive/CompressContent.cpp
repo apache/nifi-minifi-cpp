@@ -22,9 +22,9 @@
 #include <memory>
 #include <string>
 #include <map>
-#include <set>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
 #include "io/StreamPipe.h"
@@ -35,35 +35,35 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property CompressContent::CompressLevel(
+const core::Property CompressContent::CompressLevel(
     core::PropertyBuilder::createProperty("Compression Level")->withDescription("The compression level to use; this is valid only when using GZIP compression.")
         ->isRequired(false)->withDefaultValue<int>(1)->build());
-core::Property CompressContent::CompressMode(
+const core::Property CompressContent::CompressMode(
     core::PropertyBuilder::createProperty("Mode")->withDescription("Indicates whether the processor should compress content or decompress content.")
         ->isRequired(false)->withAllowableValues(CompressionMode::values())
         ->withDefaultValue(toString(CompressionMode::Compress))->build());
-core::Property CompressContent::CompressFormat(
+const core::Property CompressContent::CompressFormat(
     core::PropertyBuilder::createProperty("Compression Format")->withDescription("The compression format to use.")
         ->isRequired(false)
         ->withAllowableValues(ExtendedCompressionFormat::values())
         ->withDefaultValue(toString(ExtendedCompressionFormat::USE_MIME_TYPE))->build());
-core::Property CompressContent::UpdateFileName(
+const core::Property CompressContent::UpdateFileName(
     core::PropertyBuilder::createProperty("Update Filename")->withDescription("Determines if filename extension need to be updated")
         ->isRequired(false)->withDefaultValue<bool>(false)->build());
-core::Property CompressContent::EncapsulateInTar(
+const core::Property CompressContent::EncapsulateInTar(
     core::PropertyBuilder::createProperty("Encapsulate in TAR")
         ->withDescription("If true, on compression the FlowFile is added to a TAR archive and then compressed, "
                           "and on decompression a compressed, TAR-encapsulated FlowFile is expected.\n"
                           "If false, on compression the content of the FlowFile simply gets compressed, and on decompression a simple compressed content is expected.\n"
                           "true is the behaviour compatible with older MiNiFi C++ versions, false is the behaviour compatible with NiFi.")
         ->isRequired(false)->withDefaultValue<bool>(true)->build());
-core::Property CompressContent::BatchSize(
+const core::Property CompressContent::BatchSize(
     core::PropertyBuilder::createProperty("Batch Size")
     ->withDescription("Maximum number of FlowFiles processed in a single session")
     ->withDefaultValue<uint32_t>(1)->build());
 
-core::Relationship CompressContent::Success("success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed");
-core::Relationship CompressContent::Failure("failure", "FlowFiles will be transferred to the failure relationship if they fail to compress/decompress");
+const core::Relationship CompressContent::Success("success", "FlowFiles will be transferred to the success relationship after successfully being compressed or decompressed");
+const core::Relationship CompressContent::Failure("failure", "FlowFiles will be transferred to the failure relationship if they fail to compress/decompress");
 
 const std::string CompressContent::TAR_EXT = ".tar";
 
@@ -83,20 +83,8 @@ const std::map<io::CompressionFormat, std::string> CompressContent::fileExtensio
 };
 
 void CompressContent::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(CompressLevel);
-  properties.insert(CompressMode);
-  properties.insert(CompressFormat);
-  properties.insert(UpdateFileName);
-  properties.insert(EncapsulateInTar);
-  properties.insert(BatchSize);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Failure);
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void CompressContent::onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* /*sessionFactory*/) {
@@ -258,7 +246,7 @@ std::string CompressContent::toMimeType(io::CompressionFormat format) {
   throw Exception(GENERAL_EXCEPTION, "Invalid compression format");
 }
 
-REGISTER_RESOURCE(CompressContent, "Compresses or decompresses the contents of FlowFiles using a user-specified compression algorithm and updates the mime.type attribute as appropriate");
+REGISTER_RESOURCE(CompressContent, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

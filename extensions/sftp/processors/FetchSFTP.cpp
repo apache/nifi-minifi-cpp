@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -21,76 +20,19 @@
 #include <memory>
 #include <algorithm>
 #include <cstdint>
-#include <cstring>
-#include <iostream>
-#include <iterator>
-#include <limits>
-#include <set>
 #include <string>
 #include <utility>
 
-#include "utils/ByteArrayCallback.h"
 #include "core/FlowFile.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/Relationship.h"
 #include "core/Resource.h"
 #include "io/BufferStream.h"
 #include "io/StreamFactory.h"
-#include "ResourceClaim.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-core::Property FetchSFTP::RemoteFile(core::PropertyBuilder::createProperty("Remote File")
-    ->withDescription("The fully qualified filename on the remote system")
-    ->isRequired(true)->supportsExpressionLanguage(true)->build());
-
-core::Property FetchSFTP::CompletionStrategy(
-    core::PropertyBuilder::createProperty("Completion Strategy")
-    ->withDescription("Specifies what to do with the original file on the server once it has been pulled into NiFi. "
-                      "If the Completion Strategy fails, a warning will be logged but the data will still be transferred.")
-    ->isRequired(true)
-    ->withAllowableValues<std::string>({COMPLETION_STRATEGY_NONE, COMPLETION_STRATEGY_MOVE_FILE, COMPLETION_STRATEGY_DELETE_FILE})
-    ->withDefaultValue(COMPLETION_STRATEGY_NONE)->build());
-
-core::Property FetchSFTP::MoveDestinationDirectory(core::PropertyBuilder::createProperty("Move Destination Directory")
-    ->withDescription("The directory on the remote server to move the original file to once it has been ingested into NiFi. "
-                      "This property is ignored unless the Completion Strategy is set to 'Move File'. "
-                      "The specified directory must already exist on the remote system if 'Create Directory' is disabled, or the rename will fail.")
-    ->isRequired(false)->supportsExpressionLanguage(true)->build());
-
-core::Property FetchSFTP::CreateDirectory(core::PropertyBuilder::createProperty("Create Directory")
-    ->withDescription("Specifies whether or not the remote directory should be created if it does not exist.")
-    ->isRequired(true)->withDefaultValue<bool>(false)->build());
-
-core::Property FetchSFTP::DisableDirectoryListing(core::PropertyBuilder::createProperty("Disable Directory Listing")
-    ->withDescription("Control how 'Move Destination Directory' is created when 'Completion Strategy' is 'Move File' and 'Create Directory' is enabled. "
-                      "If set to 'true', directory listing is not performed prior to create missing directories. "
-                      "By default, this processor executes a directory listing command to see target directory existence before creating missing directories. "
-                      "However, there are situations that you might need to disable the directory listing such as the following. "
-                      "Directory listing might fail with some permission setups (e.g. chmod 100) on a directory. "
-                      "Also, if any other SFTP client created the directory after this processor performed a listing and before a directory creation request by this processor is finished, "
-                      "then an error is returned because the directory already exists.")
-    ->isRequired(false)->withDefaultValue<bool>(false)->build());
-
-core::Property FetchSFTP::UseCompression(core::PropertyBuilder::createProperty("Use Compression")
-    ->withDescription("Indicates whether or not ZLIB compression should be used when transferring files")
-    ->isRequired(true)->withDefaultValue<bool>(false)->build());
-
-core::Relationship FetchSFTP::Success("success",
-                                      "All FlowFiles that are received are routed to success");
-core::Relationship FetchSFTP::CommsFailure("comms.failure",
-                                           "Any FlowFile that could not be fetched from the remote server due to a communications failure will be transferred to this Relationship.");
-core::Relationship FetchSFTP::NotFound("not.found",
-                                       "Any FlowFile for which we receive a 'Not Found' message from the remote server will be transferred to this Relationship.");
-core::Relationship FetchSFTP::PermissionDenied("permission.denied",
-                                               "Any FlowFile that could not be fetched from the remote server due to insufficient permissions will be transferred to this Relationship.");
+namespace org::apache::nifi::minifi::processors {
 
 constexpr char const* FetchSFTP::COMPLETION_STRATEGY_NONE;
 constexpr char const* FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE;
@@ -100,29 +42,11 @@ constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_HOST;
 constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_PORT;
 constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_FILENAME;
 
-constexpr char const* FetchSFTP::ProcessorName;
-
 void FetchSFTP::initialize() {
   logger_->log_trace("Initializing FetchSFTP");
 
-  // Set the supported properties
-  std::set<core::Property> properties;
-  addSupportedCommonProperties(properties);
-  properties.insert(RemoteFile);
-  properties.insert(CompletionStrategy);
-  properties.insert(MoveDestinationDirectory);
-  properties.insert(CreateDirectory);
-  properties.insert(DisableDirectoryListing);
-  properties.insert(UseCompression);
-  setSupportedProperties(properties);
-
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  relationships.insert(CommsFailure);
-  relationships.insert(NotFound);
-  relationships.insert(PermissionDenied);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 FetchSFTP::FetchSFTP(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
@@ -273,10 +197,4 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   put_connection_back_to_cache();
 }
 
-REGISTER_RESOURCE(FetchSFTP, "Fetches the content of a file from a remote SFTP server and overwrites the contents of an incoming FlowFile with the content of the remote file.");
-
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

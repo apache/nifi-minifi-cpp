@@ -24,6 +24,7 @@
 
 #include "core/ProcessSession.h"
 #include "SQLProcessor.h"
+#include "utils/ArrayUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -31,16 +32,27 @@ class PutSQL : public SQLProcessor {
  public:
   explicit PutSQL(const std::string& name, const utils::Identifier& uuid = {});
 
-  EXTENSIONAPI static const std::string ProcessorName;
+  EXTENSIONAPI static constexpr const char* Description = "PutSQL to execute SQL command via ODBC.";
+
+  EXTENSIONAPI static const core::Property SQLStatement;
+  static auto properties() {
+    return utils::array_cat(SQLProcessor::properties(), std::array{SQLStatement});
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void processOnSchedule(core::ProcessContext& context) override;
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
 
   void initialize() override;
-
-  EXTENSIONAPI static const core::Property SQLStatement;
-
-  EXTENSIONAPI static const core::Relationship Success;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

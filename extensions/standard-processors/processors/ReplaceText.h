@@ -56,17 +56,35 @@ SMART_ENUM(ReplacementStrategyType,
 
 class ReplaceText : public core::Processor {
  public:
+  EXTENSIONAPI static constexpr const char* Description = "Updates the content of a FlowFile by replacing parts of it using various replacement strategies.";
+
   EXTENSIONAPI static const core::Property EvaluationMode;
   EXTENSIONAPI static const core::Property LineByLineEvaluationMode;
   EXTENSIONAPI static const core::Property ReplacementStrategy;
   EXTENSIONAPI static const core::Property SearchValue;
   EXTENSIONAPI static const core::Property ReplacementValue;
+  static auto properties() {
+    return std::array{
+      EvaluationMode,
+      LineByLineEvaluationMode,
+      ReplacementStrategy,
+      SearchValue,
+      ReplacementValue
+    };
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit ReplaceText(const std::string& name, const utils::Identifier& uuid = {});
-  core::annotation::Input getInputRequirement() const override { return core::annotation::Input::INPUT_REQUIRED; }
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;

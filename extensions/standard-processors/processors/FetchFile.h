@@ -55,25 +55,49 @@ class FetchFile : public core::Processor {
     : core::Processor(name, uuid) {
   }
 
+  EXTENSIONAPI static constexpr const char* Description = "Reads the contents of a file from disk and streams it into the contents of an incoming FlowFile. "
+      "Once this is done, the file is optionally moved elsewhere or deleted to help keep the file system organized.";
+
   EXTENSIONAPI static const core::Property FileToFetch;
   EXTENSIONAPI static const core::Property CompletionStrategy;
   EXTENSIONAPI static const core::Property MoveDestinationDirectory;
   EXTENSIONAPI static const core::Property MoveConflictStrategy;
   EXTENSIONAPI static const core::Property LogLevelWhenFileNotFound;
   EXTENSIONAPI static const core::Property LogLevelWhenPermissionDenied;
+  static auto properties() {
+    return std::array{
+      FileToFetch,
+      CompletionStrategy,
+      MoveDestinationDirectory,
+      MoveConflictStrategy,
+      LogLevelWhenFileNotFound,
+      LogLevelWhenPermissionDenied
+    };
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship NotFound;
   EXTENSIONAPI static const core::Relationship PermissionDenied;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() {
+    return std::array{
+      Success,
+      NotFound,
+      PermissionDenied,
+      Failure
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &session_factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
 
  private:
   template<typename... Args>

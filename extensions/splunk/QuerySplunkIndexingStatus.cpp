@@ -36,36 +36,9 @@
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 
-const core::Property QuerySplunkIndexingStatus::MaximumWaitingTime(core::PropertyBuilder::createProperty("Maximum Waiting Time")
-    ->withDescription("The maximum time the processor tries to acquire acknowledgement confirmation for an index, from the point of registration. "
-                      "After the given amount of time, the processor considers the index as not acknowledged and transfers the FlowFile to the \"unacknowledged\" relationship.")
-    ->withDefaultValue<core::TimePeriodValue>("1 hour")->isRequired(true)->build());
-
-const core::Property QuerySplunkIndexingStatus::MaxQuerySize(core::PropertyBuilder::createProperty("Maximum Query Size")
-    ->withDescription("The maximum number of acknowledgement identifiers the outgoing query contains in one batch. "
-                      "It is recommended not to set it too low in order to reduce network communication.")
-    ->withDefaultValue<uint64_t>(1000)->isRequired(true)->build());
-
-const core::Relationship QuerySplunkIndexingStatus::Acknowledged("acknowledged",
-    "A FlowFile is transferred to this relationship when the acknowledgement was successful.");
-
-const core::Relationship QuerySplunkIndexingStatus::Unacknowledged("unacknowledged",
-    "A FlowFile is transferred to this relationship when the acknowledgement was not successful. "
-    "This can happen when the acknowledgement did not happened within the time period set for Maximum Waiting Time. "
-    "FlowFiles with acknowledgement id unknown for the Splunk server will be transferred to this relationship after the Maximum Waiting Time is reached.");
-
-const core::Relationship QuerySplunkIndexingStatus::Undetermined("undetermined",
-    "A FlowFile is transferred to this relationship when the acknowledgement state is not determined. "
-    "FlowFiles transferred to this relationship might be penalized. "
-    "This happens when Splunk returns with HTTP 200 but with false response for the acknowledgement id in the flow file attribute.");
-
-const core::Relationship QuerySplunkIndexingStatus::Failure("failure",
-    "A FlowFile is transferred to this relationship when the acknowledgement was not successful due to errors during the communication, "
-    "or if the flowfile was missing the acknowledgement id");
-
 void QuerySplunkIndexingStatus::initialize() {
-  setSupportedRelationships({Acknowledged, Unacknowledged, Undetermined, Failure});
-  setSupportedProperties({Hostname, Port, Token, SplunkRequestChannel, SSLContext, MaximumWaitingTime, MaxQuerySize});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void QuerySplunkIndexingStatus::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
@@ -193,8 +166,5 @@ void QuerySplunkIndexingStatus::onTrigger(const std::shared_ptr<core::ProcessCon
   getIndexingStatusFromSplunk(client, undetermined_flow_files);
   routeFlowFilesBasedOnIndexingStatus(*session, undetermined_flow_files, max_age_);
 }
-
-
-REGISTER_RESOURCE(QuerySplunkIndexingStatus, "Queries Splunk server in order to acquire the status of indexing acknowledgement.");
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

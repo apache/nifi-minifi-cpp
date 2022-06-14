@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_
+#pragma once
 
 #include <string>
 #include <iostream>
@@ -29,11 +27,7 @@
 #include "core/state/UpdatePolicy.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 /**
  * Purpose: UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates.
@@ -51,10 +45,24 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
     initialize();
   }
 
-  MINIFIAPI static core::Property AllowAllProperties;
-  MINIFIAPI static core::Property PersistUpdates;
-  MINIFIAPI static core::Property AllowedProperties;
-  MINIFIAPI static core::Property DisallowedProperties;
+  MINIFIAPI static constexpr const char* Description = "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
+      "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.";
+
+  MINIFIAPI static const core::Property AllowAllProperties;
+  MINIFIAPI static const core::Property PersistUpdates;
+  MINIFIAPI static const core::Property AllowedProperties;
+  MINIFIAPI static const core::Property DisallowedProperties;
+  static auto properties() {
+    return std::array{
+      AllowAllProperties,
+      PersistUpdates,
+      AllowedProperties,
+      DisallowedProperties
+    };
+  }
+
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   void initialize() override;
 
@@ -80,10 +88,4 @@ class UpdatePolicyControllerService : public core::controller::ControllerService
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<UpdatePolicyControllerService>::getLogger();
 };
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_UPDATEPOLICYCONTROLLERSERVICE_H_
+}  // namespace org::apache::nifi::minifi::controllers

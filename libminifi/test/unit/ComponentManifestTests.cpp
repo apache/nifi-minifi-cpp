@@ -21,6 +21,7 @@
 #include "../Catch.h"
 #include "core/ConfigurableComponent.h"
 #include "core/controller/ControllerService.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/state/nodes/AgentInformation.h"
 
@@ -40,33 +41,46 @@ class ExampleService : public core::controller::ControllerService {
  public:
   using ControllerService::ControllerService;
 
+  static constexpr const char* Description = "An example service";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
+
   bool canEdit() override { return false; }
-  bool supportsDynamicProperties() override { return false; }
   void yield() override {}
   bool isRunning() override { return false; }
   bool isWorkAvailable() override { return false; }
 };
 
-REGISTER_RESOURCE(ExampleService, "An example service");
+REGISTER_RESOURCE(ExampleService, ControllerService);
 
 class ExampleProcessor : public core::Processor {
  public:
   using Processor::Processor;
-  static core::Property ExampleProperty;
+
+  static constexpr const char* Description = "An example processor";
+  static const core::Property ExampleProperty;
+  static auto properties() { return std::array{ExampleProperty}; }
+  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override {
-    setSupportedProperties({ExampleProperty});
+    setSupportedProperties(properties());
   }
 };
 
-core::Property ExampleProcessor::ExampleProperty(
+const core::Property ExampleProcessor::ExampleProperty(
     core::PropertyBuilder::createProperty("Example Property")
     ->withDescription("An example property")
     ->isRequired(false)
     ->asType<ExampleService>()
     ->build());
 
-REGISTER_RESOURCE(ExampleProcessor, "An example processor");
+REGISTER_RESOURCE(ExampleProcessor, Processor);
 
 }  // namespace test::apple
 
@@ -99,4 +113,13 @@ TEST_CASE("Manifest indicates property type requirement") {
   REQUIRE(get(type, "type").value == "test.apple.ExampleService");
   REQUIRE(get(type, "group").value == GROUP_STR);  // fix string
   REQUIRE(get(type, "artifact").value == "minifi-system");
+}
+
+TEST_CASE("Processors do not get instantiated during manifest creation") {
+  LogTestController::getInstance().setDebug<core::Processor>();
+
+  minifi::state::response::ComponentManifest manifest("minifi-system");
+  manifest.serialize();
+
+  CHECK_FALSE(LogTestController::getInstance().contains("Processor ExampleProcessor created"));
 }

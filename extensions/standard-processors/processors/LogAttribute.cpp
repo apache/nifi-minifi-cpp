@@ -25,13 +25,13 @@
 #include <vector>
 #include <queue>
 #include <map>
-#include <set>
 #include <sstream>
 #include <iostream>
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace org {
@@ -40,52 +40,39 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>(
+const core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>(
     {"info", "trace", "error", "warn", "debug" })->build());
 
-core::Property LogAttribute::AttributesToLog(
+const core::Property LogAttribute::AttributesToLog(
     core::PropertyBuilder::createProperty("Attributes to Log")->withDescription("A comma-separated list of Attributes to Log. If not specified, all attributes will be logged.")->build());
 
-core::Property LogAttribute::FlowFilesToLog(
+const core::Property LogAttribute::FlowFilesToLog(
     core::PropertyBuilder::createProperty("FlowFiles To Log")->withDescription(
         "Number of flow files to log. If set to zero all flow files will be logged. Please note that this may block other threads from running if not used judiciously.")->withDefaultValue<uint64_t>(1)
         ->build());
 
-core::Property LogAttribute::AttributesToIgnore(
+const core::Property LogAttribute::AttributesToIgnore(
     core::PropertyBuilder::createProperty("Attributes to Ignore")->withDescription("A comma-separated list of Attributes to ignore. If not specified, no attributes will be ignored.")->build());
 
-core::Property LogAttribute::LogPayload(core::PropertyBuilder::createProperty("Log Payload")->withDescription("If true, the FlowFile's payload will be logged, in addition to its attributes."
+const core::Property LogAttribute::LogPayload(core::PropertyBuilder::createProperty("Log Payload")->withDescription("If true, the FlowFile's payload will be logged, in addition to its attributes."
                                                                                                               "otherwise, just the Attributes will be logged")->withDefaultValue<bool>(false)->build());
 
-core::Property LogAttribute::HexencodePayload(
+const core::Property LogAttribute::HexencodePayload(
     core::PropertyBuilder::createProperty("Hexencode Payload")->withDescription(
         "If true, the FlowFile's payload will be logged in a hexencoded format")->withDefaultValue<bool>(false)->build());
 
-core::Property LogAttribute::MaxPayloadLineLength(
+const core::Property LogAttribute::MaxPayloadLineLength(
     core::PropertyBuilder::createProperty("Maximum Payload Line Length")->withDescription(
         "The logged payload will be broken into lines this long. 0 means no newlines will be added.")->withDefaultValue<uint32_t>(0U)->build());
 
-core::Property LogAttribute::LogPrefix(
+const core::Property LogAttribute::LogPrefix(
     core::PropertyBuilder::createProperty("Log Prefix")->withDescription("Log prefix appended to the log lines. It helps to distinguish the output of multiple LogAttribute processors.")->build());
 
-core::Relationship LogAttribute::Success("success", "success operational on the flow record");
+const core::Relationship LogAttribute::Success("success", "success operational on the flow record");
 
 void LogAttribute::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(LogLevel);
-  properties.insert(AttributesToLog);
-  properties.insert(AttributesToIgnore);
-  properties.insert(LogPayload);
-  properties.insert(HexencodePayload);
-  properties.insert(MaxPayloadLineLength);
-  properties.insert(FlowFilesToLog);
-  properties.insert(LogPrefix);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void LogAttribute::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
@@ -190,7 +177,7 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
   logger_->log_debug("Logged %d flow files", i);
 }
 
-REGISTER_RESOURCE(LogAttribute, "Logs attributes of flow files in the MiNiFi application log.");
+REGISTER_RESOURCE(LogAttribute, Processor);
 
 } /* namespace processors */
 } /* namespace minifi */

@@ -16,13 +16,15 @@
  */
 
 #include "UnorderedMapKeyValueStoreService.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
+
+const core::Property UnorderedMapKeyValueStoreService::LinkedServices(
+    core::PropertyBuilder::createProperty("Linked Services")
+    ->withDescription("Referenced Controller Services")
+    ->build());
 
 UnorderedMapKeyValueStoreService::UnorderedMapKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid) {
@@ -69,6 +71,11 @@ bool UnorderedMapKeyValueStoreService::clear() {
   return true;
 }
 
+void UnorderedMapKeyValueStoreService::initialize() {
+  ControllerService::initialize();
+  setSupportedProperties(properties());
+}
+
 bool UnorderedMapKeyValueStoreService::update(const std::string& key, const std::function<bool(bool /*exists*/, std::string& /*value*/)>& update_func) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   bool exists = false;
@@ -96,10 +103,6 @@ bool UnorderedMapKeyValueStoreService::update(const std::string& key, const std:
   return true;
 }
 
-REGISTER_RESOURCE(UnorderedMapKeyValueStoreService, "A key-value service implemented by a locked std::unordered_map<std::string, std::string>");
+REGISTER_RESOURCE(UnorderedMapKeyValueStoreService, ControllerService);
 
-} /* namespace controllers */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::controllers

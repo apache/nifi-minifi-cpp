@@ -26,37 +26,9 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property PutAzureBlobStorage::CreateContainer(
-  core::PropertyBuilder::createProperty("Create Container")
-    ->withDescription("Specifies whether to check if the container exists and to automatically create it if it does not. "
-                      "Permission to list containers is required. If false, this check is not made, but the Put operation will "
-                      "fail if the container does not exist.")
-    ->isRequired(true)
-    ->withDefaultValue<bool>(false)
-    ->build());
-
-const core::Relationship PutAzureBlobStorage::Success("success", "All successfully processed FlowFiles are routed to this relationship");
-const core::Relationship PutAzureBlobStorage::Failure("failure", "Unsuccessful operations will be transferred to the failure relationship");
-
 void PutAzureBlobStorage::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    ContainerName,
-    StorageAccountName,
-    StorageAccountKey,
-    SASToken,
-    CommonStorageAccountEndpointSuffix,
-    ConnectionString,
-    Blob,
-    CreateContainer,
-    UseManagedIdentityCredentials
-  });
-  // Set the supported relationships
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 
@@ -117,7 +89,5 @@ void PutAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext> 
   logger_->log_debug("Successfully uploaded blob '%s' to Azure Storage container '%s'", params->blob_name, params->container_name);
   session->transfer(flow_file, Success);
 }
-
-REGISTER_RESOURCE(PutAzureBlobStorage, "Puts content into an Azure Storage Blob");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

@@ -25,12 +25,6 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property AzureDataLakeStorageFileProcessorBase::FileName(
-    core::PropertyBuilder::createProperty("File Name")
-      ->withDescription("The filename in Azure Storage. If left empty the filename attribute will be used by default.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-
 bool AzureDataLakeStorageFileProcessorBase::setFileOperationCommonParameters(
     storage::AzureDataLakeStorageFileOperationParameters& params, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   if (!setCommonParameters(params, context, flow_file)) {

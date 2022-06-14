@@ -22,7 +22,6 @@
 #include <string>
 #include <memory>
 #include <map>
-#include <set>
 #include <iostream>
 #include <sstream>
 #include <utility>
@@ -30,6 +29,7 @@
 #include "ExtractText.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/FlowFile.h"
 #include "utils/gsl.h"
@@ -84,20 +84,8 @@ core::Property ExtractText::EnableRepeatingCaptureGroup(
 core::Relationship ExtractText::Success("success", "success operational on the flow record");
 
 void ExtractText::initialize() {
-  //! Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(Attribute);
-  properties.insert(SizeLimit);
-  properties.insert(RegexMode);
-  properties.insert(IgnoreCaptureGroupZero);
-  properties.insert(MaxCaptureGroupLen);
-  properties.insert(EnableRepeatingCaptureGroup);
-  properties.insert(InsensitiveMatch);
-  setSupportedProperties(properties);
-  //! Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ExtractText::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -222,7 +210,7 @@ ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile
       logger_(std::move(lgr)) {
 }
 
-REGISTER_RESOURCE(ExtractText, "Extracts the content of a FlowFile and places it into an attribute.");
+REGISTER_RESOURCE(ExtractText, Processor);
 
 }  // namespace processors
 }  // namespace minifi

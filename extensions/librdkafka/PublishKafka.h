@@ -1,7 +1,4 @@
 /**
- * @file PublishKafka.h
- * PublishKafka class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -42,20 +39,17 @@
 #include "controllers/SSLContextService.h"
 #include "rdkafka.h"
 #include "KafkaConnection.h"
+#include "utils/ArrayUtils.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
-// PublishKafka Class
 class PublishKafka : public KafkaProcessorBase {
  public:
-  static constexpr char const* ProcessorName = "PublishKafka";
+  EXTENSIONAPI static constexpr const char* Description = "This Processor puts the contents of a FlowFile to a Topic in Apache Kafka. "
+      "The content of a FlowFile becomes the contents of a Kafka message. "
+      "This message is optionally assigned a key by using the <Kafka Key> Property.";
 
-  // Supported Properties
   EXTENSIONAPI static const core::Property SeedBrokers;
   EXTENSIONAPI static const core::Property Topic;
   EXTENSIONAPI static const core::Property DeliveryGuarantee;
@@ -79,10 +73,44 @@ class PublishKafka : public KafkaProcessorBase {
   EXTENSIONAPI static const core::Property MessageKeyField;
   EXTENSIONAPI static const core::Property DebugContexts;
   EXTENSIONAPI static const core::Property FailEmptyFlowFiles;
+  static auto properties() {
+    return utils::array_cat(KafkaProcessorBase::properties(), std::array{
+      SeedBrokers,
+      Topic,
+      DeliveryGuarantee,
+      MaxMessageSize,
+      RequestTimeOut,
+      MessageTimeOut,
+      ClientName,
+      BatchSize,
+      TargetBatchPayloadSize,
+      AttributeNameRegex,
+      QueueBufferMaxTime,
+      QueueBufferMaxSize,
+      QueueBufferMaxMessage,
+      CompressCodec,
+      MaxFlowSegSize,
+      SecurityCA,
+      SecurityCert,
+      SecurityPrivateKey,
+      SecurityPrivateKeyPassWord,
+      KafkaKey,
+      MessageKeyField,
+      DebugContexts,
+      FailEmptyFlowFiles
+    });
+  }
 
-  // Supported Relationships
-  EXTENSIONAPI static const core::Relationship Failure;
   EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   static constexpr const char* COMPRESSION_CODEC_NONE = "none";
   static constexpr const char* COMPRESSION_CODEC_GZIP = "gzip";
@@ -101,14 +129,6 @@ class PublishKafka : public KafkaProcessorBase {
 
   ~PublishKafka() override = default;
 
-  bool supportsDynamicProperties() override { return true; }
-
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
@@ -122,10 +142,6 @@ class PublishKafka : public KafkaProcessorBase {
   std::optional<utils::SSL_data> getSslData(core::ProcessContext& context) const override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   KafkaConnectionKey key_;
   std::unique_ptr<KafkaConnection> conn_;
   std::mutex connection_mutex_;
@@ -140,10 +156,6 @@ class PublishKafka : public KafkaProcessorBase {
   std::set<std::shared_ptr<Messages>> messages_set_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors
 
 #endif  // EXTENSIONS_LIBRDKAFKA_PUBLISHKAFKA_H_

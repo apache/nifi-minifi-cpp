@@ -21,9 +21,9 @@
 #include <cstring>
 #include <memory>
 #include <string>
-#include <set>
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/StringUtils.h"
 #include "utils/TimeUtil.h"
@@ -70,18 +70,8 @@ core::Property ExecuteProcess::RedirectErrorStream(
 core::Relationship ExecuteProcess::Success("success", "All created FlowFiles are routed to this relationship.");
 
 void ExecuteProcess::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(Command);
-  properties.insert(CommandArguments);
-  properties.insert(WorkingDir);
-  properties.insert(BatchDuration);
-  properties.insert(RedirectErrorStream);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Success);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSession *session) {
@@ -239,9 +229,7 @@ void ExecuteProcess::onTrigger(core::ProcessContext *context, core::ProcessSessi
   }
 }
 
-REGISTER_RESOURCE(ExecuteProcess, "Runs an operating system command specified by the user and writes the output of that command to a FlowFile. If the command is expected to be long-running,"
-                  "the Processor can output the partial data on a specified interval. When this option is used, the output is expected to be in textual format,"
-                  "as it typically does not make sense to split binary data on arbitrary time-based intervals.");
+REGISTER_RESOURCE(ExecuteProcess, Processor);
 
 #endif
 } /* namespace processors */

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <array>
 #include <memory>
 #include <string>
 #include <set>
@@ -176,13 +176,13 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
     auto success_putfile = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
     plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
-    success_putfile->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    success_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     auto success_output_dir = testController_->createTempDirectory();
     plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir);
 
     auto failure_putfile = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(execute_python_processor, {"failure", "d"}, failure_putfile);
-    failure_putfile->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    failure_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     auto failure_output_dir = testController_->createTempDirectory();
     plan_->setProperty(failure_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir);
 
@@ -294,7 +294,7 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test module load of processo
 
   auto success_putfile = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
   plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
-  success_putfile->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+  success_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
   auto success_output_dir = testController_->createTempDirectory();
   plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir);
 

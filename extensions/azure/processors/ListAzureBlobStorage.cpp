@@ -26,41 +26,9 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property ListAzureBlobStorage::ListingStrategy(
-  core::PropertyBuilder::createProperty("Listing Strategy")
-    ->withDescription("Specify how to determine new/updated entities. If 'timestamps' is selected it tracks the latest timestamp of listed entity to determine new/updated entities. "
-                      "If 'none' is selected it lists an entity without any tracking, the same entity will be listed each time on executing this processor.")
-    ->isRequired(true)
-    ->withDefaultValue<std::string>(toString(EntityTracking::TIMESTAMPS))
-    ->withAllowableValues<std::string>(EntityTracking::values())
-    ->build());
-
-const core::Property ListAzureBlobStorage::Prefix(
-  core::PropertyBuilder::createProperty("Prefix")
-    ->withDescription("Search prefix for listing")
-    ->supportsExpressionLanguage(true)
-    ->build());
-
-const core::Relationship ListAzureBlobStorage::Success("success", "All FlowFiles that are received are routed to success");
-
 void ListAzureBlobStorage::initialize() {
-  // Set the supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    ContainerName,
-    StorageAccountName,
-    StorageAccountKey,
-    SASToken,
-    CommonStorageAccountEndpointSuffix,
-    ConnectionString,
-    UseManagedIdentityCredentials,
-    ListingStrategy,
-    Prefix
-  });
-  // Set the supported relationships
-  setSupportedRelationships({
-    Success
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ListAzureBlobStorage::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& session_factory) {
@@ -144,7 +112,5 @@ void ListAzureBlobStorage::onTrigger(const std::shared_ptr<core::ProcessContext>
     return;
   }
 }
-
-REGISTER_RESOURCE(ListAzureBlobStorage, "Lists blobs in an Azure Storage container. Listing details are attached to an empty FlowFile for use with FetchAzureBlobStorage.");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

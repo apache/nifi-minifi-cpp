@@ -28,11 +28,24 @@ namespace org::apache::nifi::minifi::core::logging { class Logger; }
 namespace org::apache::nifi::minifi::processors {
 class PutUDP final : public core::Processor {
  public:
+  EXTENSIONAPI static constexpr const char* Description = "The PutUDP processor receives a FlowFile and packages the FlowFile content into a single UDP datagram packet "
+      "which is then transmitted to the configured UDP server. "
+      "The processor doesn't guarantee a successful transfer, even if the flow file is routed to the success relationship.";
+
   EXTENSIONAPI static const core::Property Hostname;
   EXTENSIONAPI static const core::Property Port;
+  static auto properties() { return std::array{Hostname, Port}; }
 
   EXTENSIONAPI static const core::Relationship Success;
   EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit PutUDP(const std::string& name, const utils::Identifier& uuid = {});
   PutUDP(const PutUDP&) = delete;
@@ -44,8 +57,6 @@ class PutUDP final : public core::Processor {
   void onSchedule(core::ProcessContext*, core::ProcessSessionFactory *) final;
   void onTrigger(core::ProcessContext*, core::ProcessSession*) final;
 
-  core::annotation::Input getInputRequirement() const noexcept final { return core::annotation::Input::INPUT_REQUIRED; }
-  bool isSingleThreaded() const noexcept final { return true; /* for now */ }
  private:
   std::string hostname_;
   std::string port_;

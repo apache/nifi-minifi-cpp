@@ -23,12 +23,7 @@
 #include "ProcessContextExpr.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace expressions {
+namespace org::apache::nifi::minifi::core::expressions {
 
 ExpressionContextBuilder::ExpressionContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid)
     : core::ProcessContextBuilder(name, uuid) {
@@ -44,11 +39,6 @@ std::shared_ptr<core::ProcessContext> ExpressionContextBuilder::build(const std:
   return std::make_shared<core::ProcessContextExpr>(processor, controller_service_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
 }
 
-REGISTER_INTERNAL_RESOURCE_AS(ExpressionContextBuilder, ("ProcessContextBuilder"));
+REGISTER_RESOURCE_AS(ExpressionContextBuilder, InternalResource, ("ProcessContextBuilder"));
 
-} /* namespace expressions */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::expressions

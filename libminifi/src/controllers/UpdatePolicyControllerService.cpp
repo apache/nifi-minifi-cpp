@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -22,7 +21,6 @@
 
 #include <cstdio>
 #include <limits>
-#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -33,36 +31,28 @@
 #include <net/if_types.h>
 #endif
 #include "core/state/UpdatePolicy.h"
+#include "core/PropertyBuilder.h"
 #include "core/PropertyValidation.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
-core::Property UpdatePolicyControllerService::AllowAllProperties(
+const core::Property UpdatePolicyControllerService::AllowAllProperties(
     core::PropertyBuilder::createProperty("Allow All Properties")->withDescription("Allows all properties, which are also not disallowed, to be updated")->withDefaultValue<bool>(
         false)->build());
 
-core::Property UpdatePolicyControllerService::AllowedProperties(
+const core::Property UpdatePolicyControllerService::AllowedProperties(
     core::PropertyBuilder::createProperty("Allowed Properties")->withDescription("Properties for which we will allow updates")->isRequired(false)->build());
 
-core::Property UpdatePolicyControllerService::DisallowedProperties(
+const core::Property UpdatePolicyControllerService::DisallowedProperties(
     core::PropertyBuilder::createProperty("Disallowed Properties")->withDescription("Properties for which we will not allow updates")->isRequired(false)->build());
 
-core::Property UpdatePolicyControllerService::PersistUpdates(
+const core::Property UpdatePolicyControllerService::PersistUpdates(
     core::PropertyBuilder::createProperty("Persist Updates")->withDescription("Property that dictates whether updates should persist after a restart")->isRequired(false)->withDefaultValue<bool>(false)
         ->build());
 
 void UpdatePolicyControllerService::initialize() {
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(AllowAllProperties);
-  supportedProperties.insert(AllowedProperties);
-  supportedProperties.insert(DisallowedProperties);
-  supportedProperties.insert(PersistUpdates);
-  setSupportedProperties(supportedProperties);
+  setSupportedProperties(properties());
 }
 
 void UpdatePolicyControllerService::yield() {
@@ -107,11 +97,6 @@ void UpdatePolicyControllerService::onEnable() {
   policy_ = builder->build();
 }
 
-REGISTER_RESOURCE(UpdatePolicyControllerService, "UpdatePolicyControllerService allows a flow specific policy on allowing or disallowing updates. "
-    "Since the flow dictates the purpose of a device it will also be used to dictate updates to specific components.");
+REGISTER_RESOURCE(UpdatePolicyControllerService, ControllerService);
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::controllers

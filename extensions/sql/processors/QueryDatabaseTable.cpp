@@ -1,7 +1,4 @@
 /**
- * @file QueryDatabaseTable.cpp
- * PutSQL class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -37,53 +34,9 @@
 #include "data/MaxCollector.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-const std::string QueryDatabaseTable::ProcessorName("QueryDatabaseTable");
-
-const core::Property QueryDatabaseTable::TableName(
-  core::PropertyBuilder::createProperty("Table Name")
-  ->isRequired(true)
-  ->withDescription("The name of the database table to be queried.")
-  ->supportsExpressionLanguage(true)->build());
-
-const core::Property QueryDatabaseTable::ColumnNames(
-  core::PropertyBuilder::createProperty("Columns to Return")
-  ->isRequired(false)
-  ->withDescription(
-    "A comma-separated list of column names to be used in the query. If your database requires special treatment of the names (quoting, e.g.), each name should include such treatment. "
-    "If no column names are supplied, all columns in the specified table will be returned. "
-    "NOTE: It is important to use consistent column names for a given table for incremental fetch to work properly.")
-  ->supportsExpressionLanguage(true)->build());
-
-const core::Property QueryDatabaseTable::MaxValueColumnNames(
-  core::PropertyBuilder::createProperty("Maximum-value Columns")
-  ->isRequired(false)
-  ->withDescription(
-    "A comma-separated list of column names. The processor will keep track of the maximum value for each column that has been returned since the processor started running. "
-    "Using multiple columns implies an order to the column list, and each column's values are expected to increase more slowly than the previous columns' values. "
-    "Thus, using multiple columns implies a hierarchical structure of columns, which is usually used for partitioning tables. "
-    "This processor can be used to retrieve only those rows that have been added/updated since the last retrieval. "
-    "Note that some ODBC types such as bit/boolean are not conducive to maintaining maximum value, so columns of these types should not be listed in this property, and will result in error(s) during processing. "
-    "If no columns are provided, all rows from the table will be considered, which could have a performance impact. "
-    "NOTE: It is important to use consistent max-value column names for a given table for incremental fetch to work properly. "
-    "NOTE: Because of a limitation of database access library 'soci', which doesn't support milliseconds in it's 'dt_date', "
-    "there is a possibility that flowfiles might have duplicated records, if a max-value column with 'dt_date' type has value with milliseconds.")
-  ->supportsExpressionLanguage(true)->build());
-
-const core::Property QueryDatabaseTable::WhereClause(
-  core::PropertyBuilder::createProperty("Where Clause")
-  ->isRequired(false)
-  ->withDescription("A custom clause to be added in the WHERE condition when building SQL queries.")
-  ->supportsExpressionLanguage(true)->build());
+namespace org::apache::nifi::minifi::processors {
 
 const std::string QueryDatabaseTable::InitialMaxValueDynamicPropertyPrefix("initial.maxvalue.");
-
-const core::Relationship QueryDatabaseTable::Success("success", "Successfully created FlowFile from SQL query result set.");
 
 const std::string QueryDatabaseTable::RESULT_TABLE_NAME = "tablename";
 const std::string QueryDatabaseTable::RESULT_ROW_COUNT = "querydbtable.row.count";
@@ -91,19 +44,13 @@ const std::string QueryDatabaseTable::RESULT_ROW_COUNT = "querydbtable.row.count
 const std::string QueryDatabaseTable::TABLENAME_KEY = "tablename";
 const std::string QueryDatabaseTable::MAXVALUE_KEY_PREFIX = "maxvalue.";
 
-// QueryDatabaseTable
 QueryDatabaseTable::QueryDatabaseTable(const std::string& name, const utils::Identifier& uuid)
   : SQLProcessor(name, uuid, core::logging::LoggerFactory<QueryDatabaseTable>::getLogger()) {
 }
 
 void QueryDatabaseTable::initialize() {
-  //! Set the supported properties
-  setSupportedProperties({
-    DBControllerService, OutputFormat, TableName, ColumnNames,
-    MaxValueColumnNames, WhereClause, MaxRowsPerFlowFile});
-
-  //! Set the supported relationships
-  setSupportedRelationships({ Success });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void QueryDatabaseTable::processOnSchedule(core::ProcessContext& context) {
@@ -301,10 +248,4 @@ bool QueryDatabaseTable::saveState() {
   return state_manager_->set(state_map);
 }
 
-REGISTER_RESOURCE(QueryDatabaseTable, "QueryDatabaseTable to execute SELECT statement via ODBC.");
-
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

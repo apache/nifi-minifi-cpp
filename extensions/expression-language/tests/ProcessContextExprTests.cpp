@@ -22,7 +22,7 @@
 #include "core/Resource.h"
 #include "ProcessContextExpr.h"
 #include "Processor.h"
-#include "Property.h"
+#include "PropertyBuilder.h"
 #include "TestBase.h"
 #include "Catch.h"
 
@@ -31,24 +31,33 @@ namespace org::apache::nifi::minifi {
 class DummyProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
-  static core::Property SimpleProperty;
-  static core::Property ExpressionLanguageProperty;
-  void initialize() override { setSupportedProperties({SimpleProperty, ExpressionLanguageProperty}); }
-  bool supportsDynamicProperties() override { return true; }
+
+  static constexpr const char* Description = "A processor that does nothing.";
+  static const core::Property SimpleProperty;
+  static const core::Property ExpressionLanguageProperty;
+  static auto properties() { return std::array{SimpleProperty, ExpressionLanguageProperty}; }
+  static auto relationships() { return std::array<core::Relationship, 0>{}; }
+  static constexpr bool SupportsDynamicProperties = true;
+  static constexpr bool SupportsDynamicRelationships = true;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void initialize() override { setSupportedProperties(properties()); }
 };
 
-core::Property DummyProcessor::SimpleProperty{
+const core::Property DummyProcessor::SimpleProperty{
     core::PropertyBuilder::createProperty("Simple Property")
         ->withDescription("Just a simple string property")
         ->build()};
 
-core::Property DummyProcessor::ExpressionLanguageProperty{
+const core::Property DummyProcessor::ExpressionLanguageProperty{
     core::PropertyBuilder::createProperty("Expression Language Property")
         ->withDescription("A property which supports expression language")
         ->supportsExpressionLanguage(true)
         ->build()};
 
-REGISTER_RESOURCE(DummyProcessor, "A processor that does nothing.");
+REGISTER_RESOURCE(DummyProcessor, Processor);
 
 }  // namespace org::apache::nifi::minifi
 

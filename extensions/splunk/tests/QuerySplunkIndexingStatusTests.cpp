@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <array>
 #include <chrono>
 
 #include "QuerySplunkIndexingStatus.h"
@@ -52,10 +52,10 @@ TEST_CASE("QuerySplunkIndexingStatus tests", "[querysplunkindexingstatus]") {
   plan->addConnection(query_splunk_indexing_status, QuerySplunkIndexingStatus::Unacknowledged, read_from_unacknowledged);
   plan->addConnection(query_splunk_indexing_status, QuerySplunkIndexingStatus::Failure, read_from_failure);
 
-  read_from_acknowledged->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
-  read_from_undetermined->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
-  read_from_unacknowledged->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
-  read_from_failure->setAutoTerminatedRelationships({ReadFromFlowFileTestProcessor::Success});
+  read_from_acknowledged->setAutoTerminatedRelationships(std::array{core::Relationship{ReadFromFlowFileTestProcessor::Success}});
+  read_from_undetermined->setAutoTerminatedRelationships(std::array{core::Relationship{ReadFromFlowFileTestProcessor::Success}});
+  read_from_unacknowledged->setAutoTerminatedRelationships(std::array{core::Relationship{ReadFromFlowFileTestProcessor::Success}});
+  read_from_failure->setAutoTerminatedRelationships(std::array{core::Relationship{ReadFromFlowFileTestProcessor::Success}});
 
   plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Hostname.getName(), "localhost");
   plan->setProperty(query_splunk_indexing_status, QuerySplunkIndexingStatus::Port.getName(), mock_splunk_hec.getPort());

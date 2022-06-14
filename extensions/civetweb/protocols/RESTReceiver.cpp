@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -28,11 +27,7 @@
 #include "core/Resource.h"
 #include "properties/Configuration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 int log_message(const struct mg_connection* /*conn*/, const char *message) {
   puts(message);
@@ -111,10 +106,6 @@ std::unique_ptr<CivetServer> RESTReceiver::start_webserver(const std::string &po
   return server;
 }
 
-REGISTER_RESOURCE(RESTReceiver, "Provides a webserver to display C2 heartbeat information");
+REGISTER_RESOURCE(RESTReceiver, DescriptionOnly);
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

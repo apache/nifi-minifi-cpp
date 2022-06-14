@@ -18,6 +18,7 @@
 
 #ifdef OPENSSL_SUPPORT
 
+#include <array>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -151,7 +152,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
   plan->setProperty(md5processor, HashContent::HashAttribute.getName(), MD5_ATTR);
   plan->setProperty(md5processor, HashContent::HashAlgorithm.getName(), "MD5");
 
-  md5processor->setAutoTerminatedRelationships({HashContent::Success, HashContent::Failure});
+  md5processor->setAutoTerminatedRelationships(std::array{HashContent::Success, HashContent::Failure});
 
   std::stringstream stream_dir;
   stream_dir << tempdir << utils::file::get_separator() << TEST_FILE;

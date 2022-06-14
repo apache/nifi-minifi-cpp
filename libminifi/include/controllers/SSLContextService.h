@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
-#define LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
+#pragma once
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
@@ -44,11 +42,7 @@
 #include "utils/Export.h"
 #include "utils/tls/CertificateUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 class SSLContext {
  public:
@@ -142,7 +136,7 @@ class SSLContextService : public core::controller::ControllerService {
 #endif  // WIN32
   }
 
-  virtual void initialize();
+  void initialize() override;
 
   std::unique_ptr<SSLContext> createSSLContext();
 
@@ -156,14 +150,14 @@ class SSLContextService : public core::controller::ControllerService {
 
   const std::string &getCACertificate();
 
-  void yield() {
+  void yield() override {
   }
 
-  bool isRunning() {
+  bool isRunning() override {
     return getState() == core::controller::ControllerServiceState::ENABLED;
   }
 
-  bool isWorkAvailable() {
+  bool isWorkAvailable() override {
     return false;
   }
 
@@ -171,13 +165,10 @@ class SSLContextService : public core::controller::ControllerService {
   bool configure_ssl_context(SSL_CTX *ctx);
 #endif
 
-  virtual void onEnable();
+  void onEnable() override;
 
-  MINIFIAPI static const core::Property ClientCertificate;
-  MINIFIAPI static const core::Property PrivateKey;
-  MINIFIAPI static const core::Property Passphrase;
-  MINIFIAPI static const core::Property CACertificate;
-  MINIFIAPI static const core::Property UseSystemCertStore;
+  MINIFIAPI static constexpr const char* Description = "Controller service that provides SSL/TLS capabilities to consuming interfaces";
+
 #ifdef WIN32
   MINIFIAPI static const core::Property CertStoreLocation;
   MINIFIAPI static const core::Property ServerCertStore;
@@ -185,6 +176,30 @@ class SSLContextService : public core::controller::ControllerService {
   MINIFIAPI static const core::Property ClientCertCN;
   MINIFIAPI static const core::Property ClientCertKeyUsage;
 #endif  // WIN32
+  MINIFIAPI static const core::Property ClientCertificate;
+  MINIFIAPI static const core::Property PrivateKey;
+  MINIFIAPI static const core::Property Passphrase;
+  MINIFIAPI static const core::Property CACertificate;
+  MINIFIAPI static const core::Property UseSystemCertStore;
+  static auto properties() {
+    return std::array{
+#ifdef WIN32
+      CertStoreLocation,
+      ServerCertStore,
+      ClientCertStore,
+      ClientCertCN,
+      ClientCertKeyUsage,
+#endif  // WIN32
+      ClientCertificate,
+      PrivateKey,
+      Passphrase,
+      CACertificate,
+      UseSystemCertStore
+    };
+  }
+
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
  protected:
   virtual void initializeProperties();
@@ -246,9 +261,4 @@ class SSLContextService : public core::controller::ControllerService {
 };
 typedef int (SSLContextService::*ptr)(char *, int, int, void *);
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CONTROLLERS_SSLCONTEXTSERVICE_H_
+}  // namespace org::apache::nifi::minifi::controllers

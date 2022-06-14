@@ -39,12 +39,26 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
     (TIMESTAMPS, "timestamps")
   )
 
-  // Supported Properties
+  EXTENSIONAPI static constexpr const char* Description = "Lists blobs in an Azure Storage container. Listing details are attached to an empty FlowFile for use with FetchAzureBlobStorage.";
+
   EXTENSIONAPI static const core::Property ListingStrategy;
   EXTENSIONAPI static const core::Property Prefix;
+  static auto properties() {
+    return utils::array_cat(AzureBlobStorageProcessorBase::properties(), std::array{
+      ListingStrategy,
+      Prefix
+    });
+  }
 
-  // Supported Relationships
-  static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   explicit ListAzureBlobStorage(const std::string& name, const minifi::utils::Identifier& uuid = minifi::utils::Identifier())
     : ListAzureBlobStorage(name, nullptr, uuid) {
@@ -59,10 +73,6 @@ class ListAzureBlobStorage final : public AzureBlobStorageProcessorBase {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   std::optional<storage::ListAzureBlobStorageParameters> buildListAzureBlobStorageParameters(core::ProcessContext &context);
   std::shared_ptr<core::FlowFile> createNewFlowFile(core::ProcessSession &session, const storage::ListContainerResultElement &element);
 

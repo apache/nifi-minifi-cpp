@@ -615,11 +615,15 @@ Processors:
 
 class DummyComponent : public core::ConfigurableComponent {
  public:
-  virtual bool supportsDynamicProperties() {
+  bool supportsDynamicProperties() const override {
     return false;
   }
 
-  virtual bool canEdit() {
+  bool supportsDynamicRelationships() const override {
+    return false;
+  }
+
+  bool canEdit() override {
     return true;
   }
 };
@@ -638,10 +642,10 @@ TEST_CASE("Test Dependent Property", "[YamlConfigurationDependentProperty]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
-  std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { "Prop A" }, { }));
-  component->setSupportedProperties(std::move(props));
+  component->setSupportedProperties(std::array{
+    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
+    core::Property("Prop B", "Prop B desc", "val B", true, "", { "Prop A" }, { })
+  });
   yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
 }
@@ -660,10 +664,10 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
-  std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "", false, "", { }, { }));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { "Prop A" }, { }));
-  component->setSupportedProperties(std::move(props));
+  component->setSupportedProperties(std::array{
+    core::Property("Prop A", "Prop A desc", "", false, "", { }, { }),
+    core::Property("Prop B", "Prop B desc", "val B", true, "", { "Prop A" }, { })
+  });
   bool config_failed = false;
   try {
     yamlConfig.validateComponentProperties(*component, "component A", "section A");
@@ -690,10 +694,10 @@ TEST_CASE("Test Exclusive Property", "[YamlConfigurationExclusiveProperty]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
-  std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^abcd.*$" } }));
-  component->setSupportedProperties(std::move(props));
+  component->setSupportedProperties(std::array{
+    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
+    core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^abcd.*$" } })
+  });
   yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
 }
@@ -710,10 +714,10 @@ TEST_CASE("Test Regex Property", "[YamlConfigurationRegexProperty]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
-  std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "^val.*$", { }, { }));
-  component->setSupportedProperties(std::move(props));
+  component->setSupportedProperties(std::array{
+    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
+    core::Property("Prop B", "Prop B desc", "val B", true, "^val.*$", { }, { })
+  });
   yamlConfig.validateComponentProperties(*component, "component A", "section A");
   REQUIRE(true);  // Expected to get here w/o any exceptions
 }
@@ -731,10 +735,10 @@ TEST_CASE("Test Exclusive Property 2", "[YamlConfigurationExclusiveProperty2]") 
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
-  std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^val.*$" } }));
-  component->setSupportedProperties(std::move(props));
+  component->setSupportedProperties(std::array{
+    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
+    core::Property("Prop B", "Prop B desc", "val B", true, "", { }, { { "Prop A", "^val.*$" } })
+  });
   bool config_failed = false;
   try {
     yamlConfig.validateComponentProperties(*component, "component A", "section A");
@@ -759,10 +763,10 @@ TEST_CASE("Test Regex Property 2", "[YamlConfigurationRegexProperty2]") {
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
   core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
   const auto component = std::make_shared<DummyComponent>();
-  std::set<core::Property> props;
-  props.emplace(core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }));
-  props.emplace(core::Property("Prop B", "Prop B desc", "val B", true, "^notval.*$", { }, { }));
-  component->setSupportedProperties(std::move(props));
+  component->setSupportedProperties(std::array{
+    core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
+    core::Property("Prop B", "Prop B desc", "val B", true, "^notval.*$", { }, { })
+  });
   bool config_failed = false;
   try {
     yamlConfig.validateComponentProperties(*component, "component A", "section A");

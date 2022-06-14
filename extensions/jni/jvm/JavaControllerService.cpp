@@ -22,8 +22,7 @@
 #include <memory>
 #include <algorithm>
 #include <iterator>
-#include <set>
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "utils/StringUtils.h"
@@ -45,17 +44,13 @@ namespace controllers {
 #define W_OK    2       /* Test for write permission.  */
 #define F_OK    0       /* Test for existence.  */
 #endif
-static core::Property NarDirectory;
-static core::Property NarDeploymentDirectory;
-static core::Property NarDocumentDirectory;
-
-core::Property JavaControllerService::NarDirectory(
+const core::Property JavaControllerService::NarDirectory(
     core::PropertyBuilder::createProperty("Nar Directory")->withDescription("Directory containing the nars to deploy")->isRequired(true)->supportsExpressionLanguage(false)->build());
 
-core::Property JavaControllerService::NarDeploymentDirectory(
+const core::Property JavaControllerService::NarDeploymentDirectory(
     core::PropertyBuilder::createProperty("Nar Deployment Directory")->withDescription("Directory in which nars will be deployed")->isRequired(true)->supportsExpressionLanguage(false)->build());
 
-core::Property JavaControllerService::NarDocumentDirectory(
+const core::Property JavaControllerService::NarDocumentDirectory(
     core::PropertyBuilder::createProperty("Nar Document Directory")->withDescription("Directory in which documents will be deployed")->isRequired(true)->supportsExpressionLanguage(false)->build());
 
 void JavaControllerService::initialize() {
@@ -66,12 +61,7 @@ void JavaControllerService::initialize() {
 
   ControllerService::initialize();
 
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(NarDirectory);
-  supportedProperties.insert(NarDeploymentDirectory);
-  supportedProperties.insert(NarDocumentDirectory);
-
-  setSupportedProperties(supportedProperties);
+  setSupportedProperties(properties());
 
   initialized_ = true;
 }
@@ -109,7 +99,7 @@ void JavaControllerService::onEnable() {
   nar_loader_ = std::unique_ptr<NarClassLoader>(new NarClassLoader(shared_from_this(), narClassLoaderClazz, nardir, narscratch, nardocs));
 }
 
-REGISTER_RESOURCE(JavaControllerService, "Allows specification of nars to be used within referenced processors. ");
+REGISTER_RESOURCE(JavaControllerService, ControllerService);
 
 } /* namespace controllers */
 } /* namespace jni */

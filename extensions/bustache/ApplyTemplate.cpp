@@ -35,8 +35,8 @@ const core::Property ApplyTemplate::Template("Template", "Path to the input must
 const core::Relationship ApplyTemplate::Success("success", "success operational on the flow record");
 
 void ApplyTemplate::initialize() {
-  setSupportedProperties({Template});
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &context,
@@ -72,7 +72,6 @@ void ApplyTemplate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   session->transfer(flow_file, Success);
 }
 
-REGISTER_RESOURCE(ApplyTemplate, "Applies the mustache template specified by the \"Template\" property and writes the output to the flow file content. "
-    "FlowFile attributes are used as template parameters.");
+REGISTER_RESOURCE(ApplyTemplate, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors

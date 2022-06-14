@@ -43,24 +43,25 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-// CallbackProcessor Class
 class CallbackProcessor : public core::Processor {
  public:
-  static core::Relationship Success;
-  static core::Relationship Failure;
-  // Constructor
-  /*!
-   * Create a new processor
-   */
+  static constexpr const char* Description = "";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static const core::Relationship Success;
+  static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+  static constexpr bool SupportsDynamicProperties = true;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   explicit CallbackProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
-  // Destructor
   ~CallbackProcessor() override = default;
-  // Processor Name
-  static constexpr char const* ProcessorName = "CallbackProcessor";
 
- public:
   void setCallback(void *obj, std::function<void(core::ProcessSession*, core::ProcessContext *context)> ontrigger_callback,
                    std::function<void(core::ProcessContext *context)> onschedule_callback = {}) {
     objref_ = obj;
@@ -69,21 +70,14 @@ class CallbackProcessor : public core::Processor {
   }
 
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  // OnTrigger method, implemented by MiNiFi CallbackProcessor
-  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;  // override;
-  // Initialize, over write by NiFi CallbackProcessor
-  void initialize() override;  // override;
-
-  bool supportsDynamicProperties() override /*override*/ {
-    return true;
-  }
+  void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
+  void initialize() override;
 
  protected:
   void *objref_{ nullptr };
   std::function<void(core::ProcessSession*, core::ProcessContext *context)> ontrigger_callback_;
   std::function<void(core::ProcessContext *context)> onschedule_callback_;
  private:
-  // Logger
   std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<CallbackProcessor>::getLogger() };
 };
 

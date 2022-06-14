@@ -43,7 +43,34 @@ class ManipulateArchive : public core::Processor {
       : core::Processor(name, uuid) {
   }
   ~ManipulateArchive() override = default;
-  EXTENSIONAPI static constexpr char const* ProcessorName = "ManipulateArchive";
+
+  EXTENSIONAPI static constexpr const char* Description = "Performs an operation which manipulates an archive without needing to split the archive into multiple FlowFiles.";
+
+  EXTENSIONAPI static const core::Property Operation;
+  EXTENSIONAPI static const core::Property Target;
+  EXTENSIONAPI static const core::Property Destination;
+  EXTENSIONAPI static const core::Property Before;
+  EXTENSIONAPI static const core::Property After;
+  static auto properties() {
+    return std::array{
+      Operation,
+      Target,
+      Destination,
+      Before,
+      After
+    };
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   // Supported operations
   EXTENSIONAPI static char const* OPERATION_REMOVE;
@@ -51,24 +78,11 @@ class ManipulateArchive : public core::Processor {
   EXTENSIONAPI static char const* OPERATION_MOVE;
   EXTENSIONAPI static char const* OPERATION_TOUCH;
 
-  // Supported Properties
-  EXTENSIONAPI static core::Property Operation;
-  EXTENSIONAPI static core::Property Target;
-  EXTENSIONAPI static core::Property Destination;
-  EXTENSIONAPI static core::Property Before;
-  EXTENSIONAPI static core::Property After;
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Failure;
-
-  // OnTrigger method, implemented by NiFi ManipulateArchive
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  // Initialize, over write by NiFi ManipulateArchive
   void initialize() override;
 
  private:
-  // Logger
   std::shared_ptr<Logger> logger_ = core::logging::LoggerFactory<ManipulateArchive>::getLogger();
   std::string before_, after_, operation_, destination_, targetEntry_;
 };

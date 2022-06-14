@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,15 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <stdio.h>
-#include <algorithm>
 #include <memory>
-#include <string>
-#include <map>
 #include <vector>
-#include <set>
 
-#include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
@@ -31,6 +24,7 @@
 #include "ConvertHeartBeat.h"
 #include "c2/PayloadSerializer.h"
 #include "utils/ByteArrayCallback.h"
+
 namespace org {
 namespace apache {
 namespace nifi {
@@ -69,8 +63,6 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
     context->yield();
   }
 }
-
-REGISTER_INTERNAL_RESOURCE(ConvertHeartBeat);
 
 } /* namespace processors */
 } /* namespace minifi */

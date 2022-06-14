@@ -30,15 +30,12 @@
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"
+#include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "controllers/keyvalue/PersistableKeyValueStoreService.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class ListSFTP : public SFTPProcessorBase {
  public:
@@ -53,33 +50,56 @@ class ListSFTP : public SFTPProcessorBase {
   static constexpr char const *ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW = "Tracking Time Window";
   static constexpr char const *ENTITY_TRACKING_INITIAL_LISTING_TARGET_ALL_AVAILABLE = "All Available";
 
-  static constexpr char const* ProcessorName = "ListSFTP";
-
-
-  /*!
-   * Create a new processor
-   */
   explicit ListSFTP(const std::string& name, const utils::Identifier& uuid = {});
   ~ListSFTP() override;
 
-  // Supported Properties
-  static core::Property ListingStrategy;
-  static core::Property RemotePath;
-  static core::Property SearchRecursively;
-  static core::Property FollowSymlink;
-  static core::Property FileFilterRegex;
-  static core::Property PathFilterRegex;
-  static core::Property IgnoreDottedFiles;
-  static core::Property TargetSystemTimestampPrecision;
-  static core::Property EntityTrackingTimeWindow;
-  static core::Property EntityTrackingInitialListingTarget;
-  static core::Property MinimumFileAge;
-  static core::Property MaximumFileAge;
-  static core::Property MinimumFileSize;
-  static core::Property MaximumFileSize;
+  EXTENSIONAPI static constexpr const char* Description = "Performs a listing of the files residing on an SFTP server. "
+      "For each file that is found on the remote server, a new FlowFile will be created with "
+      "the filename attribute set to the name of the file on the remote server. "
+      "This can then be used in conjunction with FetchSFTP in order to fetch those files.";
 
-  // Supported Relationships
-  static core::Relationship Success;
+  EXTENSIONAPI static const core::Property ListingStrategy;
+  EXTENSIONAPI static const core::Property RemotePath;
+  EXTENSIONAPI static const core::Property SearchRecursively;
+  EXTENSIONAPI static const core::Property FollowSymlink;
+  EXTENSIONAPI static const core::Property FileFilterRegex;
+  EXTENSIONAPI static const core::Property PathFilterRegex;
+  EXTENSIONAPI static const core::Property IgnoreDottedFiles;
+  EXTENSIONAPI static const core::Property TargetSystemTimestampPrecision;
+  EXTENSIONAPI static const core::Property EntityTrackingTimeWindow;
+  EXTENSIONAPI static const core::Property EntityTrackingInitialListingTarget;
+  EXTENSIONAPI static const core::Property MinimumFileAge;
+  EXTENSIONAPI static const core::Property MaximumFileAge;
+  EXTENSIONAPI static const core::Property MinimumFileSize;
+  EXTENSIONAPI static const core::Property MaximumFileSize;
+  static auto properties() {
+    return utils::array_cat(SFTPProcessorBase::properties(), std::array{
+      ListingStrategy,
+      RemotePath,
+      SearchRecursively,
+      FollowSymlink,
+      FileFilterRegex,
+      PathFilterRegex,
+      IgnoreDottedFiles,
+      TargetSystemTimestampPrecision,
+      EntityTrackingTimeWindow,
+      EntityTrackingInitialListingTarget,
+      MinimumFileAge,
+      MaximumFileAge,
+      MinimumFileSize,
+      MaximumFileSize
+    });
+  }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   // Writes Attributes
   static constexpr char const* ATTRIBUTE_SFTP_REMOTE_HOST = "sftp.remote.host";
@@ -98,14 +118,6 @@ class ListSFTP : public SFTPProcessorBase {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
-  bool isSingleThreaded() const override {
-    return true;
-  }
-
   core::CoreComponentStateManager* state_manager_;
   std::string listing_strategy_;
   bool search_recursively_;
@@ -196,8 +208,4 @@ class ListSFTP : public SFTPProcessorBase {
       std::vector<Child>&& files);
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

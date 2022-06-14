@@ -29,15 +29,21 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "storage/AzureDataLakeStorage.h"
+#include "utils/ArrayUtils.h"
 #include "AzureStorageProcessorBase.h"
 
 namespace org::apache::nifi::minifi::azure::processors {
 
 class AzureDataLakeStorageProcessorBase : public AzureStorageProcessorBase {
  public:
-  // Supported Properties
   EXTENSIONAPI static const core::Property FilesystemName;
   EXTENSIONAPI static const core::Property DirectoryName;
+  static auto properties() {
+    return utils::array_cat(AzureStorageProcessorBase::properties(), std::array{
+      FilesystemName,
+      DirectoryName
+    });
+  }
 
   explicit AzureDataLakeStorageProcessorBase(const std::string& name, const minifi::utils::Identifier& uuid, const std::shared_ptr<core::logging::Logger> &logger)
     : AzureStorageProcessorBase(name, uuid, logger) {

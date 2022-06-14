@@ -42,7 +42,7 @@
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessorNode.h"
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
 #include "utils/HTTPClient.h"
 
@@ -54,15 +54,15 @@ namespace minifi {
 
 const char *RemoteProcessorGroupPort::RPG_SSL_CONTEXT_SERVICE_NAME = "RemoteProcessorGroupPortSSLContextService";
 
-const char *RemoteProcessorGroupPort::ProcessorName("RemoteProcessorGroupPort");
-core::Property RemoteProcessorGroupPort::hostName("Host Name", "Remote Host Name.", "");
-core::Property RemoteProcessorGroupPort::SSLContext("SSL Context Service", "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.", "");
-core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
-core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
-core::Property RemoteProcessorGroupPort::idleTimeout(
+const core::Property RemoteProcessorGroupPort::hostName("Host Name", "Remote Host Name.", "");
+const core::Property RemoteProcessorGroupPort::SSLContext("SSL Context Service", "The SSL Context Service used to provide client certificate information for TLS/SSL (https) connections.", "");
+const core::Property RemoteProcessorGroupPort::port("Port", "Remote Port", "");
+const core::Property RemoteProcessorGroupPort::portUUID("Port UUID", "Specifies remote NiFi Port UUID.", "");
+const core::Property RemoteProcessorGroupPort::idleTimeout(
             core::PropertyBuilder::createProperty("Idle Timeout")->withDescription("Max idle time for remote service")->isRequired(false)
                     ->withDefaultValue<core::TimePeriodValue>("15 s")->build());
-core::Relationship RemoteProcessorGroupPort::relation;
+
+const core::Relationship RemoteProcessorGroupPort::relation;
 
 std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextProtocol(bool create = true) {
   std::unique_ptr<sitetosite::SiteToSiteClient> nextProtocol = nullptr;
@@ -120,18 +120,8 @@ void RemoteProcessorGroupPort::returnProtocol(std::unique_ptr<sitetosite::SiteTo
 }
 
 void RemoteProcessorGroupPort::initialize() {
-// Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(hostName);
-  properties.insert(port);
-  properties.insert(SSLContext);
-  properties.insert(portUUID);
-  properties.insert(idleTimeout);
-  setSupportedProperties(properties);
-// Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(relation);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 
   logger_->log_trace("Finished initialization");
 }

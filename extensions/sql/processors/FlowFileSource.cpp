@@ -19,6 +19,7 @@
 
 #include "FlowFile.h"
 #include "data/JSONSQLWriter.h"
+#include "core/PropertyBuilder.h"
 
 namespace org {
 namespace apache {

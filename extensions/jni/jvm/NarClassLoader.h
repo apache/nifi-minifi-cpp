@@ -32,6 +32,7 @@
 #include "JniBundle.h"
 #include "../JavaException.h"
 #include "agent/agent_docs.h"
+#include "core/PropertyBuilder.h"
 
 namespace org {
 namespace apache {
@@ -224,11 +225,11 @@ class NarClassLoader {
     for (size_t i = 0; i < size; i++) {
       JniBundle bundle = getBundle(list_class, env, obj, i);
       for (const auto &cd : bundle.getDescriptions()) {
-        auto lastOfIdx = cd.class_name_.find_last_of(".");
+        auto lastOfIdx = cd.full_name_.find_last_of(".");
         if (lastOfIdx != std::string::npos) {
           lastOfIdx++;  // if a value is found, increment to move beyond the .
-          int nameLength = cd.class_name_.length() - lastOfIdx;
-          const auto processorName = cd.class_name_.substr(lastOfIdx, nameLength);
+          int nameLength = cd.full_name_.length() - lastOfIdx;
+          const auto processorName = cd.full_name_.substr(lastOfIdx, nameLength);
           if (!core::ClassLoader::getDefaultClassLoader().getGroupForClass(processorName)) {
             minifi::ExternalBuildDescription::addExternalComponent(bundle.getDetails(), cd);
           }
@@ -304,7 +305,7 @@ class NarClassLoader {
     if (component != nullptr) {
       auto type = getStringMethod("getType", jni_component_clazz, env, component);
       auto isControllerService = getBoolmethod("isControllerService", jni_component_clazz, env, component);
-      ClassDescription description(type);
+      ClassDescription description{.full_name_ = type};
       {
         jmethodID getDescriptorMethod = env->GetMethodID(jni_component_clazz, "getDescriptors", "()Ljava/util/List;");
 
@@ -331,12 +332,12 @@ class NarClassLoader {
 
               builder = builder->isRequired(getBoolmethod("isRequired", property_descriptor_clazz, env, propertyDescriptorObj));
               core::Property prop(builder->build());
-              description.class_properties_.insert(std::make_pair(prop.getName(), prop));
+              description.class_properties_.push_back(prop);
             }
           }
         }
       }
-      description.is_controller_service_ = isControllerService;
+      description.type_ = isControllerService ? ResourceType::ControllerService : ResourceType::Processor;
       jmethodID getRelationshipsMethod = env->GetMethodID(jni_component_clazz, "getRelationships", "()Ljava/util/List;");
       ThrowIf(env);
       jobject relationships = env->CallObjectMethod(component, getRelationshipsMethod);
@@ -363,13 +364,13 @@ class NarClassLoader {
       description.dynamic_relationships_ = getBoolmethod("getDynamicRelationshipsSupported", jni_component_clazz, env, component);
       description.dynamic_properties_ = getBoolmethod("getDynamicPropertiesSupported", jni_component_clazz, env, component);
 
-      AgentDocs::putDescription(type, classDescription);
+      description.description_ = classDescription;
 
       return description;
     }
     // assuming we have the bundle, we need to get the coordinate.
 
-    return ClassDescription("unknown");
+    return ClassDescription{.full_name_ = "unknown"};
   }
 
   struct BundleDetails getCoordinateDetails(JNIEnv *env, jclass jni_bundle_clazz, jobject bundle) {

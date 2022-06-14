@@ -44,15 +44,33 @@ namespace processors {
 
 class AttributesToJSON : public core::Processor {
  public:
-  // Supported Properties
+  EXTENSIONAPI static constexpr const char* Description = "Generates a JSON representation of the input FlowFile Attributes. "
+      "The resulting JSON can be written to either a new Attribute 'JSONAttributes' or written to the FlowFile as content.";
+
   EXTENSIONAPI static const core::Property AttributesList;
   EXTENSIONAPI static const core::Property AttributesRegularExpression;
   EXTENSIONAPI static const core::Property Destination;
   EXTENSIONAPI static const core::Property IncludeCoreAttributes;
   EXTENSIONAPI static const core::Property NullValue;
+  static auto properties() {
+    return std::array{
+      AttributesList,
+      AttributesRegularExpression,
+      Destination,
+      IncludeCoreAttributes,
+      NullValue
+    };
+  }
 
-  // Supported Relationships
   EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   SMART_ENUM(WriteDestination,
     (FLOWFILE_ATTRIBUTE, "flowfile-attribute"),
@@ -66,10 +84,6 @@ class AttributesToJSON : public core::Processor {
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory* sessionFactory) override;
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
 
  private:
   bool isCoreAttributeToBeFiltered(const std::string& attribute) const;

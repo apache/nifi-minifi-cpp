@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_
+#pragma once
 
 #include <utils/Id.h>
 
@@ -39,10 +37,13 @@
 #include "Scheduling.h"
 #include "utils/TimeUtil.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+#define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS \
+  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; } \
+  bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; } \
+  minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; } \
+  bool isSingleThreaded() const override { return IsSingleThreaded; }
+
+namespace org::apache::nifi::minifi {
 
 class Connection;
 
@@ -59,68 +60,60 @@ class ProcessSessionFactory;
 // Minimum scheduling period in Nano Second
 constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
 
-// Default penalization period in second
-
 #define BUILDING_DLL 1
-// Processor Class
+
 class Processor : public Connectable, public ConfigurableComponent {
  public:
   Processor(const std::string& name, const utils::Identifier& uuid);
   explicit Processor(const std::string& name);
 
+  Processor(const Processor& parent) = delete;
+  Processor& operator=(const Processor& parent) = delete;
+
   bool isRunning() override;
-  // Set Processor Scheduled State
+
   void setScheduledState(ScheduledState state);
-  // Get Processor Scheduled State
+
   ScheduledState getScheduledState() const {
     return state_;
   }
-  // Set Processor Scheduling Strategy
+
   void setSchedulingStrategy(SchedulingStrategy strategy) {
     strategy_ = strategy;
   }
-  // Get Processor Scheduling Strategy
+
   SchedulingStrategy getSchedulingStrategy() const {
     return strategy_;
   }
-  // Set Processor Scheduling Period in Nano Second
+
   void setSchedulingPeriodNano(std::chrono::nanoseconds period) {
     scheduling_period_nano_ = std::max(MINIMUM_SCHEDULING_NANOS, period);
   }
-  // Get Processor Scheduling Period in Nano Second
+
   std::chrono::nanoseconds getSchedulingPeriodNano() const {
     return scheduling_period_nano_;
   }
 
-  /**
-   * Sets the cron period
-   * @param period cron period.
-   */
   void setCronPeriod(const std::string &period) {
     cron_period_ = period;
   }
 
-  /**
-   * Returns the cron period
-   * @return cron period
-   */
   std::string getCronPeriod() const {
     return cron_period_;
   }
 
-  // Set Processor Run Duration in Nano Second
   void setRunDurationNano(std::chrono::nanoseconds period) {
     run_duration_nano_ = period;
   }
-  // Get Processor Run Duration in Nano Second
+
   std::chrono::nanoseconds getRunDurationNano() const {
     return (run_duration_nano_);
   }
-  // Set Processor yield period in MilliSecond
+
   void setYieldPeriodMsec(std::chrono::milliseconds period) {
     yield_period_msec_ = period;
   }
-  // Get Processor yield period in MilliSecond
+
   std::chrono::milliseconds getYieldPeriodMsec() const {
     return yield_period_msec_;
   }
@@ -129,39 +122,35 @@ class Processor : public Connectable, public ConfigurableComponent {
     penalization_period_ = period;
   }
 
-  // Set Processor Maximum Concurrent Tasks
   void setMaxConcurrentTasks(uint8_t tasks) override;
 
-  // Overriding to yield true can be used to indicate that the Processor is not safe for concurrent execution
-  // of its onTrigger() method. By default, Processors are assumed to be safe for concurrent execution.
-  virtual bool isSingleThreaded() const {
-    return false;
-  }
+  virtual bool isSingleThreaded() const = 0;
 
-  // Set Trigger when empty
   void setTriggerWhenEmpty(bool value) {
     _triggerWhenEmpty = value;
   }
-  // Get Trigger when empty
+
   bool getTriggerWhenEmpty() const {
     return (_triggerWhenEmpty);
   }
-  // Get Active Task Counts
+
   uint8_t getActiveTasks() const {
     return (active_tasks_);
   }
-  // Increment Active Task Counts
+
   void incrementActiveTasks() {
     active_tasks_++;
   }
-  // decrement Active Task Counts
+
   void decrementActiveTask() {
     if (active_tasks_ > 0)
       active_tasks_--;
   }
+
   void clearActiveTask() {
     active_tasks_ = 0;
   }
+
   void yield() override;
 
   void yield(std::chrono::milliseconds delta_time);
@@ -184,16 +173,13 @@ class Processor : public Connectable, public ConfigurableComponent {
   }
 
  public:
-  // OnTrigger method, implemented by NiFi Processor Designer
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSession> &session) {
     onTrigger(context.get(), session.get());
   }
   virtual void onTrigger(ProcessContext* /*context*/, ProcessSession* /*session*/) {
   }
-  // Initialize, overridden by NiFi Process Designer
   void initialize() override {
   }
-  // Scheduled event hook, overridden by NiFi Process Designer
   virtual void onSchedule(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
     onSchedule(context.get(), sessionFactory.get());
   }
@@ -212,17 +198,13 @@ class Processor : public Connectable, public ConfigurableComponent {
     stream_factory_ = std::move(stream_factory);
   }
 
-  bool supportsDynamicProperties() override {
-    return false;
-  }
-
   bool isThrottledByBackpressure() const;
 
   Connectable* pickIncomingConnection() override;
 
   void validateAnnotations() const;
 
-  std::string getInputRequirementAsString() const;
+  virtual annotation::Input getInputRequirement() const = 0;
 
  protected:
   virtual void notifyStop() {
@@ -230,33 +212,20 @@ class Processor : public Connectable, public ConfigurableComponent {
 
   std::shared_ptr<minifi::io::StreamFactory> stream_factory_;
 
-  // Processor state
   std::atomic<ScheduledState> state_;
 
-  // SchedulePeriod in Nano Seconds
   std::atomic<std::chrono::nanoseconds> scheduling_period_nano_;
-  // Run Duration in Nano Seconds
   std::atomic<std::chrono::nanoseconds> run_duration_nano_;
-  // Yield Period in Milliseconds
   std::atomic<std::chrono::milliseconds> yield_period_msec_;
 
-  // Active Tasks
   std::atomic<uint8_t> active_tasks_;
-  // Trigger the Processor even if the incoming connection is empty
   std::atomic<bool> _triggerWhenEmpty;
 
   std::string cron_period_;
 
  private:
-  // Mutex for protection
   mutable std::mutex mutex_;
-  // Yield Expiration
   std::atomic<std::chrono::time_point<std::chrono::system_clock>> yield_expiration_{};
-
-  // Prevent default copy constructor and assignment operation
-  // Only support pass by reference or pointer
-  Processor(const Processor &parent);
-  Processor &operator=(const Processor &parent);
 
  private:
   static std::mutex& getGraphMutex() {
@@ -269,11 +238,6 @@ class Processor : public Connectable, public ConfigurableComponent {
 
   static bool partOfCycle(Connection* conn);
 
-  virtual annotation::Input getInputRequirement() const {
-      // default input requirement
-      return annotation::Input::INPUT_ALLOWED;
-  }
-
   // an outgoing connection allows us to reach these nodes
   std::unordered_map<Connection*, std::unordered_set<Processor*>> reachable_processors_;
 
@@ -281,9 +245,4 @@ class Processor : public Connectable, public ConfigurableComponent {
 };
 
 }  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSOR_H_
+}  // namespace org::apache::nifi::minifi

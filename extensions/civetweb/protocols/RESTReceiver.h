@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -24,11 +23,7 @@
 #include "CivetServer.h"
 #include "c2/C2Protocol.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 int log_message(const struct mg_connection *conn, const char *message);
 
@@ -45,6 +40,8 @@ int ssl_protocol_en(void *ssl_context, void *user_data);
 class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
  public:
   explicit RESTReceiver(const std::string& name, const utils::Identifier& uuid = {});
+
+  EXTENSIONAPI static constexpr const char* Description = "Provides a webserver to display C2 heartbeat information";
 
   void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
                           const std::shared_ptr<Configure> &configure) override;
@@ -91,8 +88,4 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<RESTReceiver>::getLogger();
 };
 
-} /* namespace c2 */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::c2

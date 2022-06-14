@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef NIFI_MINIFI_CPP_TFEXTRACTTOPLABELS_H
-#define NIFI_MINIFI_CPP_TFEXTRACTTOPLABELS_H
+#pragma once
 
 #include <atomic>
 
@@ -25,11 +24,7 @@
 #include <tensorflow/core/public/session.h>
 #include <concurrentqueue.h>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class TFExtractTopLabels : public core::Processor {
  public:
@@ -38,9 +33,21 @@ class TFExtractTopLabels : public core::Processor {
         logger_(logging::LoggerFactory<TFExtractTopLabels>::getLogger()) {
   }
 
-  static core::Relationship Success;
-  static core::Relationship Retry;
-  static core::Relationship Failure;
+  EXTENSIONAPI static constexpr const char* Description = "Extracts the top 5 labels for categorical inference models";
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Retry;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() { return std::array{Success, Retry, Failure}; }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
@@ -81,10 +88,4 @@ class TFExtractTopLabels : public core::Processor {
   std::mutex labels_mtx_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // NIFI_MINIFI_CPP_TFEXTRACTTOPLABELS_H
+}  // namespace org::apache::nifi::minifi::processors

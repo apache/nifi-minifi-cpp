@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
-#define LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -27,7 +25,6 @@
 #include <iostream>
 #include <map>
 #include <memory>
-#include <set>
 
 #define DEFAULT_DYNAMIC_PROPERTY_DESC "Dynamic Property"
 
@@ -35,12 +32,9 @@
 
 #include "logging/Logger.h"
 #include "Property.h"
+#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Represents a configurable component
@@ -98,35 +92,21 @@ class ConfigurableComponent {
      */
   bool setProperty(const Property& prop, PropertyValue &value);
 
-  /**
-   * Sets supported properties for the ConfigurableComponent
-   * @param supported properties
-   * @return result of set operation.
-   */
-  bool setSupportedProperties(std::set<Property> properties);
-
-  /**
-   * Updates the supported properties for the ConfigurableComponent
-   * @param new supported properties
-   * @return result of update operation.
-   */
-  bool updateSupportedProperties(std::set<Property> properties);
+  void setSupportedProperties(gsl::span<const core::Property> properties);
 
   /**
    * Gets whether or not this processor supports dynamic properties.
    *
    * @return true if this component supports dynamic properties (default is false)
    */
-  virtual bool supportsDynamicProperties() = 0;
+  virtual bool supportsDynamicProperties() const = 0;
 
   /**
    * Gets whether or not this processor supports dynamic relationships.
    *
    * @return true if this component supports dynamic relationships (default is false)
    */
-  virtual bool supportsDynamicRelationships() {
-    return false;
-  }
+  virtual bool supportsDynamicRelationships() const = 0;
 
   /**
    * Gets the value of a dynamic property (if it was set).
@@ -195,7 +175,7 @@ class ConfigurableComponent {
    * Returns true if the instance can be edited.
    * @return true/false
    */
-  virtual bool canEdit()= 0;
+  virtual bool canEdit() = 0;
 
   mutable std::mutex configuration_mutex_;
 
@@ -243,10 +223,4 @@ bool ConfigurableComponent::getProperty(const std::string name, T &value) const 
   }
 }
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONFIGURABLECOMPONENT_H_
+}  // namespace org::apache::nifi::minifi::core

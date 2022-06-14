@@ -1,7 +1,4 @@
 /**
- * @file ProcessGroup.cpp
- * ProcessGroup class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -18,24 +15,12 @@
  * limitations under the License.
  */
 #include "core/ProcessContextBuilder.h"
-#include <time.h>
-#include <vector>
 #include <memory>
 #include <string>
-#include <queue>
-#include <map>
-#include <set>
-#include <chrono>
-#include <thread>
-#include "core/Processor.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 ProcessContextBuilder::ProcessContextBuilder(const std::string &name, const minifi::utils::Identifier &uuid)
     : core::CoreComponent(name, uuid) {
@@ -78,10 +63,6 @@ std::shared_ptr<core::ProcessContext> ProcessContextBuilder::build(const std::sh
   return std::make_shared<core::ProcessContext>(processor, controller_service_provider_, prov_repo_, flow_repo_, configuration_, content_repo_);
 }
 
-REGISTER_INTERNAL_RESOURCE(ProcessContextBuilder);
+REGISTER_RESOURCE(ProcessContextBuilder, InternalResource);
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

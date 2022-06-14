@@ -26,45 +26,9 @@
 
 namespace org::apache::nifi::minifi::azure::processors {
 
-const core::Property FetchAzureDataLakeStorage::RangeStart(
-    core::PropertyBuilder::createProperty("Range Start")
-      ->withDescription("The byte position at which to start reading from the object. An empty value or a value of zero will start reading at the beginning of the object.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-
-const core::Property FetchAzureDataLakeStorage::RangeLength(
-    core::PropertyBuilder::createProperty("Range Length")
-      ->withDescription("The number of bytes to download from the object, starting from the Range Start. "
-                        "An empty value or a value that extends beyond the end of the object will read to the end of the object.")
-      ->supportsExpressionLanguage(true)
-      ->build());
-
-const core::Property FetchAzureDataLakeStorage::NumberOfRetries(
-    core::PropertyBuilder::createProperty("Number of Retries")
-      ->withDescription("The number of automatic retries to perform if the download fails.")
-      ->withDefaultValue<uint64_t>(0)
-      ->supportsExpressionLanguage(true)
-      ->build());
-
-const core::Relationship FetchAzureDataLakeStorage::Success("success", "Files that have been successfully fetched from Azure storage are transferred to this relationship");
-const core::Relationship FetchAzureDataLakeStorage::Failure("failure", "In case of fetch failure flowfiles are transferred to this relationship");
-
 void FetchAzureDataLakeStorage::initialize() {
-  // Add new supported properties
-  setSupportedProperties({
-    AzureStorageCredentialsService,
-    FilesystemName,
-    DirectoryName,
-    FileName,
-    RangeStart,
-    RangeLength,
-    NumberOfRetries
-  });
-  // Set the supported relationships
-  setSupportedRelationships({
-    Success,
-    Failure
-  });
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 std::optional<storage::FetchAzureDataLakeStorageParameters> FetchAzureDataLakeStorage::buildFetchParameters(
@@ -129,7 +93,5 @@ void FetchAzureDataLakeStorage::onTrigger(const std::shared_ptr<core::ProcessCon
     session->remove(flow_file);
   }
 }
-
-REGISTER_RESOURCE(FetchAzureDataLakeStorage, "Fetch the provided file from Azure Data Lake Storage Gen 2");
 
 }  // namespace org::apache::nifi::minifi::azure::processors

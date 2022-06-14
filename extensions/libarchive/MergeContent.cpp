@@ -1,7 +1,4 @@
 /**
- * @file MergeContent.cpp
- * MergeContent class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -21,88 +18,22 @@
 #include <stdio.h>
 #include <memory>
 #include <string>
-#include <set>
 #include <map>
 #include <deque>
 #include <utility>
 #include <algorithm>
 #include <numeric>
-#include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 #include "serialization/PayloadSerializer.h"
 #include "serialization/FlowFileV3Serializer.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-core::Property MergeContent::MergeStrategy(
-  core::PropertyBuilder::createProperty("Merge Strategy")
-  ->withDescription("Defragment or Bin-Packing Algorithm")
-  ->withAllowableValues<std::string>({merge_content_options::MERGE_STRATEGY_DEFRAGMENT, merge_content_options::MERGE_STRATEGY_BIN_PACK})
-  ->withDefaultValue(merge_content_options::MERGE_STRATEGY_DEFRAGMENT)->build());
-core::Property MergeContent::MergeFormat(
-  core::PropertyBuilder::createProperty("Merge Format")
-  ->withDescription("Merge Format")
-  ->withAllowableValues<std::string>({
-      merge_content_options::MERGE_FORMAT_CONCAT_VALUE,
-      merge_content_options::MERGE_FORMAT_TAR_VALUE,
-      merge_content_options::MERGE_FORMAT_ZIP_VALUE,
-      merge_content_options::MERGE_FORMAT_FLOWFILE_STREAM_V3_VALUE})
-  ->withDefaultValue(merge_content_options::MERGE_FORMAT_CONCAT_VALUE)->build());
-core::Property MergeContent::CorrelationAttributeName("Correlation Attribute Name", "Correlation Attribute Name", "");
-core::Property MergeContent::DelimiterStrategy(
-  core::PropertyBuilder::createProperty("Delimiter Strategy")
-  ->withDescription("Determines if Header, Footer, and Demarcator should point to files")
-  ->withAllowableValues<std::string>({merge_content_options::DELIMITER_STRATEGY_FILENAME, merge_content_options::DELIMITER_STRATEGY_TEXT})
-  ->withDefaultValue(merge_content_options::DELIMITER_STRATEGY_FILENAME)->build());
-core::Property MergeContent::Header("Header File", "Filename specifying the header to use", "");
-core::Property MergeContent::Footer("Footer File", "Filename specifying the footer to use", "");
-core::Property MergeContent::Demarcator("Demarcator File", "Filename specifying the demarcator to use", "");
-core::Property MergeContent::KeepPath(
-  core::PropertyBuilder::createProperty("Keep Path")
-  ->withDescription("If using the Zip or Tar Merge Format, specifies whether or not the FlowFiles' paths should be included in their entry")
-  ->withDefaultValue(false)->build());
-core::Property MergeContent::AttributeStrategy(
-  core::PropertyBuilder::createProperty("Attribute Strategy")
-  ->withDescription("Determines which FlowFile attributes should be added to the bundle. If 'Keep All Unique Attributes' is selected, "
-                    "any attribute on any FlowFile that gets bundled will be kept unless its value conflicts with the value from another FlowFile "
-                    "(in which case neither, or none, of the conflicting attributes will be kept). If 'Keep Only Common Attributes' is selected, "
-                    "only the attributes that exist on all FlowFiles in the bundle, with the same value, will be preserved.")
-  ->withAllowableValues<std::string>({merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON, merge_content_options::ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE})
-  ->withDefaultValue(merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON)->build());
-core::Relationship MergeContent::Merge("merged", "The FlowFile containing the merged content");
+namespace org::apache::nifi::minifi::processors {
 
 void MergeContent::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties;
-  properties.insert(MinSize);
-  properties.insert(MaxSize);
-  properties.insert(MinEntries);
-  properties.insert(MaxEntries);
-  properties.insert(MaxBinAge);
-  properties.insert(MaxBinCount);
-  properties.insert(BatchSize);
-  properties.insert(MergeStrategy);
-  properties.insert(MergeFormat);
-  properties.insert(CorrelationAttributeName);
-  properties.insert(DelimiterStrategy);
-  properties.insert(Header);
-  properties.insert(Footer);
-  properties.insert(Demarcator);
-  properties.insert(KeepPath);
-  properties.insert(AttributeStrategy);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  std::set<core::Relationship> relationships;
-  relationships.insert(Original);
-  relationships.insert(Failure);
-  relationships.insert(Merge);
-  setSupportedRelationships(relationships);
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 std::string MergeContent::readContent(std::string path) {
@@ -432,12 +363,4 @@ void KeepAllUniqueAttributesMerger::processFlowFile(const std::shared_ptr<core::
   }
 }
 
-REGISTER_RESOURCE(MergeContent, "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile. "
-    "MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files."
-    "This processor updates the mime.type attribute as appropriate.");
-
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

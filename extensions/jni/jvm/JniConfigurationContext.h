@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -31,15 +30,11 @@ namespace jni {
 
 class ConfigurationContext : public core::controller::ControllerService {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit ConfigurationContext(const std::string& name, const utils::Identifier& uuid = {})
       : core::controller::ControllerService(name, uuid) {
   }
 
-  virtual ~ConfigurationContext() = default;
+  ~ConfigurationContext() override = default;
   virtual jobject getClassInstance() = 0;
 };
 

@@ -22,6 +22,7 @@
 
 #include "utils/file/FileUtils.h"
 #include "utils/StringUtils.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
 namespace {
@@ -47,17 +48,31 @@ namespace {
   }
 }  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace controllers {
+namespace org::apache::nifi::minifi::controllers {
 
 constexpr int UnorderedMapPersistableKeyValueStoreService::FORMAT_VERSION;
 
-core::Property UnorderedMapPersistableKeyValueStoreService::File(
-    core::PropertyBuilder::createProperty("File")->withDescription("Path to a file to store state")
-        ->isRequired(true)->build());
+const core::Property UnorderedMapPersistableKeyValueStoreService::LinkedServices(
+    core::PropertyBuilder::createProperty("Linked Services")
+    ->withDescription("Referenced Controller Services")
+    ->build());
+const core::Property UnorderedMapPersistableKeyValueStoreService::AlwaysPersist(
+    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AlwaysPersistPropertyName)
+    ->withDescription("Persist every change instead of persisting it periodically.")
+    ->isRequired(false)
+    ->withDefaultValue<bool>(false)
+    ->build());
+const core::Property UnorderedMapPersistableKeyValueStoreService::AutoPersistenceInterval(
+    core::PropertyBuilder::createProperty(AbstractAutoPersistingKeyValueStoreService::AutoPersistenceIntervalPropertyName)
+    ->withDescription("The interval of the periodic task persisting all values. Only used if Always Persist is false. If set to 0 seconds, auto persistence will be disabled.")
+    ->isRequired(false)
+    ->withDefaultValue<core::TimePeriodValue>("1 min")
+    ->build());
+const core::Property UnorderedMapPersistableKeyValueStoreService::File(
+    core::PropertyBuilder::createProperty("File")
+    ->withDescription("Path to a file to store state")
+    ->isRequired(true)
+    ->build());
 
 UnorderedMapPersistableKeyValueStoreService::UnorderedMapPersistableKeyValueStoreService(const std::string& name, const utils::Identifier& uuid /*= utils::Identifier()*/)
     : PersistableKeyValueStoreService(name, uuid)
@@ -132,8 +147,9 @@ bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& l
 }
 
 void UnorderedMapPersistableKeyValueStoreService::initialize() {
-  AbstractAutoPersistingKeyValueStoreService::initialize();
-  updateSupportedProperties({File});
+  // UnorderedMapKeyValueStoreService::initialize() also calls setSupportedProperties, and we don't want that
+  ControllerService::initialize();  // NOLINT(bugprone-parent-virtual-call)
+  setSupportedProperties(properties());
 }
 
 void UnorderedMapPersistableKeyValueStoreService::onEnable() {
@@ -245,10 +261,6 @@ bool UnorderedMapPersistableKeyValueStoreService::load() {
   return true;
 }
 
-REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, "A persistable key-value service implemented by a locked std::unordered_map<std::string, std::string> and persisted into a file");
+REGISTER_RESOURCE(UnorderedMapPersistableKeyValueStoreService, ControllerService);
 
-}  // namespace controllers
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::controllers

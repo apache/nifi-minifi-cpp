@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -33,11 +32,7 @@
 #include "io/validation.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 std::shared_ptr<utils::IdGenerator> HttpSiteToSiteClient::id_generator_ = utils::IdGenerator::getIdGenerator();
 
@@ -305,10 +300,6 @@ void HttpSiteToSiteClient::deleteTransaction(const utils::Identifier& transactio
   SiteToSiteClient::deleteTransaction(transactionID);
 }
 
-REGISTER_INTERNAL_RESOURCE_AS(HttpSiteToSiteClient, ("HttpSiteToSiteClient", "HttpProtocol"));
+REGISTER_RESOURCE_AS(HttpSiteToSiteClient, InternalResource, ("HttpSiteToSiteClient", "HttpProtocol"));
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sitetosite

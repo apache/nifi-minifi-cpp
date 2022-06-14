@@ -1,6 +1,4 @@
 /**
- * PutSFTP class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -34,14 +32,11 @@
 #include "core/Property.h"
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/ArrayUtils.h"
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class PutSFTP : public SFTPProcessorBase {
  public:
@@ -52,48 +47,65 @@ class PutSFTP : public SFTPProcessorBase {
   static constexpr char const *CONFLICT_RESOLUTION_FAIL = "FAIL";
   static constexpr char const *CONFLICT_RESOLUTION_NONE = "NONE";
 
-  static constexpr char const* ProcessorName = "PutSFTP";
-
-
-  /*!
-   * Create a new processor
-   */
   explicit PutSFTP(const std::string& name, const utils::Identifier& uuid = {});
   ~PutSFTP() override;
 
-  // Supported Properties
-  static core::Property RemotePath;
-  static core::Property CreateDirectory;
-  static core::Property DisableDirectoryListing;
-  static core::Property BatchSize;
-  static core::Property ConflictResolution;
-  static core::Property RejectZeroByte;
-  static core::Property DotRename;
-  static core::Property TempFilename;
-  static core::Property LastModifiedTime;
-  static core::Property Permissions;
-  static core::Property RemoteOwner;
-  static core::Property RemoteGroup;
-  static core::Property UseCompression;
+  EXTENSIONAPI static constexpr const char* Description = "Sends FlowFiles to an SFTP Server";
 
-  // Supported Relationships
-  static core::Relationship Success;
-  static core::Relationship Reject;
-  static core::Relationship Failure;
-
-  bool supportsDynamicProperties() override {
-    return true;
+  EXTENSIONAPI static const core::Property RemotePath;
+  EXTENSIONAPI static const core::Property CreateDirectory;
+  EXTENSIONAPI static const core::Property DisableDirectoryListing;
+  EXTENSIONAPI static const core::Property BatchSize;
+  EXTENSIONAPI static const core::Property ConflictResolution;
+  EXTENSIONAPI static const core::Property RejectZeroByte;
+  EXTENSIONAPI static const core::Property DotRename;
+  EXTENSIONAPI static const core::Property TempFilename;
+  EXTENSIONAPI static const core::Property LastModifiedTime;
+  EXTENSIONAPI static const core::Property Permissions;
+  EXTENSIONAPI static const core::Property RemoteOwner;
+  EXTENSIONAPI static const core::Property RemoteGroup;
+  EXTENSIONAPI static const core::Property UseCompression;
+  static auto properties() {
+    return utils::array_cat(SFTPProcessorBase::properties(), std::array{
+      RemotePath,
+      CreateDirectory,
+      DisableDirectoryListing,
+      BatchSize,
+      ConflictResolution,
+      RejectZeroByte,
+      DotRename,
+      TempFilename,
+      LastModifiedTime,
+      Permissions,
+      RemoteOwner,
+      RemoteGroup,
+      UseCompression
+    });
   }
+
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Reject;
+  EXTENSIONAPI static const core::Relationship Failure;
+  static auto relationships() {
+    return std::array{
+      Success,
+      Reject,
+      Failure
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   bool create_directory_;
   uint64_t batch_size_;
   std::string conflict_resolution_;
@@ -103,8 +115,4 @@ class PutSFTP : public SFTPProcessorBase {
   bool processOne(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session);
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

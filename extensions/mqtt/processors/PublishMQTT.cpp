@@ -1,7 +1,4 @@
 /**
- * @file PublishMQTT.cpp
- * PublishMQTT class implementation
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -25,8 +22,8 @@
 #include <map>
 #include <memory>
 #include <optional>
-#include <set>
 #include <string>
+#include <vector>
 
 #include "utils/TimeUtil.h"
 #include "utils/StringUtils.h"
@@ -34,26 +31,11 @@
 #include "core/ProcessSession.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
-
-core::Property PublishMQTT::Retain("Retain", "Retain MQTT published record in broker", "false");
-core::Property PublishMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
-
-core::Relationship PublishMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
-core::Relationship PublishMQTT::Failure("failure", "FlowFiles that failed to send to the destination are transferred to this relationship");
+namespace org::apache::nifi::minifi::processors {
 
 void PublishMQTT::initialize() {
-  // Set the supported properties
-  std::set<core::Property> properties(AbstractMQTTProcessor::getSupportedProperties());
-  properties.insert(Retain);
-  properties.insert(MaxFlowSegSize);
-  setSupportedProperties(properties);
-  // Set the supported relationships
-  setSupportedRelationships({Success, Failure});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
@@ -100,10 +82,4 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
   }
 }
 
-REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.");
-
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -29,6 +29,7 @@
 #include "SQLProcessor.h"
 #include "FlowFileSource.h"
 #include "data/SQLColumnIdentifier.h"
+#include "utils/ArrayUtils.h"
 
 namespace org {
 namespace apache {
@@ -36,32 +37,40 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! QueryDatabaseTable Class
 class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
  public:
   explicit QueryDatabaseTable(const std::string& name, const utils::Identifier& uuid = {});
 
   EXTENSIONAPI static const std::string RESULT_TABLE_NAME;
   EXTENSIONAPI static const std::string RESULT_ROW_COUNT;
-
   EXTENSIONAPI static const std::string TABLENAME_KEY;
   EXTENSIONAPI static const std::string MAXVALUE_KEY_PREFIX;
+  EXTENSIONAPI static const std::string InitialMaxValueDynamicPropertyPrefix;
 
-  //! Processor Name
-  EXTENSIONAPI static const std::string ProcessorName;
+  EXTENSIONAPI static constexpr const char* Description = "QueryDatabaseTable to execute SELECT statement via ODBC.";
 
   EXTENSIONAPI static const core::Property TableName;
   EXTENSIONAPI static const core::Property ColumnNames;
   EXTENSIONAPI static const core::Property MaxValueColumnNames;
   EXTENSIONAPI static const core::Property WhereClause;
-
-  EXTENSIONAPI static const std::string InitialMaxValueDynamicPropertyPrefix;
+  static auto properties() {
+    return utils::array_cat(SQLProcessor::properties(), FlowFileSource::properties(), std::array{
+      TableName,
+      ColumnNames,
+      MaxValueColumnNames,
+      WhereClause
+    });
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
 
-  bool supportsDynamicProperties() override {
-    return true;
-  }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = true;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void processOnSchedule(core::ProcessContext& context) override;
   void processOnTrigger(core::ProcessContext& context, core::ProcessSession& session) override;
@@ -69,10 +78,6 @@ class QueryDatabaseTable: public SQLProcessor, public FlowFileSource {
   void initialize() override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   std::string buildSelectQuery();
 
   void initializeMaxValues(core::ProcessContext& context);

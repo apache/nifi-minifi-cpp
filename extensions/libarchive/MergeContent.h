@@ -1,7 +1,4 @@
 /**
- * @file MergeContent.h
- * MergeContent class declaration
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -32,14 +29,11 @@
 #include "archive.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "serialization/FlowFileSerializer.h"
+#include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 namespace merge_content_options {
 
@@ -56,7 +50,6 @@ constexpr const char *ATTRIBUTE_STRATEGY_KEEP_ALL_UNIQUE = "Keep All Unique Attr
 
 } /* namespace merge_content_options */
 
-// MergeBin Class
 class MergeBin {
  public:
   virtual ~MergeBin() = default;
@@ -65,7 +58,6 @@ class MergeBin {
       std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) = 0;
 };
 
-// BinaryConcatenationMerge Class
 class BinaryConcatenationMerge : public MergeBin {
  public:
   BinaryConcatenationMerge(const std::string& header, const std::string& footer, const std::string& demarcator);
@@ -125,7 +117,6 @@ class BinaryConcatenationMerge : public MergeBin {
 };
 
 
-// Archive Class
 class ArchiveMerge {
  public:
   class ArchiveWriter : public io::OutputStream {
@@ -247,14 +238,12 @@ class ArchiveMerge {
   };
 };
 
-// TarMerge Class
 class TarMerge: public ArchiveMerge, public MergeBin {
  public:
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
              FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &merge_flow) override;
 };
 
-// ZipMerge Class
 class ZipMerge: public ArchiveMerge, public MergeBin {
  public:
   void merge(core::ProcessContext *context, core::ProcessSession *session, std::deque<std::shared_ptr<core::FlowFile>> &flows,
@@ -296,13 +285,8 @@ class KeepAllUniqueAttributesMerger: public AttributeMerger {
   std::vector<std::string> removed_attributes_;
 };
 
-// MergeContent Class
 class MergeContent : public processors::BinFiles {
  public:
-  // Constructor
-  /*!
-   * Create a new processor
-   */
   explicit MergeContent(const std::string& name, const utils::Identifier& uuid = {})
       : processors::BinFiles(name, uuid) {
     mergeStrategy_ = merge_content_options::MERGE_STRATEGY_DEFRAGMENT;
@@ -311,35 +295,49 @@ class MergeContent : public processors::BinFiles {
     keepPath_ = false;
     attributeStrategy_ = merge_content_options::ATTRIBUTE_STRATEGY_KEEP_COMMON;
   }
-  // Destructor
   ~MergeContent() override = default;
-  // Processor Name
-  EXTENSIONAPI static constexpr char const* ProcessorName = "MergeContent";
-  // Supported Properties
-  EXTENSIONAPI static core::Property MergeStrategy;
-  EXTENSIONAPI static core::Property MergeFormat;
-  EXTENSIONAPI static core::Property CorrelationAttributeName;
-  EXTENSIONAPI static core::Property DelimiterStrategy;
-  EXTENSIONAPI static core::Property KeepPath;
-  EXTENSIONAPI static core::Property Header;
-  EXTENSIONAPI static core::Property Footer;
-  EXTENSIONAPI static core::Property Demarcator;
-  EXTENSIONAPI static core::Property AttributeStrategy;
 
-  // Supported Relationships
-  EXTENSIONAPI static core::Relationship Merge;
+  EXTENSIONAPI static constexpr const char* Description = "Merges a Group of FlowFiles together based on a user-defined strategy and packages them into a single FlowFile. "
+      "MergeContent should be configured with only one incoming connection as it won't create grouped Flow Files."
+      "This processor updates the mime.type attribute as appropriate.";
 
- public:
-  /**
-   * Function that's executed when the processor is scheduled.
-   * @param context process context.
-   * @param sessionFactory process session factory that is used when creating
-   * ProcessSession objects.
-   */
+  EXTENSIONAPI static const core::Property MergeStrategy;
+  EXTENSIONAPI static const core::Property MergeFormat;
+  EXTENSIONAPI static const core::Property CorrelationAttributeName;
+  EXTENSIONAPI static const core::Property DelimiterStrategy;
+  EXTENSIONAPI static const core::Property KeepPath;
+  EXTENSIONAPI static const core::Property Header;
+  EXTENSIONAPI static const core::Property Footer;
+  EXTENSIONAPI static const core::Property Demarcator;
+  EXTENSIONAPI static const core::Property AttributeStrategy;
+  static auto properties() {
+    return utils::array_cat(BinFiles::properties(), std::array{
+      MergeStrategy,
+      MergeFormat,
+      CorrelationAttributeName,
+      DelimiterStrategy,
+      KeepPath,
+      Header,
+      Footer,
+      Demarcator,
+      AttributeStrategy
+    });
+  }
+
+  EXTENSIONAPI static const core::Relationship Merge;
+  static auto relationships() {
+    return utils::array_cat(BinFiles::relationships(), std::array{Merge});
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
+  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onSchedule(core::ProcessContext *context, core::ProcessSessionFactory *sessionFactory) override;
-  // OnTrigger method, implemented by NiFi MergeContent
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  // Initialize, over write by NiFi MergeContent
   void initialize() override;
   bool processBin(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin) override;
 
@@ -351,10 +349,6 @@ class MergeContent : public processors::BinFiles {
 
  private:
   void validatePropertyOptions();
-
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<MergeContent>::getLogger();
   std::string mergeStrategy_;
@@ -369,12 +363,7 @@ class MergeContent : public processors::BinFiles {
   std::string footerContent_;
   std::string demarcatorContent_;
   std::string attributeStrategy_;
-  // readContent
   std::string readContent(std::string path);
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -36,12 +36,14 @@ namespace {
 class DeleteGCSObjectMocked : public DeleteGCSObject {
   using org::apache::nifi::minifi::extensions::gcp::DeleteGCSObject::DeleteGCSObject;
  public:
+  static constexpr const char* Description = "DeleteGCSObjectMocked";
+
   gcs::Client getClient() const override {
     return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
-REGISTER_RESOURCE(DeleteGCSObjectMocked, "DeleteGCSObjectMocked");
+REGISTER_RESOURCE(DeleteGCSObjectMocked, Processor);
 }  // namespace
 
 class DeleteGCSObjectTests : public ::testing::Test {

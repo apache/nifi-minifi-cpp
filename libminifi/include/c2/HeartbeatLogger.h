@@ -24,14 +24,12 @@
 #include "HeartbeatReporter.h"
 #include "c2/protocols/RESTProtocol.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace c2 {
+namespace org::apache::nifi::minifi::c2 {
 
 class HeartbeatLogger : public RESTProtocol, public HeartbeatReporter {
  public:
+  MINIFIAPI static constexpr const char* Description = "Logs heartbeats at TRACE level.";
+
   explicit HeartbeatLogger(const std::string& name, const utils::Identifier& id = {});
   int16_t heartbeat(const C2Payload &heartbeat) override;
   void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink, const std::shared_ptr<Configure> &configure) override;
@@ -40,8 +38,4 @@ class HeartbeatLogger : public RESTProtocol, public HeartbeatReporter {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HeartbeatLogger>::getLogger();
 };
 
-}  // namespace c2
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::c2

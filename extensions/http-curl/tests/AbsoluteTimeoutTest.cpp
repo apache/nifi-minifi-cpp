@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #undef NDEBUG
+#include <array>
+
 #include "TestBase.h"
 #include "Catch.h"
 #include "tests/TestServer.h"
@@ -38,7 +39,7 @@ int main() {
   auto processor = plan->addProcessor("InvokeHTTP", "InvokeHTTP");
   processor->setProperty("Read Timeout", "1 s");
   processor->setProperty("Remote URL", "http://localhost:" + port);
-  processor->setAutoTerminatedRelationships({{"failure", "d"}});
+  processor->setAutoTerminatedRelationships(std::array{core::Relationship{"failure", "d"}});
 
   plan->runNextProcessor();
 

@@ -36,12 +36,14 @@ namespace {
 class ListGCSBucketMocked : public ListGCSBucket {
   using org::apache::nifi::minifi::extensions::gcp::ListGCSBucket::ListGCSBucket;
  public:
+  static constexpr const char* Description = "ListGCSBucketMocked";
+
   gcs::Client getClient() const override {
     return gcs::testing::ClientFromMock(mock_client_, *retry_policy_);
   }
   std::shared_ptr<gcs::testing::MockClient> mock_client_ = std::make_shared<gcs::testing::MockClient>();
 };
-REGISTER_RESOURCE(ListGCSBucketMocked, "ListGCSBucketMocked");
+REGISTER_RESOURCE(ListGCSBucketMocked, Processor);
 
 auto CreateObject(int index, int generation = 1) {
   std::string id = "object-" + std::to_string(index);

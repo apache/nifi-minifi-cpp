@@ -23,34 +23,28 @@
 #include "logging/LoggerConfiguration.h"
 #include "Processor.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class Funnel final : public Processor {
  public:
-  // Supported Relationships
-  static const core::Relationship Success;
-
   Funnel(const std::string& name, const utils::Identifier& uuid) : Processor(name, uuid), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
   explicit Funnel(const std::string& name) : Processor(name), logger_(logging::LoggerFactory<Funnel>::getLogger()) {}
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  MINIFIAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
+  MINIFIAPI static constexpr bool SupportsDynamicProperties = false;
+  MINIFIAPI static constexpr bool SupportsDynamicRelationships = false;
+  MINIFIAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
+  MINIFIAPI static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
   void initialize() override;
 
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
 
-  annotation::Input getInputRequirement() const override {
-    return annotation::Input::INPUT_REQUIRED;
-  }
-
  private:
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core

@@ -290,11 +290,11 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
       processor->setRunDurationNano(std::chrono::nanoseconds(runDurationNanos));
     }
 
-    std::set<core::Relationship> autoTerminatedRelationships;
+    std::vector<core::Relationship> autoTerminatedRelationships;
     for (auto &&relString : procCfg.autoTerminatedRelationships) {
       core::Relationship relationship(relString, "");
       logger_->log_debug("parseProcessorNode: autoTerminatedRelationship  => [%s]", relString);
-      autoTerminatedRelationships.insert(relationship);
+      autoTerminatedRelationships.push_back(relationship);
     }
 
     processor->setAutoTerminatedRelationships(autoTerminatedRelationships);

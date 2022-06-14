@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -23,18 +22,13 @@
 #include "core/Core.h"
 #include "core/Connectable.h"
 #include "core/ContentRepository.h"
-#include "properties/Configure.h"
-#include "core/logging/LoggerConfiguration.h"
-#include "database/RocksDatabase.h"
 #include "core/ContentSession.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "core/Property.h"
+#include "database/RocksDatabase.h"
+#include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
-
+namespace org::apache::nifi::minifi::core::repository {
 
 /**
  * DatabaseContentRepository is a content repository that stores data onto the local file system.
@@ -59,6 +53,10 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   ~DatabaseContentRepository() override {
     stop();
   }
+
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
 
   std::shared_ptr<ContentSession> createSession() override;
 
@@ -104,9 +102,4 @@ class DatabaseContentRepository : public core::ContentRepository, public core::C
   std::shared_ptr<logging::Logger> logger_;
 };
 
-} /* namespace repository */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::repository

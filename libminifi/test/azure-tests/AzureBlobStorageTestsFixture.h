@@ -18,6 +18,7 @@
 
 #pragma once
 
+#include <array>
 #include <string>
 #include <utility>
 #include <vector>
@@ -74,13 +75,13 @@ class AzureBlobStorageTestsFixture {
     auto logattribute = plan_->addProcessor("LogAttribute", "LogAttribute", { {"success", "d"} }, true);
     success_putfile_ = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
     plan_->addConnection(logattribute, {"success", "d"}, success_putfile_);
-    success_putfile_->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    success_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     success_output_dir_ = test_controller_.createTempDirectory();
     plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_);
 
     failure_putfile_ = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(azure_blob_storage_processor_, {"failure", "d"}, failure_putfile_);
-    failure_putfile_->setAutoTerminatedRelationships({{"success", "d"}, {"failure", "d"}});
+    failure_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     failure_output_dir_ = test_controller_.createTempDirectory();
     plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_);
   }

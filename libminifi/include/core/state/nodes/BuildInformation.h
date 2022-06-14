@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_
+#pragma once
 
 #include <string>
 #include <vector>
@@ -53,12 +51,7 @@
 #include "core/ClassLoader.h"
 #include "io/ClientSocket.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 /**
  * Justification and Purpose: Provides build information
@@ -70,15 +63,17 @@ class BuildInformation : public DeviceInformation {
       : DeviceInformation(name, uuid) {
   }
 
-  BuildInformation(const std::string &name) // NOLINT
+  explicit BuildInformation(const std::string &name)
       : DeviceInformation(name) {
   }
 
-  std::string getName() const {
+  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines the pertinent build information for this agent binary";
+
+  std::string getName() const override {
     return "BuildInformation";
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
 
     SerializedResponseNode build_version;
@@ -126,11 +121,4 @@ class BuildInformation : public DeviceInformation {
   }
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_BUILDINFORMATION_H_
+}  // namespace org::apache::nifi::minifi::state::response

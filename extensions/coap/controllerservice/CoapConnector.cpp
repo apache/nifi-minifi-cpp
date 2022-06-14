@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -20,30 +19,20 @@
 
 #include <string>
 #include <memory>
-#include <set>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/controller/ControllerService.h"
-#include "core/Property.h"
+#include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace coap {
-namespace controllers {
+namespace org::apache::nifi::minifi::coap::controllers {
 
-static core::Property RemoteServer;
-static core::Property Port;
-static core::Property MaxQueueSize;
-
-core::Property CoapConnectorService::RemoteServer(core::PropertyBuilder::createProperty("Remote Server")->withDescription("Remote CoAP server")->isRequired(false)->build());
-core::Property CoapConnectorService::Port(
+const core::Property CoapConnectorService::RemoteServer(core::PropertyBuilder::createProperty("Remote Server")->withDescription("Remote CoAP server")->isRequired(false)->build());
+const core::Property CoapConnectorService::Port(
     core::PropertyBuilder::createProperty("Remote Port")->withDescription("Remote CoAP server port")->withDefaultValue<uint64_t>(8181)->isRequired(true)->build());
-core::Property CoapConnectorService::MaxQueueSize(
+const core::Property CoapConnectorService::MaxQueueSize(
     core::PropertyBuilder::createProperty("Max Queue Size")->withDescription("Max queue size for received data ")->withDefaultValue<uint64_t>(1000)->isRequired(false)->build());
 
 void CoapConnectorService::initialize() {
@@ -84,18 +73,9 @@ CoapResponse CoapConnectorService::sendPayload(uint8_t type, const std::string &
 }
 
 void CoapConnectorService::initializeProperties() {
-  std::set<core::Property> supportedProperties;
-  supportedProperties.insert(RemoteServer);
-  supportedProperties.insert(Port);
-  supportedProperties.insert(MaxQueueSize);
-  setSupportedProperties(supportedProperties);
+  setSupportedProperties(properties());
 }
 
-REGISTER_INTERNAL_RESOURCE(CoapConnectorService);
+REGISTER_RESOURCE(CoapConnectorService, InternalResource);
 
-} /* namespace controllers */
-} /* namespace coap */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::coap::controllers
