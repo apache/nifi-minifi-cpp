@@ -18,7 +18,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
   Background:
     Given the content of "/tmp/output" is monitored
 
-  @no-ci
+  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance indexes a document on Elasticsearch using Basic Authentication
     Given an Elasticsearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -37,7 +37,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Elasticsearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  @no-ci
+  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance creates a document on Elasticsearch using ApiKey
     Given an Elasticsearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -56,7 +56,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Elasticsearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  @no-ci
+  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance deletes a document from Elasticsearch using ApiKey
     Given an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -75,7 +75,7 @@ Feature: Sending data to Splunk HEC using PutSplunkHTTP
     Then a flowfile with the content "hello world" is placed in the monitored directory in less than 20 seconds
     And Elasticsearch is empty
 
-  @no-ci
+  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance partially updates a document in Elasticsearch using ApiKey
     Given an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
