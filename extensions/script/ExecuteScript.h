@@ -51,7 +51,7 @@ namespace processors {
 
 class ScriptEngineFactory {
  public:
-  ScriptEngineFactory(core::Relationship& success, core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger);
+  ScriptEngineFactory(const core::Relationship& success, const core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger);
 
   template<typename T>
   std::enable_if_t<std::is_base_of_v<script::ScriptEngine, T>, std::shared_ptr<T>> createEngine() const {
@@ -65,8 +65,8 @@ class ScriptEngineFactory {
   }
 
  private:
-  core::Relationship& success_;
-  core::Relationship& failure_;
+  const core::Relationship& success_;
+  const core::Relationship& failure_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
@@ -144,10 +144,10 @@ class ExecuteScript : public core::Processor {
       "if they wish, although there will be a script context per concurrent task of the processor. In order to, e.g., compute an arithmetic sum based on incoming flow file information, set the "
       "concurrent tasks to 1.";
 
-  EXTENSIONAPI static core::Property ScriptEngine;
-  EXTENSIONAPI static core::Property ScriptFile;
-  EXTENSIONAPI static core::Property ScriptBody;
-  EXTENSIONAPI static core::Property ModuleDirectory;
+  EXTENSIONAPI static const core::Property ScriptEngine;
+  EXTENSIONAPI static const core::Property ScriptFile;
+  EXTENSIONAPI static const core::Property ScriptBody;
+  EXTENSIONAPI static const core::Property ModuleDirectory;
   static auto properties() {
     return std::array{
       ScriptEngine,
@@ -157,8 +157,8 @@ class ExecuteScript : public core::Processor {
     };
   }
 
-  EXTENSIONAPI static core::Relationship Success;
-  EXTENSIONAPI static core::Relationship Failure;
+  EXTENSIONAPI static const core::Relationship Success;
+  EXTENSIONAPI static const core::Relationship Failure;
   static auto relationships() { return std::array{Success, Failure}; }
 
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;

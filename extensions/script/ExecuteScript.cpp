@@ -38,24 +38,24 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-core::Property ExecuteScript::ScriptEngine(
+const core::Property ExecuteScript::ScriptEngine(
   core::PropertyBuilder::createProperty("Script Engine")
     ->withDescription(R"(The engine to execute scripts (python, lua))")
     ->isRequired(true)
     ->withAllowableValues(ScriptEngineOption::values())
     ->withDefaultValue(toString(ScriptEngineOption::PYTHON))
     ->build());
-core::Property ExecuteScript::ScriptFile("Script File",
+const core::Property ExecuteScript::ScriptFile("Script File",
     R"(Path to script file to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecuteScript::ScriptBody("Script Body",
+const core::Property ExecuteScript::ScriptBody("Script Body",
     R"(Body of script to execute. Only one of Script File or Script Body may be used)", "");
-core::Property ExecuteScript::ModuleDirectory("Module Directory",
+const core::Property ExecuteScript::ModuleDirectory("Module Directory",
     R"(Comma-separated list of paths to files and/or directories which contain modules required by the script)", "");
 
-core::Relationship ExecuteScript::Success("success", "Script successes");
-core::Relationship ExecuteScript::Failure("failure", "Script failures");
+const core::Relationship ExecuteScript::Success("success", "Script successes");
+const core::Relationship ExecuteScript::Failure("failure", "Script failures");
 
-ScriptEngineFactory::ScriptEngineFactory(core::Relationship& success, core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
+ScriptEngineFactory::ScriptEngineFactory(const core::Relationship& success, const core::Relationship& failure, std::shared_ptr<core::logging::Logger> logger)
   : success_(success),
     failure_(failure),
     logger_(logger) {
