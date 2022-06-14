@@ -28,6 +28,12 @@ class CountOnTriggersProcessor : public minifi::core::Processor {
  public:
   using minifi::core::Processor::Processor;
 
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
   void onTrigger(core::ProcessContext*, core::ProcessSession*) override {
     ++number_of_triggers;
   }
