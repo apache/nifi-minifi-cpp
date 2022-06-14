@@ -63,13 +63,6 @@ class ListenSyslog : public NetworkListenerProcessor {
   EXTENSIONAPI static const core::Relationship Invalid;
   static auto relationships() { return std::array{Success, Invalid}; }
 
-  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
-  EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
-  EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_FORBIDDEN;
-  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
-
-  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
-
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 

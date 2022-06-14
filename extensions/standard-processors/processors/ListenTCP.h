@@ -34,11 +34,25 @@ class ListenTCP : public NetworkListenerProcessor {
   ListenTCP& operator=(const ListenTCP&) = delete;
   ListenTCP& operator=(ListenTCP&&) = delete;
 
+  EXTENSIONAPI static constexpr const char* Description = "Listens for Syslog messages being sent to a given port over TCP or UDP. "
+      "Incoming messages are optionally checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
+      "With parsing enabled the individual parts of the message will be placed as FlowFile attributes and "
+      "valid messages will be transferred to success relationship, while invalid messages will be transferred to invalid relationship. "
+      "With parsing disabled all message will be routed to the success relationship, but it will only contain the sender, protocol, and port attributes";
+
   EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property MaxQueueSize;
   EXTENSIONAPI static const core::Property MaxBatchSize;
+  EXTENSIONAPI static const core::Property MaxQueueSize;
+  static auto properties() {
+    return std::array{
+      Port,
+      MaxBatchSize,
+      MaxQueueSize
+    };
+  }
 
   EXTENSIONAPI static const core::Relationship Success;
+  static auto relationships() { return std::array{Success}; }
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;

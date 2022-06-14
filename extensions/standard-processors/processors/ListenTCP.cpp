@@ -17,6 +17,7 @@
 #include "ListenTCP.h"
 
 #include "core/Resource.h"
+#include "core/PropertyBuilder.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -45,8 +46,8 @@ const core::Property ListenTCP::MaxBatchSize(
 const core::Relationship ListenTCP::Success("success", "Messages received successfully will be sent out this relationship.");
 
 void ListenTCP::initialize() {
-  setSupportedProperties({Port, MaxQueueSize, MaxBatchSize});
-  setSupportedRelationships({Success});
+  setSupportedProperties(properties());
+  setSupportedRelationships(relationships());
 }
 
 void ListenTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
@@ -62,7 +63,6 @@ void ListenTCP::transferAsFlowFile(const utils::net::Message& message, core::Pro
   session.transfer(flow_file, Success);
 }
 
-REGISTER_RESOURCE(ListenTCP, "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "
-                             "For each message the processor produces a single FlowFile.");
+REGISTER_RESOURCE(ListenTCP, Processor);
 
 }  // namespace org::apache::nifi::minifi::processors
