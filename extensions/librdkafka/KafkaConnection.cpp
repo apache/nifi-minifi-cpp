@@ -19,6 +19,8 @@
 
 #include <memory>
 
+#include "utils/gsl.h"
+
 namespace org::apache::nifi::minifi::processors {
 
 KafkaConnection::KafkaConnection(const KafkaConnectionKey &key)
@@ -122,7 +124,7 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, int level, const char* /
       core::logging::LOG_DEBUG(logger) << buf;
       break;
     default:
-      abort();
+      gsl_FailFast();
   }
 }
 

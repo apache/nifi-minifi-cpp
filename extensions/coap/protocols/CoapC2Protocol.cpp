@@ -21,6 +21,7 @@
 #include "coap_message.h"
 #include "io/BaseStream.h"
 #include "core/Resource.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::coap::c2 {
 
@@ -181,7 +182,7 @@ minifi::c2::Operation CoapProtocol::getOperation(int type) const {
     case 9:
       return minifi::c2::Operation::RESUME;
     default:
-      abort();
+      gsl_FailFast();
   }
 }
 
