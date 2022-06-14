@@ -35,9 +35,7 @@ namespace nifi {
 namespace minifi {
 namespace processors {
 
-//! ExtractText Class
-class
-ExtractText : public core::Processor {
+class ExtractText : public core::Processor {
  public:
   explicit ExtractText(const std::string& name,  const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
@@ -76,9 +74,7 @@ ExtractText : public core::Processor {
   //! Default maximum bytes to read into an attribute
   EXTENSIONAPI static constexpr int DEFAULT_SIZE_LIMIT = 2 * 1024 * 1024;
 
-  //! OnTrigger method, implemented by NiFi ExtractText
   void onTrigger(core::ProcessContext *context, core::ProcessSession *session) override;
-  //! Initialize, over write by NiFi ExtractText
   void initialize() override;
 
   class ReadCallback {
