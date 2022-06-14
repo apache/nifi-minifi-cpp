@@ -40,7 +40,7 @@ void ConsumeMQTT::initialize() {
   setSupportedRelationships(relationships());
 }
 
-bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTClient_message *message) {
+bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTAsync_message *message) {
   if (queue_.size_approx() >= maxQueueSize_) {
     logger_->log_warn("MQTT queue full");
     return false;
@@ -90,10 +90,10 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
     yield();
   }
 
-  std::deque<MQTTClient_message *> msg_queue;
+  std::deque<MQTTAsync_message *> msg_queue;
   getReceivedMQTTMsg(msg_queue);
   while (!msg_queue.empty()) {
-    MQTTClient_message *message = msg_queue.front();
+    MQTTAsync_message *message = msg_queue.front();
     std::shared_ptr<core::FlowFile> processFlowFile = session->create();
     int write_status{};
     session->write(processFlowFile, [message, &write_status](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
@@ -117,14 +117,15 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID %s topic %s", processFlowFile->getUUIDStr(), topic_);
       session->transfer(processFlowFile, Success);
     }
-    MQTTClient_freeMessage(&message);
+    MQTTAsync_freeMessage(&message);
     msg_queue.pop_front();
   }
 }
 
 bool ConsumeMQTT::startupClient() {
-  const int ret = MQTTClient_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_));
-  if (ret != MQTTCLIENT_SUCCESS) {
+  MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
+  const int ret = MQTTAsync_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_), &response_options);
+  if (ret != MQTTASYNC_SUCCESS) {
     logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
     return false;
   }

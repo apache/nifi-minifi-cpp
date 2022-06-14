@@ -24,7 +24,7 @@
 #include "core/ProcessSession.h"
 #include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "MQTTClient.h"
+#include "MQTTAsync.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -38,6 +38,10 @@ class AbstractMQTTProcessor : public core::Processor {
  public:
   explicit AbstractMQTTProcessor(const std::string& name, const utils::Identifier& uuid = {})
       : core::Processor(name, uuid) {
+  }
+
+  ~AbstractMQTTProcessor() override {
+    freeResources();
   }
 
   EXTENSIONAPI static const core::Property BrokerURI;
@@ -78,7 +82,7 @@ class AbstractMQTTProcessor : public core::Processor {
 
   // MQTT async callbacks
   // TODO(amarkovics) this should only be in PublishMQTT
-  static void msgDelivered(void *context, MQTTClient_deliveryToken dt) {
+  static void msgDelivered(void *context, MQTTAsync_token dt) {
     // TODO(amarkovics) why do we set delivered_token_ at all?
     // TODO(amarkovics) this needs mutex because it's called on a separate thread
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
@@ -87,26 +91,25 @@ class AbstractMQTTProcessor : public core::Processor {
   }
 
   // TODO(amarkovics) this should only be in ConsumeMQTT
-  static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTClient_message *message) {
+  static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTAsync_message* message) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
     processor->onMessageReceived(message);
-    MQTTClient_free(topicName);
+    MQTTAsync_free(topicName);
     return 1;
     // TODO(amarkovics) why always return with 1?
+    // TODO(amarkovics) might neex mutex
   }
   static void connectionLost(void *context, char* /*cause*/) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
     // TODO(amarkovics) log cause
+    // TODO(amarkovics) might neex mutex
     processor->reconnect();
   }
   bool reconnect();
-  virtual bool enqueueReceiveMQTTMsg(MQTTClient_message* /*message*/) {
-    return false;
-  }
 
  protected:
-  MQTTClient client_ = nullptr;
-  MQTTClient_deliveryToken delivered_token_ = 0;
+  MQTTAsync client_ = nullptr;
+  MQTTAsync_token delivered_token_ = 0;
   std::string uri_;
   std::string topic_;
   std::chrono::milliseconds keepAliveInterval_ = std::chrono::seconds(60);
@@ -118,11 +121,13 @@ class AbstractMQTTProcessor : public core::Processor {
 
  private:
   virtual bool getCleanSession() const = 0;
-  virtual void onMessageReceived(MQTTClient_message*) = 0;
+  virtual void onMessageReceived(MQTTAsync_message*) = 0;
   virtual bool startupClient() = 0;
 
+  void freeResources();
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
-  MQTTClient_SSLOptions sslOpts_ = MQTTClient_SSLOptions_initializer;
+  MQTTAsync_SSLOptions sslOpts_ = MQTTAsync_SSLOptions_initializer;
   bool sslEnabled_ = false;
   std::string securityCA_;
   std::string securityCert_;

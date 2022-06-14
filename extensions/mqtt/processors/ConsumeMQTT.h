@@ -28,7 +28,6 @@
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "concurrentqueue.h"
-#include "MQTTClient.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
@@ -47,9 +46,9 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   }
 
   ~ConsumeMQTT() override {
-    MQTTClient_message *message;
+    MQTTAsync_message *message;
     while (queue_.try_dequeue(message)) {
-      MQTTClient_freeMessage(&message);
+      MQTTAsync_freeMessage(&message);
     }
   }
   static core::Property CleanSession;
@@ -81,11 +80,10 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
-  bool enqueueReceiveMQTTMsg(MQTTClient_message *message) override;
 
  protected:
-  void getReceivedMQTTMsg(std::deque<MQTTClient_message *> &msg_queue) {
-    MQTTClient_message *message;
+  void getReceivedMQTTMsg(std::deque<MQTTAsync_message*> &msg_queue) {
+    MQTTAsync_message* message;
     while (queue_.try_dequeue(message)) {
       msg_queue.push_back(message);
     }
@@ -100,10 +98,12 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
     return cleanSession_;
   }
 
-  void onMessageReceived(MQTTClient_message* message) override {
+  bool enqueueReceiveMQTTMsg(MQTTAsync_message *message);
+
+  void onMessageReceived(MQTTAsync_message* message) override {
     // TODO(amarkovics) MQTT messages should be stored in a unique_ptr with custom deleter
     if (!enqueueReceiveMQTTMsg(message)) {
-      MQTTClient_freeMessage(&message);
+      MQTTAsync_freeMessage(&message);
     }
   }
 
@@ -114,7 +114,7 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   bool cleanSession_ = true;
   uint64_t maxQueueSize_;
   uint64_t maxSegSize_;
-  moodycamel::ConcurrentQueue<MQTTClient_message *> queue_;
+  moodycamel::ConcurrentQueue<MQTTAsync_message*> queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

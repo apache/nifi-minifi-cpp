@@ -29,7 +29,6 @@
 #include "core/Core.h"
 #include "core/Property.h"
 #include "core/logging/LoggerConfiguration.h"
-#include "MQTTClient.h"
 #include "AbstractMQTTProcessor.h"
 #include "utils/ArrayUtils.h"
 #include "utils/gsl.h"
@@ -71,10 +70,10 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
 
   class ReadCallback {
    public:
-    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, std::string key, MQTTClient client, int qos, bool retain, MQTTClient_deliveryToken &token)
+    ReadCallback(uint64_t flow_size, uint64_t max_seg_size, std::string topic, MQTTAsync client, int qos, bool retain, MQTTAsync_token &token)
         : flow_size_(flow_size),
           max_seg_size_(max_seg_size),
-          key_(std::move(key)),
+          topic_(std::move(topic)),
           client_(client),
           qos_(qos),
           retain_(retain),
@@ -97,12 +96,14 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
           return gsl::narrow<int64_t>(read_size_);
         }
         if (readRet > 0) {
-          MQTTClient_message pubmsg = MQTTClient_message_initializer;
+          MQTTAsync_message pubmsg = MQTTAsync_message_initializer;
           pubmsg.payload = buffer.data();
           pubmsg.payloadlen = gsl::narrow<int>(readRet);
           pubmsg.qos = qos_;
           pubmsg.retained = retain_;
-          if (MQTTClient_publishMessage(client_, key_.c_str(), &pubmsg, &token_) != MQTTCLIENT_SUCCESS) {
+            MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
+            response_options.token = token_;
+          if (MQTTAsync_sendMessage(client_, topic_.c_str(), &pubmsg, &response_options) != MQTTASYNC_SUCCESS) {
             status_ = -1;
             return -1;
           }
@@ -115,14 +116,14 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     }
     uint64_t flow_size_;
     uint64_t max_seg_size_;
-    std::string key_;
-    MQTTClient client_;
+    std::string topic_;
+    MQTTAsync client_;
 
     int status_;
     size_t read_size_;
     int qos_;
     int retain_;
-    MQTTClient_deliveryToken &token_;
+    MQTTAsync_token& token_;
   };
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;
@@ -138,8 +139,8 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     return true;
   }
 
-  void onMessageReceived(MQTTClient_message* message) override {
-    MQTTClient_freeMessage(&message);
+  void onMessageReceived(MQTTAsync_message* message) override {
+    MQTTAsync_freeMessage(&message);
   }
 
   bool startupClient() override {
