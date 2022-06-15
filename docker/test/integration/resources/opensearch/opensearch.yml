@@ -1,0 +1,16 @@
+cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+discovery.type: single-node
+
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemcert_filepath: admin.pem
+plugins.security.ssl.http.pemkey_filepath: admin-key.pem
+plugins.security.ssl.http.pemtrustedcas_filepath: root-ca.pem
+plugins.security.ssl.transport.pemcert_filepath: admin.pem
+plugins.security.ssl.transport.pemkey_filepath: admin-key.pem
+plugins.security.ssl.transport.pemtrustedcas_filepath: root-ca.pem
+plugins.security.ssl.transport.enforce_hostname_verification: false
+plugins.security.allow_unsafe_democertificates: true
+plugins.security.allow_default_init_securityindex: true
+
+plugins.security.restapi.roles_enabled: ["all_access", "security_rest_api_access"]

@@ -30,14 +30,22 @@ namespace org::apache::nifi::minifi::extensions::elasticsearch {
 
 class ElasticsearchCredentialsControllerService : public core::controller::ControllerService {
  public:
-  SMART_ENUM(AuthType,
-             (USE_BASIC_AUTHENTICATION, "Basic authentication"),
-             (USE_API_KEY, "API Key"));
+  EXTENSIONAPI static constexpr const char* Description = "Elasticsearch/Opensearch Credentials Controller Service";
 
-  EXTENSIONAPI static const core::Property AuthorizationType;
   EXTENSIONAPI static const core::Property Username;
   EXTENSIONAPI static const core::Property Password;
   EXTENSIONAPI static const core::Property ApiKey;
+
+  static auto properties() {
+    return std::array{
+        Username,
+        Password,
+        ApiKey
+    };
+  }
+
+  EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_CONTROLLER_SERVICES
 
   using ControllerService::ControllerService;
 
@@ -60,7 +68,6 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
  private:
   std::optional<std::pair<std::string, std::string>> username_password_;
   std::optional<std::string> api_key_;
-  AuthType auth_type_ = AuthType::USE_API_KEY;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ElasticsearchCredentialsControllerService>::getLogger();
 };
 }  //  namespace org::apache::nifi::minifi::extensions::elasticsearch

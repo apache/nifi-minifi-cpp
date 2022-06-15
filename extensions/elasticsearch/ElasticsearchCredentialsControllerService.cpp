@@ -19,6 +19,7 @@
 
 #include "ElasticsearchCredentialsControllerService.h"
 #include "core/Resource.h"
+#include "core/PropertyBuilder.h"
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch {
 const core::Property ElasticsearchCredentialsControllerService::Username = core::PropertyBuilder::createProperty("Username")
@@ -31,46 +32,34 @@ const core::Property ElasticsearchCredentialsControllerService::Password = core:
     ->supportsExpressionLanguage(true)
     ->build();
 
-const core::Property ElasticsearchCredentialsControllerService::AuthorizationType = core::PropertyBuilder::createProperty("Authorization Type")
-    ->withDescription("Authorization Type")
-    ->withAllowableValues(AuthType::values())
-    ->withDefaultValue(toString(AuthType::USE_API_KEY))
-    ->isRequired(true)
-    ->build();
-
 const core::Property ElasticsearchCredentialsControllerService::ApiKey = core::PropertyBuilder::createProperty("API Key")
     ->withDescription("The API Key to use")
     ->build();
 
 
 void ElasticsearchCredentialsControllerService::initialize() {
-  setSupportedProperties({Username, Password, AuthorizationType, ApiKey});
+  setSupportedProperties(properties());
 }
 
 void ElasticsearchCredentialsControllerService::onEnable() {
-  getProperty(AuthorizationType.getName(), auth_type_);
-
-  if (auth_type_ == AuthType::USE_API_KEY) {
-    std::string api_key;
-    getProperty(ApiKey.getName(), api_key);
-    api_key_.emplace(std::move(api_key));
-  } else if (auth_type_ == AuthType::USE_BASIC_AUTHENTICATION) {
-    std::string username, password;
-    getProperty(Username.getName(), username);
-    getProperty(Password.getName(), password);
+  getProperty(ApiKey.getName(), api_key_);
+  std::string username, password;
+  getProperty(Username.getName(), username);
+  getProperty(Password.getName(), password);
+  if (!username.empty() && !password.empty())
     username_password_.emplace(std::move(username), std::move(password));
-  }
+  if (!api_key_ && !username_password_)
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Either an API Key or Username and Password must be provided");
 }
 
 void ElasticsearchCredentialsControllerService::authenticateClient(utils::HTTPClient& client) {
-  if (auth_type_ == AuthType::USE_API_KEY) {
-    gsl_Expects(api_key_);
+  gsl_Expects(api_key_ || username_password_);
+  if (api_key_) {
     client.appendHeader("Authorization", "ApiKey " + *api_key_);
-  } else if (auth_type_ == AuthType::USE_BASIC_AUTHENTICATION) {
-    gsl_Expects(username_password_);
+  } else if (username_password_) {
     client.setBasicAuth(username_password_->first, username_password_->second);
   }
 }
 
-REGISTER_RESOURCE(ElasticsearchCredentialsControllerService, "Elasticsearch Credentials Controller Service");
+REGISTER_RESOURCE(ElasticsearchCredentialsControllerService, ControllerService);
 }  // namespace org::apache::nifi::minifi::extensions::elasticsearch

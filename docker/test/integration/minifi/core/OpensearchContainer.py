@@ -14,17 +14,25 @@
 # limitations under the License.
 
 
-from ..core.Processor import Processor
+import logging
+from .Container import Container
 
 
-class PutElasticsearchJson(Processor):
-    def __init__(self, schedule={'scheduling strategy': 'EVENT_DRIVEN'}):
-        super(PutElasticsearchJson, self).__init__(
-            'PutElasticsearchJson',
-            properties={
-                'Hosts': 'https://elasticsearch:9200',
-                'Index': 'test',
-                'Id': '${filename}'
-            },
-            auto_terminate=['success', 'failure', 'retry', 'errors'],
-            schedule=schedule)
+class OpensearchContainer(Container):
+    def __init__(self, name, vols, network, image_store, command=None):
+        super().__init__(name, 'opensearch', vols, network, image_store, command)
+
+    def get_startup_finished_log_entry(self):
+        return 'Hot-reloading of audit configuration is enabled'
+
+    def deploy(self):
+        if not self.set_deployed():
+            return
+
+        logging.info('Creating and running Opensearch docker container...')
+        self.client.containers.run(
+            self.image_store.get_image(self.get_engine()),
+            detach=True,
+            name=self.name,
+            network=self.network.name)
+        logging.info('Added container \'%s\'', self.name)

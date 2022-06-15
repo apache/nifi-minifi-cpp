@@ -82,6 +82,11 @@ class MiNiFi_integration_test:
         self.cluster.deploy('elasticsearch')
         assert self.wait_for_container_startup_to_finish('elasticsearch')
 
+    def start_opensearch(self):
+        self.cluster.acquire_container('opensearch', 'opensearch')
+        self.cluster.deploy('opensearch')
+        assert self.wait_for_container_startup_to_finish('opensearch')
+
     def start(self):
         logging.info("MiNiFi_integration_test start")
         self.cluster.deploy_flow()
@@ -236,6 +241,9 @@ class MiNiFi_integration_test:
 
     def check_elastic_field_value(self, elastic_container_name, index_name, doc_id, field_name, field_value):
         assert self.cluster.check_elastic_field_value(elastic_container_name, index_name, doc_id, field_name, field_value)
+
+    def add_elastic_user_to_opensearch(self, container_name):
+        assert self.cluster.add_elastic_user_to_opensearch(container_name)
 
     def check_minifi_log_contents(self, line, timeout_seconds=60, count=1):
         self.check_container_log_contents("minifi-cpp", line, timeout_seconds, count)

@@ -278,6 +278,11 @@ class DockerTestCluster(SingleNodeDockerCluster):
         result = json.loads(output_lines[-1])
         return result["encoded"]
 
+    def add_elastic_user_to_opensearch(self, container_name):
+        (code, output) = self.client.containers.get(container_name).exec_run(["/bin/bash", "-c",
+                                                                              'curl -u admin:admin -k -XPUT https://opensearch:9200/_plugins/_security/api/internalusers/elastic -H Content-Type:application/json -d\'{"password":"password","backend_roles":["admin"]}\''])
+        return code == 0 and '"status":"CREATED"'.encode() in output
+
     def query_postgres_server(self, postgresql_container_name, query, number_of_rows):
         (code, output) = self.client.containers.get(postgresql_container_name).exec_run(["psql", "-U", "postgres", "-c", query])
         output = output.decode(self.get_stdout_encoding())

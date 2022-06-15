@@ -34,6 +34,7 @@ from .MqttBrokerContainer import MqttBrokerContainer
 from .OPCUAServerContainer import OPCUAServerContainer
 from .SplunkContainer import SplunkContainer
 from .ElasticsearchContainer import ElasticsearchContainer
+from .OpensearchContainer import OpensearchContainer
 from .SyslogUdpClientContainer import SyslogUdpClientContainer
 from .SyslogTcpClientContainer import SyslogTcpClientContainer
 from .MinifiAsPodInKubernetesCluster import MinifiAsPodInKubernetesCluster
@@ -122,6 +123,8 @@ class SingleNodeDockerCluster(Cluster):
             return self.containers.setdefault(name, SplunkContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == 'elasticsearch':
             return self.containers.setdefault(name, ElasticsearchContainer(name, self.vols, self.network, self.image_store, command))
+        elif engine == 'opensearch':
+            return self.containers.setdefault(name, OpensearchContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == "syslog-udp-client":
             return self.containers.setdefault(name, SyslogUdpClientContainer(name, self.vols, self.network, self.image_store, command))
         elif engine == "syslog-tcp-client":

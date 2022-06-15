@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-#include "../PutElasticsearchJson.h"
+#include "../PostElasticsearch.h"
 #include "../ElasticsearchCredentialsControllerService.h"
 #include "MockElastic.h"
 #include "SingleProcessorTestController.h"
@@ -23,30 +23,26 @@
 
 namespace org::apache::nifi::minifi::extensions::elasticsearch::test {
 
-TEST_CASE("PutElasticsearchJson", "[elastic]") {
+TEST_CASE("PostElasticsearch", "[elastic]") {
   MockElastic mock_elastic("10433");
 
-  std::shared_ptr<PutElasticsearchJson> put_elasticsearch_json = std::make_shared<PutElasticsearchJson>("PutElasticsearchJson");
+  std::shared_ptr<PostElasticsearch> put_elasticsearch_json = std::make_shared<PostElasticsearch>("PostElasticsearch");
   minifi::test::SingleProcessorTestController test_controller{put_elasticsearch_json};
   auto elasticsearch_credentials_controller_service = test_controller.plan->addController("ElasticsearchCredentialsControllerService", "elasticsearch_credentials_controller_service");
   CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
-                                     PutElasticsearchJson::ElasticCredentials.getName(),
+                                     PostElasticsearch::ElasticCredentials.getName(),
                                      "elasticsearch_credentials_controller_service"));
   CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
-                                    PutElasticsearchJson::Hosts.getName(),
+                                    PostElasticsearch::Hosts.getName(),
                                     "localhost:10433"));
   CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
-                                    PutElasticsearchJson::IndexOperation.getName(),
-                                    "${elastic_operation}"));
+                                    PostElasticsearch::Action.getName(),
+                                    "${elastic_action}"));
   CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
-                                    PutElasticsearchJson::Index.getName(),
+                                    PostElasticsearch::Index.getName(),
                                     "test_index"));
 
   SECTION("Index with valid basic authentication") {
-    CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::AuthorizationType.getName(),
-                                            toString(ElasticsearchCredentialsControllerService::AuthType::USE_BASIC_AUTHENTICATION)));
-
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
                                             ElasticsearchCredentialsControllerService::Username.getName(),
                                             MockElasticAuthHandler::USERNAME));
@@ -56,50 +52,41 @@ TEST_CASE("PutElasticsearchJson", "[elastic]") {
 
     std::vector<std::tuple<const std::string_view, std::unordered_map<std::string, std::string>>> inputs;
 
-    auto results = test_controller.trigger({std::make_tuple<const std::string_view, std::unordered_map<std::string, std::string>>(R"({"field1":"value1"}")", {{"elastic_operation", "index"}}),
-                                            std::make_tuple<const std::string_view, std::unordered_map<std::string, std::string>>(R"({"field1":"value2"}")", {{"elastic_operation", "index"}})});
-    REQUIRE(results[PutElasticsearchJson::Success].size() == 2);
-    for (const auto& result : results[PutElasticsearchJson::Success]) {
+    auto results = test_controller.trigger({std::make_tuple<const std::string_view, std::unordered_map<std::string, std::string>>(R"({"field1":"value1"}")", {{"elastic_action", "index"}}),
+                                            std::make_tuple<const std::string_view, std::unordered_map<std::string, std::string>>(R"({"field1":"value2"}")", {{"elastic_action", "index"}})});
+    REQUIRE(results[PostElasticsearch::Success].size() == 2);
+    for (const auto& result : results[PostElasticsearch::Success]) {
       auto attributes = result->getAttributes();
       CHECK(attributes.contains("elasticsearch.index._id"));
       CHECK(attributes.contains("elasticsearch.index._index"));
     }
   }
 
-  SECTION("Create with valid ApiKey") {
-    CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::AuthorizationType.getName(),
-                                            toString(ElasticsearchCredentialsControllerService::AuthType::USE_API_KEY)));
-
+  SECTION("Update with valid ApiKey") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
                                             ElasticsearchCredentialsControllerService::ApiKey.getName(),
                                             MockElasticAuthHandler::API_KEY));
+    CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+                                            PostElasticsearch::Identifier.getName(),
+                                            "${filename}"));
 
-    auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_operation", "create"}});
-    REQUIRE(results[PutElasticsearchJson::Success].size() == 1);
-    auto attributes = results[PutElasticsearchJson::Success][0]->getAttributes();
-    CHECK(attributes.contains("elasticsearch.create._id"));
-    CHECK(attributes.contains("elasticsearch.create._index"));
+    auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "upsert"}});
+    REQUIRE(results[PostElasticsearch::Success].size() == 1);
+    auto attributes = results[PostElasticsearch::Success][0]->getAttributes();
+    CHECK(attributes.contains("elasticsearch.update._id"));
+    CHECK(attributes.contains("elasticsearch.update._index"));
   }
 
   SECTION("Invalid ApiKey") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::AuthorizationType.getName(),
-                                            toString(ElasticsearchCredentialsControllerService::AuthType::USE_API_KEY)));
-
-    CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
                                             ElasticsearchCredentialsControllerService::ApiKey.getName(),
                                             "invalid_api_key"));
 
-    auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_operation", "create"}});
-    CHECK(results[PutElasticsearchJson::Failure].size() == 1);
+    auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "create"}});
+    CHECK(results[PostElasticsearch::Failure].size() == 1);
   }
 
   SECTION("Invalid basic authentication") {
-    CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
-                                            ElasticsearchCredentialsControllerService::AuthorizationType.getName(),
-                                            toString(ElasticsearchCredentialsControllerService::AuthType::USE_BASIC_AUTHENTICATION)));
-
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
                                             ElasticsearchCredentialsControllerService::Username.getName(),
                                             MockElasticAuthHandler::USERNAME));
@@ -107,8 +94,8 @@ TEST_CASE("PutElasticsearchJson", "[elastic]") {
                                             ElasticsearchCredentialsControllerService::Password.getName(),
                                             "wrong_password"));
 
-    auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_operation", "index"}});
-    CHECK(results[PutElasticsearchJson::Failure].size() == 1);
+    auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "index"}});
+    CHECK(results[PostElasticsearch::Failure].size() == 1);
   }
 }
 
