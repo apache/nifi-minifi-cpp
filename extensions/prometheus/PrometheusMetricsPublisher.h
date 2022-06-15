@@ -35,7 +35,7 @@ class PrometheusMetricsPublisher : public core::CoreComponent, public state::Met
  public:
   explicit PrometheusMetricsPublisher(const std::string &name, const utils::Identifier &uuid = {}, std::unique_ptr<MetricsExposer> exposer = nullptr);
 
-  MINIFIAPI static constexpr const char* Description = "HTTP server that exposes MiNiFi metrics for Prometheus to scrape";
+  EXTENSIONAPI static constexpr const char* Description = "HTTP server that exposes MiNiFi metrics for Prometheus to scrape";
 
   void initialize(const std::shared_ptr<Configure>& configuration, state::response::ResponseNodeLoader& response_node_loader, core::ProcessGroup* root) override;
   void clearMetricNodes() override;
