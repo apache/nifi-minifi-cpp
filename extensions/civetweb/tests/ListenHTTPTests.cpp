@@ -143,7 +143,7 @@ class ListenHTTPTestsFixture {
       return;
     }
 
-    client = std::unique_ptr<utils::HTTPClient>(new utils::HTTPClient());
+    client = std::make_unique<utils::HTTPClient>();
     client->initialize(method, url, ssl_context_service);
     client->setVerbose();
     for (const auto &header : headers) {
@@ -643,7 +643,7 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
 
   run_server();
 
-  client = std::unique_ptr<utils::HTTPClient>(new utils::HTTPClient());
+  client = std::make_unique<utils::HTTPClient>();
   client->setVerbose();
   client->initialize(method, url, ssl_context_service);
   if (method == "POST") {

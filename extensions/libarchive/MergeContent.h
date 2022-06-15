@@ -60,7 +60,7 @@ class MergeBin {
 
 class BinaryConcatenationMerge : public MergeBin {
  public:
-  BinaryConcatenationMerge(const std::string& header, const std::string& footer, const std::string& demarcator);
+  BinaryConcatenationMerge(std::string header, std::string footer, std::string demarcator);
 
   void merge(core::ProcessContext *context, core::ProcessSession *session,
       std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;

@@ -22,7 +22,7 @@
 #include "utils/IntegrationTestUtils.h"
 #include "utils/file/PathUtils.h"
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 int main(int argc, char **argv) {
   TestController controller;

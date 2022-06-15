@@ -30,11 +30,7 @@
 #include "utils/file/FileManager.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class FocusArchiveEntry : public core::Processor {
  public:
@@ -83,8 +79,4 @@ class FocusArchiveEntry : public core::Processor {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

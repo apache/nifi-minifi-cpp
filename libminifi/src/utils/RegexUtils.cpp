@@ -79,12 +79,11 @@ void SMatch::clear() {
 
 Regex::Regex() : Regex::Regex("") {}
 
-Regex::Regex(const std::string &value) : Regex::Regex(value, {}) {}
+Regex::Regex(std::string value) : Regex::Regex(std::move(value), {}) {}
 
-Regex::Regex(const std::string &value,
-             const std::vector<Regex::Mode> &mode)
-    : regex_str_(value),
-      valid_(false) {
+Regex::Regex(std::string value, const std::vector<Regex::Mode> &mode)
+  : regex_str_(std::move(value)),
+    valid_(false) {
   // Create regex mode
 #ifdef NO_MORE_REGFREEE
   regex_mode_ = std::regex_constants::ECMAScript;
@@ -177,14 +176,14 @@ Regex& Regex::operator=(Regex&& other) {
   return *this;
 }
 
-Regex::~Regex() {
 #ifndef NO_MORE_REGFREEE
+Regex::~Regex() {
   if (valid_) {
     regfree(&compiled_regex_);
     regfree(&compiled_full_input_regex_);
   }
-#endif
 }
+#endif
 
 #ifndef NO_MORE_REGFREEE
 void Regex::compileRegex(regex_t& regex, const std::string& regex_string) const {

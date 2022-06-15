@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <stdio.h>
+#include <cstdio>
 #include <chrono>
 #include <thread>
 #include <random>
@@ -29,11 +29,7 @@
 #include "io/validation.h"
 #include "FlowController.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 bool SiteToSitePeer::Open() {
   if (IsNullOrEmpty(host_))
@@ -67,8 +63,4 @@ void SiteToSitePeer::Close() {
     stream_->close();
 }
 
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sitetosite

@@ -24,12 +24,7 @@
 #include "ConvertHeartBeat.h"
 #include "c2/PayloadSerializer.h"
 #include "utils/ByteArrayCallback.h"
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   auto ff = session.get();
@@ -64,8 +59,4 @@ void ConvertHeartBeat::onTrigger(const std::shared_ptr<core::ProcessContext> &co
   }
 }
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

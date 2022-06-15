@@ -23,11 +23,7 @@
 #include "pybind11/embed.h"
 #include "io/BaseStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 namespace py = pybind11;
 
@@ -43,8 +39,4 @@ class PyBaseStream {
   std::shared_ptr<io::BaseStream> stream_;
 };
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python

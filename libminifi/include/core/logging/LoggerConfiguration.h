@@ -18,8 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
-#define LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -43,12 +42,7 @@ class LoggerTestAccessor;
 
 class LogTestController;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
+namespace org::apache::nifi::minifi::core::logging {
 
 namespace internal {
 struct LoggerNamespace {
@@ -175,11 +169,4 @@ class LoggerFactory {
   }
 };
 
-}  // namespace logging
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_LOGGING_LOGGERCONFIGURATION_H_
+}  // namespace org::apache::nifi::minifi::core::logging

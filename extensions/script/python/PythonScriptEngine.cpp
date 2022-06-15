@@ -22,11 +22,7 @@
 #include "PythonScriptEngine.h"
 #include "utils/file/FileUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 Interpreter *getInterpreter() {
   static Interpreter interpreter;
@@ -37,7 +33,7 @@ PythonScriptEngine::PythonScriptEngine() {
   getInterpreter();
   py::gil_scoped_acquire gil { };
   py::module::import("minifi_native");
-  bindings_.reset(new py::dict());
+  bindings_ = std::make_unique<py::dict>();
   (*bindings_) = py::globals().attr("copy")();
 }
 
@@ -87,9 +83,4 @@ void PythonScriptEngine::initialize() {
   getInterpreter();
 }
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::python

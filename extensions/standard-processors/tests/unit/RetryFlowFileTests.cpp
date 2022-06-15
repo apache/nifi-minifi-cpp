@@ -56,7 +56,7 @@ class RetryFlowFileTest {
 
  protected:
   void reInitialize() {
-    testController_.reset(new TestController());
+    testController_ = std::make_unique<TestController>();
     plan_ = testController_->createPlan();
     logTestController_.setDebug<TestPlan>();
     logTestController_.setDebug<GenerateFlowFile>();

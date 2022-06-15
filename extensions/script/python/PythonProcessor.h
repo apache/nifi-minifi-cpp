@@ -23,11 +23,7 @@
 
 #include "core/Processor.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 namespace processors {
 class ExecutePythonProcessor;
@@ -52,8 +48,4 @@ class PythonProcessor {
   python::processors::ExecutePythonProcessor* processor_;
 };
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python

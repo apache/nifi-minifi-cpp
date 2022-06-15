@@ -30,11 +30,7 @@
 #include "utils/StringUtils.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 #define SFTP_ERROR(CODE) case CODE: \
                           return #CODE
@@ -138,11 +134,11 @@ LastSFTPError::operator SFTPError() const {
 }
 
 
-SFTPClient::SFTPClient(const std::string &hostname, uint16_t port, const std::string& username)
+SFTPClient::SFTPClient(std::string hostname, uint16_t port, std::string username)
     : logger_(core::logging::LoggerFactory<SFTPClient>::getLogger()),
-      hostname_(hostname),
+      hostname_(std::move(hostname)),
       port_(port),
-      username_(username),
+      username_(std::move(username)),
       curl_errorbuffer_(CURL_ERROR_SIZE, '\0') {
   easy_ = curl_easy_init();
   if (easy_ == nullptr) {
@@ -633,7 +629,7 @@ bool SFTPClient::rename(const std::string& source_path, const std::string& targe
       continue;
     }
     last_error_.setLibssh2Error(libssh2_sftp_last_error(sftp_session_));
-    logger_->log_error("Failed to rename remote file \"%s\" to \"%s\", error: %s",
+    logger_->log_error(R"(Failed to rename remote file "%s" to "%s", error: %s)",
         source_path.c_str(),
         target_path.c_str(),
         sftp_strerror(last_error_));
@@ -796,8 +792,4 @@ bool SFTPClient::setAttributes(const std::string& path, const SFTPAttributes& in
   return true;
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

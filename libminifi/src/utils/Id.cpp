@@ -24,7 +24,7 @@
 #include "utils/Id.h"
 
 #define __STDC_FORMAT_MACROS 1  // NOLINT(bugprone-reserved-identifier,cert-dcl37-c,cert-dcl51-cpp)
-#include <inttypes.h>
+#include <cinttypes>
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -42,12 +42,9 @@
 #endif
 
 #include "utils/StringUtils.h"
+#include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 #ifdef WIN32
 namespace {
@@ -193,8 +190,8 @@ IdGenerator::~IdGenerator() = default;
 
 uint64_t IdGenerator::getDeviceSegmentFromString(const std::string& str, int numBits) const {
   uint64_t deviceSegment = 0;
-  for (size_t i = 0; i < str.length(); i++) {
-    unsigned char c = toupper(str[i]);
+  for (auto ch : str) {
+    auto c = gsl::narrow_cast<unsigned char>(std::toupper(gsl::narrow_cast<unsigned char>(ch)));
     if (c >= '0' && c <= '9') {
       deviceSegment = deviceSegment + (c - '0');
     } else if (c >= 'A' && c <= 'F') {
@@ -330,8 +327,4 @@ Identifier IdGenerator::generate() {
   return Identifier{output};
 }
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

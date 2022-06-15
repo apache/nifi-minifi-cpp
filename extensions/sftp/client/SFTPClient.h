@@ -32,11 +32,7 @@
 #include "core/logging/Logger.h"
 #include "io/BaseStream.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 SMART_ENUM(SFTPError,
     (Ok, "Ok"),
@@ -80,7 +76,7 @@ class LastSFTPError {
 
 class SFTPClient {
  public:
-  SFTPClient(const std::string &hostname, uint16_t port, const std::string& username);
+  SFTPClient(std::string hostname, uint16_t port, std::string username);
 
   ~SFTPClient();
 
@@ -192,8 +188,4 @@ class SFTPClient {
   LastSFTPError last_error_;
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

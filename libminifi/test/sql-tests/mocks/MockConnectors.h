@@ -28,11 +28,7 @@
 #include "data/DatabaseConnectors.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sql {
+namespace org::apache::nifi::minifi::sql {
 
 class MockRow : public Row {
  public:
@@ -166,8 +162,4 @@ class MockODBCConnection : public Connection {
   std::string file_path_;
 };
 
-} /* namespace sql */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sql

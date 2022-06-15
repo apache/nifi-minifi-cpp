@@ -75,7 +75,7 @@ class PublishKafka::Messages {
   bool interrupted_ = false;
   const std::shared_ptr<core::logging::Logger> logger_;
 
-  std::string logStatus(const std::unique_lock<std::mutex>& lock) const {
+  [[nodiscard]] std::string logStatus(const std::unique_lock<std::mutex>& lock) const {
     gsl_Expects(lock.owns_lock());
     const auto messageresult_ok = [](const MessageResult r) { return r.status == MessageStatus::Success && r.err_code == RD_KAFKA_RESP_ERR_NO_ERROR; };
     const auto messageresult_inflight = [](const MessageResult r) { return r.status == MessageStatus::InFlight && r.err_code == RD_KAFKA_RESP_ERR_NO_ERROR; };

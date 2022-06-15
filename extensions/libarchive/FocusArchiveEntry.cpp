@@ -22,7 +22,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 
-#include <string.h>
+#include <cstring>
 
 #include <array>
 #include <string>
@@ -35,11 +35,7 @@
 #include "Exception.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> FocusArchiveEntry::id_generator_ = utils::IdGenerator::getIdGenerator();
 
@@ -130,11 +126,11 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
   session->transfer(flowFile, Success);
 }
 
-typedef struct {
+struct FocusArchiveEntryReadData {
   std::shared_ptr<io::BaseStream> stream;
   core::Processor *processor;
   std::array<std::byte, 8196> buf;
-} FocusArchiveEntryReadData;
+};
 
 // Read callback which reads from the flowfile stream
 la_ssize_t FocusArchiveEntry::ReadCallback::read_cb(struct archive * a, void *d, const void **buf) {
@@ -247,8 +243,4 @@ FocusArchiveEntry::ReadCallback::ReadCallback(core::Processor *processor, utils:
 
 REGISTER_RESOURCE(FocusArchiveEntry, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

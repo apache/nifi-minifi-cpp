@@ -89,7 +89,7 @@ namespace org::apache::nifi::minifi::processors {
     nodesFound_ = 0;
     variablesFound_ = 0;
 
-    std::function<opc::nodeFoundCallBackFunc> f = std::bind(&FetchOPCProcessor::nodeFoundCallBack, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, context, session);
+    auto f = [this, &context, &session](opc::Client& client, const UA_ReferenceDescription* ref, const std::string& path) { return nodeFoundCallBack(client, ref, path, context, session); };
     if (idType_ != opc::OPCNodeIDType::Path) {
       UA_NodeId myID;
       myID.namespaceIndex = nameSpaceIdx_;

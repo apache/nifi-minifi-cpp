@@ -20,7 +20,7 @@
 
 #include "GenerateFlowFile.h"
 
-#include <time.h>
+#include <ctime>
 
 #include <chrono>
 #include <limits>
@@ -42,11 +42,7 @@
 #include "core/TypedValues.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 const char *GenerateFlowFile::DATA_FORMAT_TEXT = "Text";
 const core::Property GenerateFlowFile::FileSize(
     core::PropertyBuilder::createProperty("File Size")->withDescription("The size of the file that will be used")->isRequired(false)->withDefaultValue<core::DataSizeValue>("1 kB")->build());
@@ -87,7 +83,7 @@ void generateData(std::vector<char>& data, bool textData = false) {
     std::generate_n(data.begin(), data.size(), [&] { return TEXT_CHARS[static_cast<uint8_t>(distr(eng))]; });
   } else {
     std::uniform_int_distribution<> distr(std::numeric_limits<char>::min(), std::numeric_limits<char>::max());
-    auto rand = std::bind(distr, eng);
+    auto rand = [&distr, &eng] { return distr(eng); };
     std::generate_n(data.begin(), data.size(), rand);
   }
 }
@@ -149,8 +145,4 @@ void GenerateFlowFile::onTrigger(core::ProcessContext* /*context*/, core::Proces
 
 REGISTER_RESOURCE(GenerateFlowFile, Processor);
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

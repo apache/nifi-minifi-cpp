@@ -24,7 +24,7 @@
 
 class VerifyHTTPGet : public VerifyInvokeHTTP {
  public:
-  virtual void runAssertions() {
+  void runAssertions() override {
     assert(org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds(10),
         "key:invokehttp.status.code value:200",

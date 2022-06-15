@@ -19,11 +19,9 @@
 
 #include <memory>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+#include "utils/gsl.h"
+
+namespace org::apache::nifi::minifi::processors {
 
 KafkaConnection::KafkaConnection(const KafkaConnectionKey &key)
     : logger_(core::logging::LoggerFactory<KafkaConnection>::getLogger()),
@@ -125,11 +123,9 @@ void KafkaConnection::logCallback(const rd_kafka_t* rk, int level, const char* /
     case 7:  // LOG_DEBUG
       core::logging::LOG_DEBUG(logger) << buf;
       break;
+    default:
+      gsl_FailFast();
   }
 }
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

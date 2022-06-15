@@ -18,7 +18,7 @@
  * limitations under the License.
  */
 #include "CompressContent.h"
-#include <stdio.h>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <map>
@@ -29,11 +29,7 @@
 #include "core/Resource.h"
 #include "io/StreamPipe.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property CompressContent::CompressLevel(
     core::PropertyBuilder::createProperty("Compression Level")->withDescription("The compression level to use; this is valid only when using GZIP compression.")
@@ -248,8 +244,4 @@ std::string CompressContent::toMimeType(io::CompressionFormat format) {
 
 REGISTER_RESOURCE(CompressContent, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

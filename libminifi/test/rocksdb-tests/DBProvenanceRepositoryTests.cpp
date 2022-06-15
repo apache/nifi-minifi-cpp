@@ -35,7 +35,7 @@ void generateData(std::vector<char>& data) {
   std::mt19937 eng(rd());
 
   std::uniform_int_distribution<> distr(std::numeric_limits<char>::min(), std::numeric_limits<char>::max());
-  auto rand = std::bind(distr, eng);
+  auto rand = [&distr, &eng] { return distr(eng); };
   std::generate_n(data.begin(), data.size(), rand);
 }
 

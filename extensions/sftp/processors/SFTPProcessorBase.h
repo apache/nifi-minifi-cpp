@@ -34,11 +34,7 @@
 #include "utils/Id.h"
 #include "../client/SFTPClient.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class SFTPProcessorBase : public core::Processor {
  public:
@@ -160,8 +156,4 @@ class SFTPProcessorBase : public core::Processor {
   CreateDirectoryHierarchyError createDirectoryHierarchy(utils::SFTPClient& client, const std::string& remote_path, bool disable_directory_listing);
 };
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

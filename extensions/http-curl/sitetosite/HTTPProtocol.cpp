@@ -16,7 +16,7 @@
  */
 #include "HTTPProtocol.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <chrono>
 #include <map>
 #include <string>
@@ -225,7 +225,7 @@ void HttpSiteToSiteClient::tearDown() {
 }
 
 void HttpSiteToSiteClient::closeTransaction(const utils::Identifier &transactionID) {
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction;
 
   auto it = this->known_transactions_.find(transactionID);
 

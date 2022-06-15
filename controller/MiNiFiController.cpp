@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 #include <fcntl.h>
-#include <stdio.h>
+#include <cstdio>
 #include <semaphore.h>
-#include <signal.h>
+#include <csignal>
 #include <vector>
 #include <queue>
 #include <map>

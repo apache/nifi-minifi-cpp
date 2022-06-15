@@ -18,11 +18,7 @@
 #include "utils/ThreadPool.h"
 #include "core/state/UpdateController.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 template<typename T>
 void ThreadPool<T>::run_tasks(std::shared_ptr<WorkerThread> thread) {
@@ -128,7 +124,7 @@ void ThreadPool<T>::manageWorkers() {
     std::stringstream thread_name;
     thread_name << name_ << " #" << i;
     auto worker_thread = std::make_shared<WorkerThread>(thread_name.str());
-    worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
+    worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
     thread_queue_.push_back(worker_thread);
     current_workers_++;
   }
@@ -159,7 +155,7 @@ void ThreadPool<T>::manageWorkers() {
         } else if (thread_manager_->canIncrease() && max_worker_threads_ > current_workers_) {  // increase slowly
           std::unique_lock<std::mutex> lock(worker_queue_mutex_);
           auto worker_thread = std::make_shared<WorkerThread>();
-          worker_thread->thread_ = createThread(std::bind(&ThreadPool::run_tasks, this, worker_thread));
+          worker_thread->thread_ = createThread([this, worker_thread] { run_tasks(worker_thread); });
           if (daemon_threads_) {
             worker_thread->thread_.detach();
           }
@@ -282,8 +278,4 @@ template class utils::ThreadPool<int>;
 template class utils::ThreadPool<bool>;
 template class utils::ThreadPool<state::Update>;
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::utils

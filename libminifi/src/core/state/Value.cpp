@@ -73,7 +73,7 @@ rapidjson::Value nodeToJson(const SerializedResponseNode& node, rapidjson::Memor
       return result;
     }
   } else {
-    return rapidjson::Value(node.value.to_string().c_str(), alloc);
+    return {node.value.to_string().c_str(), alloc};
   }
 }
 }  // namespace

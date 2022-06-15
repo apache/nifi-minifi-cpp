@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
-#define LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
+#pragma once
 
 #include <errno.h>
 #include <stdio.h>
@@ -45,11 +44,7 @@
 #include "SiteToSiteClient.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 
 /**
@@ -194,9 +189,4 @@ class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-}  // namespace sitetosite
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_SITETOSITE_RAWSOCKETPROTOCOL_H_
+}  // namespace org::apache::nifi::minifi::sitetosite

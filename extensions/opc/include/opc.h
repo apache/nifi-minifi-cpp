@@ -29,11 +29,7 @@
 #include "logging/Logger.h"
 #include "Exception.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace opc {
+namespace org::apache::nifi::minifi::opc {
 
 class OPCException : public minifi::Exception {
  public:
@@ -134,9 +130,5 @@ std::string OPCDateTime2String(UA_DateTime raw_date);
 
 void logFunc(void *context, UA_LogLevel level, UA_LogCategory category, const char *msg, va_list args);
 
-} /* namespace opc */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::opc
 

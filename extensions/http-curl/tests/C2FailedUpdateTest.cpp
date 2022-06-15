@@ -21,7 +21,7 @@
 #include "HTTPHandlers.h"
 #include "utils/IntegrationTestUtils.h"
 
-using std::literals::chrono_literals::operator""s;
+using namespace std::literals::chrono_literals;
 
 int main(int argc, char **argv) {
   const cmd_args args = parse_cmdline_args(argc, argv, "update");

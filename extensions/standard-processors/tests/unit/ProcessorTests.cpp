@@ -500,8 +500,6 @@ class TestProcessorNoContent : public minifi::core::Processor {
   explicit TestProcessorNoContent(const std::string& name, const utils::Identifier& uuid = {})
       : Processor(name, uuid) {
   }
-  virtual ~TestProcessorNoContent() {
-  }
 
   static constexpr const char* Description = "test resource";
   static auto properties() { return std::array<core::Property, 0>{}; }

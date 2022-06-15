@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "BinFiles.h"
-#include <stdio.h>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <vector>
@@ -97,8 +97,7 @@ void BinFiles::preprocessFlowFile(core::ProcessContext* /*context*/, core::Proce
 void BinManager::gatherReadyBins() {
   std::lock_guard < std::mutex > lock(mutex_);
   std::vector< std::string > emptyQueue;
-  for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>> >::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
-    std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
+  for (auto& [group_id, queue] : groupBinMap_) {
     while (!queue->empty()) {
       std::unique_ptr<Bin> &bin = queue->front();
       if (bin->isReadyForMerge() || (binAge_ != std::chrono::milliseconds::max() && bin->isOlderThan(binAge_))) {
@@ -111,7 +110,7 @@ void BinManager::gatherReadyBins() {
       }
     }
     if (queue->empty()) {
-      emptyQueue.push_back(it->first);
+      emptyQueue.push_back(group_id);
     }
   }
   for (auto group : emptyQueue) {
@@ -125,8 +124,7 @@ void BinManager::removeOldestBin() {
   std::lock_guard < std::mutex > lock(mutex_);
   std::chrono::system_clock::time_point olddate = std::chrono::system_clock::time_point::max();
   std::unique_ptr < std::deque<std::unique_ptr<Bin>>>* oldqueue;
-  for (std::map<std::string, std::unique_ptr<std::deque<std::unique_ptr<Bin>>>>::iterator it=groupBinMap_.begin(); it !=groupBinMap_.end(); ++it) {
-    std::unique_ptr < std::deque<std::unique_ptr<Bin>>>&queue = it->second;
+  for (auto& [_, queue] : groupBinMap_) {
     if (!queue->empty()) {
       std::unique_ptr<Bin> &bin = queue->front();
       if (bin->getCreationDate() < olddate) {
@@ -162,7 +160,7 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
   std::lock_guard < std::mutex > lock(mutex_);
   if (flow->getSize() > maxSize_) {
     // could not be added to a bin -- too large by itself, so create a separate bin for just this guy.
-    std::unique_ptr<Bin> bin = std::unique_ptr < Bin > (new Bin(0, ULLONG_MAX, 1, INT_MAX, "", group));
+    auto bin = std::make_unique<Bin>(0, ULLONG_MAX, 1, INT_MAX, "", group);
     if (!bin->offer(flow))
       return false;
     readyBin_.push_back(std::move(bin));
@@ -176,7 +174,7 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
       std::unique_ptr<Bin> &tail = queue->back();
       if (!tail->offer(flow)) {
         // last bin can not offer the flow
-        std::unique_ptr<Bin> bin = std::unique_ptr < Bin > (new Bin(minSize_, maxSize_, minEntries_, maxEntries_, fileCount_, group));
+        auto bin = std::make_unique<Bin>(minSize_, maxSize_, minEntries_, maxEntries_, fileCount_, group);
         if (!bin->offer(flow))
           return false;
         queue->push_back(std::move(bin));
@@ -184,7 +182,7 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
         binCount_++;
       }
     } else {
-      std::unique_ptr<Bin> bin = std::unique_ptr < Bin > (new Bin(minSize_, maxSize_, minEntries_, maxEntries_, fileCount_, group));
+      auto bin = std::make_unique<Bin>(minSize_, maxSize_, minEntries_, maxEntries_, fileCount_, group);
       if (!bin->offer(flow))
         return false;
       queue->push_back(std::move(bin));
@@ -192,8 +190,8 @@ bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile>
       logger_->log_debug("BinManager add bin %s to group %s", queue->back()->getUUIDStr(), group);
     }
   } else {
-    std::unique_ptr<std::deque<std::unique_ptr<Bin>>> queue = std::unique_ptr<std::deque<std::unique_ptr<Bin>>> (new std::deque<std::unique_ptr<Bin>>());
-    std::unique_ptr<Bin> bin = std::unique_ptr < Bin > (new Bin(minSize_, maxSize_, minEntries_, maxEntries_, fileCount_, group));
+    auto queue = std::make_unique<std::deque<std::unique_ptr<Bin>>>();
+    auto bin = std::make_unique<Bin>(minSize_, maxSize_, minEntries_, maxEntries_, fileCount_, group);
     if (!bin->offer(flow))
       return false;
     queue->push_back(std::move(bin));

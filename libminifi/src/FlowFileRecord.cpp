@@ -17,7 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <time.h>
+#include <ctime>
 #include <cstdio>
 #include <vector>
 #include <queue>
@@ -33,10 +33,7 @@
 #include "core/Repository.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 std::shared_ptr<core::logging::Logger> FlowFileRecord::logger_ = core::logging::LoggerFactory<FlowFileRecord>::getLogger();
 std::atomic<uint64_t> FlowFileRecord::local_flow_seq_number_(0);
@@ -274,7 +271,4 @@ std::shared_ptr<FlowFileRecord> FlowFileRecord::DeSerialize(io::InputStream& inS
   return file;
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

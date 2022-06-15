@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -38,11 +37,7 @@
 #include "utils/gsl.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class SocketAfterExecute : public utils::AfterExecute<int> {
  public:
@@ -237,10 +232,4 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   utils::ThreadPool<int> client_thread_pool_;
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_GETTCP_H_
+}  // namespace org::apache::nifi::minifi::processors

@@ -232,6 +232,8 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
           }
         }
         break;
+        default:
+          logger_->log_error("Unhandled C2 operation: %s", std::to_string(head));
       }
     };
     server_socket_->registerCallback(check, handler);

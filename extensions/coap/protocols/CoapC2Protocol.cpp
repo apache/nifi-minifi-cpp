@@ -21,6 +21,7 @@
 #include "coap_message.h"
 #include "io/BaseStream.h"
 #include "core/Resource.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::coap::c2 {
 
@@ -84,9 +85,9 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
   logger_->log_trace("Writing heartbeat");
 
   try {
-    const std::string deviceIdent = minifi::c2::PayloadParser::getInstance(payload).in("deviceInfo").getAs<std::string>("identifier");
+    const auto deviceIdent = minifi::c2::PayloadParser::getInstance(payload).in("deviceInfo").getAs<std::string>("identifier");
 
-    const std::string agentIdent = minifi::c2::PayloadParser::getInstance(payload).in("agentInfo").getAs<std::string>("identifier");
+    const auto agentIdent = minifi::c2::PayloadParser::getInstance(payload).in("agentInfo").getAs<std::string>("identifier");
 
     stream->write(deviceIdent, false);
 
@@ -180,15 +181,16 @@ minifi::c2::Operation CoapProtocol::getOperation(int type) const {
       return minifi::c2::Operation::PAUSE;
     case 9:
       return minifi::c2::Operation::RESUME;
+    default:
+      gsl_FailFast();
   }
-  return minifi::c2::Operation::ACKNOWLEDGE;
 }
 
 minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &payload) {
   if (nullptr == coap_service_) {
     // return an error if we don't have a coap service
     logger_->log_error("CoAP service requested without any configured hostname or port");
-    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
+    return {payload.getOperation(), state::UpdateState::READ_ERROR};
   }
 
   if (require_registration_) {
@@ -196,13 +198,13 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     auto response = minifi::c2::RESTSender::consumePayload(rest_uri_, payload, minifi::c2::TRANSMIT, false);
     if (response.getStatus().getState() == state::UpdateState::READ_ERROR) {
       logger_->log_trace("Could not register");
-      return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
+      return {payload.getOperation(), state::UpdateState::READ_COMPLETE};
     } else {
       logger_->log_trace("Registered agent.");
     }
     require_registration_ = false;
 
-    return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_COMPLETE);
+    return {payload.getOperation(), state::UpdateState::READ_COMPLETE};
   }
 
   uint16_t version = 0;
@@ -218,7 +220,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       payload_type = 0;
       stream.write(&payload_type, 1);
       if (writeAcknowledgement(&stream, payload) != 0) {
-        return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
+        return {payload.getOperation(), state::UpdateState::READ_ERROR};
       }
       break;
     case minifi::c2::Operation::HEARTBEAT:
@@ -226,12 +228,12 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       stream.write(&payload_type, 1);
       if (writeHeartbeat(&stream, payload) != 0) {
         logger_->log_error("Could not write heartbeat");
-        return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
+        return {payload.getOperation(), state::UpdateState::READ_ERROR};
       }
       break;
     default:
       logger_->log_error("Could not identify operation");
-      return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
+      return {payload.getOperation(), state::UpdateState::READ_ERROR};
   }
 
   size_t bsize = stream.size();
@@ -283,7 +285,7 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     return new_payload;
   }
 
-  return minifi::c2::C2Payload(payload.getOperation(), state::UpdateState::READ_ERROR);
+  return {payload.getOperation(), state::UpdateState::READ_ERROR};
 }
 
 REGISTER_RESOURCE(CoapProtocol, InternalResource);

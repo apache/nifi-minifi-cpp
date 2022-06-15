@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -39,11 +38,7 @@
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 namespace detail {
 struct ReadBufferResult {
   int64_t status;
@@ -202,9 +197,4 @@ class ProcessSession : public ReferenceContainer {
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSSESSION_H_
+}  // namespace org::apache::nifi::minifi::core

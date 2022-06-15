@@ -23,12 +23,7 @@
 #include <algorithm>
 #include "rocksdb/merge_operator.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 class StringAppender : public rocksdb::AssociativeMergeOperator {
  public:
@@ -47,9 +42,4 @@ class StringAppender : public rocksdb::AssociativeMergeOperator {
   }
 };
 
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::repository

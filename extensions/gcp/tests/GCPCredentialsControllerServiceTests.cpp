@@ -27,8 +27,6 @@
 #include "rapidjson/writer.h"
 #include "google/cloud/internal/setenv.h"
 
-namespace gcs = ::google::cloud::storage;
-
 using GCPCredentialsControllerService = org::apache::nifi::minifi::extensions::gcp::GCPCredentialsControllerService;
 
 namespace {

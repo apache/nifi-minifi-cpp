@@ -36,7 +36,6 @@ using org::apache::nifi::minifi::utils::putFileToDir;
 using org::apache::nifi::minifi::utils::getFileContent;
 using org::apache::nifi::minifi::utils::file::getFileNameAndPath;
 using org::apache::nifi::minifi::utils::file::concat_path;
-using org::apache::nifi::minifi::utils::file::get_separator;
 using org::apache::nifi::minifi::utils::file::resolve;
 using org::apache::nifi::minifi::utils::file::getFullPath;
 
@@ -57,7 +56,7 @@ class ExecutePythonProcessorTestBase {
 
  protected:
   void reInitialize() {
-    testController_.reset(new TestController());
+    testController_ = std::make_unique<TestController>();
     plan_ = testController_->createPlan();
     logTestController_.setDebug<TestPlan>();
     logTestController_.setDebug<minifi::processors::PutFile>();

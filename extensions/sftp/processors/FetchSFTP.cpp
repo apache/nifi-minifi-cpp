@@ -188,7 +188,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     } else {
       auto target_path = utils::file::concat_path(move_destination_directory, child_path);
       if (!client->rename(remote_file, target_path, false /*overwrite*/)) {
-        logger_->log_warn("Completion Strategy is Move File, but failed to move file \"%s\" to \"%s\"", remote_file, target_path);
+        logger_->log_warn(R"(Completion Strategy is Move File, but failed to move file "%s" to "%s")", remote_file, target_path);
       }
     }
   }

@@ -853,13 +853,13 @@ void SourceInitiatedSubscriptionListener::onSchedule(const std::shared_ptr<core:
   options.emplace_back(verify_peer ? "yes" : "no");
 
   try {
-    server_ = std::unique_ptr<CivetServer>(new CivetServer(options));
+    server_ = std::make_unique<CivetServer>(options);
   } catch (const std::exception& e) {
     throw Exception(PROCESSOR_EXCEPTION, std::string("Failed to initialize server, error: ") + e.what());
   } catch (...) {
     throw Exception(PROCESSOR_EXCEPTION, "Failed to initialize server");
   }
-  handler_ = std::unique_ptr<Handler>(new Handler(*this));
+  handler_ = std::make_unique<Handler>(*this);
   server_->addHandler("**", *handler_);
 }
 

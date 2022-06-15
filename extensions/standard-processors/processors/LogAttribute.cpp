@@ -18,8 +18,8 @@
  * limitations under the License.
  */
 #include "LogAttribute.h"
-#include <time.h>
-#include <string.h>
+#include <ctime>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
@@ -34,11 +34,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property LogAttribute::LogLevel(core::PropertyBuilder::createProperty("Log Level")->withDescription("The Log Level to use when logging the Attributes")->withAllowableValues<std::string>(
     {"info", "trace", "error", "warn", "debug" })->build());
@@ -179,8 +175,4 @@ void LogAttribute::onTrigger(const std::shared_ptr<core::ProcessContext> &contex
 
 REGISTER_RESOURCE(LogAttribute, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

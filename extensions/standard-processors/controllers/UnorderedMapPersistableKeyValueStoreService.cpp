@@ -110,7 +110,7 @@ bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& l
           current << '=';
           break;
         default:
-          logger_->log_error("Invalid escape sequence in \"%s\": \"\\%c\"", line.c_str(), c);
+          logger_->log_error(R"(Invalid escape sequence in "%s": "\%c")", line.c_str(), c);
           return false;
       }
       in_escape_sequence = false;
@@ -119,7 +119,7 @@ bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& l
         in_escape_sequence = true;
       } else if (c == '=') {
         if (key_complete) {
-          logger_->log_error("Unterminated \'=\' in line \"%s\"", line.c_str());
+          logger_->log_error(R"(Unterminated '=' in line "%s")", line.c_str());
           return false;
         } else {
           key_complete = true;
@@ -139,7 +139,7 @@ bool UnorderedMapPersistableKeyValueStoreService::parseLine(const std::string& l
   }
   key = key_ss.str();
   if (key.empty()) {
-    logger_->log_error("Line with empty key found in \"%s\": \"%s\"", file_.c_str(), line.c_str());
+    logger_->log_error(R"(Line with empty key found in "%s": "%s")", file_.c_str(), line.c_str());
     return false;
   }
   value = value_ss.str();
@@ -245,7 +245,7 @@ bool UnorderedMapPersistableKeyValueStoreService::load() {
       try {
         format_version = std::stoi(value);
       } catch (...) {
-        logger_->log_error("Invalid format version number found in \"%s\": \"%s\"", file_.c_str(), value.c_str());
+        logger_->log_error(R"(Invalid format version number found in "%s": "%s")", file_.c_str(), value.c_str());
         return false;
       }
       if (format_version > FORMAT_VERSION) {

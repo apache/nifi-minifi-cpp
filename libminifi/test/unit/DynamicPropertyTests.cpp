@@ -21,11 +21,7 @@
 #include "../TestBase.h"
 #include "../Catch.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class TestConfigurableComponentSupportsDynamic : public ConfigurableComponent {
  public:
@@ -93,8 +89,4 @@ TEST_CASE("Test Set Dynamic Property 3", "[testSetDynamicProperty2]") {
   REQUIRE("test2" == propertyKeys[1]);
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

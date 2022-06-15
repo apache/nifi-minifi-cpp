@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 #include "AbstractMQTTProcessor.h"
-#include <stdio.h>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <cinttypes>
@@ -118,7 +118,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     }
   }
   if (!client_) {
-    MQTTClient_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, NULL);
+    MQTTClient_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, nullptr);
   }
   if (client_) {
     MQTTClient_setCallbacks(client_, this, connectionLost, msgReceived, msgDelivered);

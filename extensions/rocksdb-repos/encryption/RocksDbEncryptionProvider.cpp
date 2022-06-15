@@ -24,12 +24,7 @@
 #include "utils/crypto/ciphers/Aes256Ecb.h"
 #include "logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 using utils::crypto::Bytes;
 using utils::crypto::Aes256EcbCipher;
@@ -45,7 +40,7 @@ class AES256BlockCipher final : public rocksdb::BlockCipher {
       : database_(std::move(database)),
         cipher_impl_(std::move(cipher_impl)) {}
 
-  const char *Name() const override {
+  [[nodiscard]] const char *Name() const override {
     return "AES256BlockCipher";
   }
 
@@ -70,7 +65,7 @@ class EncryptingEnv : public rocksdb::EnvWrapper {
  public:
   EncryptingEnv(Env* target, std::shared_ptr<AES256BlockCipher> cipher) : EnvWrapper(target), env_(target), cipher_(std::move(cipher)) {}
 
-  bool hasEqualKey(const EncryptingEnv& other) const {
+  [[nodiscard]] bool hasEqualKey(const EncryptingEnv& other) const {
     return *cipher_ == *other.cipher_;
   }
 
@@ -119,9 +114,4 @@ bool EncryptionEq::operator()(const rocksdb::Env* lhs, const rocksdb::Env* rhs) 
   return lhs_enc->hasEqualKey(*rhs_enc);
 }
 
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::repository

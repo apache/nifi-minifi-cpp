@@ -44,7 +44,7 @@ struct RocksDBTest : TestController {
     db_dir = createTempDirectory();
   }
 
-  OpenDatabase openDB(const std::vector<std::string>& cf_names) const {
+  [[nodiscard]] OpenDatabase openDB(const std::vector<std::string>& cf_names) const {
     rocksdb::DB* db_ptr = nullptr;
     std::vector<rocksdb::ColumnFamilyHandle*> cf_handle_ptrs;
     std::vector<rocksdb::ColumnFamilyDescriptor> cf_descs;

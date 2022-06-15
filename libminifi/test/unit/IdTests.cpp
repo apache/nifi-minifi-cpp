@@ -26,19 +26,11 @@
 #include "utils/Id.h"
 #include "../Utils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 struct IdentifierTestAccessor {
   FIELD_ACCESSOR(data_)
 };
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
 
 using org::apache::nifi::minifi::utils::IdentifierTestAccessor;
 
@@ -385,8 +377,8 @@ TEST_CASE("Speed", "[speed]") {
   generator->generate();
 
   auto before = std::chrono::high_resolution_clock::now();
-  for (size_t i = 0U; i < uuids.size(); i++) {
-    uuids[i] = generator->generate();
+  for (auto& uuid : uuids) {
+    uuid = generator->generate();
   }
   auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - before).count();
   std::cerr << "Generating one " << implementation << " UUID took " << (duration / uuids.size()) << "ns" << std::endl;

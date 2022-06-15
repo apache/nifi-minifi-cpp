@@ -40,8 +40,8 @@ namespace {
 class GetFileTestController {
  public:
   GetFileTestController();
-  std::string getFullPath(const std::string filename) const;
-  std::string getInputFilePath() const;
+  [[nodiscard]] std::string getFullPath(const std::string filename) const;
+  [[nodiscard]] std::string getInputFilePath() const;
   void setProperty(const core::Property& property, const std::string& value);
   void runSession();
 

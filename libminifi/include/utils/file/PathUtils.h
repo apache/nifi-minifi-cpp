@@ -14,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
+#pragma once
 
 #include <climits>
 #include <cctype>
@@ -26,12 +25,7 @@
 #include <system_error>
 #include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 namespace PathUtils = ::org::apache::nifi::minifi::utils::file;
 using path = const char*;
@@ -119,11 +113,4 @@ class filesystem_error : public std::system_error {
 space_info space(path);
 space_info space(path, std::error_code&) noexcept;
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_PATHUTILS_H_
+}  // namespace org::apache::nifi::minifi::utils::file

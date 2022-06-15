@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
-#define LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
+#pragma once
 
 #include <errno.h>
 #include <stdio.h>
@@ -38,11 +37,7 @@
 #include "utils/HTTPClient.h"
 #include "utils/TimeUtil.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 class Peer {
  public:
@@ -351,10 +346,4 @@ class SiteToSitePeer : public org::apache::nifi::minifi::io::BaseStream {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<SiteToSitePeer>::getLogger();
 };
 
-}  // namespace sitetosite
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_SITETOSITE_PEER_H_
+}  // namespace org::apache::nifi::minifi::sitetosite

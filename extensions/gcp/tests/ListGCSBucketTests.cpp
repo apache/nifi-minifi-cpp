@@ -23,7 +23,6 @@
 #include "google/cloud/storage/testing/canonical_errors.h"
 
 namespace gcs = ::google::cloud::storage;
-namespace minifi_gcp = org::apache::nifi::minifi::extensions::gcp;
 
 using ListGCSBucket = org::apache::nifi::minifi::extensions::gcp::ListGCSBucket;
 using ListObjectsRequest = gcs::internal::ListObjectsRequest;

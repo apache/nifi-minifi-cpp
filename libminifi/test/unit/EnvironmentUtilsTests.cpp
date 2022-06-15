@@ -24,6 +24,7 @@
 
 #include "utils/Environment.h"
 #include "utils/file/PathUtils.h"
+#include "utils/gsl.h"
 #include "../TestBase.h"
 #include "../Catch.h"
 
@@ -117,6 +118,9 @@ TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]"
               utils::Environment::unsetEnvironmentVariable(env_name.c_str());
               break;
             }
+          default: {
+            gsl_FailFast();
+          }
         }
       }
       });

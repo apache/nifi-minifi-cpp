@@ -32,12 +32,7 @@
 #include "core/controller/ControllerService.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
-namespace controllers {
+namespace org::apache::nifi::minifi::jni::controllers {
 
 /**
  * Purpose and Justification: Java Controller Service is intended to be used either within the flow or
@@ -163,9 +158,4 @@ class JavaControllerService : public core::controller::ControllerService, public
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JavaControllerService>::getLogger();
 };
 
-} /* namespace controllers */
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni::controllers

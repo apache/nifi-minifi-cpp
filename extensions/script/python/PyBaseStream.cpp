@@ -25,11 +25,7 @@
 
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 PyBaseStream::PyBaseStream(std::shared_ptr<io::BaseStream> stream)
     : stream_(std::move(stream)) {
@@ -51,15 +47,11 @@ py::bytes PyBaseStream::read(size_t len) {
   std::vector<std::byte> buffer(len);
 
   const auto read = stream_->read(buffer);
-  return py::bytes(reinterpret_cast<char *>(buffer.data()), read);
+  return {reinterpret_cast<char *>(buffer.data()), read};
 }
 
 size_t PyBaseStream::write(const py::bytes& buf) {
   return stream_->write(gsl::make_span(static_cast<std::string>(buf)).as_span<const std::byte>());
 }
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python

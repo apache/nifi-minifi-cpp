@@ -20,8 +20,6 @@
 
 #include "properties/Configuration.h"
 
-using org::apache::nifi::minifi::Configuration;
-
 namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("Configuration can merge lists of property names", "[mergeProperties]") {

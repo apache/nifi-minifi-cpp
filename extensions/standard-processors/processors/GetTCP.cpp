@@ -40,11 +40,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const char *DataHandler::SOURCE_ENDPOINT_ATTRIBUTE = "source.endpoint";
 
@@ -142,7 +138,7 @@ void GetTCP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, co
     logger_->log_debug("Reconnect interval using default value of %" PRId64 " ms", reconnect_interval_.count());
   }
 
-  handler_ = std::unique_ptr<DataHandler>(new DataHandler(sessionFactory));
+  handler_ = std::make_unique<DataHandler>(sessionFactory);
 
   f_ex = [&] {
     std::unique_ptr<io::Socket> socket_ptr;
@@ -300,8 +296,4 @@ int16_t GetTCP::getMetricNodes(std::vector<std::shared_ptr<state::response::Resp
 
 REGISTER_RESOURCE(GetTCP, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

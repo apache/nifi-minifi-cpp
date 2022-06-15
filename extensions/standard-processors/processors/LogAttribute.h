@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -33,11 +32,7 @@
 #include "utils/gsl.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class LogAttribute : public core::Processor {
  public:
@@ -124,10 +119,4 @@ class LogAttribute : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<LogAttribute>::getLogger();
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_LOGATTRIBUTE_H_
+}  // namespace org::apache::nifi::minifi::processors

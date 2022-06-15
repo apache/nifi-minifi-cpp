@@ -30,11 +30,7 @@
 #include "core/Resource.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const uint64_t ListenHTTP::DEFAULT_BUFFER_SIZE = 20000;
 
@@ -200,12 +196,12 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
     }
   }
 
-  server_.reset(new CivetServer(options, &callbacks_, &logger_));
+  server_ = std::make_unique<CivetServer>(options, &callbacks_, &logger_);
 
   context->getProperty(BatchSize.getName(), batch_size_);
   logger_->log_debug("ListenHTTP using %s: %zu", BatchSize.getName(), batch_size_);
 
-  handler_.reset(new Handler(basePath, context, std::move(authDNPattern), std::move(headersAsAttributesPattern)));
+  handler_ = std::make_unique<Handler>(basePath, context, std::move(authDNPattern), std::move(headersAsAttributesPattern));
   server_->addHandler(basePath, handler_.get());
 
   if (randomPort) {
@@ -510,8 +506,4 @@ void ListenHTTP::notifyStop() {
 
 REGISTER_RESOURCE(ListenHTTP, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

@@ -30,7 +30,6 @@
 using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi {
-
 namespace core {
 // The upper limit for Max Poll Time is 4 seconds. This is because Watchdog would potentially start
 // reporting issues with the processor health otherwise
@@ -106,12 +105,12 @@ void rebalance_cb(rd_kafka_t* rk, rd_kafka_resp_err_t trigger, rd_kafka_topic_pa
       if (logger->should_log(core::logging::LOG_LEVEL::debug)) {
         utils::print_topics_list(*logger, *partitions);
       }
-      assign_error = rd_kafka_assign(rk, NULL);
+      assign_error = rd_kafka_assign(rk, nullptr);
       break;
 
     default:
       logger->log_debug("failed: %s", rd_kafka_err2str(trigger));
-      assign_error = rd_kafka_assign(rk, NULL);
+      assign_error = rd_kafka_assign(rk, nullptr);
       break;
   }
   logger->log_debug("assign failure: %s", rd_kafka_err2str(assign_error));

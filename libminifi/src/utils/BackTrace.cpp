@@ -35,7 +35,6 @@
 #ifdef HAS_EXECINFO
 namespace {
   using std::optional;
-  using std::nullopt;
   /**
    * Demangles a symbol name using the cxx abi.
    * @param symbol_name the mangled name of the symbol

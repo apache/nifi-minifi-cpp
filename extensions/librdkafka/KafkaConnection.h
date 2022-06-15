@@ -15,8 +15,7 @@
  * limitations under the License.
  */
 
-#ifndef EXTENSIONS_LIBRDKAFKA_KAFKACONNECTION_H_
-#define EXTENSIONS_LIBRDKAFKA_KAFKACONNECTION_H_
+#pragma once
 
 #include <atomic>
 #include <map>
@@ -31,11 +30,7 @@
 #include "KafkaTopic.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 struct KafkaConnectionKey {
   std::string client_id_;
@@ -119,10 +114,4 @@ class KafkaConnection {
   }
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_LIBRDKAFKA_KAFKACONNECTION_H_
+}  // namespace org::apache::nifi::minifi::processors
