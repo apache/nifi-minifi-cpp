@@ -33,8 +33,7 @@ export ALL_FEATURES_ENABLED=${FALSE}
 export BUILD_DIR="build"
 export BUILD_IDENTIFIER=""
 export OPTIONS=()
-export CMAKE_OPTIONS_ENABLED=()
-export CMAKE_OPTIONS_DISABLED=()
+export CMAKE_OPTIONS=()
 export CMAKE_MIN_VERSION=()
 export INCOMPATIBLE_WITH=()
 export DEPLOY_LIMITS=()
@@ -260,85 +259,85 @@ add_cmake_option PORTABLE_BUILD ${TRUE}
 add_cmake_option DEBUG_SYMBOLS ${FALSE}
 add_cmake_option BUILD_ROCKSDB ${TRUE}
 ## uses the source from the third party directory
-add_enabled_option ROCKSDB_ENABLED ${TRUE} "DISABLE_ROCKSDB"
+add_option ROCKSDB_ENABLED ${TRUE} "DISABLE_ROCKSDB"
 ## need libcurl installed
-add_enabled_option HTTP_CURL_ENABLED ${TRUE} "DISABLE_CURL"
+add_option HTTP_CURL_ENABLED ${TRUE} "DISABLE_CURL"
 
 # third party directory
-add_enabled_option LIBARCHIVE_ENABLED ${TRUE} "DISABLE_LIBARCHIVE"
+add_option LIBARCHIVE_ENABLED ${TRUE} "DISABLE_LIBARCHIVE"
 add_dependency LIBARCHIVE_ENABLED "libarchive"
 
-add_disabled_option EXECUTE_SCRIPT_ENABLED ${FALSE} "ENABLE_SCRIPTING"
+add_option EXECUTE_SCRIPT_ENABLED ${FALSE} "ENABLE_SCRIPTING"
 add_dependency EXECUTE_SCRIPT_ENABLED "python"
 add_dependency EXECUTE_SCRIPT_ENABLED "lua"
 
-add_enabled_option EXPRESSION_LANGUAGE_ENABLED ${TRUE} "DISABLE_EXPRESSION_LANGUAGE"
+add_option EXPRESSION_LANGUAGE_ENABLED ${TRUE} "DISABLE_EXPRESSION_LANGUAGE"
 add_dependency EXPRESSION_LANGUAGE_ENABLED "bison"
 add_dependency EXPRESSION_LANGUAGE_ENABLED "flex"
 
-add_disabled_option PCAP_ENABLED ${FALSE} "ENABLE_PCAP"
+add_option PCAP_ENABLED ${FALSE} "ENABLE_PCAP"
 add_dependency PCAP_ENABLED "libpcap"
 
-add_disabled_option USB_ENABLED ${FALSE} "ENABLE_USB_CAMERA"
+add_option USB_ENABLED ${FALSE} "ENABLE_USB_CAMERA"
 add_dependency USB_ENABLED "libusb"
 add_dependency USB_ENABLED "libpng"
 
-add_disabled_option GPS_ENABLED ${FALSE} "ENABLE_GPS"
+add_option GPS_ENABLED ${FALSE} "ENABLE_GPS"
 add_dependency GPS_ENABLED "gpsd"
 
-add_disabled_option AWS_ENABLED ${FALSE} "ENABLE_AWS"
+add_option AWS_ENABLED ${TRUE} "ENABLE_AWS"
 
-add_disabled_option KAFKA_ENABLED ${FALSE} "ENABLE_LIBRDKAFKA"
+add_option KAFKA_ENABLED ${TRUE} "ENABLE_LIBRDKAFKA"
 
-add_disabled_option KUBERNETES_ENABLED ${FALSE} "ENABLE_KUBERNETES"
+add_option KUBERNETES_ENABLED ${FALSE} "ENABLE_KUBERNETES"
 
-add_disabled_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
+add_option MQTT_ENABLED ${FALSE} "ENABLE_MQTT"
 
-add_disabled_option PYTHON_ENABLED ${FALSE} "ENABLE_PYTHON"
+add_option PYTHON_ENABLED ${FALSE} "ENABLE_PYTHON"
 add_dependency PYTHON_ENABLED "python"
 
-add_disabled_option COAP_ENABLED ${FALSE} "ENABLE_COAP"
+add_option COAP_ENABLED ${FALSE} "ENABLE_COAP"
 add_dependency COAP_ENABLED "automake"
 add_dependency COAP_ENABLED "autoconf"
 add_dependency COAP_ENABLED "libtool"
 
-add_disabled_option JNI_ENABLED ${FALSE} "ENABLE_JNI"
+add_option JNI_ENABLED ${FALSE} "ENABLE_JNI"
 add_dependency JNI_ENABLED "jnibuild"
 
-add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
+add_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 
-add_disabled_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
+add_option OPENCV_ENABLED ${FALSE} "ENABLE_OPENCV"
 
-add_disabled_option SFTP_ENABLED ${FALSE} "ENABLE_SFTP"
+add_option SFTP_ENABLED ${FALSE} "ENABLE_SFTP"
 add_dependency SFTP_ENABLED "libssh2"
 
-add_disabled_option SQL_ENABLED ${FALSE} "ENABLE_SQL"
+add_option SQL_ENABLED ${TRUE} "ENABLE_SQL"
 
-add_disabled_option OPENWSMAN_ENABLED ${FALSE} "ENABLE_OPENWSMAN"
+add_option OPENWSMAN_ENABLED ${FALSE} "ENABLE_OPENWSMAN"
 
 # Since the following extensions have limitations on
-add_disabled_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
+add_option BUSTACHE_ENABLED ${FALSE} "ENABLE_BUSTACHE" "2.6" ${TRUE}
 add_dependency BUSTACHE_ENABLED "boost"
 
 ## currently need to limit on certain platforms
-add_disabled_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW" "2.6" ${TRUE}
+add_option TENSORFLOW_ENABLED ${FALSE} "ENABLE_TENSORFLOW" "2.6" ${TRUE}
 add_dependency TENSORFLOW_ENABLED "tensorflow"
 
-add_disabled_option OPC_ENABLED ${FALSE} "ENABLE_OPC"
+add_option OPC_ENABLED ${FALSE} "ENABLE_OPC"
 add_dependency OPC_ENABLED "mbedtls"
 
-add_disabled_option AZURE_ENABLED ${FALSE} "ENABLE_AZURE"
+add_option AZURE_ENABLED ${TRUE} "ENABLE_AZURE"
 
-add_disabled_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
+add_option SYSTEMD_ENABLED ${TRUE} "ENABLE_SYSTEMD"
 
-add_disabled_option NANOFI_ENABLED ${FALSE} "ENABLE_NANOFI"
+add_option NANOFI_ENABLED ${FALSE} "ENABLE_NANOFI"
 set_dependency PYTHON_ENABLED NANOFI_ENABLED
 
-add_disabled_option SPLUNK_ENABLED ${FALSE} "ENABLE_SPLUNK"
+add_option SPLUNK_ENABLED ${TRUE} "ENABLE_SPLUNK"
 
-add_disabled_option GCP_ENABLED ${FALSE} "ENABLE_GCP"
+add_option GCP_ENABLED ${TRUE} "ENABLE_GCP"
 
-add_disabled_option PROCFS_ENABLED ${FALSE} "ENABLE_PROCFS"
+add_option PROCFS_ENABLED ${TRUE} "ENABLE_PROCFS"
 
 USE_SHARED_LIBS=${TRUE}
 ASAN_ENABLED=${FALSE}
@@ -430,40 +429,23 @@ if [ "${USE_NINJA}" = "${TRUE}" ]; then
 fi
 
 build_cmake_command(){
-
   for option in "${OPTIONS[@]}" ; do
-    option_value="${!option}"
-    if [ "$option_value" = "${TRUE}" ]; then
-      # option is enabled
-      FOUND=""
-      FOUND_VALUE=""
-      for cmake_opt in "${CMAKE_OPTIONS_ENABLED[@]}" ; do
-        KEY=${cmake_opt%%:*}
-        VALUE=${cmake_opt#*:}
-        if [ "$KEY" = "$option" ]; then
-          FOUND="1"
-          FOUND_VALUE="$VALUE"
-        fi
-      done
-      if [ "$FOUND" = "1" ]; then
-        CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=ON"
+    for cmake_opt in "${CMAKE_OPTIONS[@]}" ; do
+      KEY=${cmake_opt%%:*}
+      VALUE=${cmake_opt#*:}
+      if [ "$KEY" = "$option" ]; then
+        FOUND="1"
+        FOUND_VALUE="$VALUE"
       fi
-    else
-      FOUND=""
-      FOUND_VALUE=""
-      if [ -z "$FOUND" ]; then
-        for cmake_opt in "${CMAKE_OPTIONS_DISABLED[@]}" ; do
-          KEY=${cmake_opt%%:*}
-          VALUE=${cmake_opt#*:}
-          if [ "$KEY" = "$option" ]; then
-            FOUND="1"
-            FOUND_VALUE="$VALUE"
-          fi
-        done
+    done
+    if [ "$FOUND" = "1" ]; then
+      set_value=OFF
+      option_value="${!option}"
+      if { [[ "$option_value" = "${FALSE}" ]] && [[ "$FOUND_VALUE" == "DISABLE"* ]]; } || \
+         { [[ "$option_value" = "${TRUE}" ]] && [[ "$FOUND_VALUE" == "ENABLE"* ]]; }; then
+        set_value=ON
       fi
-      if [ "$FOUND" = "1" ]; then
-        CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=ON"
-      fi
+      CMAKE_BUILD_COMMAND="${CMAKE_BUILD_COMMAND} -D${FOUND_VALUE}=${set_value}"
     fi
   done
 

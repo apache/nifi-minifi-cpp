@@ -26,26 +26,14 @@ get_cmake_version(){
   CMAKE_REVISION=$(echo "$CMAKE_VERSION" | cut -d. -f3)
 }
 
-add_option(){
-  eval "$1=$2"
-  OPTIONS+=("$1")
-  CMAKE_OPTIONS_ENABLED+=("$1:$3")
-  CMAKE_OPTIONS_DISABLED+=("$1:$4")
-}
-
-add_enabled_option(){
-  eval "$1=$2"
-  OPTIONS+=("$1")
-  CMAKE_OPTIONS_DISABLED+=("$1:$3")
-}
 add_cmake_option(){
   eval "$1=$2"
 }
 
-add_disabled_option(){
+add_option(){
   eval "$1=$2"
   OPTIONS+=("$1")
-  CMAKE_OPTIONS_ENABLED+=("$1:$3")
+  CMAKE_OPTIONS+=("$1:$3")
   if [ -n "$4" ]; then
     CMAKE_MIN_VERSION+=("$1:$4")
   fi
