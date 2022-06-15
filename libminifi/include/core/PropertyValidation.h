@@ -210,12 +210,12 @@ class LongValidator : public PropertyValidator {
   ~LongValidator() override = default;
 
   ValidationResult validate(const std::string &subject, const std::shared_ptr<minifi::state::response::Value> &input) const override {
-    auto in64 = std::dynamic_pointer_cast<minifi::state::response::Int64Value>(input);
-    if (in64) {
+    if (auto in64 = std::dynamic_pointer_cast<minifi::state::response::Int64Value>(input)) {
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(in64->getStringValue()).isValid(in64->getValue() >= min_ && in64->getValue() <= max_).build();
-    } else {
-      auto intb = std::dynamic_pointer_cast<minifi::state::response::IntValue>(input);
+    } else if (auto intb = std::dynamic_pointer_cast<minifi::state::response::IntValue>(input)) {
       return ValidationResult::Builder::createBuilder().withSubject(subject).withInput(intb->getStringValue()).isValid(intb->getValue() >= min_ && intb->getValue() <= max_).build();
+    } else {
+      return validate(subject, input->getStringValue());
     }
   }
 
