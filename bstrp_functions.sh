@@ -31,16 +31,19 @@ add_cmake_option(){
 }
 
 add_option(){
-  eval "$1=$2"
-  OPTIONS+=("$1")
-  CMAKE_OPTIONS+=("$1:$3")
+  BOOTSTRAP_OPTION_NAME="$1"
+  DEFAULT_VALUE="$2"
+  CMAKE_OPTION_NAME="$3"
+  eval "$BOOTSTRAP_OPTION_NAME=$DEFAULT_VALUE"
+  OPTIONS+=("$BOOTSTRAP_OPTION_NAME")
+  CMAKE_OPTIONS+=("$BOOTSTRAP_OPTION_NAME:$CMAKE_OPTION_NAME")
   if [ -n "$4" ]; then
-    CMAKE_MIN_VERSION+=("$1:$4")
+    CMAKE_MIN_VERSION+=("$BOOTSTRAP_OPTION_NAME:$4")
   fi
 
   if [ -n "$5" ]; then
     if [ "$5" = "true" ]; then
-      DEPLOY_LIMITS+=("$1")
+      DEPLOY_LIMITS+=("$BOOTSTRAP_OPTION_NAME")
     fi
   fi
 }
