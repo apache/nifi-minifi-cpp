@@ -44,6 +44,7 @@ class AbstractMQTTProcessor : public core::Processor {
     freeResources();
   }
 
+  // TODO(amarkovics) MaxFlowSegSize could be here
   EXTENSIONAPI static const core::Property BrokerURI;
   EXTENSIONAPI static const core::Property ClientID;
   EXTENSIONAPI static const core::Property Username;
@@ -58,7 +59,7 @@ class AbstractMQTTProcessor : public core::Processor {
   EXTENSIONAPI static const core::Property SecurityPrivateKey;
   EXTENSIONAPI static const core::Property SecurityPrivateKeyPassword;
 
- EXTENSIONAPI static const auto properties() {
+  EXTENSIONAPI static auto properties() {
     return std::array{
       BrokerURI,
       ClientID,

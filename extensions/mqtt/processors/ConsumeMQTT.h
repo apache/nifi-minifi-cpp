@@ -51,17 +51,17 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
       MQTTAsync_freeMessage(&message);
     }
   }
-  static core::Property CleanSession;
-  static core::Property MaxFlowSegSize;
-  static core::Property QueueBufferMaxMessage;
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
       "The the payload of the MQTT message becomes content of a FlowFile";
 
+  EXTENSIONAPI static const core::Property CleanSession;
   EXTENSIONAPI static const core::Property MaxFlowSegSize;
   EXTENSIONAPI static const core::Property QueueBufferMaxMessage;
+
   static auto properties() {
     return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
+      CleanSession,
       MaxFlowSegSize,
       QueueBufferMaxMessage
     });
@@ -90,10 +90,6 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   }
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_FORBIDDEN;
-  }
-
   bool getCleanSession() const override {
     return cleanSession_;
   }

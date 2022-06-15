@@ -29,12 +29,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-core::Property ConsumeMQTT::CleanSession("Clean Session", "Whether to start afresh rather than remembering previous subscriptions.", "true");
-core::Property ConsumeMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
-core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "");
-
-core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
-
 void ConsumeMQTT::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
@@ -132,7 +126,5 @@ bool ConsumeMQTT::startupClient() {
   logger_->log_debug("Successfully subscribed to MQTT topic: %s", topic_);
   return true;
 }
-
-REGISTER_RESOURCE(ConsumeMQTT, "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. The the payload of the MQTT message becomes content of a FlowFile");
 
 }  // namespace org::apache::nifi::minifi::processors

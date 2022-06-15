@@ -29,12 +29,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-core::Property PublishMQTT::Retain("Retain", "Retain MQTT published record in broker", "false");
-core::Property PublishMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
-
-core::Relationship PublishMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
-core::Relationship PublishMQTT::Failure("failure", "FlowFiles that failed to send to the destination are transferred to this relationship");
-
 void PublishMQTT::initialize() {
   setSupportedProperties(properties());
   setSupportedRelationships(relationships());
@@ -79,7 +73,5 @@ void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
     session->transfer(flowFile, Success);
   }
 }
-
-REGISTER_RESOURCE(PublishMQTT, "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.");
 
 }  // namespace org::apache::nifi::minifi::processors

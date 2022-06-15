@@ -19,37 +19,11 @@
 #include <memory>
 #include <string>
 #include <cinttypes>
-#include <vector>
 
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
 
 namespace org::apache::nifi::minifi::processors {
-
-core::Property AbstractMQTTProcessor::BrokerURI(
-  core::PropertyBuilder::createProperty("Broker URI")->
-    withDescription("The URI to use to connect to the MQTT broker")->
-    isRequired(true)->
-    build());
-
-core::Property AbstractMQTTProcessor::ClientID("Client ID", "MQTT client ID to use", "");
-
-core::Property AbstractMQTTProcessor::Topic(
-  core::PropertyBuilder::createProperty("Topic")->
-    withDescription("The topic to publish the message to")->
-    isRequired(true)->
-    build());
-
-core::Property AbstractMQTTProcessor::QoS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", MQTT_QOS_0);
-core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
-core::Property AbstractMQTTProcessor::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
-core::Property AbstractMQTTProcessor::Username("Username", "Username to use when connecting to the broker", "");
-core::Property AbstractMQTTProcessor::Password("Password", "Password to use when connecting to the broker", "");
-core::Property AbstractMQTTProcessor::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
-core::Property AbstractMQTTProcessor::SecurityCA("Security CA", "File or directory path to CA certificate(s) for verifying the broker's key", "");
-core::Property AbstractMQTTProcessor::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
-core::Property AbstractMQTTProcessor::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
-core::Property AbstractMQTTProcessor::SecurityPrivateKeyPassword("Security Pass Phrase", "Private key passphrase", "");
 
 void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   sslEnabled_ = false;

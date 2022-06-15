@@ -43,13 +43,12 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     max_seg_size_ = ULLONG_MAX;
   }
   ~PublishMQTT() override = default;
-  static core::Property Retain;
-  static core::Property MaxFlowSegSize;
 
   EXTENSIONAPI static constexpr const char* Description = "PublishMQTT serializes FlowFile content as an MQTT payload, sending the message to the configured topic and broker.";
 
   EXTENSIONAPI static const core::Property Retain;
   EXTENSIONAPI static const core::Property MaxFlowSegSize;
+
   static auto properties() {
     return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
       Retain,
@@ -131,10 +130,6 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
   void initialize() override;
 
  private:
-  core::annotation::Input getInputRequirement() const override {
-    return core::annotation::Input::INPUT_REQUIRED;
-  }
-
   bool getCleanSession() const override {
     return true;
   }
