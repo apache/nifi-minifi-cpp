@@ -47,6 +47,8 @@ class QueueMetrics : public ResponseNode, public ConnectionStore {
       : ResponseNode("QueueMetrics") {
   }
 
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines queue metric information";
+
   std::string getName() const override {
     return "QueueMetrics";
   }

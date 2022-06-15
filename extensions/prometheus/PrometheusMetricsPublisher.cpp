@@ -82,6 +82,6 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPub
   return nodes;
 }
 
-REGISTER_RESOURCE(PrometheusMetricsPublisher, "HTTP server that exposes MiNiFi metrics for Prometheus to scrape");
+REGISTER_RESOURCE(PrometheusMetricsPublisher, DescriptionOnly);
 
 }  // namespace org::apache::nifi::minifi::extensions::prometheus

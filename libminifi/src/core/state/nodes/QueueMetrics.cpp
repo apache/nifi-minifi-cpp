@@ -21,7 +21,7 @@
 
 namespace org::apache::nifi::minifi::state::response {
 
-REGISTER_RESOURCE(QueueMetrics, "Metric node that defines queue metric information");
+REGISTER_RESOURCE(QueueMetrics, DescriptionOnly);
 
 }  // namespace org::apache::nifi::minifi::state::response
 

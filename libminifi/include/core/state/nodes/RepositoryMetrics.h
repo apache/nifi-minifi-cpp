@@ -48,6 +48,8 @@ class RepositoryMetrics : public ResponseNode {
       : ResponseNode("RepositoryMetrics") {
   }
 
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines repository metric information";
+
   std::string getName() const override {
     return "RepositoryMetrics";
   }
