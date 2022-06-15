@@ -97,12 +97,12 @@ class AbstractMQTTProcessor : public core::Processor {
     MQTTAsync_free(topicName);
     return 1;
     // TODO(amarkovics) why always return with 1?
-    // TODO(amarkovics) might neex mutex
+    // TODO(amarkovics) might need mutex
   }
   static void connectionLost(void *context, char* /*cause*/) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
     // TODO(amarkovics) log cause
-    // TODO(amarkovics) might neex mutex
+    // TODO(amarkovics) might need mutex
     processor->reconnect();
   }
 
@@ -116,7 +116,7 @@ class AbstractMQTTProcessor : public core::Processor {
     processor->onConnectionSuccess(response);
   }
 
-  void reconnect();
+  bool reconnect();
 
  protected:
   MQTTAsync client_ = nullptr;

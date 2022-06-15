@@ -85,6 +85,11 @@ void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 }
 
 void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
+  // reconnect if necessary
+  if (!reconnect()) {
+    yield();
+  }
+
   std::deque<MQTTAsync_message *> msg_queue;
   getReceivedMQTTMsg(msg_queue);
   while (!msg_queue.empty()) {

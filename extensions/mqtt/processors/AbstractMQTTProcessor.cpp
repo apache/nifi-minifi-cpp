@@ -141,13 +141,13 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 }
 
-void AbstractMQTTProcessor::reconnect() {
+bool AbstractMQTTProcessor::reconnect() {
   if (!client_) {
     logger_->log_error("MQTT client is not existing while trying to reconnect");
-    return;
+    return false;
   }
   if (MQTTAsync_isConnected(client_)) {
-    return;
+    return true;
   }
   MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
   conn_opts.keepAliveInterval = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count());
@@ -165,7 +165,9 @@ void AbstractMQTTProcessor::reconnect() {
   int ret = MQTTAsync_connect(client_, &conn_opts);
   if (ret != MQTTASYNC_SUCCESS) {
     logger_->log_error("Failed to connect to MQTT broker %s (%d)", uri_, ret);
+    return false;
   }
+  return true;
 }
 
 void AbstractMQTTProcessor::freeResources() {
