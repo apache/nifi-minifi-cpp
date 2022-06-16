@@ -37,7 +37,7 @@ std::vector<::prometheus::MetricFamily> PublishedMetricGaugeCollection::Collect(
       | ranges::to<std::vector<::prometheus::ClientMetric::Label>>;
     client_metric.gauge = ::prometheus::ClientMetric::Gauge{metric.value};
     collection.push_back({
-      .name = metric.name,
+      .name = "minifi_" + metric.name,
       .help = "",
       .type = ::prometheus::MetricType::Gauge,
       .metric = { client_metric }

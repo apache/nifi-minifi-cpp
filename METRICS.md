@@ -56,6 +56,8 @@ The last option defines which metric classes should be exposed through the metri
 
 The following section defines the currently available metrics to be published by the MiNiFi C++ agent.
 
+NOTE: In Prometheus all metrics are extended with a `minifi_` prefix to mark the domain of the metric. For example the `connection_name` metric is published as `minifi_connection_name` in Prometheus.
+
 ### QueueMetrics
 
 QueueMetrics is a system level metric that reports queue metrics for every connection in the flow.

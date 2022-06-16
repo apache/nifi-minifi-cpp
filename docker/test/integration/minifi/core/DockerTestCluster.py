@@ -324,39 +324,39 @@ class DockerTestCluster(SingleNodeDockerCluster):
         prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
         label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}]
         for labels in label_list:
-            if not (self.verify_metric_exists(prom, 'is_running', 'RepositoryMetrics', labels)
-                    and self.verify_metric_exists(prom, 'is_full', 'RepositoryMetrics', labels)
-                    and self.verify_metric_exists(prom, 'repository_size', 'RepositoryMetrics', labels)):
+            if not (self.verify_metric_exists(prom, 'minifi_is_running', 'RepositoryMetrics', labels)
+                    and self.verify_metric_exists(prom, 'minifi_is_full', 'RepositoryMetrics', labels)
+                    and self.verify_metric_exists(prom, 'minifi_repository_size', 'RepositoryMetrics', labels)):
                 return False
         return True
 
     def verify_queue_metrics(self):
         prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
-        return self.verify_metric_exists(prom, 'queue_data_size', 'QueueMetrics') and \
-            self.verify_metric_exists(prom, 'queue_data_size_max', 'QueueMetrics') and \
-            self.verify_metric_exists(prom, 'queue_size', 'QueueMetrics') and \
-            self.verify_metric_exists(prom, 'queue_size_max', 'QueueMetrics')
+        return self.verify_metric_exists(prom, 'minifi_queue_data_size', 'QueueMetrics') and \
+            self.verify_metric_exists(prom, 'minifi_queue_data_size_max', 'QueueMetrics') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size', 'QueueMetrics') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size_max', 'QueueMetrics')
 
     def verify_getfile_metrics(self, processor_name):
         prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
         labels = {'processor_name': processor_name}
-        return self.verify_metric_exists(prom, 'onTrigger_invocations', 'GetFileMetrics', labels) and \
-            self.verify_metric_exists(prom, 'accepted_files', 'GetFileMetrics', labels) and \
-            self.verify_metric_exists(prom, 'input_bytes', 'GetFileMetrics', labels)
+        return self.verify_metric_exists(prom, 'minifi_onTrigger_invocations', 'GetFileMetrics', labels) and \
+            self.verify_metric_exists(prom, 'minifi_accepted_files', 'GetFileMetrics', labels) and \
+            self.verify_metric_exists(prom, 'minifi_input_bytes', 'GetFileMetrics', labels)
 
     def verify_flow_information_metrics(self):
         prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
-        return self.verify_metric_exists(prom, 'queue_data_size', 'FlowInformation') and \
-            self.verify_metric_exists(prom, 'queue_data_size_max', 'FlowInformation') and \
-            self.verify_metric_exists(prom, 'queue_size', 'FlowInformation') and \
-            self.verify_metric_exists(prom, 'queue_size_max', 'FlowInformation') and \
-            self.verify_metric_exists(prom, 'is_running', 'FlowInformation', {'component_name': 'FlowController'})
+        return self.verify_metric_exists(prom, 'minifi_queue_data_size', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_queue_data_size_max', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size_max', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_is_running', 'FlowInformation', {'component_name': 'FlowController'})
 
     def verify_device_info_node_metrics(self):
         prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
-        return self.verify_metric_exists(prom, 'physical_mem', 'DeviceInfoNode') and \
-            self.verify_metric_exists(prom, 'memory_usage', 'DeviceInfoNode') and \
-            self.verify_metric_exists(prom, 'cpu_utilization', 'DeviceInfoNode')
+        return self.verify_metric_exists(prom, 'minifi_physical_mem', 'DeviceInfoNode') and \
+            self.verify_metric_exists(prom, 'minifi_memory_usage', 'DeviceInfoNode') and \
+            self.verify_metric_exists(prom, 'minifi_cpu_utilization', 'DeviceInfoNode')
 
     def verify_metric_exists(self, prometheus_client, metric_name, metric_class, labels={}):
         labels['metric_class'] = metric_class
