@@ -34,11 +34,8 @@ class ListenTCP : public NetworkListenerProcessor {
   ListenTCP& operator=(const ListenTCP&) = delete;
   ListenTCP& operator=(ListenTCP&&) = delete;
 
-  EXTENSIONAPI static constexpr const char* Description = "Listens for Syslog messages being sent to a given port over TCP or UDP. "
-      "Incoming messages are optionally checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
-      "With parsing enabled the individual parts of the message will be placed as FlowFile attributes and "
-      "valid messages will be transferred to success relationship, while invalid messages will be transferred to invalid relationship. "
-      "With parsing disabled all message will be routed to the success relationship, but it will only contain the sender, protocol, and port attributes";
+  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "
+                                                          "For each message the processor produces a single FlowFile.";
 
   EXTENSIONAPI static const core::Property Port;
   EXTENSIONAPI static const core::Property MaxBatchSize;

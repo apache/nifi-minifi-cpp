@@ -37,7 +37,7 @@ void UdpServer::doReceive() {
                                  if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size())
                                    concurrent_queue_.enqueue(utils::net::Message(std::move(buffer_), Protocol::UDP, sender_endpoint_.address(), socket_.local_endpoint().port()));
                                  else
-                                   logger_->log_warn("Queue is full. Syslog message ignored.");
+                                   logger_->log_warn("Queue is full. UDP message ignored.");
                                }
                                doReceive();
                              });

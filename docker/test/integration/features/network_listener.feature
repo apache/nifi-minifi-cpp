@@ -1,4 +1,4 @@
-Feature: Minifi C++ can act as a syslog listener
+Feature: Minifi C++ can act as a network listener
 
   Background:
     Given the content of "/tmp/output" is monitored

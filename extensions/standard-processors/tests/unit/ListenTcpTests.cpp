@@ -134,7 +134,7 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP]") {
     sendMessagesViaTCP({"test_message"});
   }
 
-  CHECK(countLogOccurrencesUntil("Queue is full. Syslog message ignored.", 50, 300ms, 50ms));
+  CHECK(countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
   CHECK(controller.trigger().at(ListenTCP::Success).size() == 10);
   CHECK(controller.trigger().at(ListenTCP::Success).size() == 10);
   CHECK(controller.trigger().at(ListenTCP::Success).size() == 10);

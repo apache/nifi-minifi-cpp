@@ -467,6 +467,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
     for (auto i = 0; i < 100; ++i) {
       sendUDPPacket(rfc5424_doc_example_1.unparsed_, SYSLOG_PORT);
     }
+    CHECK(countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
   }
 
   SECTION("TCP") {
@@ -475,8 +476,8 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
     for (auto i = 0; i < 100; ++i) {
       sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, SYSLOG_PORT);
     }
+    CHECK(countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
   }
-  CHECK(countLogOccurrencesUntil("Queue is full. Syslog message ignored.", 50, 300ms, 50ms));
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);

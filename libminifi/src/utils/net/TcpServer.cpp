@@ -47,7 +47,7 @@ void TcpSession::handleReadUntilNewLine(std::error_code error_code) {
   if (!max_queue_size_ || max_queue_size_ > concurrent_queue_.size())
     concurrent_queue_.enqueue(Message(message, Protocol::TCP, socket_.remote_endpoint().address(), socket_.local_endpoint().port()));
   else
-    logger_->log_warn("Queue is full. Syslog message ignored.");
+    logger_->log_warn("Queue is full. TCP message ignored.");
   asio::async_read_until(socket_,
                          buffer_,
                          '\n',
