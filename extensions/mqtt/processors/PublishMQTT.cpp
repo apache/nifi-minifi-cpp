@@ -50,6 +50,9 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 }
 
 void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
+  // reconnect if needed
+  reconnect();
+
   if (!MQTTAsync_isConnected(client_)) {
     logger_->log_error("Could not publish to MQTT broker because disconnected to %s", uri_);
     yield();

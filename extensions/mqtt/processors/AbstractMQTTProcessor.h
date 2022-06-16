@@ -141,7 +141,6 @@ class AbstractMQTTProcessor : public core::Processor {
     if (cause != nullptr) {
       logger_->log_error("Cause for connection loss: %s", cause);
     }
-    reconnect();
   }
 
   void onConnectionSuccess(MQTTAsync_successData* /*response*/) {
@@ -154,7 +153,6 @@ class AbstractMQTTProcessor : public core::Processor {
     if (response->message != nullptr) {
       logger_->log_error("Detailed reason for connection failure: %s", response->message);
     }
-    reconnect();
   }
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
