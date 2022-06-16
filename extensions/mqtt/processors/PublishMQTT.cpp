@@ -43,7 +43,6 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
 
-  // TODO(amarkovics) implement retained messages
   retain_ = false;
   logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
 
@@ -51,8 +50,8 @@ void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 }
 
 void PublishMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
-  if (!reconnect()) {
-    logger_->log_error("MQTT connect to %s failed", uri_);
+  if (!MQTTAsync_isConnected(client_)) {
+    logger_->log_error("Could not publish to MQTT broker because disconnected to %s", uri_);
     yield();
     return;
   }

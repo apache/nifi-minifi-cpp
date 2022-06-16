@@ -57,13 +57,13 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 
   if (auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
-    keepAliveInterval_ = keep_alive_interval->getMilliseconds();
-    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keepAliveInterval_.count()});
+    keep_alive_interval_ = keep_alive_interval->getMilliseconds();
+    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keep_alive_interval_.count()});
   }
 
   if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
-    connectionTimeout_ = connection_timeout->getMilliseconds();
-    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] ms", int64_t{connectionTimeout_.count()});
+    connection_timeout_ = connection_timeout->getMilliseconds();
+    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] ms", int64_t{connection_timeout_.count()});
   }
 
   value = "";
@@ -111,20 +111,21 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   if (client_) {
     MQTTAsync_setCallbacks(client_, this, connectionLost, msgReceived, msgDelivered);
     // call reconnect to bootstrap
-    this->reconnect();
+    reconnect();
   }
 }
 
-bool AbstractMQTTProcessor::reconnect() {
+void AbstractMQTTProcessor::reconnect() {
   if (!client_) {
     logger_->log_error("MQTT client is not existing while trying to reconnect");
-    return false;
+    return;
   }
   if (MQTTAsync_isConnected(client_)) {
-    return true;
+    logger_->log_info("Already connected to %s, no need to reconnect", uri_);
+    return;
   }
   MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
-  conn_opts.keepAliveInterval = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::seconds>(keepAliveInterval_).count());
+  conn_opts.keepAliveInterval = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval_).count());
   conn_opts.cleansession = getCleanSession();
   conn_opts.context = this;
   conn_opts.onSuccess = connectionSuccess;
@@ -136,18 +137,19 @@ bool AbstractMQTTProcessor::reconnect() {
   if (sslEnabled_) {
     conn_opts.ssl = &sslOpts_;
   }
+
+  logger_->log_info("Reconnecting to %s", uri_);
   int ret = MQTTAsync_connect(client_, &conn_opts);
   if (ret != MQTTASYNC_SUCCESS) {
-    logger_->log_error("Failed to connect to MQTT broker %s (%d)", uri_, ret);
-    return false;
+    logger_->log_error("Failed to reconnect to MQTT broker %s (%d)", uri_, ret);
   }
-  return true;
 }
 
 void AbstractMQTTProcessor::freeResources() {
   if (client_ && MQTTAsync_isConnected(client_)) {
     MQTTAsync_disconnectOptions disconnect_options = MQTTAsync_disconnectOptions_initializer;
-    disconnect_options.timeout = gsl::narrow<int>(std::chrono::milliseconds{connectionTimeout_}.count());
+    // TODO(amarkovics) set callback functions
+    disconnect_options.timeout = gsl::narrow<int>(std::chrono::milliseconds{connection_timeout_}.count());
     MQTTAsync_disconnect(client_, &disconnect_options);
   }
   if (client_) {

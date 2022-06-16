@@ -95,21 +95,14 @@ class AbstractMQTTProcessor : public core::Processor {
   static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTAsync_message* message) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
     processor->onMessageReceived(message);
+    // TODO(amarkovics) do this nicer with custom deleter
     MQTTAsync_free(topicName);
     return 1;
-    // TODO(amarkovics) why always return with 1?
     // TODO(amarkovics) might need mutex
   }
-  static void connectionLost(void *context, char* /*cause*/) {
+  static void connectionLost(void *context, char* cause) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    // TODO(amarkovics) log cause
-    // TODO(amarkovics) might need mutex
-    processor->reconnect();
-  }
-
-  static void connectionFailure(void* context, MQTTAsync_failureData* response) {
-    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    processor->onConnectionFailure(response);
+    processor->onConnectionLost(cause);
   }
 
   static void connectionSuccess(void* context, MQTTAsync_successData* response) {
@@ -117,15 +110,20 @@ class AbstractMQTTProcessor : public core::Processor {
     processor->onConnectionSuccess(response);
   }
 
-  bool reconnect();
+  static void connectionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionFailure(response);
+  }
+
+  void reconnect();
 
  protected:
   MQTTAsync client_ = nullptr;
   MQTTAsync_token delivered_token_ = 0;
   std::string uri_;
   std::string topic_;
-  std::chrono::milliseconds keepAliveInterval_ = std::chrono::seconds(60);
-  std::chrono::milliseconds connectionTimeout_ = std::chrono::seconds(30);
+  std::chrono::milliseconds keep_alive_interval_ = std::chrono::seconds(60);
+  std::chrono::milliseconds connection_timeout_ = std::chrono::seconds(30);
   int64_t qos_ = 0;
   std::string clientID_;
   std::string username_;
@@ -138,15 +136,25 @@ class AbstractMQTTProcessor : public core::Processor {
 
   void freeResources();
 
-  void onConnectionFailure(MQTTAsync_failureData* response) {
-    logger_->log_error("Failed to connect to MQTT broker %s (%d)", uri_, response->code);
-    if (response->message != nullptr) {
-      logger_->log_error("Detailed reason for connection failure: %s", response->message);
+  void onConnectionLost(char* cause) {
+    logger_->log_error("Connection lost to MQTT broker %s", uri_);
+    if (cause != nullptr) {
+      logger_->log_error("Cause for connection loss: %s", cause);
     }
+    reconnect();
   }
 
   void onConnectionSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_info("Successfully connected to MQTT broker");
     startupClient();
+  }
+
+  void onConnectionFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Connection failed to MQTT broker %s (%d)", uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for connection failure: %s", response->message);
+    }
+    reconnect();
   }
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();

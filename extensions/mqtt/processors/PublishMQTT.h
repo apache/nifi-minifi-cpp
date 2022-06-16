@@ -102,6 +102,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
           pubmsg.retained = retain_;
             MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
             response_options.token = token_;
+            // TODO(amarkovics) set callbacks
           if (MQTTAsync_sendMessage(client_, topic_.c_str(), &pubmsg, &response_options) != MQTTASYNC_SUCCESS) {
             status_ = -1;
             return -1;

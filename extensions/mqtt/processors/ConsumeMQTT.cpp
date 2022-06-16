@@ -79,9 +79,10 @@ void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 }
 
 void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
-  // reconnect if necessary
-  if (!reconnect()) {
+  if (!MQTTAsync_isConnected(client_)) {
+    logger_->log_error("Could not consume from MQTT broker because disconnected to %s", uri_);
     yield();
+    return;
   }
 
   std::deque<MQTTAsync_message *> msg_queue;
@@ -118,6 +119,7 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
 
 bool ConsumeMQTT::startupClient() {
   MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
+  // TODO(amarkovics) set callbacks
   const int ret = MQTTAsync_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_), &response_options);
   if (ret != MQTTASYNC_SUCCESS) {
     logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
