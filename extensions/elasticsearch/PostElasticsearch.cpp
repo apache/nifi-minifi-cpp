@@ -126,7 +126,7 @@ namespace {
 
 class ElasticPayload {
  public:
-  std::string toString() const {
+  [[nodiscard]] std::string toString() const {
     auto result = headerString();
     if (payload_) {
       rapidjson::StringBuffer payload_buffer;
@@ -185,7 +185,7 @@ class ElasticPayload {
       payload_(std::move(payload)) {
   }
 
-  std::string headerString() const {
+  [[nodiscard]] std::string headerString() const {
     rapidjson::Document first_line = rapidjson::Document(rapidjson::kObjectType);
 
     auto operation_index_key = rapidjson::Value(operation_.data(), operation_.size(), first_line.GetAllocator());

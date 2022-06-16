@@ -31,10 +31,10 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
+HTTPClient::HTTPClient(std::string url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
     : core::Connectable("HTTPClient"),
       ssl_context_service_(ssl_context_service),
-      url_(url) {
+      url_(std::move(url)) {
   http_session_ = curl_easy_init();
 }
 
@@ -338,7 +338,7 @@ const char *HTTPClient::getContentType() {
 }
 
 const std::vector<char> &HTTPClient::getResponseBody() {
-  if (response_body_.size() == 0) {
+  if (response_body_.empty()) {
     if (callback && callback->ptr) {
       response_body_ = callback->ptr->to_string();
     } else {
@@ -450,7 +450,7 @@ void HTTPClient::setFollowRedirects(bool follow) {
 }
 
 bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
-  if (field_name.size() == 0) {
+  if (field_name.empty()) {
     return false;
   }
 
@@ -465,7 +465,7 @@ bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
 }
 
 std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::string_view field_name) {
-  if (field_name.size() == 0) {
+  if (field_name.empty()) {
     return "X-MiNiFi-Empty-Attribute-Name";
   }
 
