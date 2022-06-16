@@ -30,12 +30,7 @@
 #include "utils/tls/TLSUtils.h"
 #include "utils/TimeUtil.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace tls {
+namespace org::apache::nifi::minifi::utils::tls {
 
 const ssl_error_category& ssl_error_category::get() {
   static ssl_error_category instance;
@@ -265,11 +260,6 @@ std::error_code processPEMCertificate(const std::string& cert_file, const std::o
   return {};
 }
 
-}  // namespace tls
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::tls
 
 #endif  // OPENSSL_SUPPORT

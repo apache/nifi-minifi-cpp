@@ -33,12 +33,7 @@
 
 #include "WindowsCertStoreLocation.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace tls {
+namespace org::apache::nifi::minifi::utils::tls {
 
 class ssl_error_category : public std::error_category {
  public:
@@ -114,11 +109,6 @@ std::error_code processP12Certificate(const std::string& cert_file, const std::s
 
 std::error_code processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler);
 
-}  // namespace tls
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::tls
 
 #endif  // OPENSSL_SUPPORT

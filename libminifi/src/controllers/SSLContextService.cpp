@@ -149,7 +149,7 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
 
   if (!IsNullOrEmpty(ca_certificate_)) {
-    if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), 0) == 0) {
+    if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), nullptr) == 0) {
       core::logging::LOG_ERROR(logger_) << "Cannot load CA certificate, exiting, " << getLatestOpenSSLErrorString();
       return false;
     }
