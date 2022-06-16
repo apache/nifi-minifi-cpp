@@ -51,10 +51,7 @@ bool check_encryption(const ConfigFile& test_file, const std::string& property_n
 }
 }  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 // NOTE(fgerlits): these ==/!= operators are in the test file on purpose, and should not be part of production code,
 // as they take a varying amount of time depending on which character in the line differs, so they would open up
@@ -68,10 +65,7 @@ bool operator==(const  ConfigFile& left, const  ConfigFile& right) { return left
 bool operator!=(const  ConfigFile& left, const  ConfigFile& right) { return !(left == right); }
 
 }  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
 
 TEST_CASE("ConfigFileEncryptor can encrypt the sensitive properties", "[encrypt-config][encryptSensitivePropertiesInFile]") {
   utils::crypto::Bytes KEY = utils::StringUtils::from_base64("6q9u8LEDy1/CdmSBm8oSqPS/Ds5UOD2nRouP8yUoK10=");
