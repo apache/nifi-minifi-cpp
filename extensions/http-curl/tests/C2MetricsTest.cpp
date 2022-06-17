@@ -103,7 +103,10 @@ class MetricsHandler: public HeartbeatHandler {
       root.HasMember("metrics") &&
       root["metrics"].HasMember("RuntimeMetrics") &&
       root["metrics"].HasMember("LoadMetrics") &&
-      root["metrics"].HasMember("ProcessorMetrics");
+      root["metrics"].HasMember("ProcessorMetrics") &&
+      verifyRuntimeMetrics(root["metrics"]["RuntimeMetrics"]) &&
+      verifyLoadMetrics(root["metrics"]["LoadMetrics"]) &&
+      verifyProcessorMetrics(root["metrics"]["ProcessorMetrics"]);
     if (initial_metrics_verified) {
       test_state_ = TestState::SEND_NEW_CONFIG;
     }
