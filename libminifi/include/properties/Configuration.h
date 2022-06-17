@@ -158,7 +158,7 @@ class Configuration : public Properties {
 
   // Metrics publisher options
   static constexpr const char *nifi_metrics_publisher_class = "nifi.metrics.publisher.class";
-  static constexpr const char *nifi_metrics_publisher_port = "nifi.metrics.publisher.port";
+  static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_port = "nifi.metrics.publisher.PrometheusMetricsPublisher.port";
   static constexpr const char *nifi_metrics_publisher_metrics = "nifi.metrics.publisher.metrics";
 
   MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;

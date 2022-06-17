@@ -84,7 +84,7 @@ TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithRealExposer, "Test prometheus
 }
 
 TEST_CASE_METHOD(PrometheusPublisherTestFixtureWithRealExposer, "Test prometheus invalid port", "[prometheusPublisherTest]") {
-  configuration_->set(Configure::nifi_metrics_publisher_port, "invalid");
+  configuration_->set(Configure::nifi_metrics_publisher_prometheus_metrics_publisher_port, "invalid");
   REQUIRE_THROWS_AS(publisher_->initialize(configuration_, response_node_loader_, nullptr), std::exception);
 }
 

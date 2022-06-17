@@ -44,7 +44,7 @@ To use the publisher a port should also be configured where the metrics will be 
 
 	# in minifi.properties
 
-	nifi.metrics.publisher.port=9936
+	nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936
 
 The last option defines which metric classes should be exposed through the metrics publisher in configured with a comma separated value:
 

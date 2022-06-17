@@ -39,7 +39,7 @@ void PrometheusMetricsPublisher::initialize(const std::shared_ptr<Configure>& co
 }
 
 uint32_t PrometheusMetricsPublisher::readPort() {
-  if (auto port = configuration_->get(Configuration::nifi_metrics_publisher_port)) {
+  if (auto port = configuration_->get(Configuration::nifi_metrics_publisher_prometheus_metrics_publisher_port)) {
     return std::stoul(*port);
   }
 
