@@ -105,3 +105,4 @@ add_test(NAME C2MultipleCommandsTest COMMAND C2MultipleCommandsTest "${TEST_RESO
 add_test(NAME C2UpdateAssetTest COMMAND C2UpdateAssetTest)
 add_test(NAME C2CompressTest COMMAND C2CompressTest)
 add_test(NAME C2MetricsTest COMMAND C2MetricsTest "${TEST_RESOURCES}/TestC2Metrics.yml")
+add_test(NAME C2EmptyMetricTest COMMAND C2EmptyMetricTest "${TEST_RESOURCES}/TestEmpty.yml")
