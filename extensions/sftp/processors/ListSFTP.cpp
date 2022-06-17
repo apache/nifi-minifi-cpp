@@ -63,6 +63,21 @@ constexpr char const* ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_MINUTES;
 constexpr char const* ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW;
 constexpr char const* ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_ALL_AVAILABLE;
 
+namespace {
+uint64_t createTimestamp(const std::optional<std::chrono::system_clock::time_point> time_point) {
+  if (!time_point)
+    return 0;
+  return std::chrono::duration_cast<std::chrono::milliseconds>(time_point->time_since_epoch()).count();
+}
+
+std::optional<std::chrono::system_clock::time_point> parseTimestamp(const uint64_t timestamp) {
+  if (timestamp == 0)
+    return std::nullopt;
+  return std::chrono::system_clock::time_point{std::chrono::milliseconds{timestamp}};
+}
+
+}  // namespace
+
 void ListSFTP::initialize() {
   logger_->log_trace("Initializing FetchSFTP");
 
@@ -82,8 +97,6 @@ ListSFTP::ListSFTP(const std::string& name, const utils::Identifier& uuid /*= ut
     , minimum_file_size_(0U)
     , maximum_file_size_(0U)
     , already_loaded_from_cache_(false)
-    , last_listed_latest_entry_timestamp_(0U)
-    , last_processed_latest_entry_timestamp_(0U)
     , initial_listing_complete_(false) {
   logger_ = core::logging::LoggerFactory<ListSFTP>::getLogger();
 }
@@ -174,8 +187,8 @@ void ListSFTP::invalidateCache() {
   already_loaded_from_cache_ = false;
 
   last_run_time_ = std::chrono::steady_clock::time_point();
-  last_listed_latest_entry_timestamp_ = 0U;
-  last_processed_latest_entry_timestamp_ = 0U;
+  last_listed_latest_entry_timestamp_.reset();
+  last_processed_latest_entry_timestamp_.reset();
   latest_identifiers_processed_.clear();
 
   initial_listing_complete_ = false;
@@ -380,8 +393,8 @@ bool ListSFTP::persistTrackingTimestampsCache(const std::shared_ptr<core::Proces
   state["hostname"] = hostname;
   state["username"] = username;
   state["remote_path"] = remote_path;
-  state["listing.timestamp"] = std::to_string(last_listed_latest_entry_timestamp_);
-  state["processed.timestamp"] = std::to_string(last_processed_latest_entry_timestamp_);
+  state["listing.timestamp"] = std::to_string(createTimestamp(last_listed_latest_entry_timestamp_));
+  state["processed.timestamp"] = std::to_string(createTimestamp(last_processed_latest_entry_timestamp_));
   size_t i = 0;
   for (const auto& identifier : latest_identifiers_processed_) {
     state["id." + std::to_string(i)] = identifier;
@@ -464,8 +477,8 @@ bool ListSFTP::updateFromTrackingTimestampsCache(const std::shared_ptr<core::Pro
     return false;
   }
 
-  last_listed_latest_entry_timestamp_ = state_listing_timestamp;
-  last_processed_latest_entry_timestamp_ = state_processed_timestamp;
+  last_listed_latest_entry_timestamp_ = parseTimestamp(state_listing_timestamp);
+  last_processed_latest_entry_timestamp_ = parseTimestamp(state_processed_timestamp);
   latest_identifiers_processed_ = std::move(state_ids);
 
   return true;
@@ -479,7 +492,7 @@ void ListSFTP::listByTrackingTimestamps(
     const std::string& username,
     const std::string& remote_path,
     std::vector<Child>&& files) {
-  uint64_t min_timestamp_to_list = last_listed_latest_entry_timestamp_;
+  auto min_timestamp_to_list = last_listed_latest_entry_timestamp_;
 
   /* Load state from cache file if needed */
   if (!already_loaded_from_cache_) {
@@ -492,16 +505,16 @@ void ListSFTP::listByTrackingTimestamps(
   }
 
   std::chrono::steady_clock::time_point current_run_time = std::chrono::steady_clock::now();
-  time_t now = time(nullptr);
+  auto now = std::chrono::system_clock::now();
 
   /* Order children by timestamp and try to detect timestamp precision if needed  */
-  std::map<uint64_t /*timestamp*/, std::list<Child>> ordered_files;
+  std::map<std::chrono::system_clock::time_point, std::list<Child>> ordered_files;
   bool target_system_has_seconds = false;
   for (auto&& file : files) {
-    uint64_t timestamp = file.attrs.mtime * 1000;
-    target_system_has_seconds |= timestamp % 60000 != 0;
+    std::chrono::system_clock::time_point timestamp {std::chrono::seconds(file.attrs.mtime)};
+    target_system_has_seconds |= std::chrono::round<std::chrono::seconds>(timestamp) == timestamp;
 
-    bool new_file = min_timestamp_to_list == 0U || (timestamp >= min_timestamp_to_list && timestamp >= last_processed_latest_entry_timestamp_);
+    bool new_file = !min_timestamp_to_list.has_value() || (timestamp >= min_timestamp_to_list && timestamp >= last_processed_latest_entry_timestamp_);
     if (new_file) {
       auto& files_for_timestamp = ordered_files[timestamp];
       files_for_timestamp.emplace_back(std::move(file));
@@ -510,9 +523,9 @@ void ListSFTP::listByTrackingTimestamps(
     }
   }
 
-  uint64_t latest_listed_entry_timestamp_this_cycle = 0U;
+  std::optional<std::chrono::system_clock::time_point> latest_listed_entry_timestamp_this_cycle;
   size_t flow_files_created = 0U;
-  if (ordered_files.size() > 0) {
+  if (!ordered_files.empty()) {
     latest_listed_entry_timestamp_this_cycle = ordered_files.crbegin()->first;
 
     std::string remote_system_timestamp_precision;
@@ -533,20 +546,20 @@ void ListSFTP::listByTrackingTimestamps(
        */
       remote_system_timestamp_precision = TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS;
     }
-    uint64_t listing_lag = LISTING_LAG_MAP.at(remote_system_timestamp_precision);
-    logger_->log_debug("The listing lag is %lu ms", listing_lag);
+    std::chrono::milliseconds listing_lag{LISTING_LAG_MAP.at(remote_system_timestamp_precision)};
+    logger_->log_debug("The listing lag is %lu ms", listing_lag.count());
 
     /* If the latest listing time is equal to the last listing time, there are no entries with a newer timestamp than previously seen */
-    if (latest_listed_entry_timestamp_this_cycle == last_listed_latest_entry_timestamp_) {
-      const auto& latest_files = ordered_files.at(latest_listed_entry_timestamp_this_cycle);
-      uint64_t elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_run_time - last_run_time_).count();
+    if (latest_listed_entry_timestamp_this_cycle == last_listed_latest_entry_timestamp_ && latest_listed_entry_timestamp_this_cycle) {
+      const auto& latest_files = ordered_files.at(*latest_listed_entry_timestamp_this_cycle);
+      auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_run_time - last_run_time_);
       /* If a precision-specific listing lag has not yet elapsed since out last execution, we wait. */
       if (elapsed_time < listing_lag) {
         logger_->log_debug("The latest listed entry timestamp is the same as the last listed entry timestamp (%lu) "
                            "and the listing lag has not yet elapsed (%lu ms < % lu ms). Yielding.",
-                           latest_listed_entry_timestamp_this_cycle,
-                           elapsed_time,
-                           listing_lag);
+                           createTimestamp(latest_listed_entry_timestamp_this_cycle),
+                           elapsed_time.count(),
+                           listing_lag.count());
         context->yield();
         return;
       }
@@ -559,24 +572,24 @@ void ListSFTP::listByTrackingTimestamps(
             return latest_identifiers_processed_.count(child.getPath()) == 1U;
           })) {
         logger_->log_debug("The latest listed entry timestamp is the same as the last listed entry timestamp (%lu) "
-                           "and all files for that timestamp has been processed. Yielding.", latest_listed_entry_timestamp_this_cycle);
+                           "and all files for that timestamp has been processed. Yielding.", createTimestamp(latest_listed_entry_timestamp_this_cycle));
         context->yield();
         return;
       }
     } else {
       /* Determine the minimum reliable timestamp based on precision */
-      uint64_t minimum_reliable_timestamp = now * 1000 - listing_lag;
+      auto minimum_reliable_timestamp = now - listing_lag;
       if (remote_system_timestamp_precision == TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS) {
-        minimum_reliable_timestamp -= minimum_reliable_timestamp % 1000;
+        std::chrono::floor<std::chrono::seconds>(minimum_reliable_timestamp);
       } else {
-        minimum_reliable_timestamp -= minimum_reliable_timestamp % 60000;
+        std::chrono::floor<std::chrono::minutes>(minimum_reliable_timestamp);
       }
       /* If the latest timestamp is not old enough, we wait another cycle */
-      if (minimum_reliable_timestamp < latest_listed_entry_timestamp_this_cycle) {
+      if (latest_listed_entry_timestamp_this_cycle && minimum_reliable_timestamp < latest_listed_entry_timestamp_this_cycle) {
         logger_->log_debug("Skipping files with latest timestamp because their modification date is not smaller than the minimum reliable timestamp: %lu ms >= %lu ms",
-            latest_listed_entry_timestamp_this_cycle,
-            minimum_reliable_timestamp);
-        ordered_files.erase(latest_listed_entry_timestamp_this_cycle);
+                           createTimestamp(latest_listed_entry_timestamp_this_cycle),
+                           createTimestamp(minimum_reliable_timestamp));
+        ordered_files.erase(*latest_listed_entry_timestamp_this_cycle);
       }
     }
 
@@ -605,7 +618,7 @@ void ListSFTP::listByTrackingTimestamps(
   }
 
   /* If we have a listing timestamp, it is worth persisting the state */
-  if (latest_listed_entry_timestamp_this_cycle != 0U) {
+  if (latest_listed_entry_timestamp_this_cycle) {
     bool processed_new_files = flow_files_created > 0U;
     if (processed_new_files) {
       auto last_files_it = ordered_files.crbegin();
