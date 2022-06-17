@@ -44,6 +44,7 @@ const core::Property AbstractMQTTProcessor::Topic(
 const core::Property AbstractMQTTProcessor::QoS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", MQTT_QOS_0);
 const core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
 const core::Property AbstractMQTTProcessor::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
+const core::Property AbstractMQTTProcessor::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
 const core::Property AbstractMQTTProcessor::Username("Username", "Username to use when connecting to the broker", "");
 const core::Property AbstractMQTTProcessor::Password("Password", "Password to use when connecting to the broker", "");
 const core::Property AbstractMQTTProcessor::SecurityProtocol("Security Protocol", "Protocol used to communicate with brokers", "");
@@ -55,8 +56,7 @@ const core::Property AbstractMQTTProcessor::SecurityPrivateKeyPassword("Security
 // ConsumeMQTT
 
 const core::Property ConsumeMQTT::CleanSession("Clean Session", "Whether to start afresh rather than remembering previous subscriptions.", "true");
-const core::Property ConsumeMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
-const core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "");
+const core::Property ConsumeMQTT::QueueBufferMaxMessage("Queue Max Message", "Maximum number of messages allowed on the received MQTT queue", "1000");
 
 const core::Relationship ConsumeMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
 
@@ -66,7 +66,6 @@ REGISTER_RESOURCE(ConsumeMQTT, Processor);
 // PublishMQTT
 
 const core::Property PublishMQTT::Retain("Retain", "Retain MQTT published record in broker", "false");
-const core::Property PublishMQTT::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
 
 const core::Relationship PublishMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
 const core::Relationship PublishMQTT::Failure("failure", "FlowFiles that failed to send to the destination are transferred to this relationship");

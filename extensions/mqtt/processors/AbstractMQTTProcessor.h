@@ -16,8 +16,9 @@
  */
 #pragma once
 
-#include <string>
+#include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "core/Processor.h"
@@ -44,12 +45,12 @@ class AbstractMQTTProcessor : public core::Processor {
     freeResources();
   }
 
-  // TODO(amarkovics) MaxFlowSegSize could be here
   EXTENSIONAPI static const core::Property BrokerURI;
   EXTENSIONAPI static const core::Property ClientID;
   EXTENSIONAPI static const core::Property Username;
   EXTENSIONAPI static const core::Property Password;
   EXTENSIONAPI static const core::Property KeepLiveInterval;
+  EXTENSIONAPI static const core::Property MaxFlowSegSize;
   EXTENSIONAPI static const core::Property ConnectionTimeout;
   EXTENSIONAPI static const core::Property Topic;
   EXTENSIONAPI static const core::Property QoS;
@@ -66,6 +67,7 @@ class AbstractMQTTProcessor : public core::Processor {
       Username,
       Password,
       KeepLiveInterval,
+      MaxFlowSegSize,
       ConnectionTimeout,
       Topic,
       QoS,
@@ -79,50 +81,18 @@ class AbstractMQTTProcessor : public core::Processor {
 
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& factory) override;
 
-  void notifyStop() override;
-
-  // MQTT async callbacks
-  // TODO(amarkovics) this should only be in PublishMQTT
-  static void msgDelivered(void *context, MQTTAsync_token dt) {
-    // TODO(amarkovics) why do we set delivered_token_ at all?
-    // TODO(amarkovics) this needs mutex because it's called on a separate thread
-    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    // TODO(amarkovics) can there be more than 1 message being delivered (asynchronously)?
-    processor->delivered_token_ = dt;
+  void notifyStop() override {
+    freeResources();
   }
-
-  // TODO(amarkovics) this should only be in ConsumeMQTT
-  static int msgReceived(void *context, char *topicName, int /*topicLen*/, MQTTAsync_message* message) {
-    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    processor->onMessageReceived(message);
-    // TODO(amarkovics) do this nicer with custom deleter
-    MQTTAsync_free(topicName);
-    return 1;
-    // TODO(amarkovics) might need mutex
-  }
-  static void connectionLost(void *context, char* cause) {
-    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    processor->onConnectionLost(cause);
-  }
-
-  static void connectionSuccess(void* context, MQTTAsync_successData* response) {
-    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    processor->onConnectionSuccess(response);
-  }
-
-  static void connectionFailure(void* context, MQTTAsync_failureData* response) {
-    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    processor->onConnectionFailure(response);
-  }
-
-  void reconnect();
 
  protected:
+  void reconnect();
+
   MQTTAsync client_ = nullptr;
-  MQTTAsync_token delivered_token_ = 0;
   std::string uri_;
   std::string topic_;
   std::chrono::milliseconds keep_alive_interval_ = std::chrono::seconds(60);
+  uint64_t max_seg_size_ = std::numeric_limits<uint64_t>::max();
   std::chrono::milliseconds connection_timeout_ = std::chrono::seconds(30);
   int64_t qos_ = 0;
   std::string clientID_;
@@ -130,11 +100,47 @@ class AbstractMQTTProcessor : public core::Processor {
   std::string password_;
 
  private:
-  virtual bool getCleanSession() const = 0;
-  virtual void onMessageReceived(MQTTAsync_message*) = 0;
-  virtual bool startupClient() = 0;
+  // MQTT async callback
+  static int msgReceived(void *context, char* topic_name, int topic_len, MQTTAsync_message* message) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onMessageReceived(topic_name, topic_len, message);
+    return 1;
+  }
 
-  void freeResources();
+  // MQTT async callback
+  static void connectionLost(void *context, char* cause) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionLost(cause);
+  }
+
+  // MQTT async callback
+  static void connectionSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionSuccess(response);
+  }
+
+  // MQTT async callback
+  static void connectionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onConnectionFailure(response);
+  }
+
+  // MQTT async callback
+  static void disconnectionSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onDisonnectionSuccess(response);
+  }
+
+  // MQTT async callback
+  static void disconnectionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
+    processor->onDisconnectionFailure(response);
+  }
+
+  virtual void onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) {
+    MQTTAsync_freeMessage(&message);
+    MQTTAsync_free(topic_name);
+  }
 
   void onConnectionLost(char* cause) {
     logger_->log_error("Connection lost to MQTT broker %s", uri_);
@@ -144,7 +150,7 @@ class AbstractMQTTProcessor : public core::Processor {
   }
 
   void onConnectionSuccess(MQTTAsync_successData* /*response*/) {
-    logger_->log_info("Successfully connected to MQTT broker");
+    logger_->log_info("Successfully connected to MQTT broker %s", uri_);
     startupClient();
   }
 
@@ -154,6 +160,22 @@ class AbstractMQTTProcessor : public core::Processor {
       logger_->log_error("Detailed reason for connection failure: %s", response->message);
     }
   }
+
+  void onDisonnectionSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_info("Successfully disconnected from MQTT broker %s", uri_);
+  }
+
+  void onDisconnectionFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Disconnection failed from MQTT broker %s (%d)", uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for disconnection failure: %s", response->message);
+    }
+  }
+
+  virtual bool getCleanSession() const = 0;
+  virtual bool startupClient() = 0;
+
+  void freeResources();
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
   MQTTAsync_SSLOptions sslOpts_ = MQTTAsync_SSLOptions_initializer;

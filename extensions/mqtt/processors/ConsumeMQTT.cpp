@@ -34,17 +34,19 @@ void ConsumeMQTT::initialize() {
   setSupportedRelationships(relationships());
 }
 
-bool ConsumeMQTT::enqueueReceiveMQTTMsg(MQTTAsync_message *message) {
+void ConsumeMQTT::enqueueReceivedMQTTMsg(std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message) {
   if (queue_.size_approx() >= maxQueueSize_) {
     logger_->log_warn("MQTT queue full");
-    return false;
-  } else {
-    if (gsl::narrow<uint64_t>(message->payloadlen) > maxSegSize_)
-      message->payloadlen = gsl::narrow<int>(maxSegSize_);
-    queue_.enqueue(message);
-    logger_->log_debug("enqueue MQTT message length %d", message->payloadlen);
-    return true;
+    return;
   }
+
+  if (gsl::narrow<uint64_t>(message->payloadlen) > max_seg_size_) {
+    logger_->log_debug("MQTT message was truncated while enqueuing, original length: %d", message->payloadlen);
+    message->payloadlen = gsl::narrow<int>(max_seg_size_);
+  }
+
+  logger_->log_debug("enqueuing MQTT message with length %d", message->payloadlen);
+  queue_.enqueue(std::move(message));
 }
 
 void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
@@ -59,11 +61,6 @@ void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   if (context->getProperty(QueueBufferMaxMessage.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
     maxQueueSize_ = valInt;
     logger_->log_debug("ConsumeMQTT: Queue Max Message [%" PRIu64 "]", maxQueueSize_);
-  }
-  value = "";
-  if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    maxSegSize_ = valInt;
-    logger_->log_debug("ConsumeMQTT: Max Flow Segment Size [%" PRIu64 "]", maxSegSize_);
   }
 
   AbstractMQTTProcessor::onSchedule(context, factory);
@@ -88,13 +85,13 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
     return;
   }
 
-  std::deque<MQTTAsync_message *> msg_queue;
+  std::deque<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>> msg_queue;
   getReceivedMQTTMsg(msg_queue);
   while (!msg_queue.empty()) {
-    MQTTAsync_message *message = msg_queue.front();
+    const auto& message = msg_queue.front();
     std::shared_ptr<core::FlowFile> processFlowFile = session->create();
     int write_status{};
-    session->write(processFlowFile, [message, &write_status](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
+    session->write(processFlowFile, [&message, &write_status](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
       if (message->payloadlen < 0) {
         write_status = -1;
         return -1;
@@ -115,14 +112,15 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID %s topic %s", processFlowFile->getUUIDStr(), topic_);
       session->transfer(processFlowFile, Success);
     }
-    MQTTAsync_freeMessage(&message);
     msg_queue.pop_front();
   }
 }
 
 bool ConsumeMQTT::startupClient() {
   MQTTAsync_responseOptions response_options = MQTTAsync_responseOptions_initializer;
-  // TODO(amarkovics) set callbacks
+  response_options.context = this;
+  response_options.onSuccess = subscriptionSuccess;
+  response_options.onFailure = subscriptionFailure;
   const int ret = MQTTAsync_subscribe(client_, topic_.c_str(), gsl::narrow<int>(qos_), &response_options);
   if (ret != MQTTASYNC_SUCCESS) {
     logger_->log_error("Failed to subscribe to MQTT topic %s (%d)", topic_, ret);
@@ -130,6 +128,18 @@ bool ConsumeMQTT::startupClient() {
   }
   logger_->log_debug("Successfully subscribed to MQTT topic: %s", topic_);
   return true;
+}
+
+void ConsumeMQTT::onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) {
+  MQTTAsync_free(topic_name);
+
+  const auto* msgPayload = reinterpret_cast<const char*>(message->payload);
+  const size_t msgLen = message->payloadlen;
+  const std::string messageText(msgPayload, msgLen);
+  logger_->log_debug("Received message \"%s\" to MQTT topic %s on broker %s", messageText, topic_, uri_);
+
+  std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> smartMessage(message);
+  enqueueReceivedMQTTMsg(std::move(smartMessage));
 }
 
 }  // namespace org::apache::nifi::minifi::processors

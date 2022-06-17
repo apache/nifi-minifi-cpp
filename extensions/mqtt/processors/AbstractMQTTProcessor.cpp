@@ -61,6 +61,12 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keep_alive_interval_.count()});
   }
 
+  value = "";
+  if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
+    max_seg_size_ = valInt;
+    logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
+  }
+
   if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
     connection_timeout_ = connection_timeout->getMilliseconds();
     logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] ms", int64_t{connection_timeout_.count()});
@@ -105,11 +111,12 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 
   if (!client_) {
-    MQTTAsync_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, nullptr);
-    // TODO(amarkovics) check return value
+    if (MQTTAsync_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, nullptr) != MQTTASYNC_SUCCESS) {
+      logger_->log_error("Creating MQTT client failed");
+    }
   }
   if (client_) {
-    MQTTAsync_setCallbacks(client_, this, connectionLost, msgReceived, msgDelivered);
+    MQTTAsync_setCallbacks(client_, this, connectionLost, msgReceived, nullptr);
     // call reconnect to bootstrap
     reconnect();
   }
@@ -130,6 +137,7 @@ void AbstractMQTTProcessor::reconnect() {
   conn_opts.context = this;
   conn_opts.onSuccess = connectionSuccess;
   conn_opts.onFailure = connectionFailure;
+  conn_opts.connectTimeout = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::seconds>(connection_timeout_).count());
   if (!username_.empty()) {
     conn_opts.username = username_.c_str();
     conn_opts.password = password_.c_str();
@@ -148,17 +156,15 @@ void AbstractMQTTProcessor::reconnect() {
 void AbstractMQTTProcessor::freeResources() {
   if (client_ && MQTTAsync_isConnected(client_)) {
     MQTTAsync_disconnectOptions disconnect_options = MQTTAsync_disconnectOptions_initializer;
-    // TODO(amarkovics) set callback functions
+    disconnect_options.context = this;
+    disconnect_options.onSuccess = disconnectionSuccess;
+    disconnect_options.onFailure = disconnectionFailure;
     disconnect_options.timeout = gsl::narrow<int>(std::chrono::milliseconds{connection_timeout_}.count());
     MQTTAsync_disconnect(client_, &disconnect_options);
   }
   if (client_) {
     MQTTAsync_destroy(&client_);
   }
-}
-
-void AbstractMQTTProcessor::notifyStop() {
-  freeResources();
 }
 
 }  // namespace org::apache::nifi::minifi::processors

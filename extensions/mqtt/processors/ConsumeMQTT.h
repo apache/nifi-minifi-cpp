@@ -16,11 +16,12 @@
  */
 #pragma once
 
-#include <limits>
-#include <string>
-#include <memory>
-
 #include <deque>
+#include <limits>
+#include <memory>
+#include <string>
+#include <utility>
+
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
 #include "core/ProcessSession.h"
@@ -42,27 +43,17 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   explicit ConsumeMQTT(const std::string& name, const utils::Identifier& uuid = {})
       : processors::AbstractMQTTProcessor(name, uuid) {
     maxQueueSize_ = 100;
-    maxSegSize_ = ULLONG_MAX;
-  }
-
-  ~ConsumeMQTT() override {
-    MQTTAsync_message *message;
-    while (queue_.try_dequeue(message)) {
-      MQTTAsync_freeMessage(&message);
-    }
   }
 
   EXTENSIONAPI static constexpr const char* Description = "This Processor gets the contents of a FlowFile from a MQTT broker for a specified topic. "
       "The the payload of the MQTT message becomes content of a FlowFile";
 
   EXTENSIONAPI static const core::Property CleanSession;
-  EXTENSIONAPI static const core::Property MaxFlowSegSize;
   EXTENSIONAPI static const core::Property QueueBufferMaxMessage;
 
   static auto properties() {
     return utils::array_cat(AbstractMQTTProcessor::properties(), std::array{
       CleanSession,
-      MaxFlowSegSize,
       QueueBufferMaxMessage
     });
   }
@@ -81,36 +72,57 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
   void initialize() override;
 
- protected:
-  void getReceivedMQTTMsg(std::deque<MQTTAsync_message*> &msg_queue) {
-    MQTTAsync_message* message;
+ private:
+  struct MQTTMessageDeleter {
+    void operator()(MQTTAsync_message* message) {
+      MQTTAsync_freeMessage(&message);
+    }
+  };
+
+  void getReceivedMQTTMsg(std::deque<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>>& msg_queue) {
+    std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message;
     while (queue_.try_dequeue(message)) {
-      msg_queue.push_back(message);
+      msg_queue.push_back(std::move(message));
     }
   }
 
- private:
+  // MQTT async callback
+  static void subscriptionSuccess(void* context, MQTTAsync_successData* response) {
+    auto* processor = reinterpret_cast<ConsumeMQTT*>(context);
+    processor->onSubscriptionSuccess(response);
+  }
+
+  // MQTT async callback
+  static void subscriptionFailure(void* context, MQTTAsync_failureData* response) {
+    auto* processor = reinterpret_cast<ConsumeMQTT*>(context);
+    processor->onSubscriptionFailure(response);
+  }
+
+  void onSubscriptionSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_info("Successfully subscribed to MQTT topic %s on broker %s", topic_, uri_);
+  }
+
+  void onSubscriptionFailure(MQTTAsync_failureData* response) {
+    logger_->log_error("Subscription failed on topic %s to MQTT broker %s (%d)", topic_, uri_, response->code);
+    if (response->message != nullptr) {
+      logger_->log_error("Detailed reason for subscription failure: %s", response->message);
+    }
+  }
+
   bool getCleanSession() const override {
     return cleanSession_;
   }
 
-  bool enqueueReceiveMQTTMsg(MQTTAsync_message *message);
+  void onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsync_message* message) override;
 
-  void onMessageReceived(MQTTAsync_message* message) override {
-    // TODO(amarkovics) MQTT messages should be stored in a unique_ptr with custom deleter
-    if (!enqueueReceiveMQTTMsg(message)) {
-      MQTTAsync_freeMessage(&message);
-    }
-  }
+  void enqueueReceivedMQTTMsg(std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> message);
 
   bool startupClient() override;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
-  std::mutex mutex_;
   bool cleanSession_ = true;
   uint64_t maxQueueSize_;
-  uint64_t maxSegSize_;
-  moodycamel::ConcurrentQueue<MQTTAsync_message*> queue_;
+  moodycamel::ConcurrentQueue<std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter>> queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors
