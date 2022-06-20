@@ -19,12 +19,7 @@
 #include "core/yaml/YamlConnectionParser.h"
 #include "core/yaml/CheckRequiredField.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace yaml {
+namespace org::apache::nifi::minifi::core::yaml {
 
 void YamlConnectionParser::addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const {
   core::Relationship relationship(relationship_name, "");
@@ -145,7 +140,7 @@ utils::Identifier YamlConnectionParser::getDestinationUUIDFromYaml() const {
   // we use the same logic as above for resolving the source processor
   // for looking up the destination processor in absence of a processor id
   checkRequiredField(connectionNode_, "destination name", CONFIG_YAML_CONNECTIONS_KEY);
-  std::string connectionDestProcName = connectionNode_["destination name"].as<std::string>();
+  auto connectionDestProcName = connectionNode_["destination name"].as<std::string>();
   const auto destUUID = utils::Identifier::parse(connectionDestProcName);
   if (destUUID && parent_->findProcessorById(destUUID.value(), ProcessGroup::Traverse::ExcludeChildren)) {
     // the destination name is a remote port id, so use that as the dest id
@@ -194,9 +189,4 @@ bool YamlConnectionParser::getDropEmptyFromYaml() const {
   return false;
 }
 
-}  // namespace yaml
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::yaml

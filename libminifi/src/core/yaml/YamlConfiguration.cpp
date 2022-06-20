@@ -32,11 +32,7 @@
 #include "utils/RegexUtils.h"
 #endif  // YAML_CONFIGURATION_USE_REGEX
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 std::shared_ptr<utils::IdGenerator> YamlConfiguration::id_generator_ = utils::IdGenerator::getIdGenerator();
 
@@ -60,7 +56,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::createProcessGroup(const 
   int version = 0;
 
   yaml::checkRequiredField(yamlNode, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
-  std::string flowName = yamlNode["name"].as<std::string>();
+  auto flowName = yamlNode["name"].as<std::string>();
 
   utils::Identifier uuid;
   // assignment throws on invalid uuid
@@ -79,7 +75,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::createProcessGroup(const 
   }
 
   if (yamlNode["onschedule retry interval"]) {
-    std::string onScheduleRetryPeriod = yamlNode["onschedule retry interval"].as<std::string>();
+    auto onScheduleRetryPeriod = yamlNode["onschedule retry interval"].as<std::string>();
     logger_->log_debug("parseRootProcessGroup: onschedule retry period => [%s]", onScheduleRetryPeriod);
 
     auto on_schedule_retry_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(onScheduleRetryPeriod);
@@ -116,7 +112,7 @@ std::unique_ptr<core::ProcessGroup> YamlConfiguration::parseProcessGroupYaml(con
 
   if (childProcessGroupNodeSeq && childProcessGroupNodeSeq.IsSequence()) {
     for (YAML::const_iterator it = childProcessGroupNodeSeq.begin(); it != childProcessGroupNodeSeq.end(); ++it) {
-      YAML::Node childProcessGroupNode = it->as<YAML::Node>();
+      auto childProcessGroupNode = it->as<YAML::Node>();
       group->addProcessGroup(parseProcessGroupYaml(childProcessGroupNode, childProcessGroupNode));
     }
   }
@@ -231,7 +227,7 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
       std::vector<std::string> rawAutoTerminatedRelationshipValues;
       if (autoTerminatedSequence.IsSequence() && !autoTerminatedSequence.IsNull() && autoTerminatedSequence.size() > 0) {
         for (YAML::const_iterator relIter = autoTerminatedSequence.begin(); relIter != autoTerminatedSequence.end(); ++relIter) {
-          std::string autoTerminatedRel = relIter->as<std::string>();
+          auto autoTerminatedRel = relIter->as<std::string>();
           rawAutoTerminatedRelationshipValues.push_back(autoTerminatedRel);
         }
       }
@@ -316,7 +312,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
     return;
   }
   for (YAML::const_iterator iter = rpgNode.begin(); iter != rpgNode.end(); ++iter) {
-    YAML::Node currRpgNode = iter->as<YAML::Node>();
+    auto currRpgNode = iter->as<YAML::Node>();
 
     yaml::checkRequiredField(currRpgNode, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
     auto name = currRpgNode["name"].as<std::string>();
@@ -327,7 +323,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
     auto urlNode = getOptionalField(currRpgNode, "url", YAML::Node(""),
     CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
 
-    std::string url = urlNode.as<std::string>();
+    auto url = urlNode.as<std::string>();
     logger_->log_debug("parseRemoteProcessGroupYaml: url => [%s]", url);
 
     uuid = id;
@@ -335,7 +331,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
     group->setParent(parentGroup);
 
     if (currRpgNode["yield period"]) {
-      std::string yieldPeriod = currRpgNode["yield period"].as<std::string>();
+      auto yieldPeriod = currRpgNode["yield period"].as<std::string>();
       logger_->log_debug("parseRemoteProcessGroupYaml: yield period => [%s]", yieldPeriod);
 
       auto yield_period_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(yieldPeriod);
@@ -346,7 +342,7 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
     }
 
     if (currRpgNode["timeout"]) {
-      std::string timeout = currRpgNode["timeout"].as<std::string>();
+      auto timeout = currRpgNode["timeout"].as<std::string>();
       logger_->log_debug("parseRemoteProcessGroupYaml: timeout => [%s]", timeout);
 
       auto timeout_value = utils::timeutils::StringToDuration<std::chrono::milliseconds>(timeout);
@@ -357,32 +353,32 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
     }
 
     if (currRpgNode["local network interface"]) {
-      std::string interface = currRpgNode["local network interface"].as<std::string>();
+      auto interface = currRpgNode["local network interface"].as<std::string>();
       logger_->log_debug("parseRemoteProcessGroupYaml: local network interface => [%s]", interface);
       group->setInterface(interface);
     }
 
     if (currRpgNode["transport protocol"]) {
-      std::string transport_protocol = currRpgNode["transport protocol"].as<std::string>();
+      auto transport_protocol = currRpgNode["transport protocol"].as<std::string>();
       logger_->log_debug("parseRemoteProcessGroupYaml: transport protocol => [%s]", transport_protocol);
       if (transport_protocol == "HTTP") {
         group->setTransportProtocol(transport_protocol);
         if (currRpgNode["proxy host"]) {
-          std::string http_proxy_host = currRpgNode["proxy host"].as<std::string>();
+          auto http_proxy_host = currRpgNode["proxy host"].as<std::string>();
           logger_->log_debug("parseRemoteProcessGroupYaml: proxy host => [%s]", http_proxy_host);
           group->setHttpProxyHost(http_proxy_host);
           if (currRpgNode["proxy user"]) {
-            std::string http_proxy_username = currRpgNode["proxy user"].as<std::string>();
+            auto http_proxy_username = currRpgNode["proxy user"].as<std::string>();
             logger_->log_debug("parseRemoteProcessGroupYaml: proxy user => [%s]", http_proxy_username);
             group->setHttpProxyUserName(http_proxy_username);
           }
           if (currRpgNode["proxy password"]) {
-            std::string http_proxy_password = currRpgNode["proxy password"].as<std::string>();
+            auto http_proxy_password = currRpgNode["proxy password"].as<std::string>();
             logger_->log_debug("parseRemoteProcessGroupYaml: proxy password => [%s]", http_proxy_password);
             group->setHttpProxyPassWord(http_proxy_password);
           }
           if (currRpgNode["proxy port"]) {
-            std::string http_proxy_port = currRpgNode["proxy port"].as<std::string>();
+            auto http_proxy_port = currRpgNode["proxy port"].as<std::string>();
             int32_t port;
             if (core::Property::StringToInt(http_proxy_port, port)) {
               logger_->log_debug("parseRemoteProcessGroupYaml: proxy port => [%d]", port);
@@ -403,20 +399,20 @@ void YamlConfiguration::parseRemoteProcessGroupYaml(const YAML::Node& rpgNode, c
     group->setURL(url);
 
     yaml::checkRequiredField(currRpgNode, "Input Ports", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
-    YAML::Node inputPorts = currRpgNode["Input Ports"].as<YAML::Node>();
+    auto inputPorts = currRpgNode["Input Ports"].as<YAML::Node>();
     if (inputPorts && inputPorts.IsSequence()) {
       for (YAML::const_iterator portIter = inputPorts.begin(); portIter != inputPorts.end(); ++portIter) {
-        YAML::Node currPort = portIter->as<YAML::Node>();
+        auto currPort = portIter->as<YAML::Node>();
 
         this->parsePortYaml(currPort, group.get(), sitetosite::SEND);
       }  // for node
     }
-    YAML::Node outputPorts = currRpgNode["Output Ports"].as<YAML::Node>();
+    auto outputPorts = currRpgNode["Output Ports"].as<YAML::Node>();
     if (outputPorts && outputPorts.IsSequence()) {
       for (YAML::const_iterator portIter = outputPorts.begin(); portIter != outputPorts.end(); ++portIter) {
         logger_->log_debug("Got a current port, iterating...");
 
-        YAML::Node currPort = portIter->as<YAML::Node>();
+        auto currPort = portIter->as<YAML::Node>();
 
         this->parsePortYaml(currPort, group.get(), sitetosite::RECEIVE);
       }  // for node
@@ -867,7 +863,7 @@ void YamlConfiguration::raiseComponentError(const std::string &component_name, c
 
 std::string YamlConfiguration::getOrGenerateId(const YAML::Node& yamlNode, const std::string& idField) {
   std::string id;
-  YAML::Node node = yamlNode.as<YAML::Node>();
+  auto node = yamlNode.as<YAML::Node>();
 
   if (node[idField]) {
     if (YAML::NodeType::Scalar == node[idField].Type()) {
@@ -921,8 +917,4 @@ void YamlConfiguration::addNewId(const std::string& uuid) {
   }
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

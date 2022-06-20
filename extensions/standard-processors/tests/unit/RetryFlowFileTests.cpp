@@ -172,7 +172,7 @@ class RetryFlowFileTest {
     return std::regex_search(LogTestController::getInstance().log_output.str(), re);
   }
 
-  bool retryFlowfileWarnedForReuse() {
+  static bool retryFlowfileWarnedForReuse() {
     const std::string pattern = "[org::apache::nifi::minifi::processors::RetryFlowFile] [warning] Reusing retry attribute that belongs to different processor. Resetting value to 0.";
     return logContainsText(pattern);
   }

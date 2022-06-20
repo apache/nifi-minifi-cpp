@@ -31,11 +31,7 @@
 #include "FlowController.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace provenance {
+namespace org::apache::nifi::minifi::provenance {
 
 std::shared_ptr<utils::IdGenerator> ProvenanceEventRecord::id_generator_ = utils::IdGenerator::getIdGenerator();
 std::shared_ptr<core::logging::Logger> ProvenanceEventRecord::logger_ = core::logging::LoggerFactory<ProvenanceEventRecord>::getLogger();
@@ -623,8 +619,4 @@ void ProvenanceReporter::fetch(std::shared_ptr<core::FlowFile> flow, std::string
   }
 }
 
-} /* namespace provenance */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::provenance

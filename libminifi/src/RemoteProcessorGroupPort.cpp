@@ -46,10 +46,7 @@
 #include "utils/HTTPClient.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 const char *RemoteProcessorGroupPort::RPG_SSL_CONTEXT_SERVICE_NAME = "RemoteProcessorGroupPortSSLContextService";
 
@@ -69,7 +66,7 @@ std::unique_ptr<sitetosite::SiteToSiteClient> RemoteProcessorGroupPort::getNextP
     if (create) {
       // create
       if (bypass_rest_api_) {
-        if (nifi_instances_.size() > 0) {
+        if (!nifi_instances_.empty()) {
           auto rpg = nifi_instances_.front();
           auto host = rpg.host_;
 #ifdef WIN32
@@ -157,7 +154,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
   std::lock_guard<std::mutex> lock(peer_mutex_);
   if (!nifi_instances_.empty()) {
     refreshPeerList();
-    if (peers_.size() > 0)
+    if (!peers_.empty())
       peer_index_ = 0;
   }
   /**
@@ -181,7 +178,7 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
     }
   }
   // populate the site2site protocol for load balancing between them
-  if (peers_.size() > 0) {
+  if (!peers_.empty()) {
     auto count = peers_.size();
     if (max_concurrent_tasks_ > count)
       count = max_concurrent_tasks_;
@@ -390,11 +387,8 @@ void RemoteProcessorGroupPort::refreshPeerList() {
 
   core::logging::LOG_INFO(logger_) << "Have " << peers_.size() << " peers";
 
-  if (peers_.size() > 0)
+  if (!peers_.empty())
     peer_index_ = 0;
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

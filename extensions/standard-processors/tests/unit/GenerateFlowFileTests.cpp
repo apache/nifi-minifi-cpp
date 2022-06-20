@@ -104,7 +104,7 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
     std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
 
     is.seekg(0, is.end);
-    size_t length = gsl::narrow<size_t>(is.tellg());
+    auto length = gsl::narrow<size_t>(is.tellg());
     is.seekg(0, is.beg);
 
     std::vector<char> content(length);

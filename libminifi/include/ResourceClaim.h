@@ -57,7 +57,7 @@ class ResourceClaim {
 
   explicit ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
 
-  explicit ResourceClaim(const Path& path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
+  explicit ResourceClaim(Path path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager);
 
   // Destructor
   ~ResourceClaim();

@@ -100,7 +100,7 @@ TEST_CASE("TestRegexUtils::regexMatch works with groups", "[matchesFullInput]") 
   REQUIRE(matches[0].str() == "Speed limit 130 all the way");
   REQUIRE(matches[1].str() == "130");
   REQUIRE(matches[2].str() == "all the way");
-  REQUIRE("" == matches.suffix().str());
+  REQUIRE(matches.suffix().str().empty());
 }
 
 TEST_CASE("TestRegexUtils::getLastRegexMatch works correctly", "[getLastRegexMatch]") {

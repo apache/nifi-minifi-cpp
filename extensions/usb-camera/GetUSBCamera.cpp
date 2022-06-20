@@ -30,11 +30,7 @@
 #include "core/ProcessSessionFactory.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property GetUSBCamera::FPS(
     "FPS", "Frames per second to capture from USB camera", "1");
@@ -450,8 +446,4 @@ int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::Bas
 
 REGISTER_RESOURCE(GetUSBCamera, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

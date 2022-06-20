@@ -26,11 +26,7 @@
 #include "utils/StringUtils.h"
 #include "processors/ProcessorUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 FlowConfiguration::FlowConfiguration(
     std::shared_ptr<core::Repository> /*repo*/, std::shared_ptr<core::Repository> flow_file_repo,
@@ -173,8 +169,4 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::crea
   return controllerServicesNode;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

@@ -47,7 +47,7 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
     return false;
   }
 
-  int getRuns() const {
+  [[nodiscard]] int getRuns() const {
     return runs;
   }
 

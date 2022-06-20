@@ -29,7 +29,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org { namespace apache { namespace nifi { namespace minifi { namespace extensions { namespace systemd {
+namespace org::apache::nifi::minifi::extensions::systemd {
 
 namespace chr = std::chrono;
 
@@ -269,9 +269,4 @@ std::string ConsumeJournald::getCursor() const {
 
 REGISTER_RESOURCE(ConsumeJournald, Processor);
 
-}  // namespace systemd
-}  // namespace extensions
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::extensions::systemd

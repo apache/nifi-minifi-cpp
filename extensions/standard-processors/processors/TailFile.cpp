@@ -50,11 +50,7 @@
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property TailFile::FileName(
     core::PropertyBuilder::createProperty("File to Tail")
@@ -915,8 +911,4 @@ std::chrono::milliseconds TailFile::getLookupFrequency() const {
 
 REGISTER_RESOURCE(TailFile, Processor);
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

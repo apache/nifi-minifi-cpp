@@ -34,11 +34,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> PutFile::id_generator_ = utils::IdGenerator::getIdGenerator();
 
@@ -265,7 +261,7 @@ void PutFile::getPermissions(core::ProcessContext *context) {
   }
 
   try {
-    permissions_.setValue(std::stoi(permissions_str, 0, 8));
+    permissions_.setValue(std::stoi(permissions_str, nullptr, 8));
   } catch(const std::exception&) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Permissions property is invalid");
   }
@@ -283,7 +279,7 @@ void PutFile::getDirectoryPermissions(core::ProcessContext *context) {
   }
 
   try {
-    directory_permissions_.setValue(std::stoi(dir_permissions_str, 0, 8));
+    directory_permissions_.setValue(std::stoi(dir_permissions_str, nullptr, 8));
   } catch(const std::exception&) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Directory Permissions property is invalid");
   }
@@ -354,8 +350,4 @@ PutFile::ReadCallback::~ReadCallback() {
 
 REGISTER_RESOURCE(PutFile, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

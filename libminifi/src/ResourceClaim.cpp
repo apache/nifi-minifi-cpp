@@ -27,10 +27,7 @@
 #include "utils/Id.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 utils::NonRepeatingStringGenerator ResourceClaim::non_repeating_string_generator_;
 
@@ -55,8 +52,8 @@ ResourceClaim::ResourceClaim(std::shared_ptr<core::StreamManager<ResourceClaim>>
   logger_->log_debug("Resource Claim created %s", _contentFullPath);
 }
 
-ResourceClaim::ResourceClaim(const Path& path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
-    : _contentFullPath(path),
+ResourceClaim::ResourceClaim(Path path, std::shared_ptr<core::StreamManager<ResourceClaim>> claim_manager)
+    : _contentFullPath(std::move(path)),
       claim_manager_(std::move(claim_manager)),
       logger_(core::logging::LoggerFactory<ResourceClaim>::getLogger()) {
   if (claim_manager_) increaseFlowFileRecordOwnedCount();
@@ -66,7 +63,4 @@ ResourceClaim::~ResourceClaim() {
   if (claim_manager_) decreaseFlowFileRecordOwnedCount();
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

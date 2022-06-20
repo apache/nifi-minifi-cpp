@@ -149,7 +149,7 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
     std::string minifiHomeWithoutBin;
     std::string binDir;
     std::tie(minifiHomeWithoutBin, binDir) = minifi::utils::file::split_path(minifiHome);
-    if (minifiHomeWithoutBin != "" && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::get_separator())) {
+    if (!minifiHomeWithoutBin.empty() && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::get_separator())) {
       if (validHome(minifiHomeWithoutBin)) {
         logger->log_info("%s is a valid " MINIFI_HOME_ENV_KEY ", falling back to it.", minifiHomeWithoutBin);
         minifiHomeValid = true;

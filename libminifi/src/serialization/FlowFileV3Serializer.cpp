@@ -20,10 +20,7 @@
 #include "core/ProcessSession.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 size_t FlowFileV3Serializer::writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out) {
   if (length < MAX_2_BYTE_VALUE) {
@@ -98,7 +95,4 @@ int64_t FlowFileV3Serializer::serialize(const std::shared_ptr<core::FlowFile>& f
   return gsl::narrow<int64_t>(sum);
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

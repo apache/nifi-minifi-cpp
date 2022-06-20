@@ -25,11 +25,7 @@
 #include "utils/CollectionUtils.h"
 #include "CommandException.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 const std::vector<Argument> Arguments::registered_args_{
     {std::set<std::string>{"--minifi-home", "-m"},
@@ -165,9 +161,4 @@ std::optional<Argument> Arguments::getArg(const std::string &key) {
   return {};
 }
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
+}  // namespace org::apache::nifi::minifi::encrypt_config

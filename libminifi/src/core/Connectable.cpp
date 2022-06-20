@@ -23,11 +23,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Relationship.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 Connectable::Connectable(const std::string &name, const utils::Identifier &uuid)
     : CoreComponent(name, uuid),
@@ -163,8 +159,4 @@ Connectable* Connectable::pickIncomingConnection() {
   return getNextIncomingConnection();
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

@@ -18,11 +18,7 @@
 #include "core/ProcessorNode.h"
 #include <memory>
 #include <utility>
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 ProcessorNode::ProcessorNode(Connectable* processor)
     : Connectable(processor->getName()),
@@ -40,8 +36,4 @@ bool ProcessorNode::isRunning() {
   return processor_->isRunning();
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

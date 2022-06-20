@@ -23,11 +23,7 @@
 
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace sitetosite {
+namespace org::apache::nifi::minifi::sitetosite {
 
 int SiteToSiteClient::readResponse(const std::shared_ptr<Transaction>& /*transaction*/, RespondCode &code, std::string &message) {
   uint8_t firstByte;
@@ -299,7 +295,7 @@ bool SiteToSiteClient::confirm(const utils::Identifier& transactionID) {
 }
 
 void SiteToSiteClient::cancel(const utils::Identifier& transactionID) {
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction = nullptr;
 
   if (peer_state_ != READY) {
     return;
@@ -324,7 +320,7 @@ void SiteToSiteClient::cancel(const utils::Identifier& transactionID) {
 }
 
 void SiteToSiteClient::error(const utils::Identifier& transactionID) {
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction = nullptr;
 
   auto it = this->known_transactions_.find(transactionID);
 
@@ -341,7 +337,7 @@ void SiteToSiteClient::error(const utils::Identifier& transactionID) {
 // Complete the transaction
 bool SiteToSiteClient::complete(const utils::Identifier& transactionID) {
   int ret;
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction = nullptr;
 
   if (peer_state_ != READY) {
     bootstrap();
@@ -642,7 +638,7 @@ bool SiteToSiteClient::receive(const utils::Identifier& transactionID, DataPacke
 bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {
   uint64_t bytes = 0;
   int transfers = 0;
-  std::shared_ptr<Transaction> transaction = NULL;
+  std::shared_ptr<Transaction> transaction = nullptr;
 
   if (peer_state_ != READY) {
     if (!bootstrap()) {
@@ -659,7 +655,7 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   // Create the transaction
   transaction = createTransaction(RECEIVE);
 
-  if (transaction == NULL) {
+  if (transaction == nullptr) {
     context->yield();
     tearDown();
     throw Exception(SITE2SITE_EXCEPTION, "Can not create transaction");
@@ -750,8 +746,4 @@ bool SiteToSiteClient::receiveFlowFiles(const std::shared_ptr<core::ProcessConte
   deleteTransaction(transactionID);
   return true;
 }
-} /* namespace sitetosite */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::sitetosite

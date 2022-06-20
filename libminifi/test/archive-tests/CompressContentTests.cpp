@@ -149,7 +149,7 @@ class CompressDecompressionTestController : public TestController {
     helper_session = std::make_shared<core::ProcessSession>(context);
   }
 
-  std::shared_ptr<core::FlowFile> importFlowFile(const std::string& content_path) const {
+  [[nodiscard]] std::shared_ptr<core::FlowFile> importFlowFile(const std::string& content_path) const {
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(helper_session->create());
     helper_session->import(content_path, flow, true, 0);
     helper_session->flushContent();

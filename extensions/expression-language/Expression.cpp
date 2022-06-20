@@ -116,7 +116,7 @@ Value expr_hostname(const std::vector<Value> &args) {
   hostname[1023] = '\0';
   gethostname(hostname, 1023);
 
-  if (args.size() > 0 && args[0].asBoolean()) {
+  if (!args.empty() && args[0].asBoolean()) {
     int status;
     struct addrinfo hints;
     struct addrinfo *result;
@@ -1015,7 +1015,7 @@ Value expr_ifElse(const std::vector<Value> &args) {
 }
 
 Expression make_allAttributes(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
@@ -1060,7 +1060,7 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
 }
 
 Expression make_anyAttribute(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
@@ -1105,7 +1105,7 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
 }
 
 Expression make_allMatchingAttributes(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
@@ -1158,7 +1158,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
 }
 
 Expression make_anyMatchingAttribute(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());

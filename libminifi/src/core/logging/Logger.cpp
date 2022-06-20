@@ -23,13 +23,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace logging {
-
+namespace org::apache::nifi::minifi::core::logging {
 
 LoggerControl::LoggerControl()
     : is_enabled_(true) {
@@ -130,16 +124,11 @@ void Logger::log_string(LOG_LEVEL level, std::string str) {
 }
 
 Logger::Logger(std::shared_ptr<spdlog::logger> delegate, std::shared_ptr<LoggerControl> controller)
-    : delegate_(delegate), controller_(controller) {
+    : delegate_(std::move(delegate)), controller_(std::move(controller)) {
 }
 
 Logger::Logger(std::shared_ptr<spdlog::logger> delegate)
-    : delegate_(delegate), controller_(nullptr) {
+    : delegate_(std::move(delegate)), controller_(nullptr) {
 }
 
-} /* namespace logging */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::logging

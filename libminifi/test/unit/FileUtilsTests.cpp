@@ -58,8 +58,8 @@ TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
   REQUIRE("C:\\foo\\" == FileUtils::get_parent_path("C:\\foo\\bar\\"));
   REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo"));
   REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo\\"));
-  REQUIRE("" == FileUtils::get_parent_path("C:\\"));
-  REQUIRE("" == FileUtils::get_parent_path("C:\\\\"));
+  REQUIRE(FileUtils::get_parent_path("C:\\").empty());
+  REQUIRE(FileUtils::get_parent_path("C:\\\\").empty());
 #else
   REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar"));
   REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar/"));
@@ -67,8 +67,8 @@ TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
   REQUIRE("/foo/" == FileUtils::get_parent_path("/foo/bar/"));
   REQUIRE("/" == FileUtils::get_parent_path("/foo"));
   REQUIRE("/" == FileUtils::get_parent_path("/foo/"));
-  REQUIRE("" == FileUtils::get_parent_path("/"));
-  REQUIRE("" == FileUtils::get_parent_path("//"));
+  REQUIRE(FileUtils::get_parent_path("/").empty());
+  REQUIRE(FileUtils::get_parent_path("//").empty());
 #endif
 }
 
@@ -80,8 +80,8 @@ TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
   REQUIRE("bar\\" == FileUtils::get_child_path("C:\\foo\\bar\\"));
   REQUIRE("foo" == FileUtils::get_child_path("C:\\foo"));
   REQUIRE("foo\\" == FileUtils::get_child_path("C:\\foo\\"));
-  REQUIRE("" == FileUtils::get_child_path("C:\\"));
-  REQUIRE("" == FileUtils::get_child_path("C:\\\\"));
+  REQUIRE(FileUtils::get_child_path("C:\\").empty());
+  REQUIRE(FileUtils::get_child_path("C:\\\\").empty());
 #else
   REQUIRE("bar" == FileUtils::get_child_path("foo/bar"));
   REQUIRE("bar/" == FileUtils::get_child_path("foo/bar/"));
@@ -89,8 +89,8 @@ TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
   REQUIRE("bar/" == FileUtils::get_child_path("/foo/bar/"));
   REQUIRE("foo" == FileUtils::get_child_path("/foo"));
   REQUIRE("foo/" == FileUtils::get_child_path("/foo/"));
-  REQUIRE("" == FileUtils::get_child_path("/"));
-  REQUIRE("" == FileUtils::get_child_path("//"));
+  REQUIRE(FileUtils::get_child_path("/").empty());
+  REQUIRE(FileUtils::get_child_path("//").empty());
 #endif
 }
 
@@ -109,7 +109,8 @@ TEST_CASE("TestFilePath", "[TestGetFileNameAndPath]") {
 SECTION("NO FILE VALID PATH") {
   std::stringstream path;
   path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c" << FileUtils::get_separator();
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   REQUIRE(false == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
   REQUIRE(filepath.empty());
   REQUIRE(filename.empty());
@@ -138,13 +139,13 @@ SECTION("NO FILE NO PATH") {
 TEST_CASE("TestFileUtils::get_executable_path", "[TestGetExecutablePath]") {
   std::string executable_path = FileUtils::get_executable_path();
   std::cerr << "Executable path: " << executable_path << std::endl;
-  REQUIRE(0U < executable_path.size());
+  REQUIRE(!executable_path.empty());
 }
 
 TEST_CASE("TestFileUtils::get_executable_dir", "[TestGetExecutableDir]") {
   std::string executable_path = FileUtils::get_executable_path();
   std::string executable_dir = FileUtils::get_executable_dir();
-  REQUIRE(0U < executable_dir.size());
+  REQUIRE(!executable_dir.empty());
   std::cerr << "Executable dir: " << executable_dir << std::endl;
   REQUIRE(FileUtils::get_parent_path(executable_path) == executable_dir);
 }

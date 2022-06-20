@@ -134,7 +134,7 @@ void QueryDatabaseTable::processOnTrigger(core::ProcessContext& /*context*/, cor
 
 bool QueryDatabaseTable::loadMaxValuesFromStoredState(const std::unordered_map<std::string, std::string> &state) {
   std::unordered_map<sql::SQLColumnIdentifier, std::string> new_max_values;
-  if (!state.count(TABLENAME_KEY)) {
+  if (!state.contains(TABLENAME_KEY)) {
     logger_->log_info("State does not specify the table name.");
     return false;
   }

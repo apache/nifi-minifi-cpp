@@ -25,12 +25,7 @@
 #include "utils/Literals.h"
 #include "utils/Searcher.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) {
   constexpr uint64_t BUFFER_SIZE = 4096U;
@@ -96,9 +91,4 @@ void put_content(const std::filesystem::path& filename, std::string_view new_con
   ofs.write(new_contents.data(), gsl::narrow<std::streamsize>(new_contents.size()));
 }
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::file

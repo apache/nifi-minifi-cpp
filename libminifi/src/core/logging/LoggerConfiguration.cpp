@@ -258,7 +258,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
     }
     std::copy(current_namespace->exported_sinks.begin(), current_namespace->exported_sinks.end(), std::back_inserter(inherited_sinks));
     current_namespace = child_pair->second;
-    if (current_namespace->sinks.size() > 0) {
+    if (!current_namespace->sinks.empty()) {
       sinks = current_namespace->sinks;
       sink_namespace_str = current_namespace_str;
     }

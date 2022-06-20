@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "Exception.h"
 #include "utils/gsl.h"
@@ -456,7 +457,7 @@ bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
 
   // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
   // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
-  for (auto ch : field_name) {
+  for (auto ch : field_name) {  // NOLINT(readability-use-anyofallof)
     if (ch < 33 || ch > 126 || ch == ':') {
       return false;
     }

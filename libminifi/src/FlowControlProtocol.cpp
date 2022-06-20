@@ -32,10 +32,7 @@
 #include "core/Core.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 int FlowControlProtocol::connectServer(const char* /*host*/, uint16_t /*port*/) {
   return 0;
@@ -383,7 +380,4 @@ int FlowControlProtocol::sendReportReq() {
   }
 }
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

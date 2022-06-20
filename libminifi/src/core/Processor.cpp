@@ -308,10 +308,7 @@ bool Processor::isThrottledByBackpressure() const {
     if (!connection) {
       return false;
     }
-    if (partOfCycle(connection) && connection->isFull()) {
-      return true;
-    }
-    return false;
+    return partOfCycle(connection) && connection->isFull();
   });
   return isThrottledByOutgoing && !isForcedByIncomingCycle;
 }
