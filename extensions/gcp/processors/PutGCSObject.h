@@ -58,7 +58,6 @@ class PutGCSObject : public GCSProcessor {
     return utils::array_cat(GCSProcessor::properties(), std::array{
       Bucket,
       Key,
-      NumberOfRetries,
       ContentType,
       MD5Hash,
       Crc32cChecksum,
