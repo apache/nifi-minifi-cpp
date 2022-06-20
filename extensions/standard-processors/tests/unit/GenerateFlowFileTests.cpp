@@ -109,7 +109,7 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
 
     std::vector<char> content(length);
 
-    is.read(&content[0], length);
+    is.read(content.data(), length);
 
     fileContents.push_back(std::move(content));
 

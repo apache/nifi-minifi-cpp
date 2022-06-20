@@ -118,7 +118,7 @@ std::optional<std::unordered_set<std::string>> AttributesToJSON::getAttributesTo
   return attributes;
 }
 
-void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value) {
+void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value) const {
   rapidjson::Value json_key(key.c_str(), document.GetAllocator());
   rapidjson::Value json_val;
   if (value || !null_value_) {

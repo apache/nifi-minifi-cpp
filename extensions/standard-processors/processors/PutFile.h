@@ -108,7 +108,7 @@ class PutFile : public core::Processor {
    * @param filename from which to generate temporary write file path
    * @return
    */
-  std::string tmpWritePath(const std::string &filename, const std::string &directory) const;
+  static std::string tmpWritePath(const std::string &filename, const std::string &directory);
 
  private:
   std::string conflict_resolution_;

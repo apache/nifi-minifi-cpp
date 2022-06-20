@@ -103,7 +103,7 @@ void FetchFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context,
   log_level_when_permission_denied_ = utils::parseEnumProperty<LogLevelOption>(*context, LogLevelWhenPermissionDenied);
 }
 
-std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const {
+std::filesystem::path FetchFile::getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
   std::string file_to_fetch_path;
   context.getProperty(FileToFetch, file_to_fetch_path, flow_file);
   if (!file_to_fetch_path.empty()) {
@@ -215,9 +215,9 @@ void FetchFile::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     return;
   }
 
-  std::string path;
+  std::string file_path;
   std::string file_name;
-  utils::file::getFileNameAndPath(file_fetch_path_str, path, file_name);
+  utils::file::getFileNameAndPath(file_fetch_path_str, file_path, file_name);
 
   context->getProperty(MoveDestinationDirectory, move_destination_directory_, flow_file);
   if (moveWouldFailWithDestinationConflict(file_name)) {

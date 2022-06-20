@@ -125,7 +125,10 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
       queueParser.foreach([this, stream](const minifi::c2::C2Payload &component) {
         auto myParser = minifi::c2::PayloadParser::getInstance(component);
         stream->write(component.getLabel());
-        uint64_t datasize = 0, datasizemax = 0, qsize = 0, sizemax = 0;
+        uint64_t datasize = 0;
+        uint64_t datasizemax = 0;
+        uint64_t qsize = 0;
+        uint64_t sizemax = 0;
         try {
           datasize = myParser.getAs<uint64_t>("dataSize");
           datasizemax = myParser.getAs<uint64_t>("dataSizeMax");
@@ -159,7 +162,7 @@ int CoapProtocol::writeHeartbeat(io::BaseStream *stream, const minifi::c2::C2Pay
   return 0;
 }
 
-minifi::c2::Operation CoapProtocol::getOperation(int type) const {
+minifi::c2::Operation CoapProtocol::getOperation(int type) {
   switch (type) {
     case 0:
       return minifi::c2::Operation::ACKNOWLEDGE;
@@ -256,7 +259,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
     for (int i = 0; i < size; i++) {
       uint8_t operationType;
       uint16_t argsize = 0;
-      std::string operand, id;
+      std::string operand;
+      std::string id;
       REQUIRE_SIZE_IF(1, responseStream.read(operationType))
       REQUIRE_VALID(responseStream.read(id, false))
       REQUIRE_VALID(responseStream.read(operand, false))
@@ -273,7 +277,8 @@ minifi::c2::C2Payload CoapProtocol::serialize(const minifi::c2::C2Payload &paylo
       new_command.ident = id;
       responseStream.read(argsize);
       for (int j = 0; j < argsize; j++) {
-        std::string key, value;
+        std::string key;
+        std::string value;
         REQUIRE_VALID(responseStream.read(key))
         REQUIRE_VALID(responseStream.read(value))
         new_command.operation_arguments[key] = value;

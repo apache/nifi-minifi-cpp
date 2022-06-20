@@ -92,7 +92,7 @@ void LogTestController::setLevelByClassName(spdlog::level::level_enum level, con
   }
 }
 
-bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) {
+bool LogTestController::contains(const std::ostringstream& stream, const std::string& ending, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) const {
   if (ending.length() == 0) {
     return false;
   }
@@ -113,7 +113,7 @@ bool LogTestController::contains(const std::ostringstream& stream, const std::st
   return found;
 }
 
-std::optional<std::smatch> LogTestController::matchesRegex(const std::string& regex_str, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) {
+std::optional<std::smatch> LogTestController::matchesRegex(const std::string& regex_str, std::chrono::seconds timeout, std::chrono::milliseconds sleep_interval) const {
   if (regex_str.length() == 0) {
     return std::nullopt;
   }

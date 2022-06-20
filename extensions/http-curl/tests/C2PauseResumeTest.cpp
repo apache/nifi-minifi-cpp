@@ -150,7 +150,9 @@ int main(int argc, char **argv) {
   assert(inv != nullptr);
   std::string url;
   inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
-  std::string port, scheme, path;
+  std::string port;
+  std::string scheme;
+  std::string path;
   std::unique_ptr<TestServer> server;
   parse_http_components(url, port, scheme, path);
   server = std::make_unique<TestServer>(port, path, &responder);

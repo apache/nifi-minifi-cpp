@@ -83,7 +83,7 @@ class FilePattern {
     };
 
     using DirIt = std::filesystem::path::const_iterator;
-    static DirMatchResult matchDirectory(DirIt pattern_begin, DirIt pattern_end, DirIt value_begin, DirIt value_end);
+    static DirMatchResult matchDirectory(DirIt pattern_it, DirIt pattern_end, DirIt value_it, DirIt value_end);
 
     std::filesystem::path directory_pattern_;
     std::string file_pattern_;

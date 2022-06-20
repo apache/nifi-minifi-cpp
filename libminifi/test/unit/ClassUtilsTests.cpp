@@ -23,7 +23,8 @@
 #include "../Catch.h"
 
 TEST_CASE("Test ShortNames", "[testcrc1]") {
-  std::string className, adjusted;
+  std::string className;
+  std::string adjusted;
   SECTION("EMPTY") {
   className = "";
   adjusted = "";

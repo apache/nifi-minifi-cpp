@@ -76,7 +76,7 @@ class ProcessSession : public ReferenceContainer {
   // Create a new UUID FlowFile with no content resource claim and inherit all attributes from parent
   std::shared_ptr<core::FlowFile> create(const std::shared_ptr<core::FlowFile> &parent = {});
   // Add a FlowFile to the session
-  virtual void add(const std::shared_ptr<core::FlowFile> &flow);
+  virtual void add(const std::shared_ptr<core::FlowFile> &record);
   // Clone a new UUID FlowFile from parent both for content resource claim and attributes
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent);
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim

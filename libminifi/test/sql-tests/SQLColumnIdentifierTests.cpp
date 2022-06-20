@@ -53,5 +53,5 @@ TEST_CASE("Hashing is escape-agnostic") {
   REQUIRE(ids.count(SQLColumnIdentifier("[Abc]")) == 1);
   REQUIRE(ids.count(SQLColumnIdentifier("`Abc`")) == 1);
   REQUIRE(ids.count(SQLColumnIdentifier("Abc")) == 1);
-  REQUIRE(ids.count(SQLColumnIdentifier("abc")) == 0);
+  REQUIRE(!ids.contains(SQLColumnIdentifier("abc")));
 }

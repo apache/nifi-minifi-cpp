@@ -72,7 +72,9 @@ class VerifyC2Server : public HTTPIntegrationBase {
     std::string url;
     inv->getProperty(processors::InvokeHTTP::URL.getName(), url);
 
-    std::string port, scheme, path;
+    std::string port;
+    std::string scheme;
+    std::string path;
     parse_http_components(url, port, scheme, path);
     configuration->set(Configuration::nifi_c2_enable, "true");
     configuration->set(Configuration::nifi_c2_agent_class, "test");

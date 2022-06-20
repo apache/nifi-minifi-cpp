@@ -67,7 +67,8 @@ bool UpdatePolicyControllerService::isWorkAvailable() {
 }
 
 void UpdatePolicyControllerService::onEnable() {
-  std::string enableStr, persistStr;
+  std::string enableStr;
+  std::string persistStr;
 
   bool enable_all = false;
   if (getProperty(AllowAllProperties.getName(), enableStr)) {

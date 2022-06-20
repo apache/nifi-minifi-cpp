@@ -34,7 +34,10 @@ void ControllerSocketProtocol::initialize(core::controller::ControllerServicePro
   HeartbeatReporter::initialize(controller, updateSink, configuration);
   stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
-  std::string host = "localhost", port, limitStr, context_name;
+  std::string host = "localhost";
+  std::string port;
+  std::string limitStr;
+  std::string context_name;
   std::shared_ptr<minifi::controllers::SSLContextService> secure_context = nullptr;
 
   if (configuration_->get("controller.ssl.context.service", context_name)) {

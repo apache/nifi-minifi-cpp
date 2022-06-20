@@ -172,7 +172,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
   }
 }
 
-std::string PutFile::tmpWritePath(const std::string &filename, const std::string &directory) const {
+std::string PutFile::tmpWritePath(const std::string &filename, const std::string &directory) {
   utils::Identifier tmpFileUuid = id_generator_->generate();
   std::stringstream tmpFileSs;
   tmpFileSs << directory;

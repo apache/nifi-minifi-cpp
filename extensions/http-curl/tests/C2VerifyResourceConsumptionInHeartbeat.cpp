@@ -47,7 +47,7 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
   }
 
  protected:
-  void verifySystemResourceConsumption(const rapidjson::Document& root, bool firstCall) {
+  static void verifySystemResourceConsumption(const rapidjson::Document& root, bool firstCall) {
     assert(root.HasMember("deviceInfo"));
     auto& device_info = root["deviceInfo"];
 
@@ -73,7 +73,7 @@ class ResourceConsumptionInHeartbeatHandler : public HeartbeatHandler {
     assert(system_info["machinearch"].GetStringLength() > 0);
   }
 
-  void verifyProcessResourceConsumption(const rapidjson::Document& root, bool firstCall) {
+  static void verifyProcessResourceConsumption(const rapidjson::Document& root, bool firstCall) {
     assert(root.HasMember("agentInfo"));
     auto& agent_info = root["agentInfo"];
 

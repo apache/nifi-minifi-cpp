@@ -149,7 +149,7 @@ Arguments Arguments::parse(int argc, char* argv[]) {
 
 std::optional<Flag> Arguments::getFlag(const std::string &name) {
   for (const auto& flag : registered_flags_) {
-    if (flag.names.count(name) > 0) {
+    if (flag.names.contains(name)) {
       return flag;
     }
   }
@@ -158,7 +158,7 @@ std::optional<Flag> Arguments::getFlag(const std::string &name) {
 
 std::optional<Argument> Arguments::getArg(const std::string &key) {
   for (const auto& arg : registered_args_) {
-    if (arg.names.count(key) > 0) {
+    if (arg.names.contains(key)) {
       return arg;
     }
   }

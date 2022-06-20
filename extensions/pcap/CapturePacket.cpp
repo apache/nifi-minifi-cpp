@@ -103,7 +103,7 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
 
 CapturePacketMechanism *CapturePacket::create_new_capture(const std::string &base_path, int64_t *max_size) {
   CapturePacketMechanism *new_capture = new CapturePacketMechanism(base_path, generate_new_pcap(base_path), max_size);
-  new_capture->writer_ = new pcpp::PcapFileWriterDevice(new_capture->getFile().c_str());
+  new_capture->writer_ = new pcpp::PcapFileWriterDevice(new_capture->getFile());
   if (!new_capture->writer_->open())
     throw std::runtime_error{utils::StringUtils::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile())};
 
@@ -155,7 +155,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 
     if (!allowed_interfaces.empty()) {
       bool found_match = false;
-      std::string matching_regex = "";
+      std::string matching_regex;
       for (const auto &filter : allowed_interfaces) {
         utils::Regex r(filter);
         utils::SMatch m;

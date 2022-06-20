@@ -25,8 +25,7 @@ namespace minifi {
 namespace core {
 
 ProcessorNode::ProcessorNode(Connectable* processor)
-    : ConfigurableComponent(),
-      Connectable(processor->getName()),
+    : Connectable(processor->getName()),
       processor_(processor) {
   setUUID(processor->getUUID());
 }

@@ -34,6 +34,7 @@
 #include "core/ProcessSessionFactory.h"
 #include "io/StreamFactory.h"
 #include "utils/gsl.h"
+#include "range/v3/algorithm/any_of.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -41,7 +42,6 @@ namespace org::apache::nifi::minifi::core {
 
 Processor::Processor(const std::string& name)
     : Connectable(name),
-      ConfigurableComponent(),
       logger_(logging::LoggerFactory<Processor>::getLogger()) {
   has_work_.store(false);
   // Setup the default values
@@ -60,7 +60,6 @@ Processor::Processor(const std::string& name)
 
 Processor::Processor(const std::string& name, const utils::Identifier& uuid)
     : Connectable(name, uuid),
-      ConfigurableComponent(),
       logger_(logging::LoggerFactory<Processor>::getLogger()) {
   has_work_.store(false);
   // Setup the default values
@@ -304,18 +303,16 @@ bool Processor::isThrottledByBackpressure() const {
     }
     return false;
   })();
-  bool isForcedByIncomingCycle = ([&] {
-    for (auto &inConn : incoming_connections_) {
-      auto connection = dynamic_cast<Connection*>(inConn);
-      if (!connection) {
-        continue;
-      }
-      if (partOfCycle(connection) && connection->isFull()) {
-        return true;
-      }
+  bool isForcedByIncomingCycle = ranges::any_of(incoming_connections_, [&](auto& inConn) {
+    auto connection = dynamic_cast<Connection*>(inConn);
+    if (!connection) {
+      return false;
+    }
+    if (partOfCycle(connection) && connection->isFull()) {
+      return true;
     }
     return false;
-  })();
+  });
   return isThrottledByOutgoing && !isForcedByIncomingCycle;
 }
 

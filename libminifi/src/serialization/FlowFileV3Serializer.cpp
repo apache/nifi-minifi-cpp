@@ -25,8 +25,6 @@ namespace apache {
 namespace nifi {
 namespace minifi {
 
-constexpr uint8_t FlowFileV3Serializer::MAGIC_HEADER[];
-
 size_t FlowFileV3Serializer::writeLength(std::size_t length, const std::shared_ptr<io::OutputStream>& out) {
   if (length < MAX_2_BYTE_VALUE) {
     return out->write(static_cast<uint16_t>(length));

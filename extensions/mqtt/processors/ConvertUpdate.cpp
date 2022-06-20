@@ -39,7 +39,8 @@ void ConvertUpdate::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
     if (!update.empty()) {
       io::BufferStream stream(update);
 
-      std::string returnTopic, url;
+      std::string returnTopic;
+      std::string url;
 
       if (returnTopic.empty() || url.empty()) {
         logger_->log_debug("topic and/or URL are empty");

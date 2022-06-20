@@ -126,10 +126,7 @@ bool VolatileContentRepository::exists(const minifi::ResourceClaim &claim) {
   auto claim_check = master_list_.find(claim.getContentFullPath());
   if (claim_check != master_list_.end()) {
     auto ent = claim_check->second->takeOwnership();
-    if (ent == nullptr) {
-      return false;
-    }
-    return true;
+    return ent != nullptr;
   }
 
   return false;

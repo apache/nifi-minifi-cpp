@@ -76,11 +76,7 @@ bool Connectable::isSupportedRelationship(const core::Relationship &relationship
   const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
 
   const auto &it = relationships_.find(relationship.getName());
-  if (it != relationships_.end()) {
-    return true;
-  } else {
-    return false;
-  }
+  return it != relationships_.end();
 }
 
 void Connectable::setAutoTerminatedRelationships(gsl::span<const core::Relationship> relationships) {
@@ -106,11 +102,7 @@ bool Connectable::isAutoTerminated(const core::Relationship &relationship) {
   const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
 
   const auto &it = auto_terminated_relationships_.find(relationship.getName());
-  if (it != auto_terminated_relationships_.end()) {
-    return true;
-  } else {
-    return false;
-  }
+  return it != auto_terminated_relationships_.end();
 }
 
 void Connectable::waitForWork(uint64_t timeoutMs) {

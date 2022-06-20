@@ -99,13 +99,13 @@ struct RouteTextController : public TestController {
     }
   }
 
-  void run() {
+  void run() const {
     while (!input_->isEmpty()) {
       plan_->runProcessor(proc_);
     }
   }
 
-  void putFlowFile(const std::map<std::string, std::string>& attributes, const std::string& content) {
+  void putFlowFile(const std::map<std::string, std::string>& attributes, const std::string& content) const {
     auto flow_file = std::make_shared<minifi::FlowFileRecord>();
     for (const auto& attr : attributes) {
       flow_file->setAttribute(attr.first, attr.second);

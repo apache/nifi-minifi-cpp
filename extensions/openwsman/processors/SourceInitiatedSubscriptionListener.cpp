@@ -133,12 +133,6 @@ const core::Property SourceInitiatedSubscriptionListener::ConnectionRetryCount(
 
 const core::Relationship SourceInitiatedSubscriptionListener::Success("success", "All Events are routed to success");
 
-constexpr char const* SourceInitiatedSubscriptionListener::ATTRIBUTE_WEF_REMOTE_MACHINEID;
-constexpr char const* SourceInitiatedSubscriptionListener::ATTRIBUTE_WEF_REMOTE_IP;
-
-constexpr char const* SourceInitiatedSubscriptionListener::INITIAL_EXISTING_EVENTS_STRATEGY_NONE;
-constexpr char const* SourceInitiatedSubscriptionListener::INITIAL_EXISTING_EVENTS_STRATEGY_ALL;
-
 SourceInitiatedSubscriptionListener::SourceInitiatedSubscriptionListener(const std::string& name, const utils::Identifier& uuid)
     : Processor(name, uuid)
     , session_factory_(nullptr)

@@ -45,7 +45,7 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
 
   void initialize(core::controller::ControllerServiceProvider* controller, state::StateMonitor* updateSink,
                           const std::shared_ptr<Configure> &configure) override;
-  int16_t heartbeat(const C2Payload &heartbeat) override;
+  int16_t heartbeat(const C2Payload &payload) override;
 
  protected:
   class ListeningProtocol : public CivetHandler {
@@ -77,9 +77,9 @@ class RESTReceiver : public RESTProtocol, public HeartbeatReporter {
     std::string resp_;
   };
 
-  std::unique_ptr<CivetServer> start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler, std::string &ca_cert);
+  static std::unique_ptr<CivetServer> start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler, std::string &ca_cert);
 
-  std::unique_ptr<CivetServer> start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler);
+  static std::unique_ptr<CivetServer> start_webserver(const std::string &port, std::string &rooturi, CivetHandler *handler);
 
   std::unique_ptr<CivetServer> listener;
   std::unique_ptr<ListeningProtocol> handler;

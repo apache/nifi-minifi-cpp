@@ -100,7 +100,8 @@ TEST_CASE("TestFilePath", "[TestGetFileNameAndPath]") {
   path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c";
   std::stringstream file;
   file << path.str() << FileUtils::get_separator() << "file";
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   REQUIRE(true == utils::file::getFileNameAndPath(file.str(), filepath, filename) );
   REQUIRE(path.str() == filepath);
   REQUIRE("file" == filename);
@@ -116,7 +117,8 @@ SECTION("NO FILE VALID PATH") {
 SECTION("FILE NO PATH") {
   std::stringstream path;
   path << FileUtils::get_separator() << "file";
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   std::string expectedPath;
   expectedPath += FileUtils::get_separator();
   REQUIRE(true == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
@@ -125,7 +127,8 @@ SECTION("FILE NO PATH") {
 }
 SECTION("NO FILE NO PATH") {
   std::string path = "file";
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   REQUIRE(false == utils::file::getFileNameAndPath(path, filepath, filename) );
   REQUIRE(filepath.empty());
   REQUIRE(filename.empty());
@@ -397,9 +400,9 @@ TEST_CASE("FileUtils::file_size works", "[file_size]") {
 }
 
 TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
-  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0u;
-  constexpr uint64_t CHECKSUM_OF_4_BYTES = 2117232040u;
-  constexpr uint64_t CHECKSUM_OF_11_BYTES = 3461392622u;
+  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0U;
+  constexpr uint64_t CHECKSUM_OF_4_BYTES = 2117232040U;
+  constexpr uint64_t CHECKSUM_OF_11_BYTES = 3461392622U;
 
   TestController testController;
 
@@ -439,11 +442,11 @@ TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
 }
 
 TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
-  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0u;
-  constexpr uint64_t CHECKSUM_OF_4095_BYTES = 1902799545u;
-  constexpr uint64_t CHECKSUM_OF_4096_BYTES = 1041266625u;
-  constexpr uint64_t CHECKSUM_OF_4097_BYTES = 1619129554u;
-  constexpr uint64_t CHECKSUM_OF_8192_BYTES = 305726917u;
+  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0U;
+  constexpr uint64_t CHECKSUM_OF_4095_BYTES = 1902799545U;
+  constexpr uint64_t CHECKSUM_OF_4096_BYTES = 1041266625U;
+  constexpr uint64_t CHECKSUM_OF_4097_BYTES = 1619129554U;
+  constexpr uint64_t CHECKSUM_OF_8192_BYTES = 305726917U;
 
   TestController testController;
 

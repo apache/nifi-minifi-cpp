@@ -52,7 +52,7 @@ private:
   void processColumn(const std::string& name, unsigned long long value) override;
   void processColumn(const std::string& name, const char* value) override;
 
-  void addToJSONRow(const std::string& columnName, rapidjson::Value&& jsonValue);
+  void addToJSONRow(const std::string& column_name, rapidjson::Value&& json_value);
 
   rapidjson::Value toJSONString(const std::string& s);
 

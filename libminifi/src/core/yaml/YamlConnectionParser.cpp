@@ -26,9 +26,6 @@ namespace minifi {
 namespace core {
 namespace yaml {
 
-// This is no longer needed in c++17
-constexpr const char* YamlConnectionParser::CONFIG_YAML_CONNECTIONS_KEY;
-
 void YamlConnectionParser::addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const {
   core::Relationship relationship(relationship_name, "");
   logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);

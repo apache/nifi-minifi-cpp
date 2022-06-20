@@ -94,7 +94,6 @@ std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &t
 
 LoggerConfiguration::LoggerConfiguration()
     : root_namespace_(create_default_root()),
-      loggers(std::vector<std::shared_ptr<LoggerImpl>>()),
       formatter_(std::make_shared<spdlog::pattern_formatter>(spdlog_default_pattern)),
       shorten_names_(false) {
   controller_ = std::make_shared<LoggerControl>();
@@ -248,7 +247,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<
   std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks = root_namespace->sinks;
   std::vector<std::shared_ptr<spdlog::sinks::sink>> inherited_sinks;
   spdlog::level::level_enum level = root_namespace->level;
-  std::string current_namespace_str = "";
+  std::string current_namespace_str;
   std::string sink_namespace_str = "root";
   std::string level_namespace_str = "root";
   for (auto const & name_segment : utils::StringUtils::split(name, "::")) {
@@ -341,7 +340,7 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRo
   }
 
   int max_files = 3;
-  std::string max_files_str = "";
+  std::string max_files_str;
   if (properties->getString(appender_key + ".max_files", max_files_str)) {
     try {
       max_files = std::stoi(max_files_str);
@@ -351,7 +350,7 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRo
   }
 
   int max_file_size = 5_MiB;
-  std::string max_file_size_str = "";
+  std::string max_file_size_str;
   if (properties->getString(appender_key + ".max_file_size", max_file_size_str)) {
     try {
       max_file_size = std::stoi(max_file_size_str);

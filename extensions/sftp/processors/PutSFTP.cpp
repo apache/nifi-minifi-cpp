@@ -44,13 +44,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-constexpr char const* PutSFTP::CONFLICT_RESOLUTION_REPLACE;
-constexpr char const* PutSFTP::CONFLICT_RESOLUTION_IGNORE;
-constexpr char const* PutSFTP::CONFLICT_RESOLUTION_RENAME;
-constexpr char const* PutSFTP::CONFLICT_RESOLUTION_REJECT;
-constexpr char const* PutSFTP::CONFLICT_RESOLUTION_FAIL;
-constexpr char const* PutSFTP::CONFLICT_RESOLUTION_NONE;
-
 void PutSFTP::initialize() {
   logger_->log_trace("Initializing PutSFTP");
 

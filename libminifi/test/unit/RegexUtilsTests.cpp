@@ -44,9 +44,9 @@ TEST_CASE("TestRegexUtils::invalid_construction", "[regex2]") {
 }
 
 TEST_CASE("TestRegexUtils::empty_input", "[regex3]") {
-  std::string pat = "";
+  std::string pat;
   std::string rgx1 = "Speed limit ([0-9]+)";
-  std::string rgx2 = "";
+  std::string rgx2;
   std::string rgx3 = "(.*)";
   std::vector<Regex::Mode> mode = {Regex::Mode::ICASE};
   Regex r1(rgx1, mode);

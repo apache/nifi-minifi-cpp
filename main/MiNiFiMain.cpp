@@ -254,7 +254,8 @@ int main(int argc, char **argv) {
 
       std::cerr << "Dumping docs to " << argv[2] << std::endl;
       if (argc == 4) {
-        std::string filepath, filename;
+        std::string filepath;
+        std::string filename;
         utils::file::PathUtils::getFileNameAndPath(argv[3], filepath, filename);
         if (filepath == argv[2]) {
           std::cerr << "Target file should be out of the working directory: " << filepath << std::endl;

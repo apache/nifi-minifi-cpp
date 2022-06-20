@@ -44,7 +44,7 @@ class AgentPrinter : public HeartbeatJsonSerializer, public HeartbeatReporter {
   /**
    * Accepts the heartbeat, only extracting AgentInformation.
    */
-  int16_t heartbeat(const C2Payload &heartbeat) override;
+  int16_t heartbeat(const C2Payload &payload) override;
 
   /**
    * Overrides extracting the agent information from the payload.

@@ -21,7 +21,6 @@
 #include <memory>
 #include <set>
 #include "DatabaseService.h"
-#include "DatabaseService.h"
 #include "io/validation.h"
 #include "properties/Configure.h"
 

@@ -141,7 +141,7 @@ class PutS3Object : public S3Processor {
   }
 
   void fillUserMetadata(const std::shared_ptr<core::ProcessContext> &context);
-  std::string parseAccessControlList(const std::string &comma_separated_list) const;
+  static std::string parseAccessControlList(const std::string &comma_separated_list);
   bool setCannedAcl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
   bool setAccessControl(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::FlowFile> &flow_file, aws::s3::PutObjectRequestParameters &put_s3_request_params) const;
   void setAttributes(

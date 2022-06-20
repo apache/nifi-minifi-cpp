@@ -45,7 +45,7 @@ int FlowControlProtocol::sendData(uint8_t* /*buf*/, int /*buflen*/) {
   return 0;
 }
 
-int FlowControlProtocol::selectClient(int msec) {
+int FlowControlProtocol::selectClient(int msec) const {
   fd_set fds;
   struct timeval tv{};
   int retval;

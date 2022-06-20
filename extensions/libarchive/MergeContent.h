@@ -62,8 +62,8 @@ class BinaryConcatenationMerge : public MergeBin {
  public:
   BinaryConcatenationMerge(std::string header, std::string footer, std::string demarcator);
 
-  void merge(core::ProcessContext *context, core::ProcessSession *session,
-      std::deque<std::shared_ptr<core::FlowFile>> &flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile> &flowFile) override;
+  void merge(core::ProcessContext* context, core::ProcessSession *session,
+    std::deque<std::shared_ptr<core::FlowFile>>& flows, FlowFileSerializer& serializer, const std::shared_ptr<core::FlowFile>& merge_flow) override;
   // Nest Callback Class for write stream
   class WriteCallback {
    public:
@@ -345,7 +345,7 @@ class MergeContent : public processors::BinFiles {
   // Returns a group ID representing a bin. This allows flow files to be binned into like groups
   std::string getGroupId(core::ProcessContext *context, std::shared_ptr<core::FlowFile> flow) override;
   // check whether the defragment bin is validate
-  bool checkDefragment(std::unique_ptr<Bin> &bin);
+  static bool checkDefragment(std::unique_ptr<Bin> &bin);
 
  private:
   void validatePropertyOptions();
@@ -363,7 +363,7 @@ class MergeContent : public processors::BinFiles {
   std::string footerContent_;
   std::string demarcatorContent_;
   std::string attributeStrategy_;
-  std::string readContent(std::string path);
+  static std::string readContent(std::string path);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

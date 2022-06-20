@@ -155,7 +155,6 @@ void ExecutePythonProcessor::loadScript() {
     return;
   }
   script_to_exec_ = script_body;
-  return;
 }
 
 void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {

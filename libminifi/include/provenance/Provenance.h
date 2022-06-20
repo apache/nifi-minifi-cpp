@@ -348,14 +348,11 @@ class ProvenanceEventRecord : public core::SerializableComponent {
 
   // Serialize and Persistent to the repository
   bool Serialize(const std::shared_ptr<core::SerializableComponent> &repo) override;
-  // DeSerialize
   bool DeSerialize(gsl::span<const std::byte>) override;
-  // DeSerialize
   bool DeSerialize(org::apache::nifi::minifi::io::BufferStream &stream) {
     return DeSerialize(stream.getBuffer());
   }
-  // DeSerialize
-  bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &repo) override;
+  bool DeSerialize(const std::shared_ptr<core::SerializableComponent> &store) override;
 
  protected:
   // Event type

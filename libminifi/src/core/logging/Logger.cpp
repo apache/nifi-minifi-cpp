@@ -68,7 +68,7 @@ void LogBuilder::setIgnore() {
   ignore = true;
 }
 
-void LogBuilder::log_string(LOG_LEVEL level) {
+void LogBuilder::log_string(LOG_LEVEL level) const {
   ptr->log_string(level, str.str());
 }
 

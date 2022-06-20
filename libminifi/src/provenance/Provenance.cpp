@@ -473,7 +473,7 @@ void ProvenanceReporter::commit() {
 
   for (auto& event : _events) {
     std::unique_ptr<io::BufferStream> stramptr(new io::BufferStream());
-    event->Serialize(*stramptr.get());
+    event->Serialize(*stramptr);
 
     flowData.emplace_back(event->getUUIDStr(), std::move(stramptr));
   }

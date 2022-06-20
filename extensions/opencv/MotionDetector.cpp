@@ -98,7 +98,8 @@ void MotionDetector::onSchedule(const std::shared_ptr<core::ProcessContext> &con
 
 bool MotionDetector::detectAndDraw(cv::Mat &frame) {
   cv::Mat gray;
-  cv::Mat img_diff, thresh;
+  cv::Mat img_diff;
+  cv::Mat thresh;
   std::vector<cv::Mat> contours;
 
   logger_->log_trace("Detect and Draw");

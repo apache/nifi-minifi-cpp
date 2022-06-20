@@ -39,7 +39,8 @@ void RESTSender::initialize(core::controller::ControllerServiceProvider* control
   RESTProtocol::initialize(controller, configure);
   // base URL when one is not specified.
   if (nullptr != configure) {
-    std::string update_str, ssl_context_service_str;
+    std::string update_str;
+    std::string ssl_context_service_str;
     configure->get(Configuration::nifi_c2_rest_url, "c2.rest.url", rest_uri_);
     configure->get(Configuration::nifi_c2_rest_url_ack, "c2.rest.url.ack", ack_uri_);
     if (configure->get(Configuration::nifi_c2_rest_ssl_context_service, "c2.rest.ssl.context.service", ssl_context_service_str)) {

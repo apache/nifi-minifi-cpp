@@ -117,9 +117,9 @@ class SourceInitiatedSubscriptionListener : public core::Processor {
     bool handleSubscriptions(struct mg_connection* conn, const std::string& endpoint, WsXmlDocH request);
 
     static int enumerateEventCallback(WsXmlNodeH node, void* data);
-    std::string getSoapAction(WsXmlDocH doc);
-    std::string getMachineId(WsXmlDocH doc);
-    bool isAckRequested(WsXmlDocH doc);
+    static std::string getSoapAction(WsXmlDocH doc);
+    static std::string getMachineId(WsXmlDocH doc);
+    static bool isAckRequested(WsXmlDocH doc);
     void sendResponse(struct mg_connection* conn, const std::string& machineId, const std::string& remoteIp, char* xml_buf, size_t xml_buf_size);
 
     static std::string millisecondsToXsdDuration(std::chrono::milliseconds milliseconds);

@@ -30,8 +30,7 @@ namespace nifi {
 namespace minifi {
 namespace lua {
 
-LuaScriptEngine::LuaScriptEngine()
-    : lua_() {
+LuaScriptEngine::LuaScriptEngine() {
   lua_.open_libraries(sol::lib::base,
                       sol::lib::os,
                       sol::lib::coroutine,

@@ -40,9 +40,9 @@ namespace {
 class GetFileTestController {
  public:
   GetFileTestController();
-  [[nodiscard]] std::string getFullPath(const std::string filename) const;
+  [[nodiscard]] std::string getFullPath(const std::string& filename) const;
   [[nodiscard]] std::string getInputFilePath() const;
-  void setProperty(const core::Property& property, const std::string& value);
+  void setProperty(const core::Property& property, const std::string& value) const;
   void runSession();
 
   TestController test_controller_;
@@ -82,7 +82,7 @@ GetFileTestController::GetFileTestController()
 #endif
 }
 
-std::string GetFileTestController::getFullPath(const std::string filename) const {
+std::string GetFileTestController::getFullPath(const std::string& filename) const {
   return temp_dir_ + utils::file::FileUtils::get_separator() + filename;
 }
 
@@ -90,8 +90,8 @@ std::string GetFileTestController::getInputFilePath() const {
   return getFullPath(input_file_name_);
 }
 
-void GetFileTestController::setProperty(const core::Property& property, const std::string& value) {
-    test_plan_->setProperty(get_file_processor_, property.getName(), value);
+void GetFileTestController::setProperty(const core::Property& property, const std::string& value) const {
+  test_plan_->setProperty(get_file_processor_, property.getName(), value);
 }
 
 void GetFileTestController::runSession() {

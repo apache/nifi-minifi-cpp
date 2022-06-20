@@ -34,14 +34,6 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-constexpr char const* FetchSFTP::COMPLETION_STRATEGY_NONE;
-constexpr char const* FetchSFTP::COMPLETION_STRATEGY_MOVE_FILE;
-constexpr char const* FetchSFTP::COMPLETION_STRATEGY_DELETE_FILE;
-
-constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_HOST;
-constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_PORT;
-constexpr char const* FetchSFTP::ATTRIBUTE_SFTP_REMOTE_FILENAME;
-
 void FetchSFTP::initialize() {
   logger_->log_trace("Initializing FetchSFTP");
 

@@ -131,7 +131,9 @@ void C2Agent::checkTriggers() {
   }
 }
 void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconfigure) {
-  std::string clazz, heartbeat_period, device;
+  std::string clazz;
+  std::string heartbeat_period;
+  std::string device;
 
   if (!reconfigure) {
     if (!configure->get(Configuration::nifi_c2_agent_protocol_class, "c2.agent.protocol.class", clazz)) {

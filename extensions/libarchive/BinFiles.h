@@ -263,9 +263,9 @@ class BinFiles : public core::Processor {
     return false;
   }
   // transfer flows to failure in bin
-  void transferFlowsToFail(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
+  static void transferFlowsToFail(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
   // moves owned flows to session
-  void addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
+  static void addFlowsToSession(core::ProcessContext *context, core::ProcessSession *session, std::unique_ptr<Bin> &bin);
 
   BinManager binManager_;
 

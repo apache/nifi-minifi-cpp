@@ -131,7 +131,7 @@ class HttpSiteToSiteClient : public sitetosite::SiteToSiteClient {
 
   void tearDown() override;
 
-  std::optional<utils::Identifier> parseTransactionId(const std::string &uri);
+  static std::optional<utils::Identifier> parseTransactionId(const std::string &uri);
 
   std::unique_ptr<utils::HTTPClient> create_http_client(const std::string &uri, const std::string &method = "POST", bool setPropertyHeaders = false) {
     std::unique_ptr<utils::HTTPClient> http_client_ = std::make_unique<utils::HTTPClient>(uri, ssl_context_service_);

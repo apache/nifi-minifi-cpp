@@ -46,7 +46,7 @@ class EncryptConfig {
   std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
   void writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes& encryption_key) const;
 
-  void encryptSensitiveProperties(const EncryptionKeys& encryption_key) const;
+  void encryptSensitiveProperties(const EncryptionKeys& keys) const;
 
   const std::string minifi_home_;
   EncryptionKeys keys_;

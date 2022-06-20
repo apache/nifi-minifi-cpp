@@ -136,7 +136,7 @@ class LogBuilder {
 
   void setIgnore();
 
-  void log_string(LOG_LEVEL level);
+  void log_string(LOG_LEVEL level) const;
 
   template<typename T>
   LogBuilder &operator<<(const T &o) {

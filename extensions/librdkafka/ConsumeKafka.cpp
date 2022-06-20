@@ -220,7 +220,7 @@ void ConsumeKafka::configure_new_connection(core::ProcessContext& context) {
   }
 }
 
-std::string ConsumeKafka::extract_message(const rd_kafka_message_t& rkmessage) const {
+std::string ConsumeKafka::extract_message(const rd_kafka_message_t& rkmessage) {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage.err) {
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker: " + std::to_string(rkmessage.err) + " " + rd_kafka_err2str(rkmessage.err));
   }

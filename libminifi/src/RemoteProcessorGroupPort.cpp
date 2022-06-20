@@ -38,7 +38,6 @@
 
 #include "rapidjson/document.h"
 
-#include "Exception.h"
 #include "core/logging/Logger.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessorNode.h"
@@ -166,7 +165,8 @@ void RemoteProcessorGroupPort::onSchedule(const std::shared_ptr<core::ProcessCon
    * we must rely on the configured host/port
    */
   if (peers_.empty() && is_http_disabled()) {
-    std::string host, portStr;
+    std::string host;
+    std::string portStr;
     int configured_port = -1;
     // place hostname/port into the log message if we have it
     context->getProperty(hostName.getName(), host);
@@ -317,7 +317,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     }
     int siteTosite_port_ = -1;
     client = std::unique_ptr<utils::BaseHTTPClient>(dynamic_cast<utils::BaseHTTPClient*>(client_ptr));
-    client->initialize("GET", fullUrl.str().c_str(), ssl_service);
+    client->initialize("GET", fullUrl.str(), ssl_service);
     // use a connection timeout. if this times out we will simply attempt re-connection
     // so no need for configuration parameter that isn't already defined in Processor
     client->setConnectionTimeout(std::chrono::milliseconds(10000));

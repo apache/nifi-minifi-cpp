@@ -99,10 +99,12 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     const auto* const inv = dynamic_cast<minifi::processors::InvokeHTTP*>(proc);
 
     assert(inv != nullptr);
-    std::string url = "";
+    std::string url;
     inv->getProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
 
-    std::string port, scheme, path;
+    std::string port;
+    std::string scheme;
+    std::string path;
 
     parse_http_components(url, port, scheme, path);
     uint16_t newport = std::stoi(port) + 2;
@@ -133,7 +135,8 @@ class VerifyCoAPServer : public CoapIntegrationBase {
     {
       // should result in valid operation
       minifi::io::BufferStream stream;
-      uint16_t version = 0, size = 1;
+      uint16_t version = 0;
+      uint16_t size = 1;
       uint8_t operation = 1;
       stream.write(version);
       stream.write(size);

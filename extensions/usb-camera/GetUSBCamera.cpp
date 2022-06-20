@@ -433,7 +433,7 @@ int64_t GetUSBCamera::PNGWriteCallback::operator()(const std::shared_ptr<io::Bas
       row_pointers[y] = reinterpret_cast<png_byte *>(frame_->data) + width_ * y * 3;
     }
 
-    png_write_image(png, &row_pointers[0]);
+    png_write_image(png, row_pointers.data());
     png_write_end(png, nullptr);
 
     png_destroy_write_struct(&png, &info);

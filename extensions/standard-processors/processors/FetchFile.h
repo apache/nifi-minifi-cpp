@@ -103,7 +103,7 @@ class FetchFile : public core::Processor {
   template<typename... Args>
   void logWithLevel(LogLevelOption log_level, Args&&... args) const;
 
-  std::filesystem::path getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) const;
+  static std::filesystem::path getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
   std::string getMoveAbsolutePath(const std::string& file_name) const;
   bool moveDestinationConflicts(const std::string& file_name) const;
   bool moveWouldFailWithDestinationConflict(const std::string& file_name) const;

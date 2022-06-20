@@ -31,7 +31,7 @@ namespace sql {
 
 class SQLRowsetProcessor {
  public:
-  SQLRowsetProcessor(std::unique_ptr<Rowset> rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> rowSubscribers);
+  SQLRowsetProcessor(std::unique_ptr<Rowset> rowset, std::vector<std::reference_wrapper<SQLRowSubscriber>> row_subscribers);
 
   size_t process(size_t max);
 

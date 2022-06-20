@@ -39,7 +39,7 @@ class HttpStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit HttpStream(std::shared_ptr<utils::HTTPClient> http_client_);
+  explicit HttpStream(std::shared_ptr<utils::HTTPClient> client);
 
   virtual ~HttpStream() {
     forceClose();

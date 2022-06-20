@@ -321,7 +321,6 @@ void SiteToSiteClient::cancel(const utils::Identifier& transactionID) {
   transaction->_state = TRANSACTION_CANCELED;
 
   tearDown();
-  return;
 }
 
 void SiteToSiteClient::error(const utils::Identifier& transactionID) {
@@ -337,7 +336,6 @@ void SiteToSiteClient::error(const utils::Identifier& transactionID) {
 
   transaction->_state = TRANSACTION_ERROR;
   tearDown();
-  return;
 }
 
 // Complete the transaction

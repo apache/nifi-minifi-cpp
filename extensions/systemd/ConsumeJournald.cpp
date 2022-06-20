@@ -33,7 +33,6 @@ namespace org { namespace apache { namespace nifi { namespace minifi { namespace
 
 namespace chr = std::chrono;
 
-constexpr const char* ConsumeJournald::CURSOR_KEY;
 const core::Relationship ConsumeJournald::Success("success", "Successfully consumed journal messages.");
 
 const core::Property ConsumeJournald::BatchSize = core::PropertyBuilder::createProperty("Batch Size")

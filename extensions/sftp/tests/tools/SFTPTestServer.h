@@ -40,7 +40,7 @@ class SFTPTestServer {
 
   bool start();
   bool stop();
-  uint16_t getPort();
+  uint16_t getPort() const;
 
  private:
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<SFTPTestServer>::getLogger();

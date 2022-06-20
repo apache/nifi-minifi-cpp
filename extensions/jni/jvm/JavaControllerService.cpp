@@ -66,7 +66,9 @@ void JavaControllerService::onEnable() {
 
   core::Property prop = NarDirectory;
 
-  std::string nardir, narscratch, nardocs;
+  std::string nardir;
+  std::string narscratch;
+  std::string nardocs;
   if (getProperty(NarDirectory.getName(), prop)) {
     nardir = prop.getValue().to_string();
   }

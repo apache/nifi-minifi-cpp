@@ -138,7 +138,8 @@ static void sigpipe_handle(int /*x*/) {
 }
 
 int main(int argc, char **argv) {
-  std::string key_dir, test_file_location;
+  std::string key_dir;
+  std::string test_file_location;
   if (argc > 1) {
     test_file_location = argv[1];
     key_dir = argv[2];

@@ -177,24 +177,24 @@ class TailFile : public core::Processor {
   std::string parseRollingFilePattern(const TailState &state) const;
   std::vector<TailState> findAllRotatedFiles(const TailState &state) const;
   std::vector<TailState> findRotatedFilesAfterLastReadTime(const TailState &state) const;
-  std::vector<TailState> sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const;
+  static std::vector<TailState> sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime);
   void processFile(const std::shared_ptr<core::ProcessSession> &session,
                    const std::string &full_file_name,
                    TailState &state);
   void processSingleFile(const std::shared_ptr<core::ProcessSession> &session,
                          const std::string &full_file_name,
                          TailState &state);
-  bool getStateFromStateManager(std::map<std::string, TailState> &state) const;
+  bool getStateFromStateManager(std::map<std::string, TailState> &new_tail_states) const;
   bool getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessContext>& context,
                                    std::map<std::string, TailState> &new_tail_states) const;
   void doMultifileLookup(core::ProcessContext& context);
   void checkForRemovedFiles();
   void checkForNewFiles(core::ProcessContext& context);
-  std::string baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context) const;
+  static std::string baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context);
   void updateFlowFileAttributes(const std::string &full_file_name, const TailState &state, const std::string &fileName,
                                 const std::string &baseName, const std::string &extension,
                                 std::shared_ptr<core::FlowFile> &flow_file) const;
-  void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const;
+  static void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum);
   bool isOldFileInitiallyRead(TailState &state) const;
 
   static const char *CURRENT_STR;

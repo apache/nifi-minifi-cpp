@@ -28,8 +28,8 @@ namespace org::apache::nifi::minifi::utils {
 
 namespace views = ranges::views;
 
-std::optional<bool> StringUtils::toBool(const std::string& str) {
-  std::string trimmed = trim(str);
+std::optional<bool> StringUtils::toBool(const std::string& input) {
+  std::string trimmed = trim(input);
   if (equalsIgnoreCase(trimmed, "true")) {
     return true;
   }
@@ -315,10 +315,7 @@ bool StringUtils::from_hex(std::byte* data, size_t* data_length, std::string_vie
       }
     }
   }
-  if (found_first_nibble) {
-    return false;
-  }
-  return true;
+  return !found_first_nibble;
 }
 
 std::vector<std::byte> StringUtils::from_hex(std::string_view hex) {

@@ -100,11 +100,10 @@ class TLSClientSocketSupportedProtocolsTest {
     assert(server.hadConnection() == should_be_compatible);
   }
 
- protected:
-    std::unique_ptr<minifi::io::TLSSocket> client_socket_;
-    std::string host_;
-    std::filesystem::path key_dir_;
-    std::shared_ptr<minifi::Configure> configuration_;
+  std::unique_ptr<minifi::io::TLSSocket> client_socket_;
+  std::string host_;
+  std::filesystem::path key_dir_;
+  std::shared_ptr<minifi::Configure> configuration_;
 };
 
 static void sigpipe_handle(int) {

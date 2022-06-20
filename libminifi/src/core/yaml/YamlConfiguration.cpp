@@ -168,7 +168,7 @@ void YamlConfiguration::parseProcessorNodeYaml(const YAML::Node& processorsNode,
     procCfg.name = procNode["name"].as<std::string>();
     procCfg.id = getOrGenerateId(procNode);
 
-    uuid = procCfg.id.c_str();
+    uuid = procCfg.id;
     logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
     yaml::checkRequiredField(procNode, "class", CONFIG_YAML_PROCESSORS_KEY);
     procCfg.javaClass = procNode["class"].as<std::string>();

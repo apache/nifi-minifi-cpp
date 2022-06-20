@@ -133,10 +133,10 @@ class DefragmentText : public core::Processor {
                                   std::shared_ptr<core::FlowFile> &split_before_last_pattern,
                                   std::shared_ptr<core::FlowFile> &split_after_last_pattern) const;
 
-  void updateAttributesForSplitFiles(const core::FlowFile &original_flow_file,
-                                     const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
-                                     const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
-                                     const size_t split_position) const;
+  static void updateAttributesForSplitFiles(const core::FlowFile &original_flow_file,
+                                            const std::shared_ptr<core::FlowFile> &split_before_last_pattern,
+                                            const std::shared_ptr<core::FlowFile> &split_after_last_pattern,
+                                            const size_t split_position);
 };
 
 

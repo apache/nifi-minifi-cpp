@@ -154,7 +154,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
 
   try {
     for (const auto &onScheduledName : onScheduledNames) {
-      current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first.c_str(), onScheduledName.second, context_instance_);
+      current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first, onScheduledName.second, context_instance_);
     }
   } catch (std::runtime_error &re) {
     // this can be ignored.

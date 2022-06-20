@@ -89,7 +89,7 @@ class CoapProtocol : public minifi::c2::RESTSender {
    * @param type input type
    * @return Operation
    */
-  minifi::c2::Operation getOperation(int type) const;
+  static minifi::c2::Operation getOperation(int type);
 
   /**
    * Writes a heartbeat to the provided BaseStream ptr.
@@ -105,7 +105,7 @@ class CoapProtocol : public minifi::c2::RESTSender {
    * @param payload payload to serialize
    * @return result 0 if success failure otherwise
    */
-  int writeAcknowledgement(io::BaseStream *stream, const minifi::c2::C2Payload &payload);
+  static int writeAcknowledgement(io::BaseStream *stream, const minifi::c2::C2Payload &payload);
 
   minifi::c2::C2Payload serialize(const minifi::c2::C2Payload &payload);
 

@@ -431,16 +431,16 @@ class StringUtils {
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the size of Base64 encoded bytes
    */
-  static size_t to_base64(char* base64, gsl::span<const std::byte> data_to_be_transformed, bool url, bool padded);
+  static size_t to_base64(char* base64, gsl::span<const std::byte> raw_data, bool url, bool padded);
 
   /**
    * Creates a Base64 encoded string from data
-   * @param data the bytes to be Base64 encoded
+   * @param raw_data the bytes to be Base64 encoded
    * @param url if true, the URL-safe Base64 encoding will be used
    * @param padded if true, padding is added to the Base64 encoded string
    * @return the Base64 encoded string
    */
-  static std::string to_base64(gsl::span<const std::byte> data_to_be_transformed, bool url = false, bool padded = true);
+  static std::string to_base64(gsl::span<const std::byte> raw_data, bool url = false, bool padded = true);
 
   /**
    * Base64 encodes a string

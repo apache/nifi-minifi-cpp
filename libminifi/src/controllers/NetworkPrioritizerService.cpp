@@ -72,7 +72,7 @@ void NetworkPrioritizerService::yield() {
  */
 io::NetworkInterface NetworkPrioritizerService::getInterface(uint32_t size = 0) {
   std::vector<std::string> controllers;
-  std::string ifc = "";
+  std::string ifc;
   if (!network_controllers_.empty()) {
     if (sufficient_tokens(size) && size <= max_payload_) {
       controllers.insert(std::end(controllers), std::begin(network_controllers_), std::end(network_controllers_));
@@ -153,11 +153,7 @@ bool NetworkPrioritizerService::sufficient_tokens(uint32_t size) {
     tokens_ += gsl::narrow<uint32_t>(diff * tokens_per_ms);
   }
   if (bytes_per_token_ > 0 && size > 0) {
-    if (tokens_ * bytes_per_token_ >= size) {
-      return true;
-    } else {
-      return false;
-    }
+    return tokens_ * bytes_per_token_ >= size;
   }
   return true;
 }

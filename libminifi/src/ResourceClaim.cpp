@@ -34,7 +34,7 @@ namespace minifi {
 
 utils::NonRepeatingStringGenerator ResourceClaim::non_repeating_string_generator_;
 
-std::string default_directory_path = "";
+std::string default_directory_path;
 
 void setDefaultDirectory(std::string path) {
   default_directory_path = path;
