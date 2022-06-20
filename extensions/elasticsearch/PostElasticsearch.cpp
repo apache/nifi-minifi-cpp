@@ -213,7 +213,8 @@ class ElasticPayload {
   std::optional<rapidjson::Document> payload_;
 };
 
-auto submitRequest(utils::HTTPClient& client, const size_t expected_items) -> nonstd::expected<rapidjson::Document, std::string> {
+auto submitRequest(utils::HTTPClient& client, std::string&& payload, const size_t expected_items) -> nonstd::expected<rapidjson::Document, std::string> {
+  client.setPostFields(std::move(payload));
   if (!client.submit())
     return nonstd::make_unexpected("Submit failed");
   auto response_code = client.getResponseCode();
@@ -244,55 +245,68 @@ void addAttributesFromResponse(std::string name, rapidjson::Value::ConstMemberIt
     flow_file.addAttribute(name, object->value.GetString());
   } else if (object->value.IsBool()) {
     flow_file.addAttribute(name, std::to_string(object->value.GetBool()));
+  } else if (object->value.IsDouble()) {
+    flow_file.addAttribute(name, std::to_string(object->value.GetDouble()));
+  } else {
+    core::logging::LoggerFactory<PostElasticsearch>::getLogger()->log_error("Unexpected %s in response json", object->value.GetType());
+  }
+}
+
+void processResponseFromElastic(const rapidjson::Document& response, core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& flowfiles_sent) {
+  gsl_Expects(response.HasMember("items"));
+  auto& items = response["items"];
+  gsl_Expects(items.Size() == flowfiles_sent.size());
+  for (size_t i = 0; i < items.Size(); ++i) {
+    for (auto it = items[i].MemberBegin(); it != items[i].MemberEnd(); ++it) {
+      addAttributesFromResponse("elasticsearch", it, *flowfiles_sent[i]);
+    }
+    if (items[i].MemberBegin()->value.HasMember("error"))
+      session.transfer(flowfiles_sent[i], PostElasticsearch::Error);
+    else
+      session.transfer(flowfiles_sent[i], PostElasticsearch::Success);
   }
 }
 }  // namespace
 
-void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session && max_batch_size_ > 0);
+std::string PostElasticsearch::collectPayload(core::ProcessContext& context,
+                                              core::ProcessSession& session,
+                                              std::vector<std::shared_ptr<core::FlowFile>>& flowfiles_with_payload) const {
   std::stringstream payload;
-  std::vector<std::shared_ptr<core::FlowFile>> flowfiles_in_payload;
   for (size_t flow_files_processed = 0; flow_files_processed < max_batch_size_; ++flow_files_processed) {
-    auto flow_file = session->get();
+    auto flow_file = session.get();
     if (!flow_file)
       break;
-    auto elastic_payload = ElasticPayload::parse(*session, *context, flow_file);
+    auto elastic_payload = ElasticPayload::parse(session, context, flow_file);
     if (!elastic_payload) {
       logger_->log_error(elastic_payload.error().c_str());
-      session->transfer(flow_file, Failure);
+      session.transfer(flow_file, PostElasticsearch::Failure);
       continue;
     }
 
     payload << elastic_payload->toString() << "\n";
-    flowfiles_in_payload.push_back(flow_file);
+    flowfiles_with_payload.push_back(flow_file);
   }
+  return payload.str();
+}
 
-  if (flowfiles_in_payload.empty()) {
-    yield();
+void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
+  gsl_Expects(context && session && max_batch_size_ > 0);
+  std::vector<std::shared_ptr<core::FlowFile>> flowfiles_with_payload;
+  auto payload = collectPayload(*context, *session, flowfiles_with_payload);
+
+  if (flowfiles_with_payload.empty()) {
     return;
   }
 
-
-  client_.setPostFields(payload.str());
-  auto result = submitRequest(client_, flowfiles_in_payload.size());
+  auto result = submitRequest(client_, std::move(payload), flowfiles_with_payload.size());
   if (!result) {
     logger_->log_error(result.error().c_str());
-    for (const auto& flow_file_in_payload: flowfiles_in_payload)
+    for (const auto& flow_file_in_payload: flowfiles_with_payload)
       session->transfer(flow_file_in_payload, Failure);
     return;
   }
 
-  auto& items = result->operator[]("items");
-  gsl_Expects(items.Size() == flowfiles_in_payload.size());
-  for (size_t i = 0; i < items.Size(); ++i) {
-    for (auto it = items[i].MemberBegin(); it != items[i].MemberEnd(); ++it) {
-      addAttributesFromResponse("elasticsearch", it, *flowfiles_in_payload[i]);
-    }
-    if (items[i].MemberBegin()->value.HasMember("error"))
-      session->transfer(flowfiles_in_payload[i], Error);
-    else
-      session->transfer(flowfiles_in_payload[i], Success);
-  }
+  processResponseFromElastic(*result, *session, flowfiles_with_payload);
 }
 
 REGISTER_RESOURCE(PostElasticsearch, Processor);

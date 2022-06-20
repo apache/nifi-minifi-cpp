@@ -20,6 +20,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "controllers/SSLContextService.h"
 #include "core/Processor.h"
@@ -77,6 +78,8 @@ class PostElasticsearch : public core::Processor {
   void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
 
  private:
+  std::string collectPayload(core::ProcessContext&, core::ProcessSession&, std::vector<std::shared_ptr<core::FlowFile>>&) const;
+
   uint64_t max_batch_size_ = 100;
   utils::HTTPClient client_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger();

@@ -51,6 +51,48 @@ class MockElasticAuthHandler : public CivetAuthHandler {
 };
 
 class BulkElasticHandler : public CivetHandler {
+ public:
+  void returnErrors(bool ret_errors) {
+    ret_error_ = ret_errors;
+  }
+
+ private:
+  rapidjson::Value addIndexSuccess(rapidjson::Document::AllocatorType& alloc) {
+    rapidjson::Value item{rapidjson::kObjectType};
+    rapidjson::Value operation{rapidjson::kObjectType};
+    operation.AddMember("_index", "test", alloc);
+    operation.AddMember("_id", "1", alloc);
+    operation.AddMember("result", "created", alloc);
+    item.AddMember("index", operation, alloc);
+    return item;
+  }
+
+  rapidjson::Value addUpdateSuccess(rapidjson::Document::AllocatorType& alloc) {
+    rapidjson::Value item{rapidjson::kObjectType};
+    rapidjson::Value operation{rapidjson::kObjectType};
+    operation.AddMember("_index", "test", alloc);
+    operation.AddMember("_id", "1", alloc);
+    operation.AddMember("result", "updated", alloc);
+    item.AddMember("update", operation, alloc);
+    return item;
+  }
+
+  rapidjson::Value addUpdateError(rapidjson::Document::AllocatorType& alloc) {
+    rapidjson::Value item{rapidjson::kObjectType};
+    rapidjson::Value operation{rapidjson::kObjectType};
+    operation.AddMember("_index", "test", alloc);
+    operation.AddMember("_id", "1", alloc);
+    rapidjson::Value error{rapidjson::kObjectType};
+    error.AddMember("type", "document_missing_exception", alloc);
+    error.AddMember("reason", "[6]: document missing", alloc);
+    error.AddMember("index_uuid", "aAsFqTI0Tc2W0LCWgPNrOA", alloc);
+    error.AddMember("shard", "0", alloc);
+    error.AddMember("index", "index", alloc);
+    operation.AddMember("error", error, alloc);
+    item.AddMember("update", operation, alloc);
+    return item;
+  }
+
   bool handlePost(CivetServer*, struct mg_connection* conn) override {
     char request[2048];
     size_t chars_read = mg_read(conn, request, 2048);
@@ -58,7 +100,7 @@ class BulkElasticHandler : public CivetHandler {
     std::vector<std::string> lines = utils::StringUtils::splitRemovingEmpty({request, chars_read}, "\n");
     rapidjson::Document response{rapidjson::kObjectType};
     response.AddMember("took", 30, response.GetAllocator());
-    response.AddMember("errors", false, response.GetAllocator());
+    response.AddMember("errors", ret_error_, response.GetAllocator());
     response.AddMember("items", rapidjson::kArrayType, response.GetAllocator());
     auto& items = response["items"];
     for (const auto& line : lines) {
@@ -71,11 +113,14 @@ class BulkElasticHandler : public CivetHandler {
       rapidjson::Value item{rapidjson::kObjectType};
       rapidjson::Value operation{rapidjson::kObjectType};
 
-      operation.AddMember("_index", "test", response.GetAllocator());
-      operation.AddMember("_id", "1", response.GetAllocator());
-      operation.AddMember("result", "created", response.GetAllocator());
-      item.AddMember(line_json.MemberBegin()->name, operation, response.GetAllocator());
-      items.PushBack(item, response.GetAllocator());
+      if (ret_error_) {
+        items.PushBack(addUpdateError(response.GetAllocator()), response.GetAllocator());
+      } else {
+        if (line_json.HasMember("update"))
+          items.PushBack(addUpdateSuccess(response.GetAllocator()), response.GetAllocator());
+        else
+          items.PushBack(addIndexSuccess(response.GetAllocator()), response.GetAllocator());
+      }
     }
 
     rapidjson::StringBuffer buffer;
@@ -88,6 +133,8 @@ class BulkElasticHandler : public CivetHandler {
     mg_printf(conn, "%s", buffer.GetString());
     return true;
   }
+
+  bool ret_error_ = false;
 };
 
 class MockElastic {
@@ -125,6 +172,10 @@ class MockElastic {
 
   [[nodiscard]] const std::string& getPort() const {
     return port_;
+  }
+
+  void returnErrors(bool ret_errors) {
+    bulk_handler_->returnErrors(ret_errors);
   }
 
  private:

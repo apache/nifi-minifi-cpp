@@ -77,6 +77,23 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
     CHECK(attributes.contains("elasticsearch.update._index"));
   }
 
+  SECTION("Update error") {
+    CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
+                                            ElasticsearchCredentialsControllerService::ApiKey.getName(),
+                                            MockElasticAuthHandler::API_KEY));
+    CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+                                            PostElasticsearch::Identifier.getName(),
+                                            "${filename}"));
+    mock_elastic.returnErrors(true);
+    auto results = test_controller.trigger(R"({"field1":"value1"}")", {{"elastic_action", "upsert"}});
+    REQUIRE(results[PostElasticsearch::Error].size() == 1);
+    auto attributes = results[PostElasticsearch::Error][0]->getAttributes();
+    CHECK(attributes.contains("elasticsearch.update._id"));
+    CHECK(attributes.contains("elasticsearch.update._index"));
+    CHECK(attributes.contains("elasticsearch.update.error.type"));
+    CHECK(attributes.contains("elasticsearch.update.error.reason"));
+  }
+
   SECTION("Invalid ApiKey") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
                                             ElasticsearchCredentialsControllerService::ApiKey.getName(),

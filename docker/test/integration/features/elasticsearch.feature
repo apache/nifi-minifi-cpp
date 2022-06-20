@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@no-ci  # Elasticsearch container requires more RAM than what the CI environment has
 Feature: Managing documents on Elasticsearch with PostElasticsearch
 
   Background:
     Given the content of "/tmp/output" is monitored
 
-  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance indexes a document on Elasticsearch using Basic Authentication
     Given an Elasticsearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -37,8 +37,7 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Elasticsearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
-  Scenario: MiNiFi instance creates a document on Elasticsearch using Basic Authentication
+  Scenario: MiNiFi instance creates a document on Elasticsearch using API Key authentication
     Given an Elasticsearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
@@ -56,7 +55,6 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Elasticsearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance deletes a document from Elasticsearch using Basic Authentication
     Given an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -75,7 +73,6 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
     Then a flowfile with the content "hello world" is placed in the monitored directory in less than 20 seconds
     And Elasticsearch is empty
 
-  @no-ci  # Elasticsearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance partially updates a document in Elasticsearch using Basic Authentication
     Given an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"

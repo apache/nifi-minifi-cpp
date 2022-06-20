@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+@no-ci  # Opensearch container requires more RAM than what the CI environment has
 Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Keys)
 
   Background:
     Given the content of "/tmp/output" is monitored
 
-  @no-ci  # Opensearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance indexes a document on Opensearch using Basic Authentication
     Given an Opensearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -38,7 +38,6 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Opensearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  @no-ci  # Opensearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance creates a document on Opensearch using Basic Authentication
     Given an Opensearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -58,7 +57,6 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Opensearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  @no-ci  # Opensearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance deletes a document from Opensearch using Basic Authentication
     Given an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
@@ -78,7 +76,6 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     Then a flowfile with the content "hello world" is placed in the monitored directory in less than 20 seconds
     And Opensearch is empty
 
-  @no-ci  # Opensearch container requires more RAM than what the CI environment has
   Scenario: MiNiFi instance partially updates a document in Opensearch using Basic Authentication
     Given an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
