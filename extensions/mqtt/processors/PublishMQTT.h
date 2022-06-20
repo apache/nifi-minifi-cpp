@@ -107,11 +107,8 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     processor->onSendFailure(response);
   }
 
-  void onSendSuccess(MQTTAsync_successData* response) {
-    const auto* msgText = reinterpret_cast<const char*>(response->alt.pub.message.payload);
-    const size_t msgLen = response->alt.pub.message.payloadlen;
-    const std::string message(msgText, msgLen);
-    logger_->log_debug("Successfully sent message \"%s\" to MQTT topic %s on broker %s", message, topic_, uri_);
+  void onSendSuccess(MQTTAsync_successData* /*response*/) {
+    logger_->log_debug("Successfully sent message to MQTT topic %s on broker %s", topic_, uri_);
   }
 
   void onSendFailure(MQTTAsync_failureData* response) {
