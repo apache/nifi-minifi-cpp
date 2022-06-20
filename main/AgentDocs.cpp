@@ -28,7 +28,7 @@
 
 namespace org::apache::nifi::minifi::docs {
 
-std::string AgentDocs::extractClassName(const std::string &processor) const {
+std::string AgentDocs::extractClassName(const std::string &processor) {
   auto positionOfLastDot = processor.find_last_of('.');
   if (positionOfLastDot != std::string::npos) {
     return processor.substr(positionOfLastDot + 1);

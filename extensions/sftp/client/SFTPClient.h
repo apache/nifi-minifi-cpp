@@ -149,7 +149,7 @@ class SFTPClient {
     int64_t atime;
   };
 
-  bool setAttributes(const std::string& path, const SFTPAttributes& attrs);
+  bool setAttributes(const std::string& path, const SFTPAttributes& input);
 
  protected:
   /*

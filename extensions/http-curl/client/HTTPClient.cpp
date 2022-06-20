@@ -22,12 +22,15 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "Exception.h"
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
+#include "range/v3/algorithm/all_of.hpp"
+#include "range/v3/action/transform.hpp"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -456,15 +459,10 @@ bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
 
   // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
   // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
-  for (auto ch : field_name) {
-    if (ch < 33 || ch > 126 || ch == ':') {
-      return false;
-    }
-  }
-  return true;
+  return ranges::all_of(field_name, [](char c) { return c >= 33 && c <= 126 && c != ':'; });
 }
 
-std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::string_view field_name) {
+std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::string field_name) {
   if (field_name.empty()) {
     return "X-MiNiFi-Empty-Attribute-Name";
   }
@@ -472,14 +470,10 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
   std::string result;
   // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
   // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
-  for (auto ch : field_name) {
-    if (ch < 33 || ch > 126 || ch == ':') {
-      result += '-';
-    } else {
-      result += ch;
-    }
-  }
-  return result;
+  ranges::actions::transform(field_name, [](char ch) {
+      return (ch >= 33 && ch <= 126 && ch != ':') ? ch : '-';
+  });
+  return field_name;
 }
 
 REGISTER_RESOURCE(HTTPClient, InternalResource);

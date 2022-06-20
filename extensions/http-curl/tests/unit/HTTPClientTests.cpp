@@ -31,7 +31,7 @@ TEST_CASE("HTTPClientTestChunkedResponse", "[basic]") {
 
   class Responder : public CivetHandler {
    public:
-    void send_response(struct mg_connection *conn) {
+    static void send_response(struct mg_connection *conn) {
       mg_printf(conn, "HTTP/1.1 200 OK\r\n");
       mg_printf(conn, "Content-Type: application/octet-stream\r\n");
       mg_printf(conn, "Transfer-Encoding: chunked\r\n");

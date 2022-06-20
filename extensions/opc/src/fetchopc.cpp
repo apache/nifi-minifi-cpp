@@ -75,7 +75,7 @@ namespace org::apache::nifi::minifi::processors {
     }
 
     context->getProperty(Lazy.getName(), value);
-    lazy_mode_ = value == "On" ? true : false;
+    lazy_mode_ = value == "On";
   }
 
   void FetchOPCProcessor::onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) {

@@ -24,14 +24,9 @@
 #include "LuaScriptEngine.h"
 #include "LuaProcessSession.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace lua {
+namespace org::apache::nifi::minifi::lua {
 
-LuaScriptEngine::LuaScriptEngine()
-    : lua_() {
+LuaScriptEngine::LuaScriptEngine() {
   lua_.open_libraries(sol::lib::base,
                       sol::lib::os,
                       sol::lib::coroutine,
@@ -102,8 +97,4 @@ void LuaScriptEngine::evalFile(const std::string &file_name) {
   }
 }
 
-} /* namespace lua */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::lua

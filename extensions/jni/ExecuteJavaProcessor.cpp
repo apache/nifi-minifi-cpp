@@ -43,12 +43,7 @@
 #include "jvm/JniMethod.h"
 #include "jvm/JniLogger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
-namespace processors {
+namespace org::apache::nifi::minifi::jni::processors {
 
 core::Property ExecuteJavaProcessor::JVMControllerService(core::PropertyBuilder::createProperty("JVM Controller Service")
     ->withDescription("Name of controller service defined within this flow")
@@ -154,7 +149,7 @@ void ExecuteJavaProcessor::onSchedule(const std::shared_ptr<core::ProcessContext
 
   try {
     for (const auto &onScheduledName : onScheduledNames) {
-      current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first.c_str(), onScheduledName.second, context_instance_);
+      current_processor_class.callVoidMethod(env, clazzInstance, onScheduledName.first, onScheduledName.second, context_instance_);
     }
   } catch (std::runtime_error &re) {
     // this can be ignored.
@@ -227,10 +222,4 @@ void ExecuteJavaProcessor::onTrigger(const std::shared_ptr<core::ProcessContext>
 
 REGISTER_RESOURCE_AS(ExecuteJavaProcessor, Processor, ("ExecuteJavaClass"));
 
-} /* namespace processors */
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
+}  // namespace org::apache::nifi::minifi::jni::processors

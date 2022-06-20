@@ -114,7 +114,8 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
 };
 
 int main(int argc, char **argv) {
-  std::string test_file_location, url;
+  std::string test_file_location;
+  std::string url;
   if (argc > 1) {
     test_file_location = argv[1];
   }

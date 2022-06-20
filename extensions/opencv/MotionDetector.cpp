@@ -24,11 +24,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property MotionDetector::ImageEncoding(
     core::PropertyBuilder::createProperty("Image Encoding")
@@ -98,7 +94,8 @@ void MotionDetector::onSchedule(const std::shared_ptr<core::ProcessContext> &con
 
 bool MotionDetector::detectAndDraw(cv::Mat &frame) {
   cv::Mat gray;
-  cv::Mat img_diff, thresh;
+  cv::Mat img_diff;
+  cv::Mat thresh;
   std::vector<cv::Mat> contours;
 
   logger_->log_trace("Detect and Draw");
@@ -209,8 +206,4 @@ void MotionDetector::notifyStop() {
 
 REGISTER_RESOURCE(MotionDetector, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

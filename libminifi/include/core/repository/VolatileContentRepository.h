@@ -95,7 +95,7 @@ class VolatileContentRepository :
    */
   virtual std::shared_ptr<io::BaseStream> read(const minifi::ResourceClaim &claim);
 
-  virtual bool exists(const minifi::ResourceClaim &streamId);
+  virtual bool exists(const minifi::ResourceClaim &claim);
 
   /**
    * Closes the claim.

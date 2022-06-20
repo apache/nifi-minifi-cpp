@@ -239,7 +239,8 @@ TEST_CASE("TailFile picks up the state correctly if it is rewritten between runs
   testController.runSession(plan, true);
   REQUIRE(LogTestController::getInstance().contains("key:filename value:minifi-tmpfile.0-13.txt"));
 
-  std::string filePath, fileName;
+  std::string filePath;
+  std::string fileName;
   REQUIRE(utils::file::getFileNameAndPath(temp_file.str(), filePath, fileName));
 
   // should stay the same
@@ -319,7 +320,8 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     std::unordered_map<std::string, std::string> state;
     REQUIRE(plan->getProcessContextForProcessor(tailfile)->getStateManager()->get(state));
 
-    std::string filePath, fileName;
+    std::string filePath;
+    std::string fileName;
     REQUIRE(utils::file::getFileNameAndPath(temp_file, filePath, fileName));
     std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName},
                                                                 {"file.0.position", "35"},
@@ -363,7 +365,10 @@ TEST_CASE("TailFile converts the old-style state file to the new-style state", "
     std::unordered_map<std::string, std::string> state;
     REQUIRE(plan->getProcessContextForProcessor(tailfile)->getStateManager()->get(state));
 
-    std::string filePath1, filePath2, fileName1, fileName2;
+    std::string filePath1;
+    std::string filePath2;
+    std::string fileName1;
+    std::string fileName2;
     REQUIRE(utils::file::getFileNameAndPath(temp_file_1, filePath1, fileName1));
     REQUIRE(utils::file::getFileNameAndPath(temp_file_2, filePath2, fileName2));
     std::unordered_map<std::string, std::string> expected_state{{"file.0.name", fileName1},

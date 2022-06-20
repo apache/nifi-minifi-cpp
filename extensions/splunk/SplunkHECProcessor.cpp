@@ -45,7 +45,7 @@ std::string SplunkHECProcessor::getNetworkLocation() const {
   return hostname_ + ":" + port_;
 }
 
-std::shared_ptr<minifi::controllers::SSLContextService> SplunkHECProcessor::getSSLContextService(core::ProcessContext& context) const {
+std::shared_ptr<minifi::controllers::SSLContextService> SplunkHECProcessor::getSSLContextService(core::ProcessContext& context) {
   std::string context_name;
   if (context.getProperty(SSLContext.getName(), context_name) && !IsNullOrEmpty(context_name))
     return std::dynamic_pointer_cast<minifi::controllers::SSLContextService>(context.getControllerService(context_name));

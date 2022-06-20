@@ -41,7 +41,7 @@ namespace org::apache::nifi::minifi::opc {
 namespace {
 
 void add_value_to_variant(UA_Variant *variant, std::string &value) {
-  UA_String ua_value = UA_STRING(&value[0]);
+  UA_String ua_value = UA_STRING(value.data());
   UA_Variant_setScalarCopy(variant, &ua_value, &UA_TYPES[UA_TYPES_STRING]);
 }
 

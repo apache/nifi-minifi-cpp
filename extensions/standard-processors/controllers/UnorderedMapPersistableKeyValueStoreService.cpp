@@ -50,8 +50,6 @@ namespace {
 
 namespace org::apache::nifi::minifi::controllers {
 
-constexpr int UnorderedMapPersistableKeyValueStoreService::FORMAT_VERSION;
-
 const core::Property UnorderedMapPersistableKeyValueStoreService::LinkedServices(
     core::PropertyBuilder::createProperty("Linked Services")
     ->withDescription("Referenced Controller Services")
@@ -236,7 +234,8 @@ bool UnorderedMapPersistableKeyValueStoreService::load() {
   std::unordered_map<std::string, std::string> map;
   std::string line;
   while (std::getline(ifs, line)) {
-    std::string key, value;
+    std::string key;
+    std::string value;
     if (!parseLine(line, key, value)) {
       continue;
     }

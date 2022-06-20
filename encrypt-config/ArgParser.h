@@ -46,10 +46,10 @@ class Arguments {
 
   void set(const std::string& key, const std::string& value);
 
-  void set(const std::string& bool_key);
+  void set(const std::string& flag);
 
   static std::optional<Argument> getArg(const std::string& key);
-  static std::optional<Flag> getFlag(const std::string& flag);
+  static std::optional<Flag> getFlag(const std::string& name);
 
  public:
   static Arguments parse(int argc, char* argv[]);
@@ -61,7 +61,7 @@ class Arguments {
   [[nodiscard]] bool isSet(const std::string& flag) const;
 
  private:
-  [[nodiscard]] std::optional<std::string> get(const Argument& key) const;
+  [[nodiscard]] std::optional<std::string> get(const Argument& arg) const;
 
   std::map<std::string, std::string> args_;
   std::set<std::string> flags_;

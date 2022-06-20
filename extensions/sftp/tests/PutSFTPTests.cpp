@@ -127,7 +127,7 @@ class PutSFTPTestsFixture {
   }
 
   // Create source file
-  void createFile(const std::string &dir, const std::string& relative_path, const std::string& content) {
+  static void createFile(const std::string &dir, const std::string& relative_path, const std::string& content) {
     std::fstream file;
     std::stringstream ss;
     ss << dir << "/" << relative_path;

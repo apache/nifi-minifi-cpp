@@ -23,11 +23,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "core/Relationship.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 Connectable::Connectable(const std::string &name, const utils::Identifier &uuid)
     : CoreComponent(name, uuid),
@@ -75,12 +71,7 @@ bool Connectable::isSupportedRelationship(const core::Relationship &relationship
 
   const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
 
-  const auto &it = relationships_.find(relationship.getName());
-  if (it != relationships_.end()) {
-    return true;
-  } else {
-    return false;
-  }
+  return relationships_.contains(relationship.getName());
 }
 
 void Connectable::setAutoTerminatedRelationships(gsl::span<const core::Relationship> relationships) {
@@ -105,12 +96,7 @@ bool Connectable::isAutoTerminated(const core::Relationship &relationship) {
 
   const auto conditionalLock = isConnectableRunning ? std::unique_lock<std::mutex>() : std::unique_lock<std::mutex>(relationship_mutex_);
 
-  const auto &it = auto_terminated_relationships_.find(relationship.getName());
-  if (it != auto_terminated_relationships_.end()) {
-    return true;
-  } else {
-    return false;
-  }
+  return auto_terminated_relationships_.contains(relationship.getName());
 }
 
 void Connectable::waitForWork(uint64_t timeoutMs) {
@@ -171,8 +157,4 @@ Connectable* Connectable::pickIncomingConnection() {
   return getNextIncomingConnection();
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

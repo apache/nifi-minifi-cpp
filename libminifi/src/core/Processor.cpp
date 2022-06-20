@@ -34,6 +34,7 @@
 #include "core/ProcessSessionFactory.h"
 #include "io/StreamFactory.h"
 #include "utils/gsl.h"
+#include "range/v3/algorithm/any_of.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -41,7 +42,6 @@ namespace org::apache::nifi::minifi::core {
 
 Processor::Processor(const std::string& name)
     : Connectable(name),
-      ConfigurableComponent(),
       logger_(logging::LoggerFactory<Processor>::getLogger()) {
   has_work_.store(false);
   // Setup the default values
@@ -60,7 +60,6 @@ Processor::Processor(const std::string& name)
 
 Processor::Processor(const std::string& name, const utils::Identifier& uuid)
     : Connectable(name, uuid),
-      ConfigurableComponent(),
       logger_(logging::LoggerFactory<Processor>::getLogger()) {
   has_work_.store(false);
   // Setup the default values
@@ -290,32 +289,16 @@ bool Processor::partOfCycle(Connection* conn) {
 }
 
 bool Processor::isThrottledByBackpressure() const {
-  bool isThrottledByOutgoing = ([&] {
-    for (auto &outIt : outgoing_connections_) {
-      for (auto &out : outIt.second) {
-        auto connection = dynamic_cast<Connection*>(out);
-        if (!connection) {
-          continue;
-        }
-        if (connection->isFull()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  })();
-  bool isForcedByIncomingCycle = ([&] {
-    for (auto &inConn : incoming_connections_) {
-      auto connection = dynamic_cast<Connection*>(inConn);
-      if (!connection) {
-        continue;
-      }
-      if (partOfCycle(connection) && connection->isFull()) {
-        return true;
-      }
-    }
-    return false;
-  })();
+  bool isThrottledByOutgoing = ranges::any_of(outgoing_connections_, [](auto& name_connection_set_pair) {
+    return ranges::any_of(name_connection_set_pair.second, [](auto& connectable) {
+      auto connection = dynamic_cast<Connection*>(connectable);
+      return connection && connection->isFull();
+    });
+  });
+  bool isForcedByIncomingCycle = ranges::any_of(incoming_connections_, [](auto& connectable) {
+    auto connection = dynamic_cast<Connection*>(connectable);
+    return connection && partOfCycle(connection) && connection->isFull();
+  });
   return isThrottledByOutgoing && !isForcedByIncomingCycle;
 }
 

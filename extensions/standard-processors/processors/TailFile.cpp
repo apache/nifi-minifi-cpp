@@ -50,11 +50,7 @@
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property TailFile::FileName(
     core::PropertyBuilder::createProperty("File to Tail")
@@ -383,7 +379,8 @@ void TailFile::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   } else {
     tail_mode_ = Mode::SINGLE;
 
-    std::string path, file_name;
+    std::string path;
+    std::string file_name;
     if (utils::file::getFileNameAndPath(file_to_tail_, path, file_name)) {
       // NOTE: position and checksum will be updated in recoverState() if there is a persisted state for this file
       tail_states_.emplace(file_to_tail_, TailState{path, file_name});
@@ -453,7 +450,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &s
   value = utils::StringUtils::trimRight(value);
 
   if (key == "FILENAME") {
-    std::string fileLocation, fileName;
+    std::string fileLocation;
+    std::string fileName;
     if (utils::file::getFileNameAndPath(value, fileLocation, fileName)) {
       logger_->log_debug("State migration received path %s, file %s", fileLocation, fileName);
       state.emplace(fileName, TailState{fileLocation, fileName});
@@ -472,7 +470,8 @@ void TailFile::parseStateFileLine(char *buf, std::map<std::string, TailState> &s
   }
   if (key.find(CURRENT_STR) == 0) {
     const auto file = key.substr(strlen(CURRENT_STR));
-    std::string fileLocation, fileName;
+    std::string fileLocation;
+    std::string fileName;
     if (utils::file::getFileNameAndPath(value, fileLocation, fileName)) {
       state[file].path_ = fileLocation;
       state[file].file_name_ = fileName;
@@ -531,7 +530,8 @@ bool TailFile::getStateFromStateManager(std::map<std::string, TailState> &new_ta
             readOptionalInt64(state_map, "file." + std::to_string(i) + ".last_read_time")
         }};
 
-        std::string fileLocation, fileName;
+        std::string fileLocation;
+        std::string fileName;
         if (utils::file::getFileNameAndPath(current, fileLocation, fileName)) {
           logger_->log_debug("Received path %s, file %s", fileLocation, fileName);
           new_tail_states.emplace(current, TailState{fileLocation, fileName, position, last_read_time, checksum});
@@ -661,7 +661,7 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
   return sortAndSkipMainFilePrefix(state, matched_files_with_mtime);
 }
 
-std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) const {
+std::vector<TailState> TailFile::sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime) {
   const auto first_by_mtime_then_by_name = [](const auto& left, const auto& right) {
     return std::tie(left.mtime_, left.tail_state_.file_name_) <
            std::tie(right.mtime_, right.tail_state_.file_name_);
@@ -766,7 +766,7 @@ void TailFile::processSingleFile(const std::shared_ptr<core::ProcessSession> &se
                                  TailState &state) {
   std::string fileName = state.file_name_;
 
-  if (utils::file::file_size(full_file_name) == 0u) {
+  if (utils::file::file_size(full_file_name) == 0U) {
     logger_->log_warn("Unable to read file %s as it does not exist or has size zero", full_file_name);
     return;
   }
@@ -839,7 +839,7 @@ void TailFile::updateFlowFileAttributes(const std::string &full_file_name, const
   }
 }
 
-void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) const {
+void TailFile::updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum) {
   state.position_ += size;
   state.last_read_time_ = std::chrono::file_clock::now();
   state.checksum_ = checksum;
@@ -858,7 +858,7 @@ void TailFile::checkForRemovedFiles() {
     const std::string &full_file_name = kv.first;
     const TailState &state = kv.second;
     utils::Regex pattern_regex(file_to_tail_);
-    if (utils::file::file_size(state.fileNameWithPath()) == 0u ||
+    if (utils::file::file_size(state.fileNameWithPath()) == 0U ||
         !utils::regexMatch(state.file_name_, pattern_regex)) {
       file_names_to_remove.push_back(full_file_name);
     }
@@ -897,7 +897,7 @@ void TailFile::checkForNewFiles(core::ProcessContext& context) {
   }
 }
 
-std::string TailFile::baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context) const {
+std::string TailFile::baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context) {
   auto flow_file = std::make_shared<FlowFileRecord>();
   for (const auto& [key, value] : attribute_map) {
     flow_file->setAttribute(key, value);
@@ -911,8 +911,4 @@ std::chrono::milliseconds TailFile::getLookupFrequency() const {
 
 REGISTER_RESOURCE(TailFile, Processor);
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

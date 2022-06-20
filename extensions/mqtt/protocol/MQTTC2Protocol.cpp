@@ -37,7 +37,8 @@ void MQTTC2Protocol::initialize(core::controller::ControllerServiceProvider* con
   agent_identifier_ = configure->getAgentIdentifier();
 
   std::stringstream outputStream;
-  std::string updateTopicOpt, heartbeatTopicOpt;
+  std::string updateTopicOpt;
+  std::string heartbeatTopicOpt;
   if (configure->get(minifi::Configuration::nifi_c2_mqtt_heartbeat_topic, heartbeatTopicOpt)) {
     heartbeat_topic_ = heartbeatTopicOpt;
   } else {

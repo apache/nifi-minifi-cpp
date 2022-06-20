@@ -44,9 +44,9 @@ TEST_CASE("TestRegexUtils::invalid_construction", "[regex2]") {
 }
 
 TEST_CASE("TestRegexUtils::empty_input", "[regex3]") {
-  std::string pat = "";
+  std::string pat;
   std::string rgx1 = "Speed limit ([0-9]+)";
-  std::string rgx2 = "";
+  std::string rgx2;
   std::string rgx3 = "(.*)";
   std::vector<Regex::Mode> mode = {Regex::Mode::ICASE};
   Regex r1(rgx1, mode);
@@ -100,7 +100,7 @@ TEST_CASE("TestRegexUtils::regexMatch works with groups", "[matchesFullInput]") 
   REQUIRE(matches[0].str() == "Speed limit 130 all the way");
   REQUIRE(matches[1].str() == "130");
   REQUIRE(matches[2].str() == "all the way");
-  REQUIRE("" == matches.suffix().str());
+  REQUIRE(matches.suffix().str().empty());
 }
 
 TEST_CASE("TestRegexUtils::getLastRegexMatch works correctly", "[getLastRegexMatch]") {

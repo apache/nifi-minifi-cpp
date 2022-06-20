@@ -142,7 +142,7 @@ class ListSFTPTestsFixture {
     auto full_path = ss.str();
     std::deque<std::string> parent_dirs;
     std::string parent_dir = full_path;
-    while ((parent_dir = utils::file::FileUtils::get_parent_path(parent_dir)) != "") {
+    while (!(parent_dir = utils::file::FileUtils::get_parent_path(parent_dir)).empty()) {
       parent_dirs.push_front(parent_dir);
     }
     for (const auto& dir : parent_dirs) {
@@ -235,7 +235,8 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
 
   auto file = src_dir + "/vfs/nifi_test/tstFile.ext";
   auto mtime_str = utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(utils::file::to_sys(utils::file::last_write_time(file).value())));
-  uint64_t uid, gid;
+  uint64_t uid;
+  uint64_t gid;
   REQUIRE(true == utils::file::FileUtils::get_uid_gid(file, uid, gid));
   uint32_t permissions;
   REQUIRE(true == utils::file::FileUtils::get_permissions(file, permissions));

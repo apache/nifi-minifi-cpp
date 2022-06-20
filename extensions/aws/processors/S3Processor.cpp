@@ -113,7 +113,7 @@ void S3Processor::onSchedule(const std::shared_ptr<core::ProcessContext>& contex
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Bucket property missing or invalid");
   }
 
-  if (!context->getProperty(Region.getName(), client_config_->region) || client_config_->region.empty() || REGIONS.count(client_config_->region) == 0) {
+  if (!context->getProperty(Region.getName(), client_config_->region) || client_config_->region.empty() || !REGIONS.contains(client_config_->region)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Region property missing or invalid");
   }
   logger_->log_debug("S3Processor: Region [%s]", client_config_->region);

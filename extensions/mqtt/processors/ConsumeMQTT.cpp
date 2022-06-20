@@ -94,8 +94,8 @@ void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*conte
       logger_->log_error("ConsumeMQTT fail for the flow with UUID %s", processFlowFile->getUUIDStr());
       session->remove(processFlowFile);
     } else {
-      session->putAttribute(processFlowFile, MQTT_BROKER_ATTRIBUTE, uri_.c_str());
-      session->putAttribute(processFlowFile, MQTT_TOPIC_ATTRIBUTE, topic_.c_str());
+      session->putAttribute(processFlowFile, MQTT_BROKER_ATTRIBUTE, uri_);
+      session->putAttribute(processFlowFile, MQTT_TOPIC_ATTRIBUTE, topic_);
       logger_->log_debug("ConsumeMQTT processing success for the flow with UUID %s topic %s", processFlowFile->getUUIDStr(), topic_);
       session->transfer(processFlowFile, Success);
     }

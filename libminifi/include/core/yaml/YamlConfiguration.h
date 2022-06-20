@@ -160,7 +160,7 @@ class YamlConfiguration : public FlowConfiguration {
    */
   std::unique_ptr<core::ProcessGroup> getYamlRoot(const YAML::Node& rootYamlNode);
 
-  std::unique_ptr<core::ProcessGroup> createProcessGroup(const YAML::Node& headerNode, bool is_root = false);
+  std::unique_ptr<core::ProcessGroup> createProcessGroup(const YAML::Node& yamlNode, bool is_root = false);
 
   std::unique_ptr<core::ProcessGroup> parseProcessGroupYaml(const YAML::Node& headerNode, const YAML::Node& yamlNode, bool is_root = false);
   /**
@@ -170,11 +170,11 @@ class YamlConfiguration : public FlowConfiguration {
    * object will be created a added to the parent ProcessGroup specified
    * by the parent argument.
    *
-   * @param processorNode the YAML::Node containing the processor configuration
-   * @param parent        the parent ProcessGroup to which the the created
-   *                        Processor should be added
+   * @param processorsNode the YAML::Node containing the processor configuration
+   * @param parent         the parent ProcessGroup to which the the created
+   *                       Processor should be added
    */
-  void parseProcessorNodeYaml(const YAML::Node& processorNode, core::ProcessGroup* parent);
+  void parseProcessorNodeYaml(const YAML::Node& processorsNode, core::ProcessGroup* parent);
 
   /**
    * Parses a port from its corressponding YAML config node and adds
@@ -194,10 +194,10 @@ class YamlConfiguration : public FlowConfiguration {
    * returns a ProcessGroup containing the tree of flow configuration
    * objects.
    *
-   * @param rootNode
+   * @param rootFlowNode
    * @return
    */
-  std::unique_ptr<core::ProcessGroup> parseRootProcessGroupYaml(const YAML::Node& rootNode);
+  std::unique_ptr<core::ProcessGroup> parseRootProcessGroupYaml(const YAML::Node& rootFlowNode);
 
   // Process Property YAML
   void parseProcessorPropertyYaml(const YAML::Node& doc, const YAML::Node& node, std::shared_ptr<core::Processor> processor);
@@ -248,7 +248,7 @@ class YamlConfiguration : public FlowConfiguration {
    * @param propertiesNode the YAML::Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNodeYaml(const YAML::Node& propertiesNode, core::ConfigurableComponent& processor, const std::string& component_name, const std::string& yaml_section);
+  void parsePropertiesNodeYaml(const YAML::Node& propertiesNode, core::ConfigurableComponent& component, const std::string& component_name, const std::string& yaml_section);
 
   /**
    * Parses the Funnels section of a configuration YAML.
@@ -301,7 +301,7 @@ class YamlConfiguration : public FlowConfiguration {
 
  private:
   PropertyValue getValidatedProcessorPropertyForDefaultTypeInfo(const core::Property& propertyFromProcessor, const YAML::Node& propertyValueNode);
-  void parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
+  void parsePropertyValueSequence(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& component);
   void parseSingleProperty(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
   void parsePropertyNodeElement(const std::string& propertyName, const YAML::Node& propertyValueNode, core::ConfigurableComponent& processor);
   void addNewId(const std::string& uuid);

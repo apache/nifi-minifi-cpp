@@ -43,7 +43,7 @@ std::string MergeContent::readContent(std::string path) {
     in.seekg(0, std::ios::end);
     contents.resize(gsl::narrow<size_t>(in.tellg()));
     in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
+    in.read(contents.data(), contents.size());
     in.close();
   }
   return (contents);
@@ -129,7 +129,7 @@ void MergeContent::validatePropertyOptions() {
 }
 
 std::string MergeContent::getGroupId(core::ProcessContext*, std::shared_ptr<core::FlowFile> flow) {
-  std::string groupId = "";
+  std::string groupId;
   std::string value;
   if (!correlationAttributeName_.empty()) {
     if (flow->getAttribute(correlationAttributeName_, value))
@@ -209,10 +209,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
          int indexFirst = std::stoi(value);
          second->getAttribute(BinFiles::FRAGMENT_INDEX_ATTRIBUTE, value);
          int indexSecond = std::stoi(value);
-         if (indexSecond > indexFirst)
-           return true;
-         else
-           return false;
+         return indexSecond > indexFirst;
         });
   }
 

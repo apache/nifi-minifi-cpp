@@ -97,8 +97,6 @@ static SFTPError libssh2_sftp_error_to_sftp_error(unsigned long libssh2_sftp_err
   }
 }
 
-constexpr size_t SFTPClient::MAX_BUFFER_SIZE;
-
 LastSFTPError::LastSFTPError()
     : sftp_error_set_(false)
     , libssh2_sftp_error_(LIBSSH2_FX_OK)
@@ -222,10 +220,7 @@ bool SFTPClient::setProxy(ProxyType type, const utils::HTTPProxy& proxy) {
   }
   std::stringstream proxy_string;
   proxy_string << proxy.host << ":" << proxy.port;
-  if (curl_easy_setopt(easy_, CURLOPT_PROXY, proxy_string.str().c_str()) != CURLE_OK) {
-    return false;
-  }
-  return true;
+  return curl_easy_setopt(easy_, CURLOPT_PROXY, proxy_string.str().c_str()) == CURLE_OK;
 }
 
 bool SFTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {

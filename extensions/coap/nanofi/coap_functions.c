@@ -42,7 +42,8 @@ int create_session(coap_context_t **ctx, coap_session_t **session, const char *n
   int getaddrres;
   struct addrinfo hints;
   coap_proto_t proto = COAP_PROTO_UDP;
-  struct addrinfo *result, *interface_itr;
+  struct addrinfo *result;
+  struct addrinfo *interface_itr;
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;  // ipv4 or ipv6
@@ -84,7 +85,8 @@ int create_session(coap_context_t **ctx, coap_session_t **session, const char *n
 
 int create_endpoint_context(coap_context_t **ctx, const char *node, const char *port) {
   struct addrinfo hints;
-  struct addrinfo *result, *interface_itr;
+  struct addrinfo *result;
+  struct addrinfo *interface_itr;
 
   memset(&hints, 0, sizeof(struct addrinfo));
   hints.ai_family = AF_UNSPEC;  // ipv4 or ipv6
@@ -182,7 +184,8 @@ void response_handler(struct coap_context_t *ctx, struct coap_session_t *session
 }
 
 int resolve_address(const struct coap_str_const_t *server, struct sockaddr *destination) {
-  struct addrinfo *result, *iterative_obj;
+  struct addrinfo *result;
+  struct addrinfo *iterative_obj;
   struct addrinfo hints;
   static char addrstr[256];
   int error, len = -1;

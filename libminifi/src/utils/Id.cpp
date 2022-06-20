@@ -168,7 +168,8 @@ std::optional<Identifier> Identifier::parse(const std::string &str) {
 }
 
 bool Identifier::parseByte(Data &data, const uint8_t *input, int &charIdx, int &byteIdx) {
-  uint8_t upper, lower;
+  uint8_t upper;
+  uint8_t lower;
   if (!StringUtils::from_hex(input[charIdx++], upper)
       || !StringUtils::from_hex(input[charIdx++], lower)) {
     return false;

@@ -131,7 +131,9 @@ void C2Agent::checkTriggers() {
   }
 }
 void C2Agent::configure(const std::shared_ptr<Configure> &configure, bool reconfigure) {
-  std::string clazz, heartbeat_period, device;
+  std::string clazz;
+  std::string heartbeat_period;
+  std::string device;
 
   if (!reconfigure) {
     if (!configure->get(Configuration::nifi_c2_agent_protocol_class, "c2.agent.protocol.class", clazz)) {
@@ -254,7 +256,7 @@ void C2Agent::serializeMetrics(C2Payload &metric_payload, const std::string &nam
   const auto payloads = std::count_if(begin(metrics), end(metrics), [](const state::response::SerializedResponseNode& metric) { return !metric.children.empty() || metric.keep_empty; });
   metric_payload.reservePayloads(metric_payload.getNestedPayloads().size() + payloads);
   for (const auto &metric : metrics) {
-    if (metric.children.size() > 0 || (metric.children.size() == 0 && metric.keep_empty)) {
+    if (metric.keep_empty || !metric.children.empty()) {
       C2Payload child_metric_payload(metric_payload.getOperation());
       if (metric.array) {
         child_metric_payload.setContainer(true);

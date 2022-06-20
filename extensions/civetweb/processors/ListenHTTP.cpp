@@ -131,7 +131,7 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
     }
 
     if (context->getProperty(SSLVerifyPeer.getName(), sslVerifyPeer)) {
-      if (sslVerifyPeer.empty() || sslVerifyPeer.compare("no") == 0) {
+      if (sslVerifyPeer.empty() || sslVerifyPeer == "no") {
         logger_->log_debug("ListenHTTP will not verify peers");
       } else {
         logger_->log_debug("ListenHTTP will verify peers");
@@ -432,7 +432,7 @@ void ListenHTTP::Handler::writeBody(mg_connection *conn, const mg_request_info *
       std::lock_guard<std::mutex> guard(uri_map_mutex_);
       std::string req_uri = request_uri_str.substr(base_uri_.size() + 1);
 
-      if (response_uri_map_.count(req_uri)) {
+      if (response_uri_map_.contains(req_uri)) {
         response = response_uri_map_[req_uri];
       }
     }

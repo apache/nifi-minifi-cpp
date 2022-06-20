@@ -68,7 +68,7 @@ class C2Agent : public state::UpdateController {
   C2Agent(core::controller::ControllerServiceProvider *controller,
           state::Pausable *pause_handler,
           state::StateMonitor* updateSink,
-          std::shared_ptr<Configure> configure,
+          std::shared_ptr<Configure> configuration,
           std::shared_ptr<utils::file::FileSystem> filesystem,
           std::function<void()> request_restart);
 
@@ -103,7 +103,7 @@ class C2Agent : public state::UpdateController {
    * @param name name of this metric
    * @param metrics metrics to include.
    */
-  void serializeMetrics(C2Payload &parent_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false, bool is_collapsible = true);
+  void serializeMetrics(C2Payload &metric_payload, const std::string &name, const std::vector<state::response::SerializedResponseNode> &metrics, bool is_container = false, bool is_collapsible = true);
 
   /**
    * Extract the payload

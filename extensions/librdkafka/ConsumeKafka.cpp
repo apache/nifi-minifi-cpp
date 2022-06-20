@@ -220,7 +220,7 @@ void ConsumeKafka::configure_new_connection(core::ProcessContext& context) {
   }
 }
 
-std::string ConsumeKafka::extract_message(const rd_kafka_message_t& rkmessage) const {
+std::string ConsumeKafka::extract_message(const rd_kafka_message_t& rkmessage) {
   if (RD_KAFKA_RESP_ERR_NO_ERROR != rkmessage.err) {
     throw minifi::Exception(ExceptionType::PROCESSOR_EXCEPTION, "ConsumeKafka: received error message from broker: " + std::to_string(rkmessage.err) + " " + rd_kafka_err2str(rkmessage.err));
   }
@@ -315,7 +315,7 @@ std::vector<std::pair<std::string, std::string>> ConsumeKafka::get_flowfile_attr
   std::vector<std::pair<std::string, std::string>> attributes_from_headers;
   for (const std::string& header_name : headers_to_add_as_attributes_) {
     const std::vector<std::string> matching_headers = get_matching_headers(message, header_name);
-    if (matching_headers.size()) {
+    if (!matching_headers.empty()) {
       attributes_from_headers.emplace_back(header_name, utils::get_encoded_string(resolve_duplicate_headers(matching_headers), message_header_encoding_attr_to_enum()));
     }
   }
@@ -339,7 +339,7 @@ std::optional<std::vector<std::shared_ptr<FlowFileRecord>>> ConsumeKafka::transf
   for (const auto& message : pending_messages_) {
     std::string message_content = extract_message(*message);
     std::vector<std::pair<std::string, std::string>> attributes_from_headers = get_flowfile_attributes_from_message_header(*message);
-    std::vector<std::string> split_message{ message_demarcator_.size() ?
+    std::vector<std::string> split_message{ !message_demarcator_.empty() ?
       utils::StringUtils::split(message_content, message_demarcator_) :
       std::vector<std::string>{ message_content }};
     for (auto& flowfile_content : split_message) {
@@ -382,7 +382,7 @@ void ConsumeKafka::onTrigger(core::ProcessContext* /* context */, core::ProcessS
   std::unique_lock<std::mutex> lock(do_not_call_on_trigger_concurrently_);
   logger_->log_debug("ConsumeKafka onTrigger");
 
-  if (pending_messages_.size()) {
+  if (!pending_messages_.empty()) {
     process_pending_messages(*session);
     return;
   }

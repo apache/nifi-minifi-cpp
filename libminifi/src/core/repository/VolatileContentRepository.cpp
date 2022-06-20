@@ -29,12 +29,7 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace repository {
+namespace org::apache::nifi::minifi::core::repository {
 
 const char *VolatileContentRepository::minimal_locking = "minimal.locking";
 
@@ -126,10 +121,7 @@ bool VolatileContentRepository::exists(const minifi::ResourceClaim &claim) {
   auto claim_check = master_list_.find(claim.getContentFullPath());
   if (claim_check != master_list_.end()) {
     auto ent = claim_check->second->takeOwnership();
-    if (ent == nullptr) {
-      return false;
-    }
-    return true;
+    return ent != nullptr;
   }
 
   return false;
@@ -185,9 +177,4 @@ bool VolatileContentRepository::remove(const minifi::ResourceClaim &claim) {
   return false;
 }
 
-}  // namespace repository
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::repository

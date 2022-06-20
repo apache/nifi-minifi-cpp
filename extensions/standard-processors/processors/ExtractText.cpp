@@ -101,7 +101,8 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::BaseStre
   std::vector<std::byte> buffer;
   buffer.resize(std::min(gsl::narrow<size_t>(flowFile_->getSize()), MAX_BUFFER_SIZE));
 
-  std::string attrKey, sizeLimitStr;
+  std::string attrKey;
+  std::string sizeLimitStr;
   ctx_->getProperty(Attribute.getName(), attrKey);
   ctx_->getProperty(SizeLimit.getName(), sizeLimitStr);
   ctx_->getProperty(RegexMode.getName(), regex_mode);

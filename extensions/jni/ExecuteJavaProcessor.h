@@ -252,7 +252,7 @@ class ExecuteJavaProcessor : public core::Processor {
     return factory;
   }
 
-  JNINativeMethod registerNativeMethod(const std::string &name, const std::string &params, const void *ptr);
+  static JNINativeMethod registerNativeMethod(const std::string &name, const std::string &params, const void *ptr);
 
   JavaClass jni_logger_class_;
 

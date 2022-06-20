@@ -205,9 +205,9 @@ class S3Wrapper {
   S3Wrapper();
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
-  std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& options, std::shared_ptr<Aws::IOStream> data_stream);
-  bool deleteObject(const DeleteObjectRequestParameters& options);
-  std::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& fetched_body);
+  std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream);
+  bool deleteObject(const DeleteObjectRequestParameters& params);
+  std::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body);
   std::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
   std::optional<std::map<std::string, std::string>> getObjectTags(const GetObjectTagsParameters& params);
   std::optional<HeadObjectResult> headObject(const HeadObjectRequestParameters& head_object_params);

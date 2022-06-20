@@ -143,8 +143,10 @@ void DefragmentText::processNextFragment(core::ProcessSession *session, const gs
 void DefragmentText::updateAttributesForSplitFiles(const core::FlowFile& original_flow_file,
                                                    const std::shared_ptr<core::FlowFile>& split_before_last_pattern,
                                                    const std::shared_ptr<core::FlowFile>& split_after_last_pattern,
-                                                   const size_t split_position) const {
-  std::string base_name, post_name, offset_str;
+                                                   const size_t split_position) {
+  std::string base_name;
+  std::string post_name;
+  std::string offset_str;
   if (!original_flow_file.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
     return;
   if (!original_flow_file.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))
@@ -167,7 +169,9 @@ void DefragmentText::updateAttributesForSplitFiles(const core::FlowFile& origina
 
 namespace {
 void updateAppendedAttributes(core::FlowFile& buffered_ff) {
-  std::string base_name, post_name, offset_str;
+  std::string base_name;
+  std::string post_name;
+  std::string offset_str;
   if (!buffered_ff.getAttribute(textfragmentutils::BASE_NAME_ATTRIBUTE, base_name))
     return;
   if (!buffered_ff.getAttribute(textfragmentutils::POST_NAME_ATTRIBUTE, post_name))

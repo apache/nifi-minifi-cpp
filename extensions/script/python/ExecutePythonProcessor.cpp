@@ -30,12 +30,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
-namespace processors {
+namespace org::apache::nifi::minifi::python::processors {
 
 const core::Property ExecutePythonProcessor::ScriptFile(core::PropertyBuilder::createProperty("Script File")
     ->withDescription("Path to script file to execute. Only one of Script File or Script Body may be used")
@@ -122,7 +117,7 @@ void ExecutePythonProcessor::onTrigger(const std::shared_ptr<core::ProcessContex
 void ExecutePythonProcessor::appendPathForImportModules() {
   std::string module_directory;
   getProperty(ModuleDirectory.getName(), module_directory);
-  if (module_directory.size()) {
+  if (!module_directory.empty()) {
     python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory, ","));
   }
 }
@@ -145,8 +140,8 @@ void ExecutePythonProcessor::loadScript() {
     throw std::runtime_error("Neither Script Body nor Script File is available to execute");
   }
 
-  if (script_file.size()) {
-    if (script_body.size()) {
+  if (!script_file.empty()) {
+    if (!script_body.empty()) {
       throw std::runtime_error("Only one of Script File or Script Body may be used");
     }
     script_file_path_ = script_file;
@@ -155,7 +150,6 @@ void ExecutePythonProcessor::loadScript() {
     return;
   }
   script_to_exec_ = script_body;
-  return;
 }
 
 void ExecutePythonProcessor::reloadScriptIfUsingScriptFileProperty() {
@@ -184,9 +178,4 @@ std::unique_ptr<PythonScriptEngine> ExecutePythonProcessor::createScriptEngine()
 
 REGISTER_RESOURCE(ExecutePythonProcessor, Processor);
 
-} /* namespace processors */
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python::processors

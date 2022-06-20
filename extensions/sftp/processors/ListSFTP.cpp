@@ -52,17 +52,6 @@ const std::map<std::string, uint64_t> ListSFTP::LISTING_LAG_MAP = {
   {ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_MINUTES, 60000},
 };
 
-constexpr char const* ListSFTP::LISTING_STRATEGY_TRACKING_TIMESTAMPS;
-constexpr char const* ListSFTP::LISTING_STRATEGY_TRACKING_ENTITIES;
-
-constexpr char const* ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_AUTO_DETECT;
-constexpr char const* ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_MILLISECONDS;
-constexpr char const* ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_SECONDS;
-constexpr char const* ListSFTP::TARGET_SYSTEM_TIMESTAMP_PRECISION_MINUTES;
-
-constexpr char const* ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_TRACKING_TIME_WINDOW;
-constexpr char const* ListSFTP::ENTITY_TRACKING_INITIAL_LISTING_TARGET_ALL_AVAILABLE;
-
 namespace {
 uint64_t toUnixTime(const std::optional<std::chrono::system_clock::time_point> time_point) {
   if (!time_point)
@@ -593,7 +582,7 @@ void ListSFTP::listByTrackingTimestamps(
       if (files_for_timestamp.first == last_processed_latest_entry_timestamp_) {
         /* Filter out previously processed entities. */
         for (auto it = files_for_timestamp.second.begin(); it != files_for_timestamp.second.end();) {
-          if (latest_identifiers_processed_.count(it->getPath()) != 0U) {
+          if (latest_identifiers_processed_.contains(it->getPath())) {
             it = files_for_timestamp.second.erase(it);
           } else {
             ++it;

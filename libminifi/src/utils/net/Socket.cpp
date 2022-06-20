@@ -52,14 +52,14 @@ std::string sockaddr_ntop(const sockaddr* const sa) {
     sockaddr_in sa_in{};
     std::memcpy(&sa_in, sa, sizeof(sockaddr_in));
     result.resize(INET_ADDRSTRLEN);
-    if (inet_ntop(AF_INET, &sa_in.sin_addr, &result[0], INET_ADDRSTRLEN) == nullptr) {
+    if (inet_ntop(AF_INET, &sa_in.sin_addr, result.data(), INET_ADDRSTRLEN) == nullptr) {
       throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error().message() };
     }
   } else if (sa->sa_family == AF_INET6) {
     sockaddr_in6 sa_in6{};
     std::memcpy(&sa_in6, sa, sizeof(sockaddr_in6));
     result.resize(INET6_ADDRSTRLEN);
-    if (inet_ntop(AF_INET6, &sa_in6.sin6_addr, &result[0], INET6_ADDRSTRLEN) == nullptr) {
+    if (inet_ntop(AF_INET6, &sa_in6.sin6_addr, result.data(), INET6_ADDRSTRLEN) == nullptr) {
       throw minifi::Exception{ minifi::ExceptionType::GENERAL_EXCEPTION, get_last_socket_error().message() };
     }
   } else {

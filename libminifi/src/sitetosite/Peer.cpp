@@ -51,11 +51,7 @@ bool SiteToSitePeer::Open() {
     return false;
 
   const auto data_size = sizeof MAGIC_BYTES;
-  if (stream_->write(reinterpret_cast<const uint8_t *>(MAGIC_BYTES), data_size) != data_size) {
-    return false;
-  }
-
-  return true;
+  return stream_->write(reinterpret_cast<const uint8_t *>(MAGIC_BYTES), data_size) == data_size;
 }
 
 void SiteToSitePeer::Close() {

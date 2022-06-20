@@ -58,8 +58,8 @@ TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
   REQUIRE("C:\\foo\\" == FileUtils::get_parent_path("C:\\foo\\bar\\"));
   REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo"));
   REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo\\"));
-  REQUIRE("" == FileUtils::get_parent_path("C:\\"));
-  REQUIRE("" == FileUtils::get_parent_path("C:\\\\"));
+  REQUIRE("" == FileUtils::get_parent_path("C:\\"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_parent_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
 #else
   REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar"));
   REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar/"));
@@ -67,8 +67,8 @@ TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
   REQUIRE("/foo/" == FileUtils::get_parent_path("/foo/bar/"));
   REQUIRE("/" == FileUtils::get_parent_path("/foo"));
   REQUIRE("/" == FileUtils::get_parent_path("/foo/"));
-  REQUIRE("" == FileUtils::get_parent_path("/"));
-  REQUIRE("" == FileUtils::get_parent_path("//"));
+  REQUIRE("" == FileUtils::get_parent_path("/"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_parent_path("//"));  // NOLINT(readability-container-size-empty)
 #endif
 }
 
@@ -80,8 +80,8 @@ TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
   REQUIRE("bar\\" == FileUtils::get_child_path("C:\\foo\\bar\\"));
   REQUIRE("foo" == FileUtils::get_child_path("C:\\foo"));
   REQUIRE("foo\\" == FileUtils::get_child_path("C:\\foo\\"));
-  REQUIRE("" == FileUtils::get_child_path("C:\\"));
-  REQUIRE("" == FileUtils::get_child_path("C:\\\\"));
+  REQUIRE("" == FileUtils::get_child_path("C:\\"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_child_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
 #else
   REQUIRE("bar" == FileUtils::get_child_path("foo/bar"));
   REQUIRE("bar/" == FileUtils::get_child_path("foo/bar/"));
@@ -89,8 +89,8 @@ TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
   REQUIRE("bar/" == FileUtils::get_child_path("/foo/bar/"));
   REQUIRE("foo" == FileUtils::get_child_path("/foo"));
   REQUIRE("foo/" == FileUtils::get_child_path("/foo/"));
-  REQUIRE("" == FileUtils::get_child_path("/"));
-  REQUIRE("" == FileUtils::get_child_path("//"));
+  REQUIRE("" == FileUtils::get_child_path("/"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_child_path("//"));  // NOLINT(readability-container-size-empty)
 #endif
 }
 
@@ -100,7 +100,8 @@ TEST_CASE("TestFilePath", "[TestGetFileNameAndPath]") {
   path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c";
   std::stringstream file;
   file << path.str() << FileUtils::get_separator() << "file";
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   REQUIRE(true == utils::file::getFileNameAndPath(file.str(), filepath, filename) );
   REQUIRE(path.str() == filepath);
   REQUIRE("file" == filename);
@@ -108,7 +109,8 @@ TEST_CASE("TestFilePath", "[TestGetFileNameAndPath]") {
 SECTION("NO FILE VALID PATH") {
   std::stringstream path;
   path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c" << FileUtils::get_separator();
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   REQUIRE(false == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
   REQUIRE(filepath.empty());
   REQUIRE(filename.empty());
@@ -116,7 +118,8 @@ SECTION("NO FILE VALID PATH") {
 SECTION("FILE NO PATH") {
   std::stringstream path;
   path << FileUtils::get_separator() << "file";
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   std::string expectedPath;
   expectedPath += FileUtils::get_separator();
   REQUIRE(true == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
@@ -125,7 +128,8 @@ SECTION("FILE NO PATH") {
 }
 SECTION("NO FILE NO PATH") {
   std::string path = "file";
-  std::string filename, filepath;
+  std::string filename;
+  std::string filepath;
   REQUIRE(false == utils::file::getFileNameAndPath(path, filepath, filename) );
   REQUIRE(filepath.empty());
   REQUIRE(filename.empty());
@@ -135,13 +139,13 @@ SECTION("NO FILE NO PATH") {
 TEST_CASE("TestFileUtils::get_executable_path", "[TestGetExecutablePath]") {
   std::string executable_path = FileUtils::get_executable_path();
   std::cerr << "Executable path: " << executable_path << std::endl;
-  REQUIRE(0U < executable_path.size());
+  REQUIRE(!executable_path.empty());
 }
 
 TEST_CASE("TestFileUtils::get_executable_dir", "[TestGetExecutableDir]") {
   std::string executable_path = FileUtils::get_executable_path();
   std::string executable_dir = FileUtils::get_executable_dir();
-  REQUIRE(0U < executable_dir.size());
+  REQUIRE(!executable_dir.empty());
   std::cerr << "Executable dir: " << executable_dir << std::endl;
   REQUIRE(FileUtils::get_parent_path(executable_path) == executable_dir);
 }
@@ -397,9 +401,9 @@ TEST_CASE("FileUtils::file_size works", "[file_size]") {
 }
 
 TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
-  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0u;
-  constexpr uint64_t CHECKSUM_OF_4_BYTES = 2117232040u;
-  constexpr uint64_t CHECKSUM_OF_11_BYTES = 3461392622u;
+  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0U;
+  constexpr uint64_t CHECKSUM_OF_4_BYTES = 2117232040U;
+  constexpr uint64_t CHECKSUM_OF_11_BYTES = 3461392622U;
 
   TestController testController;
 
@@ -439,11 +443,11 @@ TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
 }
 
 TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
-  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0u;
-  constexpr uint64_t CHECKSUM_OF_4095_BYTES = 1902799545u;
-  constexpr uint64_t CHECKSUM_OF_4096_BYTES = 1041266625u;
-  constexpr uint64_t CHECKSUM_OF_4097_BYTES = 1619129554u;
-  constexpr uint64_t CHECKSUM_OF_8192_BYTES = 305726917u;
+  constexpr uint64_t CHECKSUM_OF_0_BYTES = 0U;
+  constexpr uint64_t CHECKSUM_OF_4095_BYTES = 1902799545U;
+  constexpr uint64_t CHECKSUM_OF_4096_BYTES = 1041266625U;
+  constexpr uint64_t CHECKSUM_OF_4097_BYTES = 1619129554U;
+  constexpr uint64_t CHECKSUM_OF_8192_BYTES = 305726917U;
 
   TestController testController;
 

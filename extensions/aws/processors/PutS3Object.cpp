@@ -41,7 +41,7 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
   const auto &dynamic_prop_keys = context->getDynamicPropertyKeys();
   bool first_property = true;
   for (const auto &prop_key : dynamic_prop_keys) {
-    std::string prop_value = "";
+    std::string prop_value;
     if (context->getDynamicProperty(prop_key, prop_value) && !prop_value.empty()) {
       logger_->log_debug("PutS3Object: DynamicProperty: [%s] -> [%s]", prop_key, prop_value);
       user_metadata_map_.emplace(prop_key, prop_value);
@@ -76,7 +76,7 @@ void PutS3Object::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
   fillUserMetadata(context);
 }
 
-std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) const {
+std::string PutS3Object::parseAccessControlList(const std::string &comma_separated_list) {
   auto users = minifi::utils::StringUtils::split(comma_separated_list, ",");
   for (auto& user : users) {
     auto trimmed_user = minifi::utils::StringUtils::trim(user);

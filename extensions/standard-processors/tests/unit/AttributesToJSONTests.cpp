@@ -64,7 +64,7 @@ class AttributesToJSONTestFixture {
     utils::putFileToDir(dir_, TEST_FILE_NAME, TEST_FILE_CONTENT);
   }
 
-  void assertJSONAttributesFromLog(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
+  static void assertJSONAttributesFromLog(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes) {
     auto match = LogTestController::getInstance().matchesRegex("key:JSONAttributes value:(.*)");
     REQUIRE(match);
     assertAttributes(expected_attributes, (*match)[1].str());
@@ -76,7 +76,7 @@ class AttributesToJSONTestFixture {
     assertAttributes(expected_attributes, file_contents[0]);
   }
 
-  void assertAttributes(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes, const std::string& output_json) {
+  static void assertAttributes(const std::unordered_map<std::string, std::optional<std::string>>& expected_attributes, const std::string& output_json) {
     rapidjson::Document root;
     rapidjson::ParseResult ok = root.Parse(output_json.c_str());
     REQUIRE(ok);

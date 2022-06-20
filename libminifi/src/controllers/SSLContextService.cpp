@@ -311,7 +311,7 @@ bool SSLContextService::useClientCertificate(PCCERT_CONTEXT certificate, ClientC
 }
 #endif  // WIN32
 
-bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX* ctx) const {
+bool SSLContextService::addServerCertificatesFromSystemStoreToSSLContext(SSL_CTX* ctx) const {  // NOLINT(readability-convert-member-functions-to-static)
 #ifdef WIN32
   X509_STORE* ssl_store = SSL_CTX_get_cert_store(ctx);
   if (!ssl_store) {

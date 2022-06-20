@@ -64,7 +64,7 @@ class ArchiveMetadata {
 
   ArchiveEntryIterator find(const std::string& name);
   ArchiveEntryIterator eraseEntry(ArchiveEntryIterator position);
-  ArchiveEntryIterator insertEntry(ArchiveEntryIterator it, const ArchiveEntryMetadata& entry);
+  ArchiveEntryIterator insertEntry(ArchiveEntryIterator position, const ArchiveEntryMetadata& entry);
 
   void seedTempPaths(org::apache::nifi::minifi::utils::file::FileManager* file_man, bool keep);
 
@@ -82,7 +82,7 @@ class ArchiveStack {
   void push(const ArchiveMetadata& metadata) { stack_.push_back(metadata); }
   ArchiveMetadata pop() { auto x = top(); stack_.pop_back(); return x; }
   ArchiveMetadata top() const { return stack_.back(); }
-  void loadJson(const rapidjson::Value& input);
+  void loadJson(const rapidjson::Value& lensStack);
   void loadJsonString(const std::string& input);
   std::string toJsonString() const;
   rapidjson::Document toJson() const;

@@ -210,13 +210,13 @@ class FlowControlProtocol {
 
  private:
   // Connect to the socket, return sock descriptor if success, 0 for failure
-  int connectServer(const char *host, uint16_t port);
+  static int connectServer(const char *host, uint16_t port);
   // Send Data via the socket, return -1 for failure
-  int sendData(uint8_t *buf, int buflen);
+  static int sendData(uint8_t *buf, int buflen);
   // Read length into buf, return -1 for failure and 0 for EOF
   int readData(uint8_t *buf, int buflen);
   // Select on the socket
-  int selectClient(int msec);
+  int selectClient(int msec) const;
   // Read the header
   int readHdr(FlowControlProtocolHeader *hdr);
   // encode uint32_t

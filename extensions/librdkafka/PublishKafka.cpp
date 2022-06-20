@@ -349,7 +349,8 @@ void PublishKafka::onSchedule(const std::shared_ptr<core::ProcessContext> &conte
   interrupted_ = false;
 
   // Try to get a KafkaConnection
-  std::string client_id, brokers;
+  std::string client_id;
+  std::string brokers;
   if (!context->getProperty(ClientName, client_id, nullptr)) {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Client Name property missing or invalid");
   }

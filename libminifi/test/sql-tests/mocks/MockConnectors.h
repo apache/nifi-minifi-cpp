@@ -114,7 +114,7 @@ class MockDB {
    * @param condition_str SQL WHERE condition string with only AND logical operators
    * @return Function object evaluating MockRow according to the condition parameter
    */
-  std::function<bool(const MockRow&)> parseWhereCondition(const std::string& condition_str);
+  static std::function<bool(const MockRow&)> parseWhereCondition(const std::string& condition_str);
 
   static DataType stringToDataType(const std::string& type_str);
   static std::string dataTypeToString(DataType data_type);

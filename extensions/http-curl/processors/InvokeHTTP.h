@@ -149,7 +149,7 @@ class InvokeHTTP : public core::Processor {
    * @param statuscode http response code.
    */
   void route(const std::shared_ptr<core::FlowFile> &request, const std::shared_ptr<core::FlowFile> &response, const std::shared_ptr<core::ProcessSession> &session,
-             const std::shared_ptr<core::ProcessContext> &context, bool isSuccess, int64_t statusCode);
+             const std::shared_ptr<core::ProcessContext> &context, bool is_success, int64_t status_code);
   bool shouldEmitFlowFile() const;
   [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
 

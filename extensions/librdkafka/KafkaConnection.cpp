@@ -74,7 +74,7 @@ rd_kafka_t *KafkaConnection::getConnection() const {
 }
 
 bool KafkaConnection::hasTopic(const std::string &topic) const {
-  return topics_.count(topic);
+  return topics_.contains(topic);
 }
 
 std::shared_ptr<KafkaTopic> KafkaConnection::getTopic(const std::string &topic) const {

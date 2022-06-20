@@ -82,7 +82,9 @@ int main(int argc, char **argv) {
 
   auto stream_factory_ = minifi::io::StreamFactory::getInstance(configuration);
 
-  std::string host = "localhost", portStr, caCert;
+  std::string host = "localhost";
+  std::string portStr;
+  std::string caCert;
   int port = -1;
 
   cxxopts::Options options("MiNiFiController", "MiNiFi local agent controller");

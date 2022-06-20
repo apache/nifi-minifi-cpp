@@ -116,9 +116,11 @@ Value expr_hostname(const std::vector<Value> &args) {
   hostname[1023] = '\0';
   gethostname(hostname, 1023);
 
-  if (args.size() > 0 && args[0].asBoolean()) {
+  if (!args.empty() && args[0].asBoolean()) {
     int status;
-    struct addrinfo hints, *result, *addr_cursor;
+    struct addrinfo hints;
+    struct addrinfo *result;
+    struct addrinfo *addr_cursor;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
@@ -154,7 +156,9 @@ Value expr_ip(const std::vector<Value>& /*args*/) {
   int status;
   char ip_str[INET6_ADDRSTRLEN];
   struct sockaddr_in *addr;
-  struct addrinfo hints, *result, *addr_cursor;
+  struct addrinfo hints;
+  struct addrinfo *result;
+  struct addrinfo *addr_cursor;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
 
@@ -1011,7 +1015,7 @@ Value expr_ifElse(const std::vector<Value> &args) {
 }
 
 Expression make_allAttributes(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
@@ -1056,7 +1060,7 @@ Expression make_allAttributes(const std::string &function_name, const std::vecto
 }
 
 Expression make_anyAttribute(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
@@ -1101,7 +1105,7 @@ Expression make_anyAttribute(const std::string &function_name, const std::vector
 }
 
 Expression make_allMatchingAttributes(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
@@ -1154,7 +1158,7 @@ Expression make_allMatchingAttributes(const std::string &function_name, const st
 }
 
 Expression make_anyMatchingAttribute(const std::string &function_name, const std::vector<Expression> &args) {
-  if (args.size() < 1) {
+  if (args.empty()) {
     std::stringstream message_ss;
     message_ss << "Expression language function " << function_name << " called with " << args.size() << " argument(s), but " << 1 << " are required";
     throw std::runtime_error(message_ss.str());
@@ -1501,11 +1505,7 @@ Expression make_function_composition(const Expression &arg, const std::vector<st
 }
 
 bool Expression::is_dynamic() const {
-  if (val_fn_) {
-    return true;
-  } else {
-    return false;
-  }
+  return static_cast<bool>(val_fn_);
 }
 
 Expression Expression::operator+(const Expression &other_expr) const {

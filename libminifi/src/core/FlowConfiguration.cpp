@@ -26,11 +26,7 @@
 #include "utils/StringUtils.h"
 #include "processors/ProcessorUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 FlowConfiguration::FlowConfiguration(
     std::shared_ptr<core::Repository> /*repo*/, std::shared_ptr<core::Repository> flow_file_repo,
@@ -46,7 +42,9 @@ FlowConfiguration::FlowConfiguration(
       logger_(logging::LoggerFactory<FlowConfiguration>::getLogger()) {
   controller_services_ = std::make_shared<core::controller::ControllerServiceMap>();
   service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration);
-  std::string flowUrl = "", bucket_id = "default", flowId = "";
+  std::string flowUrl;
+  std::string bucket_id = "default";
+  std::string flowId;
   configuration->get(Configure::nifi_c2_flow_id, flowId);
   configuration->get(Configure::nifi_c2_flow_url, flowUrl);
   flow_version_ = std::make_shared<state::response::FlowVersion>(flowUrl, bucket_id, flowId);
@@ -106,7 +104,8 @@ std::unique_ptr<core::ProcessGroup> FlowConfiguration::updateFromPayload(const s
   service_provider_ = std::make_shared<core::controller::StandardControllerServiceProvider>(controller_services_, nullptr, configuration_);
   auto payload = getRootFromPayload(yamlConfigPayload);
   if (!url.empty() && payload != nullptr) {
-    std::string flow_id, bucket_id;
+    std::string flow_id;
+    std::string bucket_id;
     auto path_split = utils::StringUtils::split(url, "/");
     for (auto it = path_split.cbegin(); it != path_split.cend(); ++it) {
       if (*it == "flows" && std::next(it) != path_split.cend()) {
@@ -170,8 +169,4 @@ std::shared_ptr<core::controller::ControllerServiceNode> FlowConfiguration::crea
   return controllerServicesNode;
 }
 
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core

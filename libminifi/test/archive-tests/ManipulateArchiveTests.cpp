@@ -97,7 +97,8 @@ bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive outpu
 }
 
 bool run_archive_test(TAE_MAP_T input_map, TAE_MAP_T output_map, PROP_MAP_T properties, bool check_attributes = true) {
-  OrderedTestArchive input_archive, output_archive;
+  OrderedTestArchive input_archive;
+  OrderedTestArchive output_archive;
 
   // An empty vector is treated as "ignore order"
   input_archive.order = output_archive.order = FN_VEC_T();

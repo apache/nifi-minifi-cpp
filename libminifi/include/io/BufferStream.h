@@ -54,7 +54,7 @@ class BufferStream : public BaseStream {
   using BaseStream::read;
   using BaseStream::write;
 
-  size_t write(const uint8_t* data, size_t len) final;
+  size_t write(const uint8_t* value, size_t size) final;
 
   size_t read(gsl::span<std::byte> buffer) override;
 

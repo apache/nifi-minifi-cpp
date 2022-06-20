@@ -29,11 +29,7 @@
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property AttributesToJSON::AttributesList(
   core::PropertyBuilder::createProperty("Attributes List")
@@ -118,7 +114,7 @@ std::optional<std::unordered_set<std::string>> AttributesToJSON::getAttributesTo
   return attributes;
 }
 
-void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value) {
+void AttributesToJSON::addAttributeToJson(rapidjson::Document& document, const std::string& key, const std::optional<std::string>& value) const {
   rapidjson::Value json_key(key.c_str(), document.GetAllocator());
   rapidjson::Value json_val;
   if (value || !null_value_) {
@@ -169,8 +165,4 @@ void AttributesToJSON::onTrigger(core::ProcessContext* /*context*/, core::Proces
 
 REGISTER_RESOURCE(AttributesToJSON, Processor);
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

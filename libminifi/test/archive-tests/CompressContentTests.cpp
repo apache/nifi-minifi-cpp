@@ -94,7 +94,7 @@ class ReadCallback {
  * decompression test. Each such test controller should either be
  * CompressTestController or a DecompressTestController.
  */
-class CompressDecompressionTestController : public TestController{
+class CompressDecompressionTestController : public TestController {
  protected:
   static std::string tempDir_;
   static std::string raw_content_path_;
@@ -149,7 +149,7 @@ class CompressDecompressionTestController : public TestController{
     helper_session = std::make_shared<core::ProcessSession>(context);
   }
 
-  std::shared_ptr<core::FlowFile> importFlowFile(const std::string& content_path) {
+  [[nodiscard]] std::shared_ptr<core::FlowFile> importFlowFile(const std::string& content_path) const {
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(helper_session->create());
     helper_session->import(content_path, flow, true, 0);
     helper_session->flushContent();
@@ -174,7 +174,7 @@ class CompressDecompressionTestController : public TestController{
     session->commit();
   }
 
-  void read(const std::shared_ptr<core::FlowFile>& file, ReadCallback& reader) {
+  void read(const std::shared_ptr<core::FlowFile>& file, ReadCallback& reader) const {
     helper_session->read(file, std::ref(reader));
   }
 
@@ -192,15 +192,15 @@ class CompressDecompressionTestController : public TestController{
     }
   };
 
-  [[nodiscard]] std::string rawContentPath() const {
+  [[nodiscard]] static std::string rawContentPath() {
     return raw_content_path_;
   }
 
-  [[nodiscard]] std::string compressedPath() const {
+  [[nodiscard]] static std::string compressedPath() {
     return compressed_content_path_;
   }
 
-  [[nodiscard]] RawContent getRawContent() const {
+  [[nodiscard]] static RawContent getRawContent() {
     std::ifstream file;
     file.open(raw_content_path_, std::ios::binary);
     std::string contents{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()};

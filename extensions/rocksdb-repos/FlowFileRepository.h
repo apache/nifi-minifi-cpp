@@ -217,7 +217,7 @@ class FlowFileRepository : public core::Repository {
    * Returns true if a checkpoint is needed at startup
    * @return true if a checkpoint is needed.
    */
-  bool need_checkpoint(minifi::internal::OpenRocksDb& opendb);
+  static bool need_checkpoint(minifi::internal::OpenRocksDb& opendb);
 
   /**
    * Prunes stored flow files.

@@ -128,9 +128,7 @@ bool flowFileAcknowledgementTimedOut(const gsl::not_null<std::shared_ptr<core::F
   if (!splunk_response_time_str.has_value())
     return true;
   uint64_t splunk_response_time = std::stoull(splunk_response_time_str.value());
-  if (system_clock::now() > std::chrono::system_clock::time_point() + std::chrono::milliseconds(splunk_response_time) + max_age)
-    return true;
-  return false;
+  return system_clock::now() > std::chrono::system_clock::time_point() + std::chrono::milliseconds(splunk_response_time) + max_age;
 }
 
 void routeFlowFilesBasedOnIndexingStatus(core::ProcessSession& session,

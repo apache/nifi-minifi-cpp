@@ -76,7 +76,7 @@ class UploadToGCSCallback {
   }
 
   void setIfGenerationMatch(std::optional<bool> overwrite) {
-    if (overwrite.has_value() && overwrite.value() == false) {
+    if (overwrite.has_value() && !overwrite.value()) {
       if_generation_match_ = gcs::IfGenerationMatch(0);
     } else {
       if_generation_match_ = gcs::IfGenerationMatch();

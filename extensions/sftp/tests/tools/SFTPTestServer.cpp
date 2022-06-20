@@ -143,7 +143,7 @@ bool SFTPTestServer::stop() {
   return true;
 }
 
-uint16_t SFTPTestServer::getPort() {
+uint16_t SFTPTestServer::getPort() const {
   return port_;
 }
 

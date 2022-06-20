@@ -109,8 +109,8 @@ class ListenHTTP : public core::Processor {
    public:
     Handler(std::string base_uri,
             core::ProcessContext *context,
-            std::string &&authDNPattern,
-            std::string &&headersAsAttributesPattern);
+            std::string &&auth_dn_regex,
+            std::string &&header_as_attrs_regex);
     bool handlePost(CivetServer *server, struct mg_connection *conn) override;
     bool handleGet(CivetServer *server, struct mg_connection *conn) override;
     bool handleHead(CivetServer *server, struct mg_connection *conn) override;
@@ -124,12 +124,12 @@ class ListenHTTP : public core::Processor {
     bool dequeueRequest(FlowFileBufferPair &flow_file_buffer_pair);
 
    private:
-    void sendHttp500(struct mg_connection *conn);
-    void sendHttp503(struct mg_connection *conn);
+    static void sendHttp500(struct mg_connection *conn);
+    static void sendHttp503(struct mg_connection *conn);
     bool authRequest(mg_connection *conn, const mg_request_info *req_info) const;
     void setHeaderAttributes(const mg_request_info *req_info, const std::shared_ptr<core::FlowFile> &flow_file) const;
     void writeBody(mg_connection *conn, const mg_request_info *req_info, bool include_payload = true);
-    std::unique_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
+    static std::unique_ptr<io::BufferStream> createContentBuffer(struct mg_connection *conn, const struct mg_request_info *req_info);
     void enqueueRequest(mg_connection *conn, const mg_request_info *req_info, std::unique_ptr<io::BufferStream>);
 
     std::string base_uri_;

@@ -44,11 +44,7 @@
 #include "utils/ByteArrayCallback.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 std::shared_ptr<utils::IdGenerator> CapturePacket::id_generator_ = utils::IdGenerator::getIdGenerator();
 
@@ -76,7 +72,7 @@ std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
 
 void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevice* /*dev*/, void* data) {
   // parse the packet
-  PacketMovers* capture_mechanism = reinterpret_cast<PacketMovers*>(data);
+  auto capture_mechanism = reinterpret_cast<PacketMovers*>(data);
 
   CapturePacketMechanism *capture;
 
@@ -102,8 +98,8 @@ void CapturePacket::packet_callback(pcpp::RawPacket* packet, pcpp::PcapLiveDevic
 }
 
 CapturePacketMechanism *CapturePacket::create_new_capture(const std::string &base_path, int64_t *max_size) {
-  CapturePacketMechanism *new_capture = new CapturePacketMechanism(base_path, generate_new_pcap(base_path), max_size);
-  new_capture->writer_ = new pcpp::PcapFileWriterDevice(new_capture->getFile().c_str());
+  auto new_capture = new CapturePacketMechanism(base_path, generate_new_pcap(base_path), max_size);
+  new_capture->writer_ = new pcpp::PcapFileWriterDevice(new_capture->getFile());
   if (!new_capture->writer_->open())
     throw std::runtime_error{utils::StringUtils::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile())};
 
@@ -155,7 +151,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 
     if (!allowed_interfaces.empty()) {
       bool found_match = false;
-      std::string matching_regex = "";
+      std::string matching_regex;
       for (const auto &filter : allowed_interfaces) {
         utils::Regex r(filter);
         utils::SMatch m;
@@ -222,8 +218,4 @@ void CapturePacket::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 
 REGISTER_RESOURCE(CapturePacket, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

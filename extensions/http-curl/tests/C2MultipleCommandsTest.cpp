@@ -35,7 +35,7 @@ class AckAuditor {
 
   bool isAcknowledged(const std::string& operation_id) const {
     std::lock_guard<std::mutex> guard(acknowledged_operations_mutex_);
-    return acknowledged_operations_.count(operation_id) > 0;
+    return acknowledged_operations_.contains(operation_id);
   }
 
   void addVerifier(std::function<void(const rapidjson::Document&)> verifier) {
