@@ -163,7 +163,7 @@ ENV PATH ${PATH}:/usr/lib/jvm/default-jvm/bin
 
 RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} && \
     install -d -o ${USER} -g ${USER} ${MINIFI_BASE_DIR} && ln -s ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME} && \
-    apk add --no-cache libstdc++ tzdata && \
+    apk add --no-cache libstdc++ tzdata alpine-conf && \
     if [ "$ENABLE_GPS" = "ON" ]; then apk add --no-cache gpsd; fi && \
     if [ "$ENABLE_JNI" = "ON" ]; then apk add --no-cache openjdk8-jre-base; fi && \
     if [ "$ENABLE_PCAP" = "ON" ]; then apk add --no-cache libpcap; fi && \
@@ -175,7 +175,7 @@ RUN addgroup -g ${GID} ${USER} && adduser -u ${UID} -D -G ${USER} -g "" ${USER} 
 # Copy built minifi distribution from builder
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_VERSIONED_HOME} ${MINIFI_HOME}
 COPY --from=build --chown=${USER}:${USER} ${MINIFI_BASE_DIR}/docker/conf/minifi-log.properties ${MINIFI_HOME}/conf/minifi-log.properties
-RUN echo "UTC" > /etc/timezone
+RUN setup-timezone -z UTC
 
 USER ${USER}
 WORKDIR ${MINIFI_HOME}
