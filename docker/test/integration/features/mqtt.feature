@@ -110,6 +110,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "publisher-client" flow
     And a PublishMQTT processor in the "publisher-client" flow
     And the "Quality of Service" property of the PublishMQTT processor is set to "1"
+    And the "Client ID" property of the PublishMQTT processor is set to "publisher-client"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
 
     # consuming MQTT client
@@ -216,3 +217,31 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And the MQTT broker has a log line matching "Received PUBREC from consumer-client \(Mid: 1\)"
     And the MQTT broker has a log line matching "Sending PUBREL to consumer-client \(m1\)"
     And the MQTT broker has a log line matching "Received PUBCOMP from consumer-client \(Mid: 1, RC:0\)"
+
+  Scenario: Retained message
+    # publishing MQTT client
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "publisher-client" flow
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishMQTT processor in the "publisher-client" flow
+    And the "Client ID" property of the PublishMQTT processor is set to "publisher-client"
+    And the "Retain" property of the PublishMQTT processor is set to "true"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+
+    # consuming MQTT client
+    And a ConsumeMQTT processor in the "consumer-client" flow
+    And the "Client ID" property of the ConsumeMQTT processor is set to "consumer-client"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "consumer-client" flow
+    And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+
+    And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
+
+    When the MQTT broker is started
+    And "publisher-client" flow is started
+    Then the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
+
+    # consumer is joining late, but it will still see the retained message
+    And "consumer-client" flow is started
+    And the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
+
+    And a file with the content "test" is placed in "/tmp/input"
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds

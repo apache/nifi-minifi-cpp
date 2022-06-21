@@ -87,7 +87,7 @@ class PublishMQTT : public processors::AbstractMQTTProcessor {
     MQTTAsync client_;
 
     int qos_;
-    int retain_;
+    bool retain_;
   };
 
   void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) override;

@@ -65,10 +65,10 @@ REGISTER_RESOURCE(ConsumeMQTT, Processor);
 
 // PublishMQTT
 
-const core::Property PublishMQTT::Retain("Retain", "Retain MQTT published record in broker", "false");
+const core::Property PublishMQTT::Retain("Retain", "Retain published message in broker", "false");
 
 const core::Relationship PublishMQTT::Success("success", "FlowFiles that are sent successfully to the destination are transferred to this relationship");
-const core::Relationship PublishMQTT::Failure("failure", "FlowFiles that failed to send to the destination are transferred to this relationship");
+const core::Relationship PublishMQTT::Failure("failure", "FlowFiles that failed to be sent to the destination are transferred to this relationship");
 
 REGISTER_RESOURCE(PublishMQTT, Processor);
 

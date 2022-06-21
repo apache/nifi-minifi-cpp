@@ -87,7 +87,12 @@ class MiNiFi_integration_test:
         self.cluster.deploy('opensearch')
         assert self.wait_for_container_startup_to_finish('opensearch')
 
-    def start(self):
+    def start(self, container_name=None):
+        if container_name is not None:
+            logging.info("Starting container %s", container_name)
+            self.cluster.deploy_flow(container_name)
+            assert self.wait_for_container_startup_to_finish(container_name)
+            return
         logging.info("MiNiFi_integration_test start")
         self.cluster.deploy_flow()
         for container_name in self.cluster.containers:

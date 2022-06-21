@@ -583,6 +583,12 @@ def step_impl(context, container_name):
     context.test.restart(container_name)
 
 
+@when("\"{container_name}\" flow is started")
+@then("\"{container_name}\" flow is started")
+def step_impl(context, container_name):
+    context.test.start(container_name)
+
+
 @when("content \"{content}\" is added to file \"{file_name}\" present in directory \"{path}\" {seconds:d} seconds later")
 def step_impl(context, content, file_name, path, seconds):
     time.sleep(seconds)
@@ -869,6 +875,11 @@ def step_impl(context, minifi_container_name, log_pattern, duration):
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")
     context.test.start()
+
+
+@when("the MQTT broker is started")
+def step_impl(context):
+    context.test.start('mqtt-broker')
 
 
 # Google Cloud Storage

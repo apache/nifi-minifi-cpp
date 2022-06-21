@@ -35,6 +35,9 @@ void PublishMQTT::initialize() {
 }
 
 void PublishMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
+  if (const auto retain_opt = context->getProperty<bool>(Retain)) {
+    retain_ = *retain_opt;
+  }
   logger_->log_debug("PublishMQTT: Retain [%d]", retain_);
 
   AbstractMQTTProcessor::onSchedule(context, factory);
