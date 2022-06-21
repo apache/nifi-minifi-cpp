@@ -163,6 +163,29 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     | תַּלְמוּד                  | תּוֹרָה        |
 
 
+  Scenario: QoS 0 message flow is correct
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
+    And a file with the content "test" is present in "/tmp/input"
+    And a PublishMQTT processor set up to communicate with an MQTT broker instance
+    And the "Quality of Service" property of the PublishMQTT processor is set to "0"
+    And the "Client ID" property of the PublishMQTT processor is set to "publisher-client"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+
+    And a ConsumeMQTT processor set up to communicate with an MQTT broker instance
+    And the "Quality of Service" property of the ConsumeMQTT processor is set to "0"
+    And the "Client ID" property of the ConsumeMQTT processor is set to "consumer-client"
+    And a PutFile processor with the "Directory" property set to "/tmp/output"
+    And "ConsumeMQTT" processor is a start node
+    And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+
+    And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
+
+    When both instances start up
+    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    And the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
+    And the MQTT broker has a log line matching "Received PUBLISH from publisher-client \(d0, q0, r0, m0, 'testtopic'.*\(4 bytes\)"
+    And the MQTT broker has a log line matching "Sending PUBLISH to consumer-client \(d0, q0, r0, m0, 'testtopic',.*\(4 bytes\)\)"
+
   Scenario: QoS 1 Subscriber sends PUBACK on a PUBLISH message, with correct packet ID
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "test" is present in "/tmp/input"
