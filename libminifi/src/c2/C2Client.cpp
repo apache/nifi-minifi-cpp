@@ -102,11 +102,13 @@ std::optional<std::string> C2Client::fetchFlow(const std::string& uri) const {
 void C2Client::loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node) {
   auto classes = utils::StringUtils::split(class_definitions, ",");
   for (const std::string& clazz : classes) {
-    auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
-    if (!response_node) {
+    auto response_nodes = response_node_loader_.loadResponseNodes(clazz, root_.get());
+    if (response_nodes.empty()) {
       continue;
     }
-    std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
+    for(const auto& response_node : response_nodes) {
+      std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
+    }
   }
 }
 
@@ -137,7 +139,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       }
 
       // We don't need to lock here, we already do it in the initializeResponseNodes member function
-      root_response_nodes_[name] = new_node;
+      root_response_nodes_.emplace(name, new_node);
     } catch (...) {
       logger_->log_error("Could not create metrics class %s", metricsClass);
     }
@@ -189,28 +191,29 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
   return prev_node;
 }
 
-std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
+std::vector<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNodes(const std::string& metrics_class) const {
   std::lock_guard<std::mutex> guard{metrics_mutex_};
+  std::vector<state::response::NodeReporter::ReportedNode> reported_nodes;
   if (!metrics_class.empty()) {
-    auto metrics_node = response_node_loader_.getComponentMetricsNode(metrics_class);
-    if (metrics_node) {
+    auto metrics_nodes = response_node_loader_.getComponentMetricsNodes(metrics_class);
+    for (const auto& metrics_node : metrics_nodes) {
       state::response::NodeReporter::ReportedNode reported_node;
       reported_node.is_array = metrics_node->isArray();
       reported_node.name = metrics_node->getName();
       reported_node.serialized_nodes = metrics_node->serialize();
-      return reported_node;
+      reported_nodes.push_back(reported_node);
     }
   } else {
-    const auto iter = root_response_nodes_.find("metrics");
-    if (iter != root_response_nodes_.end()) {
+    const auto metrics_range = root_response_nodes_.equal_range("metrics");
+    for (auto iter = metrics_range.first; iter != metrics_range.second; ++iter) {
       state::response::NodeReporter::ReportedNode reported_node;
       reported_node.is_array = iter->second->isArray();
       reported_node.name = iter->second->getName();
       reported_node.serialized_nodes = iter->second->serialize();
-      return reported_node;
+      reported_nodes.push_back(reported_node);
     }
   }
-  return std::nullopt;
+  return reported_nodes;
 }
 
 std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatNodes(bool include_manifest) const {
@@ -238,18 +241,23 @@ std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatN
 }
 
 void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
+  if (!root_response_nodes_.empty()) {
+    return;
+  }
   std::string class_csv;
   std::lock_guard<std::mutex> guard{metrics_mutex_};
   if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
     std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
     for (const std::string& clazz : classes) {
-      auto response_node = response_node_loader_.loadResponseNode(clazz, root);
-      if (!response_node) {
+      auto response_nodes = response_node_loader_.loadResponseNodes(clazz, root);
+      if (response_nodes.empty()) {
         continue;
       }
 
-      root_response_nodes_[response_node->getName()] = std::move(response_node);
+      for (auto response_node: response_nodes) {
+        root_response_nodes_.emplace(response_node->getName(), std::move(response_node));
+      }
     }
   }
 

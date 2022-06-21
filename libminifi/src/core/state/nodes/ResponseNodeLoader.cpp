@@ -59,17 +59,17 @@ void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
     node_source->getResponseNodes(metric_vector);
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     for (const auto& metric : metric_vector) {
-      component_metrics_[metric->getName()] = metric;
+      component_metrics_.emplace(metric->getName(), metric);
     }
   }
 }
 
-std::shared_ptr<ResponseNode> ResponseNodeLoader::getResponseNode(const std::string& clazz) const {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getResponseNodes(const std::string& clazz) const {
   std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
   if (ptr == nullptr) {
-    return getComponentMetricsNode(clazz);
+    return getComponentMetricsNodes(clazz);
   }
-  return std::dynamic_pointer_cast<ResponseNode>(ptr);
+  return {std::dynamic_pointer_cast<ResponseNode>(ptr)};
 }
 
 void ResponseNodeLoader::initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node) {
@@ -153,32 +153,35 @@ void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNod
   }
 }
 
-std::shared_ptr<ResponseNode> ResponseNodeLoader::loadResponseNode(const std::string& clazz, core::ProcessGroup* root) {
-  auto response_node = getResponseNode(clazz);
-  if (!response_node) {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) {
+  auto response_nodes = getResponseNodes(clazz);
+  if (response_nodes.empty()) {
     logger_->log_error("No metric defined for %s", clazz);
-    return nullptr;
+    return {};
   }
 
-  initializeRepositoryMetrics(response_node);
-  initializeQueueMetrics(response_node, root);
-  initializeAgentIdentifier(response_node);
-  initializeAgentMonitor(response_node);
-  initializeAgentNode(response_node);
-  initializeConfigurationChecksums(response_node);
-  initializeFlowMonitor(response_node, root);
-  return response_node;
+  for (const auto& response_node : response_nodes) {
+    initializeRepositoryMetrics(response_node);
+    initializeQueueMetrics(response_node, root);
+    initializeAgentIdentifier(response_node);
+    initializeAgentMonitor(response_node);
+    initializeAgentNode(response_node);
+    initializeConfigurationChecksums(response_node);
+    initializeFlowMonitor(response_node, root);
+  }
+  return response_nodes;
 }
 
-std::shared_ptr<state::response::ResponseNode> ResponseNodeLoader::getComponentMetricsNode(const std::string& metrics_class) const {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getComponentMetricsNodes(const std::string& metrics_class) const {
+  std::vector<std::shared_ptr<ResponseNode>> nodes;
   if (!metrics_class.empty()) {
     std::lock_guard<std::mutex> lock(component_metrics_mutex_);
-    const auto citer = component_metrics_.find(metrics_class);
-    if (citer != component_metrics_.end()) {
-      return citer->second;
+    const auto class_range = component_metrics_.equal_range(metrics_class);
+    for (auto it = class_range.first; it != class_range.second; ++it) {
+      nodes.push_back(it->second);
     }
   }
-  return nullptr;
+  return nodes;
 }
 
 void ResponseNodeLoader::setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) {

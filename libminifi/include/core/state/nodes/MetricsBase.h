@@ -198,7 +198,7 @@ class NodeReporter {
    * Retrieves metrics node
    * @return metrics response node
    */
-  virtual std::optional<ReportedNode> getMetricsNode(const std::string& metricsClass) const = 0;
+  virtual std::vector<ReportedNode> getMetricsNodes(const std::string& metricsClass) const = 0;
 
   /**
    * Retrieves root nodes configured to be included in heartbeat

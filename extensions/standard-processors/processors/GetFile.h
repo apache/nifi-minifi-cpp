@@ -62,23 +62,27 @@ class GetFileMetrics : public state::response::ResponseNode {
   std::vector<state::response::SerializedResponseNode> serialize() override {
     std::vector<state::response::SerializedResponseNode> resp;
 
+    state::response::SerializedResponseNode root_node;
+    root_node.name = source_component_.getName();
+
     state::response::SerializedResponseNode iter;
     iter.name = "OnTriggerInvocations";
     iter.value = (uint32_t)iterations_.load();
 
-    resp.push_back(iter);
+    root_node.children.push_back(iter);
 
     state::response::SerializedResponseNode accepted_files;
     accepted_files.name = "AcceptedFiles";
     accepted_files.value = (uint32_t)accepted_files_.load();
 
-    resp.push_back(accepted_files);
+    root_node.children.push_back(accepted_files);
 
     state::response::SerializedResponseNode input_bytes;
     input_bytes.name = "InputBytes";
     input_bytes.value = (uint32_t)input_bytes_.load();
 
-    resp.push_back(input_bytes);
+    root_node.children.push_back(input_bytes);
+    resp.push_back(root_node);
 
     return resp;
   }

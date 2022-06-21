@@ -38,14 +38,14 @@ class ResponseNodeLoader {
  public:
   ResponseNodeLoader(std::shared_ptr<Configure> configuration, std::shared_ptr<core::Repository> provenance_repo,
     std::shared_ptr<core::Repository> flow_file_repo, core::FlowConfiguration* flow_configuration);
-  std::shared_ptr<ResponseNode> loadResponseNode(const std::string& clazz, core::ProcessGroup* root);
-  std::shared_ptr<state::response::ResponseNode> getComponentMetricsNode(const std::string& metrics_class) const;
+  std::vector<std::shared_ptr<ResponseNode>> loadResponseNodes(const std::string& clazz, core::ProcessGroup* root);
+  std::vector<std::shared_ptr<ResponseNode>> getComponentMetricsNodes(const std::string& metrics_class) const;
   void setControllerServiceProvider(core::controller::ControllerServiceProvider* controller);
   void setStateMonitor(state::StateMonitor* update_sink);
   void initializeComponentMetrics(core::ProcessGroup* root);
 
  private:
-  std::shared_ptr<ResponseNode> getResponseNode(const std::string& clazz) const;
+  std::vector<std::shared_ptr<ResponseNode>> getResponseNodes(const std::string& clazz) const;
   void initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node);
   static void initializeQueueMetrics(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
   void initializeAgentIdentifier(const std::shared_ptr<ResponseNode>& response_node);
@@ -55,7 +55,7 @@ class ResponseNodeLoader {
   void initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
 
   mutable std::mutex component_metrics_mutex_;
-  std::unordered_map<std::string, std::shared_ptr<ResponseNode>> component_metrics_;
+  std::unordered_multimap<std::string, std::shared_ptr<ResponseNode>> component_metrics_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;
