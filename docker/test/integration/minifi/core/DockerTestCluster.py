@@ -202,7 +202,10 @@ class DockerTestCluster(SingleNodeDockerCluster):
         result_str = output.decode("utf-8")
         result_lines = result_str.splitlines()
         for result_line in result_lines:
-            result_line_json = json.loads(result_line)
+            try:
+                result_line_json = json.loads(result_line)
+            except json.decoder.JSONDecodeError:
+                continue
             if "result" not in result_line_json:
                 continue
             if "host" in attributes:
