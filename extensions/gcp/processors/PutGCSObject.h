@@ -74,7 +74,7 @@ class PutGCSObject : public GCSProcessor {
   EXTENSIONAPI static constexpr bool SupportsDynamicProperties = false;
   EXTENSIONAPI static constexpr bool SupportsDynamicRelationships = false;
   EXTENSIONAPI static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_REQUIRED;
-  EXTENSIONAPI static constexpr bool IsSingleThreaded = true;
+  EXTENSIONAPI static constexpr bool IsSingleThreaded = false;
 
   ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
 
