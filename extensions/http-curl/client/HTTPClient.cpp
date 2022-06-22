@@ -29,6 +29,7 @@
 #include "utils/StringUtils.h"
 #include "core/Resource.h"
 #include "utils/RegexUtils.h"
+#include "range/v3/algorithm/all_of.hpp"
 
 namespace org::apache::nifi::minifi::utils {
 
@@ -457,12 +458,7 @@ bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
 
   // RFC822 3.1.2: The  field-name must be composed of printable ASCII characters
   // (i.e., characters that  have  values  between  33.  and  126., decimal, except colon).
-  for (auto ch : field_name) {  // NOLINT(readability-use-anyofallof)
-    if (ch < 33 || ch > 126 || ch == ':') {
-      return false;
-    }
-  }
-  return true;
+  return ranges::all_of(field_name, [](char c) { return c >= 33 && c <= 126 && c != ':'; });
 }
 
 std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::string_view field_name) {
