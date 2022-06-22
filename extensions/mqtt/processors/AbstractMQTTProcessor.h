@@ -29,9 +29,9 @@
 
 namespace org::apache::nifi::minifi::processors {
 
-static constexpr const char* const MQTT_QOS_0 = "0";
-static constexpr const char* const MQTT_QOS_1 = "1";
-static constexpr const char* const MQTT_QOS_2 = "2";
+static constexpr uint8_t MQTT_QOS_0 = 0;
+static constexpr uint8_t MQTT_QOS_1 = 1;
+static constexpr uint8_t MQTT_QOS_2 = 2;
 
 static constexpr const char* const MQTT_SECURITY_PROTOCOL_SSL = "ssl";
 
@@ -94,7 +94,7 @@ class AbstractMQTTProcessor : public core::Processor {
   std::chrono::milliseconds keep_alive_interval_ = std::chrono::seconds(60);
   uint64_t max_seg_size_ = std::numeric_limits<uint64_t>::max();
   std::chrono::milliseconds connection_timeout_ = std::chrono::seconds(30);
-  int64_t qos_ = 0;
+  int64_t qos_ = MQTT_QOS_1;
   std::string clientID_;
   std::string username_;
   std::string password_;
@@ -128,7 +128,7 @@ class AbstractMQTTProcessor : public core::Processor {
   // MQTT async callback
   static void disconnectionSuccess(void* context, MQTTAsync_successData* response) {
     auto* processor = reinterpret_cast<AbstractMQTTProcessor*>(context);
-    processor->onDisonnectionSuccess(response);
+    processor->onDisconnectionSuccess(response);
   }
 
   // MQTT async callback
@@ -161,7 +161,7 @@ class AbstractMQTTProcessor : public core::Processor {
     }
   }
 
-  void onDisonnectionSuccess(MQTTAsync_successData* /*response*/) {
+  void onDisconnectionSuccess(MQTTAsync_successData* /*response*/) {
     logger_->log_info("Successfully disconnected from MQTT broker %s", uri_);
   }
 

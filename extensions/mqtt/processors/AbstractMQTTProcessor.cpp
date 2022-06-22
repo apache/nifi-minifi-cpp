@@ -28,83 +28,68 @@ namespace org::apache::nifi::minifi::processors {
 void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
   sslEnabled_ = false;
 
-  std::string value;
-  int64_t valInt;
-  value = "";
-  if (context->getProperty(BrokerURI.getName(), value) && !value.empty()) {
-    uri_ = value;
+  if (auto value = context->getProperty(BrokerURI)) {
+    uri_ = std::move(*value);
     logger_->log_debug("AbstractMQTTProcessor: BrokerURI [%s]", uri_);
   }
-  value = "";
-  if (context->getProperty(ClientID.getName(), value) && !value.empty()) {
-    clientID_ = value;
+  if (auto value = context->getProperty(ClientID)) {
+    clientID_ = std::move(*value);
     logger_->log_debug("AbstractMQTTProcessor: ClientID [%s]", clientID_);
   }
-  value = "";
-  if (context->getProperty(Topic.getName(), value) && !value.empty()) {
-    topic_ = value;
+  if (auto value = context->getProperty(Topic)) {
+    topic_ = std::move(*value);
     logger_->log_debug("AbstractMQTTProcessor: Topic [%s]", topic_);
   }
-  value = "";
-  if (context->getProperty(Username.getName(), value) && !value.empty()) {
-    username_ = value;
+  if (auto value = context->getProperty(Username)) {
+    username_ = std::move(*value);
     logger_->log_debug("AbstractMQTTProcessor: UserName [%s]", username_);
   }
-  value = "";
-  if (context->getProperty(Password.getName(), value) && !value.empty()) {
-    password_ = value;
+  if (auto value = context->getProperty(Password)) {
+    password_ = std::move(*value);
     logger_->log_debug("AbstractMQTTProcessor: Password [%s]", password_);
   }
 
-  if (auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
+  if (const auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
     keep_alive_interval_ = keep_alive_interval->getMilliseconds();
     logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keep_alive_interval_.count()});
   }
 
-  value = "";
-  if (context->getProperty(MaxFlowSegSize.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    max_seg_size_ = valInt;
+  if (const auto value = context->getProperty<uint64_t>(MaxFlowSegSize)) {
+    max_seg_size_ = *value;
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
 
-  if (auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
+  if (const auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
     connection_timeout_ = connection_timeout->getMilliseconds();
     logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] ms", int64_t{connection_timeout_.count()});
   }
 
-  value = "";
-  if (context->getProperty(QoS.getName(), value) && !value.empty() && (value == MQTT_QOS_0 || value == MQTT_QOS_1 || MQTT_QOS_2) &&
-      core::Property::StringToInt(value, valInt)) {
-    qos_ = valInt;
+  if (const auto value = context->getProperty<int64_t>(QoS); value && (*value == MQTT_QOS_0 || *value == MQTT_QOS_1 || *value == MQTT_QOS_2)) {
+    qos_ = *value;
     logger_->log_debug("AbstractMQTTProcessor: QOS [%" PRId64 "]", qos_);
   }
-  value = "";
 
-  if (context->getProperty(SecurityProtocol.getName(), value) && !value.empty()) {
-    if (value == MQTT_SECURITY_PROTOCOL_SSL) {
+  if (const auto security_protocol = context->getProperty(SecurityProtocol)) {
+    if (*security_protocol == MQTT_SECURITY_PROTOCOL_SSL) {
       sslEnabled_ = true;
-      value = "";
-      if (context->getProperty(SecurityCA.getName(), value) && !value.empty()) {
-        logger_->log_debug("AbstractMQTTProcessor: trustStore [%s]", value);
-        securityCA_ = value;
+      if (auto value = context->getProperty(SecurityCA)) {
+        logger_->log_debug("AbstractMQTTProcessor: trustStore [%s]", *value);
+        securityCA_ = std::move(*value);
         sslOpts_.trustStore = securityCA_.c_str();
       }
-      value = "";
-      if (context->getProperty(SecurityCert.getName(), value) && !value.empty()) {
-        logger_->log_debug("AbstractMQTTProcessor: keyStore [%s]", value);
-        securityCert_ = value;
+      if (auto value = context->getProperty(SecurityCert)) {
+        logger_->log_debug("AbstractMQTTProcessor: keyStore [%s]", *value);
+        securityCert_ = std::move(*value);
         sslOpts_.keyStore = securityCert_.c_str();
       }
-      value = "";
-      if (context->getProperty(SecurityPrivateKey.getName(), value) && !value.empty()) {
-        logger_->log_debug("AbstractMQTTProcessor: privateKey [%s]", value);
-        securityPrivateKey_ = value;
+      if (auto value = context->getProperty(SecurityPrivateKey)) {
+        logger_->log_debug("AbstractMQTTProcessor: privateKey [%s]", *value);
+        securityPrivateKey_ = std::move(*value);
         sslOpts_.privateKey = securityPrivateKey_.c_str();
       }
-      value = "";
-      if (context->getProperty(SecurityPrivateKeyPassword.getName(), value) && !value.empty()) {
-        logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [%s]", value);
-        securityPrivateKeyPassword_ = value;
+      if (auto value = context->getProperty(SecurityPrivateKeyPassword)) {
+        logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [%s]", *value);
+        securityPrivateKeyPassword_ = std::move(*value);
         sslOpts_.privateKeyPassword = securityPrivateKeyPassword_.c_str();
       }
     }
