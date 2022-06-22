@@ -26,8 +26,6 @@
 namespace org::apache::nifi::minifi::processors {
 
 void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory>& /*factory*/) {
-  sslEnabled_ = false;
-
   if (auto value = context->getProperty(BrokerURI)) {
     uri_ = std::move(*value);
     logger_->log_debug("AbstractMQTTProcessor: BrokerURI [%s]", uri_);
@@ -55,7 +53,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 
   if (const auto value = context->getProperty<uint64_t>(MaxFlowSegSize)) {
-    max_seg_size_ = *value;
+    max_seg_size_ = {*value};
     logger_->log_debug("PublishMQTT: max flow segment size [%" PRIu64 "]", max_seg_size_);
   }
 
@@ -64,34 +62,60 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] ms", int64_t{connection_timeout_.count()});
   }
 
-  if (const auto value = context->getProperty<int64_t>(QoS); value && (*value == MQTT_QOS_0 || *value == MQTT_QOS_1 || *value == MQTT_QOS_2)) {
-    qos_ = *value;
-    logger_->log_debug("AbstractMQTTProcessor: QOS [%" PRId64 "]", qos_);
+  if (const auto value = context->getProperty<uint32_t>(QoS); value && (*value == MQTT_QOS_0 || *value == MQTT_QOS_1 || *value == MQTT_QOS_2)) {
+    qos_ = {*value};
+    logger_->log_debug("AbstractMQTTProcessor: QoS [%" PRIu32 "]", qos_);
   }
 
   if (const auto security_protocol = context->getProperty(SecurityProtocol)) {
     if (*security_protocol == MQTT_SECURITY_PROTOCOL_SSL) {
-      sslEnabled_ = true;
+      sslOpts_ = MQTTAsync_SSLOptions_initializer;
       if (auto value = context->getProperty(SecurityCA)) {
         logger_->log_debug("AbstractMQTTProcessor: trustStore [%s]", *value);
         securityCA_ = std::move(*value);
-        sslOpts_.trustStore = securityCA_.c_str();
+        sslOpts_->trustStore = securityCA_.c_str();
       }
       if (auto value = context->getProperty(SecurityCert)) {
         logger_->log_debug("AbstractMQTTProcessor: keyStore [%s]", *value);
         securityCert_ = std::move(*value);
-        sslOpts_.keyStore = securityCert_.c_str();
+        sslOpts_->keyStore = securityCert_.c_str();
       }
       if (auto value = context->getProperty(SecurityPrivateKey)) {
         logger_->log_debug("AbstractMQTTProcessor: privateKey [%s]", *value);
         securityPrivateKey_ = std::move(*value);
-        sslOpts_.privateKey = securityPrivateKey_.c_str();
+        sslOpts_->privateKey = securityPrivateKey_.c_str();
       }
       if (auto value = context->getProperty(SecurityPrivateKeyPassword)) {
         logger_->log_debug("AbstractMQTTProcessor: privateKeyPassword [%s]", *value);
         securityPrivateKeyPassword_ = std::move(*value);
-        sslOpts_.privateKeyPassword = securityPrivateKeyPassword_.c_str();
+        sslOpts_->privateKeyPassword = securityPrivateKeyPassword_.c_str();
       }
+    }
+  }
+
+  if (auto last_will_topic = context->getProperty(LastWillTopic); last_will_topic.has_value() && !last_will_topic->empty()) {
+    last_will_ = MQTTAsync_willOptions_initializer;
+    
+    logger_->log_debug("AbstractMQTTProcessor: Last Will Topic [%s]", *last_will_topic);
+    last_will_topic_ = std::move(*last_will_topic);
+    last_will_->topicName = last_will_topic_.c_str();
+
+    if (auto value = context->getProperty(LastWillMessage)) {
+      logger_->log_debug("AbstractMQTTProcessor: Last Will Message [%s]", *value);
+      last_will_message_ = std::move(*value);
+      last_will_->message = last_will_message_.c_str();
+    }
+
+    if (const auto value = context->getProperty<uint32_t>(LastWillQoS); value && (*value == MQTT_QOS_0 || *value == MQTT_QOS_1 || *value == MQTT_QOS_2)) {
+      logger_->log_debug("AbstractMQTTProcessor: Last Will QoS [%" PRIu32 "]", *value);
+      last_will_qos_ = {*value};
+      last_will_->qos = gsl::narrow<int>(last_will_qos_);
+    }
+
+    if (const auto value = context->getProperty<bool>(LastWillRetain)) {
+      logger_->log_debug("AbstractMQTTProcessor: Last Will Retain [%d]", *value);
+      last_will_retain_ = {*value};
+      last_will_->retained = last_will_retain_;
     }
   }
 
@@ -127,8 +151,11 @@ void AbstractMQTTProcessor::reconnect() {
     conn_opts.username = username_.c_str();
     conn_opts.password = password_.c_str();
   }
-  if (sslEnabled_) {
-    conn_opts.ssl = &sslOpts_;
+  if (sslOpts_) {
+    conn_opts.ssl = &*sslOpts_;
+  }
+  if (last_will_) {
+    conn_opts.will = &*last_will_;
   }
 
   logger_->log_info("Reconnecting to %s", uri_);

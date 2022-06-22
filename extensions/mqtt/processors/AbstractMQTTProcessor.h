@@ -59,6 +59,10 @@ class AbstractMQTTProcessor : public core::Processor {
   EXTENSIONAPI static const core::Property SecurityCert;
   EXTENSIONAPI static const core::Property SecurityPrivateKey;
   EXTENSIONAPI static const core::Property SecurityPrivateKeyPassword;
+  EXTENSIONAPI static const core::Property LastWillTopic;
+  EXTENSIONAPI static const core::Property LastWillMessage;
+  EXTENSIONAPI static const core::Property LastWillQoS;
+  EXTENSIONAPI static const core::Property LastWillRetain;
 
   EXTENSIONAPI static auto properties() {
     return std::array{
@@ -75,7 +79,11 @@ class AbstractMQTTProcessor : public core::Processor {
       SecurityCA,
       SecurityCert,
       SecurityPrivateKey,
-      SecurityPrivateKeyPassword
+      SecurityPrivateKeyPassword,
+      LastWillTopic,
+      LastWillMessage,
+      LastWillQoS,
+      LastWillRetain
     };
   }
 
@@ -94,7 +102,7 @@ class AbstractMQTTProcessor : public core::Processor {
   std::chrono::milliseconds keep_alive_interval_ = std::chrono::seconds(60);
   uint64_t max_seg_size_ = std::numeric_limits<uint64_t>::max();
   std::chrono::milliseconds connection_timeout_ = std::chrono::seconds(30);
-  int64_t qos_ = MQTT_QOS_1;
+  uint32_t qos_ = MQTT_QOS_1;
   std::string clientID_;
   std::string username_;
   std::string password_;
@@ -177,13 +185,21 @@ class AbstractMQTTProcessor : public core::Processor {
 
   void freeResources();
 
-  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
-  MQTTAsync_SSLOptions sslOpts_ = MQTTAsync_SSLOptions_initializer;
-  bool sslEnabled_ = false;
+  // SSL
+  std::optional<MQTTAsync_SSLOptions> sslOpts_;
   std::string securityCA_;
   std::string securityCert_;
   std::string securityPrivateKey_;
   std::string securityPrivateKeyPassword_;
+
+  // Last Will
+  std::optional<MQTTAsync_willOptions> last_will_;
+  std::string last_will_topic_;
+  std::string last_will_message_;
+  uint32_t last_will_qos_ = MQTT_QOS_1;
+  bool last_will_retain_ = false;
+
+  std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<AbstractMQTTProcessor>::getLogger();
 };
 
 }  // namespace org::apache::nifi::minifi::processors

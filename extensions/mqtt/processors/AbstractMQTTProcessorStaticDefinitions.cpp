@@ -41,7 +41,7 @@ const core::Property AbstractMQTTProcessor::Topic(
     isRequired(true)->
     build());
 
-const core::Property AbstractMQTTProcessor::QoS("Quality of Service", "The Quality of Service(QoS) to send the message with. Accepts three values '0', '1' and '2'", MQTT_QOS_1);
+const core::Property AbstractMQTTProcessor::QoS("Quality of Service", "The Quality of Service (QoS) to send the message with. Accepts three values '0', '1' and '2'", std::to_string(MQTT_QOS_1));
 const core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
 const core::Property AbstractMQTTProcessor::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
 const core::Property AbstractMQTTProcessor::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
@@ -52,6 +52,10 @@ const core::Property AbstractMQTTProcessor::SecurityCA("Security CA", "File or d
 const core::Property AbstractMQTTProcessor::SecurityCert("Security Cert", "Path to client's public key (PEM) used for authentication", "");
 const core::Property AbstractMQTTProcessor::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
 const core::Property AbstractMQTTProcessor::SecurityPrivateKeyPassword("Security Pass Phrase", "Private key passphrase", "");
+const core::Property AbstractMQTTProcessor::LastWillTopic("Last Will Topic", "The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent.", "");
+const core::Property AbstractMQTTProcessor::LastWillMessage("Last Will Message", "The message to send as the client's Last Will. If the Last Will topic is not set then a Last Will will not be sent.", "");
+const core::Property AbstractMQTTProcessor::LastWillQoS("Last Will QoS", "The Quality of Service (QoS) to send the last will with. Accepts three values '0', '1' and '2'", std::to_string(MQTT_QOS_1));
+const core::Property AbstractMQTTProcessor::LastWillRetain("Last Will Retain","Whether to retain the client's Last Will.", "false");
 
 // ConsumeMQTT
 
