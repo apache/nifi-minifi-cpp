@@ -143,7 +143,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   }
   context->getProperty(TempFilename, temp_file_name, flow_file);
   if (context->getProperty(LastModifiedTime, value, flow_file))
-    last_modified_ = utils::timeutils::parseDateTimeStr<date::sys_seconds>(value);
+    last_modified_ = utils::timeutils::parseDateTimeStr(value);
 
   if (context->getProperty(Permissions, value, flow_file)) {
     if (core::Property::StringToPermissions(value, permissions)) {

@@ -21,34 +21,52 @@
 
 using namespace std::literals::chrono_literals;
 
-template <class TimePointType>
-void testParseDateTimeStr() {
+TEST_CASE("parseDateTimeStr() works correctly", "[parseDateTimeStr]") {
   using org::apache::nifi::minifi::utils::timeutils::parseDateTimeStr;
 
-  CHECK(*parseDateTimeStr<TimePointType>("1970-01-01T00:00:00Z") == TimePointType{0s});
-  CHECK(*parseDateTimeStr<TimePointType>("1970-01-01T00:59:59Z") == TimePointType{1h - 1s});
+  CHECK(*parseDateTimeStr("1970-01-01T00:00:00Z") == std::chrono::sys_seconds{0s});
+  CHECK(*parseDateTimeStr("1970-01-01T00:59:59Z") == std::chrono::sys_seconds{1h - 1s});
 
-  CHECK(*parseDateTimeStr<TimePointType>("1970-01-02T00:00:00Z") == TimePointType{std::chrono::days(1)});
-  CHECK(*parseDateTimeStr<TimePointType>("1970-02-01T00:00:00Z") == TimePointType{31 * std::chrono::days(1)});
-  CHECK(*parseDateTimeStr<TimePointType>("1971-01-01T00:00:00Z") == TimePointType{365 * std::chrono::days(1)});
+  CHECK(*parseDateTimeStr("1970-01-02T00:00:00Z") == std::chrono::sys_seconds{std::chrono::days(1)});
+  CHECK(*parseDateTimeStr("1970-02-01T00:00:00Z") == std::chrono::sys_seconds{31 * std::chrono::days(1)});
+  CHECK(*parseDateTimeStr("1971-01-01T00:00:00Z") == std::chrono::sys_seconds{365 * std::chrono::days(1)});
 
-  CHECK(*parseDateTimeStr<TimePointType>("1995-02-28T00:00:00Z") == TimePointType{793929600s});
-  CHECK(*parseDateTimeStr<TimePointType>("1995-03-01T00:00:00Z") == TimePointType{793929600s + std::chrono::days(1)});
-  CHECK(*parseDateTimeStr<TimePointType>("1996-02-28T00:00:00Z") == TimePointType{825465600s});
-  CHECK(*parseDateTimeStr<TimePointType>("1996-02-29T00:00:00Z") == TimePointType{825465600s + std::chrono::days(1)});
-  CHECK(*parseDateTimeStr<TimePointType>("2000-02-28T00:00:00Z") == TimePointType{951696000s});
-  CHECK(*parseDateTimeStr<TimePointType>("2000-02-29T00:00:00Z") == TimePointType{951696000s + std::chrono::days(1)});
-  CHECK(*parseDateTimeStr<TimePointType>("2100-02-28T00:00:00Z") == TimePointType{4107456000s});
-  CHECK(*parseDateTimeStr<TimePointType>("2100-03-01T00:00:00Z") == TimePointType{4107456000s + std::chrono::days(1)});
+  CHECK(*parseDateTimeStr("1995-02-28T00:00:00Z") == std::chrono::sys_seconds{793929600s});
+  CHECK(*parseDateTimeStr("1995-03-01T00:00:00Z") == std::chrono::sys_seconds{793929600s + std::chrono::days(1)});
+  CHECK(*parseDateTimeStr("1996-02-28T00:00:00Z") == std::chrono::sys_seconds{825465600s});
+  CHECK(*parseDateTimeStr("1996-02-29T00:00:00Z") == std::chrono::sys_seconds{825465600s + std::chrono::days(1)});
+  CHECK(*parseDateTimeStr("2000-02-28T00:00:00Z") == std::chrono::sys_seconds{951696000s});
+  CHECK(*parseDateTimeStr("2000-02-29T00:00:00Z") == std::chrono::sys_seconds{951696000s + std::chrono::days(1)});
+  CHECK(*parseDateTimeStr("2100-02-28T00:00:00Z") == std::chrono::sys_seconds{4107456000s});
+  CHECK(*parseDateTimeStr("2100-03-01T00:00:00Z") == std::chrono::sys_seconds{4107456000s + std::chrono::days(1)});
 
-  CHECK(*parseDateTimeStr<TimePointType>("2017-12-12T18:54:16Z") == TimePointType{1513104856s});
-  CHECK(*parseDateTimeStr<TimePointType>("2024-01-30T23:01:15Z") == TimePointType{1706655675s});
-  CHECK(*parseDateTimeStr<TimePointType>("2087-07-31T01:33:50Z") == TimePointType{3710453630s});
+  CHECK(*parseDateTimeStr("2017-12-12T18:54:16Z") == std::chrono::sys_seconds{1513104856s});
+  CHECK(*parseDateTimeStr("2024-01-30T23:01:15Z") == std::chrono::sys_seconds{1706655675s});
+  CHECK(*parseDateTimeStr("2087-07-31T01:33:50Z") == std::chrono::sys_seconds{3710453630s});
 }
 
-TEST_CASE("parseDateTimeStr() works correctly", "[parseDateTimeStr]") {
-  testParseDateTimeStr<date::sys_seconds>();
-  testParseDateTimeStr<date::local_seconds>();
+TEST_CASE("getDateTimeStr() works correctly", "[getDateTimeStr]") {
+  using org::apache::nifi::minifi::utils::timeutils::getDateTimeStr;
+
+  CHECK("1970-01-01T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{0s}));
+  CHECK("1970-01-01T00:59:59Z" == getDateTimeStr(std::chrono::sys_seconds{1h - 1s}));
+
+  CHECK("1970-01-02T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{std::chrono::days(1)}));
+  CHECK("1970-02-01T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{31 * std::chrono::days(1)}));
+  CHECK("1971-01-01T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{365 * std::chrono::days(1)}));
+
+  CHECK("1995-02-28T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{793929600s}));
+  CHECK("1995-03-01T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{793929600s + std::chrono::days(1)}));
+  CHECK("1996-02-28T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{825465600s}));
+  CHECK("1996-02-29T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{825465600s + std::chrono::days(1)}));
+  CHECK("2000-02-28T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{951696000s}));
+  CHECK("2000-02-29T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{951696000s + std::chrono::days(1)}));
+  CHECK("2100-02-28T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{4107456000s}));
+  CHECK("2100-03-01T00:00:00Z" == getDateTimeStr(std::chrono::sys_seconds{4107456000s + std::chrono::days(1)}));
+
+  CHECK("2017-12-12T18:54:16Z" == getDateTimeStr(std::chrono::sys_seconds{1513104856s}));
+  CHECK("2024-01-30T23:01:15Z" == getDateTimeStr(std::chrono::sys_seconds{1706655675s}));
+  CHECK("2087-07-31T01:33:50Z" == getDateTimeStr(std::chrono::sys_seconds{3710453630s}));
 }
 
 TEST_CASE("Test time conversion", "[testtimeconversion]") {
@@ -63,18 +81,18 @@ TEST_CASE("Test DateTime Conversion", "[testDateTime]") {
   using date::sys_days;
   using utils::timeutils::parseDateTimeStr;
 
-  CHECK(sys_days(date::year_month_day(1970_y/01/01)) == parseDateTimeStr<date::sys_seconds>("1970-01-01T00:00:00Z"));
-  CHECK(sys_days(year_month_day(1970_y/01/01)) + 0h + 59min + 59s == parseDateTimeStr<date::sys_seconds>("1970-01-01T00:59:59Z"));
-  CHECK(sys_days(year_month_day(2000_y/06/17)) + 12h + 34min + 21s == parseDateTimeStr<date::sys_seconds>("2000-06-17T12:34:21Z"));
-  CHECK(sys_days(year_month_day(2038_y/01/19)) + 3h + 14min + 7s == parseDateTimeStr<date::sys_seconds>("2038-01-19T03:14:07Z"));
-  CHECK(sys_days(year_month_day(2065_y/01/24)) + 5h + 20min + 0s == parseDateTimeStr<date::sys_seconds>("2065-01-24T05:20:00Z"));
-  CHECK(sys_days(year_month_day(1969_y/01/01)) == parseDateTimeStr<date::sys_seconds>("1969-01-01T00:00:00Z"));
+  CHECK(sys_days(date::year_month_day(1970_y/01/01)) == parseDateTimeStr("1970-01-01T00:00:00Z"));
+  CHECK(sys_days(year_month_day(1970_y/01/01)) + 0h + 59min + 59s == parseDateTimeStr("1970-01-01T00:59:59Z"));
+  CHECK(sys_days(year_month_day(2000_y/06/17)) + 12h + 34min + 21s == parseDateTimeStr("2000-06-17T12:34:21Z"));
+  CHECK(sys_days(year_month_day(2038_y/01/19)) + 3h + 14min + 7s == parseDateTimeStr("2038-01-19T03:14:07Z"));
+  CHECK(sys_days(year_month_day(2065_y/01/24)) + 5h + 20min + 0s == parseDateTimeStr("2065-01-24T05:20:00Z"));
+  CHECK(sys_days(year_month_day(1969_y/01/01)) == parseDateTimeStr("1969-01-01T00:00:00Z"));
 
-  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-01-01A00:00:00Z"));
-  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-01-01T00:00:00"));
-  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-01-01T00:00:00Zfoo"));
-  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("1970-13-01T00:00:00Z"));
-  CHECK_FALSE(utils::timeutils::parseDateTimeStr<date::sys_seconds>("foobar"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr("1970-01-01A00:00:00Z"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr("1970-01-01T00:00:00"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr("1970-01-01T00:00:00Zfoo"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr("1970-13-01T00:00:00Z"));
+  CHECK_FALSE(utils::timeutils::parseDateTimeStr("foobar"));
 }
 
 TEST_CASE("Test system_clock epoch", "[systemclockepoch]") {

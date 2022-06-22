@@ -235,7 +235,6 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
 
   auto file = src_dir + "/vfs/nifi_test/tstFile.ext";
   auto mtime_str = utils::timeutils::getDateTimeStr(std::chrono::time_point_cast<std::chrono::seconds>(utils::file::to_sys(utils::file::last_write_time(file).value())));
-  REQUIRE(mtime_str);
   uint64_t uid, gid;
   REQUIRE(true == utils::file::FileUtils::get_uid_gid(file, uid, gid));
   uint32_t permissions;
@@ -250,7 +249,7 @@ TEST_CASE_METHOD(ListSFTPTestsFixture, "ListSFTP list one file writes attributes
   REQUIRE(LogTestController::getInstance().contains("key:file.group value:" + std::to_string(gid)));
   REQUIRE(LogTestController::getInstance().contains("key:file.permissions value:" + permissions_ss.str()));
   REQUIRE(LogTestController::getInstance().contains("key:file.size value:14"));
-  REQUIRE(LogTestController::getInstance().contains("key:file.lastModifiedTime value:" + *mtime_str));
+  REQUIRE(LogTestController::getInstance().contains("key:file.lastModifiedTime value:" + mtime_str));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:tstFile.ext"));
   REQUIRE(LogTestController::getInstance().contains("key:path value:nifi_test"));
 }

@@ -92,22 +92,18 @@ inline std::string getTimeStr(std::chrono::system_clock::time_point tp) {
   return stream.str();
 }
 
-template<class TimePoint>
-inline std::optional<TimePoint> parseDateTimeStr(const std::string& str) {
+inline std::optional<std::chrono::sys_seconds> parseDateTimeStr(const std::string& str) {
   std::istringstream stream(str);
-  TimePoint tp;
+  std::chrono::sys_seconds tp;
   date::from_stream(stream, "%Y-%m-%dT%H:%M:%SZ", tp);
   if (stream.fail() || (stream.peek() && !stream.eof()))
     return std::nullopt;
   return tp;
 }
 
-template<class TimePoint>
-inline std::optional<std::string> getDateTimeStr(TimePoint tp) {
+inline std::string getDateTimeStr(std::chrono::sys_seconds tp) {
   std::ostringstream stream;
   date::to_stream(stream, "%Y-%m-%dT%H:%M:%SZ", std::chrono::floor<std::chrono::milliseconds>(tp));
-  if (stream.fail())
-    return std::nullopt;
   return stream.str();
 }
 
