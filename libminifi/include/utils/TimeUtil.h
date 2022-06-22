@@ -103,7 +103,7 @@ inline std::optional<std::chrono::sys_seconds> parseDateTimeStr(const std::strin
 
 inline std::string getDateTimeStr(std::chrono::sys_seconds tp) {
   std::ostringstream stream;
-  date::to_stream(stream, "%Y-%m-%dT%H:%M:%SZ", std::chrono::floor<std::chrono::milliseconds>(tp));
+  date::to_stream(stream, "%Y-%m-%dT%H:%M:%SZ", std::chrono::floor<std::chrono::seconds>(tp));
   return stream.str();
 }
 
