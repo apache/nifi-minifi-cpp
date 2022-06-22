@@ -511,8 +511,8 @@ void ListSFTP::listByTrackingTimestamps(
   std::map<std::chrono::system_clock::time_point, std::list<Child>> ordered_files;
   bool target_system_has_seconds = false;
   for (auto&& file : files) {
-    std::chrono::system_clock::time_point timestamp {std::chrono::seconds(file.attrs.mtime)};
-    target_system_has_seconds |= std::chrono::round<std::chrono::seconds>(timestamp) == timestamp;
+    std::chrono::system_clock::time_point timestamp{std::chrono::seconds(file.attrs.mtime)};
+    target_system_has_seconds |= std::chrono::round<std::chrono::minutes>(timestamp) != timestamp;
 
     bool new_file = !min_timestamp_to_list.has_value() || (timestamp >= min_timestamp_to_list && timestamp >= last_processed_latest_entry_timestamp_);
     if (new_file) {
