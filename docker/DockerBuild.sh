@@ -40,67 +40,73 @@ function usage {
   echo "-d, --distro-name     Linux distribution build to be used for alternative builds (bionic|focal|fedora|centos)"
   echo "-l  --dump-location   Path where to the output dump to be put"
   echo "-c  --cmake-param     CMake parameter passed in PARAM=value format"
+  echo "-o  --options         Minifi options string"
   echo "-h  --help            Show this help message"
   exit 1
 }
 
-BUILD_ARGS=""
+BUILD_ARGS=()
 while [[ $# -gt 0 ]]; do
   key="$1"
   case $key in
-    -u|--uid)
-      UID_ARG="$2"
-      shift
-      shift
-      ;;
-    -g|--gid)
-      GID_ARG="$2"
-      shift
-      shift
+  -u | --uid)
+    UID_ARG="$2"
+    shift
+    shift
     ;;
-    -v|--minifi-version)
-      MINIFI_VERSION="$2"
-      shift
-      shift
-      ;;
-    -t|--tag)
-      IMAGE_TAG="$2"
-      shift
-      shift
-      ;;
-    -d|--distro-name)
-      DISTRO_NAME="$2"
-      shift
-      shift
-      ;;
-    -l|--dump-location)
-      DUMP_LOCATION="$2"
-      shift
-      shift
-      ;;
-    -c|--cmake-param)
-      IFS='=' read -ra ARR <<< "$2"
-      if [[ ${#ARR[@]} -gt 1 ]]; then
-        if [ "${ARR[0]}" == "BUILD_NUMBER" ]; then
-          BUILD_NUMBER="${ARR[1]}"
-        elif [ "${ARR[0]}" == "DOCKER_BASE_IMAGE" ]; then
-          BUILD_ARGS="${BUILD_ARGS} --build-arg BASE_ALPINE_IMAGE=${ARR[1]}"
-        elif [ "${ARR[0]}" == "DOCKER_CCACHE_DUMP_LOCATION" ]; then
-          DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
-        else
-          BUILD_ARGS="${BUILD_ARGS} --build-arg ${ARR[0]}=${ARR[1]}"
-        fi
+  -g | --gid)
+    GID_ARG="$2"
+    shift
+    shift
+    ;;
+  -v | --minifi-version)
+    MINIFI_VERSION="$2"
+    shift
+    shift
+    ;;
+  -t | --tag)
+    IMAGE_TAG="$2"
+    shift
+    shift
+    ;;
+  -d | --distro-name)
+    DISTRO_NAME="$2"
+    shift
+    shift
+    ;;
+  -l | --dump-location)
+    DUMP_LOCATION="$2"
+    shift
+    shift
+    ;;
+  -c | --cmake-param)
+    IFS='=' read -ra ARR <<<"$2"
+    if [[ ${#ARR[@]} -gt 1 ]]; then
+      if [ "${ARR[0]}" == "BUILD_NUMBER" ]; then
+        BUILD_NUMBER="${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_BASE_IMAGE" ]; then
+        BUILD_ARGS+=("--build-arg BASE_ALPINE_IMAGE=${ARR[1]}")
+      elif [ "${ARR[0]}" == "DOCKER_CCACHE_DUMP_LOCATION" ]; then
+        DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
+      else
+        BUILD_ARGS+=("--build-arg ${ARR[0]}=${ARR[1]}")
       fi
-      shift
-      shift
-      ;;
-    -h|--help)
-      usage
-      ;;
-    *)
-      echo "Unknown argument passed: $1"
-      usage
-      ;;
+    fi
+    shift
+    shift
+    ;;
+  -o | --options)
+    BUILD_ARGS+=("--build-arg" "MINIFI_OPTIONS=$2")
+    shift
+    shift
+    ;;
+  -h | --help)
+    usage
+    ;;
+  *)
+    echo "Unknown argument passed: $1"
+    usage
+    ;;
   esac
 done
 
@@ -136,35 +142,23 @@ if [ -n "${BUILD_NUMBER}" ]; then
   TARGZ_TAG="${TARGZ_TAG}-${BUILD_NUMBER}"
 fi
 
-DOCKER_BUILD_START="docker build "
-BUILD_ARGS="--build-arg UID=${UID_ARG} \
-            --build-arg GID=${GID_ARG} \
-            --build-arg MINIFI_VERSION=${MINIFI_VERSION} \
-            --build-arg DUMP_LOCATION=${DUMP_LOCATION} \
-            --build-arg DISTRO_NAME=${DISTRO_NAME} ${BUILD_ARGS}"
+BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
+            "--build-arg" "GID=${GID_ARG}"
+            "--build-arg" "MINIFI_VERSION=${MINIFI_VERSION}"
+            "--build-arg" "DUMP_LOCATION=${DUMP_LOCATION}"
+            "--build-arg" "DISTRO_NAME=${DISTRO_NAME}")
 
 if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
-  DOCKER_COMMAND="${DOCKER_BUILD_START} ${BUILD_ARGS} \
-                -f ${DOCKERFILE} \
-                --target build \
-                -t \
-                minifi_build .."
-  echo "Build image Docker Command: 'DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}'"
-  DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
-  container_id=$(docker run --rm -d  minifi_build sh -c "while true; do sleep 1; done")
+  DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} --target build -t minifi_build ..
+
+  container_id=$(docker run --rm -d minifi_build sh -c "while true; do sleep 1; done")
   mkdir -p "${DOCKER_CCACHE_DUMP_LOCATION}"
   docker cp "${container_id}:/home/minificpp/.ccache/." "${DOCKER_CCACHE_DUMP_LOCATION}"
   docker rm -f "${container_id}"
 fi
 
-DOCKER_COMMAND="${DOCKER_BUILD_START} ${BUILD_ARGS} \
-                -f ${DOCKERFILE} \
-                -t \
-                apacheminificpp:${TAG} .."
-
-echo "Docker Command: 'DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}'"
-DOCKER_BUILDKIT=1 ${DOCKER_COMMAND}
+DOCKER_BUILDKIT=0 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} -t apacheminificpp:"${TAG}" ..
 
 if [ -n "${DUMP_LOCATION}" ]; then
-  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" > "${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
+  docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" >"${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
 fi
