@@ -48,7 +48,6 @@ class VerifyEmptyC2Metric : public VerifyC2Base {
     LogTestController::getInstance().setTrace<minifi::c2::C2Client>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
-    LogTestController::getInstance().setOff<minifi::processors::GetTCP>();
     VerifyC2Base::testSetup();
   }
 
@@ -68,39 +67,66 @@ class MetricsHandler: public HeartbeatHandler {
       metrics_found_(metrics_found) {
   }
 
-  void handleHeartbeat(const rapidjson::Document& root, struct mg_connection* conn) override {
-    verifyMetrics(root);
-    sendEmptyHeartbeatResponse(conn);
+  void handleHeartbeat(const rapidjson::Document&, struct mg_connection* conn) override {
+    switch (state_) {
+      case TestState::DESCRIBE_SPECIFIC_METRIC: {
+        sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn, {{"metricsClass", "GetFileMetrics"}});
+        break;
+      }
+      case TestState::DESCRIBE_ALL_METRICS: {
+        sendHeartbeatResponse("DESCRIBE", "metrics", "889347", conn);
+        break;
+      }
+      default:
+        throw std::runtime_error("Unhandled test state");
+    }
+  }
+
+  void handleAcknowledge(const rapidjson::Document& root) override {
+    switch (state_) {
+      case TestState::DESCRIBE_SPECIFIC_METRIC: {
+        verifySpecificMetrics(root);
+        break;
+      }
+      case TestState::DESCRIBE_ALL_METRICS: {
+        verifyAllMetrics(root);
+        break;
+      }
+      default:
+        throw std::runtime_error("Unhandled test state");
+    }
   }
 
  private:
+  enum class TestState {
+    DESCRIBE_SPECIFIC_METRIC,
+    DESCRIBE_ALL_METRICS
+  };
+
   static void sendEmptyHeartbeatResponse(struct mg_connection* conn) {
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
   }
 
-  void verifyMetrics(const rapidjson::Document& root) {
+  void verifySpecificMetrics(const rapidjson::Document& root) {
     rapidjson::StringBuffer buffer;
     buffer.Clear();
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
     root.Accept(writer);
     auto str = strdup(buffer.GetString());
     (void)str;
-    auto initial_metrics_verified =
-      root.HasMember("metrics") &&
-      root["metrics"].HasMember("ProcessorMetrics") &&
-      verifyProcessorMetrics(root["metrics"]["ProcessorMetrics"]);
-    if (initial_metrics_verified) {
-      metrics_found_ = true;
+    auto getfile_metrics_verified =
+      !root.HasMember("metrics") &&
+      root.HasMember("GetFileMetrics") &&
+      verifyGetFileMetrics(root["GetFileMetrics"]);
+    if (getfile_metrics_verified) {
+      state_ = TestState::DESCRIBE_ALL_METRICS;
     }
   }
 
-  static bool verifyProcessorMetrics(const rapidjson::Value& processor_metrics) {
-    if (!processor_metrics.HasMember("GetFileMetrics")) {
-      return false;
-    }
+  static bool verifyGetFileMetrics(const rapidjson::Value& getfile_metrics) {
     std::unordered_set<std::string> expected_names{"GetFile1", "GetFile2"};
     std::unordered_set<std::string> names;
-    for (auto &get_file_metric : processor_metrics["GetFileMetrics"].GetArray()) {
+    for (auto &get_file_metric : getfile_metrics.GetArray()) {
       for (auto member_it = get_file_metric.MemberBegin(); member_it != get_file_metric.MemberEnd(); ++member_it) {
         names.insert(member_it->name.GetString());
       }
@@ -109,6 +135,26 @@ class MetricsHandler: public HeartbeatHandler {
     return names == expected_names;
   }
 
+  void verifyAllMetrics(const rapidjson::Document& root) {
+    rapidjson::StringBuffer buffer;
+    buffer.Clear();
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    root.Accept(writer);
+    auto str = strdup(buffer.GetString());
+    (void)str;
+    auto all_metrics_verified =
+      root.HasMember("metrics") &&
+      root["metrics"].HasMember("ProcessorMetrics") &&
+      root["metrics"]["ProcessorMetrics"].HasMember("GetFileMetrics") &&
+      verifyGetFileMetrics(root["metrics"]["ProcessorMetrics"]["GetFileMetrics"]) &&
+      root["metrics"].HasMember("SystemMetrics") &&
+      root["metrics"]["SystemMetrics"].HasMember("QueueMetrics");
+    if (all_metrics_verified) {
+      metrics_found_ = true;
+    }
+  }
+
+  TestState state_ = TestState::DESCRIBE_SPECIFIC_METRIC;
   std::atomic_bool& metrics_found_;
 };
 
@@ -123,6 +169,8 @@ int main(int argc, char **argv) {
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics", "processormetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.name", "ProcessorMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "GetFileMetrics");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.name", "SystemMetrics");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "QueueMetrics");
   harness.setKeyDir(args.key_dir);
   org::apache::nifi::minifi::test::MetricsHandler handler(metrics_found, harness.getConfiguration());
   harness.setUrl(args.url, &handler);
