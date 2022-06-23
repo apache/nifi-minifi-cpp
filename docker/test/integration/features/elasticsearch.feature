@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@no-ci  # Elasticsearch container requires more RAM than what the CI environment has
 Feature: Managing documents on Elasticsearch with PostElasticsearch
 
   Background:

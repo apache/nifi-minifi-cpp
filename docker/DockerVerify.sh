@@ -17,9 +17,9 @@
 
 set -e
 
-if [[ $# -lt 1 ]]; then
+if [[ $# -lt 2 ]]; then
   echo "Usage:"
-  echo "  ./DockerVerify.sh <MINIFI_VERSION>"
+  echo "  ./DockerVerify.sh <MINIFI_VERSION> <FEATURE_PATH>"
   exit 1
 fi
 
@@ -67,11 +67,11 @@ TEST_DIRECTORY="${docker_dir}/test/integration"
 export TEST_DIRECTORY
 
 # Add --no-logcapture to see logs interleaved with the test output
-BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers --tags ~@no-ci)
+BEHAVE_OPTS=(-f pretty --logging-level INFO --logging-clear-handlers)
 
 # Specify feature or scenario to run a specific test e.g.:
 # behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature"
 # behave "${BEHAVE_OPTS[@]}" "features/file_system_operations.feature" -n "Get and put operations run in a simple flow"
 cd "${docker_dir}/test/integration"
 exec
-  behave "${BEHAVE_OPTS[@]}"
+  behave "${BEHAVE_OPTS[@]}" "${@:2}"

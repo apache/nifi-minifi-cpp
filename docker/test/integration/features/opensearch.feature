@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-@no-ci  # Opensearch container requires more RAM than what the CI environment has
 Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Keys)
 
   Background:
