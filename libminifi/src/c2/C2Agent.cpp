@@ -502,17 +502,13 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
         if (iter != resp.operation_arguments.end()) {
           metricsClass = iter->second.to_string();
         }
-        auto metrics_nodes = reporter->getMetricsNodes(metricsClass);
-        if (!metrics_nodes.empty()) {
-          C2Payload metrics(Operation::ACKNOWLEDGE);
-          metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
-          std::vector<state::response::SerializedResponseNode> serialized_nodes_sum;
-          for (const auto& node: metrics_nodes) {
-            serialized_nodes_sum.insert(serialized_nodes_sum.end(), node.serialized_nodes.begin(), node.serialized_nodes.end());
-          }
-          serializeMetrics(metrics, metrics_nodes[0].name, serialized_nodes_sum, metrics_nodes[0].is_array);
-          response.addPayload(std::move(metrics));
+        auto metricsNode = reporter->getMetricsNode(metricsClass);
+        C2Payload metrics(Operation::ACKNOWLEDGE);
+        metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
+        if (metricsNode) {
+          serializeMetrics(metrics, metricsNode->name, metricsNode->serialized_nodes, metricsNode->is_array);
         }
+        response.addPayload(std::move(metrics));
       }
       enqueue_c2_response(std::move(response));
       break;

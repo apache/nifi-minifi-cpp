@@ -31,8 +31,6 @@
 #include "processors/GetTCP.h"
 #include "utils/StringUtils.h"
 #include "utils/file/PathUtils.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -53,7 +51,7 @@ class VerifyEmptyC2Metric : public VerifyC2Base {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(40s, [&] { return metrics_found_.load(); }, 1s));
+    assert(verifyEventHappenedInPollTime(40000000s, [&] { return metrics_found_.load(); }, 1s));
   }
 
  private:
@@ -108,45 +106,23 @@ class MetricsHandler: public HeartbeatHandler {
   }
 
   void verifySpecificMetrics(const rapidjson::Document& root) {
-    rapidjson::StringBuffer buffer;
-    buffer.Clear();
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    root.Accept(writer);
-    auto str = strdup(buffer.GetString());
-    (void)str;
     auto getfile_metrics_verified =
       !root.HasMember("metrics") &&
       root.HasMember("GetFileMetrics") &&
-      verifyGetFileMetrics(root["GetFileMetrics"]);
+      root["GetFileMetrics"].HasMember("GetFile1") &&
+      root["GetFileMetrics"].HasMember("GetFile2");
     if (getfile_metrics_verified) {
       state_ = TestState::DESCRIBE_ALL_METRICS;
     }
   }
 
-  static bool verifyGetFileMetrics(const rapidjson::Value& getfile_metrics) {
-    std::unordered_set<std::string> expected_names{"GetFile1", "GetFile2"};
-    std::unordered_set<std::string> names;
-    for (auto &get_file_metric : getfile_metrics.GetArray()) {
-      for (auto member_it = get_file_metric.MemberBegin(); member_it != get_file_metric.MemberEnd(); ++member_it) {
-        names.insert(member_it->name.GetString());
-      }
-    }
-
-    return names == expected_names;
-  }
-
   void verifyAllMetrics(const rapidjson::Document& root) {
-    rapidjson::StringBuffer buffer;
-    buffer.Clear();
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    root.Accept(writer);
-    auto str = strdup(buffer.GetString());
-    (void)str;
     auto all_metrics_verified =
       root.HasMember("metrics") &&
       root["metrics"].HasMember("ProcessorMetrics") &&
       root["metrics"]["ProcessorMetrics"].HasMember("GetFileMetrics") &&
-      verifyGetFileMetrics(root["metrics"]["ProcessorMetrics"]["GetFileMetrics"]) &&
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile1") &&
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile2") &&
       root["metrics"].HasMember("SystemMetrics") &&
       root["metrics"]["SystemMetrics"].HasMember("QueueMetrics");
     if (all_metrics_verified) {
@@ -166,11 +142,11 @@ int main(int argc, char **argv) {
   org::apache::nifi::minifi::test::VerifyEmptyC2Metric harness(metrics_found);
   harness.getConfiguration()->set("nifi.c2.root.class.definitions", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.name", "metrics");
-  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics", "processormetrics");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics", "processormetrics,systemmetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.name", "ProcessorMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "GetFileMetrics");
-  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.name", "SystemMetrics");
-  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "QueueMetrics");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.systemmetrics.name", "SystemMetrics");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.systemmetrics.classes", "QueueMetrics");
   harness.setKeyDir(args.key_dir);
   org::apache::nifi::minifi::test::MetricsHandler handler(metrics_found, harness.getConfiguration());
   harness.setUrl(args.url, &handler);

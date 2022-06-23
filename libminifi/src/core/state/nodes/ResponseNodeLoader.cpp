@@ -59,7 +59,7 @@ void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
     node_source->getResponseNodes(metric_vector);
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     for (const auto& metric : metric_vector) {
-      component_metrics_.emplace(metric->getName(), metric);
+      component_metrics_[metric->getName()].push_back(metric);
     }
   }
 }
@@ -173,15 +173,14 @@ std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes
 }
 
 std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getComponentMetricsNodes(const std::string& metrics_class) const {
-  std::vector<std::shared_ptr<ResponseNode>> nodes;
   if (!metrics_class.empty()) {
     std::lock_guard<std::mutex> lock(component_metrics_mutex_);
-    const auto class_range = component_metrics_.equal_range(metrics_class);
-    for (auto it = class_range.first; it != class_range.second; ++it) {
-      nodes.push_back(it->second);
+    auto it = component_metrics_.find(metrics_class);
+    if (it != component_metrics_.end()) {
+      return it->second;
     }
   }
-  return nodes;
+  return {};
 }
 
 void ResponseNodeLoader::setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) {

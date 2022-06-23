@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <optional>
+#include <unordered_map>
 
 #include "../Value.h"
 #include "../PublishedMetricProvider.h"
@@ -50,6 +51,32 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
         is_array_(false) {
   }
   virtual ~ResponseNode() = default;
+
+  static std::vector<state::response::SerializedResponseNode> serializeAndMergeResponseNodes(std::vector<ResponseNode>& nodes) {
+    if (nodes.empty()) {
+      return {};
+    }
+
+    std::vector<state::response::SerializedResponseNode> result;
+    for (auto& node: nodes) {
+      auto serialized = node.serialize();
+      result.insert(result.end(), serialized.begin(), serialized.end());
+    }
+    return result;
+  }
+
+  static std::vector<state::response::SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<std::shared_ptr<ResponseNode>>& nodes) {
+    if (nodes.empty()) {
+      return {};
+    }
+
+    std::vector<state::response::SerializedResponseNode> result;
+    for (const auto& node: nodes) {
+      auto serialized = node->serialize();
+      result.insert(result.end(), serialized.begin(), serialized.end());
+    }
+    return result;
+  }
 
   virtual std::vector<SerializedResponseNode> serialize() = 0;
 
@@ -101,7 +128,7 @@ class ObjectNode : public ResponseNode {
   }
 
   void add_node(const std::shared_ptr<ResponseNode> &node) {
-    nodes_.push_back(node);
+    nodes_[node->getName()].push_back(node);
   }
 
   std::string getName() const override {
@@ -110,19 +137,19 @@ class ObjectNode : public ResponseNode {
 
   std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
-//    SerializedResponseNode outer_node;
-    //  outer_node.name = getName();
-    for (auto &node : nodes_) {
+    for (const auto& [name, nodes] : nodes_) {
+      if (nodes.empty()) {
+        continue;
+      }
       SerializedResponseNode inner_node;
-      inner_node.name = node->getName();
-      for (auto &embed : node->serialize()) {
+      inner_node.name = nodes[0]->getName();
+      for (auto &embed : ResponseNode::serializeAndMergeResponseNodes(nodes)) {
         if (!embed.empty() || embed.keep_empty) {
           inner_node.children.push_back(std::move(embed));
         }
       }
       serialized.push_back(std::move(inner_node));
     }
-    // serialized.push_back(std::move(outer_node));
     return serialized;
   }
 
@@ -131,7 +158,7 @@ class ObjectNode : public ResponseNode {
   }
 
  protected:
-  std::vector<std::shared_ptr<ResponseNode>> nodes_;
+  std::unordered_map<std::string, std::vector<std::shared_ptr<ResponseNode>>> nodes_;
 };
 
 /**
@@ -198,7 +225,7 @@ class NodeReporter {
    * Retrieves metrics node
    * @return metrics response node
    */
-  virtual std::vector<ReportedNode> getMetricsNodes(const std::string& metricsClass) const = 0;
+  virtual std::optional<ReportedNode> getMetricsNode(const std::string& metricsClass) const = 0;
 
   /**
    * Retrieves root nodes configured to be included in heartbeat

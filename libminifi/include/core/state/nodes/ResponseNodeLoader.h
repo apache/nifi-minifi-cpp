@@ -55,7 +55,7 @@ class ResponseNodeLoader {
   void initializeFlowMonitor(const std::shared_ptr<ResponseNode>& response_node, core::ProcessGroup* root);
 
   mutable std::mutex component_metrics_mutex_;
-  std::unordered_multimap<std::string, std::shared_ptr<ResponseNode>> component_metrics_;
+  std::unordered_map<std::string, std::vector<std::shared_ptr<ResponseNode>>> component_metrics_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<core::Repository> provenance_repo_;
   std::shared_ptr<core::Repository> flow_file_repo_;

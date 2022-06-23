@@ -51,7 +51,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
       std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger());
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
-  std::vector<state::response::NodeReporter::ReportedNode> getMetricsNodes(const std::string& metrics_class) const override;
+  std::optional<state::response::NodeReporter::ReportedNode> getMetricsNode(const std::string& metrics_class) const override;
   std::vector<state::response::NodeReporter::ReportedNode> getHeartbeatNodes(bool include_manifest) const override;
 
   void stopC2();
@@ -77,7 +77,7 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   bool initialized_ = false;
   std::shared_ptr<core::logging::Logger> logger_;
   mutable std::mutex metrics_mutex_;
-  std::unordered_multimap<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
+  std::unordered_map<std::string, std::vector<std::shared_ptr<state::response::ResponseNode>>> root_response_nodes_;
 
  protected:
   std::atomic<bool> flow_update_{false};

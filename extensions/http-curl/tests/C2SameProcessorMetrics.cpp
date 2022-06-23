@@ -31,8 +31,6 @@
 #include "processors/GetTCP.h"
 #include "utils/StringUtils.h"
 #include "utils/file/PathUtils.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -79,34 +77,15 @@ class MetricsHandler: public HeartbeatHandler {
   }
 
   void verifyMetrics(const rapidjson::Document& root) {
-    rapidjson::StringBuffer buffer;
-    buffer.Clear();
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    root.Accept(writer);
-    auto str = strdup(buffer.GetString());
-    (void)str;
     auto initial_metrics_verified =
       root.HasMember("metrics") &&
       root["metrics"].HasMember("ProcessorMetrics") &&
-      verifyProcessorMetrics(root["metrics"]["ProcessorMetrics"]);
+      root["metrics"]["ProcessorMetrics"].HasMember("GetFileMetrics") &&
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile1") &&
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile2");
     if (initial_metrics_verified) {
       metrics_found_ = true;
     }
-  }
-
-  static bool verifyProcessorMetrics(const rapidjson::Value& processor_metrics) {
-    if (!processor_metrics.HasMember("GetFileMetrics")) {
-      return false;
-    }
-    std::unordered_set<std::string> expected_names{"GetFile1", "GetFile2"};
-    std::unordered_set<std::string> names;
-    for (auto &get_file_metric : processor_metrics["GetFileMetrics"].GetArray()) {
-      for (auto member_it = get_file_metric.MemberBegin(); member_it != get_file_metric.MemberEnd(); ++member_it) {
-        names.insert(member_it->name.GetString());
-      }
-    }
-
-    return names == expected_names;
   }
 
   std::atomic_bool& metrics_found_;

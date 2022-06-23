@@ -139,7 +139,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       }
 
       // We don't need to lock here, we already do it in the initializeResponseNodes member function
-      root_response_nodes_.emplace(name, new_node);
+      root_response_nodes_[name].push_back(new_node);
     } catch (...) {
       logger_->log_error("Could not create metrics class %s", metricsClass);
     }
@@ -191,29 +191,28 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
   return prev_node;
 }
 
-std::vector<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNodes(const std::string& metrics_class) const {
+std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
   std::lock_guard<std::mutex> guard{metrics_mutex_};
-  std::vector<state::response::NodeReporter::ReportedNode> reported_nodes;
+  const auto createReportedNode = [](const std::vector<std::shared_ptr<state::response::ResponseNode>>& nodes) {
+    state::response::NodeReporter::ReportedNode reported_node;
+    reported_node.is_array = nodes[0]->isArray();
+    reported_node.name = nodes[0]->getName();
+    reported_node.serialized_nodes = state::response::ResponseNode::serializeAndMergeResponseNodes(nodes);
+    return reported_node;
+  };
+
   if (!metrics_class.empty()) {
     auto metrics_nodes = response_node_loader_.getComponentMetricsNodes(metrics_class);
-    for (const auto& metrics_node : metrics_nodes) {
-      state::response::NodeReporter::ReportedNode reported_node;
-      reported_node.is_array = metrics_node->isArray();
-      reported_node.name = metrics_node->getName();
-      reported_node.serialized_nodes = metrics_node->serialize();
-      reported_nodes.push_back(reported_node);
+    if (!metrics_nodes.empty()) {
+      return createReportedNode(metrics_nodes);
     }
   } else {
-    const auto metrics_range = root_response_nodes_.equal_range("metrics");
-    for (auto iter = metrics_range.first; iter != metrics_range.second; ++iter) {
-      state::response::NodeReporter::ReportedNode reported_node;
-      reported_node.is_array = iter->second->isArray();
-      reported_node.name = iter->second->getName();
-      reported_node.serialized_nodes = iter->second->serialize();
-      reported_nodes.push_back(reported_node);
+    const auto metrics_it = root_response_nodes_.find("metrics");
+    if (metrics_it != root_response_nodes_.end()) {
+      return createReportedNode(metrics_it->second);
     }
   }
-  return reported_nodes;
+  return std::nullopt;
 }
 
 std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatNodes(bool include_manifest) const {
@@ -221,23 +220,25 @@ std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatN
   configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
   const bool include = include_manifest || fullHb == "true";
 
-  std::vector<state::response::NodeReporter::ReportedNode> nodes;
+  std::vector<state::response::NodeReporter::ReportedNode> reported_nodes;
   std::lock_guard<std::mutex> guard{metrics_mutex_};
-  nodes.reserve(root_response_nodes_.size());
-  for (const auto &entry : root_response_nodes_) {
-    auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
-    if (identifier) {
-      identifier->includeAgentManifest(include);
-    }
-    if (entry.second) {
-      state::response::NodeReporter::ReportedNode reported_node;
-      reported_node.name = entry.second->getName();
-      reported_node.is_array = entry.second->isArray();
-      reported_node.serialized_nodes = entry.second->serialize();
-      nodes.push_back(reported_node);
+  reported_nodes.reserve(root_response_nodes_.size());
+  for (const auto& [name, node_values] : root_response_nodes_) {
+    for (const auto& node : node_values) {
+      auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(node);
+      if (identifier) {
+        identifier->includeAgentManifest(include);
+      }
+      if (node) {
+        state::response::NodeReporter::ReportedNode reported_node;
+        reported_node.name = node->getName();
+        reported_node.is_array = node->isArray();
+        reported_node.serialized_nodes = node->serialize();
+        reported_nodes.push_back(reported_node);
+      }
     }
   }
-  return nodes;
+  return reported_nodes;
 }
 
 void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
@@ -256,7 +257,7 @@ void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
       }
 
       for (auto response_node: response_nodes) {
-        root_response_nodes_.emplace(response_node->getName(), std::move(response_node));
+        root_response_nodes_[response_node->getName()].push_back(std::move(response_node));
       }
     }
   }

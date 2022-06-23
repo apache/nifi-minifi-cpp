@@ -169,8 +169,9 @@ class MetricsHandler: public HeartbeatHandler {
 
   static bool verifyProcessorMetrics(const rapidjson::Value& processor_metrics) {
     return processor_metrics.HasMember("GetTCPMetrics") &&
-      processor_metrics["GetTCPMetrics"].HasMember("OnTriggerInvocations") &&
-      processor_metrics["GetTCPMetrics"]["OnTriggerInvocations"].GetUint() > 0;
+      processor_metrics["GetTCPMetrics"].HasMember("GetTCP") &&
+      processor_metrics["GetTCPMetrics"]["GetTCP"].HasMember("OnTriggerInvocations") &&
+      processor_metrics["GetTCPMetrics"]["GetTCP"]["OnTriggerInvocations"].GetUint() > 0;
   }
 
   [[nodiscard]] static std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) {
