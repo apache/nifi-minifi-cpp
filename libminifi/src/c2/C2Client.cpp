@@ -106,7 +106,7 @@ void C2Client::loadNodeClasses(const std::string& class_definitions, const std::
     if (response_nodes.empty()) {
       continue;
     }
-    for(const auto& response_node : response_nodes) {
+    for (const auto& response_node : response_nodes) {
       std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
     }
   }

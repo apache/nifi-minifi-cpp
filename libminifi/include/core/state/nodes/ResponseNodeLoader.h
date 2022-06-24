@@ -23,6 +23,7 @@
 #include <memory>
 #include <mutex>
 #include <functional>
+#include <vector>
 
 #include "MetricsBase.h"
 #include "core/ProcessGroup.h"
