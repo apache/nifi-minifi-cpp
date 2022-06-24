@@ -136,7 +136,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
         loadC2ResponseConfiguration(optionName, new_node);
       }
 
-      // We don't need to lock here we do it in the initializeResponseNodes
+      // We don't need to lock here, we already do it in the initializeResponseNodes member function
       root_response_nodes_[name] = new_node;
     } catch (...) {
       logger_->log_error("Could not create metrics class %s", metricsClass);

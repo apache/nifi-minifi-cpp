@@ -82,6 +82,8 @@ class Identifier {
   static std::optional<Identifier> parse(const std::string& str);
 
  private:
+  friend class ::std::hash<org::apache::nifi::minifi::utils::Identifier>;
+
   static bool parseByte(Data& data, const uint8_t* input, int& charIdx, int& byteIdx);
 
   Data data_{};
@@ -132,3 +134,26 @@ class NonRepeatingStringGenerator {
 };
 
 }  // namespace org::apache::nifi::minifi::utils
+
+namespace std {
+template<>
+struct hash<org::apache::nifi::minifi::utils::Identifier> {
+  size_t operator()(const org::apache::nifi::minifi::utils::Identifier& id) const noexcept {
+    constexpr int slices = sizeof(org::apache::nifi::minifi::utils::Identifier) / sizeof(size_t);
+    const auto combine = [](size_t& seed, size_t new_hash) {
+      // from the boost hash_combine docs
+      seed ^= new_hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    };
+    const auto get_slice = [](const org::apache::nifi::minifi::utils::Identifier& id, size_t idx) -> size_t {
+      size_t result{};
+      memcpy(&result, reinterpret_cast<const unsigned char*>(&id.data_) + idx * sizeof(size_t), sizeof(size_t));
+      return result;
+    };
+    size_t hash = get_slice(id, 0);
+    for (size_t i = 1; i < slices; ++i) {
+      combine(hash, get_slice(id, i));
+    }
+    return hash;
+  }
+};
+}  // namespace std

@@ -64,10 +64,10 @@ QueueMetrics is a system level metric that reports queue metrics for every conne
 
 | Metric name          | Labels                                         | Description                                |
 |----------------------|------------------------------------------------|--------------------------------------------|
-| queue_data_size      | metric_class, connection_uuid, connection_name | Max queue size to apply back pressure      |
+| queue_data_size      | metric_class, connection_uuid, connection_name | Current queue data size                    |
 | queue_data_size_max  | metric_class, connection_uuid, connection_name | Max queue data size to apply back pressure |
 | queue_size           | metric_class, connection_uuid, connection_name | Current queue size                         |
-| queue_size_max       | metric_class, connection_uuid, connection_name | Current queue data size                    |
+| queue_size_max       | metric_class, connection_uuid, connection_name | Max queue size to apply back pressure      |
 
 | Label                    | Description                                                |
 |--------------------------|------------------------------------------------------------|
@@ -140,10 +140,10 @@ DeviceInfoNode is a system level metric that reports metrics about the system re
 
 | Metric name          | Labels                                         | Description                                |
 |----------------------|------------------------------------------------|--------------------------------------------|
-| queue_data_size      | metric_class, connection_uuid, connection_name | Max queue size to apply back pressure      |
+| queue_data_size      | metric_class, connection_uuid, connection_name | Current queue data size                    |
 | queue_data_size_max  | metric_class, connection_uuid, connection_name | Max queue data size to apply back pressure |
 | queue_size           | metric_class, connection_uuid, connection_name | Current queue size                         |
-| queue_size_max       | metric_class, connection_uuid, connection_name | Current queue data size                    |
+| queue_size_max       | metric_class, connection_uuid, connection_name | Max queue size to apply back pressure      |
 | is_running           | metric_class, component_uuid, component_name   | Check if the component is running (1 or 0) |
 
 | Label           | Description                                                  |

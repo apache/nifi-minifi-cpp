@@ -17,9 +17,9 @@
  */
 #pragma once
 
-#include <map>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "Connection.h"
 #include "utils/gsl.h"
@@ -30,7 +30,7 @@ class ConnectionStore {
  public:
   void updateConnection(minifi::Connection* connection) {
     if (nullptr != connection) {
-      connections_[connection->getUUIDStr()] = connection;
+      connections_[connection->getUUID()] = connection;
     }
   }
 
@@ -54,7 +54,7 @@ class ConnectionStore {
   virtual ~ConnectionStore() = default;
 
  protected:
-  std::map<std::string, minifi::Connection*> connections_;
+  std::unordered_map<utils::Identifier, minifi::Connection*> connections_;
 };
 
 }  // namespace org::apache::nifi::minifi::state
