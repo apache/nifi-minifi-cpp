@@ -82,7 +82,7 @@ class Identifier {
   static std::optional<Identifier> parse(const std::string& str);
 
  private:
-  friend class ::std::hash<org::apache::nifi::minifi::utils::Identifier>;
+  friend struct ::std::hash<org::apache::nifi::minifi::utils::Identifier>;
 
   static bool parseByte(Data& data, const uint8_t* input, int& charIdx, int& byteIdx);
 
