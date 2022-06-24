@@ -13,7 +13,7 @@ for changed_file in ${FILES}; do
       continue 2
     fi
   done
-  if [[ "${changed_file}" == *.cpp ]]; then
+  if [[ "${changed_file}" == *.cpp ]] && [[ -f "${changed_file}" ]]; then
     clang-tidy-14 -warnings-as-errors=* -quiet -p build "${changed_file}"
     exit_code=$(( $? | exit_code ))
   fi;
