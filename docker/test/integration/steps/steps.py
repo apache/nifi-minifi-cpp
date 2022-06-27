@@ -417,7 +417,7 @@ def step_impl(context):
 
 
 # TCP client
-@given('a TCP client is setup to send logs to minifi')
+@given('a TCP client is set up to send a test TCP message to minifi')
 def step_impl(context):
     context.test.acquire_container("tcp-client", "tcp-client")
 

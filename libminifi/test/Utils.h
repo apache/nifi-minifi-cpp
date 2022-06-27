@@ -21,6 +21,9 @@
 #include <vector>
 
 #include "rapidjson/document.h"
+#include "asio.hpp"
+
+using namespace std::chrono_literals;
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
 
@@ -87,3 +90,31 @@ class ExceptionSubStringMatcher : public Catch::MatcherBase<T> {
  private:
   std::vector<std::string> possible_exception_substrs_;
 };
+
+bool countLogOccurrencesUntil(const std::string& pattern,
+                              const int occurrences,
+                              const std::chrono::milliseconds max_duration,
+                              const std::chrono::milliseconds wait_time = 50ms) {
+  auto start_time = std::chrono::steady_clock::now();
+  while (std::chrono::steady_clock::now() < start_time + max_duration) {
+    if (LogTestController::getInstance().countOccurrences(pattern) == occurrences)
+      return true;
+    std::this_thread::sleep_for(wait_time);
+  }
+  return false;
+}
+
+void sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t port) {
+  asio::io_context io_context;
+  asio::ip::tcp::socket socket(io_context);
+  asio::ip::tcp::endpoint remote_endpoint(asio::ip::address::from_string("127.0.0.1"), port);
+  socket.connect(remote_endpoint);
+  std::error_code err;
+  for (auto& content : contents) {
+    std::string tcp_message(content);
+    tcp_message += '\n';
+    socket.send(asio::buffer(tcp_message, tcp_message.size()), 0, err);
+  }
+  REQUIRE(!err);
+  socket.close();
+}

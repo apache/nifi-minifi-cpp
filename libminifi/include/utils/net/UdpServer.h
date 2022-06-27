@@ -43,7 +43,7 @@ class UdpServer : public Server {
   asio::ip::udp::endpoint sender_endpoint_;
   std::string buffer_;
 
-  static inline constexpr size_t MAX_UDP_PACKET_SIZE = 65535;
+  static constexpr size_t MAX_UDP_PACKET_SIZE = 65535;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::net

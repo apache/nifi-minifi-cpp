@@ -19,7 +19,7 @@
 #include "Catch.h"
 #include "processors/ListenTCP.h"
 #include "SingleProcessorTestController.h"
-#include "asio.hpp"
+#include "Utils.h"
 
 using ListenTCP = org::apache::nifi::minifi::processors::ListenTCP;
 
@@ -28,7 +28,6 @@ using namespace std::literals::chrono_literals;
 namespace org::apache::nifi::minifi::test {
 
 constexpr uint64_t PORT = 10254;
-using ProcessorTriggerResult = std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>;
 
 void sendMessagesViaTCP(const std::vector<std::string_view>& contents) {
   asio::io_context io_context;
@@ -50,43 +49,6 @@ void check_for_attributes(core::FlowFile& flow_file) {
   CHECK("127.0.0.1" == flow_file.getAttribute("tcp.sender"));
 }
 
-bool triggerUntil(test::SingleProcessorTestController& controller,
-                  const std::unordered_map<core::Relationship, size_t>& expected_quantities,
-                  ProcessorTriggerResult& result,
-                  const std::chrono::milliseconds max_duration,
-                  const std::chrono::milliseconds wait_time = 50ms) {
-  auto start_time = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() < start_time + max_duration) {
-    for (auto& [relationship, flow_files] : controller.trigger()) {
-      result[relationship].insert(result[relationship].end(), flow_files.begin(), flow_files.end());
-    }
-    bool expected_quantities_met = true;
-    for (const auto& [relationship, expected_quantity] : expected_quantities) {
-      if (result[relationship].size() < expected_quantity) {
-        expected_quantities_met = false;
-        break;
-      }
-    }
-    if (expected_quantities_met)
-      return true;
-    std::this_thread::sleep_for(wait_time);
-  }
-  return false;
-}
-
-bool countLogOccurrencesUntil(const std::string& pattern,
-                              const int occurrences,
-                              const std::chrono::milliseconds max_duration,
-                              const std::chrono::milliseconds wait_time = 50ms) {
-  auto start_time = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() < start_time + max_duration) {
-    if (LogTestController::getInstance().countOccurrences(pattern) == occurrences)
-      return true;
-    std::this_thread::sleep_for(wait_time);
-  }
-  return false;
-}
-
 TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {
   const auto listen_tcp = std::make_shared<ListenTCP>("ListenTCP");
 
@@ -99,7 +61,7 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {
   sendMessagesViaTCP({"test_message_1"});
   sendMessagesViaTCP({"another_message"});
   ProcessorTriggerResult result;
-  REQUIRE(triggerUntil(controller, {{ListenTCP::Success, 2}}, result, 300s, 50ms));
+  REQUIRE(controller.triggerUntil({{ListenTCP::Success, 2}}, result, 300s, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[0]) == "test_message_1");
   CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[1]) == "another_message");
 

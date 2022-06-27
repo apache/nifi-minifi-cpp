@@ -7,7 +7,7 @@ Feature: Minifi C++ can act as a network listener
     Given a ListenTCP processor
     And the "Listening Port" property of the ListenTCP processor is set to "10254"
     And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And a TCP client is setup to send logs to minifi
+    And a TCP client is set up to send a test TCP message to minifi
     And the "success" relationship of the ListenTCP processor is connected to the PutFile
 
     When both instances start up

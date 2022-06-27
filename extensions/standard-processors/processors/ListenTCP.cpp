@@ -31,7 +31,7 @@ const core::Property ListenTCP::Port(
 const core::Property ListenTCP::MaxQueueSize(
     core::PropertyBuilder::createProperty("Max Size of Message Queue")
         ->withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
-                          "If the buffer full, the message is ignored. If set to zero the buffer is unlimited.")
+                          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
         ->withDefaultValue<uint64_t>(0)
         ->isRequired(true)
         ->build());
@@ -51,7 +51,7 @@ void ListenTCP::initialize() {
 }
 
 void ListenTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
-  gsl_Expects(context && !server_thread_.joinable() && !server_);
+  gsl_Expects(context);
   startServer(*context, MaxBatchSize, MaxQueueSize, Port, utils::net::Protocol::TCP);
 }
 

@@ -38,6 +38,7 @@ void NetworkListenerProcessor::onTrigger(const std::shared_ptr<core::ProcessCont
 
 void NetworkListenerProcessor::startServer(
     const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop, const core::Property& port_prop, utils::net::Protocol protocol) {
+  gsl_Expects(!server_thread_.joinable() && !server_);
   context.getProperty(max_batch_size_prop.getName(), max_batch_size_);
   if (max_batch_size_ < 1)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max Batch Size property is invalid");
@@ -61,7 +62,7 @@ void NetworkListenerProcessor::startServer(
   logger_->log_debug("Started %s server on port %d with %s max queue size and %zu max batch size",
                      protocol.toString(),
                      port,
-                     max_queue_size_opt ? std::to_string(*max_queue_size_opt) : "no",
+                     max_queue_size_opt ? std::to_string(*max_queue_size_opt) : "unlimited",
                      max_batch_size_);
 }
 
