@@ -174,7 +174,7 @@ separate "subdatabase" is created under the name `"flowfile"`.
      in minifi.properties
      nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
 	 nifi.database.content.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/content
-	 nifi.state.manangement.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
+	 nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/processor_states
 
 We should not simultaneously use the same directory with and without the `minifidb://` scheme.
 Moreover the `"default"` name is restricted and should not be used.
@@ -184,7 +184,7 @@ Moreover the `"default"` name is restricted and should not be used.
      nifi.flowfile.repository.directory.default=minifidb://${MINIFI_HOME}/agent_state/flowfile
 	 nifi.database.content.repository.directory.default=${MINIFI_HOME}/agent_state
 	 ^ error: using the same database directory without the "minifidb://" scheme
-	 nifi.state.manangement.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/default
+	 nifi.state.management.provider.local.path=minifidb://${MINIFI_HOME}/agent_state/default
 	 ^ error: "default" is restricted
 
 ### Configuring Repository encryption
