@@ -140,10 +140,6 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
     }
   }
 
-  SwapManager* castToSwapManager() override {
-    return static_cast<SwapManager*>(this);
-  }
-
   void run() override;
 
   bool Put(std::string key, const uint8_t *buf, size_t bufLen) override {

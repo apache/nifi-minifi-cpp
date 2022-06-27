@@ -27,22 +27,6 @@
 #include "core/ProcessSession.h"
 #include "../unit/ProvenanceTestHelper.h"
 
-#define SUPPORTS_DYNAMIC_PROPERTIES(val) \
-  static constexpr bool SupportsDynamicProperties = val; \
-  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; }
-
-#define SUPPORTS_DYNAMIC_RELATIONSHIPS(val) \
-  static constexpr bool SupportsDynamicRelationships = val; \
-  bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; }
-
-#define INPUT_REQUIREMENT(val) \
-  static constexpr minifi::core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ ## val; \
-  minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; }
-
-#define IS_SINGLE_THREADED(val) \
-  static constexpr bool IsSingleThreaded = val; \
-  bool isSingleThreaded() const override { return IsSingleThreaded; }
-
 class OutputProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
@@ -51,10 +35,20 @@ class OutputProcessor : public core::Processor {
 
   using core::Processor::onTrigger;
 
-  SUPPORTS_DYNAMIC_PROPERTIES(false)
-  SUPPORTS_DYNAMIC_RELATIONSHIPS(false)
-  INPUT_REQUIREMENT(ALLOWED)
-  IS_SINGLE_THREADED(false)
+  static constexpr const char* Description = "Processor used for testing cycles";
+  static auto properties() { return std::array<core::Property, 0>{}; }
+  static auto relationships() { return std::array{Success}; }
+  static constexpr bool SupportsDynamicProperties = false;
+  static constexpr bool SupportsDynamicRelationships = false;
+  static constexpr core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ALLOWED;
+  static constexpr bool IsSingleThreaded = false;
+
+  ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS
+
+  void initialize() override {
+    setSupportedProperties(properties());
+    setSupportedRelationships(relationships());
+  }
 
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) override {
     auto id = std::to_string(next_id_++);

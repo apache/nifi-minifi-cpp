@@ -127,10 +127,6 @@ class Repository : public virtual core::SerializableComponent, public core::Trac
     return false;
   }
 
-  virtual SwapManager* castToSwapManager() {
-    return nullptr;
-  }
-
   // Run function for the thread
   virtual void run() {
     // no op

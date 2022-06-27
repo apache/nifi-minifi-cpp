@@ -162,9 +162,9 @@ std::unique_ptr<minifi::Connection> FlowConfiguration::createConnection(const st
   // but it kind of makes sense that swapping the flow files is the responsibility of the
   // flow_file_repo_. If we introduce other swappers then we will have no other choice.
   if (flow_file_repo_) {
-    SwapManager* swap_manager_ptr = flow_file_repo_->castToSwapManager();
-    if (swap_manager_ptr != nullptr) {
-      return std::make_unique<minifi::Connection>(flow_file_repo_, content_repo_, std::shared_ptr<SwapManager>(flow_file_repo_, swap_manager_ptr), name, uuid);
+    auto swap_manager = std::dynamic_pointer_cast<SwapManager>(flow_file_repo_);
+    if (swap_manager) {
+      return std::make_unique<minifi::Connection>(flow_file_repo_, content_repo_, std::move(swap_manager), name, uuid);
     }
   }
   return std::make_unique<minifi::Connection>(flow_file_repo_, content_repo_, name, uuid);
