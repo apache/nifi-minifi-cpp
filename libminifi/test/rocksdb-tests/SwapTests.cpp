@@ -27,6 +27,22 @@
 #include "core/ProcessSession.h"
 #include "../unit/ProvenanceTestHelper.h"
 
+#define SUPPORTS_DYNAMIC_PROPERTIES(val) \
+  static constexpr bool SupportsDynamicProperties = val; \
+  bool supportsDynamicProperties() const override { return SupportsDynamicProperties; }
+
+#define SUPPORTS_DYNAMIC_RELATIONSHIPS(val) \
+  static constexpr bool SupportsDynamicRelationships = val; \
+  bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; }
+
+#define INPUT_REQUIREMENT(val) \
+  static constexpr minifi::core::annotation::Input InputRequirement = core::annotation::Input::INPUT_ ## val; \
+  minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; }
+
+#define IS_SINGLE_THREADED(val) \
+  static constexpr bool IsSingleThreaded = val; \
+  bool isSingleThreaded() const override { return IsSingleThreaded; }
+
 class OutputProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
@@ -35,13 +51,22 @@ class OutputProcessor : public core::Processor {
 
   using core::Processor::onTrigger;
 
+  SUPPORTS_DYNAMIC_PROPERTIES(false)
+  SUPPORTS_DYNAMIC_RELATIONSHIPS(false)
+  INPUT_REQUIREMENT(ALLOWED)
+  IS_SINGLE_THREADED(false)
+
   void onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) override {
-    int id = next_id_++;
+    auto id = std::to_string(next_id_++);
     auto ff = session->create();
-    ff->addAttribute("index", std::to_string(id));
-    auto buffer = std::make_shared<minifi::io::BufferStream>(std::to_string(id));
-    minifi::OutputStreamPipe input{buffer};
-    session->write(ff, &input);
+    ff->addAttribute("index", id);
+    session->write(ff, [&] (const std::shared_ptr<minifi::io::BaseStream>& output) -> int64_t {
+      auto ret = output->write(gsl::span<const char>(id.data(), id.size()).as_span<const std::byte>());
+      if (minifi::io::isError(ret)) {
+        return -1;
+      }
+      return gsl::narrow<int64_t>(ret);
+    });
     session->transfer(ff, Success);
     flow_files_.push_back(ff);
   }
