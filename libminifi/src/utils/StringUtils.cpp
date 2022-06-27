@@ -116,7 +116,7 @@ std::vector<std::string> StringUtils::splitAndTrimRemovingEmpty(const std::strin
   return result;
 }
 
-bool StringUtils::StringToFloat(std::string input, float &output, FailurePolicy cp /*= RETURN*/) {
+bool StringUtils::StringToFloat(const std::string& input, float &output, FailurePolicy cp /*= RETURN*/) {
   try {
     output = std::stof(input);
   } catch (const std::invalid_argument &ie) {
@@ -156,7 +156,7 @@ std::string StringUtils::replaceEnvironmentVariables(std::string source_string) 
       beg_seq += 2;
       continue;
     }
-    end_seq = source_string.find("}", beg_seq + 2);
+    end_seq = source_string.find('}', beg_seq + 2);
     if (end_seq == std::string::npos) {
       break;
     }
@@ -215,7 +215,7 @@ std::string StringUtils::replaceMap(std::string source_string, const std::map<st
     }
   }
 
-  std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> a,
+  std::sort(replacements.begin(), replacements.end(), [](const std::pair<size_t, std::pair<size_t, std::string>> &a,
                                                          const std::pair<size_t, std::pair<size_t, std::string>> &b) {
     return a.first > b.first;
   });

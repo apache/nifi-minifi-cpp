@@ -113,9 +113,9 @@ class Expression {
    * @param args function arguments
    * @return composed multi-expression
    */
-  Expression compose_multi(std::function<Value(const std::vector<Value> &)> fn, const std::vector<Expression> &args) const;
+  Expression compose_multi(const std::function<Value(const std::vector<Value> &)>& fn, const std::vector<Expression> &args) const;
 
-  Expression make_aggregate(std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)> val_fn) const;
+  Expression make_aggregate(const std::function<Value(const Parameters &params, const std::vector<Expression> &sub_exprs)>& val_fn) const;
 
  protected:
   Value val_;

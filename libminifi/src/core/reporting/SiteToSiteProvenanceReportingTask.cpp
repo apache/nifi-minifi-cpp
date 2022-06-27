@@ -46,12 +46,7 @@
 #include "FlowController.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace reporting {
+namespace org::apache::nifi::minifi::core::reporting {
 
 const char *SiteToSiteProvenanceReportingTask::ProvenanceAppStr = "MiNiFi Flow";
 
@@ -102,7 +97,7 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core
   rapidjson::Document array(rapidjson::kArrayType);
   rapidjson::Document::AllocatorType &alloc = array.GetAllocator();
 
-  for (auto sercomp : records) {
+  for (const auto& sercomp : records) {
     std::shared_ptr<provenance::ProvenanceEventRecord> record = std::dynamic_pointer_cast<provenance::ProvenanceEventRecord>(sercomp);
     if (nullptr == record) {
       break;
@@ -131,7 +126,7 @@ void SiteToSiteProvenanceReportingTask::getJsonReport(const std::shared_ptr<core
     recordJson.AddMember("remoteIdentifier", getStringValue(record->getSourceSystemFlowFileIdentifier(), alloc), alloc);
     recordJson.AddMember("alternateIdentifier", getStringValue(record->getAlternateIdentifierUri(), alloc), alloc);
 
-    for (auto attr : record->getAttributes()) {
+    for (const auto& attr : record->getAttributes()) {
       setJsonStr(attr.first, attr.second, updatedAttributesJson, alloc);
     }
     recordJson.AddMember("updatedAttributes", updatedAttributesJson, alloc);
@@ -202,9 +197,4 @@ void SiteToSiteProvenanceReportingTask::onTrigger(const std::shared_ptr<core::Pr
   returnProtocol(std::move(protocol_));
 }
 
-} /* namespace reporting */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::reporting

@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_REMOTEPROCESSORGROUPPORT_H_
-#define LIBMINIFI_INCLUDE_REMOTEPROCESSORGROUPPORT_H_
+#pragma once
 
 #include <string>
 #include <utility>
@@ -37,10 +36,7 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 /**
  * Count down latch implementation that's used across
@@ -241,8 +237,4 @@ class RemoteProcessorGroupPort : public core::Processor {
   static const char* RPG_SSL_CONTEXT_SERVICE_NAME;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_REMOTEPROCESSORGROUPPORT_H_
+}  // namespace org::apache::nifi::minifi

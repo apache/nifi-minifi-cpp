@@ -23,18 +23,14 @@
 
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 bool ClassUtils::shortenClassName(const std::string &class_name, std::string &out) {
   std::string class_delim = "::";
   auto class_split = utils::StringUtils::split(class_name, class_delim);
   // support . and ::
   if (class_split.size() <= 1) {
-    if (class_name.find(".") != std::string::npos) {
+    if (class_name.find('.') != std::string::npos) {
       class_delim = ".";
       class_split = utils::StringUtils::split(class_name, class_delim);
     } else {
@@ -53,9 +49,4 @@ bool ClassUtils::shortenClassName(const std::string &class_name, std::string &ou
   return true;
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
+}  // namespace org::apache::nifi::minifi::utils

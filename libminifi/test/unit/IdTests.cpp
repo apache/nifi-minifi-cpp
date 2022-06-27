@@ -77,7 +77,7 @@ TEST_CASE("Test Generate Move", "[id]") {
 
   auto generated = generator->generate();
   auto str = generated.to_string();
-  utils::Identifier moved = std::move(generated);
+  utils::Identifier moved = generated;
   auto str2 = moved.to_string();
   REQUIRE(str == str2);
 }

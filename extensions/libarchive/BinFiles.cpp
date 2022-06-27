@@ -80,7 +80,7 @@ void BinFiles::onSchedule(core::ProcessContext *context, core::ProcessSessionFac
   }
 }
 
-void BinFiles::preprocessFlowFile(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/, std::shared_ptr<core::FlowFile> flow) {
+void BinFiles::preprocessFlowFile(core::ProcessContext* /*context*/, core::ProcessSession* /*session*/, const std::shared_ptr<core::FlowFile>& flow) {
   // handle backward compatibility with old segment attributes
   std::string value;
   if (!flow->getAttribute(BinFiles::FRAGMENT_COUNT_ATTRIBUTE, value) && flow->getAttribute(BinFiles::SEGMENT_COUNT_ATTRIBUTE, value)) {
@@ -113,7 +113,7 @@ void BinManager::gatherReadyBins() {
       emptyQueue.push_back(group_id);
     }
   }
-  for (auto group : emptyQueue) {
+  for (const auto& group : emptyQueue) {
     // erase from the map if the queue is empty for the group
     groupBinMap_.erase(group);
   }
@@ -156,7 +156,7 @@ void BinManager::getReadyBin(std::deque<std::unique_ptr<Bin>> &retBins) {
   }
 }
 
-bool BinManager::offer(const std::string &group, std::shared_ptr<core::FlowFile> flow) {
+bool BinManager::offer(const std::string &group, const std::shared_ptr<core::FlowFile>& flow) {
   std::lock_guard < std::mutex > lock(mutex_);
   if (flow->getSize() > maxSize_) {
     // could not be added to a bin -- too large by itself, so create a separate bin for just this guy.
@@ -279,7 +279,7 @@ void BinFiles::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
 void BinFiles::transferFlowsToFail(core::ProcessContext* /*context*/, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
-  for (auto flow : flows) {
+  for (const auto& flow : flows) {
     session->transfer(flow, Failure);
   }
   flows.clear();
@@ -287,7 +287,7 @@ void BinFiles::transferFlowsToFail(core::ProcessContext* /*context*/, core::Proc
 
 void BinFiles::addFlowsToSession(core::ProcessContext* /*context*/, core::ProcessSession *session, std::unique_ptr<Bin> &bin) {
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
-  for (auto flow : flows) {
+  for (const auto& flow : flows) {
     session->add(flow);
   }
 }

@@ -146,6 +146,7 @@ std::unique_ptr<MockRowset> MockRowset::select(const std::vector<std::string>& c
     rowset = std::make_unique<MockRowset>(column_names_, column_types_);
   } else {
     std::vector<DataType> col_types;
+    col_types.reserve(cols.size());
     for (const auto& col : cols) {
       col_types.push_back(column_types_.at(getColumnIndex(col)));
     }
@@ -156,6 +157,7 @@ std::unique_ptr<MockRowset> MockRowset::select(const std::vector<std::string>& c
   for (const auto& row : rows_) {
     if (condition(row)) {
       std::vector<std::string> values;
+      values.reserve(used_cols.size());
       for (const auto& col : used_cols) {
         values.push_back(row.getValue(col));
       }

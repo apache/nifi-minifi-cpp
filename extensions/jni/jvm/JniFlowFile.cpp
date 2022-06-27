@@ -41,7 +41,7 @@ extern "C" {
 namespace minifi = org::apache::nifi::minifi;
 
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -49,7 +49,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getId(JNIEnv 
   return id;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -57,7 +57,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getEntryDate(
   return entryDate;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartDate(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -65,7 +65,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageSta
   return val;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageStartIndex(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -73,7 +73,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLineageSta
   return val;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLastQueueDatePrim(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -81,7 +81,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getLastQueueD
   return val;
 }
 JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getQueueDateIndex(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -89,7 +89,7 @@ JNIEXPORT jlong JNICALL Java_org_apache_nifi_processor_JniFlowFile_getQueueDateI
   return val;
 }
 JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniFlowFile_isPenalized(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -97,7 +97,7 @@ JNIEXPORT jboolean JNICALL Java_org_apache_nifi_processor_JniFlowFile_isPenalize
   return val;
 }
 JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribute(JNIEnv *env, jobject obj, jstring key) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -106,14 +106,14 @@ JNIEXPORT jstring JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribut
   return env->NewStringUTF(value.c_str());
 }
 JNIEXPORT jlong JNICALL  Java_org_apache_nifi_processor_JniFlowFile_getSize(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
   jlong val = ff->getSize();
   return val;
 }
 JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   THROW_IF_NULL(ff, env, NO_FF_OBJECT);
@@ -121,7 +121,7 @@ JNIEXPORT jstring JNICALL  Java_org_apache_nifi_processor_JniFlowFile_getUUIDStr
 }
 
 JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttributes(JNIEnv *env, jobject obj) {
-  minifi::jni::JniFlowFile *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
+  auto *ptr = minifi::jni::JVMLoader::getInstance()->getReference<minifi::jni::JniFlowFile>(env, obj);
 
   auto ff = ptr->get();
   jclass mapClass = env->FindClass("java/util/HashMap");
@@ -136,7 +136,7 @@ JNIEXPORT jobject JNICALL Java_org_apache_nifi_processor_JniFlowFile_getAttribut
 
   jmethodID put = env->GetMethodID(mapClass, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 
-  for (auto kf : ff->getAttributes()) {
+  for (const auto& kf : ff->getAttributes()) {
     env->CallObjectMethod(hashMap, put, env->NewStringUTF(kf.first.c_str()), env->NewStringUTF(kf.second.c_str()));
     minifi::jni::ThrowIf(env);
   }

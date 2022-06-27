@@ -23,11 +23,7 @@
 
 #include "PyProcessSession.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 namespace py = pybind11;
 namespace core = org::apache::nifi::minifi::core;
@@ -53,8 +49,8 @@ std::shared_ptr<script::ScriptFlowFile> PyProcessSession::get() {
   return result;
 }
 
-void PyProcessSession::transfer(std::shared_ptr<script::ScriptFlowFile> script_flow_file,
-                                core::Relationship relationship) {
+void PyProcessSession::transfer(const std::shared_ptr<script::ScriptFlowFile>& script_flow_file,
+                                const core::Relationship& relationship) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
@@ -68,7 +64,7 @@ void PyProcessSession::transfer(std::shared_ptr<script::ScriptFlowFile> script_f
   session_->transfer(flow_file, relationship);
 }
 
-void PyProcessSession::read(std::shared_ptr<script::ScriptFlowFile> script_flow_file,
+void PyProcessSession::read(const std::shared_ptr<script::ScriptFlowFile>& script_flow_file,
                             py::object input_stream_callback) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
@@ -85,7 +81,7 @@ void PyProcessSession::read(std::shared_ptr<script::ScriptFlowFile> script_flow_
   });
 }
 
-void PyProcessSession::write(std::shared_ptr<script::ScriptFlowFile> script_flow_file,
+void PyProcessSession::write(const std::shared_ptr<script::ScriptFlowFile>& script_flow_file,
                              py::object output_stream_callback) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
@@ -112,7 +108,7 @@ std::shared_ptr<script::ScriptFlowFile> PyProcessSession::create() {
   return result;
 }
 
-std::shared_ptr<script::ScriptFlowFile> PyProcessSession::create(std::shared_ptr<script::ScriptFlowFile> flow_file) {
+std::shared_ptr<script::ScriptFlowFile> PyProcessSession::create(const std::shared_ptr<script::ScriptFlowFile>& flow_file) {
   if (!session_) {
     throw std::runtime_error("Access of ProcessSession after it has been released");
   }
@@ -139,8 +135,4 @@ void PyProcessSession::releaseCoreResources() {
   session_.reset();
 }
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python

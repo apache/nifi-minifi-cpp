@@ -1349,7 +1349,7 @@ TEST_CASE("TailFile handles the Delimiter setting correctly", "[delimiter]") {
     auto temp_directory = testController.createTempDirectory();
 
     std::string delimiter = test_case.second;
-    std::string full_file_name = createTempFile(temp_directory, "test.log", "one" + delimiter + "two" + delimiter);
+    std::string full_file_name = createTempFile(temp_directory, "test.log", std::string("one").append(delimiter).append("two").append(delimiter));
 
     auto plan = testController.createPlan();
 

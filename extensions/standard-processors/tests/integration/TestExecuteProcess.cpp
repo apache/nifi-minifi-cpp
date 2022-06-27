@@ -87,17 +87,15 @@ int main(int /*argc*/, char ** /*argv*/) {
   core::ProcessSessionFactory factory(contextset);
   processor->onSchedule(contextset.get(), &factory);
 
-  for (int i = 0; i < 1; i++) {
-    processor_workers.push_back(std::thread([processor, test_repo, &is_ready]() {
-      auto node = std::make_shared<core::ProcessorNode>(processor.get());
-      auto context = std::make_shared<core::ProcessContext>(node, nullptr, test_repo, test_repo);
-      context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
-      auto session = std::make_shared<core::ProcessSession>(context);
-      while (!is_ready.load(std::memory_order_relaxed)) {
-      }
-      processor->onTrigger(context.get(), session.get());
-    }));
-  }
+  processor_workers.push_back(std::thread([processor, test_repo, &is_ready]() {
+    auto node = std::make_shared<core::ProcessorNode>(processor.get());
+    auto context = std::make_shared<core::ProcessContext>(node, nullptr, test_repo, test_repo);
+    context->setProperty(org::apache::nifi::minifi::processors::ExecuteProcess::Command, "sleep 0.5");
+    auto session = std::make_shared<core::ProcessSession>(context);
+    while (!is_ready.load(std::memory_order_relaxed)) {
+    }
+    processor->onTrigger(context.get(), session.get());
+  }));
 
   is_ready.store(true, std::memory_order_relaxed);
 

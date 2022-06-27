@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
+#pragma once
 
 #include <openssl/err.h>
 #include <openssl/ssl.h>
@@ -33,11 +32,7 @@
 #include "io/ClientSocket.h"
 #include "properties/Configure.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 #define TLS_GOOD 0
 #define TLS_ERROR_CONTEXT 1
@@ -110,9 +105,9 @@ class TLSSocket : public Socket {
   /**
    * Move constructor.
    */
-  TLSSocket(TLSSocket &&);
+  TLSSocket(TLSSocket &&) noexcept;
 
-  TLSSocket& operator=(TLSSocket&&);
+  TLSSocket& operator=(TLSSocket&&) noexcept;
 
   ~TLSSocket() override;
 
@@ -176,10 +171,4 @@ class TLSSocket : public Socket {
   std::map<int, SSL*> ssl_map_;
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSSOCKET_H_
+}  // namespace org::apache::nifi::minifi::io

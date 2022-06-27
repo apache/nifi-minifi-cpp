@@ -253,7 +253,7 @@ bool ListenHTTP::processIncomingFlowFile(core::ProcessSession &session) {
       response.mime_type = "application/octet-stream";
     }
     response.body = to_string(session.readBuffer(flow_file));
-    handler_->setResponseBody(std::move(response));
+    handler_->setResponseBody(response);
   }
 
   session.remove(flow_file);
@@ -421,7 +421,7 @@ void ListenHTTP::Handler::setResponseBody(const ResponseBody& response) {
     logger_->log_info("Registering response body for URI '%s' of length %lu",
                       response.uri,
                       response.body.size());
-    response_uri_map_[response.uri] = std::move(response);
+    response_uri_map_[response.uri] = response;
   }
 }
 

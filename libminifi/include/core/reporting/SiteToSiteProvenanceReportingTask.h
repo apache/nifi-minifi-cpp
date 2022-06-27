@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
-#define LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
+#pragma once
 
 #include <mutex>
 #include <memory>
@@ -30,12 +29,7 @@
 #include "io/StreamFactory.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace reporting {
+namespace org::apache::nifi::minifi::core::reporting {
 
 //! SiteToSiteProvenanceReportingTask Class
 class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPort {
@@ -93,11 +87,4 @@ class SiteToSiteProvenanceReportingTask : public minifi::RemoteProcessorGroupPor
 
 // SiteToSiteProvenanceReportingTask
 
-}  // namespace reporting
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_REPORTING_SITETOSITEPROVENANCEREPORTINGTASK_H_
+}  // namespace org::apache::nifi::minifi::core::reporting

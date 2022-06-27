@@ -52,7 +52,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::map(mul2);
+    auto ret = e | utils::map(mul2);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
@@ -80,7 +80,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::map(mul2);
+    auto ret = e | utils::map(mul2);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
@@ -111,7 +111,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::map(ret_void);
+    auto ret = e | utils::map(ret_void);
     REQUIRE(ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -143,7 +143,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::map(ret_void);
+    auto ret = e | utils::map(ret_void);
     REQUIRE(!ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -186,7 +186,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::flatMap(succeed);
+    auto ret = e | utils::flatMap(succeed);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
@@ -214,7 +214,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::flatMap(fail);
+    auto ret = e | utils::flatMap(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
@@ -242,7 +242,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::flatMap(succeed);
+    auto ret = e | utils::flatMap(succeed);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
@@ -270,7 +270,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::flatMap(fail);
+    auto ret = e | utils::flatMap(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
@@ -321,7 +321,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::orElse(succeed);
+    auto ret = e | utils::orElse(succeed);
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
@@ -359,7 +359,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = std::move(e) | utils::orElse(fail);
+    auto ret = e | utils::orElse(fail);
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
@@ -396,7 +396,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::orElse(succeed);
+    auto ret = e | utils::orElse(succeed);
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
@@ -461,14 +461,14 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::orElse(fail);
+    auto ret = e | utils::orElse(fail);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = std::move(e) | utils::orElse(failvoid);
+    auto ret = e | utils::orElse(failvoid);
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
@@ -480,7 +480,7 @@ TEST_CASE("expected valueOrElse", "[expected][valueOrElse]") {
   REQUIRE(42 == (ex | utils::valueOrElse([] { return 42; })));
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([]{ throw std::exception(); }), std::exception);
   REQUIRE(gsl::narrow<int>("hello"sv.size()) == (ex | utils::valueOrElse([](const std::string& err) { return gsl::narrow<int>(err.size()); })));
-  REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);
+  REQUIRE_THROWS_AS(ex | utils::valueOrElse([](std::string){ throw std::exception(); }), std::exception);  // NOLINT(performance-unnecessary-value-param)
   REQUIRE_THROWS_AS(ex | utils::valueOrElse([](const std::string&) -> int { throw std::exception(); }), std::exception);
   REQUIRE_THROWS_AS(std::move(ex) | utils::valueOrElse([](std::string&&) -> int { throw std::exception(); }), std::exception);
 }

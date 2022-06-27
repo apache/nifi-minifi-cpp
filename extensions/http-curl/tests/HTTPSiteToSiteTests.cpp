@@ -93,7 +93,7 @@ struct test_profile {
   bool invalid_checksum{false};
 };
 
-void run_variance(std::string test_file_location, bool isSecure, std::string url, const struct test_profile &profile) {
+void run_variance(const std::string& test_file_location, bool isSecure, const std::string& url, const struct test_profile &profile) {
   SiteToSiteTestHarness harness(isSecure);
 
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";

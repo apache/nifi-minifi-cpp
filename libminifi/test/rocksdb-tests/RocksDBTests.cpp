@@ -48,6 +48,7 @@ struct RocksDBTest : TestController {
     rocksdb::DB* db_ptr = nullptr;
     std::vector<rocksdb::ColumnFamilyHandle*> cf_handle_ptrs;
     std::vector<rocksdb::ColumnFamilyDescriptor> cf_descs;
+    cf_descs.reserve(cf_names.size());
     for (auto& cf_name : cf_names) {
       cf_descs.emplace_back(cf_name, rocksdb::ColumnFamilyOptions{});
     }

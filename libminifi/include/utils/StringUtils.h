@@ -161,7 +161,7 @@ class StringUtils {
    * @param output output float
    * @param cp failure policy
    */
-  static bool StringToFloat(std::string input, float &output, FailurePolicy cp = RETURN);
+  static bool StringToFloat(const std::string& input, float &output, FailurePolicy cp = RETURN);
 
   static std::string replaceEnvironmentVariables(std::string source_string);
 

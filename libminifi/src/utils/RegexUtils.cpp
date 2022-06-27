@@ -145,7 +145,7 @@ Regex& Regex::operator=(const Regex& other) {
   return *this;
 }
 
-Regex::Regex(Regex&& other)
+Regex::Regex(Regex&& other) noexcept
 #ifndef NO_MORE_REGFREEE
   : valid_(false),
     regex_mode_(REG_EXTENDED)
@@ -154,7 +154,7 @@ Regex::Regex(Regex&& other)
   *this = std::move(other);
 }
 
-Regex& Regex::operator=(Regex&& other) {
+Regex& Regex::operator=(Regex&& other) noexcept {
   if (this == &other) {
     return *this;
   }

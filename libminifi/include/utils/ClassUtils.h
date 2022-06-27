@@ -14,17 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_CLASSUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_CLASSUTILS_H_
+#pragma once
 
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace ClassUtils {
+namespace org::apache::nifi::minifi::utils::ClassUtils {
 
 /**
  * Shortens class names via the canonical representation ( package with name )
@@ -34,11 +28,4 @@ namespace ClassUtils {
  */
 bool shortenClassName(const std::string &class_name, std::string &out);
 
-} /* namespace ClassUtils */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif /* LIBMINIFI_INCLUDE_UTILS_CLASSUTILS_H_ */
+}  // namespace org::apache::nifi::minifi::utils::ClassUtils

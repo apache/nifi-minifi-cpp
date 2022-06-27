@@ -258,7 +258,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
   if (nifi_instances_.empty())
     return std::make_pair("", -1);
 
-  for (auto nifi : nifi_instances_) {
+  for (const auto& nifi : nifi_instances_) {
     std::string host = nifi.host_;
 #ifdef WIN32
     if ("localhost" == host) {

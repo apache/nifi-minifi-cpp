@@ -31,11 +31,7 @@
 
 #include "LuaProcessSession.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace lua {
+namespace org::apache::nifi::minifi::lua {
 
 class LuaScriptEngine : public script::ScriptEngine {
  public:
@@ -115,8 +111,4 @@ class LuaScriptEngine : public script::ScriptEngine {
   sol::state lua_;
 };
 
-} /* namespace lua */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::lua

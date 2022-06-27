@@ -35,9 +35,9 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
       : tasks(tasks) {
   }
 
-  explicit WorkerNumberExecutions(WorkerNumberExecutions && other)
-      : runs(std::move(other.runs)),
-        tasks(std::move(other.tasks)) {
+  explicit WorkerNumberExecutions(WorkerNumberExecutions && other) noexcept
+      : runs(other.runs),
+        tasks(other.tasks) {
   }
 
   bool isFinished(const int &result) override {

@@ -103,7 +103,7 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   auto records = reporter->getEvents();
   auto record = session->get();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   reporter = session->getProvenanceReporter();
 
@@ -117,7 +117,7 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   session->commit();
   records = reporter->getEvents();
   // FIXME(fgerlits): this test is very weak, as `records` is empty
-  for (auto provEventRecord : records) {
+  for (const auto& provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == TestHTTPServer::PROCESSOR_NAME);
   }
 
@@ -197,7 +197,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   auto records = reporter->getEvents();
   record = session->get();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   listenhttp->incrementActiveTasks();
   listenhttp->setScheduledState(core::ScheduledState::RUNNING);
@@ -215,7 +215,7 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   session2->commit();
   records = reporter->getEvents();
   // FIXME(fgerlits): this test is very weak, as `records` is empty
-  for (auto provEventRecord : records) {
+  for (const auto& provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == listenhttp->getName());
   }
 
@@ -238,14 +238,14 @@ TEST_CASE("HTTPTestsPostNoResourceClaim", "[httptest1]") {
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   plan->reset();
   testController.runSession(plan);
 
   records = plan->getProvenanceRecords();
   // FIXME(fgerlits): this test is very weak, as `records` is empty
-  for (auto provEventRecord : records) {
+  for (const auto& provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == TestHTTPServer::PROCESSOR_NAME);
   }
 

@@ -46,10 +46,10 @@ void PutS3Object::fillUserMetadata(const std::shared_ptr<core::ProcessContext> &
       logger_->log_debug("PutS3Object: DynamicProperty: [%s] -> [%s]", prop_key, prop_value);
       user_metadata_map_.emplace(prop_key, prop_value);
       if (first_property) {
-        user_metadata_ = prop_key + "=" + prop_value;
+        user_metadata_ = std::string(prop_key).append("=").append(prop_value);
         first_property = false;
       } else {
-        user_metadata_ += "," + prop_key + "=" + prop_value;
+        user_metadata_ += std::string(",").append(prop_key).append("=").append(prop_value);
       }
     }
   }

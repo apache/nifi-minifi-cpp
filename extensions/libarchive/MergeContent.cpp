@@ -36,7 +36,7 @@ void MergeContent::initialize() {
   setSupportedRelationships(relationships());
 }
 
-std::string MergeContent::readContent(std::string path) {
+std::string MergeContent::readContent(const std::string& path) {
   std::string contents;
   std::ifstream in(path.c_str(), std::ios::in | std::ios::binary);
   if (in) {
@@ -159,7 +159,7 @@ bool MergeContent::checkDefragment(std::unique_ptr<Bin> &bin) {
     catch (...) {
       return false;
     }
-    for (auto flow : flows) {
+    for (const auto& flow : flows) {
       std::string value;
       if (!flow->getAttribute(BinFiles::FRAGMENT_ID_ATTRIBUTE, value))
           return false;
@@ -262,7 +262,7 @@ bool MergeContent::processBin(core::ProcessContext *context, core::ProcessSessio
   // we successfully merge the flow
   session->transfer(merge_flow, Merge);
   std::deque<std::shared_ptr<core::FlowFile>> &flows = bin->getFlowFile();
-  for (auto flow : flows) {
+  for (const auto& flow : flows) {
     session->transfer(flow, Original);
   }
   logger_->log_info("Merge FlowFile record UUID %s, payload length %d", merge_flow->getUUIDStr(), merge_flow->getSize());

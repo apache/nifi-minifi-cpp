@@ -45,7 +45,7 @@ const char* MODIFY_DEST = "modified";
 
 using PROP_MAP_T = std::map<std::string, std::string>;
 
-bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive output_archive, PROP_MAP_T properties, bool check_attributes = true) {
+bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchive& output_archive, const PROP_MAP_T& properties, bool check_attributes = true) {
     TestController testController;
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::FocusArchiveEntry>();
     LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::UnfocusArchiveEntry>();
@@ -74,8 +74,8 @@ bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive outpu
 
     std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ManipulateArchive", "testManipulateArchive", core::Relationship("success", "description"), true);
 
-    for (auto kv : properties) {
-      plan->setProperty(maprocessor, kv.first, kv.second);
+    for (const auto& [name, value] : properties) {
+      plan->setProperty(maprocessor, name, value);
     }
 
     std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
@@ -96,14 +96,14 @@ bool run_archive_test(OrderedTestArchive input_archive, OrderedTestArchive outpu
     return check_archive_contents(output_path, output_archive, check_attributes);
 }
 
-bool run_archive_test(TAE_MAP_T input_map, TAE_MAP_T output_map, PROP_MAP_T properties, bool check_attributes = true) {
+bool run_archive_test(TAE_MAP_T input_map, TAE_MAP_T output_map, const PROP_MAP_T& properties, bool check_attributes = true) {
   OrderedTestArchive input_archive;
   OrderedTestArchive output_archive;
 
   // An empty vector is treated as "ignore order"
   input_archive.order = output_archive.order = FN_VEC_T();
-  input_archive.map = input_map;
-  output_archive.map = output_map;
+  input_archive.map = std::move(input_map);
+  output_archive.map = std::move(output_map);
   return run_archive_test(input_archive, output_archive, properties, check_attributes);
 }
 

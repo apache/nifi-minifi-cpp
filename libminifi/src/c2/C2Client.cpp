@@ -120,7 +120,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
 
   for (const std::string& metricsClass : classes) {
     try {
-      std::string option = prefix + "." + metricsClass;
+      std::string option = std::string(prefix).append(".").append(metricsClass);
       std::string classOption = option + ".classes";
       std::string nameOption = option + ".name";
 
@@ -132,7 +132,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       if (configuration_->get(classOption, class_definitions)) {
         loadNodeClasses(class_definitions, new_node);
       } else {
-        std::string optionName = option + "." + name;
+        std::string optionName = std::string(option).append(".").append(name);
         loadC2ResponseConfiguration(optionName, new_node);
       }
 
@@ -153,7 +153,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 
   for (const std::string& metricsClass : classes) {
     try {
-      std::string option = prefix + "." + metricsClass;
+      std::string option = std::string(prefix).append(".").append(metricsClass);
       std::string classOption = option + ".classes";
       std::string nameOption = option + ".name";
 
@@ -177,7 +177,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
             std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
           }
         } else {
-          std::string optionName = option + "." + name;
+          std::string optionName = std::string(option).append(".").append(name);
           auto sub_node = loadC2ResponseConfiguration(optionName, new_node);
           std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(sub_node);
         }
