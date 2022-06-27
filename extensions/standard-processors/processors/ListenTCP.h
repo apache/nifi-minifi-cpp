@@ -29,10 +29,6 @@ class ListenTCP : public NetworkListenerProcessor {
   explicit ListenTCP(const std::string& name, const utils::Identifier& uuid = {})
     : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger()) {
   }
-  ListenTCP(const ListenTCP&) = delete;
-  ListenTCP(ListenTCP&&) = delete;
-  ListenTCP& operator=(const ListenTCP&) = delete;
-  ListenTCP& operator=(ListenTCP&&) = delete;
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "
                                                           "For each message the processor produces a single FlowFile.";

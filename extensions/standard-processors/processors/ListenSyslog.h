@@ -33,10 +33,6 @@ class ListenSyslog : public NetworkListenerProcessor {
   explicit ListenSyslog(const std::string& name, const utils::Identifier& uuid = {})
       : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenSyslog>::getLogger()) {
   }
-  ListenSyslog(const ListenSyslog&) = delete;
-  ListenSyslog(ListenSyslog&&) = delete;
-  ListenSyslog& operator=(const ListenSyslog&) = delete;
-  ListenSyslog& operator=(ListenSyslog&&) = delete;
 
   EXTENSIONAPI static constexpr const char* Description = "Listens for Syslog messages being sent to a given port over TCP or UDP. "
       "Incoming messages are optionally checked against regular expressions for RFC5424 and RFC3164 formatted messages. "

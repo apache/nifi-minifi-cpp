@@ -53,7 +53,7 @@ const core::Property ListenSyslog::ParseMessages(
 const core::Property ListenSyslog::MaxQueueSize(
     core::PropertyBuilder::createProperty("Max Size of Message Queue")
         ->withDescription("Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. "
-                          "If the is buffer full, the message is ignored. If set to zero the buffer is unlimited.")
+                          "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
         ->withDefaultValue<uint64_t>(10000)->build());
 
 const core::Relationship ListenSyslog::Success("success", "Incoming messages that match the expected format when parsing will be sent to this relationship. "
