@@ -106,11 +106,7 @@ std::error_code set_non_blocking(const mio::SocketDescriptor fd) noexcept {
 }
 }  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 
 bool valid_socket(const SocketDescriptor fd) noexcept {
@@ -518,8 +514,4 @@ size_t Socket::read(gsl::span<std::byte> buf, bool retrieve_all_bytes) {
   return total_read;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::io
