@@ -22,7 +22,6 @@
 #include <string>
 #include <memory>
 #include <map>
-#include <iostream>
 #include <sstream>
 #include <utility>
 
@@ -35,11 +34,7 @@
 #include "utils/gsl.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 constexpr size_t MAX_BUFFER_SIZE = 4096;
 constexpr int MAX_CAPTURE_GROUP_SIZE = 1024;
@@ -57,7 +52,7 @@ core::Property ExtractText::RegexMode(
     ->withDescription("Set this to extract parts of flowfile content using regular experssions in dynamic properties")
     ->withDefaultValue<bool>(false)->build());
 
-core::Property ExtractText::IgnoreCaptureGroupZero(
+core::Property ExtractText::IncludeCaptureGroupZero(
     core::PropertyBuilder::createProperty("Include Capture Group 0")
     ->withDescription("Indicates that Capture Group 0 should be included as an attribute. "
                       "Capture Group 0 represents the entirety of the regular expression match, is typically not used, and could have considerable length.")
@@ -143,8 +138,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::BaseStre
       regex_flags.push_back(utils::Regex::Mode::ICASE);
     }
 
-    bool ignoregroupzero;
-    ctx_->getProperty(IgnoreCaptureGroupZero.getName(), ignoregroupzero);
+    const bool include_capture_group_zero = ctx_->getProperty<bool>(IncludeCaptureGroupZero).value_or(true);
 
     bool repeatingcapture;
     ctx_->getProperty(EnableRepeatingCaptureGroup.getName(), repeatingcapture);
@@ -171,9 +165,7 @@ int64_t ExtractText::ReadCallback::operator()(const std::shared_ptr<io::BaseStre
         utils::Regex rgx(value, regex_flags);
         utils::SMatch matches;
         while (utils::regexSearch(workStr, matches, rgx)) {
-          size_t i = ignoregroupzero ? 1 : 0;
-
-          for (; i < matches.size(); ++i, ++matchcount) {
+          for (std::size_t i = (include_capture_group_zero ? 0 : 1); i < matches.size(); ++i, ++matchcount) {
             std::string attributeValue = matches[i];
             if (attributeValue.length() > maxCaptureSize) {
               attributeValue = attributeValue.substr(0, maxCaptureSize);
@@ -212,8 +204,4 @@ ExtractText::ReadCallback::ReadCallback(std::shared_ptr<core::FlowFile> flowFile
 
 REGISTER_RESOURCE(ExtractText, Processor);
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::processors

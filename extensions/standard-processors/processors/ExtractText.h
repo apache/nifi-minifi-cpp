@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_
-#define EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -29,11 +28,7 @@
 #include "FlowFileRecord.h"
 #include "utils/Export.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 class ExtractText : public core::Processor {
  public:
@@ -46,7 +41,7 @@ class ExtractText : public core::Processor {
   EXTENSIONAPI static core::Property Attribute;
   EXTENSIONAPI static core::Property SizeLimit;
   EXTENSIONAPI static core::Property RegexMode;
-  EXTENSIONAPI static core::Property IgnoreCaptureGroupZero;
+  EXTENSIONAPI static core::Property IncludeCaptureGroupZero;
   EXTENSIONAPI static core::Property InsensitiveMatch;
   EXTENSIONAPI static core::Property MaxCaptureGroupLen;
   EXTENSIONAPI static core::Property EnableRepeatingCaptureGroup;
@@ -55,7 +50,7 @@ class ExtractText : public core::Processor {
       Attribute,
       SizeLimit,
       RegexMode,
-      IgnoreCaptureGroupZero,
+      IncludeCaptureGroupZero,
       InsensitiveMatch,
       MaxCaptureGroupLen,
       EnableRepeatingCaptureGroup
@@ -92,10 +87,4 @@ class ExtractText : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExtractText>::getLogger();
 };
 
-}  // namespace processors
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // EXTENSIONS_STANDARD_PROCESSORS_PROCESSORS_EXTRACTTEXT_H_
+}  // namespace org::apache::nifi::minifi::processors
