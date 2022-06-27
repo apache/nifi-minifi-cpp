@@ -18,11 +18,7 @@
 #include "utils/FlowFileQueue.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 bool FlowFileQueue::FlowFilePenaltyExpirationComparator::operator()(const value_type& left, const value_type& right) const {
   // a flow file with earlier expiration compares less
@@ -242,8 +238,4 @@ size_t FlowFileQueue::shouldSwapInCount() const {
 }
 
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

@@ -30,10 +30,7 @@
 #include "utils/ThreadPool.h"
 #include "core/logging/Logger.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class FlowFileLoader {
   using FlowFilePtr = std::shared_ptr<core::FlowFile>;
@@ -65,7 +62,4 @@ class FlowFileLoader {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

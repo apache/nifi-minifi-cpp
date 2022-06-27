@@ -26,10 +26,7 @@
 #include "logging/LoggerConfiguration.h"
 #include "FlowFileRecord.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 FlowFileLoader::FlowFileLoader()
   : logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()) {}
@@ -112,7 +109,4 @@ utils::TaskRescheduleInfo FlowFileLoader::loadImpl(const std::vector<SwappedFlow
   }
 }
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

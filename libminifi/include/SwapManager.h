@@ -24,10 +24,7 @@
 #include "core/FlowFile.h"
 #include "utils/Id.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 struct SwappedFlowFile {
   utils::Identifier id;
@@ -41,7 +38,4 @@ class SwapManager {
   virtual ~SwapManager() = default;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi
