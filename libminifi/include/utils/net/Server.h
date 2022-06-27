@@ -27,18 +27,14 @@
 #include "asio/ts/buffer.hpp"
 #include "asio/ts/internet.hpp"
 #include "asio/streambuf.hpp"
+#include "IpProtocol.h"
 
 namespace org::apache::nifi::minifi::utils::net {
-
-SMART_ENUM(Protocol,
-  (TCP, "TCP"),
-  (UDP, "UDP")
-)
 
 struct Message {
  public:
   Message() = default;
-  Message(std::string message_data, Protocol protocol, asio::ip::address sender_address, asio::ip::port_type server_port)
+  Message(std::string message_data, IpProtocol protocol, asio::ip::address sender_address, asio::ip::port_type server_port)
     : message_data(std::move(message_data)),
       protocol(protocol),
       server_port(server_port),
@@ -46,7 +42,7 @@ struct Message {
   }
 
   std::string message_data;
-  Protocol protocol;
+  IpProtocol protocol;
   asio::ip::port_type server_port;
   asio::ip::address sender_address;
 };

@@ -52,7 +52,7 @@ void ListenTCP::initialize() {
 
 void ListenTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
-  startServer(*context, MaxBatchSize, MaxQueueSize, Port, utils::net::Protocol::TCP);
+  startServer(*context, MaxBatchSize, MaxQueueSize, Port, utils::net::IpProtocol::TCP);
 }
 
 void ListenTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {

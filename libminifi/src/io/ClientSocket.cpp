@@ -342,7 +342,7 @@ int Socket::initialize() {
     return nullptr;
   }();
   const bool is_server = hostname == nullptr;
-  const auto addr_info_or_error = utils::net::resolveHost(hostname, port_, utils::net::IpProtocol::Tcp, !is_server);
+  const auto addr_info_or_error = utils::net::resolveHost(hostname, port_, utils::net::IpProtocol::TCP, !is_server);
   if (!addr_info_or_error) {
     logger_->log_error("getaddrinfo: %s", addr_info_or_error.error().message());
     return -1;

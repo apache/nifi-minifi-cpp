@@ -21,6 +21,7 @@
 #include <system_error>
 #include "nonstd/expected.hpp"
 #include "utils/gsl.h"
+#include "IpProtocol.h"
 
 struct addrinfo;
 
@@ -29,20 +30,15 @@ struct addrinfo_deleter {
   void operator()(addrinfo*) const noexcept;
 };
 
-enum class IpProtocol {
-  Tcp,
-  Udp
-};
-
-nonstd::expected<gsl::not_null<std::unique_ptr<addrinfo, addrinfo_deleter>>, std::error_code> resolveHost(const char* hostname, const char* port, IpProtocol = IpProtocol::Tcp,
+nonstd::expected<gsl::not_null<std::unique_ptr<addrinfo, addrinfo_deleter>>, std::error_code> resolveHost(const char* hostname, const char* port, IpProtocol = IpProtocol::TCP,
     bool need_canonname = false);
-inline auto resolveHost(const char* const port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
+inline auto resolveHost(const char* const port, const IpProtocol proto = IpProtocol::TCP, const bool need_canonname = false) {
   return resolveHost(nullptr, port, proto, need_canonname);
 }
-inline auto resolveHost(const char* const hostname, const uint16_t port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
+inline auto resolveHost(const char* const hostname, const uint16_t port, const IpProtocol proto = IpProtocol::TCP, const bool need_canonname = false) {
   return resolveHost(hostname, std::to_string(port).c_str(), proto, need_canonname);
 }
-inline auto resolveHost(const uint16_t port, const IpProtocol proto = IpProtocol::Tcp, const bool need_canonname = false) {
+inline auto resolveHost(const uint16_t port, const IpProtocol proto = IpProtocol::TCP, const bool need_canonname = false) {
   return resolveHost(nullptr, port, proto, need_canonname);
 }
 }  // namespace org::apache::nifi::minifi::utils::net

@@ -34,8 +34,8 @@ const core::Property ListenSyslog::ProtocolProperty(
     core::PropertyBuilder::createProperty("Protocol")
         ->withDescription("The protocol for Syslog communication.")
         ->isRequired(true)
-        ->withAllowableValues(utils::net::Protocol::values())
-        ->withDefaultValue(toString(utils::net::Protocol::UDP))
+        ->withAllowableValues(utils::net::IpProtocol::values())
+        ->withDefaultValue(toString(utils::net::IpProtocol::UDP))
         ->build());
 
 const core::Property ListenSyslog::MaxBatchSize(
@@ -88,7 +88,7 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
 
   context->getProperty(ParseMessages.getName(), parse_messages_);
 
-  utils::net::Protocol protocol;
+  utils::net::IpProtocol protocol;
   context->getProperty(ProtocolProperty.getName(), protocol);
 
   startServer(*context, MaxBatchSize, MaxQueueSize, Port, protocol);

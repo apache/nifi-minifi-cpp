@@ -37,11 +37,11 @@ void NetworkListenerProcessor::onTrigger(const std::shared_ptr<core::ProcessCont
 }
 
 void NetworkListenerProcessor::startServer(
-    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop, const core::Property& port_prop, utils::net::Protocol protocol) {
+    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop, const core::Property& port_prop, utils::net::IpProtocol protocol) {
   gsl_Expects(!server_thread_.joinable() && !server_);
   context.getProperty(max_batch_size_prop.getName(), max_batch_size_);
   if (max_batch_size_ < 1)
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max Batch Size property is invalid");
+    throw Exception(PROCESSOR_EXCEPTION, "Max Batch Size property is invalid");
 
   uint64_t max_queue_size = 0;
   context.getProperty(max_queue_size_prop.getName(), max_queue_size);
@@ -50,12 +50,12 @@ void NetworkListenerProcessor::startServer(
   int port;
   context.getProperty(port_prop.getName(), port);
 
-  if (protocol == utils::net::Protocol::UDP) {
+  if (protocol == utils::net::IpProtocol::UDP) {
     server_ = std::make_unique<utils::net::UdpServer>(max_queue_size_opt, port, logger_);
-  } else if (protocol == utils::net::Protocol::TCP) {
+  } else if (protocol == utils::net::IpProtocol::TCP) {
     server_ = std::make_unique<utils::net::TcpServer>(max_queue_size_opt, port, logger_);
   } else {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid protocol");
+    throw Exception(PROCESSOR_EXCEPTION, "Invalid protocol");
   }
 
   server_thread_ = std::thread([this]() { server_->run(); });

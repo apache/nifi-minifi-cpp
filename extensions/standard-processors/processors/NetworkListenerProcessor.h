@@ -53,7 +53,7 @@ class NetworkListenerProcessor : public core::Processor {
  protected:
   void stopServer();
   void startServer(
-    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop, const core::Property& port_prop, utils::net::Protocol protocol);
+    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop, const core::Property& port_prop, utils::net::IpProtocol protocol);
   virtual void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) = 0;
 
   uint64_t max_batch_size_{500};
