@@ -40,7 +40,7 @@ std::vector<::prometheus::MetricFamily> PublishedMetricGaugeCollection::Collect(
       .name = "minifi_" + metric.name,
       .help = "",
       .type = ::prometheus::MetricType::Gauge,
-      .metric = { client_metric }
+      .metric = { std::move(client_metric) }
     });
   }
   return collection;
