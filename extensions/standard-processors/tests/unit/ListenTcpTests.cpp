@@ -29,21 +29,6 @@ namespace org::apache::nifi::minifi::test {
 
 constexpr uint64_t PORT = 10254;
 
-void sendMessagesViaTCP(const std::vector<std::string_view>& contents) {
-  asio::io_context io_context;
-  asio::ip::tcp::socket socket(io_context);
-  asio::ip::tcp::endpoint remote_endpoint(asio::ip::address::from_string("127.0.0.1"), PORT);
-  socket.connect(remote_endpoint);
-  std::error_code err;
-  for (auto& content : contents) {
-    std::string tcp_message(content);
-    tcp_message += '\n';
-    socket.send(asio::buffer(tcp_message, tcp_message.size()), 0, err);
-  }
-  REQUIRE(!err);
-  socket.close();
-}
-
 void check_for_attributes(core::FlowFile& flow_file) {
   CHECK(std::to_string(PORT) == flow_file.getAttribute("tcp.port"));
   CHECK("127.0.0.1" == flow_file.getAttribute("tcp.sender"));
@@ -58,8 +43,8 @@ TEST_CASE("ListenTCP test multiple messages", "[ListenTCP]") {
   REQUIRE(listen_tcp->setProperty(ListenTCP::MaxBatchSize, "2"));
 
   controller.plan->scheduleProcessor(listen_tcp);
-  sendMessagesViaTCP({"test_message_1"});
-  sendMessagesViaTCP({"another_message"});
+  sendMessagesViaTCP({"test_message_1"}, PORT);
+  sendMessagesViaTCP({"another_message"}, PORT);
   ProcessorTriggerResult result;
   REQUIRE(controller.triggerUntil({{ListenTCP::Success, 2}}, result, 300s, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenTCP::Success)[0]) == "test_message_1");
@@ -93,7 +78,7 @@ TEST_CASE("ListenTCP max queue and max batch size test", "[ListenTCP]") {
 
   controller.plan->scheduleProcessor(listen_tcp);
   for (auto i = 0; i < 100; ++i) {
-    sendMessagesViaTCP({"test_message"});
+    sendMessagesViaTCP({"test_message"}, PORT);
   }
 
   CHECK(countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
