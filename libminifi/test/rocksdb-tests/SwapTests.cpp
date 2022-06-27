@@ -89,10 +89,10 @@ TEST_CASE("Connection will on-demand swap flow files") {
   config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
   config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
-  std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
-  std::shared_ptr<core::Repository> ff_repo = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
-  std::shared_ptr<minifi::SwapManager> swap_manager{ff_repo, ff_repo->castToSwapManager()};
-  std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
+  auto prov_repo = std::make_shared<TestRepository>();
+  auto ff_repo = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
+  auto swap_manager = std::dynamic_pointer_cast<minifi::SwapManager>(ff_repo);
+  auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
   ff_repo->initialize(config);
   content_repo->initialize(config);
