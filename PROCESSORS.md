@@ -1248,7 +1248,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Protocol                  | UDP           | UDP<br>TCP<br>   | The protocol for Syslog communication.                                                                                                                                                               |
 | Parse Messages            | false         | false<br>true    | Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.                 |
 | Max Batch Size            | 500           |                  | The maximum number of Syslog events to process at a time.                                                                                                                                            |
-| Max Size of Message Queue | 0             |                  | Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
+| Max Size of Message Queue | 10000         |                  | Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
 
 ### Relationships
 
@@ -1295,7 +1295,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 |-------------------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Listening Port**            |               |                  | The port to listen on for communication.                                                                                                                                                      |
 | **Max Batch Size**            | 500           |                  | The maximum number of messages to process at a time.                                                                                                                                          |
-| **Max Size of Message Queue** | 0             |                  | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
+| **Max Size of Message Queue** | 10000         |                  | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
 
 
 ## ListFile

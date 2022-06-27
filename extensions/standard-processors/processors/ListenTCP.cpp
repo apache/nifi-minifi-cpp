@@ -32,7 +32,7 @@ const core::Property ListenTCP::MaxQueueSize(
     core::PropertyBuilder::createProperty("Max Size of Message Queue")
         ->withDescription("Maximum number of messages allowed to be buffered before processing them when the processor is triggered. "
                           "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
-        ->withDefaultValue<uint64_t>(0)
+        ->withDefaultValue<uint64_t>(10000)
         ->isRequired(true)
         ->build());
 
