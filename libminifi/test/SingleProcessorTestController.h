@@ -33,9 +33,8 @@ using namespace std::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
 struct InputFlowFileData {
-  explicit InputFlowFileData(std::string_view content, std::unordered_map<std::string, std::string> attributes = {}) : content(content), attributes(std::move(attributes)) {}
   std::string_view content;
-  std::unordered_map<std::string, std::string> attributes;
+  std::unordered_map<std::string, std::string> attributes = {};
 };
 
 
@@ -70,7 +69,7 @@ class SingleProcessorTestController : public TestController {
   }
 
   auto trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
-    return trigger(InputFlowFileData(input_flow_file_content, std::move(input_flow_file_attributes)));
+    return trigger({input_flow_file_content, std::move(input_flow_file_attributes)});
   }
 
   auto trigger(std::vector<InputFlowFileData>&& input_flow_file_datas) {

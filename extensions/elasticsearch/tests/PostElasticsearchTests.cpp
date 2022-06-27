@@ -50,8 +50,8 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
                                             ElasticsearchCredentialsControllerService::Password.getName(),
                                             MockElasticAuthHandler::PASSWORD));
 
-    auto results = test_controller.trigger({minifi::test::InputFlowFileData(R"({"field1":"value1"}")", {{"elastic_action", "index"}}),
-                                            minifi::test::InputFlowFileData(R"({"field1":"value2"}")", {{"elastic_action", "index"}})});
+    auto results = test_controller.trigger({{R"({"field1":"value1"}")", {{"elastic_action", "index"}}},
+                                            {R"({"field1":"value2"}")", {{"elastic_action", "index"}}}});
     REQUIRE(results[PostElasticsearch::Success].size() == 2);
     for (const auto& result : results[PostElasticsearch::Success]) {
       auto attributes = result->getAttributes();
