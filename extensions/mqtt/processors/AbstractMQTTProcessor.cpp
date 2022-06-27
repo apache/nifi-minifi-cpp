@@ -15,10 +15,9 @@
  * limitations under the License.
  */
 #include "AbstractMQTTProcessor.h"
-#include <cstdio>
 #include <memory>
 #include <string>
-#include <cinttypes>
+#include <utility>
 
 #include "utils/StringUtils.h"
 #include "core/ProcessContext.h"
@@ -95,7 +94,7 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
 
   if (auto last_will_topic = context->getProperty(LastWillTopic); last_will_topic.has_value() && !last_will_topic->empty()) {
     last_will_ = MQTTAsync_willOptions_initializer;
-    
+
     logger_->log_debug("AbstractMQTTProcessor: Last Will Topic [%s]", *last_will_topic);
     last_will_topic_ = std::move(*last_will_topic);
     last_will_->topicName = last_will_topic_.c_str();

@@ -53,9 +53,10 @@ const core::Property AbstractMQTTProcessor::SecurityCert("Security Cert", "Path 
 const core::Property AbstractMQTTProcessor::SecurityPrivateKey("Security Private Key", "Path to client's private key (PEM) used for authentication", "");
 const core::Property AbstractMQTTProcessor::SecurityPrivateKeyPassword("Security Pass Phrase", "Private key passphrase", "");
 const core::Property AbstractMQTTProcessor::LastWillTopic("Last Will Topic", "The topic to send the client's Last Will to. If the Last Will topic is not set then a Last Will will not be sent.", "");
-const core::Property AbstractMQTTProcessor::LastWillMessage("Last Will Message", "The message to send as the client's Last Will. If the Last Will topic is not set then a Last Will will not be sent.", "");
+const core::Property AbstractMQTTProcessor::LastWillMessage("Last Will Message",
+                                                            "The message to send as the client's Last Will. If the Last Will topic is not set then a Last Will will not be sent.", "");
 const core::Property AbstractMQTTProcessor::LastWillQoS("Last Will QoS", "The Quality of Service (QoS) to send the last will with. Accepts three values '0', '1' and '2'", std::to_string(MQTT_QOS_1));
-const core::Property AbstractMQTTProcessor::LastWillRetain("Last Will Retain","Whether to retain the client's Last Will.", "false");
+const core::Property AbstractMQTTProcessor::LastWillRetain("Last Will Retain", "Whether to retain the client's Last Will.", "false");
 
 // ConsumeMQTT
 
