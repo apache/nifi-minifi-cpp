@@ -26,19 +26,19 @@ namespace org::apache::nifi::minifi::extensions::elasticsearch::test {
 TEST_CASE("PostElasticsearch", "[elastic]") {
   MockElastic mock_elastic("10433");
 
-  auto put_elasticsearch_json = std::make_shared<PostElasticsearch>("PostElasticsearch");
-  minifi::test::SingleProcessorTestController test_controller{put_elasticsearch_json};
+  auto post_elasticsearch_json = std::make_shared<PostElasticsearch>("PostElasticsearch");
+  minifi::test::SingleProcessorTestController test_controller{post_elasticsearch_json};
   auto elasticsearch_credentials_controller_service = test_controller.plan->addController("ElasticsearchCredentialsControllerService", "elasticsearch_credentials_controller_service");
-  CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+  CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
                                      PostElasticsearch::ElasticCredentials.getName(),
                                      "elasticsearch_credentials_controller_service"));
-  CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+  CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
                                     PostElasticsearch::Hosts.getName(),
                                     "localhost:10433"));
-  CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+  CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
                                     PostElasticsearch::Action.getName(),
                                     "${elastic_action}"));
-  CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+  CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
                                     PostElasticsearch::Index.getName(),
                                     "test_index"));
 
@@ -64,7 +64,7 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
                                             ElasticsearchCredentialsControllerService::ApiKey.getName(),
                                             MockElasticAuthHandler::API_KEY));
-    CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+    CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
                                             PostElasticsearch::Identifier.getName(),
                                             "${filename}"));
 
@@ -79,7 +79,7 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
     CHECK(test_controller.plan->setProperty(elasticsearch_credentials_controller_service,
                                             ElasticsearchCredentialsControllerService::ApiKey.getName(),
                                             MockElasticAuthHandler::API_KEY));
-    CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
+    CHECK(test_controller.plan->setProperty(post_elasticsearch_json,
                                             PostElasticsearch::Identifier.getName(),
                                             "${filename}"));
     mock_elastic.returnErrors(true);

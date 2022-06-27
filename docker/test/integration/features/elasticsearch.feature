@@ -19,14 +19,14 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
   Background:
     Given the content of "/tmp/output" is monitored
 
-  Scenario: MiNiFi instance indexes a document on Elasticsearch using Basic Authentication
+  Scenario Outline: MiNiFi instance indexes a document on Elasticsearch using Basic Authentication
     Given an Elasticsearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
     And a PostElasticsearch processor
     And the "Index" property of the PostElasticsearch processor is set to "my_index"
     And the "Identifier" property of the PostElasticsearch processor is set to "my_id"
-    And the "Action" property of the PostElasticsearch processor is set to "index"
+    And the "Action" property of the PostElasticsearch processor is set to <action>
     And a SSL context service is set up for PostElasticsearch and Elasticsearch
     And an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -37,25 +37,12 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Elasticsearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  Scenario: MiNiFi instance creates a document on Elasticsearch using API Key authentication
-    Given an Elasticsearch server is set up and running
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
-    And a PostElasticsearch processor
-    And the "Index" property of the PostElasticsearch processor is set to "my_index"
-    And the "Identifier" property of the PostElasticsearch processor is set to "my_id"
-    And the "Action" property of the PostElasticsearch processor is set to "create"
-    And a SSL context service is set up for PostElasticsearch and Elasticsearch
-    And an ElasticsearchCredentialsService is set up for PostElasticsearch with ApiKey
-    And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
-    And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
+    Examples:
+    | action   |
+    | "index"  |
+    | "create" |
 
-    When both instances start up
-    Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
-    And Elasticsearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
-
-  Scenario: MiNiFi instance deletes a document from Elasticsearch using Basic Authentication
+  Scenario: MiNiFi instance deletes a document from Elasticsearch using API Key authentication
     Given an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index"
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "hello world" is present in "/tmp/input"
@@ -64,7 +51,7 @@ Feature: Managing documents on Elasticsearch with PostElasticsearch
     And the "Identifier" property of the PostElasticsearch processor is set to "preloaded_id"
     And the "Action" property of the PostElasticsearch processor is set to "delete"
     And a SSL context service is set up for PostElasticsearch and Elasticsearch
-    And an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication
+    And an ElasticsearchCredentialsService is set up for PostElasticsearch with ApiKey
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
     And the "success" relationship of the PostElasticsearch processor is connected to the PutFile

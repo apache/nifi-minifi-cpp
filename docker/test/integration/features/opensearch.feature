@@ -19,7 +19,7 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
   Background:
     Given the content of "/tmp/output" is monitored
 
-  Scenario: MiNiFi instance indexes a document on Opensearch using Basic Authentication
+  Scenario Outline: MiNiFi instance creates a document on Opensearch using Basic Authentication
     Given an Opensearch server is set up and running
     And a GetFile processor with the "Input Directory" property set to "/tmp/input"
     And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
@@ -27,7 +27,7 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch:9200"
     And the "Index" property of the PostElasticsearch processor is set to "my_index"
     And the "Identifier" property of the PostElasticsearch processor is set to "my_id"
-    And the "Action" property of the PostElasticsearch processor is set to "index"
+    And the "Action" property of the PostElasticsearch processor is set to <action>
     And a SSL context service is set up for PostElasticsearch and Opensearch
     And an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication
     And a PutFile processor with the "Directory" property set to "/tmp/output"
@@ -38,24 +38,10 @@ Feature: PostElasticsearch works on Opensearch (Opensearch doesnt support API Ke
     Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
     And Opensearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
 
-  Scenario: MiNiFi instance creates a document on Opensearch using Basic Authentication
-    Given an Opensearch server is set up and running
-    And a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "{ "field1" : "value1" }" is present in "/tmp/input"
-    And a PostElasticsearch processor
-    And the "Hosts" property of the PostElasticsearch processor is set to "https://opensearch:9200"
-    And the "Index" property of the PostElasticsearch processor is set to "my_index"
-    And the "Identifier" property of the PostElasticsearch processor is set to "my_id"
-    And the "Action" property of the PostElasticsearch processor is set to "create"
-    And a SSL context service is set up for PostElasticsearch and Opensearch
-    And an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication
-    And a PutFile processor with the "Directory" property set to "/tmp/output"
-    And the "success" relationship of the GetFile processor is connected to the PostElasticsearch
-    And the "success" relationship of the PostElasticsearch processor is connected to the PutFile
-
-    When both instances start up
-    Then a flowfile with the content "{ "field1" : "value1" }" is placed in the monitored directory in less than 20 seconds
-    And Opensearch has a document with "my_id" in "my_index" that has "value1" set in "field1"
+    Examples:
+      | action   |
+      | "index"  |
+      | "create" |
 
   Scenario: MiNiFi instance deletes a document from Opensearch using Basic Authentication
     Given an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index"

@@ -436,35 +436,35 @@ def step_impl(context):
     minifi_key_file = '/tmp/resources/elasticsearch/minifi_client.key'
     root_ca_crt_file = '/tmp/resources/elasticsearch/root_ca.crt'
     ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
-    put_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
-    put_elasticsearch_json.controller_services.append(ssl_context_service)
-    put_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(ssl_context_service)
+    post_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
 
 
 @given(u'a SSL context service is set up for PostElasticsearch and Opensearch')
 def step_impl(context):
     root_ca_crt_file = '/tmp/resources/opensearch/root-ca.pem'
     ssl_context_service = SSLContextService(ca_cert=root_ca_crt_file)
-    put_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
-    put_elasticsearch_json.controller_services.append(ssl_context_service)
-    put_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(ssl_context_service)
+    post_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
 
 
 @given(u'an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication')
 def step_impl(context):
     elasticsearch_credential_service = ElasticsearchCredentialsService()
-    put_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
-    put_elasticsearch_json.controller_services.append(elasticsearch_credential_service)
-    put_elasticsearch_json.set_property("Elasticsearch Credentials Provider Service", elasticsearch_credential_service.name)
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(elasticsearch_credential_service)
+    post_elasticsearch_json.set_property("Elasticsearch Credentials Provider Service", elasticsearch_credential_service.name)
 
 
 @given(u'an ElasticsearchCredentialsService is set up for PostElasticsearch with ApiKey')
 def step_impl(context):
     api_key = context.test.elastic_generate_apikey("elasticsearch")
     elasticsearch_credential_service = ElasticsearchCredentialsService(api_key)
-    put_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
-    put_elasticsearch_json.controller_services.append(elasticsearch_credential_service)
-    put_elasticsearch_json.set_property("Elasticsearch Credentials Provider Service", elasticsearch_credential_service.name)
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(elasticsearch_credential_service)
+    post_elasticsearch_json.set_property("Elasticsearch Credentials Provider Service", elasticsearch_credential_service.name)
 
 
 # splunk hec
