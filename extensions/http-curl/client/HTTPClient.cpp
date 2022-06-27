@@ -278,8 +278,8 @@ bool HTTPClient::submit() {
   }
 
   if (username_password_) {
-    curl_easy_setopt(http_session_, CURLOPT_USERNAME, username_password_->first.c_str());
-    curl_easy_setopt(http_session_, CURLOPT_PASSWORD, username_password_->second.c_str());
+    curl_easy_setopt(http_session_, CURLOPT_USERNAME, username_password_->username.c_str());
+    curl_easy_setopt(http_session_, CURLOPT_PASSWORD, username_password_->password.c_str());
   }
 
   curl_easy_setopt(http_session_, CURLOPT_URL, url_.c_str());

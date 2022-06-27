@@ -432,9 +432,9 @@ def step_impl(context):
 
 @given(u'a SSL context service is set up for PostElasticsearch and Elasticsearch')
 def step_impl(context):
-    minifi_crt_file = '/tmp/resources/elasticsearch/minifi_cert.pem'
-    minifi_key_file = '/tmp/resources/elasticsearch/minifi_cert.key'
-    root_ca_crt_file = '/tmp/resources/elasticsearch/root_ca.pem'
+    minifi_crt_file = '/tmp/resources/elasticsearch/minifi_client.crt'
+    minifi_key_file = '/tmp/resources/elasticsearch/minifi_client.key'
+    root_ca_crt_file = '/tmp/resources/elasticsearch/root_ca.crt'
     ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
     put_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
     put_elasticsearch_json.controller_services.append(ssl_context_service)

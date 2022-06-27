@@ -26,7 +26,7 @@ namespace org::apache::nifi::minifi::extensions::elasticsearch::test {
 TEST_CASE("PostElasticsearch", "[elastic]") {
   MockElastic mock_elastic("10433");
 
-  std::shared_ptr<PostElasticsearch> put_elasticsearch_json = std::make_shared<PostElasticsearch>("PostElasticsearch");
+  auto put_elasticsearch_json = std::make_shared<PostElasticsearch>("PostElasticsearch");
   minifi::test::SingleProcessorTestController test_controller{put_elasticsearch_json};
   auto elasticsearch_credentials_controller_service = test_controller.plan->addController("ElasticsearchCredentialsControllerService", "elasticsearch_credentials_controller_service");
   CHECK(test_controller.plan->setProperty(put_elasticsearch_json,
@@ -50,10 +50,8 @@ TEST_CASE("PostElasticsearch", "[elastic]") {
                                             ElasticsearchCredentialsControllerService::Password.getName(),
                                             MockElasticAuthHandler::PASSWORD));
 
-    std::vector<std::tuple<const std::string_view, std::unordered_map<std::string, std::string>>> inputs;
-
-    auto results = test_controller.trigger({std::make_tuple<const std::string_view, std::unordered_map<std::string, std::string>>(R"({"field1":"value1"}")", {{"elastic_action", "index"}}),
-                                            std::make_tuple<const std::string_view, std::unordered_map<std::string, std::string>>(R"({"field1":"value2"}")", {{"elastic_action", "index"}})});
+    auto results = test_controller.trigger({minifi::test::InputFlowFileData(R"({"field1":"value1"}")", {{"elastic_action", "index"}}),
+                                            minifi::test::InputFlowFileData(R"({"field1":"value2"}")", {{"elastic_action", "index"}})});
     REQUIRE(results[PostElasticsearch::Success].size() == 2);
     for (const auto& result : results[PostElasticsearch::Success]) {
       auto attributes = result->getAttributes();

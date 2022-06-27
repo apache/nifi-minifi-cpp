@@ -301,7 +301,14 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   std::chrono::milliseconds keep_alive_idle_{-1};
 
-  std::optional<std::pair<std::string, std::string>> username_password_;
+  struct BasicAuthCredentials {
+    BasicAuthCredentials(std::string username, std::string password) : username(std::move(username)), password(std::move(password)) {}
+
+    std::string username;
+    std::string password;
+  };
+
+  std::optional<BasicAuthCredentials> username_password_;
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HTTPClient>::getLogger()};
 };

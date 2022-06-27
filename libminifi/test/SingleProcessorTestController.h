@@ -32,6 +32,12 @@
 using namespace std::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
+struct InputFlowFileData {
+  explicit InputFlowFileData(std::string_view content, std::unordered_map<std::string, std::string> attributes = {}) : content(content), attributes(std::move(attributes)) {}
+  std::string_view content;
+  std::unordered_map<std::string, std::string> attributes;
+};
+
 
 using ProcessorTriggerResult = std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>;
 
@@ -58,16 +64,18 @@ class SingleProcessorTestController : public TestController {
     return result;
   }
 
-  auto trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
-    const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
-    input_->put(new_flow_file);
+  auto trigger(InputFlowFileData&& input_flow_file_data) {
+    input_->put(createFlowFile(input_flow_file_data.content, std::move(input_flow_file_data.attributes)));
     return trigger();
   }
 
-  auto trigger(std::initializer_list<std::tuple<const std::string_view, std::unordered_map<std::string, std::string>>> flow_files) {
-    for (const auto& flow_file : flow_files) {
-      const auto new_flow_file = createFlowFile(std::get<const std::string_view>(flow_file), std::get<std::unordered_map<std::string, std::string>>(flow_file));
-      input_->put(new_flow_file);
+  auto trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
+    return trigger(InputFlowFileData(input_flow_file_content, std::move(input_flow_file_attributes)));
+  }
+
+  auto trigger(std::vector<InputFlowFileData>&& input_flow_file_datas) {
+    for (auto& input_flow_file_data : std::move(input_flow_file_datas)) {
+      input_->put(createFlowFile(input_flow_file_data.content, std::move(input_flow_file_data.attributes)));
     }
     return trigger();
   }

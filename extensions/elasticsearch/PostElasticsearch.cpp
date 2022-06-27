@@ -43,7 +43,7 @@ const core::Property PostElasticsearch::Action = core::PropertyBuilder::createPr
     ->build();
 
 const core::Property PostElasticsearch::MaxBatchSize = core::PropertyBuilder::createProperty("Max Batch Size")
-    ->withDescription("The maximum number of Syslog events to process at a time.")
+    ->withDescription("The maximum number of flow files to process at a time.")
     ->withDefaultValue<uint64_t>(100)
     ->build();
 
@@ -137,7 +137,7 @@ class ElasticPayload {
     return result;
   }
 
-  static auto parse(core::ProcessSession& session, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) -> nonstd::expected<ElasticPayload, std::string> {
+  static nonstd::expected<ElasticPayload, std::string> parse(core::ProcessSession& session, core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file) {
     auto action = context.getProperty(PostElasticsearch::Action, flow_file);
     if (!action || (action != "index" && action != "create" && action != "delete" && action != "update" && action != "upsert"))
       return nonstd::make_unexpected("Missing or invalid action");
@@ -213,7 +213,7 @@ class ElasticPayload {
   std::optional<rapidjson::Document> payload_;
 };
 
-auto submitRequest(utils::HTTPClient& client, std::string&& payload, const size_t expected_items) -> nonstd::expected<rapidjson::Document, std::string> {
+nonstd::expected<rapidjson::Document, std::string> submitRequest(utils::HTTPClient& client, std::string&& payload, const size_t expected_items) {
   client.setPostFields(std::move(payload));
   if (!client.submit())
     return nonstd::make_unexpected("Submit failed");
