@@ -139,6 +139,7 @@ namespace std {
 template<>
 struct hash<org::apache::nifi::minifi::utils::Identifier> {
   size_t operator()(const org::apache::nifi::minifi::utils::Identifier& id) const noexcept {
+    static_assert(sizeof(org::apache::nifi::minifi::utils::Identifier) % sizeof(size_t) == 0);
     constexpr int slices = sizeof(org::apache::nifi::minifi::utils::Identifier) / sizeof(size_t);
     const auto combine = [](size_t& seed, size_t new_hash) {
       // from the boost hash_combine docs
