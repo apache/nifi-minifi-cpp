@@ -416,6 +416,12 @@ def step_impl(context):
     context.test.start_splunk()
 
 
+# TCP client
+@given('a TCP client is set up to send a test TCP message to minifi')
+def step_impl(context):
+    context.test.acquire_container("tcp-client", "tcp-client")
+
+
 @given("SSL is enabled for the Splunk HEC and the SSL context service is set up for PutSplunkHTTP and QuerySplunkIndexingStatus")
 def step_impl(context):
     root_ca_cert, root_ca_key = make_ca("root CA")

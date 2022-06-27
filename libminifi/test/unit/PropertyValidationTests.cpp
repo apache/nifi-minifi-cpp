@@ -260,4 +260,14 @@ TEST_CASE("TimePeriodValue Property without validator") {
   REQUIRE_THROWS_AS(component.getProperty(prop.getName(), time_period_value), ValueException);
 }
 
+TEST_CASE("Validating listener port property") {
+  auto prop = core::PropertyBuilder::createProperty("Port")
+        ->withType(core::StandardValidators::get().LISTEN_PORT_VALIDATOR)
+        ->build();
+  REQUIRE_NOTHROW(prop.setValue("1234"));
+  REQUIRE_THROWS_AS(prop.setValue("banana"), InvalidValueException);
+  REQUIRE_THROWS_AS(prop.setValue("65536"), InvalidValueException);
+  REQUIRE_THROWS_AS(prop.setValue("-1"), InvalidValueException);
+}
+
 }  // namespace org::apache::nifi::minifi::core

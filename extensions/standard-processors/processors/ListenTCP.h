@@ -14,60 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-
 #pragma once
 
-#include <utility>
-#include <string>
 #include <memory>
-#include <regex>
+#include <string>
 
 #include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
 
 namespace org::apache::nifi::minifi::processors {
 
-class ListenSyslog : public NetworkListenerProcessor {
+class ListenTCP : public NetworkListenerProcessor {
  public:
-  explicit ListenSyslog(const std::string& name, const utils::Identifier& uuid = {})
-      : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenSyslog>::getLogger()) {
+  explicit ListenTCP(const std::string& name, const utils::Identifier& uuid = {})
+    : NetworkListenerProcessor(name, uuid, core::logging::LoggerFactory<ListenTCP>::getLogger()) {
   }
 
-  EXTENSIONAPI static constexpr const char* Description = "Listens for Syslog messages being sent to a given port over TCP or UDP. "
-      "Incoming messages are optionally checked against regular expressions for RFC5424 and RFC3164 formatted messages. "
-      "With parsing enabled the individual parts of the message will be placed as FlowFile attributes and "
-      "valid messages will be transferred to success relationship, while invalid messages will be transferred to invalid relationship. "
-      "With parsing disabled all message will be routed to the success relationship, but it will only contain the sender, protocol, and port attributes";
+  EXTENSIONAPI static constexpr const char* Description = "Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. "
+                                                          "For each message the processor produces a single FlowFile.";
 
   EXTENSIONAPI static const core::Property Port;
-  EXTENSIONAPI static const core::Property ProtocolProperty;
   EXTENSIONAPI static const core::Property MaxBatchSize;
-  EXTENSIONAPI static const core::Property ParseMessages;
   EXTENSIONAPI static const core::Property MaxQueueSize;
   static auto properties() {
     return std::array{
       Port,
-      ProtocolProperty,
       MaxBatchSize,
-      ParseMessages,
       MaxQueueSize
     };
   }
 
   EXTENSIONAPI static const core::Relationship Success;
-  EXTENSIONAPI static const core::Relationship Invalid;
-  static auto relationships() { return std::array{Success, Invalid}; }
+  static auto relationships() { return std::array{Success}; }
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
  private:
   void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) override;
-
-  static const std::regex rfc5424_pattern_;
-  static const std::regex rfc3164_pattern_;
-
-  bool parse_messages_ = false;
 };
+
 }  // namespace org::apache::nifi::minifi::processors

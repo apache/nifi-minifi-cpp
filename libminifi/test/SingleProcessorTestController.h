@@ -26,8 +26,14 @@
 #include "TestBase.h"
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
+#include "range/v3/algorithm/all_of.hpp"
+
+using namespace std::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
+
+using ProcessorTriggerResult = std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>;
+
 class SingleProcessorTestController : public TestController {
  public:
   explicit SingleProcessorTestController(const std::shared_ptr<core::Processor>& processor)
@@ -55,6 +61,26 @@ class SingleProcessorTestController : public TestController {
     const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
     input_->put(new_flow_file);
     return trigger();
+  }
+
+  bool triggerUntil(const std::unordered_map<core::Relationship, size_t>& expected_quantities,
+                    ProcessorTriggerResult& result,
+                    const std::chrono::milliseconds max_duration,
+                    const std::chrono::milliseconds wait_time = 50ms) {
+    auto start_time = std::chrono::steady_clock::now();
+    while (std::chrono::steady_clock::now() < start_time + max_duration) {
+      for (auto& [relationship, flow_files] : trigger()) {
+        result[relationship].insert(result[relationship].end(), flow_files.begin(), flow_files.end());
+      }
+      if (ranges::all_of(expected_quantities, [&result](const auto& kv) {
+        const auto& [relationship, expected_quantity] = kv;
+        return result[relationship].size() >= expected_quantity;
+      })) {
+        return true;
+      }
+      std::this_thread::sleep_for(wait_time);
+    }
+    return false;
   }
 
   core::Relationship addDynamicRelationship(std::string name) {

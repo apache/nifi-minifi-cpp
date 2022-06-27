@@ -19,7 +19,7 @@
 #include "Catch.h"
 #include "ListenSyslog.h"
 #include "SingleProcessorTestController.h"
-#include "asio.hpp"
+#include "Utils.h"
 
 using ListenSyslog = org::apache::nifi::minifi::processors::ListenSyslog;
 
@@ -207,21 +207,6 @@ void sendUDPPacket(const std::string_view content, uint64_t port) {
   socket.close();
 }
 
-void sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t port) {
-  asio::io_context io_context;
-  asio::ip::tcp::socket socket(io_context);
-  asio::ip::tcp::endpoint remote_endpoint(asio::ip::address::from_string("127.0.0.1"), port);
-  socket.connect(remote_endpoint);
-  std::error_code err;
-  for (auto& content : contents) {
-    std::string tcp_message(content);
-    tcp_message += '\n';
-    socket.send(asio::buffer(tcp_message, tcp_message.size()), 0, err);
-  }
-  REQUIRE(!err);
-  socket.close();
-}
-
 void check_for_only_basic_attributes(core::FlowFile& flow_file, uint16_t port, std::string_view protocol) {
   CHECK(std::to_string(port) == flow_file.getAttribute("syslog.port"));
   CHECK(protocol == flow_file.getAttribute("syslog.protocol"));
@@ -272,43 +257,6 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164
   CHECK(original_message.msg_ == flow_file.getAttribute("syslog.msg"));
 }
 
-bool triggerUntil(test::SingleProcessorTestController& controller,
-                  const std::unordered_map<core::Relationship, size_t>& expected_quantities,
-                  std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>& result,
-                  const std::chrono::milliseconds max_duration,
-                  const std::chrono::milliseconds wait_time = 50ms) {
-  auto start_time = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() < start_time + max_duration) {
-    for (auto& [relationship, flow_files] : controller.trigger()) {
-      result[relationship].insert(result[relationship].end(), flow_files.begin(), flow_files.end());
-    }
-    bool expected_quantities_met = true;
-    for (const auto& [relationship, expected_quantity] : expected_quantities) {
-      if (result[relationship].size() < expected_quantity) {
-        expected_quantities_met = false;
-        break;
-      }
-    }
-    if (expected_quantities_met)
-      return true;
-    std::this_thread::sleep_for(wait_time);
-  }
-  return false;
-}
-
-bool countLogOccurrencesUntil(const std::string& pattern,
-                              const int occurrences,
-                              const std::chrono::milliseconds max_duration,
-                              const std::chrono::milliseconds wait_time = 50ms) {
-  auto start_time = std::chrono::steady_clock::now();
-  while (std::chrono::steady_clock::now() < start_time + max_duration) {
-    if (LogTestController::getInstance().countOccurrences(pattern) == occurrences)
-      return true;
-    std::this_thread::sleep_for(wait_time);
-  }
-  return false;
-}
-
 TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
@@ -335,7 +283,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     sendMessagesViaTCP({invalid_syslog}, SYSLOG_PORT);
   }
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
-  REQUIRE(triggerUntil(controller, {{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
+  REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
   CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[0]) == rfc5424_logger_example_1);
   CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[1]) == invalid_syslog);
 
@@ -393,7 +341,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
   }
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
-  REQUIRE(triggerUntil(controller, {{ListenSyslog::Success, 9}, {ListenSyslog::Invalid, 1}}, result, 300ms, 50ms));
+  REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 9}, {ListenSyslog::Invalid, 1}}, result, 300ms, 50ms));
   REQUIRE(result.at(ListenSyslog::Success).size() == 9);
   REQUIRE(result.at(ListenSyslog::Invalid).size() == 1);
 
@@ -467,6 +415,7 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
     for (auto i = 0; i < 100; ++i) {
       sendUDPPacket(rfc5424_doc_example_1.unparsed_, SYSLOG_PORT);
     }
+    CHECK(countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
   }
 
   SECTION("TCP") {
@@ -475,8 +424,8 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
     for (auto i = 0; i < 100; ++i) {
       sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, SYSLOG_PORT);
     }
+    CHECK(countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
   }
-  CHECK(countLogOccurrencesUntil("Queue is full. Syslog message ignored.", 50, 300ms, 50ms));
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);

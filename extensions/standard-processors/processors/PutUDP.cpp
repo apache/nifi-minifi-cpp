@@ -124,7 +124,7 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
     return names;
   };
 
-  utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::Udp)
+  utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::UDP)
       | utils::map(utils::dereference)
       | utils::map(debug_log_resolved_names)
       | utils::flatMap([](const auto& names) { return utils::net::open_socket(names); })

@@ -34,7 +34,7 @@ namespace org::apache::nifi::minifi::processors {
 namespace {
 struct DatagramListener {
   DatagramListener(const char* const hostname, const char* const port)
-    :resolved_names_{utils::net::resolveHost(hostname, port, utils::net::IpProtocol::Udp).value()},
+    :resolved_names_{utils::net::resolveHost(hostname, port, utils::net::IpProtocol::UDP).value()},
      open_socket_{utils::net::open_socket(*resolved_names_)
         | utils::valueOrElse([=]() -> utils::net::OpenSocketResult { throw std::runtime_error{utils::StringUtils::join_pack("Failed to connect to ", hostname, " on port ", port)}; })}
   {

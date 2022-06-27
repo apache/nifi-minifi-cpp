@@ -69,14 +69,14 @@ nonstd::expected<gsl::not_null<std::unique_ptr<addrinfo, addrinfo_deleter>>, std
   addrinfo hints{};
   memset(&hints, 0, sizeof hints);  // make sure the struct is empty
   hints.ai_family = AF_UNSPEC;
-  hints.ai_socktype = protocol == IpProtocol::Tcp ? SOCK_STREAM : SOCK_DGRAM;
+  hints.ai_socktype = protocol == IpProtocol::TCP ? SOCK_STREAM : SOCK_DGRAM;
   hints.ai_flags = need_canonname ? AI_CANONNAME : 0;
   if (!hostname)
     hints.ai_flags |= AI_PASSIVE;
   hints.ai_protocol = [protocol]() -> int {
-    switch (protocol) {
-      case IpProtocol::Tcp: return IPPROTO_TCP;
-      case IpProtocol::Udp: return IPPROTO_UDP;
+    switch (protocol.value()) {
+      case IpProtocol::TCP: return IPPROTO_TCP;
+      case IpProtocol::UDP: return IPPROTO_UDP;
     }
     return 0;
   }();

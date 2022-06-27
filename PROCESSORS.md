@@ -45,6 +45,7 @@
 - [ListGCSBucket](#listgcsbucket)
 - [ListenHTTP](#listenhttp)
 - [ListenSyslog](#listensyslog)
+- [ListenTCP](#listentcp)
 - [ListFile](#listfile)
 - [ListS3](#lists3)
 - [ListSFTP](#listsftp)
@@ -1247,7 +1248,7 @@ In the list below, the names of required properties appear in bold. Any other pr
 | Protocol                  | UDP           | UDP<br>TCP<br>   | The protocol for Syslog communication.                                                                                                                                                               |
 | Parse Messages            | false         | false<br>true    | Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.                 |
 | Max Batch Size            | 500           |                  | The maximum number of Syslog events to process at a time.                                                                                                                                            |
-| Max Size of Message Queue | 0             |                  | Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. If the buffer full, the message is ignored. If set to zero the buffer is unlimited. |
+| Max Size of Message Queue | 10000         |                  | Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
 
 ### Relationships
 
@@ -1277,6 +1278,24 @@ In the list below, the names of required properties appear in bold. Any other pr
 | _syslog.msg_id_          | The message id of the Syslog message.                              | Parsed RFC5424         |
 | _syslog.structured_data_ | The structured data of the Syslog message.                         | Parsed RFC5424         |
 
+
+
+## ListenTCP
+
+### Description
+
+Listens for incoming TCP connections and reads data from each connection using a line separator as the message demarcator. For each message the processor produces a single FlowFile.
+
+
+### Properties
+
+In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
+
+| Name                          | Default Value | Allowable Values | Description                                                                                                                                                                                   |
+|-------------------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Listening Port**            |               |                  | The port to listen on for communication.                                                                                                                                                      |
+| **Max Batch Size**            | 500           |                  | The maximum number of messages to process at a time.                                                                                                                                          |
+| **Max Size of Message Queue** | 10000         |                  | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
 
 
 ## ListFile
