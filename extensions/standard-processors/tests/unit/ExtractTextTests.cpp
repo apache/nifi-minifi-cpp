@@ -160,34 +160,34 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
     test_file.close();
   }
 
+  std::list<std::string> expected_logs;
+
   SECTION("Do not include capture group 0") {
     plan->setProperty(maprocessor, org::apache::nifi::minifi::processors::ExtractText::IncludeCaptureGroupZero.getName(), "false");
 
     testController.runSession(plan);
 
-    std::list<std::string> suffixes = { "", ".0", ".1" };
-    for (const auto& suffix : suffixes) {
-      ss.str("");
-      ss << "key:" << "RegexAttr" << suffix << " value:" << ((suffix == ".1") ? "80" : "130");
-      std::string log_check = ss.str();
-      REQUIRE(LogTestController::getInstance().contains(log_check));
-    }
+    expected_logs = {
+      "key:RegexAttr value:130",
+      "key:RegexAttr.0 value:130",
+      "key:RegexAttr.1 value:80"
+    };
   }
 
   SECTION("Include capture group 0") {
     testController.runSession(plan);
 
-    std::list<std::string> expected_logs = {
+    expected_logs = {
       "key:RegexAttr value:Speed limit 130",
       "key:RegexAttr.0 value:Speed limit 130",
       "key:RegexAttr.1 value:130",
       "key:RegexAttr.2 value:Speed limit 80",
       "key:RegexAttr.3 value:80"
     };
+  }
 
-    for (const auto& log : expected_logs) {
-      REQUIRE(LogTestController::getInstance().contains(log));
-    }
+  for (const auto& log : expected_logs) {
+    REQUIRE(LogTestController::getInstance().contains(log));
   }
 
   std::string error_str = "error encountered when trying to construct regular expression from property (key: InvalidRegex)";
