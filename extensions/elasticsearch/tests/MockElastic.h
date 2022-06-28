@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 #include <CivetServer.h>
+#include "tests/CivetLibrary.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "rapidjson/document.h"
@@ -138,24 +139,6 @@ class BulkElasticHandler : public CivetHandler {
 };
 
 class MockElastic {
-  struct CivetLibrary{
-    CivetLibrary() {
-      if (getCounter()++ == 0) {
-        mg_init_library(0);
-      }
-    }
-    ~CivetLibrary() {
-      if (--getCounter() == 0) {
-        mg_exit_library();
-      }
-    }
-   private:
-    static std::atomic<int>& getCounter() {
-      static std::atomic<int> counter{0};
-      return counter;
-    }
-  };
-
  public:
   explicit MockElastic(std::string port) : port_(std::move(port)) {
     std::vector<std::string> options;

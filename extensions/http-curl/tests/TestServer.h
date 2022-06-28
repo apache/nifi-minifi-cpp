@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 #include "civetweb.h"
+#include "CivetLibrary.h"
 #include "CivetServer.h"
 #include "HTTPUtils.h"
 #include "ServerAwareHandler.h"
@@ -31,24 +32,6 @@
  * initiated it might get stuck inside worker_thread_run > consume_socket)
  */
 class TestServer{
-  struct CivetLibrary{
-    CivetLibrary() {
-      if (getCounter()++ == 0) {
-        mg_init_library(0);
-      }
-    }
-    ~CivetLibrary() {
-      if (--getCounter() == 0) {
-        mg_exit_library();
-      }
-    }
-   private:
-    static std::atomic<int>& getCounter() {
-      static std::atomic<int> counter{0};
-      return counter;
-    }
-  };
-
  public:
   TestServer(std::string &port, std::string &rooturi, CivetHandler *handler, CivetCallbacks *callbacks, std::string& cert, std::string &ca_cert) {
     if (!mg_check_feature(2)) {

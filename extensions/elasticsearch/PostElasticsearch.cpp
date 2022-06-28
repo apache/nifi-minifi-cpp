@@ -40,6 +40,7 @@ const core::Relationship PostElasticsearch::Error("error", "All flowfiles that E
 const core::Property PostElasticsearch::Action = core::PropertyBuilder::createProperty("Action")
     ->withDescription("The type of the operation used to index (create, delete, index, update, upsert)")
     ->supportsExpressionLanguage(true)
+    ->isRequired(true)
     ->build();
 
 const core::Property PostElasticsearch::MaxBatchSize = core::PropertyBuilder::createProperty("Max Batch Size")
@@ -62,11 +63,13 @@ const core::Property PostElasticsearch::SSLContext = core::PropertyBuilder::crea
 const core::Property PostElasticsearch::Hosts = core::PropertyBuilder::createProperty("Hosts")
     ->withDescription("A comma-separated list of HTTP hosts that host Elasticsearch query nodes. Currently only supports a single host.")
     ->supportsExpressionLanguage(true)
+    ->isRequired(true)
     ->build();
 
 const core::Property PostElasticsearch::Index = core::PropertyBuilder::createProperty("Index")
     ->withDescription("The name of the index to use.")
     ->supportsExpressionLanguage(true)
+    ->isRequired(true)
     ->build();
 
 const core::Property PostElasticsearch::Identifier = core::PropertyBuilder::createProperty("Identifier")
@@ -188,15 +191,15 @@ class ElasticPayload {
   [[nodiscard]] std::string headerString() const {
     rapidjson::Document first_line = rapidjson::Document(rapidjson::kObjectType);
 
-    auto operation_index_key = rapidjson::Value(operation_.data(), operation_.size(), first_line.GetAllocator());
+    auto operation_index_key = rapidjson::Value(operation_.data(), operation_.size());
     first_line.AddMember(operation_index_key, rapidjson::Value{rapidjson::kObjectType}, first_line.GetAllocator());
     auto& operation_request = first_line[operation_.c_str()];
 
-    auto index_json = rapidjson::Value(index_.data(), index_.size(), first_line.GetAllocator());
+    auto index_json = rapidjson::Value(index_.data(), index_.size());
     operation_request.AddMember("_index", index_json, first_line.GetAllocator());
 
     if (id_) {
-      auto id_json = rapidjson::Value(id_->data(), id_->size(), first_line.GetAllocator());
+      auto id_json = rapidjson::Value(id_->data(), id_->size());
       operation_request.AddMember("_id", id_json, first_line.GetAllocator());
     }
 
@@ -255,8 +258,10 @@ void addAttributesFromResponse(std::string name, rapidjson::Value::ConstMemberIt
 void processResponseFromElastic(const rapidjson::Document& response, core::ProcessSession& session, const std::vector<std::shared_ptr<core::FlowFile>>& flowfiles_sent) {
   gsl_Expects(response.HasMember("items"));
   auto& items = response["items"];
+  gsl_Expects(items.IsArray());
   gsl_Expects(items.Size() == flowfiles_sent.size());
   for (size_t i = 0; i < items.Size(); ++i) {
+    gsl_Expects(items[i].IsObject());
     for (auto it = items[i].MemberBegin(); it != items[i].MemberEnd(); ++it) {
       addAttributesFromResponse("elasticsearch", it, *flowfiles_sent[i]);
     }
