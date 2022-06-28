@@ -119,43 +119,43 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
   updating_ = true;
-
-  std::unique_lock<std::recursive_mutex> flow_lock(mutex_);
-  stop();
-  unload();
-  controller_map_->clear();
-  clearResponseNodes();
-  if (metrics_publisher_) {
-    metrics_publisher_->clearMetricNodes();
-  }
-  auto prevRoot = std::move(this->root_);
-  this->root_ = std::move(newRoot);
-  processor_to_controller_.clear();
-  initialized_ = false;
   bool started = false;
-  try {
-    load(std::move(root_), true);
-    flow_update_ = true;
-    started = start() == 0;
-    flow_lock.unlock();
-    updating_ = false;
 
-    if (started) {
-      auto flowVersion = flow_configuration_->getFlowVersion();
-      if (flowVersion) {
-        logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
-      } else {
-        logger_->log_debug("Invalid flow version, not setting");
-      }
+  {
+    std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+    stop();
+    unload();
+    controller_map_->clear();
+    clearResponseNodes();
+    if (metrics_publisher_) {
+      metrics_publisher_->clearMetricNodes();
     }
-  } catch (...) {
-    this->root_ = std::move(prevRoot);
-    load(std::move(this->root_), true);
-    flow_update_ = true;
-    flow_lock.unlock();
-    updating_ = false;
+    auto prevRoot = std::move(this->root_);
+    this->root_ = std::move(newRoot);
+    processor_to_controller_.clear();
+    initialized_ = false;
+    try {
+      load(std::move(root_), true);
+      flow_update_ = true;
+      started = start() == 0;
+    } catch (...) {
+      this->root_ = std::move(prevRoot);
+      load(std::move(this->root_), true);
+      flow_update_ = true;
+    }
+  }
+
+  updating_ = false;
+
+  if (started) {
+    auto flowVersion = flow_configuration_->getFlowVersion();
+    if (flowVersion) {
+      logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
+    } else {
+      logger_->log_debug("Invalid flow version, not setting");
+    }
   }
 
   return started;
