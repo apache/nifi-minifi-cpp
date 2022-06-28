@@ -106,23 +106,18 @@ void PostElasticsearch::onSchedule(const std::shared_ptr<core::ProcessContext>& 
   if (max_batch_size_ < 1)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Max Batch Size property is invalid");
 
-  std::string host_url{};
   if (auto hosts_str = context->getProperty(Hosts)) {
     auto hosts = utils::StringUtils::split(*hosts_str, ",");
     if (hosts.size() > 1)
       throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Multiple hosts not yet supported");
-    host_url = hosts[0];
+    host_url_ = hosts[0];
   } else {
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing or invalid hosts");
   }
 
-  auto credentials_service = getCredentialsService(*context);
-  if (!credentials_service)
+  credentials_service_ = getCredentialsService(*context);
+  if (!credentials_service_)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing Elasticsearch credentials service");
-
-  client_.initialize("POST", host_url + "/_bulk", getSSLContextService(*context));
-  client_.setContentType("application/json");
-  credentials_service->authenticateClient(client_);
 }
 
 namespace {
@@ -296,6 +291,11 @@ std::string PostElasticsearch::collectPayload(core::ProcessContext& context,
 
 void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session && max_batch_size_ > 0);
+  utils::HTTPClient client;
+  client.initialize("POST", host_url_ + "/_bulk", getSSLContextService(*context));
+  client.setContentType("application/json");
+  credentials_service_->authenticateClient(client);
+
   std::vector<std::shared_ptr<core::FlowFile>> flowfiles_with_payload;
   auto payload = collectPayload(*context, *session, flowfiles_with_payload);
 
@@ -303,7 +303,7 @@ void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& c
     return;
   }
 
-  auto result = submitRequest(client_, std::move(payload), flowfiles_with_payload.size());
+  auto result = submitRequest(client, std::move(payload), flowfiles_with_payload.size());
   if (!result) {
     logger_->log_error(result.error().c_str());
     for (const auto& flow_file_in_payload: flowfiles_with_payload)

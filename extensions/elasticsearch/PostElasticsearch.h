@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "controllers/SSLContextService.h"
+#include "ElasticsearchCredentialsControllerService.h"
 #include "core/Processor.h"
 #include "utils/Enum.h"
 #include "client/HTTPClient.h"
@@ -81,7 +82,8 @@ class PostElasticsearch : public core::Processor {
   std::string collectPayload(core::ProcessContext&, core::ProcessSession&, std::vector<std::shared_ptr<core::FlowFile>>&) const;
 
   uint64_t max_batch_size_ = 100;
-  utils::HTTPClient client_;
+  std::string host_url_;
+  std::shared_ptr<ElasticsearchCredentialsControllerService> credentials_service_;
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PostElasticsearch>::getLogger();
 };
 
