@@ -341,6 +341,9 @@ class BaseHTTPClient {
 
   virtual void setHTTPProxy(const utils::HTTPProxy &proxy) = 0;
 
+  virtual void setBasicAuth(std::string username, std::string password) = 0;
+  virtual void clearBasicAuth() = 0;
+
   virtual void setDisableHostVerification() = 0;
 
   virtual bool setSpecificSSLVersion(SSLVersion specific_version) = 0;

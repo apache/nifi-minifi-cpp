@@ -22,6 +22,7 @@
 #include <utility>
 #include <vector>
 #include <CivetServer.h>
+#include "tests/CivetLibrary.h"
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "rapidjson/document.h"
@@ -173,24 +174,6 @@ class AckIndexerHandler : public MockSplunkHandler {
 };
 
 class MockSplunkHEC {
-  struct CivetLibrary{
-    CivetLibrary() {
-      if (getCounter()++ == 0) {
-        mg_init_library(0);
-      }
-    }
-    ~CivetLibrary() {
-      if (--getCounter() == 0) {
-        mg_exit_library();
-      }
-    }
-   private:
-    static std::atomic<int>& getCounter() {
-      static std::atomic<int> counter{0};
-      return counter;
-    }
-  };
-
  public:
   static constexpr const char* TOKEN = "Splunk 822f7d13-2b70-4f8c-848b-86edfc251222";
 

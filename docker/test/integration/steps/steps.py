@@ -21,6 +21,7 @@ from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
 from minifi.controllers.GCPCredentialsControllerService import GCPCredentialsControllerService
+from minifi.controllers.ElasticsearchCredentialsService import ElasticsearchCredentialsService
 from minifi.controllers.ODBCService import ODBCService
 from minifi.controllers.KubernetesControllerService import KubernetesControllerService
 
@@ -408,6 +409,62 @@ def step_impl(context, protocol):
 @given('a Google Cloud storage server is set up and a single object with contents "preloaded data" is present')
 def step_impl(context):
     context.test.acquire_container("fake-gcs-server", "fake-gcs-server")
+
+
+# elasticsearch
+@given('an Elasticsearch server is set up and running')
+@given('an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index"')
+@given('an Elasticsearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"')
+def step_impl(context):
+    context.test.start_elasticsearch()
+    context.test.create_doc_elasticsearch("elasticsearch", "my_index", "preloaded_id")
+
+
+# opensearch
+@given('an Opensearch server is set up and running')
+@given('an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index"')
+@given('an Opensearch server is set up and a single document is present with "preloaded_id" in "my_index" with "value1" in "field1"')
+def step_impl(context):
+    context.test.start_opensearch()
+    context.test.add_elastic_user_to_opensearch("opensearch")
+    context.test.create_doc_elasticsearch("opensearch", "my_index", "preloaded_id")
+
+
+@given(u'a SSL context service is set up for PostElasticsearch and Elasticsearch')
+def step_impl(context):
+    minifi_crt_file = '/tmp/resources/elasticsearch/minifi_client.crt'
+    minifi_key_file = '/tmp/resources/elasticsearch/minifi_client.key'
+    root_ca_crt_file = '/tmp/resources/elasticsearch/root_ca.crt'
+    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(ssl_context_service)
+    post_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
+
+
+@given(u'a SSL context service is set up for PostElasticsearch and Opensearch')
+def step_impl(context):
+    root_ca_crt_file = '/tmp/resources/opensearch/root-ca.pem'
+    ssl_context_service = SSLContextService(ca_cert=root_ca_crt_file)
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(ssl_context_service)
+    post_elasticsearch_json.set_property("SSL Context Service", ssl_context_service.name)
+
+
+@given(u'an ElasticsearchCredentialsService is set up for PostElasticsearch with Basic Authentication')
+def step_impl(context):
+    elasticsearch_credential_service = ElasticsearchCredentialsService()
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(elasticsearch_credential_service)
+    post_elasticsearch_json.set_property("Elasticsearch Credentials Provider Service", elasticsearch_credential_service.name)
+
+
+@given(u'an ElasticsearchCredentialsService is set up for PostElasticsearch with ApiKey')
+def step_impl(context):
+    api_key = context.test.elastic_generate_apikey("elasticsearch")
+    elasticsearch_credential_service = ElasticsearchCredentialsService(api_key)
+    post_elasticsearch_json = context.test.get_node_by_name("PostElasticsearch")
+    post_elasticsearch_json.controller_services.append(elasticsearch_credential_service)
+    post_elasticsearch_json.set_property("Elasticsearch Credentials Provider Service", elasticsearch_credential_service.name)
 
 
 # splunk hec
@@ -836,3 +893,23 @@ def step_impl(context, metric_class, timeout_seconds):
 @then("\"{metric_class}\" processor metric is published to the Prometheus server in less than {timeout_seconds:d} seconds for \"{processor_name}\" processor")
 def step_impl(context, metric_class, timeout_seconds, processor_name):
     context.test.check_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)
+
+
+@then("Elasticsearch is empty")
+def step_impl(context):
+    context.test.check_empty_elastic("elasticsearch")
+
+
+@then(u'Elasticsearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
+def step_impl(context, doc_id, index, value, field):
+    context.test.check_elastic_field_value("elasticsearch", index_name=index, doc_id=doc_id, field_name=field, field_value=value)
+
+
+@then("Opensearch is empty")
+def step_impl(context):
+    context.test.check_empty_elastic("opensearch")
+
+
+@then(u'Opensearch has a document with "{doc_id}" in "{index}" that has "{value}" set in "{field}"')
+def step_impl(context, doc_id, index, value, field):
+    context.test.check_elastic_field_value("opensearch", index_name=index, doc_id=doc_id, field_name=field, field_value=value)

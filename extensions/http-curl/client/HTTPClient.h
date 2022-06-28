@@ -38,6 +38,7 @@
 #include <map>
 #include <chrono>
 #include <string>
+#include <utility>
 #ifdef WIN32
 #include <regex>
 #else
@@ -70,7 +71,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   HTTPClient(const HTTPClient&) = delete;
   HTTPClient& operator=(const HTTPClient&) = delete;
 
-  explicit HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
+  explicit HTTPClient(std::string url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
   ~HTTPClient() override;
 
@@ -137,6 +138,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   void setDisablePeerVerification() override;
 
   void setDisableHostVerification() override;
+
+  void setBasicAuth(std::string username, std::string password) override;
+  void clearBasicAuth() override;
 
   bool setSpecificSSLVersion(SSLVersion specific_version) override;
 
@@ -296,6 +300,15 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   std::chrono::milliseconds keep_alive_probe_{-1};
 
   std::chrono::milliseconds keep_alive_idle_{-1};
+
+  struct BasicAuthCredentials {
+    BasicAuthCredentials(std::string username, std::string password) : username(std::move(username)), password(std::move(password)) {}
+
+    std::string username;
+    std::string password;
+  };
+
+  std::optional<BasicAuthCredentials> username_password_;
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HTTPClient>::getLogger()};
 };

@@ -1,0 +1,28 @@
+cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+discovery.type: "single-node"
+
+# Enable security features
+xpack.security.enabled: true
+
+xpack.security.enrollment.enabled: true
+
+# Enable encryption for HTTP API client connections, such as Kibana, Logstash, and Agents
+xpack.security.http.ssl:
+  enabled: true
+  key: certs/elastic_http.key
+  certificate: certs/elastic_http.crt
+  certificate_authorities: ["certs/root_ca.crt"]
+
+
+# Enable encryption and mutual authentication between cluster nodes
+xpack.security.transport.ssl:
+  enabled: true
+  verification_mode: certificate
+  key: certs/elastic_transport.key
+  certificate: certs/elastic_transport.crt
+  certificate_authorities: ["certs/root_ca.crt"]
+
+# Create a new cluster with the current node only
+# Additional nodes can still join the cluster later
+

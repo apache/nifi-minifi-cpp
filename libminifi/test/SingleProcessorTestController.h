@@ -31,6 +31,11 @@
 using namespace std::chrono_literals;
 
 namespace org::apache::nifi::minifi::test {
+struct InputFlowFileData {
+  std::string_view content;
+  std::unordered_map<std::string, std::string> attributes = {};
+};
+
 
 using ProcessorTriggerResult = std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>>;
 
@@ -57,9 +62,19 @@ class SingleProcessorTestController : public TestController {
     return result;
   }
 
+  auto trigger(InputFlowFileData&& input_flow_file_data) {
+    input_->put(createFlowFile(input_flow_file_data.content, std::move(input_flow_file_data.attributes)));
+    return trigger();
+  }
+
   auto trigger(const std::string_view input_flow_file_content, std::unordered_map<std::string, std::string> input_flow_file_attributes = {}) {
-    const auto new_flow_file = createFlowFile(input_flow_file_content, std::move(input_flow_file_attributes));
-    input_->put(new_flow_file);
+    return trigger({input_flow_file_content, std::move(input_flow_file_attributes)});
+  }
+
+  auto trigger(std::vector<InputFlowFileData>&& input_flow_file_datas) {
+    for (auto& input_flow_file_data : std::move(input_flow_file_datas)) {
+      input_->put(createFlowFile(input_flow_file_data.content, std::move(input_flow_file_data.attributes)));
+    }
     return trigger();
   }
 

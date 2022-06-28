@@ -31,10 +31,10 @@
 
 namespace org::apache::nifi::minifi::utils {
 
-HTTPClient::HTTPClient(const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
+HTTPClient::HTTPClient(std::string url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service)
     : core::Connectable("HTTPClient"),
       ssl_context_service_(ssl_context_service),
-      url_(url) {
+      url_(std::move(url)) {
   http_session_ = curl_easy_init();
 }
 
@@ -133,6 +133,14 @@ void HTTPClient::setDisablePeerVerification() {
 void HTTPClient::setDisableHostVerification() {
   logger_->log_debug("Disabling host verification");
   curl_easy_setopt(http_session_, CURLOPT_SSL_VERIFYHOST, 0L);
+}
+
+void HTTPClient::setBasicAuth(std::string username, std::string password) {
+  username_password_.emplace(std::move(username), std::move(password));
+}
+
+void HTTPClient::clearBasicAuth() {
+  username_password_.reset();
 }
 
 bool HTTPClient::setSpecificSSLVersion(SSLVersion specific_version) {
@@ -269,6 +277,11 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_, CURLOPT_HTTPHEADER, headers_);
   }
 
+  if (username_password_) {
+    curl_easy_setopt(http_session_, CURLOPT_USERNAME, username_password_->username.c_str());
+    curl_easy_setopt(http_session_, CURLOPT_PASSWORD, username_password_->password.c_str());
+  }
+
   curl_easy_setopt(http_session_, CURLOPT_URL, url_.c_str());
   logger_->log_debug("Submitting to %s", url_);
   if (callback == nullptr) {
@@ -325,7 +338,7 @@ const char *HTTPClient::getContentType() {
 }
 
 const std::vector<char> &HTTPClient::getResponseBody() {
-  if (response_body_.size() == 0) {
+  if (response_body_.empty()) {
     if (callback && callback->ptr) {
       response_body_ = callback->ptr->to_string();
     } else {
@@ -437,7 +450,7 @@ void HTTPClient::setFollowRedirects(bool follow) {
 }
 
 bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
-  if (field_name.size() == 0) {
+  if (field_name.empty()) {
     return false;
   }
 
@@ -452,7 +465,7 @@ bool HTTPClient::isValidHttpHeaderField(std::string_view field_name) {
 }
 
 std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::string_view field_name) {
-  if (field_name.size() == 0) {
+  if (field_name.empty()) {
     return "X-MiNiFi-Empty-Attribute-Name";
   }
 

@@ -60,6 +60,10 @@ class ImageStore:
             image = self.__build_tcp_client_image()
         elif container_engine == "prometheus":
             image = self.__build_prometheus_image()
+        elif container_engine == "elasticsearch":
+            image = self.__build_elasticsearch_image()
+        elif container_engine == "opensearch":
+            image = self.__build_opensearch_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
@@ -183,6 +187,12 @@ class ImageStore:
 
     def __build_prometheus_image(self):
         return self.__build_image_by_path(self.test_dir + "/resources/prometheus", 'minifi-prometheus')
+
+    def __build_elasticsearch_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/elasticsearch", 'elasticsearch')
+
+    def __build_opensearch_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/opensearch", 'opensearch')
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()
