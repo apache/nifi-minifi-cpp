@@ -31,6 +31,11 @@ class Cluster(object):
         Stops a flow in the cluster.
         """
 
+    def kill_flow(self, container_name):
+        """
+        Kills (ungracefully stops) a flow in the cluster.
+        """
+
     def restart_flow(self, container_name):
         """
         Stops a flow in the cluster.

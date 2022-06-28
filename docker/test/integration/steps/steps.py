@@ -578,6 +578,11 @@ def step_impl(context, container_name):
     context.test.stop(container_name)
 
 
+@then("\"{container_name}\" flow is killed")
+def step_impl(context, container_name):
+    context.test.kill(container_name)
+
+
 @then("\"{container_name}\" flow is restarted")
 def step_impl(context, container_name):
     context.test.restart(container_name)

@@ -266,5 +266,28 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And "consumer-client" flow is started
     And the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
 
-    And a file with the content "test" is placed in "/tmp/input"
     And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+
+  Scenario: Last will
+    # publishing MQTT client with last will
+    Given a GetFile processor with the "Input Directory" property set to "/tmp/input" in the "publisher-client" flow
+    And a PublishMQTT processor in the "publisher-client" flow
+    And the "Client ID" property of the PublishMQTT processor is set to "publisher-client"
+    And the "Last Will Topic" property of the PublishMQTT processor is set to "last_will_topic"
+    And the "Last Will Message" property of the PublishMQTT processor is set to "last_will_message"
+    And the "success" relationship of the GetFile processor is connected to the PublishMQTT
+
+    # consuming MQTT client set to consume last will topic
+    And a ConsumeMQTT processor in the "consumer-client" flow
+    And the "Client ID" property of the ConsumeMQTT processor is set to "consumer-client"
+    And the "Topic" property of the ConsumeMQTT processor is set to "last_will_topic"
+    And a PutFile processor with the "Directory" property set to "/tmp/output" in the "consumer-client" flow
+    And the "success" relationship of the ConsumeMQTT processor is connected to the PutFile
+
+    And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
+
+    When all instances start up
+    Then the MQTT broker has a log line matching "Sending CONNACK to publisher-client"
+    And "publisher-client" flow is killed
+    And the MQTT broker has a log line matching "Sending PUBLISH to consumer-client"
+    And a flowfile with the content "last_will_message" is placed in the monitored directory in less than 60 seconds

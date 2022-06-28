@@ -61,6 +61,12 @@ class MinifiContainer(FlowContainer):
         logging.info('Successfully stopped minifi docker container "%s"', self.name)
         self.deployed = False
 
+    def kill(self):
+        logging.info('Killing minifi docker container "%s"...', self.name)
+        self.client.containers.get(self.name).kill()
+        logging.info('Successfully killed minifi docker container "%s"', self.name)
+        self.deployed = False
+
     def restart(self):
         logging.info('Restarting minifi docker container "%s"...', self.name)
         self.client.containers.get(self.name).restart()

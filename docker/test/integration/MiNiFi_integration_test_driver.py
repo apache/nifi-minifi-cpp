@@ -102,6 +102,10 @@ class MiNiFi_integration_test:
         logging.info("Stopping container %s", container_name)
         self.cluster.stop_flow(container_name)
 
+    def kill(self, container_name):
+        logging.info("Killing container %s", container_name)
+        self.cluster.kill_flow(container_name)
+
     def restart(self, container_name):
         logging.info("Restarting container %s", container_name)
         self.cluster.restart_flow(container_name)

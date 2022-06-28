@@ -65,6 +65,9 @@ class Container:
     def stop(self):
         raise NotImplementedError()
 
+    def kill(self):
+        raise NotImplementedError()
+
     def restart(self):
         raise NotImplementedError()
 
