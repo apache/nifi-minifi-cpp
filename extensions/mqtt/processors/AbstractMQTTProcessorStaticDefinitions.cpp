@@ -41,7 +41,8 @@ const core::Property AbstractMQTTProcessor::Topic(
     isRequired(true)->
     build());
 
-const core::Property AbstractMQTTProcessor::QoS("Quality of Service", "The Quality of Service (QoS) to send or receive the message with. Accepts three values '0', '1' and '2'", std::to_string(MQTT_QOS_1));
+const core::Property AbstractMQTTProcessor::QoS("Quality of Service",
+                                                "The Quality of Service (QoS) to send or receive the message with. Accepts three values '0', '1' and '2'", std::to_string(MQTT_QOS_1));
 const core::Property AbstractMQTTProcessor::KeepLiveInterval("Keep Alive Interval", "Defines the maximum time interval between messages sent or received", "60 sec");
 const core::Property AbstractMQTTProcessor::ConnectionTimeout("Connection Timeout", "Maximum time interval the client will wait for the network connection to the MQTT server", "30 sec");
 const core::Property AbstractMQTTProcessor::MaxFlowSegSize("Max Flow Segment Size", "Maximum flow content payload segment size for the MQTT record", "");
