@@ -44,7 +44,8 @@ C2Client::C2Client(
       configuration_(std::move(configuration)),
       filesystem_(std::move(filesystem)),
       logger_(std::move(logger)),
-      request_restart_(std::move(request_restart)) {}
+      request_restart_(std::move(request_restart)),
+      response_node_loader_(configuration_, provenance_repo_, flow_file_repo_, flow_configuration_.get()) {}
 
 void C2Client::stopC2() {
   if (c2_agent_) {
@@ -76,75 +77,13 @@ void C2Client::initialize(core::controller::ControllerServiceProvider *controlle
     configuration_->set(Configuration::nifi_c2_agent_identifier_fallback, agent_id, PropertyChangeLifetime::PERSISTENT);
   }
 
-  {
-    std::lock_guard<std::mutex> lock(initialization_mutex_);
-    if (initialized_ && !flow_update_) {
-      return;
-    }
-  }
-
-  // root_response_nodes_ was not cleared before, it is unclear if that was intentional
-
-  std::map<std::string, Connection*> connections;
-  if (root_ != nullptr) {
-    root_->getConnections(connections);
-  }
-
-  std::string class_csv;
-  if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
-    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
-
-    for (const std::string& clazz : classes) {
-      auto instance = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-      auto response_node = utils::dynamic_unique_cast<state::response::ResponseNode>(std::move(instance));
-      if (nullptr == response_node) {
-        logger_->log_error("No metric defined for %s", clazz);
-        continue;
-      }
-      auto identifier = dynamic_cast<state::response::AgentIdentifier*>(response_node.get());
-      if (identifier != nullptr) {
-        identifier->setAgentIdentificationProvider(configuration_);
-      }
-      auto monitor = dynamic_cast<state::response::AgentMonitor*>(response_node.get());
-      if (monitor != nullptr) {
-        monitor->addRepository(provenance_repo_);
-        monitor->addRepository(flow_file_repo_);
-        monitor->setStateMonitor(update_sink);
-      }
-      auto agent_node = dynamic_cast<state::response::AgentNode*>(response_node.get());
-      if (agent_node != nullptr && controller != nullptr) {
-        agent_node->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(controller->getControllerService(C2Agent::UPDATE_NAME)).get());
-      }
-      if (agent_node != nullptr) {
-        agent_node->setConfigurationReader([this](const std::string& key){
-          return configuration_->getRawValue(key);
-        });
-      }
-      auto configuration_checksums = dynamic_cast<state::response::ConfigurationChecksums*>(response_node.get());
-      if (configuration_checksums) {
-        configuration_checksums->addChecksumCalculator(configuration_->getChecksumCalculator());
-        configuration_checksums->addChecksumCalculator(flow_configuration_->getChecksumCalculator());
-      }
-      auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(response_node.get());
-      if (flowMonitor != nullptr) {
-        for (auto &con : connections) {
-          flowMonitor->updateConnection(con.second);
-        }
-        flowMonitor->setStateMonitor(update_sink);
-        flowMonitor->setFlowVersion(flow_configuration_->getFlowVersion());
-      }
-      const auto responseNodeName = response_node->getName();
-      std::lock_guard<std::mutex> guard(metrics_mutex_);
-      root_response_nodes_[responseNodeName] = std::move(response_node);
-    }
-  }
-
-  initializeComponentMetrics();
-
-  loadC2ResponseConfiguration(Configuration::nifi_c2_root_class_definitions);
-
   std::lock_guard<std::mutex> lock(initialization_mutex_);
+  if (initialized_ && !flow_update_) {
+    return;
+  }
+
   if (!initialized_) {
+    initializeResponseNodes(root_.get());
     // C2Agent is initialized once, meaning that a C2-triggered flow/configuration update
     // might not be equal to a fresh restart
     c2_agent_ = std::make_unique<c2::C2Agent>(controller, pause_handler, update_sink, configuration_, filesystem_, request_restart_);
@@ -160,29 +99,14 @@ std::optional<std::string> C2Client::fetchFlow(const std::string& uri) const {
   return c2_agent_->fetchFlow(uri);
 }
 
-void C2Client::initializeComponentMetrics() {
-  {
-    std::lock_guard<std::mutex> guard(metrics_mutex_);
-    component_metrics_.clear();
-  }
-
-  if (root_ == nullptr) {
-    return;
-  }
-  std::vector<core::Processor*> processors;
-  root_->getAllProcessors(processors);
-  for (const auto processor : processors) {
-    auto rep = dynamic_cast<state::response::ResponseNodeSource*>(processor);
-    if (rep == nullptr) {
+void C2Client::loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node) {
+  auto classes = utils::StringUtils::split(class_definitions, ",");
+  for (const std::string& clazz : classes) {
+    auto response_node = response_node_loader_.loadResponseNode(clazz, root_.get());
+    if (!response_node) {
       continue;
     }
-    // we have a metrics source.
-    std::vector<std::shared_ptr<state::response::ResponseNode>> metric_vector;
-    rep->getResponseNodes(metric_vector);
-    std::lock_guard<std::mutex> guard(metrics_mutex_);
-    for (auto& metric : metric_vector) {
-      component_metrics_[metric->getName()] = metric;
-    }
+    std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(response_node);
   }
 }
 
@@ -206,35 +130,13 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       }
       std::shared_ptr<state::response::ResponseNode> new_node = std::make_shared<state::response::ObjectNode>(name);
       if (configuration_->get(classOption, class_definitions)) {
-        std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-        for (const std::string& clazz : classes) {
-          // instantiate the object
-          std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-          if (nullptr == ptr) {
-            const bool found_metric = [&] {
-              std::lock_guard<std::mutex> guard{metrics_mutex_};
-              auto metric = component_metrics_.find(clazz);
-              if (metric != component_metrics_.end()) {
-                ptr = metric->second;
-                return true;
-              }
-              return false;
-            }();
-            if (!found_metric) {
-              logger_->log_error("No metric defined for %s", clazz);
-              continue;
-            }
-          }
-          auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-          std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
-        }
-
+        loadNodeClasses(class_definitions, new_node);
       } else {
         std::string optionName = option + "." + name;
-        auto node = loadC2ResponseConfiguration(optionName, new_node);
+        loadC2ResponseConfiguration(optionName, new_node);
       }
 
-      std::lock_guard<std::mutex> guard{metrics_mutex_};
+      // We don't need to lock here, we already do it in the initializeResponseNodes member function
       root_response_nodes_[name] = new_node;
     } catch (...) {
       logger_->log_error("Could not create metrics class %s", metricsClass);
@@ -264,37 +166,16 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
         std::vector<std::string> sub_classes = utils::StringUtils::split(name, ",");
         for (const std::string& subClassStr : classes) {
           auto node = loadC2ResponseConfiguration(subClassStr, prev_node);
-          if (node != nullptr)
+          if (node != nullptr) {
             std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(node);
+          }
         }
       } else {
         if (configuration_->get(classOption, class_definitions)) {
-          std::vector<std::string> classes = utils::StringUtils::split(class_definitions, ",");
-          for (const std::string& clazz : classes) {
-            // instantiate the object
-            std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
-            if (nullptr == ptr) {
-              const bool found_metric = [&] {
-                std::lock_guard<std::mutex> guard{metrics_mutex_};
-                auto metric = component_metrics_.find(clazz);
-                if (metric != component_metrics_.end()) {
-                  ptr = metric->second;
-                  return true;
-                }
-                return false;
-              }();
-              if (!found_metric) {
-                logger_->log_error("No metric defined for %s", clazz);
-                continue;
-              }
-            }
-
-            auto node = std::dynamic_pointer_cast<state::response::ResponseNode>(ptr);
-            std::static_pointer_cast<state::response::ObjectNode>(new_node)->add_node(node);
-          }
-          if (!new_node->isEmpty())
+          loadNodeClasses(class_definitions, new_node);
+          if (!new_node->isEmpty()) {
             std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
-
+          }
         } else {
           std::string optionName = option + "." + name;
           auto sub_node = loadC2ResponseConfiguration(optionName, new_node);
@@ -308,57 +189,76 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
   return prev_node;
 }
 
-std::shared_ptr<state::response::ResponseNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
+std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
   if (!metrics_class.empty()) {
-    std::lock_guard<std::mutex> lock(metrics_mutex_);
-    const auto citer = component_metrics_.find(metrics_class);
-    if (citer != component_metrics_.end()) {
-      return citer->second;
+    auto metrics_node = response_node_loader_.getComponentMetricsNode(metrics_class);
+    if (metrics_node) {
+      state::response::NodeReporter::ReportedNode reported_node;
+      reported_node.is_array = metrics_node->isArray();
+      reported_node.name = metrics_node->getName();
+      reported_node.serialized_nodes = metrics_node->serialize();
+      return reported_node;
     }
   } else {
-    std::lock_guard<std::mutex> lock(metrics_mutex_);
     const auto iter = root_response_nodes_.find("metrics");
     if (iter != root_response_nodes_.end()) {
-      return iter->second;
+      state::response::NodeReporter::ReportedNode reported_node;
+      reported_node.is_array = iter->second->isArray();
+      reported_node.name = iter->second->getName();
+      reported_node.serialized_nodes = iter->second->serialize();
+      return reported_node;
     }
   }
-  return nullptr;
+  return std::nullopt;
 }
 
-std::vector<std::shared_ptr<state::response::ResponseNode>> C2Client::getHeartbeatNodes(bool include_manifest) const {
+std::vector<state::response::NodeReporter::ReportedNode> C2Client::getHeartbeatNodes(bool include_manifest) const {
   std::string fullHb{"true"};
   configuration_->get(minifi::Configuration::nifi_c2_full_heartbeat, fullHb);
   const bool include = include_manifest || fullHb == "true";
 
-  std::vector<std::shared_ptr<state::response::ResponseNode>> nodes;
+  std::vector<state::response::NodeReporter::ReportedNode> nodes;
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
   nodes.reserve(root_response_nodes_.size());
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
   for (const auto &entry : root_response_nodes_) {
     auto identifier = std::dynamic_pointer_cast<state::response::AgentIdentifier>(entry.second);
     if (identifier) {
       identifier->includeAgentManifest(include);
     }
-    nodes.push_back(entry.second);
+    if (entry.second) {
+      state::response::NodeReporter::ReportedNode reported_node;
+      reported_node.name = entry.second->getName();
+      reported_node.is_array = entry.second->isArray();
+      reported_node.serialized_nodes = entry.second->serialize();
+      nodes.push_back(reported_node);
+    }
   }
   return nodes;
 }
 
-void C2Client::updateResponseNodeConnections() {
-  std::map<std::string, Connection*> connections;
-  if (root_ != nullptr) {
-    root_->getConnections(connections);
-  }
+void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
+  std::string class_csv;
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
+  if (configuration_->get(minifi::Configuration::nifi_c2_root_classes, class_csv)) {
+    std::vector<std::string> classes = utils::StringUtils::split(class_csv, ",");
 
-  std::lock_guard<std::mutex> lock(metrics_mutex_);
-  for (auto& [_, responseNode] : root_response_nodes_) {
-    auto flowMonitor = dynamic_cast<state::response::FlowMonitor*>(responseNode.get());
-    if (flowMonitor != nullptr) {
-      flowMonitor->clearConnections();
-      for (const auto &con: connections) {
-        flowMonitor->updateConnection(con.second);
+    for (const std::string& clazz : classes) {
+      auto response_node = response_node_loader_.loadResponseNode(clazz, root);
+      if (!response_node) {
+        continue;
       }
+
+      root_response_nodes_[response_node->getName()] = std::move(response_node);
     }
   }
+
+  loadC2ResponseConfiguration(Configuration::nifi_c2_root_class_definitions);
+}
+
+void C2Client::clearResponseNodes() {
+  std::lock_guard<std::mutex> guard{metrics_mutex_};
+  root_response_nodes_.clear();
 }
 
 }  // namespace org::apache::nifi::minifi::c2

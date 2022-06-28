@@ -12,8 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import json
 import logging
 import sys
@@ -29,6 +27,7 @@ from .SingleNodeDockerCluster import SingleNodeDockerCluster
 from .utils import retry_check
 from azure.storage.blob import BlobServiceClient
 from azure.core.exceptions import ResourceExistsError
+from prometheus_api_client import PrometheusConnect
 
 
 class DockerTestCluster(SingleNodeDockerCluster):
@@ -249,7 +248,7 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     @retry_check()
     def check_google_cloud_storage(self, gcs_container_name, content):
-        (code, output) = self.client.containers.get(gcs_container_name).exec_run(["grep", "-r", content, "/storage"])
+        (code, _) = self.client.containers.get(gcs_container_name).exec_run(["grep", "-r", content, "/storage"])
         return code == 0
 
     @retry_check()
@@ -286,3 +285,79 @@ class DockerTestCluster(SingleNodeDockerCluster):
                 tar.addfile(info, io.BytesIO(content.encode('utf-8')))
             with open(os.path.join(td, 'content.tar'), 'rb') as data:
                 return container.put_archive(os.path.dirname(dst_path), data.read())
+
+    def wait_for_metric_class_on_prometheus(self, metric_class, timeout_seconds):
+        start_time = time.perf_counter()
+        while (time.perf_counter() - start_time) < timeout_seconds:
+            if self.verify_metric_class(metric_class):
+                return True
+            time.sleep(1)
+        return False
+
+    def wait_for_processor_metric_on_prometheus(self, metric_class, timeout_seconds, processor_name):
+        start_time = time.perf_counter()
+        while (time.perf_counter() - start_time) < timeout_seconds:
+            if self.verify_processor_metric(metric_class, processor_name):
+                return True
+            time.sleep(1)
+        return False
+
+    def verify_processor_metric(self, metric_class, processor_name):
+        if metric_class == "GetFileMetrics":
+            return self.verify_getfile_metrics(processor_name)
+        else:
+            raise Exception("Metric class '%s' verification is not implemented" % metric_class)
+
+    def verify_metric_class(self, metric_class):
+        if metric_class == "RepositoryMetrics":
+            return self.verify_repository_metrics()
+        elif metric_class == "QueueMetrics":
+            return self.verify_queue_metrics()
+        elif metric_class == "FlowInformation":
+            return self.verify_flow_information_metrics()
+        elif metric_class == "DeviceInfoNode":
+            return self.verify_device_info_node_metrics()
+        else:
+            raise Exception("Metric class '%s' verification is not implemented" % metric_class)
+
+    def verify_repository_metrics(self):
+        prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
+        label_list = [{'repository_name': 'provenance'}, {'repository_name': 'flowfile'}]
+        for labels in label_list:
+            if not (self.verify_metric_exists(prom, 'minifi_is_running', 'RepositoryMetrics', labels)
+                    and self.verify_metric_exists(prom, 'minifi_is_full', 'RepositoryMetrics', labels)
+                    and self.verify_metric_exists(prom, 'minifi_repository_size', 'RepositoryMetrics', labels)):
+                return False
+        return True
+
+    def verify_queue_metrics(self):
+        prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
+        return self.verify_metric_exists(prom, 'minifi_queue_data_size', 'QueueMetrics') and \
+            self.verify_metric_exists(prom, 'minifi_queue_data_size_max', 'QueueMetrics') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size', 'QueueMetrics') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size_max', 'QueueMetrics')
+
+    def verify_getfile_metrics(self, processor_name):
+        prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
+        labels = {'processor_name': processor_name}
+        return self.verify_metric_exists(prom, 'minifi_onTrigger_invocations', 'GetFileMetrics', labels) and \
+            self.verify_metric_exists(prom, 'minifi_accepted_files', 'GetFileMetrics', labels) and \
+            self.verify_metric_exists(prom, 'minifi_input_bytes', 'GetFileMetrics', labels)
+
+    def verify_flow_information_metrics(self):
+        prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
+        return self.verify_metric_exists(prom, 'minifi_queue_data_size', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_queue_data_size_max', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_queue_size_max', 'FlowInformation') and \
+            self.verify_metric_exists(prom, 'minifi_is_running', 'FlowInformation', {'component_name': 'FlowController'})
+
+    def verify_device_info_node_metrics(self):
+        prom = PrometheusConnect(url="http://localhost:9090", disable_ssl=True)
+        return self.verify_metric_exists(prom, 'minifi_physical_mem', 'DeviceInfoNode') and \
+            self.verify_metric_exists(prom, 'minifi_memory_usage', 'DeviceInfoNode') and \
+            self.verify_metric_exists(prom, 'minifi_cpu_utilization', 'DeviceInfoNode')
+
+    def verify_metric_exists(self, prometheus_client, metric_name, metric_class, labels={}):
+        labels['metric_class'] = metric_class
+        return len(prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)) > 0

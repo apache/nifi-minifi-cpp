@@ -303,7 +303,7 @@ class DeviceInfoNode : public DeviceInformation {
     device_id_ = device.device_id_;
   }
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines device characteristics to the C2 protocol";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines device characteristics to the C2 protocol";
 
   std::string getName() const override {
     return "deviceInfo";
@@ -317,6 +317,22 @@ class DeviceInfoNode : public DeviceInformation {
     serialized.push_back(serializeNetworkInfo());
 
     return serialized;
+  }
+
+  std::vector<PublishedMetric> calculateMetrics() override {
+    double system_cpu_usage = -1.0;
+    {
+      std::lock_guard<std::mutex> guard(cpu_load_tracker_mutex_);
+      system_cpu_usage = cpu_load_tracker_.getCpuUsageAndRestartCollection();
+    }
+    SerializedResponseNode cpu_usage;
+    cpu_usage.name = "cpuUtilization";
+    cpu_usage.value = system_cpu_usage;
+    return {
+      {"physical_mem", static_cast<double>(utils::OsUtils::getSystemTotalPhysicalMemory()), {{"metric_class", "DeviceInfoNode"}}},
+      {"memory_usage", static_cast<double>(utils::OsUtils::getSystemPhysicalMemoryUsage()), {{"metric_class", "DeviceInfoNode"}}},
+      {"cpu_utilization", system_cpu_usage, {{"metric_class", "DeviceInfoNode"}}},
+    };
   }
 
  protected:

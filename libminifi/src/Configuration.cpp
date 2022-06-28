@@ -124,7 +124,10 @@ const std::vector<core::ConfigurationProperty> Configuration::CONFIGURATION_PROP
   core::ConfigurationProperty{Configuration::nifi_log_logger_root},
   core::ConfigurationProperty{Configuration::nifi_log_compression_cached_log_max_size, gsl::make_not_null(core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())},
   core::ConfigurationProperty{Configuration::nifi_log_compression_compressed_log_max_size, gsl::make_not_null(core::StandardValidators::get().DATA_SIZE_VALIDATOR.get())},
-  core::ConfigurationProperty{Configuration::nifi_asset_directory}
+  core::ConfigurationProperty{Configuration::nifi_asset_directory},
+  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_class},
+  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_prometheus_metrics_publisher_port, gsl::make_not_null(core::StandardValidators::get().PORT_VALIDATOR.get())},
+  core::ConfigurationProperty{Configuration::nifi_metrics_publisher_metrics}
 };
 
 const std::array<const char*, 2> Configuration::DEFAULT_SENSITIVE_PROPERTIES = {Configuration::nifi_security_client_pass_phrase,
@@ -145,7 +148,7 @@ std::vector<std::string> Configuration::mergeProperties(std::vector<std::string>
   return properties;
 }
 
-std::vector<std::string> Configuration::getSensitiveProperties(std::function<std::optional<std::string>(const std::string&)> reader) {
+std::vector<std::string> Configuration::getSensitiveProperties(const std::function<std::optional<std::string>(const std::string&)>& reader) {
   std::vector<std::string> sensitive_properties(Configuration::DEFAULT_SENSITIVE_PROPERTIES.begin(), Configuration::DEFAULT_SENSITIVE_PROPERTIES.end());
   if (reader) {
     const auto additional_sensitive_props_list = reader(Configuration::nifi_sensitive_props_additional_keys);

@@ -24,6 +24,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 #include "c2/C2Agent.h"
 #include "core/controller/ControllerServiceProvider.h"
@@ -35,6 +36,8 @@
 #include "core/ProcessGroup.h"
 #include "core/Flow.h"
 #include "utils/file/FileSystem.h"
+#include "core/state/nodes/ResponseNodeLoader.h"
+#include "utils/Id.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -48,22 +51,21 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
       std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<C2Client>::getLogger());
 
   void initialize(core::controller::ControllerServiceProvider *controller, state::Pausable *pause_handler, state::StateMonitor* update_sink);
-
-  std::shared_ptr<state::response::ResponseNode> getMetricsNode(const std::string& metrics_class) const override;
-
-  std::vector<std::shared_ptr<state::response::ResponseNode>> getHeartbeatNodes(bool include_manifest) const override;
+  std::optional<state::response::NodeReporter::ReportedNode> getMetricsNode(const std::string& metrics_class) const override;
+  std::vector<state::response::NodeReporter::ReportedNode> getHeartbeatNodes(bool include_manifest) const override;
 
   void stopC2();
+  void initializeResponseNodes(core::ProcessGroup* root);
+  void clearResponseNodes();
 
  protected:
   bool isC2Enabled() const;
   std::optional<std::string> fetchFlow(const std::string& uri) const;
-  void updateResponseNodeConnections();
 
  private:
-  void initializeComponentMetrics();
   void loadC2ResponseConfiguration(const std::string &prefix);
   std::shared_ptr<state::response::ResponseNode> loadC2ResponseConfiguration(const std::string &prefix, std::shared_ptr<state::response::ResponseNode> prev_node);
+  void loadNodeClasses(const std::string& class_definitions, const std::shared_ptr<state::response::ResponseNode>& new_node);
 
  protected:
   std::shared_ptr<Configure> configuration_;
@@ -74,14 +76,13 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   std::mutex initialization_mutex_;
   bool initialized_ = false;
   std::shared_ptr<core::logging::Logger> logger_;
-
   mutable std::mutex metrics_mutex_;
   std::map<std::string, std::shared_ptr<state::response::ResponseNode>> root_response_nodes_;
-  std::map<std::string, std::shared_ptr<state::response::ResponseNode>> component_metrics_;
 
  protected:
   std::atomic<bool> flow_update_{false};
   std::function<void()> request_restart_;
+  state::response::ResponseNodeLoader response_node_loader_;
 };
 
 }  // namespace org::apache::nifi::minifi::c2

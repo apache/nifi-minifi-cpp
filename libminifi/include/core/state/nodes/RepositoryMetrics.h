@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -27,12 +26,8 @@
 
 #include "../nodes/MetricsBase.h"
 #include "Connection.h"
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+
+namespace org::apache::nifi::minifi::state::response {
 
 /**
  * Justification and Purpose: Provides repository metrics. Provides critical information to the
@@ -53,19 +48,21 @@ class RepositoryMetrics : public ResponseNode {
       : ResponseNode("RepositoryMetrics") {
   }
 
-  virtual std::string getName() const {
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines repository metric information";
+
+  std::string getName() const override {
     return "RepositoryMetrics";
   }
 
   void addRepository(const std::shared_ptr<core::Repository> &repo) {
     if (nullptr != repo) {
-      repositories.insert(std::make_pair(repo->getName(), repo));
+      repositories_.insert(std::make_pair(repo->getName(), repo));
     }
   }
 
-  std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
-    for (auto conn : repositories) {
+    for (auto conn : repositories_) {
       auto repo = conn.second;
       SerializedResponseNode parent;
       parent.name = repo->getName();
@@ -90,15 +87,18 @@ class RepositoryMetrics : public ResponseNode {
     return serialized;
   }
 
+  std::vector<PublishedMetric> calculateMetrics() override {
+    std::vector<PublishedMetric> metrics;
+    for (const auto& [_, repo] : repositories_) {
+      metrics.push_back({"is_running", (repo->isRunning() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+      metrics.push_back({"is_full", (repo->isFull() ? 1.0 : 0.0), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+      metrics.push_back({"repository_size", static_cast<double>(repo->getRepoSize()), {{"metric_class", getName()}, {"repository_name", repo->getName()}}});
+    }
+    return metrics;
+  }
+
  protected:
-  std::map<std::string, std::shared_ptr<core::Repository>> repositories;
+  std::map<std::string, std::shared_ptr<core::Repository>> repositories_;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_REPOSITORYMETRICS_H_
+}  // namespace org::apache::nifi::minifi::state::response

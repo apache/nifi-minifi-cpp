@@ -220,7 +220,7 @@ void C2Agent::performHeartBeat() {
   C2Payload payload(Operation::HEARTBEAT);
   logger_->log_trace("Performing heartbeat");
   auto reporter = dynamic_cast<state::response::NodeReporter*>(update_sink_);
-  std::vector<std::shared_ptr<state::response::ResponseNode>> metrics;
+  std::vector<state::response::NodeReporter::ReportedNode> metrics;
   if (reporter) {
     if (!manifest_sent_) {
       // include agent manifest for the first heartbeat
@@ -233,9 +233,9 @@ void C2Agent::performHeartBeat() {
     payload.reservePayloads(metrics.size());
     for (const auto& metric : metrics) {
       C2Payload child_metric_payload(Operation::HEARTBEAT);
-      child_metric_payload.setLabel(metric->getName());
-      child_metric_payload.setContainer(metric->isArray());
-      serializeMetrics(child_metric_payload, metric->getName(), metric->serialize(), metric->isArray());
+      child_metric_payload.setLabel(metric.name);
+      child_metric_payload.setContainer(metric.is_array);
+      serializeMetrics(child_metric_payload, metric.name, metric.serialized_nodes, metric.is_array);
       payload.addPayload(std::move(child_metric_payload));
     }
   }
@@ -504,7 +504,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
         C2Payload metrics(Operation::ACKNOWLEDGE);
         metricsClass.empty() ? metrics.setLabel("metrics") : metrics.setLabel(metricsClass);
         if (metricsNode) {
-          serializeMetrics(metrics, metricsNode->getName(), metricsNode->serialize(), metricsNode->isArray());
+          serializeMetrics(metrics, metricsNode->name, metricsNode->serialized_nodes, metricsNode->is_array);
         }
         response.addPayload(std::move(metrics));
       }
@@ -523,7 +523,7 @@ void C2Agent::handle_describe(const C2ContentResponse &resp) {
         agentInfo.setLabel("agentInfo");
 
         const auto manifest = reporter->getAgentManifest();
-        serializeMetrics(agentInfo, manifest->getName(), manifest->serialize());
+        serializeMetrics(agentInfo, manifest.name, manifest.serialized_nodes);
         response.addPayload(std::move(agentInfo));
       }
       enqueue_c2_response(std::move(response));

@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
-#define LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_
+#pragma once
 
 #include <algorithm>
 #include <atomic>
@@ -57,6 +56,8 @@
 #include "TimerDrivenSchedulingAgent.h"
 #include "utils/Id.h"
 #include "utils/file/FileSystem.h"
+#include "core/state/nodes/ResponseNodeLoader.h"
+#include "core/state/MetricsPublisher.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -181,7 +182,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
-  std::shared_ptr<state::response::ResponseNode> getAgentManifest() override;
+  state::response::NodeReporter::ReportedNode getAgentManifest() override;
 
   uint64_t getUptime() override;
 
@@ -196,6 +197,8 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
    * @return the built flow
    */
   std::unique_ptr<core::ProcessGroup> loadInitialFlow();
+
+  void loadMetricsPublisher();
 
  protected:
   // function to load the flow file repo.
@@ -252,8 +255,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   // Thread pool for schedulers
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_;
   std::map<utils::Identifier, std::unique_ptr<state::ProcessorController>> processor_to_controller_;
+  std::unique_ptr<state::MetricsPublisher> metrics_publisher_;
 };
 
 }  // namespace org::apache::nifi::minifi
-
-#endif  // LIBMINIFI_INCLUDE_FLOWCONTROLLER_H_

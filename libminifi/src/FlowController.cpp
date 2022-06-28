@@ -28,8 +28,6 @@
 
 #include "FlowController.h"
 #include "core/state/nodes/AgentInformation.h"
-#include "core/state/nodes/FlowInformation.h"
-#include "core/state/nodes/RepositoryMetrics.h"
 #include "core/state/ProcessorController.h"
 #include "c2/C2Agent.h"
 #include "core/ProcessGroup.h"
@@ -44,6 +42,7 @@
 #include "utils/HTTPClient.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
+#include "core/ClassLoader.h"
 
 namespace org::apache::nifi::minifi {
 
@@ -70,6 +69,8 @@ FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo
   initialized_ = false;
 
   protocol_ = std::make_unique<FlowControlProtocol>(this, configuration_);
+  response_node_loader_.setControllerServiceProvider(this);
+  response_node_loader_.setStateMonitor(this);
 }
 
 FlowController::FlowController(std::shared_ptr<core::Repository> provenance_repo, std::shared_ptr<core::Repository> flow_file_repo,
@@ -118,39 +119,43 @@ bool FlowController::applyConfiguration(const std::string &source, const std::st
   logger_->log_info("Starting to reload Flow Controller with flow control name %s, version %d", newRoot->getName(), newRoot->getVersion());
 
   updating_ = true;
-
-  std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
-  stop();
-  unload();
-  controller_map_->clear();
-  auto prevRoot = std::move(this->root_);
-  this->root_ = std::move(newRoot);
-  processor_to_controller_.clear();
-  updateResponseNodeConnections();
-  initialized_ = false;
   bool started = false;
-  try {
-    load(std::move(root_), true);
-    flow_update_ = true;
-    started = start() == 0;
 
-    updating_ = false;
-
-    if (started) {
-      auto flowVersion = flow_configuration_->getFlowVersion();
-      if (flowVersion) {
-        logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
-        configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
-      } else {
-        logger_->log_debug("Invalid flow version, not setting");
-      }
+  {
+    std::lock_guard<std::recursive_mutex> flow_lock(mutex_);
+    stop();
+    unload();
+    controller_map_->clear();
+    clearResponseNodes();
+    if (metrics_publisher_) {
+      metrics_publisher_->clearMetricNodes();
     }
-  } catch (...) {
-    this->root_ = std::move(prevRoot);
-    load(std::move(this->root_), true);
-    flow_update_ = true;
-    updating_ = false;
+    auto prevRoot = std::move(this->root_);
+    this->root_ = std::move(newRoot);
+    processor_to_controller_.clear();
+    initialized_ = false;
+    try {
+      load(std::move(root_), true);
+      flow_update_ = true;
+      started = start() == 0;
+    } catch (...) {
+      this->root_ = std::move(prevRoot);
+      load(std::move(this->root_), true);
+      flow_update_ = true;
+    }
+  }
+
+  updating_ = false;
+
+  if (started) {
+    auto flowVersion = flow_configuration_->getFlowVersion();
+    if (flowVersion) {
+      logger_->log_debug("Setting flow id to %s", flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_id, flowVersion->getFlowId());
+      configuration_->set(Configure::nifi_c2_flow_url, flowVersion->getFlowIdentifier()->getRegistryUrl());
+    } else {
+      logger_->log_debug("Invalid flow version, not setting");
+    }
   }
 
   return started;
@@ -278,7 +283,6 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
       logger_->log_info("Load Flow Controller from provided root");
       this->root_ = std::move(root);
       processor_to_controller_.clear();
-      updateResponseNodeConnections();
     } else {
       logger_->log_info("Instantiating new flow");
       this->root_ = loadInitialFlow();
@@ -291,6 +295,13 @@ void FlowController::load(std::unique_ptr<core::ProcessGroup> root, bool reload)
     logger_->log_info("Loaded root processor Group");
     logger_->log_info("Initializing timers");
     controller_service_provider_impl_ = flow_configuration_->getControllerServiceProvider();
+    response_node_loader_.initializeComponentMetrics(root_.get());
+    initializeResponseNodes(root_.get());
+    if (metrics_publisher_) {
+      metrics_publisher_->loadMetricNodes(root_.get());
+    } else {
+      loadMetricsPublisher();
+    }
 
     if (!thread_pool_.isRunning() || reload) {
       thread_pool_.shutdown();
@@ -425,19 +436,26 @@ int16_t FlowController::clearConnection(const std::string &connection) {
   return -1;
 }
 
-std::shared_ptr<state::response::ResponseNode> FlowController::getAgentManifest() {
-  auto agentInfo = std::make_shared<state::response::AgentInformation>("agentInfo");
-  agentInfo->setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)).get());
-  agentInfo->setAgentIdentificationProvider(configuration_);
-  agentInfo->setConfigurationReader([this](const std::string& key){
+state::response::NodeReporter::ReportedNode FlowController::getAgentManifest() {
+  state::response::AgentInformation agentInfo("agentInfo");
+  agentInfo.setUpdatePolicyController(std::static_pointer_cast<controllers::UpdatePolicyControllerService>(getControllerService(c2::C2Agent::UPDATE_NAME)).get());
+  agentInfo.setAgentIdentificationProvider(configuration_);
+  agentInfo.setConfigurationReader([this](const std::string& key){
     return configuration_->getRawValue(key);
   });
-  agentInfo->setStateMonitor(this);
-  agentInfo->includeAgentStatus(false);
-  return agentInfo;
+  agentInfo.setStateMonitor(this);
+  agentInfo.includeAgentStatus(false);
+  state::response::NodeReporter::ReportedNode reported_node;
+  reported_node.name = agentInfo.getName();
+  reported_node.is_array = agentInfo.isArray();
+  reported_node.serialized_nodes = agentInfo.serialize();
+  return reported_node;
 }
 
 void FlowController::executeOnAllComponents(std::function<void(state::StateController&)> func) {
+  if (updating_) {
+    return;
+  }
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   for (auto* component: getAllComponents()) {
     func(*component);
@@ -445,6 +463,9 @@ void FlowController::executeOnAllComponents(std::function<void(state::StateContr
 }
 
 void FlowController::executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) {
+  if (updating_) {
+    return;
+  }
   std::lock_guard<std::recursive_mutex> lock(mutex_);
   if (auto* component = getComponent(name); component != nullptr) {
     func(*component);
@@ -550,6 +571,22 @@ state::StateController* FlowController::getProcessorController(const std::string
     foundController = controllerFactory(*processor);
   }
   return foundController.get();
+}
+
+void FlowController::loadMetricsPublisher() {
+  if (auto metrics_publisher_class = configuration_->get(minifi::Configure::nifi_metrics_publisher_class)) {
+    auto ptr = core::ClassLoader::getDefaultClassLoader().instantiate(*metrics_publisher_class, *metrics_publisher_class);
+    if (!ptr) {
+      logger_->log_error("Configured metrics publisher class \"%s\" could not be instantiated.", *metrics_publisher_class);
+      return;
+    }
+    metrics_publisher_ = utils::dynamic_unique_cast<state::MetricsPublisher>(std::move(ptr));
+    if (!metrics_publisher_) {
+      logger_->log_error("Configured metrics publisher class \"%s\" is not a metrics publisher.", *metrics_publisher_class);
+      return;
+    }
+    metrics_publisher_->initialize(configuration_, response_node_loader_, root_.get());
+  }
 }
 
 }  // namespace org::apache::nifi::minifi

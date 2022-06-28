@@ -15,29 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
+#pragma once
 
 #include <utility>
 #include <vector>
 #include <memory>
 #include <string>
+#include <optional>
 
 #include "../Value.h"
+#include "../PublishedMetricProvider.h"
 #include "core/Core.h"
 #include "core/Connectable.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
-namespace response {
+namespace org::apache::nifi::minifi::state::response {
 
 /**
  * Purpose: Defines a metric. Serialization is intended to be thread safe.
  */
-class ResponseNode : public core::Connectable {
+class ResponseNode : public core::Connectable, public PublishedMetricProvider {
  public:
   ResponseNode()
       : core::Connectable("metric"),
@@ -108,11 +104,11 @@ class ObjectNode : public ResponseNode {
     nodes_.push_back(node);
   }
 
-  virtual std::string getName() const {
+  std::string getName() const override {
     return Connectable::getName();
   }
 
-  virtual std::vector<SerializedResponseNode> serialize() {
+  std::vector<SerializedResponseNode> serialize() override {
     std::vector<SerializedResponseNode> serialized;
 //    SerializedResponseNode outer_node;
     //  outer_node.name = getName();
@@ -120,7 +116,9 @@ class ObjectNode : public ResponseNode {
       SerializedResponseNode inner_node;
       inner_node.name = node->getName();
       for (auto &embed : node->serialize()) {
-        inner_node.children.push_back(std::move(embed));
+        if (!embed.empty() || embed.keep_empty) {
+          inner_node.children.push_back(std::move(embed));
+        }
       }
       serialized.push_back(std::move(inner_node));
     }
@@ -128,7 +126,7 @@ class ObjectNode : public ResponseNode {
     return serialized;
   }
 
-  virtual bool isEmpty() {
+  bool isEmpty() override {
     return nodes_.empty();
   }
 
@@ -186,6 +184,12 @@ class MetricsNodeSource : public ResponseNodeSource {
 
 class NodeReporter {
  public:
+  struct ReportedNode {
+    std::string name;
+    bool is_array;
+    std::vector<SerializedResponseNode> serialized_nodes;
+  };
+
   NodeReporter() = default;
 
   virtual ~NodeReporter() = default;
@@ -194,20 +198,20 @@ class NodeReporter {
    * Retrieves metrics node
    * @return metrics response node
    */
-  virtual std::shared_ptr<ResponseNode> getMetricsNode(const std::string& metricsClass) const = 0;
+  virtual std::optional<ReportedNode> getMetricsNode(const std::string& metricsClass) const = 0;
 
   /**
    * Retrieves root nodes configured to be included in heartbeat
    * @param includeManifest -- determines if manifest is to be included
    * @return a list of response nodes
    */
-  virtual std::vector<std::shared_ptr<ResponseNode>> getHeartbeatNodes(bool includeManifest) const = 0;
+  virtual std::vector<ReportedNode> getHeartbeatNodes(bool includeManifest) const = 0;
 
   /**
    * Retrieves the agent manifest to be sent as a response to C2 DESCRIBE manifest
    * @return the agent manifest response node
    */
-  virtual std::shared_ptr<state::response::ResponseNode> getAgentManifest() = 0;
+  virtual ReportedNode getAgentManifest() = 0;
 };
 
 /**
@@ -238,11 +242,4 @@ class ResponseNodeSink {
   virtual int16_t setMetricsNodes(const std::shared_ptr<ResponseNode> &metrics) = 0;
 };
 
-}  // namespace response
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_NODES_METRICSBASE_H_
+}  // namespace org::apache::nifi::minifi::state::response

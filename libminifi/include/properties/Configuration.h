@@ -156,12 +156,17 @@ class Configuration : public Properties {
 
   static constexpr const char *nifi_asset_directory = "nifi.asset.directory";
 
+  // Metrics publisher options
+  static constexpr const char *nifi_metrics_publisher_class = "nifi.metrics.publisher.class";
+  static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_port = "nifi.metrics.publisher.PrometheusMetricsPublisher.port";
+  static constexpr const char *nifi_metrics_publisher_metrics = "nifi.metrics.publisher.metrics";
+
   MINIFIAPI static const std::vector<core::ConfigurationProperty> CONFIGURATION_PROPERTIES;
   MINIFIAPI static const std::array<const char*, 2> DEFAULT_SENSITIVE_PROPERTIES;
 
   static std::vector<std::string> mergeProperties(std::vector<std::string> properties,
                                                   const std::vector<std::string>& additional_properties);
-  static std::vector<std::string> getSensitiveProperties(std::function<std::optional<std::string>(const std::string&)> reader);
+  static std::vector<std::string> getSensitiveProperties(const std::function<std::optional<std::string>(const std::string&)>& reader);
   static bool validatePropertyValue(const std::string& property_name, const std::string& property_value);
 };
 

@@ -120,6 +120,7 @@ option(ENABLE_GCP "Enable Google Cloud support" ON)
 option(DOCKER_BUILD_ONLY "Disables all targets except docker build scripts. Ideal for systems without an up-to-date compiler." OFF)
 option(ENABLE_KUBERNETES "Enables the Kubernetes extensions." OFF)
 option(ENABLE_TEST_PROCESSORS "Enables test processors" OFF)
+option(ENABLE_PROMETHEUS "Enables Prometheus support." OFF)
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 	option(ENABLE_PROCFS "Enables the procfs extension." ON)
@@ -408,6 +409,12 @@ if ((ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL) OR ENABLE_ALL 
 	include(BundledLibXml2)
 	use_bundled_libxml2(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/libxml2/dummy")
+endif()
+
+if (ENABLE_ALL OR ENABLE_PROMETHEUS OR NOT DISABLE_CIVET)
+	include(BundledCivetWeb)
+	use_bundled_civetweb(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/civetweb/dummy")
 endif()
 
 ## Add extensions

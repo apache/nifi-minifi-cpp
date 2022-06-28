@@ -759,7 +759,7 @@ class AgentInformation : public AgentNode {
     setArray(false);
   }
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines all agent information, to include the manifest, and bundle information as part of a healthy hearbeat.";
 
   std::string getName() const override {
     return "agentInfo";

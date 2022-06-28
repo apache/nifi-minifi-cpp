@@ -58,6 +58,8 @@ class ImageStore:
             image = self.__build_splunk_image()
         elif container_engine == "tcp-client":
             image = self.__build_tcp_client_image()
+        elif container_engine == "prometheus":
+            image = self.__build_prometheus_image()
         else:
             raise Exception("There is no associated image for " + container_engine)
 
@@ -96,6 +98,9 @@ class ImageStore:
                     echo "Database = postgres" >> /etc/odbc.ini
                 RUN sed -i -e 's/INFO/DEBUG/g' {minifi_root}/conf/minifi-log.properties
                 RUN echo nifi.flow.engine.threads=5 >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.metrics.publisher.class=PrometheusMetricsPublisher >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936 >> {minifi_root}/conf/minifi.properties
+                RUN echo nifi.metrics.publisher.metrics=RepositoryMetrics,QueueMetrics,GetFileMetrics,GetTCPMetrics,FlowInformation,DeviceInfoNode >> {minifi_root}/conf/minifi.properties
                 USER minificpp
                 """.format(base_image='apacheminificpp:' + MinifiContainer.MINIFI_VERSION,
                            minifi_root=MinifiContainer.MINIFI_ROOT))
@@ -175,6 +180,9 @@ class ImageStore:
             """.format(base_image='alpine:3.13'))
 
         return self.__build_image(dockerfile)
+
+    def __build_prometheus_image(self):
+        return self.__build_image_by_path(self.test_dir + "/resources/prometheus", 'minifi-prometheus')
 
     def __build_image(self, dockerfile, context_files=[]):
         conf_dockerfile_buffer = BytesIO()

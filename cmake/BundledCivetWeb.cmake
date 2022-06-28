@@ -46,7 +46,8 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
 
     # Set build options
     set(CIVETWEB_CMAKE_ARGS ${PASSTHROUGH_CMAKE_ARGS}
-            "-DCMAKE_INSTALL_PREFIX=${CIVETWEB_BIN_DIR}"
+            -DCMAKE_INSTALL_PREFIX=${CIVETWEB_BIN_DIR}
+            -DCMAKE_PREFIX_PATH=${CIVETWEB_BIN_DIR}
             -DCIVETWEB_ENABLE_SSL_DYNAMIC_LOADING=OFF
             -DCIVETWEB_BUILD_TESTING=OFF
             -DCIVETWEB_ENABLE_DUKTAPE=OFF
@@ -102,4 +103,5 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     set_target_properties(CIVETWEB::civetweb-cpp PROPERTIES IMPORTED_LOCATION "${CIVETWEB_BIN_DIR}/${LIBDIR}/${PREFIX}civetweb-cpp.${SUFFIX}")
     target_link_libraries(CIVETWEB::civetweb-cpp INTERFACE CIVETWEB::c-library)
     add_dependencies(CIVETWEB::civetweb-cpp civetweb-external)
+    add_library(civetweb::civetweb-cpp ALIAS CIVETWEB::civetweb-cpp)
 endfunction(use_bundled_civetweb)

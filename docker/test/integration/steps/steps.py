@@ -819,3 +819,20 @@ def step_imp(context, content):
 def step_imp(context, content, source, source_type, host):
     attr = {"source": source, "sourcetype": source_type, "host": host}
     context.test.check_splunk_event_with_attributes("splunk", content, attr)
+
+
+# Prometheus
+@given("a Prometheus server is set up")
+def step_impl(context):
+    context.test.acquire_container("prometheus", "prometheus")
+
+
+@then("\"{metric_class}\" are published to the Prometheus server in less than {timeout_seconds:d} seconds")
+@then("\"{metric_class}\" is published to the Prometheus server in less than {timeout_seconds:d} seconds")
+def step_impl(context, metric_class, timeout_seconds):
+    context.test.check_metric_class_on_prometheus(metric_class, timeout_seconds)
+
+
+@then("\"{metric_class}\" processor metric is published to the Prometheus server in less than {timeout_seconds:d} seconds for \"{processor_name}\" processor")
+def step_impl(context, metric_class, timeout_seconds, processor_name):
+    context.test.check_processor_metric_on_prometheus(metric_class, timeout_seconds, processor_name)

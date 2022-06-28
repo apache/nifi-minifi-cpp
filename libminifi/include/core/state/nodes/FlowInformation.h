@@ -39,6 +39,7 @@
 #include "../nodes/StateMonitor.h"
 #include "Connection.h"
 #include "io/ClientSocket.h"
+#include "../ConnectionStore.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -124,7 +125,7 @@ class FlowVersion : public DeviceInformation {
   std::shared_ptr<FlowIdentifier> identifier;
 };
 
-class FlowMonitor : public StateMonitorNode {
+class FlowMonitor : public StateMonitorNode, public ConnectionStore {
  public:
   FlowMonitor(const std::string &name, const utils::Identifier &uuid)
       : StateMonitorNode(name, uuid) {
@@ -134,23 +135,12 @@ class FlowMonitor : public StateMonitorNode {
       : StateMonitorNode(name) {
   }
 
-  void updateConnection(minifi::Connection* connection) {
-    if (nullptr != connection) {
-      connections_[connection->getUUIDStr()] = connection;
-    }
-  }
-
-  void clearConnections() {
-    connections_.clear();
-  }
-
   void setFlowVersion(std::shared_ptr<state::response::FlowVersion> flow_version) {
     flow_version_ = std::move(flow_version);
   }
 
  protected:
   std::shared_ptr<state::response::FlowVersion> flow_version_;
-  std::map<std::string, minifi::Connection*> connections_;
 };
 
 /**
@@ -166,7 +156,7 @@ class FlowInformation : public FlowMonitor {
       : FlowMonitor(name) {
   }
 
-  MINIFIAPI static constexpr const char* Description = "Node part of an AST that defines the flow ID and flow URL deployed to this agent";
+  MINIFIAPI static constexpr const char* Description = "Metric node that defines the flow ID and flow URL deployed to this agent";
 
   std::string getName() const override {
     return "flowInfo";
@@ -257,7 +247,17 @@ class FlowInformation : public FlowMonitor {
     return serialized;
   }
 
- protected:
+  std::vector<PublishedMetric> calculateMetrics() override {
+    std::vector<PublishedMetric> metrics = calculateConnectionMetrics("FlowInformation");
+
+    if (nullptr != monitor_) {
+      monitor_->executeOnAllComponents([&metrics](StateController& component){
+        metrics.push_back({"is_running", (component.isRunning() ? 1.0 : 0.0),
+          {{"component_uuid", component.getComponentUUID().to_string()}, {"component_name", component.getComponentName()}, {"metric_class", "FlowInformation"}}});
+      });
+    }
+    return metrics;
+  }
 };
 
 }  // namespace org::apache::nifi::minifi::state::response
