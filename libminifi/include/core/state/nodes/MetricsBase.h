@@ -52,19 +52,6 @@ class ResponseNode : public core::Connectable, public PublishedMetricProvider {
   }
   virtual ~ResponseNode() = default;
 
-  static std::vector<state::response::SerializedResponseNode> serializeAndMergeResponseNodes(std::vector<ResponseNode>& nodes) {
-    if (nodes.empty()) {
-      return {};
-    }
-
-    std::vector<state::response::SerializedResponseNode> result;
-    for (auto& node: nodes) {
-      auto serialized = node.serialize();
-      result.insert(result.end(), serialized.begin(), serialized.end());
-    }
-    return result;
-  }
-
   static std::vector<state::response::SerializedResponseNode> serializeAndMergeResponseNodes(const std::vector<std::shared_ptr<ResponseNode>>& nodes) {
     if (nodes.empty()) {
       return {};

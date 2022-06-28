@@ -51,7 +51,7 @@ class VerifyEmptyC2Metric : public VerifyC2Base {
 
   void runAssertions() override {
     using org::apache::nifi::minifi::utils::verifyEventHappenedInPollTime;
-    assert(verifyEventHappenedInPollTime(40000000s, [&] { return metrics_found_.load(); }, 1s));
+    assert(verifyEventHappenedInPollTime(40s, [&] { return metrics_found_.load(); }, 1s));
   }
 
  private:
