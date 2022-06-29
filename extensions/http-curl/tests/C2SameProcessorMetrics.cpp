@@ -17,9 +17,7 @@
  */
 
 #undef NDEBUG
-#include <string>
-#include <iostream>
-#include <filesystem>
+#include <memory>
 
 #include "TestBase.h"
 #include "HTTPIntegrationBase.h"
@@ -82,7 +80,9 @@ class MetricsHandler: public HeartbeatHandler {
       root["metrics"].HasMember("ProcessorMetrics") &&
       root["metrics"]["ProcessorMetrics"].HasMember("GetFileMetrics") &&
       root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile1") &&
-      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile2");
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile2") &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("GetTCP1") &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("GetTCP2");
     if (initial_metrics_verified) {
       metrics_found_ = true;
     }
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.name", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics", "processormetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.name", "ProcessorMetrics");
-  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "GetFileMetrics");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "GetFileMetrics,GetTCPMetrics");
   harness.setKeyDir(args.key_dir);
   org::apache::nifi::minifi::test::MetricsHandler handler(metrics_found, harness.getConfiguration());
   harness.setUrl(args.url, &handler);

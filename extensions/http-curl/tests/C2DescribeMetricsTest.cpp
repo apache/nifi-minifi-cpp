@@ -17,9 +17,7 @@
  */
 
 #undef NDEBUG
-#include <string>
-#include <iostream>
-#include <filesystem>
+#include <memory>
 
 #include "TestBase.h"
 #include "HTTPIntegrationBase.h"
@@ -46,6 +44,7 @@ class VerifyEmptyC2Metric : public VerifyC2Base {
     LogTestController::getInstance().setTrace<minifi::c2::C2Client>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::FlowController>();
+    LogTestController::getInstance().setOff<minifi::processors::GetTCP>();
     VerifyC2Base::testSetup();
   }
 
@@ -123,6 +122,8 @@ class MetricsHandler: public HeartbeatHandler {
       root["metrics"]["ProcessorMetrics"].HasMember("GetFileMetrics") &&
       root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile1") &&
       root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile2") &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("GetTCP1") &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("GetTCP2") &&
       root["metrics"].HasMember("SystemMetrics") &&
       root["metrics"]["SystemMetrics"].HasMember("QueueMetrics");
     if (all_metrics_verified) {
@@ -144,7 +145,7 @@ int main(int argc, char **argv) {
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.name", "metrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics", "processormetrics,systemmetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.name", "ProcessorMetrics");
-  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "GetFileMetrics");
+  harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.processormetrics.classes", "GetFileMetrics,GetTCPMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.systemmetrics.name", "SystemMetrics");
   harness.getConfiguration()->set("nifi.c2.root.class.definitions.metrics.metrics.systemmetrics.classes", "QueueMetrics");
   harness.setKeyDir(args.key_dir);
