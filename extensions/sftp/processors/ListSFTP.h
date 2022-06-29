@@ -25,6 +25,7 @@
 #include <set>
 #include <tuple>
 #include <vector>
+#include <optional>
 
 #include "SFTPProcessorBase.h"
 #include "core/Processor.h"
@@ -124,10 +125,8 @@ class ListSFTP : public SFTPProcessorBase {
   bool follow_symlink_;
   std::string file_filter_regex_;
   std::string path_filter_regex_;
-  bool file_filter_regex_set_;
-  bool path_filter_regex_set_;
-  utils::Regex compiled_file_filter_regex_;
-  utils::Regex compiled_path_filter_regex_;
+  std::optional<utils::Regex> compiled_file_filter_regex_;
+  std::optional<utils::Regex> compiled_path_filter_regex_;
   bool ignore_dotted_files_;
   std::string target_system_timestamp_precision_;
   std::string entity_tracking_initial_listing_target_;

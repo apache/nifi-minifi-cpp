@@ -110,7 +110,7 @@ class ListenHTTP : public core::Processor {
     Handler(std::string base_uri,
             core::ProcessContext *context,
             std::string &&authDNPattern,
-            std::string &&headersAsAttributesPattern);
+            std::optional<std::string> &&headersAsAttributesPattern);
     bool handlePost(CivetServer *server, struct mg_connection *conn) override;
     bool handleGet(CivetServer *server, struct mg_connection *conn) override;
     bool handleHead(CivetServer *server, struct mg_connection *conn) override;
@@ -134,7 +134,7 @@ class ListenHTTP : public core::Processor {
 
     std::string base_uri_;
     utils::Regex auth_dn_regex_;
-    utils::Regex headers_as_attrs_regex_;
+    std::optional<utils::Regex> headers_as_attrs_regex_;
     core::ProcessContext *process_context_;
     std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
     std::map<std::string, ResponseBody> response_uri_map_;

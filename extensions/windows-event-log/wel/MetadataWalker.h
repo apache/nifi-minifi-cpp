@@ -28,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <optional>
 
 #include "core/Core.h"
 #include "core/Processor.h"
@@ -46,8 +47,6 @@ namespace nifi {
 namespace minifi {
 namespace wel {
 
-
-
 /**
  * Defines a tree walker for the XML input
  *
@@ -57,8 +56,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
   MetadataWalker(const WindowsEventLogMetadata& windows_event_log_metadata, const std::string &log_name, bool update_xml, bool resolve, const std::string &regex = "")
       : windows_event_log_metadata_(windows_event_log_metadata),
         log_name_(log_name),
-        regex_(regex),
-        regex_str_(regex),
+        regex_(regex.empty() ? std::nullopt : std::make_optional(regex)),
         update_xml_(update_xml),
         resolve_(resolve) {
   }
@@ -97,8 +95,7 @@ class MetadataWalker : public pugi::xml_tree_walker {
 
   const WindowsEventLogMetadata& windows_event_log_metadata_;
   std::string log_name_;
-  utils::Regex regex_;
-  std::string regex_str_;
+  std::optional<utils::Regex> regex_;
   bool update_xml_;
   bool resolve_;
   std::map<std::string, std::string> metadata_;

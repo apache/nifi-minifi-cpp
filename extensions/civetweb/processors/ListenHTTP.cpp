@@ -108,10 +108,12 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   bool randomPort = listeningPort == "0";
 
-  std::string authDNPattern;
+  std::string authDNPattern = ".*";
 
   if (context->getProperty(AuthorizedDNPattern.getName(), authDNPattern) && !authDNPattern.empty()) {
     logger_->log_debug("ListenHTTP using %s: %s", AuthorizedDNPattern.getName(), authDNPattern);
+  } else {
+    logger_->log_debug("Authorized DN Pattern not set or invalid, using default '%s' pattern", authDNPattern);
   }
 
   std::string sslCertFile;
@@ -275,10 +277,10 @@ void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
   logger_->log_debug("ListenHTTP transferred %zu flow files from HTTP request buffer", flow_file_count);
 }
 
-ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context, std::string &&auth_dn_regex, std::string &&header_as_attrs_regex)
+ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context, std::string &&auth_dn_regex, std::optional<std::string> &&headers_as_attrs_regex)
     : base_uri_(std::move(base_uri)),
       auth_dn_regex_(std::move(auth_dn_regex)),
-      headers_as_attrs_regex_(std::move(header_as_attrs_regex)),
+      headers_as_attrs_regex_(std::move(headers_as_attrs_regex)),
       process_context_(context) {
   context->getProperty(BufferSize.getName(), buffer_size_);
   logger_->log_debug("ListenHTTP using %s: %zu", BufferSize.getName(), buffer_size_);
@@ -303,7 +305,7 @@ void ListenHTTP::Handler::setHeaderAttributes(const mg_request_info *req_info, c
 
     if (strcmp("filename", header->name) == 0) {
       flow_file->setAttribute("filename", header->value);
-    } else if (utils::regexMatch(header->name, headers_as_attrs_regex_)) {
+    } else if (headers_as_attrs_regex_ && utils::regexMatch(header->name, *headers_as_attrs_regex_)) {
       flow_file->setAttribute(header->name, header->value);
     }
   }
