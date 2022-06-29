@@ -162,6 +162,7 @@ class Configuration : public Properties {
   static constexpr const char *nifi_log_alert_filter = "nifi.log.alert.filter";
   static constexpr const char *nifi_log_alert_rate_limit = "nifi.log.alert.rate.limit";
   static constexpr const char *nifi_log_alert_buffer_limit = "nifi.log.alert.buffer.limit";
+  static constexpr const char *nifi_log_alert_level = "nifi.log.alert.level";
 
   static constexpr const char *nifi_asset_directory = "nifi.asset.directory";
 

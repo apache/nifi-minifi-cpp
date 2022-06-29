@@ -17,18 +17,18 @@
 
 #pragma once
 
-#include <mutex>
-
-#include "spdlog/sinks/base_sink.h"
-#include "core/logging/LoggerProperties.h"
-#include "utils/ThreadPool.h"
 #include "controllers/SSLContextService.h"
 #include "core/controller/ControllerServiceProvider.h"
+#include "core/logging/LoggerProperties.h"
+#include "utils/ThreadPool.h"
+#include "utils/StagingQueue.h"
 #include "properties/Configure.h"
+#include "spdlog/sinks/base_sink.h"
 
-#include <regex>
-#include <unordered_set>
 #include <deque>
+#include <mutex>
+#include <unordered_set>
+#include <regex>
 
 namespace org::apache::nifi::minifi::core::logging {
 
@@ -41,7 +41,26 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
     std::chrono::milliseconds rate_limit;
     int buffer_limit;
     std::regex filter;
-    std::optional<std::regex> discriminator;
+    spdlog::level::level_enum level;
+  };
+
+  struct LogBuffer {
+    size_t size_{0};
+    std::deque<std::pair<std::string, size_t>> data_;
+
+    static LogBuffer allocate(size_t size);
+    LogBuffer commit();
+    [[nodiscard]]
+    size_t size() const;
+  };
+
+  class LiveLogSet {
+    std::chrono::milliseconds lifetime_{};
+    std::unordered_set<size_t> ignored_;
+    std::deque<std::pair<std::chrono::steady_clock::time_point, size_t>> ordered_;
+   public:
+    bool tryAdd(size_t hash);
+    void setLifetime(std::chrono::milliseconds lifetime);
   };
 
  public:
@@ -59,14 +78,11 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
   void flush_() override;
 
   Config config_;
-  std::unordered_set<size_t> ignored_hashes_;
-  std::deque<std::pair<std::chrono::steady_clock::time_point, size_t>> ordered_hashes_;
-  std::mutex log_mtx_;
-  int buffer_size_{0};
-  std::deque<std::pair<std::string, size_t>> buffer_;
+  LiveLogSet live_logs_;
+
+  utils::StagingQueue<LogBuffer> buffer_;
 
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_{1};
-  utils::Identifier task_id_;
 
   std::shared_ptr<controllers::SSLContextService> ssl_service_;
 

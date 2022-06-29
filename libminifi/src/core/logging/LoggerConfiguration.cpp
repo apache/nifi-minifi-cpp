@@ -39,6 +39,7 @@
 #include "core/logging/alert/AlertSink.h"
 #include "utils/Literals.h"
 #include "core/TypedValues.h"
+#include "core/logging/Utils.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -60,27 +61,6 @@
 namespace org::apache::nifi::minifi::core::logging {
 
 const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
-
-namespace {
-std::optional<spdlog::level::level_enum> parse_log_level(const std::string& level_name) {
-  if (utils::StringUtils::equalsIgnoreCase(level_name, "trace")) {
-    return spdlog::level::trace;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "debug")) {
-    return spdlog::level::debug;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "info")) {
-    return spdlog::level::info;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "warn")) {
-    return spdlog::level::warn;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "error")) {
-    return spdlog::level::err;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "critical")) {
-    return spdlog::level::critical;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "off")) {
-    return spdlog::level::off;
-  }
-  return std::nullopt;
-}
-}  // namespace
 
 namespace internal {
 
@@ -239,7 +219,7 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       std::string level_name = utils::StringUtils::trim(segment);
       if (first) {
         first = false;
-        auto opt_level = parse_log_level(level_name);
+        auto opt_level = utils::parse_log_level(level_name);
         if (opt_level) {
           level = *opt_level;
         }
