@@ -44,7 +44,7 @@ struct GetFileRequest {
   bool ignoreHiddenFile = true;
   std::chrono::milliseconds pollInterval{0};
   uint64_t batchSize = 10;
-  std::string fileFilter = "[^\\.].*";
+  std::string fileFilter = ".*";
   std::string inputDirectory;
 };
 

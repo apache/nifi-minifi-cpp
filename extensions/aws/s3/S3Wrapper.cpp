@@ -29,12 +29,7 @@
 #include "utils/gsl.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace s3 {
+namespace org::apache::nifi::minifi::aws::s3 {
 
 void HeadObjectResult::setFilePaths(const std::string& key) {
   absolute_path = key;
@@ -58,7 +53,7 @@ void S3Wrapper::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const st
 Expiration S3Wrapper::getExpiration(const std::string& expiration) {
   minifi::utils::Regex expr("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
   minifi::utils::SMatch matches;
-  const bool matched = minifi::utils::regexSearch(expiration, matches, expr);
+  const bool matched = minifi::utils::regexMatch(expiration, matches, expr);
   if (!matched || matches.size() < 3)
     return Expiration{};
   return Expiration{matches[1], matches[2]};
@@ -301,9 +296,4 @@ FetchObjectResult S3Wrapper::fillFetchObjectResult(const GetObjectRequestParamet
   return result;
 }
 
-}  // namespace s3
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::s3

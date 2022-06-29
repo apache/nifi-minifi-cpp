@@ -52,11 +52,11 @@ bool MetadataWalker::for_each(pugi::xml_node &node) {
         return input;
       };
 
-      if (utils::regexMatch(attr.name(), regex_)) {
+      if (regex_ && utils::regexMatch(attr.name(), *regex_)) {
         updateText(node, attr.name(), idUpdate);
       }
 
-      if (utils::regexMatch(attr.value(), regex_)) {
+      if (regex_ && utils::regexMatch(attr.value(), *regex_)) {
         updateText(node, attr.value(), idUpdate);
       }
     }

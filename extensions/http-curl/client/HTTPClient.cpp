@@ -387,17 +387,6 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
   return 0;
 }
 
-bool HTTPClient::matches(const std::string &value, const std::string &sregex) {
-  if (sregex == ".*")
-    return true;
-  try {
-    utils::Regex rgx(sregex);
-    return utils::regexSearch(value, rgx);
-  } catch (const Exception &) {
-    return false;
-  }
-}
-
 void HTTPClient::configure_secure_connection(CURL *http_session) {
   logger_->log_debug("Using certificate file \"%s\"", ssl_context_service_->getCertificateFile());
   logger_->log_debug("Using private key file \"%s\"", ssl_context_service_->getPrivateKeyFile());

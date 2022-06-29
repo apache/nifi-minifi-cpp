@@ -78,8 +78,6 @@ ListSFTP::ListSFTP(const std::string& name, const utils::Identifier& uuid /*= ut
     : SFTPProcessorBase(name, uuid)
     , search_recursively_(false)
     , follow_symlink_(false)
-    , file_filter_regex_set_(false)
-    , path_filter_regex_set_(false)
     , ignore_dotted_files_(false)
     , minimum_file_age_(0U)
     , maximum_file_age_(0U)
@@ -116,27 +114,19 @@ void ListSFTP::onSchedule(const std::shared_ptr<core::ProcessContext> &context, 
   } else {
     follow_symlink_ = utils::StringUtils::toBool(value).value_or(false);
   }
-  if (context->getProperty(FileFilterRegex.getName(), file_filter_regex_)) {
+  if (context->getProperty(FileFilterRegex.getName(), file_filter_regex_) && !file_filter_regex_.empty()) {
     try {
       compiled_file_filter_regex_ = utils::Regex(file_filter_regex_);
-      file_filter_regex_set_ = true;
     } catch (const Exception &e) {
       logger_->log_error("Failed to compile File Filter Regex \"%s\"", file_filter_regex_.c_str());
-      file_filter_regex_set_ = false;
     }
-  } else {
-    file_filter_regex_set_ = false;
   }
-  if (context->getProperty(PathFilterRegex.getName(), path_filter_regex_)) {
+  if (context->getProperty(PathFilterRegex.getName(), path_filter_regex_) && !path_filter_regex_.empty()) {
     try {
       compiled_path_filter_regex_ = utils::Regex(path_filter_regex_);
-      path_filter_regex_set_ = true;
     } catch (const Exception &e) {
       logger_->log_error("Failed to compile Path Filter Regex \"%s\"", path_filter_regex_.c_str());
-      path_filter_regex_set_ = false;
     }
-  } else {
-    path_filter_regex_set_ = false;
   }
   if (!context->getProperty(IgnoreDottedFiles.getName(), value)) {
     logger_->log_error("Ignore Dotted Files attribute is missing or invalid");
@@ -278,9 +268,9 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   }
 
   /* File Filter Regex */
-  if (file_filter_regex_set_) {
+  if (compiled_file_filter_regex_) {
     bool match = false;
-    match = utils::regexSearch(filename, compiled_file_filter_regex_);
+    match = utils::regexMatch(filename, *compiled_file_filter_regex_);
     if (!match) {
       logger_->log_debug(R"(Ignoring "%s/%s" because it did not match the File Filter Regex "%s")",
                          parent_path.c_str(),
@@ -299,10 +289,10 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
   }
 
   /* Path Filter Regex */
-  if (path_filter_regex_set_) {
+  if (compiled_path_filter_regex_) {
     std::string dir_path = utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
     bool match = false;
-    match = utils::regexSearch(dir_path, compiled_path_filter_regex_);
+    match = utils::regexMatch(dir_path, *compiled_path_filter_regex_);
     if (!match) {
       logger_->log_debug(R"(Not recursing into "%s" because it did not match the Path Filter Regex "%s")",
                          dir_path.c_str(),
