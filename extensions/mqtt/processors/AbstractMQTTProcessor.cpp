@@ -47,8 +47,8 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 
   if (const auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
-    keep_alive_interval_ = keep_alive_interval->getMilliseconds();
-    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] ms", int64_t{keep_alive_interval_.count()});
+    keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
+    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] s", int64_t{keep_alive_interval_.count()});
   }
 
   if (const auto value = context->getProperty<uint64_t>(MaxFlowSegSize)) {
@@ -57,8 +57,8 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
   }
 
   if (const auto connection_timeout = context->getProperty<core::TimePeriodValue>(ConnectionTimeout)) {
-    connection_timeout_ = connection_timeout->getMilliseconds();
-    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] ms", int64_t{connection_timeout_.count()});
+    connection_timeout_ = std::chrono::duration_cast<std::chrono::seconds>(connection_timeout->getMilliseconds());
+    logger_->log_debug("AbstractMQTTProcessor: ConnectionTimeout [%" PRId64 "] s", int64_t{connection_timeout_.count()});
   }
 
   if (const auto value = context->getProperty<uint32_t>(QoS); value && (*value == MQTT_QOS_0 || *value == MQTT_QOS_1 || *value == MQTT_QOS_2)) {
@@ -140,12 +140,12 @@ void AbstractMQTTProcessor::reconnect() {
     return;
   }
   MQTTAsync_connectOptions conn_opts = MQTTAsync_connectOptions_initializer;
-  conn_opts.keepAliveInterval = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval_).count());
+  conn_opts.keepAliveInterval = gsl::narrow<int>(keep_alive_interval_.count());
   conn_opts.cleansession = getCleanSession();
   conn_opts.context = this;
   conn_opts.onSuccess = connectionSuccess;
   conn_opts.onFailure = connectionFailure;
-  conn_opts.connectTimeout = gsl::narrow<int>(std::chrono::duration_cast<std::chrono::seconds>(connection_timeout_).count());
+  conn_opts.connectTimeout = gsl::narrow<int>(connection_timeout_.count());
   if (!username_.empty()) {
     conn_opts.username = username_.c_str();
     conn_opts.password = password_.c_str();

@@ -99,9 +99,9 @@ class AbstractMQTTProcessor : public core::Processor {
   MQTTAsync client_ = nullptr;
   std::string uri_;
   std::string topic_;
-  std::chrono::milliseconds keep_alive_interval_ = std::chrono::seconds(60);
+  std::chrono::seconds keep_alive_interval_{60};
   uint64_t max_seg_size_ = std::numeric_limits<uint64_t>::max();
-  std::chrono::milliseconds connection_timeout_ = std::chrono::seconds(30);
+  std::chrono::seconds connection_timeout_{30};
   uint32_t qos_ = MQTT_QOS_1;
   std::string clientID_;
   std::string username_;

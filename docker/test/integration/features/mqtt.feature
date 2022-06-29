@@ -291,3 +291,14 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And "publisher-client" flow is killed
     And the MQTT broker has a log line matching "Sending PUBLISH to consumer-client"
     And a flowfile with the content "last_will_message" is placed in the monitored directory in less than 60 seconds
+
+  Scenario: Keep Alive
+    Given a ConsumeMQTT processor set up to communicate with an MQTT broker instance
+    And the "Client ID" property of the ConsumeMQTT processor is set to "consumer-client"
+    And the "Keep Alive Interval" property of the ConsumeMQTT processor is set to "1 sec"
+
+    And an MQTT broker is set up in correspondence with the ConsumeMQTT
+
+    When both instances start up
+    Then the MQTT broker has a log line matching "Received PINGREQ from consumer-client"
+    Then the MQTT broker has a log line matching "Sending PINGRESP to consumer-client"

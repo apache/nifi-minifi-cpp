@@ -379,6 +379,7 @@ def step_impl(context):
 
 # MQTT setup
 @given("an MQTT broker is set up in correspondence with the PublishMQTT")
+@given("an MQTT broker is set up in correspondence with the ConsumeMQTT")
 @given("an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT")
 def step_impl(context):
     context.test.acquire_container("mqtt-broker", "mqtt-broker")
