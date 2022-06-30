@@ -49,7 +49,7 @@ class AbstractMQTTProcessor : public core::Processor {
   EXTENSIONAPI static const core::Property ClientID;
   EXTENSIONAPI static const core::Property Username;
   EXTENSIONAPI static const core::Property Password;
-  EXTENSIONAPI static const core::Property KeepLiveInterval;
+  EXTENSIONAPI static const core::Property KeepAliveInterval;
   EXTENSIONAPI static const core::Property MaxFlowSegSize;
   EXTENSIONAPI static const core::Property ConnectionTimeout;
   EXTENSIONAPI static const core::Property Topic;
@@ -66,24 +66,24 @@ class AbstractMQTTProcessor : public core::Processor {
 
   EXTENSIONAPI static auto properties() {
     return std::array{
-      BrokerURI,
-      ClientID,
-      Username,
-      Password,
-      KeepLiveInterval,
-      MaxFlowSegSize,
-      ConnectionTimeout,
-      Topic,
-      QoS,
-      SecurityProtocol,
-      SecurityCA,
-      SecurityCert,
-      SecurityPrivateKey,
-      SecurityPrivateKeyPassword,
-      LastWillTopic,
-      LastWillMessage,
-      LastWillQoS,
-      LastWillRetain
+            BrokerURI,
+            Topic,
+            ClientID,
+            QoS,
+            ConnectionTimeout,
+            KeepAliveInterval,
+            MaxFlowSegSize,
+            LastWillTopic,
+            LastWillMessage,
+            LastWillQoS,
+            LastWillRetain,
+            Username,
+            Password,
+            SecurityProtocol,
+            SecurityCA,
+            SecurityCert,
+            SecurityPrivateKey,
+            SecurityPrivateKeyPassword
     };
   }
 

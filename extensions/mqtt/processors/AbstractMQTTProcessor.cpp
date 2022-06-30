@@ -46,9 +46,9 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     logger_->log_debug("AbstractMQTTProcessor: Password [%s]", password_);
   }
 
-  if (const auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepLiveInterval)) {
+  if (const auto keep_alive_interval = context->getProperty<core::TimePeriodValue>(KeepAliveInterval)) {
     keep_alive_interval_ = std::chrono::duration_cast<std::chrono::seconds>(keep_alive_interval->getMilliseconds());
-    logger_->log_debug("AbstractMQTTProcessor: KeepLiveInterval [%" PRId64 "] s", int64_t{keep_alive_interval_.count()});
+    logger_->log_debug("AbstractMQTTProcessor: KeepAliveInterval [%" PRId64 "] s", int64_t{keep_alive_interval_.count()});
   }
 
   if (const auto value = context->getProperty<uint64_t>(MaxFlowSegSize)) {
