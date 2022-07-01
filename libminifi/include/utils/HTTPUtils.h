@@ -31,9 +31,9 @@ so we convert localhost to our local hostname.
 inline bool parse_http_components(const std::string &url, std::string &port, std::string &scheme, std::string &path) {
 #ifdef WIN32
   auto hostname = (url.find(org::apache::nifi::minifi::io::Socket::getMyHostName()) != std::string::npos ? org::apache::nifi::minifi::io::Socket::getMyHostName() : "localhost");
-  std::string regex_str = "(http|https)://(" + hostname + ":)([0-9]+)?(/.*)$";
+  std::string regex_str = "(http|https)://(" + hostname + ":)([0-9]+)?(/.*)";
 #else
-  std::string regex_str = "(http|https)://(localhost:)([0-9]+)?(/.*)$";
+  std::string regex_str = "(http|https)://(localhost:)([0-9]+)?(/.*)";
 #endif
 
   auto rgx = org::apache::nifi::minifi::utils::Regex(regex_str, {org::apache::nifi::minifi::utils::Regex::Mode::ICASE});

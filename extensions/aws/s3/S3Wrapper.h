@@ -43,12 +43,7 @@
 #include "io/BaseStream.h"
 #include "S3RequestSender.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace s3 {
+namespace org::apache::nifi::minifi::aws::s3 {
 
 static const std::unordered_map<std::string, Aws::S3::Model::StorageClass> STORAGE_CLASS_MAP {
   {"Standard", Aws::S3::Model::StorageClass::STANDARD},
@@ -241,9 +236,4 @@ class S3Wrapper {
   uint64_t last_bucket_list_timestamp_ = 0;
 };
 
-}  // namespace s3
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::s3

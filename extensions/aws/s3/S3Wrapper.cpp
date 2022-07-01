@@ -29,12 +29,7 @@
 #include "utils/gsl.h"
 #include "utils/RegexUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace aws {
-namespace s3 {
+namespace org::apache::nifi::minifi::aws::s3 {
 
 void HeadObjectResult::setFilePaths(const std::string& key) {
   absolute_path = key;
@@ -301,9 +296,4 @@ FetchObjectResult S3Wrapper::fillFetchObjectResult(const GetObjectRequestParamet
   return result;
 }
 
-}  // namespace s3
-}  // namespace aws
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::aws::s3
