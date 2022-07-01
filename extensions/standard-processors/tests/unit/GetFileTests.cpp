@@ -154,6 +154,7 @@ TEST_CASE("GetFile keeps the source file if KeepSourceFile is true") {
 TEST_CASE("Hidden files are read when IgnoreHiddenFile property is false", "[getFileProperty]") {
   GetFileTestController test_controller;
   test_controller.setProperty(minifi::processors::GetFile::IgnoreHiddenFile, "false");
+  test_controller.setProperty(minifi::processors::GetFile::FileFilter, ".*");
 
   test_controller.runSession();
 

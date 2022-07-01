@@ -244,7 +244,7 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
     return false;
 
   utils::Regex rgx(request.fileFilter);
-  if (!utils::regexSearch(name, rgx)) {
+  if (!utils::regexMatch(name, rgx)) {
     return false;
   }
 

@@ -58,7 +58,7 @@ void S3Wrapper::setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const st
 Expiration S3Wrapper::getExpiration(const std::string& expiration) {
   minifi::utils::Regex expr("expiry-date=\"(.*)\", rule-id=\"(.*)\"");
   minifi::utils::SMatch matches;
-  const bool matched = minifi::utils::regexSearch(expiration, matches, expr);
+  const bool matched = minifi::utils::regexMatch(expiration, matches, expr);
   if (!matched || matches.size() < 3)
     return Expiration{};
   return Expiration{matches[1], matches[2]};

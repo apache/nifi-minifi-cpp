@@ -256,8 +256,6 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   Progress progress_;
 
  protected:
-  inline bool matches(const std::string &value, const std::string &sregex) override;
-
   static CURLcode configure_ssl_context(CURL* /*curl*/, void *ctx, void *param) {
 #ifdef OPENSSL_SUPPORT
     minifi::controllers::SSLContextService *ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);

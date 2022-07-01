@@ -281,7 +281,7 @@ bool ListSFTP::filterFile(const std::string& parent_path, const std::string& fil
   /* File Filter Regex */
   if (compiled_file_filter_regex_) {
     bool match = false;
-    match = utils::regexSearch(filename, *compiled_file_filter_regex_);
+    match = utils::regexMatch(filename, *compiled_file_filter_regex_);
     if (!match) {
       logger_->log_debug(R"(Ignoring "%s/%s" because it did not match the File Filter Regex "%s")",
                          parent_path.c_str(),
@@ -303,7 +303,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
   if (compiled_path_filter_regex_) {
     std::string dir_path = utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
     bool match = false;
-    match = utils::regexSearch(dir_path, *compiled_path_filter_regex_);
+    match = utils::regexMatch(dir_path, *compiled_path_filter_regex_);
     if (!match) {
       logger_->log_debug(R"(Not recursing into "%s" because it did not match the Path Filter Regex "%s")",
                          dir_path.c_str(),

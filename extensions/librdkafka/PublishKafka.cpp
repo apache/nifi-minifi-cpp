@@ -189,7 +189,7 @@ class ReadCallback {
     if (!result) { throw std::bad_alloc{}; }
 
     for (const auto& kv : flow_file.getAttributes()) {
-      if (attribute_name_regex && utils::regexSearch(kv.first, *attribute_name_regex)) {
+      if (attribute_name_regex && utils::regexMatch(kv.first, *attribute_name_regex)) {
         rd_kafka_header_add(result, kv.first.c_str(), kv.first.size(), kv.second.c_str(), kv.second.size());
       }
     }

@@ -362,8 +362,6 @@ class BaseHTTPClient {
   std::vector<char> response_body_;
   std::vector<std::string> headers_;
   std::map<std::string, std::string> header_mapping_;
-
-  virtual inline bool matches(const std::string &value, const std::string &sregex) = 0;
 };
 
 std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
