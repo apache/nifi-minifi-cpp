@@ -38,10 +38,8 @@ AlertSink::AlertSink(Config config, std::shared_ptr<Logger> logger)
       logger_(std::move(logger)) {
   set_level(config_.level);
   live_logs_.setLifetime(config_.rate_limit);
-  auto task_id = utils::IdGenerator::getIdGenerator()->generate();
-  utils::Worker<utils::TaskRescheduleInfo> functor(std::bind(&AlertSink::run, this), task_id.to_string(), std::make_unique<utils::ComplexMonitor>());
-  std::future<utils::TaskRescheduleInfo> future;
-  thread_pool_.execute(std::move(functor), future);
+  next_flush_ = clock_->timeSinceEpoch() + config_.flush_period;
+  flush_thread_ = std::thread([this] {run();});
 }
 
 std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix, const std::shared_ptr<LoggerProperties>& logger_properties, std::shared_ptr<Logger> logger) {
@@ -97,11 +95,9 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
 }
 
 void AlertSink::initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<AgentIdentificationProvider> agent_id) {
-  if (thread_pool_.isRunning()) {
-    return;
-  }
+  auto services = std::make_unique<Services>();
 
-  agent_id_ = std::move(agent_id);
+  services->agent_id = std::move(agent_id);
 
   if (config_.ssl_service_name) {
     if (!controller) {
@@ -110,7 +106,7 @@ void AlertSink::initialize(core::controller::ControllerServiceProvider* controll
     }
     if (auto service = controller->getControllerService(config_.ssl_service_name.value())) {
       if (auto ssl_service = std::dynamic_pointer_cast<controllers::SSLContextService>(service)) {
-        ssl_service_ = ssl_service;
+        services->ssl_service = ssl_service;
       } else {
         logger_->log_error("Service '%s' is not an SSLContextService", config_.ssl_service_name.value());
         return;
@@ -121,8 +117,7 @@ void AlertSink::initialize(core::controller::ControllerServiceProvider* controll
     }
   }
 
-
-  thread_pool_.start();
+  services.reset(services_.exchange(services.release()));
 }
 
 void AlertSink::sink_it_(const spdlog::details::log_msg& msg) {
@@ -137,11 +132,12 @@ void AlertSink::sink_it_(const spdlog::details::log_msg& msg) {
   for (size_t idx = 1; idx < match.size(); ++idx) {
     std::string_view submatch;
     if (match[idx].first != match[idx].second) {
+      // TODO(adebreceni): std::string_view(It begin, It end) is not yet supported on all platforms
       submatch = std::string_view(std::to_address(match[idx].first), std::distance(match[idx].first, match[idx].second));
     }
     hash = utils::hash_combine(hash, std::hash<std::string_view>{}(submatch));
   }
-  if (!live_logs_.tryAdd(hash)) {
+  if (!live_logs_.tryAdd(clock_->timeSinceEpoch(), hash)) {
     return;
   }
 
@@ -156,25 +152,61 @@ void AlertSink::sink_it_(const spdlog::details::log_msg& msg) {
 
 void AlertSink::flush_() {}
 
-utils::TaskRescheduleInfo AlertSink::run() {
+void AlertSink::run() {
+  while (running_) {
+    {
+      std::unique_lock lock(mtx_);
+      next_flush_ = clock_->wait_until(cv_, lock, next_flush_, [&] {return !running_;}) + config_.flush_period;
+    }
+    std::unique_ptr<Services> services(services_.exchange(nullptr));
+    if (!services || !running_) {
+      continue;
+    }
+    try {
+      send(*services);
+    } catch (const std::exception& err) {
+      logger_->log_error("Exception while sending logs: %s", err.what());
+    } catch (...) {
+      logger_->log_error("Unknown exception while sending logs");
+    }
+    Services* expected{nullptr};
+    // only restore the services pointer if no initialize set it to something else meanwhile
+    if (services_.compare_exchange_strong(expected, services.get())) {
+      (void)services.release();
+    }
+  }
+}
+
+AlertSink::~AlertSink() {
+  {
+    std::lock_guard lock(mtx_);
+    running_ = false;
+    cv_.notify_all();
+  }
+  if (flush_thread_.joinable()) {
+    flush_thread_.join();
+  }
+}
+
+void AlertSink::send(Services& services) {
   LogBuffer logs;
   buffer_.commit();
   if (!buffer_.tryDequeue(logs)) {
-    return utils::TaskRescheduleInfo::RetryIn(config_.flush_period);
+    return;
   }
 
   auto client = core::ClassLoader::getDefaultClassLoader().instantiate<utils::BaseHTTPClient>("HTTPClient", "HTTPClient");
   if (!client) {
     logger_->log_error("Could not instantiate a HTTPClient object");
-    return utils::TaskRescheduleInfo::RetryIn(config_.flush_period);
+    return;
   }
-  client->initialize("PUT", config_.url, ssl_service_);
+  client->initialize("PUT", config_.url, services.ssl_service);
 
   rapidjson::Document doc(rapidjson::kObjectType);
-  std::string agent_id = agent_id_->getAgentIdentifier();
+  std::string agent_id = services.agent_id->getAgentIdentifier();
   doc.AddMember("agentId", rapidjson::Value(agent_id.data(), agent_id.length()), doc.GetAllocator());
   doc.AddMember("alerts", rapidjson::Value(rapidjson::kArrayType), doc.GetAllocator());
-  for (const auto& [log, hash] : logs.data_) {
+  for (const auto& [log, _] : logs.data_) {
     doc["alerts"].PushBack(rapidjson::Value(log.data(), log.size()), doc.GetAllocator());
   }
   rapidjson::StringBuffer buffer;
@@ -202,8 +234,6 @@ utils::TaskRescheduleInfo AlertSink::run() {
   if (!req_success) {
     logger_->log_error("Failed to send alert request");
   }
-
-  return utils::TaskRescheduleInfo::RetryIn(config_.flush_period);
 }
 
 AlertSink::LogBuffer AlertSink::LogBuffer::allocate(size_t /*size*/) {
@@ -222,8 +252,7 @@ void AlertSink::LiveLogSet::setLifetime(std::chrono::milliseconds lifetime) {
   lifetime_ = lifetime;
 }
 
-bool AlertSink::LiveLogSet::tryAdd(size_t hash) {
-  auto now = std::chrono::steady_clock::now();
+bool AlertSink::LiveLogSet::tryAdd(std::chrono::milliseconds now, size_t hash) {
   auto limit = now - lifetime_;
   while (!ordered_.empty() && ordered_.front().first < limit) {
     ignored_.erase(ordered_.front().second);

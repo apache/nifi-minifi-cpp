@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -16,6 +15,22 @@
  * limitations under the License.
  */
 
-#include "../TestBase.h"
-#include "../Catch.h"
+#include "utils/TimeUtil.h"
 
+namespace org::apache::nifi::minifi::utils::timeutils {
+
+static std::mutex global_clock_mtx;
+static std::shared_ptr<Clock> global_clock{std::make_shared<SteadyClock>()};
+
+std::shared_ptr<Clock> getClock() {
+  std::lock_guard lock(global_clock_mtx);
+  return global_clock;
+}
+
+// test-only utility to specify what clock to use
+void setClock(std::shared_ptr<Clock> clock) {
+  std::lock_guard lock(global_clock_mtx);
+  global_clock = std::move(clock);
+}
+
+}  // namespace org::apache::nifi::minifi::utils::timeutils

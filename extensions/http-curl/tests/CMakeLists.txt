@@ -110,3 +110,4 @@ add_test(NAME C2MetricsTest COMMAND C2MetricsTest "${TEST_RESOURCES}/TestC2Metri
 add_test(NAME C2EmptyMetricTest COMMAND C2EmptyMetricTest "${TEST_RESOURCES}/TestEmpty.yml")
 add_test(NAME C2SameProcessorMetrics COMMAND C2SameProcessorMetrics "${TEST_RESOURCES}/TestSameProcessorMetrics.yml")
 add_test(NAME C2DescribeMetricsTest COMMAND C2DescribeMetricsTest "${TEST_RESOURCES}/TestSameProcessorMetrics.yml")
+add_test(NAME AlertTests COMMAND AlertTests)

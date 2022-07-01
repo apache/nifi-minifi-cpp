@@ -70,6 +70,13 @@ class Clock {
  public:
   virtual ~Clock() = default;
   virtual std::chrono::milliseconds timeSinceEpoch() const = 0;
+  virtual std::chrono::milliseconds wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) {
+    auto now = timeSinceEpoch();
+    if (now < time) {
+      cv.wait_for(lck, time - now, pred);
+    }
+    return timeSinceEpoch();
+  }
 };
 
 class SystemClock : public Clock {
@@ -89,6 +96,11 @@ class SteadyClock : public Clock {
     return std::chrono::steady_clock::now();
   }
 };
+
+std::shared_ptr<Clock> getClock();
+
+// test-only utility to specify what clock to use
+void setClock(std::shared_ptr<Clock> clock);
 
 inline std::string getTimeStr(std::chrono::system_clock::time_point tp) {
   std::ostringstream stream;

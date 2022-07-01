@@ -44,6 +44,11 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
     spdlog::level::level_enum level;
   };
 
+  struct Services {
+    std::shared_ptr<controllers::SSLContextService> ssl_service;
+    std::shared_ptr<AgentIdentificationProvider> agent_id;
+  };
+
   struct LogBuffer {
     size_t size_{0};
     std::deque<std::pair<std::string, size_t>> data_;
@@ -57,9 +62,9 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
   class LiveLogSet {
     std::chrono::milliseconds lifetime_{};
     std::unordered_set<size_t> ignored_;
-    std::deque<std::pair<std::chrono::steady_clock::time_point, size_t>> ordered_;
+    std::deque<std::pair<std::chrono::milliseconds, size_t>> ordered_;
    public:
-    bool tryAdd(size_t hash);
+    bool tryAdd(std::chrono::milliseconds now, size_t hash);
     void setLifetime(std::chrono::milliseconds lifetime);
   };
 
@@ -71,8 +76,11 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
 
   void initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<AgentIdentificationProvider> agent_id);
 
+  ~AlertSink() override;
+
  private:
-  utils::TaskRescheduleInfo run();
+  void run();
+  void send(Services& services);
 
   void sink_it_(const spdlog::details::log_msg& msg) override;
   void flush_() override;
@@ -80,13 +88,17 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
   Config config_;
   LiveLogSet live_logs_;
 
+  std::atomic_bool running_{true};
+  std::mutex mtx_;
+  std::chrono::milliseconds next_flush_;
+  std::condition_variable cv_;
+  std::thread flush_thread_;
+
   utils::StagingQueue<LogBuffer> buffer_;
 
-  utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_{1};
+  std::shared_ptr<utils::timeutils::Clock> clock_ = utils::timeutils::getClock();
+  std::atomic<gsl::owner<Services*>> services_{nullptr};
 
-  std::shared_ptr<controllers::SSLContextService> ssl_service_;
-
-  std::shared_ptr<AgentIdentificationProvider> agent_id_;
   std::shared_ptr<Logger> logger_;
 };
 

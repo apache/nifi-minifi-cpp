@@ -22,6 +22,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
@@ -62,10 +63,40 @@ Identifier generateUUID() {
 
 class ManualClock : public timeutils::Clock {
  public:
-  [[nodiscard]] std::chrono::milliseconds timeSinceEpoch() const override { return time_; }
-  void advance(std::chrono::milliseconds elapsed_time) { time_ += elapsed_time; }
+  [[nodiscard]] std::chrono::milliseconds timeSinceEpoch() const override {
+    std::lock_guard lock(mtx_);
+    return time_;
+  }
+  void advance(std::chrono::milliseconds elapsed_time) {
+    std::lock_guard lock(mtx_);
+    time_ += elapsed_time;
+    for (auto* cv : cvs_) {
+      cv->notify_all();
+    }
+  }
+  std::chrono::milliseconds wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) override {
+    std::chrono::milliseconds now;
+    {
+      std::unique_lock lock(mtx_);
+      now = time_;
+      cvs_.insert(&cv);
+    }
+    if (now < time) {
+      cv.wait_for(lck, time - now, [&] {
+        now = timeSinceEpoch();
+        return now >= time || pred();
+      });
+    }
+    {
+      std::unique_lock lock(mtx_);
+      cvs_.erase(&cv);
+    }
+    return now;
+  }
 
  private:
+  mutable std::mutex mtx_;
+  std::unordered_set<std::condition_variable*> cvs_;
   std::chrono::milliseconds time_{0};
 };
 
@@ -86,6 +117,7 @@ class ManualSteadyClock : public timeutils::SteadyClock {
  private:
   std::chrono::milliseconds time_{0};
 };
+
 
 
 #ifdef WIN32

@@ -21,6 +21,8 @@
 #include <string>
 #include <array>
 
+#include "CivetServer.h"
+
 class ServerAwareHandler: public CivetHandler {
  protected:
   void sleep_for(std::chrono::milliseconds time) {
