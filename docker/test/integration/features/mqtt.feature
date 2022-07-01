@@ -64,7 +64,6 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
   Scenario: A MiNiFi instance publishes and consumes data to/from an MQTT broker
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
 
@@ -76,13 +75,13 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
     When both instances start up
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a file with the content "test" is placed in "/tmp/input"
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received PUBLISH from .*testtopic.*\(4 bytes\)"
     And the MQTT broker has a log line matching "Received SUBSCRIBE from"
 
   Scenario Outline: Subscription to topics with wildcards
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "Topic" property of the PublishMQTT processor is set to "test/my/topic"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
@@ -96,7 +95,8 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
     When both instances start up
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a file with the content "test" is placed in "/tmp/input"
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received PUBLISH from .*test/my/topic.*\(4 bytes\)"
     And the MQTT broker has a log line matching "Received SUBSCRIBE from"
 
@@ -137,7 +137,6 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
   Scenario Outline: UTF-8 topics and messages
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "<message>" is present in "/tmp/input"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "Topic" property of the PublishMQTT processor is set to "<topic>"
     And the "success" relationship of the GetFile processor is connected to the PublishMQTT
@@ -151,7 +150,8 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
     When both instances start up
-    Then a flowfile with the content "<message>" is placed in the monitored directory in less than 60 seconds
+    Then a file with the content "<message>" is placed in "/tmp/input"
+    And a flowfile with the content "<message>" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received PUBLISH from .*<topic>"
     And the MQTT broker has a log line matching "Received SUBSCRIBE from"
 
@@ -165,7 +165,6 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
   Scenario: QoS 0 message flow is correct
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "Quality of Service" property of the PublishMQTT processor is set to "0"
     And the "Client ID" property of the PublishMQTT processor is set to "publisher-client"
@@ -181,14 +180,14 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
     When both instances start up
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a file with the content "test" is placed in "/tmp/input"
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
     And the MQTT broker has a log line matching "Received PUBLISH from publisher-client \(d0, q0, r0, m0, 'testtopic'.*\(4 bytes\)"
     And the MQTT broker has a log line matching "Sending PUBLISH to consumer-client \(d0, q0, r0, m0, 'testtopic',.*\(4 bytes\)\)"
 
   Scenario: QoS 1 Subscriber sends PUBACK on a PUBLISH message, with correct packet ID
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "Quality of Service" property of the PublishMQTT processor is set to "1"
     And the "Client ID" property of the PublishMQTT processor is set to "publisher-client"
@@ -204,7 +203,8 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
     When both instances start up
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a file with the content "test" is placed in "/tmp/input"
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
     And the MQTT broker has a log line matching "Received PUBLISH from publisher-client.*m1, 'testtopic'.*\(4 bytes\)"
     And the MQTT broker has a log line matching "Sending PUBACK to publisher-client \(m1, rc0\)"
@@ -214,7 +214,6 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
   Scenario: QoS 2 message flow is correct
     Given a GetFile processor with the "Input Directory" property set to "/tmp/input"
-    And a file with the content "test" is present in "/tmp/input"
     And a PublishMQTT processor set up to communicate with an MQTT broker instance
     And the "Quality of Service" property of the PublishMQTT processor is set to "2"
     And the "Client ID" property of the PublishMQTT processor is set to "publisher-client"
@@ -230,7 +229,8 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
     And an MQTT broker is set up in correspondence with the PublishMQTT and ConsumeMQTT
 
     When both instances start up
-    Then a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
+    Then a file with the content "test" is placed in "/tmp/input"
+    And a flowfile with the content "test" is placed in the monitored directory in less than 60 seconds
     And the MQTT broker has a log line matching "Received SUBSCRIBE from consumer-client"
     And the MQTT broker has a log line matching "Received PUBLISH from publisher-client.*m1, 'testtopic'.*\(4 bytes\)"
     And the MQTT broker has a log line matching "Sending PUBREC to publisher-client \(m1, rc0\)"
