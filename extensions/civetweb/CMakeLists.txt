@@ -23,16 +23,16 @@ endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-include_directories(${CMAKE_SOURCE_DIR}/libminifi/include
-                    ${CMAKE_SOURCE_DIR}/libminifi/include/core
-                    ${CMAKE_SOURCE_DIR}/thirdparty/
-                    ./include)
-
 file(GLOB SOURCES  "processors/*.cpp" "protocols/*.cpp")
 
 add_library(minifi-civet-extensions SHARED ${SOURCES})
-target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads)
-target_link_libraries(minifi-civet-extensions CIVETWEB::c-library CIVETWEB::civetweb-cpp)
+target_include_directories(minifi-civet-extensions BEFORE PUBLIC
+                           ${CMAKE_SOURCE_DIR}/libminifi/include
+                           ${CMAKE_SOURCE_DIR}/libminifi/include/core
+                           ${CMAKE_SOURCE_DIR}/thirdparty/
+                           ${civetweb_SOURCE_DIR}/include
+                           ./include)
+target_link_libraries(minifi-civet-extensions ${LIBMINIFI} Threads::Threads civetweb::civetweb-cpp civetweb::c-library)
 
 register_extension(minifi-civet-extensions CIVETWEB CIVETWEB "This enables ListenHTTP" "extensions/civetweb/tests")
 register_extension_linter(minifi-civet-extensions-linter)
