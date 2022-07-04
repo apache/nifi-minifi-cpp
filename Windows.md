@@ -74,6 +74,7 @@ After the build directory it will take optional parameters modifying the CMake c
 | /D | Builds RelWithDebInfo build instead of Release |
 | /DD | Builds Debug build instead of Release |
 | /CI | Sets STRICT_GSL_CHECKS to AUDIT |
+| /NJ | Uses Ninja build system instead of MSBuild |
 
 Examples:
  - 32-bit build with kafka, disabling tests, enabling MSI creation: `win_build_vs.bat build32 /T /K /P`

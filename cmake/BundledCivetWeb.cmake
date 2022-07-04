@@ -18,9 +18,6 @@
 function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     message("Using bundled civetweb")
 
-    # Define patch step
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${SOURCE_DIR}/thirdparty/civetweb/civetweb.patch")
-
     set(LIBDIR "lib")
     # Define byproducts
     if (WIN32)
@@ -64,12 +61,11 @@ function(use_bundled_civetweb SOURCE_DIR BINARY_DIR)
     # Build project
     ExternalProject_Add(
             civetweb-external
-            URL "https://github.com/civetweb/civetweb/archive/v1.12.tar.gz"
-            URL_HASH "SHA256=8cab1e2ad8fb3e2e81fed0b2321a5afbd7269a644c44ed4c3607e0a212c6d9e1"
+            GIT_REPOSITORY "https://github.com/civetweb/civetweb.git"
+            GIT_TAG "4447b6501d5c568b4c6c0940eac801ec690b2250" # commit containing fix for MSVC issue https://github.com/civetweb/civetweb/issues/1024
             SOURCE_DIR "${BINARY_DIR}/thirdparty/civetweb-src"
             LIST_SEPARATOR % # This is needed for passing semicolon-separated lists
             CMAKE_ARGS ${CIVETWEB_CMAKE_ARGS}
-            PATCH_COMMAND ${PC}
             BUILD_BYPRODUCTS "${CIVETWEB_LIBRARIES_LIST}"
             EXCLUDE_FROM_ALL TRUE
     )
