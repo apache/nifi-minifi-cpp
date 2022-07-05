@@ -60,10 +60,8 @@ jobs:
           restore-keys: |
             windows-2019-clcache-${{github.ref}}-
             windows-2019-clcache-refs/heads/main-
-      - name: Setup Ninja
-        uses: seanmiddleditch/gha-setup-ninja@master
       - name: Setup PATH
-        uses: ilammy/msvc-dev-cmd@v1.10.0
+        uses: microsoft/setup-msbuild@v1.0.2
       - id: install-sqliteodbc-driver
         run: |
           Invoke-WebRequest -Uri "http://www.ch-werner.de/sqliteodbc/sqliteodbc_w64.exe" -OutFile "sqliteodbc_w64.exe"
@@ -83,13 +81,13 @@ jobs:
         run: |
           PATH %PATH%;C:\Program Files (x86)\Windows Kits\10\bin\10.0.19041.0\x64
           PATH %PATH%;C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\Roslyn
-          win_build_vs.bat ..\b /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR /NJ
+          win_build_vs.bat ..\b /64 /CI /S /A /PDH /SPLUNK /GCP /ELASTIC /K /L /R /Z /N /RO /PR
         shell: cmd
       - name: test
         run: cd ..\b && ctest --timeout 300 --parallel %NUMBER_OF_PROCESSORS% -C Release --output-on-failure
         shell: cmd
       - name: linter
-        run: cd ..\b && ninja linter
+        run: cd ..\b && msbuild -maxCpuCount linter.vcxproj
         shell: cmd
   ubuntu_20_04:
     name: "ubuntu-20.04"
