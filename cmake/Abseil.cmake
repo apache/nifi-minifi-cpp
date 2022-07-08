@@ -19,6 +19,7 @@
 include(FetchContent)
 set(ABSL_PROPAGATE_CXX_STD ON CACHE INTERNAL absl-propagate-cxx)
 set(ABSL_ENABLE_INSTALL ON CACHE INTERNAL "")
+set(BUILD_TESTING OFF CACHE STRING "" FORCE)
 FetchContent_Declare(
         absl
         URL      https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz
