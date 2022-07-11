@@ -108,11 +108,11 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
   bool randomPort = listeningPort == "0";
 
-  std::string authDNPattern = ".*";
-
+  std::string authDNPattern;
   if (context->getProperty(AuthorizedDNPattern.getName(), authDNPattern) && !authDNPattern.empty()) {
     logger_->log_debug("ListenHTTP using %s: %s", AuthorizedDNPattern.getName(), authDNPattern);
   } else {
+    authDNPattern = ".*";
     logger_->log_debug("Authorized DN Pattern not set or invalid, using default '%s' pattern", authDNPattern);
   }
 
