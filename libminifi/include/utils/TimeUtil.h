@@ -30,6 +30,7 @@
 #include <functional>
 #include <algorithm>
 #include <condition_variable>
+#include <memory>
 
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000

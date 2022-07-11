@@ -61,11 +61,7 @@ class AlertHandler : public ServerAwareHandler {
 
 class VerifyAlerts : public HTTPIntegrationBase {
  public:
-
-
-  void testSetup() override {
-
-  }
+  void testSetup() override {}
 
   void runAssertions() override {
     verify_();

@@ -28,7 +28,6 @@
 #include "database/RocksDbUtils.h"
 #include "database/StringAppender.h"
 #include "core/Resource.h"
-#include "database/RocksDbUtils.h"
 
 namespace org::apache::nifi::minifi::core::repository {
 

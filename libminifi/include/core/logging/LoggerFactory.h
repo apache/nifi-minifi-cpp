@@ -18,6 +18,9 @@
 
 #pragma once
 
+#include <string>
+#include <memory>
+
 #include "core/logging/Logger.h"
 #include "core/Core.h"
 

@@ -17,6 +17,14 @@
 
 #pragma once
 
+#include <deque>
+#include <mutex>
+#include <unordered_set>
+#include <regex>
+#include <utility>
+#include <string>
+#include <memory>
+
 #include "controllers/SSLContextService.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerProperties.h"
@@ -25,10 +33,6 @@
 #include "properties/Configure.h"
 #include "spdlog/sinks/base_sink.h"
 
-#include <deque>
-#include <mutex>
-#include <unordered_set>
-#include <regex>
 
 namespace org::apache::nifi::minifi::core::logging {
 

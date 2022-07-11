@@ -18,6 +18,7 @@
 #pragma once
 
 #include <optional>
+#include <string>
 #include "spdlog/common.h"
 
 namespace org::apache::nifi::minifi::utils {
