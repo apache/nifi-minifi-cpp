@@ -23,6 +23,7 @@
 #include "core/Processor.h"
 #include "rdkafka_utils.h"
 #include "utils/Enum.h"
+#include "utils/net/Ssl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -67,7 +68,7 @@ class KafkaProcessorBase : public core::Processor {
   }
 
  protected:
-  virtual std::optional<utils::SSL_data> getSslData(core::ProcessContext& context) const;
+  virtual std::optional<utils::net::SslData> getSslData(core::ProcessContext& context) const;
   void setKafkaAuthenticationParameters(core::ProcessContext& context, gsl::not_null<rd_kafka_conf_t*> config);
 
   SecurityProtocolOption security_protocol_;

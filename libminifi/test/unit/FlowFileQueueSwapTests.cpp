@@ -22,6 +22,8 @@
 #include "../TestBase.h"
 #include "SwapTestController.h"
 
+namespace org::apache::nifi::minifi::test {
+
 TEST_CASE("Setting swap threshold sets underlying queue limits", "[SwapTest1]") {
   const size_t target_size = 4;
   const size_t min_size = target_size / 2;
@@ -29,9 +31,9 @@ TEST_CASE("Setting swap threshold sets underlying queue limits", "[SwapTest1]") 
 
   minifi::Connection conn(nullptr, nullptr, "");
   conn.setSwapThreshold(target_size);
-  REQUIRE(FlowFileQueueTestAccessor::get_min_size_(ConnectionTestAccessor::get_queue_(conn)) == min_size);
-  REQUIRE(FlowFileQueueTestAccessor::get_target_size_(ConnectionTestAccessor::get_queue_(conn)) == target_size);
-  REQUIRE(FlowFileQueueTestAccessor::get_max_size_(ConnectionTestAccessor::get_queue_(conn)) == max_size);
+  REQUIRE(utils::FlowFileQueueTestAccessor::get_min_size_(utils::ConnectionTestAccessor::get_queue_(conn)) == min_size);
+  REQUIRE(utils::FlowFileQueueTestAccessor::get_target_size_(utils::ConnectionTestAccessor::get_queue_(conn)) == target_size);
+  REQUIRE(utils::FlowFileQueueTestAccessor::get_max_size_(utils::ConnectionTestAccessor::get_queue_(conn)) == max_size);
 }
 
 TEST_CASE_METHOD(SwapTestController, "Default constructed FlowFileQueue won't swap", "[SwapTest2]") {
@@ -181,3 +183,5 @@ TEST_CASE_METHOD(SwapTestController, "Popping below min checks if the pending lo
   verifySwapEvents({{Load, {120}}});
   verifyQueue({70, 80, 90, 100, 110}, {{}}, {});
 }
+
+}  // namespace org::apache::nifi::minifi::test

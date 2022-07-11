@@ -20,21 +20,20 @@
 #include "Utils.h"
 #include "lua/LuaScriptEngine.h"
 
-using ScriptException = org::apache::nifi::minifi::script::ScriptException;
-using LuaScriptEngine = org::apache::nifi::minifi::lua::LuaScriptEngine;
+namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("LuaScriptEngine errors during eval", "[luascriptengineeval]") {
-  LuaScriptEngine engine;
+  lua::LuaScriptEngine engine;
   REQUIRE_NOTHROW(engine.eval("print('foo')"));
   // The exception message comes from the lua engine
   REQUIRE_THROWS_MATCHES(
     engine.eval("shout('foo')"),
-    ScriptException,
-    ExceptionSubStringMatcher<ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value", "attempt to call global 'shout'"}));
+    script::ScriptException,
+    utils::ExceptionSubStringMatcher<script::ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value", "attempt to call global 'shout'"}));
 }
 
 TEST_CASE("LuaScriptEngine errors during call", "[luascriptenginecall]") {
-  LuaScriptEngine engine;
+  lua::LuaScriptEngine engine;
   REQUIRE_NOTHROW(engine.eval(R"(
     function foo()
       print('foo')
@@ -48,6 +47,8 @@ TEST_CASE("LuaScriptEngine errors during call", "[luascriptenginecall]") {
   // The exception message comes from the lua engine
   REQUIRE_THROWS_MATCHES(
     engine.call("bar"),
-    ScriptException,
-    ExceptionSubStringMatcher<ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value", "attempt to call global 'shout'"}));
+    script::ScriptException,
+    utils::ExceptionSubStringMatcher<script::ScriptException>({"global 'shout' is not callable (a nil value)", "attempt to call a nil value", "attempt to call global 'shout'"}));
 }
+
+}  // namespace org::apache::nifi::minifi::test

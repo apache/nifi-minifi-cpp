@@ -20,12 +20,13 @@
 #include "ListenSyslog.h"
 #include "SingleProcessorTestController.h"
 #include "Utils.h"
+#include "controllers/SSLContextService.h"
 
 using ListenSyslog = org::apache::nifi::minifi::processors::ListenSyslog;
 
 using namespace std::literals::chrono_literals;
 
-namespace org::apache::nifi::minifi::processors::testing {
+namespace org::apache::nifi::minifi::test {
 
 constexpr uint64_t SYSLOG_PORT = 10255;
 
@@ -260,7 +261,7 @@ void check_parsed_attributes(const core::FlowFile& flow_file, const ValidRFC3164
 TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
-  test::SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{listen_syslog};
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
@@ -279,8 +280,8 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
     protocol = "TCP";
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     controller.plan->scheduleProcessor(listen_syslog);
-    sendMessagesViaTCP({rfc5424_logger_example_1}, SYSLOG_PORT);
-    sendMessagesViaTCP({invalid_syslog}, SYSLOG_PORT);
+    REQUIRE(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, SYSLOG_PORT));
+    REQUIRE(utils::sendMessagesViaTCP({invalid_syslog}, SYSLOG_PORT));
   }
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
@@ -294,7 +295,7 @@ TEST_CASE("ListenSyslog without parsing test", "[ListenSyslog]") {
 TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
-  test::SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{listen_syslog};
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
@@ -325,19 +326,18 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     controller.plan->scheduleProcessor(listen_syslog);
     std::this_thread::sleep_for(100ms);
-    sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
-                        rfc5424_doc_example_2.unparsed_,
-                        rfc5424_doc_example_3.unparsed_,
-                        rfc5424_doc_example_4.unparsed_}, SYSLOG_PORT);
+    REQUIRE(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_,
+                                       rfc5424_doc_example_2.unparsed_,
+                                       rfc5424_doc_example_3.unparsed_,
+                                       rfc5424_doc_example_4.unparsed_}, SYSLOG_PORT));
 
-    sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
-                        rfc3164_doc_example_2.unparsed_,
-                        rfc3164_doc_example_3.unparsed_,
-                        rfc3164_doc_example_4.unparsed_}, SYSLOG_PORT);
+    REQUIRE(utils::sendMessagesViaTCP({rfc3164_doc_example_1.unparsed_,
+                                       rfc3164_doc_example_2.unparsed_,
+                                       rfc3164_doc_example_3.unparsed_,
+                                       rfc3164_doc_example_4.unparsed_}, SYSLOG_PORT));
 
-
-    sendMessagesViaTCP({rfc5424_logger_example_1}, SYSLOG_PORT);
-    sendMessagesViaTCP({invalid_syslog}, SYSLOG_PORT);
+    REQUIRE(utils::sendMessagesViaTCP({rfc5424_logger_example_1}, SYSLOG_PORT));
+    REQUIRE(utils::sendMessagesViaTCP({invalid_syslog}, SYSLOG_PORT));
   }
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
@@ -378,7 +378,7 @@ TEST_CASE("ListenSyslog with parsing test", "[ListenSyslog]") {
 
 TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
-  test::SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{listen_syslog};
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "100"));
@@ -401,7 +401,7 @@ TEST_CASE("ListenSyslog can be rescheduled", "[ListenSyslog]") {
 TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
   const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
 
-  test::SingleProcessorTestController controller{listen_syslog};
+  SingleProcessorTestController controller{listen_syslog};
   REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "10"));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
@@ -415,16 +415,16 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
     for (auto i = 0; i < 100; ++i) {
       sendUDPPacket(rfc5424_doc_example_1.unparsed_, SYSLOG_PORT);
     }
-    CHECK(countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
+    CHECK(utils::countLogOccurrencesUntil("Queue is full. UDP message ignored.", 50, 300ms, 50ms));
   }
 
   SECTION("TCP") {
     REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
     controller.plan->scheduleProcessor(listen_syslog);
     for (auto i = 0; i < 100; ++i) {
-      sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, SYSLOG_PORT);
+      REQUIRE(utils::sendMessagesViaTCP({rfc5424_doc_example_1.unparsed_}, SYSLOG_PORT));
     }
-    CHECK(countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
+    CHECK(utils::countLogOccurrencesUntil("Queue is full. TCP message ignored.", 50, 300ms, 50ms));
   }
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);
   CHECK(controller.trigger().at(ListenSyslog::Success).size() == 10);
@@ -434,4 +434,36 @@ TEST_CASE("ListenSyslog max queue and max batch size test", "[ListenSyslog]") {
   CHECK(controller.trigger().at(ListenSyslog::Success).empty());
 }
 
-}  // namespace org::apache::nifi::minifi::processors::testing
+TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog]") {
+  const auto listen_syslog = std::make_shared<ListenSyslog>("ListenSyslog");
+
+  SingleProcessorTestController controller{listen_syslog};
+  auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
+  const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate.getName(),
+    minifi::utils::file::concat_path(executable_dir, "resources/ca_cert.crt")));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate.getName(),
+    minifi::utils::file::concat_path(executable_dir, "resources/cert_and_private_key.pem")));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey.getName(),
+    minifi::utils::file::concat_path(executable_dir, "resources/cert_and_private_key.pem")));
+  LogTestController::getInstance().setTrace<ListenSyslog>();
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ParseMessages, "false"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::ProtocolProperty, "TCP"));
+  REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService, "SSLContextService"));
+  ssl_context_service->enable();
+  controller.plan->scheduleProcessor(listen_syslog);
+  REQUIRE(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, SYSLOG_PORT, minifi::utils::file::concat_path(executable_dir, "resources/ca_cert.crt")));
+  REQUIRE(utils::sendMessagesViaSSL({invalid_syslog}, SYSLOG_PORT, minifi::utils::file::concat_path(executable_dir, "/resources/ca_cert.crt")));
+
+  std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
+  REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));
+  CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[0]) == rfc5424_logger_example_1);
+  CHECK(controller.plan->getContent(result.at(ListenSyslog::Success)[1]) == invalid_syslog);
+
+  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[0], SYSLOG_PORT, "TCP");
+  check_for_only_basic_attributes(*result.at(ListenSyslog::Success)[1], SYSLOG_PORT, "TCP");
+}
+
+}  // namespace org::apache::nifi::minifi::test

@@ -16,36 +16,50 @@
  */
 #pragma once
 
-#include <optional>
-#include <memory>
-
 #include "SessionHandlingServer.h"
+
+#include <memory>
+#include <string>
+
+#include "Ssl.h"
+#include "asio/ssl.hpp"
 
 namespace org::apache::nifi::minifi::utils::net {
 
-class TcpSession : public std::enable_shared_from_this<TcpSession> {
+using ssl_socket = asio::ssl::stream<asio::ip::tcp::socket>;
+
+class SslSession : public std::enable_shared_from_this<SslSession> {
  public:
-  TcpSession(asio::io_context& io_context, utils::ConcurrentQueue<Message>& concurrent_queue, std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger);
-  asio::ip::tcp::socket& getSocket();
+  SslSession(asio::io_context& io_context, asio::ssl::context& context, utils::ConcurrentQueue<Message>& concurrent_queue,
+    std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger);
+
+  ssl_socket::lowest_layer_type& getSocket();
   void start();
   void handleReadUntilNewLine(std::error_code error_code);
 
- private:
+ protected:
   utils::ConcurrentQueue<Message>& concurrent_queue_;
   std::optional<size_t> max_queue_size_;
   asio::basic_streambuf<std::allocator<char>> buffer_;
-  asio::ip::tcp::socket socket_;
   std::shared_ptr<core::logging::Logger> logger_;
+  ssl_socket socket_;
 };
 
-class TcpServer : public SessionHandlingServer<TcpSession> {
+class SslServer : public SessionHandlingServer<SslSession> {
  public:
-  TcpServer(std::optional<size_t> max_queue_size,
-            uint16_t port,
-            std::shared_ptr<core::logging::Logger> logger);
+  SMART_ENUM(ClientAuthOption,
+    (NONE, "NONE"),
+    (WANT, "WANT"),
+    (REQUIRED, "REQUIRED")
+  )
+
+  SslServer(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger, SslData ssl_data, ClientAuthOption client_auth);
 
  protected:
-  std::shared_ptr<TcpSession> createSession() override;
+  std::shared_ptr<SslSession> createSession() override;
+
+  asio::ssl::context context_;
+  SslData ssl_data_;
 };
 
 }  // namespace org::apache::nifi::minifi::utils::net

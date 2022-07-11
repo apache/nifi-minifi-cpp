@@ -632,12 +632,12 @@ bool PublishKafka::createNewTopic(const std::shared_ptr<core::ProcessContext> &c
   return true;
 }
 
-std::optional<utils::SSL_data> PublishKafka::getSslData(core::ProcessContext& context) const {
+std::optional<utils::net::SslData> PublishKafka::getSslData(core::ProcessContext& context) const {
   if (auto result = KafkaProcessorBase::getSslData(context); result) {
     return result;
   }
 
-  utils::SSL_data ssl_data;
+  utils::net::SslData ssl_data;
   context.getProperty(SecurityCA.getName(), ssl_data.ca_loc);
   context.getProperty(SecurityCert.getName(), ssl_data.cert_loc);
   context.getProperty(SecurityPrivateKey.getName(), ssl_data.key_loc);

@@ -21,6 +21,7 @@
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
+#include "controllers/SSLContextService.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -55,6 +56,20 @@ const core::Property ListenSyslog::MaxQueueSize(
         ->withDescription("Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. "
                           "If the buffer is full, the message is ignored. If set to zero the buffer is unlimited.")
         ->withDefaultValue<uint64_t>(10000)->build());
+
+const core::Property ListenSyslog::SSLContextService(
+    core::PropertyBuilder::createProperty("SSL Context Service")
+        ->withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection. "
+                          "This Property is only considered if the <Protocol> Property has a value of \"TCP\".")
+        ->asType<minifi::controllers::SSLContextService>()
+        ->build());
+
+const core::Property ListenSyslog::ClientAuth(
+    core::PropertyBuilder::createProperty("Client Auth")
+      ->withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")
+      ->withDefaultValue<std::string>(toString(utils::net::SslServer::ClientAuthOption::NONE))
+      ->withAllowableValues<std::string>(utils::net::SslServer::ClientAuthOption::values())
+      ->build());
 
 const core::Relationship ListenSyslog::Success("success", "Incoming messages that match the expected format when parsing will be sent to this relationship. "
                                                           "When Parse Messages is set to false, all incoming message will be sent to this relationship.");
@@ -91,7 +106,13 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   utils::net::IpProtocol protocol;
   context->getProperty(ProtocolProperty.getName(), protocol);
 
-  startServer(*context, MaxBatchSize, MaxQueueSize, Port, protocol);
+  if (protocol == utils::net::IpProtocol::TCP) {
+    startTcpServer(*context);
+  } else if (protocol == utils::net::IpProtocol::UDP) {
+    startUdpServer(*context);
+  } else {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid protocol");
+  }
 }
 
 void ListenSyslog::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
@@ -133,6 +154,26 @@ void ListenSyslog::transferAsFlowFile(const utils::net::Message& message, core::
   flow_file->setAttribute("syslog.port", std::to_string(message.server_port));
   flow_file->setAttribute("syslog.sender", message.sender_address.to_string());
   session.transfer(flow_file, valid ? Success : Invalid);
+}
+
+const core::Property& ListenSyslog::getMaxBatchSizeProperty() {
+  return MaxBatchSize;
+}
+
+const core::Property& ListenSyslog::getMaxQueueSizeProperty() {
+  return MaxQueueSize;
+}
+
+const core::Property& ListenSyslog::getPortProperty() {
+  return Port;
+}
+
+const core::Property& ListenSyslog::getSslContextProperty() {
+  return SSLContextService;
+}
+
+const core::Property& ListenSyslog::getClientAuthProperty() {
+  return ClientAuth;
 }
 
 REGISTER_RESOURCE(ListenSyslog, Processor);

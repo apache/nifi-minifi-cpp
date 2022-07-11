@@ -30,6 +30,7 @@
 #include "../Catch.h"
 #include "../unit/ProvenanceTestHelper.h"
 
+namespace org::apache::nifi::minifi::test {
 
 using Timepoint = std::chrono::time_point<std::chrono::steady_clock>;
 
@@ -75,7 +76,7 @@ class SwappingFlowFileTestRepo : public TestFlowRepository, public minifi::SwapM
     for (const auto& ff_id : flow_files) {
       std::string value;
       Get(ff_id.id.to_string().c_str(), value);
-      utils::Identifier container_id;
+      minifi::utils::Identifier container_id;
       auto ff = minifi::FlowFileRecord::DeSerialize(std::as_bytes(std::span(value)), content_repo_, container_id);
       ff->setPenaltyExpiration(ff_id.to_be_processed_after);
       load_task.result.push_back(std::move(ff));
@@ -127,7 +128,7 @@ struct VerifiedQueue {
 
   void verify(std::initializer_list<unsigned> live, std::optional<std::initializer_list<unsigned>> inter, std::initializer_list<unsigned> swapped) const {
     // check live ffs
-    auto live_copy = FlowFileQueueTestAccessor::get_queue_(impl);
+    auto live_copy = utils::FlowFileQueueTestAccessor::get_queue_(impl);
     REQUIRE(live_copy.size() == live.size());
     for (auto sec : live) {
       auto min = live_copy.popMin();
@@ -136,9 +137,9 @@ struct VerifiedQueue {
 
     // check inter ffs
     if (!inter) {
-      REQUIRE_FALSE(FlowFileQueueTestAccessor::get_load_task_(impl).has_value());
+      REQUIRE_FALSE(utils::FlowFileQueueTestAccessor::get_load_task_(impl).has_value());
     } else {
-      auto& intermediate = FlowFileQueueTestAccessor::get_load_task_(impl)->intermediate_items;
+      auto& intermediate = utils::FlowFileQueueTestAccessor::get_load_task_(impl)->intermediate_items;
       REQUIRE(intermediate.size() == inter->size());
       size_t idx = 0;
       for (auto sec : inter.value()) {
@@ -148,7 +149,7 @@ struct VerifiedQueue {
     }
 
     // check swapped ffs
-    auto swapped_copy = FlowFileQueueTestAccessor::get_swapped_flow_files_(impl);
+    auto swapped_copy = utils::FlowFileQueueTestAccessor::get_swapped_flow_files_(impl);
     REQUIRE(swapped_copy.size() == swapped.size());
     for (auto sec : swapped) {
       auto min = swapped_copy.popMin();
@@ -169,7 +170,7 @@ struct VerifiedQueue {
   explicit VerifiedQueue(std::shared_ptr<minifi::SwapManager> swap_manager)
     : impl(std::move(swap_manager)) {}
 
-  utils::FlowFileQueue impl;
+  minifi::utils::FlowFileQueue impl;
   FlowFilePtrVec ref_;
 };
 
@@ -179,8 +180,8 @@ class SwapTestController : public TestController {
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
     flow_repo_ = std::make_shared<SwappingFlowFileTestRepo>();
     flow_repo_->loadComponent(content_repo_);
-    clock_ = std::make_shared<utils::ManualClock>();
-    utils::timeutils::setClock(clock_);
+    clock_ = std::make_shared<minifi::utils::ManualClock>();
+    minifi::utils::timeutils::setClock(clock_);
     queue_ = std::make_shared<VerifiedQueue>(std::static_pointer_cast<minifi::SwapManager>(flow_repo_));
   }
 
@@ -233,5 +234,7 @@ class SwapTestController : public TestController {
   std::shared_ptr<SwappingFlowFileTestRepo> flow_repo_;
   std::shared_ptr<core::repository::VolatileContentRepository> content_repo_;
   std::shared_ptr<VerifiedQueue> queue_;
-  std::shared_ptr<utils::ManualClock> clock_;
+  std::shared_ptr<minifi::utils::ManualClock> clock_;
 };
+
+}  // namespace org::apache::nifi::minifi::test

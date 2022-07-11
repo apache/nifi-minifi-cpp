@@ -27,6 +27,8 @@
 #include "core/ProcessSession.h"
 #include "../unit/ProvenanceTestHelper.h"
 
+namespace org::apache::nifi::minifi::test {
+
 class OutputProcessor : public core::Processor {
  public:
   using core::Processor::Processor;
@@ -86,8 +88,8 @@ TEST_CASE("Connection will on-demand swap flow files") {
   auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
-  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
-  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, minifi::utils::file::FileUtils::concat_path(dir, "content_repository"));
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, minifi::utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
 
   auto prov_repo = std::make_shared<TestRepository>();
   auto ff_repo = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository");
@@ -102,7 +104,7 @@ TEST_CASE("Connection will on-demand swap flow files") {
 
   auto processor = std::make_shared<OutputProcessor>("proc");
 
-  auto connection = std::make_shared<minifi::Connection>(ff_repo, content_repo, swap_manager, "conn", utils::IdGenerator::getIdGenerator()->generate());
+  auto connection = std::make_shared<minifi::Connection>(ff_repo, content_repo, swap_manager, "conn", minifi::utils::IdGenerator::getIdGenerator()->generate());
   connection->setSwapThreshold(50);
   connection->addRelationship(OutputProcessor::Success);
   connection->setSourceUUID(processor->getUUID());
@@ -117,9 +119,9 @@ TEST_CASE("Connection will on-demand swap flow files") {
   }
 
   REQUIRE(connection->getQueueSize() == processor->flow_files_.size());
-  utils::FlowFileQueue& queue = ConnectionTestAccessor::get_queue_(*connection);
+  minifi::utils::FlowFileQueue& queue = utils::ConnectionTestAccessor::get_queue_(*connection);
   // below max threshold live flow files
-  REQUIRE(FlowFileQueueTestAccessor::get_queue_(queue).size() <= 75);
+  REQUIRE(utils::FlowFileQueueTestAccessor::get_queue_(queue).size() <= 75);
   REQUIRE(queue.size() == 200);
 
   std::set<std::shared_ptr<core::FlowFile>> expired;
@@ -135,3 +137,5 @@ TEST_CASE("Connection will on-demand swap flow files") {
 
   REQUIRE(queue.empty());
 }
+
+}  // namespace org::apache::nifi::minifi::test

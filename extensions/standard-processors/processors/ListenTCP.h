@@ -21,6 +21,7 @@
 
 #include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -36,11 +37,15 @@ class ListenTCP : public NetworkListenerProcessor {
   EXTENSIONAPI static const core::Property Port;
   EXTENSIONAPI static const core::Property MaxBatchSize;
   EXTENSIONAPI static const core::Property MaxQueueSize;
+  EXTENSIONAPI static const core::Property SSLContextService;
+  EXTENSIONAPI static const core::Property ClientAuth;
   static auto properties() {
     return std::array{
       Port,
       MaxBatchSize,
-      MaxQueueSize
+      MaxQueueSize,
+      SSLContextService,
+      ClientAuth
     };
   }
 
@@ -49,6 +54,13 @@ class ListenTCP : public NetworkListenerProcessor {
 
   void initialize() override;
   void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
+
+ protected:
+  const core::Property& getMaxBatchSizeProperty() override;
+  const core::Property& getMaxQueueSizeProperty() override;
+  const core::Property& getPortProperty() override;
+  const core::Property& getSslContextProperty() override;
+  const core::Property& getClientAuthProperty() override;
 
  private:
   void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) override;

@@ -25,6 +25,8 @@
 #include "Utils.h"
 #include "FlowFileMatcher.h"
 
+namespace org::apache::nifi::minifi::test {
+
 TEST_CASE("ExecuteSQL works without incoming flow file", "[ExecuteSQL1]") {
   SQLTestController controller;
 
@@ -43,7 +45,7 @@ TEST_CASE("ExecuteSQL works without incoming flow file", "[ExecuteSQL1]") {
   REQUIRE(row_count == "2");
 
   auto content = plan->getContent(flow_files[0]);
-  verifyJSON(content, R"(
+  utils::verifyJSON(content, R"(
     [{
       "int_col": 11,
       "text_col": "one"
@@ -74,7 +76,7 @@ TEST_CASE("ExecuteSQL uses statement in property", "[ExecuteSQL2]") {
   REQUIRE(row_count == "1");
 
   auto content = plan->getContent(flow_files[0]);
-  verifyJSON(content, R"(
+  utils::verifyJSON(content, R"(
     [{
       "int_col": 11,
       "text_col": "one"
@@ -100,7 +102,7 @@ TEST_CASE("ExecuteSQL uses statement in content", "[ExecuteSQL3]") {
   REQUIRE(row_count == "2");
 
   auto content = plan->getContent(flow_files[0]);
-  verifyJSON(content, R"(
+  utils::verifyJSON(content, R"(
     [{
       "int_col": 11,
       "text_col": "one"
@@ -132,7 +134,7 @@ TEST_CASE("ExecuteSQL uses sql.args.N.value attributes", "[ExecuteSQL4]") {
   REQUIRE(row_count == "1");
 
   auto content = plan->getContent(flow_files[0]);
-  verifyJSON(content, R"(
+  utils::verifyJSON(content, R"(
     [{
       "int_col": 11,
       "text_col": "banana"
@@ -161,7 +163,7 @@ TEST_CASE("ExecuteSQL honors Max Rows Per Flow File", "[ExecuteSQL5]") {
   plan->run();
 
   auto content_verifier = [&] (const std::shared_ptr<core::FlowFile>& actual, const std::string& expected) {
-    verifyJSON(plan->getContent(actual), expected);
+    utils::verifyJSON(plan->getContent(actual), expected);
   };
 
   FlowFileMatcher matcher{content_verifier, {
@@ -196,3 +198,5 @@ TEST_CASE("ExecuteSQL incoming flow file is malformed", "[ExecuteSQL6]") {
 
   REQUIRE_THROWS(plan->run());
 }
+
+}  // namespace org::apache::nifi::minifi::test

@@ -35,12 +35,14 @@
 #include "core/Repository.h"
 #include "utils/FlowFileQueue.h"
 
-struct ConnectionTestAccessor;
-
 namespace org::apache::nifi::minifi {
 
+namespace test::utils {
+struct ConnectionTestAccessor;
+}  // namespace test::utils
+
 class Connection : public core::Connectable {
-  friend struct ::ConnectionTestAccessor;
+  friend struct test::utils::ConnectionTestAccessor;
  public:
   explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name);
   explicit Connection(std::shared_ptr<core::Repository> flow_repository, std::shared_ptr<core::ContentRepository> content_repo, const std::string &name, const utils::Identifier &uuid);

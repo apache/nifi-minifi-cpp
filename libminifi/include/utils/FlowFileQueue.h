@@ -26,16 +26,14 @@
 #include "SwapManager.h"
 #include "TimeUtil.h"
 
+namespace org::apache::nifi::minifi::test::utils {
 struct FlowFileQueueTestAccessor;
+}  // namespace org::apache::nifi::minifi::test::utils
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 class FlowFileQueue {
-  friend struct ::FlowFileQueueTestAccessor;
+  friend struct test::utils::FlowFileQueueTestAccessor;
   using TimePoint = std::chrono::steady_clock::time_point;
 
  public:
@@ -109,8 +107,4 @@ class FlowFileQueue {
   std::shared_ptr<core::logging::Logger> logger_;
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
