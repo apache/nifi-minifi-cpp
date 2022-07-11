@@ -288,6 +288,7 @@ Feature: Sending data to MQTT streaming platform using PublishMQTT
 
     When all instances start up
     Then the MQTT broker has a log line matching "Sending CONNACK to publisher-client"
+    Then the MQTT broker has a log line matching "Sending CONNACK to consumer-client"
     And "publisher-client" flow is killed
     And the MQTT broker has a log line matching "Sending PUBLISH to consumer-client"
     And a flowfile with the content "last_will_message" is placed in the monitored directory in less than 60 seconds
