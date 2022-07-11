@@ -30,8 +30,8 @@ endif()
 
 FetchContent_Declare(
     paho.mqtt.c-external
-    URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.9.tar.gz"
-    URL_HASH "SHA256=386c9b5fa1cf6d0d516db12d57fd8f6a410dd0fdc5e9a2da870aae437a2535ed"
+    URL "https://github.com/eclipse/paho.mqtt.c/archive/refs/tags/v1.3.10.tar.gz"
+    URL_HASH "SHA256=c70db96e66adacae411d5d875fbb08bca6ff9945de3d215b3af93cbd22792db5"
 )
 
 FetchContent_MakeAvailable(paho.mqtt.c-external)
