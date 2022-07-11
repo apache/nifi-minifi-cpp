@@ -20,18 +20,16 @@
 #include "Utils.h"
 #include "python/PythonScriptEngine.h"
 
-using PythonScriptEngine = org::apache::nifi::minifi::python::PythonScriptEngine;
-using ScriptException = org::apache::nifi::minifi::script::ScriptException;
-
+namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("PythonScriptEngine errors during eval", "[pythonscriptengineeval]") {
-  PythonScriptEngine engine;
+  python::PythonScriptEngine engine;
   REQUIRE_NOTHROW(engine.eval("print('foo')"));
-  REQUIRE_THROWS_MATCHES(engine.eval("shout('foo')"), ScriptException, ExceptionSubStringMatcher<ScriptException>({"name 'shout' is not defined"}));
+  REQUIRE_THROWS_MATCHES(engine.eval("shout('foo')"), script::ScriptException, utils::ExceptionSubStringMatcher<script::ScriptException>({"name 'shout' is not defined"}));
 }
 
 TEST_CASE("PythonScriptEngine errors during call", "[luascriptenginecall]") {
-  PythonScriptEngine engine;
+  python::PythonScriptEngine engine;
   REQUIRE_NOTHROW(engine.eval(R"(
     def foo():
       print('foo')
@@ -41,5 +39,7 @@ TEST_CASE("PythonScriptEngine errors during call", "[luascriptenginecall]") {
 
   )"));
   REQUIRE_NOTHROW(engine.call("foo"));
-  REQUIRE_THROWS_MATCHES(engine.call("bar"), ScriptException, ExceptionSubStringMatcher<ScriptException>({"name 'shout' is not defined"}));
+  REQUIRE_THROWS_MATCHES(engine.call("bar"), script::ScriptException, utils::ExceptionSubStringMatcher<script::ScriptException>({"name 'shout' is not defined"}));
 }
+
+}  // namespace org::apache::nifi::minifi::test

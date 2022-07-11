@@ -22,6 +22,8 @@
 
 #include "rapidjson/document.h"
 #include "asio.hpp"
+#include "asio/ssl.hpp"
+#include "net/Ssl.h"
 
 using namespace std::chrono_literals;
 
@@ -41,6 +43,8 @@ using namespace std::chrono_literals;
   static auto call_##method(T&& instance, Args&& ...args) -> decltype((std::forward<T>(instance).method(std::forward<Args>(args)...))) { \
     return std::forward<T>(instance).method(std::forward<Args>(args)...); \
   }
+
+namespace org::apache::nifi::minifi::test::utils {
 
 // carries out a loose match on objects, i.e. it doesn't matter if the
 // actual object has extra fields than expected
@@ -107,7 +111,7 @@ bool countLogOccurrencesUntil(const std::string& pattern,
   return false;
 }
 
-void sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t port) {
+bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t port) {
   asio::io_context io_context;
   asio::ip::tcp::socket socket(io_context);
   asio::ip::tcp::endpoint remote_endpoint(asio::ip::address::from_string("127.0.0.1"), port);
@@ -118,8 +122,11 @@ void sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t 
     tcp_message += '\n';
     socket.send(asio::buffer(tcp_message, tcp_message.size()), 0, err);
   }
-  REQUIRE(!err);
+  if (err) {
+    return false;
+  }
   socket.close();
+  return true;
 }
 
 struct ConnectionTestAccessor {
@@ -135,3 +142,37 @@ struct FlowFileQueueTestAccessor {
   FIELD_ACCESSOR(load_task_);
   FIELD_ACCESSOR(queue_);
 };
+
+bool sendMessagesViaSSL(const std::vector<std::string_view>& contents, uint64_t port, const std::string& ca_cert_path, const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
+  asio::ssl::context ctx(asio::ssl::context::sslv23);
+  ctx.load_verify_file(ca_cert_path);
+  if (ssl_data) {
+    ctx.set_verify_mode(asio::ssl::verify_peer);
+    ctx.use_certificate_file(ssl_data->cert_loc, asio::ssl::context::pem);
+    ctx.use_private_key_file(ssl_data->key_loc, asio::ssl::context::pem);
+  }
+  asio::io_context io_context;
+  asio::ssl::stream<asio::ip::tcp::socket> socket(io_context, ctx);
+  asio::ip::tcp::endpoint remote_endpoint(asio::ip::address::from_string("127.0.0.1"), port);
+  asio::error_code err;
+  socket.lowest_layer().connect(remote_endpoint, err);
+  if (err) {
+    return false;
+  }
+  socket.handshake(asio::ssl::stream_base::client, err);
+  if (err) {
+    return false;
+  }
+  for (auto& content : contents) {
+    std::string tcp_message(content);
+    tcp_message += '\n';
+    socket.write_some(asio::buffer(tcp_message, tcp_message.size()));
+  }
+  if (err) {
+    return false;
+  }
+  socket.lowest_layer().close();
+  return true;
+}
+
+}  // namespace org::apache::nifi::minifi::test::utils

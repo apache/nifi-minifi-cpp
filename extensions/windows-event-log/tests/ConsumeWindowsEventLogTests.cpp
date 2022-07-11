@@ -36,6 +36,8 @@ using PutFile = org::apache::nifi::minifi::processors::PutFile;
 using ConfigurableComponent = org::apache::nifi::minifi::core::ConfigurableComponent;
 using IdGenerator = org::apache::nifi::minifi::utils::IdGenerator;
 
+namespace org::apache::nifi::minifi::test {
+
 namespace {
 
 const std::string APPLICATION_CHANNEL = "Application";
@@ -69,7 +71,7 @@ TEST_CASE("ConsumeWindowsEventLog constructor works", "[create]") {
   std::shared_ptr<TestPlan> test_plan = test_controller.createPlan();
 
   REQUIRE_NOTHROW(ConsumeWindowsEventLog("one"));
-  REQUIRE_NOTHROW(ConsumeWindowsEventLog("two", utils::IdGenerator::getIdGenerator()->generate()));
+  REQUIRE_NOTHROW(ConsumeWindowsEventLog("two", IdGenerator::getIdGenerator()->generate()));
   REQUIRE_NOTHROW(test_plan->addProcessor("ConsumeWindowsEventLog", "cwel"));
 }
 
@@ -339,7 +341,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[on
   std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Simple"}.run();
   // the json must be single-line
   REQUIRE(event.find('\n') == std::string::npos);
-  verifyJSON(event, R"json(
+  utils::verifyJSON(event, R"json(
     {
       "System": {
         "Provider": {
@@ -358,7 +360,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly", "[on
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "[onTrigger]") {
   std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Flattened"}.run();
-  verifyJSON(event, R"json(
+  utils::verifyJSON(event, R"json(
     {
       "Name": "Application",
       "Channel": "Application",
@@ -373,7 +375,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly", "
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Raw correctly", "[onTrigger]") {
   std::string event = SimpleFormatTestController{APPLICATION_CHANNEL, "*", "JSON", "Raw"}.run();
-  verifyJSON(event, R"json(
+  utils::verifyJSON(event, R"json(
     [
       {
         "name": "Event",
@@ -438,3 +440,5 @@ TEST_CASE("ConsumeWindowsEventLog batch commit size works", "[onTrigger]") {
   batchCommitSizeTestHelper(5, 1, 1);
   batchCommitSizeTestHelper(5, 0, 5);
 }
+
+}  // namespace org::apache::nifi::minifi::test

@@ -49,13 +49,13 @@ struct Message {
 
 class Server {
  public:
-  void run() {
+  virtual void run() {
     io_context_.run();
   }
-  void reset() {
+  virtual void reset() {
     io_context_.restart();
   }
-  void stop() {
+  virtual void stop() {
     io_context_.stop();
   }
   bool queueEmpty() {

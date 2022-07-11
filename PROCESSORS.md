@@ -1263,13 +1263,14 @@ With parsing disabled all message will be routed to the success relationship, bu
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                      | Default Value | Allowable Values | Description                                                                                                                                                                                          |
-|---------------------------|---------------|------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Listening Port            | 514           |                  | The port for Syslog communication. (Well-known ports (0-1023) require root access)                                                                                                                   |
-| Protocol                  | UDP           | UDP<br>TCP<br>   | The protocol for Syslog communication.                                                                                                                                                               |
-| Parse Messages            | false         | false<br>true    | Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.                 |
-| Max Batch Size            | 500           |                  | The maximum number of Syslog events to process at a time.                                                                                                                                            |
+| Name                      | Default Value | Allowable Values | Description                                                                                                                                                                                             |
+|---------------------------|---------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Listening Port            | 514           |                  | The port for Syslog communication. (Well-known ports (0-1023) require root access)                                                                                                                      |
+| Protocol                  | UDP           | UDP<br>TCP<br>   | The protocol for Syslog communication.                                                                                                                                                                  |
+| Parse Messages            | false         | false<br>true    | Indicates if the processor should parse the Syslog messages. If set to false, each outgoing FlowFile will only contain the sender, protocol, and port, and no additional attributes.                    |
+| Max Batch Size            | 500           |                  | The maximum number of Syslog events to process at a time.                                                                                                                                               |
 | Max Size of Message Queue | 10000         |                  | Maximum number of Syslog messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
+| SSL Context Service       |               |                  | The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.                                                           |
 
 ### Relationships
 
@@ -1312,11 +1313,13 @@ Listens for incoming TCP connections and reads data from each connection using a
 
 In the list below, the names of required properties appear in bold. Any other properties (not in bold) are considered optional. The table also indicates any default values, and whether a property supports the NiFi Expression Language.
 
-| Name                          | Default Value | Allowable Values | Description                                                                                                                                                                                   |
-|-------------------------------|---------------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Listening Port**            |               |                  | The port to listen on for communication.                                                                                                                                                      |
-| **Max Batch Size**            | 500           |                  | The maximum number of messages to process at a time.                                                                                                                                          |
-| **Max Size of Message Queue** | 10000         |                  | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
+| Name                          | Default Value | Allowable Values           | Description                                                                                                                                                                                      |
+|-------------------------------|---------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Listening Port**            |               |                            | The port to listen on for communication.                                                                                                                                                         |
+| **Max Batch Size**            | 500           |                            | The maximum number of messages to process at a time.                                                                                                                                             |
+| **Max Size of Message Queue** | 10000         |                            | Maximum number of messages allowed to be buffered before processing them when the processor is triggered. If the buffer is full, the message is ignored. If set to zero the buffer is unlimited. |
+| SSL Context Service           |               |                            | The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.                                                    |
+| Client Auth                   | NONE          | NONE<br/>WANT<br/>REQUIRED | The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.                                                                                    |
 
 
 ## ListFile

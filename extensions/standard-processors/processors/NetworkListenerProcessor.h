@@ -26,6 +26,7 @@
 #include "core/ProcessSession.h"
 #include "core/Property.h"
 #include "utils/net/Server.h"
+#include "utils/net/SslServer.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -53,7 +54,9 @@ class NetworkListenerProcessor : public core::Processor {
  protected:
   void stopServer();
   void startServer(
-    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop, const core::Property& port_prop, utils::net::IpProtocol protocol);
+    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop,
+    const core::Property& port_prop, const core::Property& ssl_prop, utils::net::IpProtocol protocol,
+    utils::net::SslServer::ClientAuthOption client_auth = utils::net::SslServer::ClientAuthOption::NONE);
   virtual void transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) = 0;
 
   uint64_t max_batch_size_{500};

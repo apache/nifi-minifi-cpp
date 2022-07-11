@@ -21,6 +21,7 @@
 
 #include "NetworkListenerProcessor.h"
 #include "core/logging/LoggerConfiguration.h"
+#include "utils/Enum.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -36,11 +37,15 @@ class ListenTCP : public NetworkListenerProcessor {
   EXTENSIONAPI static const core::Property Port;
   EXTENSIONAPI static const core::Property MaxBatchSize;
   EXTENSIONAPI static const core::Property MaxQueueSize;
+  EXTENSIONAPI static const core::Property SSLContextService;
+  EXTENSIONAPI static const core::Property ClientAuth;
   static auto properties() {
     return std::array{
       Port,
       MaxBatchSize,
-      MaxQueueSize
+      MaxQueueSize,
+      SSLContextService,
+      ClientAuth
     };
   }
 

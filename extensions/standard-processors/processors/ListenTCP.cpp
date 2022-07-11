@@ -18,6 +18,8 @@
 
 #include "core/Resource.h"
 #include "core/PropertyBuilder.h"
+#include "controllers/SSLContextService.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -43,6 +45,19 @@ const core::Property ListenTCP::MaxBatchSize(
         ->isRequired(true)
         ->build());
 
+const core::Property ListenTCP::SSLContextService(
+    core::PropertyBuilder::createProperty("SSL Context Service")
+        ->withDescription("The Controller Service to use in order to obtain an SSL Context. If this property is set, messages will be received over a secure connection.")
+        ->asType<minifi::controllers::SSLContextService>()
+        ->build());
+
+const core::Property ListenTCP::ClientAuth(
+    core::PropertyBuilder::createProperty("Client Auth")
+      ->withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")
+      ->withDefaultValue<std::string>(toString(utils::net::SslServer::ClientAuthOption::NONE))
+      ->withAllowableValues<std::string>(utils::net::SslServer::ClientAuthOption::values())
+      ->build());
+
 const core::Relationship ListenTCP::Success("success", "Messages received successfully will be sent out this relationship.");
 
 void ListenTCP::initialize() {
@@ -52,7 +67,8 @@ void ListenTCP::initialize() {
 
 void ListenTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
-  startServer(*context, MaxBatchSize, MaxQueueSize, Port, utils::net::IpProtocol::TCP);
+  auto client_auth = utils::parseEnumProperty<utils::net::SslServer::ClientAuthOption>(*context, ClientAuth);
+  startServer(*context, MaxBatchSize, MaxQueueSize, Port, SSLContextService, utils::net::IpProtocol::TCP, client_auth);
 }
 
 void ListenTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {

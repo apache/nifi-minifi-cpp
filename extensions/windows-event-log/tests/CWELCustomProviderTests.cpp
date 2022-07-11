@@ -38,6 +38,8 @@
 // using the command "mc -um unit-test-provider.man"
 #include "custom-provider/unit-test-provider.h"
 
+namespace org::apache::nifi::minifi::test {
+
 namespace {
 
 struct CustomEventData {
@@ -151,7 +153,7 @@ const std::string EVENT_DATA_JSON = R"(
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly custom provider", "[onTrigger]") {
   std::string event = CustomProviderController{"JSON", "Simple"}.run();
-  verifyJSON(event, R"(
+  utils::verifyJSON(event, R"(
     {
       "System": {
         "Provider": {
@@ -166,7 +168,7 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Simple correctly custom
 
 TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly custom provider", "[onTrigger]") {
   std::string event = CustomProviderController{"JSON", "Flattened"}.run();
-  verifyJSON(event, R"(
+  utils::verifyJSON(event, R"(
     {
       "Name": ")" + CUSTOM_PROVIDER_NAME + R"(",
       "Channel": ")" + CUSTOM_CHANNEL /* Channel is not overwritten by data named "Channel" */ + R"(",
@@ -176,3 +178,5 @@ TEST_CASE("ConsumeWindowsEventLog prints events in JSON::Flattened correctly cus
     }
   )");
 }
+
+}  // namespace org::apache::nifi::minifi::test

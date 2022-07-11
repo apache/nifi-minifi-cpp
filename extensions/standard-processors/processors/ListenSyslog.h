@@ -45,13 +45,15 @@ class ListenSyslog : public NetworkListenerProcessor {
   EXTENSIONAPI static const core::Property MaxBatchSize;
   EXTENSIONAPI static const core::Property ParseMessages;
   EXTENSIONAPI static const core::Property MaxQueueSize;
+  EXTENSIONAPI static const core::Property SSLContextService;
   static auto properties() {
     return std::array{
       Port,
       ProtocolProperty,
       MaxBatchSize,
       ParseMessages,
-      MaxQueueSize
+      MaxQueueSize,
+      SSLContextService
     };
   }
 

@@ -24,6 +24,8 @@
 #include "Utils.h"
 #include "FlowFileMatcher.h"
 
+namespace org::apache::nifi::minifi::test {
+
 TEST_CASE("QueryDatabaseTable queries the table and returns specified columns", "[QueryDatabaseTable1]") {
   SQLTestController controller;
 
@@ -48,7 +50,7 @@ TEST_CASE("QueryDatabaseTable queries the table and returns specified columns", 
   flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
   auto content = plan->getContent(flow_files[0]);
-  verifyJSON(content, R"(
+  utils::verifyJSON(content, R"(
     [{"text_col": "one"}, {"text_col": "two"}, {"text_col": "three"}]
   )", true);
 }
@@ -88,7 +90,7 @@ TEST_CASE("QueryDatabaseTable requerying the table returns only new rows", "[Que
   second_flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "2");
   auto content = plan->getContent(second_flow_files[0]);
-  verifyJSON(content, R"(
+  utils::verifyJSON(content, R"(
     [{"text_col": "four"}, {"text_col": "five"}]
   )", true);
 }
@@ -119,7 +121,7 @@ TEST_CASE("QueryDatabaseTable specifying initial max values", "[QueryDatabaseTab
   flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "2");
   auto content = plan->getContent(flow_files[0]);
-  verifyJSON(content, R"(
+  utils::verifyJSON(content, R"(
     [{"text_col": "three"}, {"text_col": "four"}]
   )", true);
 }
@@ -145,7 +147,7 @@ TEST_CASE("QueryDatabaseTable honors Max Rows Per Flow File and sets output attr
   plan->run();
 
   auto content_verifier = [&] (const std::shared_ptr<core::FlowFile>& actual, const std::string& expected) {
-    verifyJSON(plan->getContent(actual), expected, true);
+    utils::verifyJSON(plan->getContent(actual), expected, true);
   };
 
   FlowFileMatcher matcher(content_verifier, {
@@ -250,3 +252,5 @@ TEST_CASE("QueryDatabaseTable changing maximum value columns resets state", "[Qu
   flow_files[0]->getAttribute(minifi::processors::QueryDatabaseTable::RESULT_ROW_COUNT, row_count);
   REQUIRE(row_count == "3");
 }
+
+}  // namespace org::apache::nifi::minifi::test

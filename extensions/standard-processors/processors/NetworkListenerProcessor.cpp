@@ -17,6 +17,7 @@
 #include "NetworkListenerProcessor.h"
 #include "utils/net/UdpServer.h"
 #include "utils/net/TcpServer.h"
+#include "utils/net/Ssl.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -37,7 +38,8 @@ void NetworkListenerProcessor::onTrigger(const std::shared_ptr<core::ProcessCont
 }
 
 void NetworkListenerProcessor::startServer(
-    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop, const core::Property& port_prop, utils::net::IpProtocol protocol) {
+    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop,
+    const core::Property& port_prop, const core::Property& ssl_prop, utils::net::IpProtocol protocol, utils::net::SslServer::ClientAuthOption client_auth) {
   gsl_Expects(!server_thread_.joinable() && !server_);
   context.getProperty(max_batch_size_prop.getName(), max_batch_size_);
   if (max_batch_size_ < 1)
@@ -53,7 +55,16 @@ void NetworkListenerProcessor::startServer(
   if (protocol == utils::net::IpProtocol::UDP) {
     server_ = std::make_unique<utils::net::UdpServer>(max_queue_size_opt, port, logger_);
   } else if (protocol == utils::net::IpProtocol::TCP) {
-    server_ = std::make_unique<utils::net::TcpServer>(max_queue_size_opt, port, logger_);
+    std::string ssl_value;
+    if (context.getProperty(ssl_prop.getName(), ssl_value) && !ssl_value.empty()) {
+      auto ssl_data = utils::net::getSslData(context, ssl_prop, logger_);
+      if (!ssl_data || !ssl_data->isValid()) {
+        throw Exception(PROCESSOR_EXCEPTION, "SSL Context Service is set, but no valid SSL data was found!");
+      }
+      server_ = std::make_unique<utils::net::SslServer>(max_queue_size_opt, port, logger_, *ssl_data, client_auth);
+    } else {
+      server_ = std::make_unique<utils::net::TcpServer>(max_queue_size_opt, port, logger_);
+    }
   } else {
     throw Exception(PROCESSOR_EXCEPTION, "Invalid protocol");
   }

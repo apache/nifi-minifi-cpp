@@ -84,7 +84,7 @@ TEST_CASE("HTTPTestsWithNoResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::Processor> invokehttp = std::make_shared<org::apache::nifi::minifi::processors::InvokeHTTP>("invokehttp");
   invokehttp->initialize();
 
-  utils::Identifier invokehttp_uuid = invokehttp->getUUID();
+  minifi::utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
 
   auto node = std::make_shared<core::ProcessorNode>(invokehttp.get());
@@ -139,10 +139,10 @@ TEST_CASE("HTTPTestsWithResourceClaimPOST", "[httptest1]") {
   std::shared_ptr<core::Processor> invokehttp = std::make_shared<org::apache::nifi::minifi::processors::InvokeHTTP>("invokehttp");
   invokehttp->initialize();
 
-  utils::Identifier processoruuid = listenhttp->getUUID();
+  minifi::utils::Identifier processoruuid = listenhttp->getUUID();
   REQUIRE(processoruuid);
 
-  utils::Identifier invokehttp_uuid = invokehttp->getUUID();
+  minifi::utils::Identifier invokehttp_uuid = invokehttp->getUUID();
   REQUIRE(invokehttp_uuid);
 
   auto configuration = std::make_shared<minifi::Configure>();

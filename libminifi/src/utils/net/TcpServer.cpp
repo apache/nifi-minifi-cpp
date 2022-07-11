@@ -57,29 +57,12 @@ void TcpSession::handleReadUntilNewLine(std::error_code error_code) {
 }
 
 TcpServer::TcpServer(std::optional<size_t> max_queue_size, uint16_t port, std::shared_ptr<core::logging::Logger> logger)
-    : Server(max_queue_size, std::move(logger)),
-      acceptor_(io_context_, asio::ip::tcp::endpoint(asio::ip::tcp::v4(), port)) {
+    : SessionHandlingServer<TcpSession>(max_queue_size, port, std::move(logger)) {
   startAccept();
 }
 
-void TcpServer::startAccept() {
-  auto new_session = std::make_shared<TcpSession>(io_context_, concurrent_queue_, max_queue_size_, logger_);
-  acceptor_.async_accept(new_session->getSocket(),
-                         [this, new_session](const auto& error_code) -> void {
-                           handleAccept(new_session, error_code);
-                         });
-}
-
-void TcpServer::handleAccept(const std::shared_ptr<TcpSession>& session, const std::error_code& error) {
-  if (error)
-    return;
-
-  session->start();
-  auto new_session = std::make_shared<TcpSession>(io_context_, concurrent_queue_, max_queue_size_, logger_);
-  acceptor_.async_accept(new_session->getSocket(),
-                         [this, new_session](const auto& error_code) -> void {
-                           handleAccept(new_session, error_code);
-                         });
+std::shared_ptr<TcpSession> TcpServer::createSession() {
+  return std::make_shared<TcpSession>(io_context_, concurrent_queue_, max_queue_size_, logger_);
 }
 
 }  // namespace org::apache::nifi::minifi::utils::net

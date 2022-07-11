@@ -138,7 +138,7 @@ class PublishKafka : public KafkaProcessorBase {
  protected:
   bool configureNewConnection(const std::shared_ptr<core::ProcessContext> &context);
   bool createNewTopic(const std::shared_ptr<core::ProcessContext> &context, const std::string& topic_name, const std::shared_ptr<core::FlowFile>& flow_file);
-  std::optional<utils::SSL_data> getSslData(core::ProcessContext& context) const override;
+  std::optional<utils::net::SslData> getSslData(core::ProcessContext& context) const override;
 
  private:
   KafkaConnectionKey key_;
