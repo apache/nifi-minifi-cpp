@@ -29,6 +29,7 @@
 #include <optional>
 #include <functional>
 #include <algorithm>
+#include <condition_variable>
 
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
@@ -73,7 +74,10 @@ class Clock {
   virtual std::chrono::milliseconds wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) {
     auto now = timeSinceEpoch();
     if (now < time) {
-      cv.wait_for(lck, time - now, pred);
+      cv.wait_for(lck, time - now, [&] {
+        now = timeSinceEpoch();
+        return now >= time || pred();
+      });
     }
     return timeSinceEpoch();
   }

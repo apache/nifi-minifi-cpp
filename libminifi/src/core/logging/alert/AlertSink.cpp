@@ -27,9 +27,6 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-using std::chrono_literals::operator""s;
-using std::chrono_literals::operator""min;
-
 namespace org::apache::nifi::minifi::core::logging {
 
 AlertSink::AlertSink(Config config, std::shared_ptr<Logger> logger)
