@@ -23,7 +23,7 @@ The config includes a KubernetesControllerService that provides the namespace, p
 In this specific example all container logs from the default namespace are collected and forwarded to Kafka.
 The controller service can be modified to have additional filters for namespaces, pods, containers, for which more information can be found in the [CONTROLLERS.md](/CONTROLLERS.md#kubernetesControllerService) documentation.
 
-Note: To access query Kubernetes cluster information, the MiNiFi agent requires read permission on the pod and namespace objects. One way to give access read access to MiNiFi is to create specific cluster roles and cluster role bindings for a specific namespace where the MiNiFi is deployed. There is an example on this in the [daemon-set-log-collection/cluster-roles](daemon-set-log-collection/cluster-roles) directory.
+Note: To query Kubernetes cluster information, the MiNiFi agent requires read permission on the pod and namespace objects. One way to give read access to MiNiFi is to create specific cluster roles and cluster role bindings for a specific namespace where the MiNiFi is deployed. There is an example on this in the [daemon-set-log-collection/cluster-roles](daemon-set-log-collection/cluster-roles) directory.
 
 This setup complies with the [node logging agent](https://kubernetes.io/docs/concepts/cluster-administration/logging/#using-a-node-logging-agent) architecture described in the Kubernetes documentation.
 
