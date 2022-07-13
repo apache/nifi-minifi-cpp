@@ -224,7 +224,11 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
           level = *opt_level;
         }
       } else {
-        sinks.push_back(sink_map[level_name]);
+        if (auto it = sink_map.find(level_name); it != sink_map.end()) {
+          sinks.push_back(it->second);
+        } else {
+          logger->log_error("Couldn't find sink '%s'", level_name);
+        }
       }
     }
     std::shared_ptr<internal::LoggerNamespace> current_namespace = root_namespace;
