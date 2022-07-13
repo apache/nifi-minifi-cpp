@@ -1103,6 +1103,15 @@ In the list below, the names of required properties appear in bold. Any other pr
 | no retry | The original FlowFile will be routed on any status code that should NOT be retried (1xx, 3xx, 4xx status codes). It will have new attributes detailing the request.                                              |
 | failure  | The original FlowFile will be routed on any type of connection failure, timeout or general exception. It will have new attributes detailing the request.                                                         |
 
+### Output Attributes
+
+| Attribute                   | Description                                                    |
+|-----------------------------|----------------------------------------------------------------|
+| _invokehttp.status.code_    | The status code that is returned                               |
+| _invokehttp.status.message_ | The status message that is returned                            |
+| _invokehttp.request.url_    | The original request URL                                       |
+| _invokehttp.tx.id_          | The transaction ID that is returned after reading the response |
+
 
 ## ListAzureBlobStorage
 

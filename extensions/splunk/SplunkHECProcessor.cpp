@@ -18,7 +18,6 @@
 #include "SplunkHECProcessor.h"
 #include "core/ProcessContext.h"
 #include "client/HTTPClient.h"
-#include "utils/HTTPClient.h"
 
 namespace org::apache::nifi::minifi::extensions::splunk {
 
@@ -52,10 +51,10 @@ std::shared_ptr<minifi::controllers::SSLContextService> SplunkHECProcessor::getS
   return nullptr;
 }
 
-void SplunkHECProcessor::initializeClient(utils::HTTPClient& client, const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const {
+void SplunkHECProcessor::initializeClient(curl::HTTPClient& client, const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const {
   client.initialize("POST", url, ssl_context_service);
-  client.appendHeader("Authorization", token_);
-  client.appendHeader("X-Splunk-Request-Channel", request_channel_);
+  client.setRequestHeader("Authorization", token_);
+  client.setRequestHeader("X-Splunk-Request-Channel", request_channel_);
 }
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

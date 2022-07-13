@@ -34,7 +34,7 @@
 #include "io/BufferStream.h"
 #include "io/EndianCheck.h"
 #include "properties/Configure.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "utils/TimeUtil.h"
 
 namespace org::apache::nifi::minifi::sitetosite {

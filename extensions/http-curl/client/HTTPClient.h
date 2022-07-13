@@ -21,7 +21,8 @@
 #pragma warning(disable: 4996)
 #endif
 
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
+#include "RequestHeaders.h"
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )
 #pragma comment(lib, "crypt32.lib" )
@@ -39,6 +40,7 @@
 #include <chrono>
 #include <string>
 #include <utility>
+#include <limits>
 #ifdef WIN32
 #include <regex>
 #else
@@ -51,17 +53,28 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org::apache::nifi::minifi::utils {
+namespace org::apache::nifi::minifi::extensions::curl {
 
-/**
- * Purpose and Justification: Pull the basics for an HTTPClient into a self contained class. Simply provide
- * the URL and an SSLContextService ( can be null).
- *
- * Since several portions of the code have been relying on curl, we can encapsulate most CURL HTTP
- * operations here without maintaining it everywhere. Further, this will help with testing as we
- * only need to to test our usage of CURL once
- */
-class HTTPClient : public BaseHTTPClient, public core::Connectable {
+struct KeepAliveProbeData {
+  std::chrono::seconds keep_alive_delay;
+  std::chrono::seconds keep_alive_interval;
+};
+
+struct HTTPResponseData {
+  std::vector<char> response_body;
+  utils::HTTPHeaderResponse header_response;
+  char* response_content_type;
+  int64_t response_code;
+
+  void clear() {
+    header_response.clear();
+    response_body.clear();
+    response_content_type = nullptr;
+    response_code = 0;
+  }
+};
+
+class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
  public:
   HTTPClient();
 
@@ -71,7 +84,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   HTTPClient(const HTTPClient&) = delete;
   HTTPClient& operator=(const HTTPClient&) = delete;
 
-  explicit HTTPClient(std::string url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
+  explicit HTTPClient(std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr);
 
   ~HTTPClient() override;
 
@@ -81,33 +94,24 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   static int debug_callback(CURL *handle, curl_infotype type, char *data, size_t size, void *userptr);
 
-  void setVerbose(bool use_stderr = false) override;
+  void setVerbose(bool use_stderr) override;
 
-  void addFormPart(const std::string& content_type, const std::string& name, HTTPUploadCallback* read_callback, const std::optional<std::string>& filename = std::nullopt);
+  void addFormPart(const std::string& content_type, const std::string& name, std::unique_ptr<utils::HTTPUploadCallback>&& read_callback, const std::optional<std::string>& filename);
 
   void forceClose();
 
-  void initialize(const std::string &method, const std::string url = "", const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service = nullptr) override;
-
-  // This is a bad API and deprecated. Use the std::chrono variant of this
-  // It is assumed that the value of timeout provided to this function
-  // is in seconds units
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setConnectionTimeout(int64_t timeout) override;
-
-  // This is a bad API and deprecated. Use the std::chrono variant of this
-  // It is assumed that the value of timeout provided to this function
-  // is in seconds units
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setReadTimeout(int64_t timeout) override;
+  void initialize(std::string method, std::string url, std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) override;
 
   void setConnectionTimeout(std::chrono::milliseconds timeout) override;
 
   void setReadTimeout(std::chrono::milliseconds timeout) override;
 
-  void setUploadCallback(HTTPUploadCallback *callbackObj) override;
+  void setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback>&& callback) override;
 
-  void setSeekFunction(HTTPUploadCallback *callbackObj) override;
+  virtual void setReadCallback(std::unique_ptr<utils::HTTPReadCallback>&& callback);
 
-  virtual void setReadCallback(HTTPReadCallback *callbackObj);
+  const utils::HTTPUploadCallback* getUploadCallback() const { return write_callback_.get(); }
+  const utils::HTTPReadCallback* getReadCallback() const { return read_callback_.get(); }
 
   void setContentType(std::string content_type) override;
 
@@ -115,69 +119,55 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setPostFields(const std::string& input) override;
 
-  void setHeaders(struct curl_slist *list);
-
-  void appendHeader(const std::string &new_header) override;
-
-  void appendHeader(const std::string &key, const std::string &value);
+  void setRequestHeader(std::string key, std::optional<std::string> value) override;
 
   bool submit() override;
-
-  CURLcode getResponseResult();
 
   int64_t getResponseCode() const override;
 
   const char *getContentType() override;
 
-  const std::vector<char> &getResponseBody() override;
+  const std::vector<char>& getResponseBody() override;
 
-  void set_request_method(const std::string method) override;
+  void set_request_method(std::string method) override;
+  std::string& getRequestMethod() { return method_; }
 
-  void setUseChunkedEncoding() override;
+  void setPeerVerification(bool peer_verification) override;
+  void setHostVerification(bool host_verification) override;
 
-  void setDisablePeerVerification() override;
-
-  void setDisableHostVerification() override;
-
-  void setBasicAuth(std::string username, std::string password) override;
+  void setBasicAuth(const std::string& username, const std::string& password) override;
   void clearBasicAuth() override;
 
-  bool setSpecificSSLVersion(SSLVersion specific_version) override;
+  bool setSpecificSSLVersion(utils::SSLVersion specific_version) override;
 
-  bool setMinimumSSLVersion(SSLVersion minimum_version) override;
+  bool setMinimumSSLVersion(utils::SSLVersion minimum_version) override;
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveProbe(long probe) {  // NOLINT deprecated
-    keep_alive_probe_ = std::chrono::milliseconds(probe * 1000);
+  void setKeepAliveProbe(std::optional<KeepAliveProbeData> probe_data) {
+    if (probe_data) {
+      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPALIVE, true);
+      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPINTVL, probe_data->keep_alive_interval.count());
+      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPIDLE, probe_data->keep_alive_delay.count());
+    } else {
+      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPALIVE, false);
+    }
   }
 
-  DEPRECATED(/*deprecated in*/ 0.8.0, /*will remove in */ 2.0) void setKeepAliveIdle(long idle) {  // NOLINT deprecated
-    keep_alive_idle_ = std::chrono::milliseconds(idle * 1000);
-  }
-
-  void setKeepAliveProbe(std::chrono::milliseconds probe) {
-    keep_alive_probe_ = probe;
-  }
-
-  void setKeepAliveIdle(std::chrono::milliseconds idle) {
-    keep_alive_idle_ = idle;
-  }
-
-
-  std::string getURL() const {
+  const std::string& getURL() const {
     return url_;
   }
 
-  const std::vector<std::string> &getHeaders() override {
-    return header_response_.getHeaderLines();
+  const std::vector<std::string>& getResponseHeaders() override {
+    return response_data_.header_response.getHeaderLines();
+  }
+
+  const std::map<std::string, std::string>& getResponseHeaderMap() override {
+    return response_data_.header_response.getHeaderMap();
   }
 
   void setInterface(const std::string &);
 
   void setFollowRedirects(bool follow);
 
-  const std::map<std::string, std::string> &getParsedHeaders() override {
-    return header_response_.getHeaderMap();
-  }
 
   /**
    * Locates the header value ignoring case. This is different than returning a mapping
@@ -186,9 +176,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
    * @param key key to search
    * @return header value.
    */
-  const std::string getHeaderValue(const std::string &key) {
+  std::string getHeaderValue(const std::string &key) {
     std::string ret;
-    for (const auto &kv : header_response_.getHeaderMap()) {
+    for (const auto &kv : response_data_.header_response.getHeaderMap()) {
       if (utils::StringUtils::equalsIgnoreCase(key, kv.first)) {
         ret = kv.second;
         break;
@@ -204,20 +194,9 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
     return true;
   }
 
-  /**
-   * Block until work is available on any input connection, or the given duration elapses
-   * @param timeoutMs timeout in milliseconds
-   */
-  void waitForWork(uint64_t /*timeoutMs*/) {
-  }
-
   void yield() override {
   }
 
-  /**
-   * Determines if work is available by this connectable
-   * @return boolean if work is available.
-   */
   bool isWorkAvailable() override {
     return true;
   }
@@ -226,12 +205,12 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void setHTTPProxy(const utils::HTTPProxy &proxy) override {
     if (!proxy.host.empty()) {
-      curl_easy_setopt(http_session_, CURLOPT_PROXY, proxy.host.c_str());
-      curl_easy_setopt(http_session_, CURLOPT_PROXYPORT, proxy.port);
+      curl_easy_setopt(http_session_.get(), CURLOPT_PROXY, proxy.host.c_str());
+      curl_easy_setopt(http_session_.get(), CURLOPT_PROXYPORT, proxy.port);
       if (!proxy.username.empty()) {
-        curl_easy_setopt(http_session_, CURLOPT_PROXYAUTH, CURLAUTH_ANY);
+        curl_easy_setopt(http_session_.get(), CURLOPT_PROXYAUTH, CURLAUTH_ANY);
         std::string value = proxy.username + ":" + proxy.password;
-        curl_easy_setopt(http_session_, CURLOPT_PROXYUSERPWD, value.c_str());
+        curl_easy_setopt(http_session_.get(), CURLOPT_PROXYUSERPWD, value.c_str());
       }
     }
   }
@@ -245,8 +224,8 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   struct Progress{
     std::chrono::steady_clock::time_point last_transferred_;
-    curl_off_t uploaded_data_;
-    curl_off_t downloaded_data_;
+    curl_off_t uploaded_data_{};
+    curl_off_t downloaded_data_{};
     void reset(){
       last_transferred_ = std::chrono::steady_clock::now();
       uploaded_data_ = 0;
@@ -259,7 +238,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
  protected:
   static CURLcode configure_ssl_context(CURL* /*curl*/, void *ctx, void *param) {
 #ifdef OPENSSL_SUPPORT
-    minifi::controllers::SSLContextService *ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
+    auto* ssl_context_service = static_cast<minifi::controllers::SSLContextService*>(param);
     if (!ssl_context_service->configure_ssl_context(static_cast<SSL_CTX*>(ctx))) {
       return CURLE_FAILED_INIT;
     }
@@ -271,48 +250,33 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
 
   void configure_secure_connection();
 
-  bool isSecure(const std::string &url);
+  std::chrono::milliseconds getAbsoluteTimeout() const { return 3*read_timeout_; }
 
-  HTTPReadCallback content_;
+  utils::HTTPReadCallback content_{new utils::ByteOutputCallback(std::numeric_limits<size_t>::max())};
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::string url_;
-  std::chrono::milliseconds connect_timeout_ms_{30000};
-  // read timeout.
-  std::chrono::milliseconds read_timeout_ms_{30000};
-  char *content_type_str_{nullptr};
-  std::string content_type_;
-  struct curl_slist *headers_{nullptr};
-  HTTPReadCallback *callback{nullptr};
-  HTTPUploadCallback *write_callback_{nullptr};
-  int64_t http_code_{0};
-  ByteOutputCallback read_callback_{INT_MAX};
-  utils::HTTPHeaderResponse header_response_{-1};
-
-  CURLcode res{CURLE_OK};
-
-  CURL* http_session_{nullptr};
-  curl_mime* form_{nullptr};
-
   std::string method_;
 
-  std::chrono::milliseconds keep_alive_probe_{-1};
+  std::chrono::milliseconds connect_timeout_{std::chrono::seconds(30)};
+  std::chrono::milliseconds read_timeout_{std::chrono::seconds(30)};
 
-  std::chrono::milliseconds keep_alive_idle_{-1};
+  HTTPResponseData response_data_;
 
-  struct BasicAuthCredentials {
-    BasicAuthCredentials(std::string username, std::string password) : username(std::move(username)), password(std::move(password)) {}
+  CURLcode res_{CURLE_OK};
 
-    std::string username;
-    std::string password;
-  };
+  RequestHeaders request_headers_;
 
-  std::optional<BasicAuthCredentials> username_password_;
+  std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> http_session_{nullptr, curl_easy_cleanup};
+  std::unique_ptr<curl_mime, decltype(&curl_mime_free)> form_{nullptr, curl_mime_free};
+  std::unique_ptr<utils::HTTPReadCallback> read_callback_;
+  std::unique_ptr<utils::HTTPUploadCallback> write_callback_;
+  std::unique_ptr<utils::HTTPUploadCallback> form_callback_;
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<HTTPClient>::getLogger()};
 };
 
-}  // namespace org::apache::nifi::minifi::utils
+}  // namespace org::apache::nifi::minifi::extensions::curl
 
 #ifdef WIN32
 #pragma warning(pop)

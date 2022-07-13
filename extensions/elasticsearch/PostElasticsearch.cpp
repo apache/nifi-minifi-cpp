@@ -118,6 +118,10 @@ void PostElasticsearch::onSchedule(const std::shared_ptr<core::ProcessContext>& 
   credentials_service_ = getCredentialsService(*context);
   if (!credentials_service_)
     throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Missing Elasticsearch credentials service");
+
+  client_.initialize("POST", host_url_ + "/_bulk", getSSLContextService(*context));
+  client_.setContentType("application/json");
+  credentials_service_->authenticateClient(client_);
 }
 
 namespace {
@@ -211,7 +215,7 @@ class ElasticPayload {
   std::optional<rapidjson::Document> payload_;
 };
 
-nonstd::expected<rapidjson::Document, std::string> submitRequest(utils::HTTPClient& client, std::string&& payload, const size_t expected_items) {
+nonstd::expected<rapidjson::Document, std::string> submitRequest(curl::HTTPClient& client, std::string&& payload, const size_t expected_items) {
   client.setPostFields(std::move(payload));
   if (!client.submit())
     return nonstd::make_unexpected("Submit failed");
@@ -291,10 +295,6 @@ std::string PostElasticsearch::collectPayload(core::ProcessContext& context,
 
 void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
   gsl_Expects(context && session && max_batch_size_ > 0);
-  utils::HTTPClient client;
-  client.initialize("POST", host_url_ + "/_bulk", getSSLContextService(*context));
-  client.setContentType("application/json");
-  credentials_service_->authenticateClient(client);
 
   std::vector<std::shared_ptr<core::FlowFile>> flowfiles_with_payload;
   auto payload = collectPayload(*context, *session, flowfiles_with_payload);
@@ -303,7 +303,7 @@ void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& c
     return;
   }
 
-  auto result = submitRequest(client, std::move(payload), flowfiles_with_payload.size());
+  auto result = submitRequest(client_, std::move(payload), flowfiles_with_payload.size());
   if (!result) {
     logger_->log_error(result.error().c_str());
     for (const auto& flow_file_in_payload: flowfiles_with_payload)

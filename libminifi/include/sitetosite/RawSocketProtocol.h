@@ -47,15 +47,6 @@
 namespace org::apache::nifi::minifi::sitetosite {
 
 
-/**
- * Site2Site Peer
- */
-typedef struct Site2SitePeerStatus {
-  std::string host_;
-  int port_;
-  bool isSecure_;
-} Site2SitePeerStatus;
-
 // RawSiteToSiteClient Class
 class RawSiteToSiteClient : public sitetosite::SiteToSiteClient {
  public:

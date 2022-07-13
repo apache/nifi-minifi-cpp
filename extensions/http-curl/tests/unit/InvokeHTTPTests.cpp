@@ -33,8 +33,8 @@
 #include "core/ProcessSession.h"
 #include "core/ProcessorNode.h"
 #include "processors/LogAttribute.h"
-#include "utils/gsl.h"
 #include "SingleProcessorTestController.h"
+#include "ConnectionCountingServer.h"
 
 namespace org::apache::nifi::minifi::test {
 
@@ -53,8 +53,8 @@ class TestHTTPServer {
 
  private:
   TestController test_controller_;
-  std::shared_ptr<core::Processor> listen_http_;
-  std::shared_ptr<core::Processor> log_attribute_;
+  std::shared_ptr<processors::ListenHTTP> listen_http_;
+  std::shared_ptr<processors::LogAttribute> log_attribute_;
   std::shared_ptr<TestPlan> test_plan_ = test_controller_.createPlan();
 };
 
@@ -62,8 +62,10 @@ TestHTTPServer::TestHTTPServer() {
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::ListenHTTP>();
   LogTestController::getInstance().setDebug<org::apache::nifi::minifi::processors::LogAttribute>();
 
-  listen_http_ = test_plan_->addProcessor("ListenHTTP", PROCESSOR_NAME);
-  log_attribute_ = test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
+  listen_http_ = std::dynamic_pointer_cast<processors::ListenHTTP>(test_plan_->addProcessor("ListenHTTP", PROCESSOR_NAME));
+  log_attribute_ = std::dynamic_pointer_cast<processors::LogAttribute>(test_plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true));
+  REQUIRE(listen_http_);
+  REQUIRE(log_attribute_);
   test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::BasePath.getName(), "testytesttest");
   test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::Port.getName(), "8681");
   test_plan_->setProperty(listen_http_, org::apache::nifi::minifi::processors::ListenHTTP::HeadersAsAttributesRegex.getName(), ".*");
@@ -283,27 +285,6 @@ TEST_CASE("HTTPTestsPenalizeNoRetry", "[httptest1]") {
   }
 }
 
-TEST_CASE("HTTPTestsPutResponseBodyinAttribute", "[httptest1]") {
-  using minifi::processors::InvokeHTTP;
-
-  TestController testController;
-  TestHTTPServer http_server;
-
-  LogTestController::getInstance().setDebug<InvokeHTTP>();
-
-  std::shared_ptr<TestPlan> plan = testController.createPlan();
-  std::shared_ptr<core::Processor> genfile = plan->addProcessor("GenerateFlowFile", "genfile");
-  std::shared_ptr<core::Processor> invokehttp = plan->addProcessor("InvokeHTTP", "invokehttp", core::Relationship("success", "description"), true);
-
-  plan->setProperty(invokehttp, InvokeHTTP::Method.getName(), "GET");
-  plan->setProperty(invokehttp, InvokeHTTP::URL.getName(), TestHTTPServer::URL);
-  plan->setProperty(invokehttp, InvokeHTTP::PropPutOutputAttributes.getName(), "http.type");
-  invokehttp->setAutoTerminatedRelationships(std::array{InvokeHTTP::RelFailure, InvokeHTTP::RelNoRetry, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
-  testController.runSession(plan);
-
-  REQUIRE(LogTestController::getInstance().contains("Adding http response body to flow file attribute http.type"));
-}
-
 TEST_CASE("InvokeHTTP fails with when flow contains invalid attribute names in HTTP headers", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;
@@ -433,4 +414,76 @@ TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substrin
   REQUIRE(LogTestController::getInstance().contains("key:header value:value2"));
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
 }
+
+TEST_CASE("HTTPTestsResponseBodyinAttribute", "[InvokeHTTP]") {
+  using minifi::processors::InvokeHTTP;
+
+  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invoke_http};
+
+  minifi::extensions::curl::testing::ConnectionCountingServer connection_counting_server;
+
+  invoke_http->setProperty(InvokeHTTP::Method, "POST");
+  invoke_http->setProperty(InvokeHTTP::URL, "http://localhost:" + connection_counting_server.getPort()  + "/reverse");
+  invoke_http->setProperty(InvokeHTTP::PutResponseBodyInAttribute, "http.body");
+  const auto result = test_controller.trigger("data", {{"header1", "value1"}, {"header", "value2"}});
+  auto success_flow_files = result.at(InvokeHTTP::Success);
+  CHECK(result.at(InvokeHTTP::RelFailure).empty());
+  CHECK(result.at(InvokeHTTP::RelResponse).empty());
+  CHECK(result.at(InvokeHTTP::RelNoRetry).empty());
+  CHECK(result.at(InvokeHTTP::RelRetry).empty());
+  REQUIRE(success_flow_files.size() == 1);
+  CHECK(test_controller.plan->getContent(success_flow_files[0]) == "data");
+
+  auto http_type_attribute = success_flow_files[0]->getAttribute("http.body");
+  REQUIRE(http_type_attribute);
+  CHECK(*http_type_attribute == "atad");
+}
+
+TEST_CASE("HTTPTestsResponseBody", "[InvokeHTTP]") {
+  using minifi::processors::InvokeHTTP;
+
+  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invoke_http};
+
+  minifi::extensions::curl::testing::ConnectionCountingServer connection_counting_server;
+
+  invoke_http->setProperty(InvokeHTTP::Method, "POST");
+  invoke_http->setProperty(InvokeHTTP::URL, "http://localhost:" + connection_counting_server.getPort()  + "/reverse");
+  invoke_http->setProperty(InvokeHTTP::SendBody, "true");
+  const auto result = test_controller.trigger("data", {{"header1", "value1"}, {"header", "value2"}});
+  CHECK(result.at(InvokeHTTP::RelFailure).empty());
+  CHECK(result.at(InvokeHTTP::RelNoRetry).empty());
+  CHECK(result.at(InvokeHTTP::RelRetry).empty());
+  CHECK(!result.at(InvokeHTTP::Success).empty());
+  CHECK(!result.at(InvokeHTTP::RelResponse).empty());
+
+  auto success_flow_files = result.at(InvokeHTTP::RelResponse);
+  REQUIRE(success_flow_files.size() == 1);
+  REQUIRE(test_controller.plan->getContent(success_flow_files[0]) == "atad");
+}
+
+TEST_CASE("Test Keepalive", "[InvokeHTTP]") {
+  using minifi::processors::InvokeHTTP;
+
+  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invoke_http};
+
+  minifi::extensions::curl::testing::ConnectionCountingServer connection_counting_server;
+
+  invoke_http->setProperty(InvokeHTTP::Method, "GET");
+  invoke_http->setProperty(InvokeHTTP::URL, "http://localhost:" + connection_counting_server.getPort()  + "/method");
+
+  for (auto i = 0; i < 4; ++i) {
+    const auto result = test_controller.trigger(InputFlowFileData{"data"});
+    CHECK(result.at(InvokeHTTP::RelFailure).empty());
+    CHECK(result.at(InvokeHTTP::RelNoRetry).empty());
+    CHECK(result.at(InvokeHTTP::RelRetry).empty());
+    CHECK(!result.at(InvokeHTTP::Success).empty());
+    CHECK(!result.at(InvokeHTTP::RelResponse).empty());
+  }
+
+  CHECK(1 == connection_counting_server.getConnectionCounter());
+}
+
 }  // namespace org::apache::nifi::minifi::test

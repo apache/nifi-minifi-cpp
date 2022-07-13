@@ -71,7 +71,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();

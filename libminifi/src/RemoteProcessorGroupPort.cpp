@@ -43,9 +43,12 @@
 #include "core/ProcessorNode.h"
 #include "core/PropertyBuilder.h"
 #include "core/Relationship.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 
 #undef GetObject  // windows.h #defines GetObject = GetObjectA or GetObjectW, which conflicts with rapidjson
+
+using namespace std::literals::chrono_literals;
+
 namespace org::apache::nifi::minifi {
 
 const char *RemoteProcessorGroupPort::RPG_SSL_CONTEXT_SERVICE_NAME = "RemoteProcessorGroupPortSSLContextService";
@@ -266,12 +269,12 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     }
 #endif
     std::string protocol = nifi.protocol_;
-    int port = nifi.port_;
+    int nifi_port = nifi.port_;
     std::stringstream fullUrl;
     fullUrl << protocol << host;
     // don't append port if it is 0 ( undefined )
-    if (port > 0) {
-      fullUrl << ":" << std::to_string(port);
+    if (nifi_port > 0) {
+      fullUrl << ":" << std::to_string(nifi_port);
     }
     fullUrl << "/nifi-api/site-to-site";
 
@@ -279,13 +282,13 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     configure_->get(Configure::nifi_rest_api_password, this->rest_password_);
 
     std::string token;
-    std::unique_ptr<utils::BaseHTTPClient> client = nullptr;
+    std::unique_ptr<utils::BaseHTTPClient> client;
     if (!rest_user_name_.empty()) {
       std::stringstream loginUrl;
       loginUrl << protocol << host;
       // don't append port if it is 0 ( undefined )
-      if (port > 0) {
-        loginUrl << ":" << std::to_string(port);
+      if (nifi_port > 0) {
+        loginUrl << ":" << std::to_string(nifi_port);
       }
       loginUrl << "/nifi-api/access/token";
 
@@ -298,7 +301,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
       client->initialize("GET", loginUrl.str(), ssl_service);
       // use a connection timeout. if this times out we will simply attempt re-connection
       // so no need for configuration parameter that isn't already defined in Processor
-      client->setConnectionTimeout(std::chrono::milliseconds(10000));
+      client->setConnectionTimeout(10s);
       client->setReadTimeout(idle_timeout_);
 
       token = utils::get_token(client.get(), this->rest_user_name_, this->rest_password_);
@@ -317,15 +320,14 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
     client->initialize("GET", fullUrl.str(), ssl_service);
     // use a connection timeout. if this times out we will simply attempt re-connection
     // so no need for configuration parameter that isn't already defined in Processor
-    client->setConnectionTimeout(std::chrono::milliseconds(10000));
+    client->setConnectionTimeout(10s);
     client->setReadTimeout(idle_timeout_);
     if (!proxy_.host.empty()) {
       client->setHTTPProxy(proxy_);
     }
-    if (!token.empty()) {
-      std::string header = "Authorization: " + token;
-      client->appendHeader(header);
-    }
+    if (!token.empty())
+      client->setRequestHeader("Authorization", token);
+
 
     if (client->submit() && client->getResponseCode() == 200) {
       const std::vector<char> &response_body = client->getResponseBody();
@@ -347,7 +349,7 @@ std::pair<std::string, int> RemoteProcessorGroupPort::refreshRemoteSite2SiteInfo
             if (client_type_ == sitetosite::CLIENT_TYPE::RAW && port_itr != end_itr && port_itr->value.IsNumber())
               siteTosite_port_ = port_itr->value.GetInt();
             else
-              siteTosite_port_ = port;
+              siteTosite_port_ = nifi_port;
 
             if (secure_itr != end_itr && secure_itr->value.IsBool())
               this->site2site_secure_ = secure_itr->value.GetBool();

@@ -80,7 +80,7 @@ class LuaScriptEngine : public script::ScriptEngine {
   };
 
   void onTrigger(const std::shared_ptr<core::ProcessContext> &context,
-      const std::shared_ptr<core::ProcessSession> &session) {
+      const std::shared_ptr<core::ProcessSession> &session) override {
     auto script_context = convert(context);
     auto lua_session = convert(session);
     TriggerSession trigger_session(script_context, lua_session);

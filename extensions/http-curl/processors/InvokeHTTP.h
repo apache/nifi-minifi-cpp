@@ -21,7 +21,7 @@
 #include <curl/curl.h>
 #include <memory>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include "FlowFileRecord.h"
 #include "core/Processor.h"
@@ -30,6 +30,7 @@
 #include "controllers/SSLContextService.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Id.h"
+#include "utils/ResourceQueue.h"
 #include "../client/HTTPClient.h"
 #include "utils/Export.h"
 #include "utils/Enum.h"
@@ -51,8 +52,8 @@ class InvokeHTTP : public core::Processor {
   }
 
   EXTENSIONAPI static constexpr const char* Description = "An HTTP client processor which can interact with a configurable HTTP Endpoint. "
-      "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
-      "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).";
+                                                          "The destination URL and HTTP Method are configurable. FlowFile attributes are converted to HTTP headers and the "
+                                                          "FlowFile contents are included as the body of the request (if the HTTP Method is PUT, POST or PATCH).";
 
   EXTENSIONAPI static const core::Property Method;
   EXTENSIONAPI static const core::Property URL;
@@ -71,33 +72,34 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static const core::Property SendMessageBody;
   EXTENSIONAPI static const core::Property UseChunkedEncoding;
   EXTENSIONAPI static const core::Property DisablePeerVerification;
-  EXTENSIONAPI static const core::Property PropPutOutputAttributes;
+  EXTENSIONAPI static const core::Property PutResponseBodyInAttribute;
   EXTENSIONAPI static const core::Property AlwaysOutputResponse;
   EXTENSIONAPI static const core::Property PenalizeOnNoRetry;
   EXTENSIONAPI static const core::Property InvalidHTTPHeaderFieldHandlingStrategy;
+
   static auto properties() {
     return std::array{
-      Method,
-      URL,
-      ConnectTimeout,
-      ReadTimeout,
-      DateHeader,
-      FollowRedirects,
-      AttributesToSend,
-      SSLContext,
-      ProxyHost,
-      ProxyPort,
-      ProxyUsername,
-      ProxyPassword,
-      ContentType,
-      SendBody,
-      SendMessageBody,
-      UseChunkedEncoding,
-      DisablePeerVerification,
-      PropPutOutputAttributes,
-      AlwaysOutputResponse,
-      PenalizeOnNoRetry,
-      InvalidHTTPHeaderFieldHandlingStrategy
+        Method,
+        URL,
+        ConnectTimeout,
+        ReadTimeout,
+        DateHeader,
+        FollowRedirects,
+        AttributesToSend,
+        SSLContext,
+        ProxyHost,
+        ProxyPort,
+        ProxyUsername,
+        ProxyPassword,
+        ContentType,
+        SendBody,
+        SendMessageBody,
+        UseChunkedEncoding,
+        DisablePeerVerification,
+        PutResponseBodyInAttribute,
+        AlwaysOutputResponse,
+        PenalizeOnNoRetry,
+        InvalidHTTPHeaderFieldHandlingStrategy
     };
   }
 
@@ -106,13 +108,14 @@ class InvokeHTTP : public core::Processor {
   EXTENSIONAPI static const core::Relationship RelRetry;
   EXTENSIONAPI static const core::Relationship RelNoRetry;
   EXTENSIONAPI static const core::Relationship RelFailure;
+
   static auto relationships() {
     return std::array{
-      Success,
-      RelResponse,
-      RelRetry,
-      RelNoRetry,
-      RelFailure
+        Success,
+        RelResponse,
+        RelRetry,
+        RelNoRetry,
+        RelFailure
     };
   }
 
@@ -127,52 +130,37 @@ class InvokeHTTP : public core::Processor {
 
   EXTENSIONAPI static constexpr const char* STATUS_CODE = "invokehttp.status.code";
   EXTENSIONAPI static constexpr const char* STATUS_MESSAGE = "invokehttp.status.message";
-  EXTENSIONAPI static constexpr const char* RESPONSE_BODY = "invokehttp.response.body";
   EXTENSIONAPI static constexpr const char* REQUEST_URL = "invokehttp.request.url";
   EXTENSIONAPI static constexpr const char* TRANSACTION_ID = "invokehttp.tx.id";
-  EXTENSIONAPI static constexpr const char* REMOTE_DN = "invokehttp.remote.dn";
-  EXTENSIONAPI static constexpr const char* EXCEPTION_CLASS = "invokehttp.java.exception.class";
-  EXTENSIONAPI static constexpr const char* EXCEPTION_MESSAGE = "invokehttp.java.exception.message";
 
-  void onTrigger(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSession> &session) override;
+  void onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) override;
   void initialize() override;
-  void onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &sessionFactory) override;
+  void onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) override;
 
  private:
-  /**
-   * Routes the flowfile to the proper destination
-   * @param request request flow file record
-   * @param response response flow file record
-   * @param session process session
-   * @param context process context
-   * @param isSuccess success code or not
-   * @param statuscode http response code.
-   */
-  void route(const std::shared_ptr<core::FlowFile> &request, const std::shared_ptr<core::FlowFile> &response, const std::shared_ptr<core::ProcessSession> &session,
-             const std::shared_ptr<core::ProcessContext> &context, bool is_success, int64_t status_code);
-  bool shouldEmitFlowFile() const;
+  void route(const std::shared_ptr<core::FlowFile>& request, const std::shared_ptr<core::FlowFile>& response, const std::shared_ptr<core::ProcessSession>& session,
+             const std::shared_ptr<core::ProcessContext>& context, bool is_success, int64_t status_code);
+  bool shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client) const;
+  void onTriggerWithClient(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session, minifi::extensions::curl::HTTPClient& client);
   [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
 
-  std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
-  std::string method_;
-  std::string url_;
-  bool date_header_include_{true};
+
+  void setupMembersFromProperties(const core::ProcessContext& context);
+  std::unique_ptr<minifi::extensions::curl::HTTPClient> createHTTPClientFromPropertiesAndMembers(const core::ProcessContext& context) const;
+
   std::optional<utils::Regex> attributes_to_send_;
-  std::chrono::milliseconds connect_timeout_ms_{20000};
-  std::chrono::milliseconds read_timeout_ms_{20000};
-  // attribute in which response body will be added
-  std::string put_attribute_name_;
+
+  std::optional<std::string> put_response_body_in_attribute_;
   bool always_output_response_{false};
-  std::string content_type_;
   bool use_chunked_encoding_{false};
   bool penalize_no_retry_{false};
-  // disabling peer verification makes susceptible for MITM attacks
-  bool disable_peer_verification_{false};
-  utils::HTTPProxy proxy_;
-  bool follow_redirects_{true};
   bool send_body_{true};
+
   InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_;
+
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger()};
+  gsl::not_null<std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>>> client_queue_ = gsl::make_not_null(
+      utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_));
 };
 
 }  // namespace org::apache::nifi::minifi::processors

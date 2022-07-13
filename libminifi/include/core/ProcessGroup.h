@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_
-#define LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -39,15 +38,12 @@
 #include "controller/ControllerServiceNode.h"
 #include "controller/ControllerServiceMap.h"
 #include "utils/Id.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "utils/CallBackTimer.h"
 
 struct ProcessGroupTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 namespace state {
 class StateController;
@@ -281,8 +277,4 @@ class ProcessGroup : public CoreComponent {
   std::unique_ptr<utils::CallBackTimer> onScheduleTimer_;
 };
 }  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_CORE_PROCESSGROUP_H_
+}  // namespace org::apache::nifi::minifi

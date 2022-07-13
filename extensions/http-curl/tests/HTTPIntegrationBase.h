@@ -131,7 +131,7 @@ class VerifyC2Base : public HTTPIntegrationBase {
  public:
   using HTTPIntegrationBase::HTTPIntegrationBase;
   void testSetup() override {
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setDebug<LogTestController>();
   }
 
@@ -183,7 +183,7 @@ class VerifyC2Update : public HTTPIntegrationBase {
 
   void testSetup() override {
     LogTestController::getInstance().setInfo<minifi::FlowController>();
-    LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
   }
@@ -212,7 +212,7 @@ class VerifyFlowFetched : public HTTPIntegrationBase {
 
   void testSetup() override {
     LogTestController::getInstance().setInfo<minifi::FlowController>();
-    LogTestController::getInstance().setDebug<minifi::utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();
   }

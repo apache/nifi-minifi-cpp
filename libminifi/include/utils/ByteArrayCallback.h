@@ -47,6 +47,8 @@ class ByteInputCallback {
     return gsl::narrow<int64_t>(vec.size());
   }
 
+  virtual void close() { }
+
   virtual void seek(size_t) { }
 
   virtual void write(std::string content) {

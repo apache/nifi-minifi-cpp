@@ -28,15 +28,11 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/ByteArrayCallback.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::extensions::curl {
 
 /**
  * The original class here was deadlock-prone, undocumented and was a smorgasbord of multithreading primitives used inconsistently.
- * This is a rewrite based on the contract inferred from this class's usage in utils::HTTPClient
+ * This is a rewrite based on the contract inferred from this class's usage in curl::HTTPClient
  * through HTTPStream and the non-buggy part of the behaviour of the original class.
  * Based on these:
  *  - this class provides a mechanism through which chunks of data can be inserted on a producer thread, while a
@@ -53,7 +49,7 @@ namespace utils {
  *  - because of this, all functions that request data at a specific offset are implicit seeks and potentially modify
  *    the current buffer
  */
-class HttpStreamingCallback final : public ByteInputCallback {
+class HttpStreamingCallback final : public utils::ByteInputCallback {
  public:
   HttpStreamingCallback()
       : is_alive_(true),
@@ -65,7 +61,7 @@ class HttpStreamingCallback final : public ByteInputCallback {
 
   ~HttpStreamingCallback() override = default;
 
-  void close() {
+  void close() override {
     logger_->log_trace("close() called");
     std::unique_lock<std::mutex> lock(mutex_);
     is_alive_ = false;
@@ -156,11 +152,11 @@ class HttpStreamingCallback final : public ByteInputCallback {
       current_pos_ = current_buffer_start_;
       total_bytes_loaded_ += current_vec_.size();
       logger_->log_trace("loadNextBuffer() loaded new buffer, ptr_: %p, size: %zu, current_buffer_start_: %zu, current_pos_: %zu, total_bytes_loaded_: %zu",
-          ptr_,
-          current_vec_.size(),
-          current_buffer_start_,
-          current_pos_,
-          total_bytes_loaded_);
+                         ptr_,
+                         current_vec_.size(),
+                         current_buffer_start_,
+                         current_pos_,
+                         total_bytes_loaded_);
     }
   }
 
@@ -218,11 +214,7 @@ class HttpStreamingCallback final : public ByteInputCallback {
   std::deque<std::vector<std::byte>> byte_arrays_;
 
   std::vector<std::byte> current_vec_;
-  std::byte *ptr_;
+  std::byte* ptr_;
 };
 
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::extensions::curl

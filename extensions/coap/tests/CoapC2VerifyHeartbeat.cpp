@@ -29,7 +29,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "HTTPClient.h"
+#include "BaseHTTPClient.h"
 #include "processors/InvokeHTTP.h"
 #include "TestBase.h"
 #include "Catch.h"
@@ -64,7 +64,7 @@ class VerifyCoAPServer : public CoapIntegrationBase {
   }
 
   void testSetup() override {
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setOff<minifi::processors::InvokeHTTP>();
     LogTestController::getInstance().setDebug<minifi::c2::RESTReceiver>();
     LogTestController::getInstance().setDebug<minifi::c2::C2Agent>();

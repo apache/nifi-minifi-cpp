@@ -47,13 +47,13 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
 
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::RemoteProcessorGroupPort>();
-    LogTestController::getInstance().setTrace<minifi::sitetosite::HttpSiteToSiteClient>();
+    LogTestController::getInstance().setTrace<minifi::extensions::curl::HttpSiteToSiteClient>();
     LogTestController::getInstance().setTrace<minifi::sitetosite::SiteToSiteClient>();
-    LogTestController::getInstance().setTrace<utils::HTTPClient>();
+    LogTestController::getInstance().setTrace<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setTrace<minifi::controllers::SSLContextService>();
     LogTestController::getInstance().setInfo<minifi::FlowController>();
     LogTestController::getInstance().setDebug<core::ConfigurableComponent>();
-    LogTestController::getInstance().setTrace<utils::HttpStreamingCallback>();
+    LogTestController::getInstance().setTrace<minifi::extensions::curl::HttpStreamingCallback>();
 
     std::fstream file;
     ss << dir << utils::file::get_separator() << "tstFile.ext";

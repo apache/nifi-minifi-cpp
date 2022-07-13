@@ -119,7 +119,7 @@ class Connectable : public CoreComponent {
    * Block until work is available on any input connection, or the given duration elapses
    * @param timeoutMs timeout in milliseconds
    */
-  void waitForWork(uint64_t timeoutMs);
+  void waitForWork(std::chrono::milliseconds timeout);
   /**
    * Notify this processor that work may be available
    */

@@ -23,7 +23,7 @@
 #include "core/Processor.h"
 
 
-namespace org::apache::nifi::minifi::utils {
+namespace org::apache::nifi::minifi::extensions::curl {
 class HTTPClient;
 }
 
@@ -57,7 +57,7 @@ class SplunkHECProcessor : public core::Processor {
  protected:
   std::string getNetworkLocation() const;
   static std::shared_ptr<minifi::controllers::SSLContextService> getSSLContextService(core::ProcessContext& context);
-  void initializeClient(utils::HTTPClient& client, const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const;
+  void initializeClient(curl::HTTPClient& client, const std::string &url, const std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service) const;
 
   std::string token_;
   std::string hostname_;

@@ -39,7 +39,7 @@
 #include "core/Connectable.h"
 #include "utils/file/PathUtils.h"
 #include "utils/file/FileSystem.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "io/NetworkPrioritizer.h"
 #include "io/FileStream.h"
 #include "core/ClassLoader.h"

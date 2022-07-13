@@ -47,7 +47,7 @@ class HttpTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<minifi::SchedulingAgent>();
     LogTestController::getInstance().setDebug<core::ProcessContext>();
     LogTestController::getInstance().setTrace<minifi::processors::InvokeHTTP>();
-    LogTestController::getInstance().setDebug<utils::HTTPClient>();
+    LogTestController::getInstance().setDebug<minifi::extensions::curl::HTTPClient>();
     LogTestController::getInstance().setDebug<minifi::processors::ListenHTTP>();
     LogTestController::getInstance().setDebug<minifi::processors::ListenHTTP::Handler>();
     LogTestController::getInstance().setDebug<minifi::processors::LogAttribute>();

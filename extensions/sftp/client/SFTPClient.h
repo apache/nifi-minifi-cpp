@@ -28,7 +28,7 @@
 
 #include "Exception.h"
 #include "utils/Enum.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "core/logging/Logger.h"
 #include "io/BaseStream.h"
 
@@ -49,7 +49,7 @@ class SFTPException : public Exception {
       :Exception{ExceptionType::FILE_OPERATION_EXCEPTION, fmt::format("SFTP Error: {0}", err.toString())},
       error_{err}
   {}
-  SFTPError error() const noexcept { return error_; }
+  [[nodiscard]] SFTPError error() const noexcept { return error_; }
  private:
   SFTPError error_;
 };
@@ -115,7 +115,7 @@ class SFTPClient {
    * If a function did not fail because of an SFTP-related error, this function will return SFTP_ERROR_OK.
    * If this function is called after a function returns true, the return value is UNDEFINED.
    */
-  SFTPError getLastError() const;
+  [[nodiscard]] SFTPError getLastError() const;
 
   bool getFile(const std::string& path, io::BaseStream& output, int64_t expected_size = -1);
 

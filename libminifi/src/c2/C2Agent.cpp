@@ -38,7 +38,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/file/FileManager.h"
 #include "utils/file/FileSystem.h"
-#include "utils/HTTPClient.h"
+#include "utils/BaseHTTPClient.h"
 #include "utils/Environment.h"
 #include "utils/Monitors.h"
 #include "utils/StringUtils.h"

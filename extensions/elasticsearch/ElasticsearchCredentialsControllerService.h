@@ -63,7 +63,7 @@ class ElasticsearchCredentialsControllerService : public core::controller::Contr
 
   void onEnable() override;
 
-  void authenticateClient(utils::HTTPClient& client);
+  void authenticateClient(curl::HTTPClient& client);
 
  private:
   std::optional<std::pair<std::string, std::string>> username_password_;

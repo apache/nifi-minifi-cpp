@@ -29,7 +29,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-#include "HTTPClient.h"
+#include "BaseHTTPClient.h"
 #include "processors/GetTCP.h"
 #include "TestBase.h"
 #include "Catch.h"

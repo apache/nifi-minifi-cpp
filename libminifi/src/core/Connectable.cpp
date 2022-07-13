@@ -99,12 +99,12 @@ bool Connectable::isAutoTerminated(const core::Relationship &relationship) {
   return auto_terminated_relationships_.contains(relationship.getName());
 }
 
-void Connectable::waitForWork(uint64_t timeoutMs) {
+void Connectable::waitForWork(std::chrono::milliseconds time_out) {
   has_work_.store(isWorkAvailable());
 
   if (!has_work_.load()) {
     std::unique_lock<std::mutex> lock(work_available_mutex_);
-    work_condition_.wait_for(lock, std::chrono::milliseconds(timeoutMs), [&] {return has_work_.load();});
+    work_condition_.wait_for(lock, time_out, [&] {return has_work_.load();});
   }
 }
 

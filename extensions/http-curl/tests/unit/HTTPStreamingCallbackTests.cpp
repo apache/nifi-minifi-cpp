@@ -28,10 +28,12 @@
 #include "TestBase.h"
 #include "Catch.h"
 
+namespace org::apache::nifi::minifi::extensions::curl::testing {
+
 class HttpStreamingCallbackTestsFixture {
  public:
   HttpStreamingCallbackTestsFixture() {
-    LogTestController::getInstance().setTrace<utils::HttpStreamingCallback>();
+    LogTestController::getInstance().setTrace<HttpStreamingCallback>();
   }
 
   virtual ~HttpStreamingCallbackTestsFixture() {
@@ -45,7 +47,7 @@ class HttpStreamingCallbackTestsFixture {
     if (consumer_thread_.joinable()) {
       throw std::logic_error("Consumer thread already started");
     }
-    consumer_thread_ = std::thread([this](){
+    consumer_thread_ = std::thread([this]() {
       std::cerr << "Consumer thread started" << std::endl;
 
       size_t current_pos = 0U;
@@ -83,7 +85,7 @@ class HttpStreamingCallbackTestsFixture {
   }
 
  protected:
-  utils::HttpStreamingCallback callback_;
+  HttpStreamingCallback callback_;
   std::mutex content_mutex_;
   std::vector<char> content_;
   std::thread consumer_thread_;
@@ -158,3 +160,4 @@ TEST_CASE_METHOD(HttpStreamingCallbackTestsFixture, "HttpStreamingCallback multi
 
   REQUIRE(input == content);
 }
+}  // namespace org::apache::nifi::minifi::extensions::curl::testing

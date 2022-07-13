@@ -16,7 +16,7 @@
 
 from minifi.core.FileSystemObserver import FileSystemObserver
 from minifi.core.RemoteProcessGroup import RemoteProcessGroup
-from minifi.core.SSL_cert_utils import gen_cert, rsa_gen_key_callback, make_ca, make_cert, dump_certificate, dump_privatekey
+from minifi.core.SSL_cert_utils import make_ca, make_cert, dump_certificate, dump_privatekey
 from minifi.core.Funnel import Funnel
 
 from minifi.controllers.SSLContextService import SSLContextService
@@ -272,6 +272,12 @@ def step_impl(context, content, path):
     context.test.add_test_data(path, content)
 
 
+@given("{number_of_files:d} files with the content \"{content}\" are present in \"{path}\"")
+def step_impl(context, number_of_files, content, path):
+    for i in range(0, number_of_files):
+        context.test.add_test_data(path, content)
+
+
 @given("an empty file is present in \"{path}\"")
 def step_impl(context, path):
     context.test.add_test_data(path, "")
@@ -329,16 +335,26 @@ def step_impl(context):
 # TLS
 @given("an ssl context service set up for {producer_name} and {consumer_name}")
 def step_impl(context, producer_name, consumer_name):
-    cert, key = gen_cert()
-    crt_file = '/tmp/resources/test-crt.pem'
-    ssl_context_service = SSLContextService(cert=crt_file, ca_cert=crt_file)
-    context.test.put_test_resource('test-crt.pem', cert.as_pem() + key.as_pem(None, rsa_gen_key_callback))
+    root_ca_cert, root_ca_key = make_ca("root CA")
+    minifi_cert, minifi_key = make_cert("minifi-cpp-flow", root_ca_cert, root_ca_key)
+    secondary_cert, secondary_key = make_cert("secondary", root_ca_cert, root_ca_key)
+    secondary_pem_file = '/tmp/resources/secondary.pem'
+    minifi_crt_file = '/tmp/resources/minifi-cpp-flow.crt'
+    minifi_key_file = '/tmp/resources/minifi-cpp-flow.key'
+    root_ca_crt_file = '/tmp/resources/root_ca.pem'
+    ssl_context_service = SSLContextService(cert=minifi_crt_file, ca_cert=root_ca_crt_file, key=minifi_key_file)
+    context.test.put_test_resource('secondary.pem', dump_certificate(secondary_cert) + dump_privatekey(secondary_key))
+    context.test.put_test_resource('minifi-cpp-flow.crt', dump_certificate(minifi_cert))
+    context.test.put_test_resource('minifi-cpp-flow.key', dump_privatekey(minifi_key))
+    context.test.put_test_resource('root_ca.pem', dump_certificate(root_ca_cert))
+
     producer = context.test.get_node_by_name(producer_name)
     producer.controller_services.append(ssl_context_service)
     producer.set_property("SSL Context Service", ssl_context_service.name)
     consumer = context.test.get_node_by_name(consumer_name)
-    consumer.set_property("SSL Certificate", crt_file)
-    consumer.set_property("SSL Verify Peer", "no")
+    consumer.set_property("SSL Certificate Authority", root_ca_crt_file)
+    consumer.set_property("SSL Certificate", secondary_pem_file)
+    consumer.set_property("SSL Verify Peer", "yes")
 
 
 @given("an ssl context service set up for {producer_name}")
@@ -709,6 +725,11 @@ def step_impl(context):
 @then("a flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
 def step_impl(context, content, duration):
     context.test.check_for_single_file_with_content_generated(content, timeparse(duration))
+
+
+@then("{number_of_flow_files:d} flowfiles with the content \"{content}\" are placed in the monitored directory in less than {duration}")
+def step_impl(context, number_of_flow_files, content, duration):
+    context.test.check_for_multiple_files_generated(number_of_flow_files, timeparse(duration), [content])
 
 
 @then("a flowfile with the JSON content \"{content}\" is placed in the monitored directory in less than {duration}")
