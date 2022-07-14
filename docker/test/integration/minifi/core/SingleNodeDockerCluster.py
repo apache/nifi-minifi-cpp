@@ -166,6 +166,6 @@ class SingleNodeDockerCluster(Cluster):
 
     def restart_flow(self, container_name):
         if container_name not in self.containers:
-            logging.error('Could not stop restart because it is not found: \'%s\'', container_name)
+            logging.error('Could not restart container because it is not found: \'%s\'', container_name)
             return
         self.containers[container_name].restart()
