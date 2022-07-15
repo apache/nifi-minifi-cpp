@@ -26,8 +26,8 @@ ARG MINIFI_VERSION
 ARG UID=1000
 ARG GID=1000
 
-# PDH and WEL extensions and not listed as they are Windows specific
-# SYSTEMD extension is turned OFF explicitly as it has no use in an alpine container
+# MINIFI_OPTIONS will be passed directly to cmake
+# use it to define cmake options (e.g. -DENABLE_AWS=ON -DENABLE_AZURE=ON)
 ARG MINIFI_OPTIONS=""
 ARG CMAKE_BUILD_TYPE=Release
 

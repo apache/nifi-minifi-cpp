@@ -20,6 +20,8 @@
 FROM ubuntu:focal AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
+# MINIFI_OPTIONS will be passed directly to cmake
+# use it to define cmake options (e.g. -DENABLE_AWS=ON -DENABLE_AZURE=ON)
 ARG MINIFI_VERSION
 
 # Install the system dependencies needed for a build
