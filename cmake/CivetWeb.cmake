@@ -17,10 +17,6 @@
 
 include(FetchContent)
 
-if (NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error" CACHE STRING "" FORCE)
-  set(CMAKE_CFLAGS "${CMAKE_CFLAGS} -Wno-error" CACHE STRING "" FORCE)
-endif()
 set(CIVETWEB_ENABLE_SSL_DYNAMIC_LOADING "OFF" CACHE STRING "" FORCE)
 set(CIVETWEB_BUILD_TESTING "OFF" CACHE STRING "" FORCE)
 set(CIVETWEB_ENABLE_DUKTAPE "OFF" CACHE STRING "" FORCE)
@@ -38,5 +34,13 @@ FetchContent_MakeAvailable(civetweb)
 
 add_dependencies(civetweb-c-library OpenSSL::Crypto OpenSSL::SSL)
 add_dependencies(civetweb-cpp OpenSSL::Crypto OpenSSL::SSL)
+
+set(CIVETWEB_C_FLAGS "${CMAKE_CFLAGS} -Wno-error" CACHE STRING "" FORCE)
+set(CIVETWEB_CXX_LAGS "${CMAKE_CXX_FLAGS} -Wno-error" CACHE STRING "" FORCE)
+string(REPLACE " " ";" REPLACED_C_FLAGS ${CIVETWEB_C_FLAGS})
+string(REPLACE " " ";" REPLACED_CXX_FLAGS ${CIVETWEB_CXX_LAGS})
+target_compile_options(civetweb-c-library INTERFACE ${REPLACED_C_FLAGS})
+target_compile_options(civetweb-cpp INTERFACE ${REPLACED_CXX_FLAGS})
+
 add_library(civetweb::c-library ALIAS civetweb-c-library)
 add_library(civetweb::civetweb-cpp ALIAS civetweb-cpp)
