@@ -73,14 +73,14 @@ for %%x in (%*) do (
     if [%%~x] EQU [/NONFREEUCRT] set "redist=-DMSI_REDISTRIBUTE_UCRT_NONASL=ON"
     if [%%~x] EQU [/L]           set build_linter=ON
     if [%%~x] EQU [/RO]          set real_odbc=ON
-    if [%%~x] EQU [/NJ]          set generator="Ninja"
+    if [%%~x] EQU [/NINJA]       set generator="Ninja"
 )
 
 mkdir %builddir%
 pushd %builddir%\
 
 if [%generator%] EQU ["Ninja"] (
-    set "buildcmd=ninja"
+    set "buildcmd=ninja && copy bin\minifi.exe main\"
 ) else (
     set "buildcmd=msbuild /m nifi-minifi-cpp.sln /property:Configuration=%cmake_build_type% /property:Platform=%build_platform% && copy bin\%cmake_build_type%\minifi.exe main\"
 )
