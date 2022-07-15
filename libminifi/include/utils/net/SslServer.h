@@ -57,7 +57,6 @@ class SslServer : public SessionHandlingServer<SslSession> {
 
  protected:
   std::shared_ptr<SslSession> createSession() override;
-  std::string get_password() const;
 
   asio::ssl::context context_;
   SslData ssl_data_;

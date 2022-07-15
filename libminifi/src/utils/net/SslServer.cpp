@@ -72,7 +72,7 @@ SslServer::SslServer(std::optional<size_t> max_queue_size, uint16_t port, std::s
         asio::ssl::context::default_workarounds
         | asio::ssl::context::no_sslv2
         | asio::ssl::context::single_dh_use);
-    context_.set_password_callback(std::bind(&SslServer::get_password, this));
+    context_.set_password_callback([this](std::size_t&, asio::ssl::context_base::password_purpose&) { return ssl_data_.key_pw; });
     context_.use_certificate_file(ssl_data_.cert_loc, asio::ssl::context::pem);
     context_.use_private_key_file(ssl_data_.key_loc, asio::ssl::context::pem);
     context_.load_verify_file(ssl_data_.ca_loc);
@@ -86,10 +86,6 @@ SslServer::SslServer(std::optional<size_t> max_queue_size, uint16_t port, std::s
 
 std::shared_ptr<SslSession> SslServer::createSession() {
   return std::make_shared<SslSession>(io_context_, context_, concurrent_queue_, max_queue_size_, logger_);
-}
-
-std::string SslServer::get_password() const {
-  return ssl_data_.key_pw;
 }
 
 }  // namespace org::apache::nifi::minifi::utils::net

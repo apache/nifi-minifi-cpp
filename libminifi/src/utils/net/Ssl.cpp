@@ -20,24 +20,33 @@
 namespace org::apache::nifi::minifi::utils::net {
 
 std::optional<utils::net::SslData> getSslData(const core::ProcessContext& context, const core::Property& ssl_prop, const std::shared_ptr<core::logging::Logger>& logger) {
-  std::string ssl_service_name;
-  if (context.getProperty(ssl_prop.getName(), ssl_service_name) && !ssl_service_name.empty()) {
-    std::shared_ptr<core::controller::ControllerService> service = context.getControllerService(ssl_service_name);
-    if (service) {
-      auto ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
-      utils::net::SslData ssl_data;
-      ssl_data.ca_loc = ssl_service->getCACertificate();
-      ssl_data.cert_loc = ssl_service->getCertificateFile();
-      ssl_data.key_loc = ssl_service->getPrivateKeyFile();
-      ssl_data.key_pw = ssl_service->getPassphrase();
-      return ssl_data;
+  auto getSslContextService = [&]() -> std::shared_ptr<minifi::controllers::SSLContextService> {
+    if (auto ssl_service_name = context.getProperty(ssl_prop); ssl_service_name && !ssl_service_name->empty()) {
+      if (auto service = context.getControllerService(*ssl_service_name)) {
+        if (auto ssl_service = std::dynamic_pointer_cast<org::apache::nifi::minifi::controllers::SSLContextService>(service)) {
+          return ssl_service;
+        } else {
+          logger->log_warn("SSL Context Service property is set to '%s', but it is not a valid SSLContextService.", *ssl_service_name);
+        }
+      } else {
+        logger->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", *ssl_service_name);
+      }
     } else {
-      logger->log_warn("SSL Context Service property is set to '%s', but the controller service could not be found.", ssl_service_name);
-      return std::nullopt;
+      logger->log_warn("No valid SSL Context Service property is set.");
     }
+    return nullptr;
+  };
+
+  if (auto service = getSslContextService()) {
+    auto ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+    utils::net::SslData ssl_data;
+    ssl_data.ca_loc = ssl_service->getCACertificate();
+    ssl_data.cert_loc = ssl_service->getCertificateFile();
+    ssl_data.key_loc = ssl_service->getPrivateKeyFile();
+    ssl_data.key_pw = ssl_service->getPassphrase();
+    return ssl_data;
   }
 
-  logger->log_warn("No valid SSL Context Service property is set.");
   return std::nullopt;
 }
 
