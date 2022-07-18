@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   namespace: daemon
-  name: log-collector
+  name: minifi
 spec:
   securityContext:
     runAsUser: 0

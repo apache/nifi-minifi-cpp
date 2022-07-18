@@ -49,7 +49,7 @@ set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
         (${Patch_EXECUTABLE} -R -p1 -s -f --dry-run -i ${K8S_PATCH_FILE} || ${Patch_EXECUTABLE} -p1 -i ${K8S_PATCH_FILE})")
 FetchContent_Declare(kubernetes
     GIT_REPOSITORY https://github.com/kubernetes-client/c
-    GIT_TAG 9581cd9a8426a5ad7d543b146d5c5ede37cc32e0  # latest commit on master as of 2022-01-05
+    GIT_TAG f5f12a807432824963bbea380cdf4d9ba412e00e  # v0.4.0
     PATCH_COMMAND "${K8S_PC}"
 )
 

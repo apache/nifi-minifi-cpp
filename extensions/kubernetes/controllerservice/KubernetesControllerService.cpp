@@ -20,9 +20,6 @@
 #include <vector>
 
 extern "C" {
-#include "config/incluster_config.h"
-#include "config/kube_config.h"
-#include "include/apiClient.h"
 #include "api/CoreV1API.h"
 }
 
@@ -34,45 +31,6 @@ extern "C" {
 #include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::controllers {
-
-class KubernetesControllerService::APIClient {
- public:
-  APIClient();
-  ~APIClient() noexcept;
-
-  APIClient(APIClient&&) = delete;
-  APIClient(const APIClient&) = delete;
-  APIClient& operator=(APIClient&&) = delete;
-  APIClient& operator=(const APIClient&) = delete;
-
-  [[nodiscard]] gsl::not_null<apiClient_t*> getClient() const noexcept { return api_client_; }
-
- private:
-  char* base_path_ = nullptr;
-  sslConfig_t* ssl_config_ = nullptr;
-  list_t* api_keys_ = nullptr;
-  gsl::not_null<apiClient_t*> api_client_;
-};
-
-KubernetesControllerService::APIClient::APIClient()
-  : api_client_([this] {
-    int rc = load_incluster_config(&base_path_, &ssl_config_, &api_keys_);
-    if (rc != 0) {
-      throw std::runtime_error(utils::StringUtils::join_pack("load_incluster_config() failed with error code ", std::to_string(rc)));
-    }
-    const auto api_client = apiClient_create_with_base_path(base_path_, ssl_config_, api_keys_);
-    if (!api_client) {
-      throw std::runtime_error("apiClient_create_with_base_path() failed");
-    }
-    return gsl::make_not_null(api_client);
-    }()) {
-}
-
-KubernetesControllerService::APIClient::~APIClient() noexcept {
-  apiClient_free(api_client_);
-  free_client_config(base_path_, ssl_config_, api_keys_);
-  apiClient_unsetupGlobalEnv();
-}
 
 const core::Property KubernetesControllerService::NamespaceFilter{
     core::PropertyBuilder::createProperty("Namespace Filter")
@@ -110,7 +68,7 @@ void KubernetesControllerService::initialize() {
 
 void KubernetesControllerService::onEnable() {
   try {
-    api_client_ = std::make_unique<APIClient>();
+    api_client_ = std::make_unique<kubernetes::ApiClient>();
   } catch (const std::runtime_error& ex) {
     logger_->log_error("Could not create the API client in the Kubernetes Controller Service: %s", ex.what());
   }
