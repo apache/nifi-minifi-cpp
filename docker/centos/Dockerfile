@@ -20,8 +20,6 @@
 FROM centos:7 AS build_deps
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
-# MINIFI_OPTIONS will be passed directly to cmake
-# use it to define cmake options (e.g. -DENABLE_AWS=ON -DENABLE_AZURE=ON)
 ARG MINIFI_VERSION
 
 # Install the system dependencies needed for a build
@@ -37,6 +35,9 @@ RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
 
 FROM build_deps AS release
+
+# MINIFI_OPTIONS will be passed directly to cmake
+# use it to define cmake options (e.g. -DENABLE_AWS=ON -DENABLE_AZURE=ON)
 ARG MINIFI_OPTIONS=""
 ARG CMAKE_BUILD_TYPE=Release
 # Perform the build
