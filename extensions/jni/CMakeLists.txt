@@ -18,7 +18,7 @@
 #
 
 if(NOT (ENABLE_ALL OR ENABLE_JNI))
-	return()
+  return()
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
@@ -51,64 +51,64 @@ message("Building NiFi assembly for packaging ....")
 # we should stick with the the minor duplication
 if (WIN32)
 execute_process(COMMAND cmd /c "${MAVEN_EXECUTABLE}" "-q" "package" "-Denforcer.skip=true"
-	WORKING_DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly"
-	RESULT_VARIABLE mvn_result
-  	OUTPUT_VARIABLE mvn_output
-	ERROR_VARIABLE mvn_error)
+  WORKING_DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly"
+  RESULT_VARIABLE mvn_result
+  OUTPUT_VARIABLE mvn_output
+  ERROR_VARIABLE mvn_error)
 else()
 execute_process(COMMAND "${MAVEN_EXECUTABLE}" "-q" "package" "-Denforcer.skip=true"
-	WORKING_DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly"
-	RESULT_VARIABLE mvn_result
-  	OUTPUT_VARIABLE mvn_output
-	ERROR_VARIABLE mvn_error)
+  WORKING_DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly"
+  RESULT_VARIABLE mvn_result
+  OUTPUT_VARIABLE mvn_output
+  ERROR_VARIABLE mvn_error)
 endif()
 if("${mvn_result}" STREQUAL "0")
-	message("${mvn_output}")
+  message("${mvn_output}")
 
-	install(DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly/target/nifi-minifi-jni-minifi-jni/nifi-minifi-jni-1.9.0/minifi-jni"
+  install(DIRECTORY "${JNI_ASSEMBLY_JAR_BIN}/nifi-minifi-jni-assembly/target/nifi-minifi-jni-minifi-jni/nifi-minifi-jni-1.9.0/minifi-jni"
         DESTINATION .
         COMPONENT bin)
 
 else()
-	message("Maven failed ${mvn_result} ${mvn_output} ${mvn_error}")
+  message("Maven failed ${mvn_result} ${mvn_output} ${mvn_error}")
 endif()
 
 message("Building NiFi JNI Jar for packaging ....")
 
 if (WIN32)
 execute_process(COMMAND cmd /c "${MAVEN_EXECUTABLE}" "-q" "package"
-	WORKING_DIRECTORY "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni"
-	RESULT_VARIABLE mvn_result
-  	OUTPUT_VARIABLE mvn_output
-	ERROR_VARIABLE mvn_error)
+  WORKING_DIRECTORY "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni"
+  RESULT_VARIABLE mvn_result
+  OUTPUT_VARIABLE mvn_output
+  ERROR_VARIABLE mvn_error)
 else()
 execute_process(COMMAND "${MAVEN_EXECUTABLE}" "-q" "package"
-	WORKING_DIRECTORY "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni"
-	RESULT_VARIABLE mvn_result
-  	OUTPUT_VARIABLE mvn_output
-	ERROR_VARIABLE mvn_error)
+  WORKING_DIRECTORY "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni"
+  RESULT_VARIABLE mvn_result
+  OUTPUT_VARIABLE mvn_output
+  ERROR_VARIABLE mvn_error)
 endif()
 if("${mvn_result}" STREQUAL "0")
-	message("${mvn_output}")
-	SET (JNI-FRAMEWORK-JAR "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni/target/nifi-framework-jni-1.9.0.jar")
-	message("Produced ${JNI-FRAMEWORK-JAR}")
-	message("${mvn_output}")
-	install(FILES ${JNI-FRAMEWORK-JAR}
-	        DESTINATION minifi-jni/lib
-	        COMPONENT bin)
+  message("${mvn_output}")
+  SET (JNI-FRAMEWORK-JAR "${JNI_FRAMEWORK_JAR_BIN}/nifi-framework-jni/target/nifi-framework-jni-1.9.0.jar")
+  message("Produced ${JNI-FRAMEWORK-JAR}")
+  message("${mvn_output}")
+  install(FILES ${JNI-FRAMEWORK-JAR}
+          DESTINATION minifi-jni/lib
+          COMPONENT bin)
 else()
-	message("Maven could not be invoked to build the framework jar")
+  message("Maven could not be invoked to build the framework jar")
 endif()
 
 target_link_libraries (minifi-jni ${LIBMINIFI})
 
 if (APPLE)
-	target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
+  target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
 elseif (WIN32)
-	target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
-	target_link_libraries (minifi-jni ${Java_LIBRARIES})
+  target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
+  target_link_libraries (minifi-jni ${Java_LIBRARIES})
 else()
-	target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
+  target_link_libraries (minifi-jni ${JAVA_JVM_LIBRARY})
 endif()
 
 register_extension(minifi-jni "JNI EXTENSIONS" JNI-EXTENSION "Enables JNI capabilities to support loading Java Classes." "${TEST_DIR}/jni-tests")
