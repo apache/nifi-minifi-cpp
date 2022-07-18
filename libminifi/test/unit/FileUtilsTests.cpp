@@ -58,8 +58,8 @@ TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
   REQUIRE("C:\\foo\\" == FileUtils::get_parent_path("C:\\foo\\bar\\"));
   REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo"));
   REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo\\"));
-  REQUIRE(FileUtils::get_parent_path("C:\\").empty());
-  REQUIRE(FileUtils::get_parent_path("C:\\\\").empty());
+  REQUIRE("" == FileUtils::get_parent_path("C:\\"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_parent_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
 #else
   REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar"));
   REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar/"));
@@ -67,8 +67,8 @@ TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
   REQUIRE("/foo/" == FileUtils::get_parent_path("/foo/bar/"));
   REQUIRE("/" == FileUtils::get_parent_path("/foo"));
   REQUIRE("/" == FileUtils::get_parent_path("/foo/"));
-  REQUIRE(FileUtils::get_parent_path("/").empty());
-  REQUIRE(FileUtils::get_parent_path("//").empty());
+  REQUIRE("" == FileUtils::get_parent_path("/"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_parent_path("//"));  // NOLINT(readability-container-size-empty)
 #endif
 }
 
@@ -80,8 +80,8 @@ TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
   REQUIRE("bar\\" == FileUtils::get_child_path("C:\\foo\\bar\\"));
   REQUIRE("foo" == FileUtils::get_child_path("C:\\foo"));
   REQUIRE("foo\\" == FileUtils::get_child_path("C:\\foo\\"));
-  REQUIRE(FileUtils::get_child_path("C:\\").empty());
-  REQUIRE(FileUtils::get_child_path("C:\\\\").empty());
+  REQUIRE("" == FileUtils::get_child_path("C:\\"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_child_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
 #else
   REQUIRE("bar" == FileUtils::get_child_path("foo/bar"));
   REQUIRE("bar/" == FileUtils::get_child_path("foo/bar/"));
@@ -89,8 +89,8 @@ TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
   REQUIRE("bar/" == FileUtils::get_child_path("/foo/bar/"));
   REQUIRE("foo" == FileUtils::get_child_path("/foo"));
   REQUIRE("foo/" == FileUtils::get_child_path("/foo/"));
-  REQUIRE(FileUtils::get_child_path("/").empty());
-  REQUIRE(FileUtils::get_child_path("//").empty());
+  REQUIRE("" == FileUtils::get_child_path("/"));  // NOLINT(readability-container-size-empty)
+  REQUIRE("" == FileUtils::get_child_path("//"));  // NOLINT(readability-container-size-empty)
 #endif
 }
 

@@ -39,7 +39,7 @@ class WorkerNumberExecutions : public utils::AfterExecute<int> {
   }
 
   bool isFinished(const int &result) override {
-    return !(result > 0 && ++runs < tasks);
+    return result <= 0 || ++runs >= tasks;
   }
   bool isCancelled(const int& /*result*/) override {
     return false;
