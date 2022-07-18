@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_OPENWSMAN AND NOT DISABLE_CIVET AND NOT DISABLE_CURL))
-  return()
+    return()
 endif()
 
 include(BundledOpenWSMAN)

@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_ALL OR ENABLE_LIBRDKAFKA))
-  return()
+    return()
 endif()
 
 include(BundledLibRdKafka)

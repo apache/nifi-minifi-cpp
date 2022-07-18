@@ -30,7 +30,7 @@ FOREACH(testfile ${PCAP_TESTS})
     createTests("${testfilename}")
     target_link_libraries(${testfilename} minifi-pcap)
     target_link_libraries(${testfilename} minifi-standard-processors)
-  MATH(EXPR PCAP_INT_TEST_COUNT "${PCAP_INT_TEST_COUNT}+1")
+    MATH(EXPR PCAP_INT_TEST_COUNT "${PCAP_INT_TEST_COUNT}+1")
 ENDFOREACH()
 
 message("-- Finished building ${PCAP_INT_TEST_COUNT} libPCAP test file(s)...")

@@ -20,21 +20,21 @@
 #  PCAP_INCLUDE_DIR        The location of PCAP headers
 
 find_path(PCAP_INCLUDE_DIR
-  NAMES pcap.h
-  HINTS ${PCAP_ROOT_DIR}/include)
+    NAMES pcap.h
+    HINTS ${PCAP_ROOT_DIR}/include)
 
 find_library(PCAP_LIBRARIES
-  NAMES pcap
-  HINTS ${PCAP_ROOT_DIR}/lib)
+    NAMES pcap
+    HINTS ${PCAP_ROOT_DIR}/lib)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
-  PCAP
-  DEFAULT_MSG
-  PCAP_LIBRARIES
-  PCAP_INCLUDE_DIR)
+    PCAP
+    DEFAULT_MSG
+    PCAP_LIBRARIES
+    PCAP_INCLUDE_DIR)
 
 mark_as_advanced(
-  PCAP_ROOT_DIR
-  PCAP_LIBRARIES
-  PCAP_INCLUDE_DIR)
+    PCAP_ROOT_DIR
+    PCAP_LIBRARIES
+    PCAP_INCLUDE_DIR)

@@ -42,17 +42,17 @@ set(PCAPPLUSPLUS_HEADER_DIR PCAPPLUSPLUS_HEADER_DIR PARENT_SCOPE)
 file(COPY ${PCAPPLUSPLUS_TP_BASE_DIR} DESTINATION ${PCAPPLUSPLUS_BASE_DIR})
 
 if (WIN32)
-  execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-windows-visual-studio.bat WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
+    execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-windows-visual-studio.bat WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
 elseif (APPLE)
-  execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-mac_os_x.sh  WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
+    execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-mac_os_x.sh  WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
 else ()
-  execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-linux.sh --default WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
+    execute_process(COMMAND  ${PCAPPLUSPLUS_BASE_DIR}/configure-linux.sh --default WORKING_DIRECTORY  ${PCAPPLUSPLUS_BASE_DIR})
 endif ()
 
 add_custom_target(
-   pcappp
-   COMMAND make libs
-   WORKING_DIRECTORY ${PCAPPLUSPLUS_BASE_DIR}
+    pcappp
+    COMMAND make libs
+    WORKING_DIRECTORY ${PCAPPLUSPLUS_BASE_DIR}
 )
 
 set(PCAPPLUSPLUS_LIB_DIR "${PCAPPLUSPLUS_BASE_DIR}/Dist")
@@ -66,9 +66,9 @@ add_dependencies(minifi-pcap pcappp)
 
 target_link_libraries (minifi-pcap ${PCAPPLUSPLUS_LIB_DIR}/libPcap++.a ${PCAPPLUSPLUS_LIB_DIR}/libPacket++.a ${PCAPPLUSPLUS_LIB_DIR}/libCommon++.a ${PCAP_LIBRARIES})
 if (APPLE)
-  target_link_libraries(minifi-pcap "-framework CoreFoundation")
-  target_link_libraries(minifi-pcap "-framework SystemConfiguration")
-  set_target_properties(minifi-pcap PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
+    target_link_libraries(minifi-pcap "-framework CoreFoundation")
+    target_link_libraries(minifi-pcap "-framework SystemConfiguration")
+    set_target_properties(minifi-pcap PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
 endif ()
 
 target_link_libraries(minifi-pcap ${LIBMINIFI} Threads::Threads)

@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_ALL OR ENABLE_GPS))
-  return()
+    return()
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)

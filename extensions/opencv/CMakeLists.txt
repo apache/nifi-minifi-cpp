@@ -18,7 +18,7 @@
 #
 
 if (NOT ENABLE_OPENCV)
-  return()
+    return()
 endif()
 
 include(BundledOpenCV)

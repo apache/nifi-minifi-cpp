@@ -18,7 +18,7 @@
 #
 
 if (NOT ENABLE_TENSORFLOW)
-  return()
+    return()
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)

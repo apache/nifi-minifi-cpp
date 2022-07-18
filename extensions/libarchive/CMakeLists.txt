@@ -18,19 +18,19 @@
 #
 
 if (DISABLE_LIBARCHIVE)
-  return()
+    return()
 endif()
 
 if (NOT DISABLE_LZMA)
-  include(BundledLibLZMA)
-  use_bundled_liblzma(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/liblzma/dummy")
+    include(BundledLibLZMA)
+    use_bundled_liblzma(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/liblzma/dummy")
 endif()
 
 if (NOT DISABLE_BZIP2)
-  include(BundledBZip2)
-  use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
+    include(BundledBZip2)
+    use_bundled_bzip2(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/bzip2/dummy")
 endif()
 
 include(BundledLibArchive)

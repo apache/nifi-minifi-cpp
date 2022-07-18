@@ -18,7 +18,7 @@
 #
 
 if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" AND (ENABLE_ALL OR ENABLE_PROCFS)))
-  return()
+    return()
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)

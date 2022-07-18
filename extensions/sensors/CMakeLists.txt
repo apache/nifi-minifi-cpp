@@ -18,7 +18,7 @@
 #
 
 if(NOT (ENABLE_ALL OR ENABLE_SENSORS))
-  return()
+    return()
 endif()
 
 include(BundledRTIMULib)

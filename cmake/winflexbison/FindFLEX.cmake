@@ -149,10 +149,10 @@
 #=============================================================================
 
 find_library(FL_LIBRARY NAMES fl
-  DOC "Path to the fl library")
+    DOC "Path to the fl library")
 
 find_path(FLEX_INCLUDE_DIR FlexLexer.h
-  DOC "Path to the flex headers")
+    DOC "Path to the flex headers")
 
 mark_as_advanced(FL_LIBRARY FLEX_INCLUDE_DIR)
 
@@ -161,80 +161,80 @@ set(FLEX_LIBRARIES ${FL_LIBRARY})
 
 if(FLEX_EXECUTABLE)
 
-  execute_process(COMMAND ${FLEX_EXECUTABLE} --version
-    OUTPUT_VARIABLE FLEX_version_output
-    ERROR_VARIABLE FLEX_version_error
-    RESULT_VARIABLE FLEX_version_result
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if(NOT ${FLEX_version_result} EQUAL 0)
-    if(FLEX_FIND_REQUIRED)
-      message(SEND_ERROR "Command \"${FLEX_EXECUTABLE} --version\" failed with output:\n${FLEX_version_output}\n${FLEX_version_error}")
-    else()
-      message("Command \"${FLEX_EXECUTABLE} --version\" failed with output:\n${FLEX_version_output}\n${FLEX_version_error}\nFLEX_VERSION will not be available")
-    endif()
-  else()
-    # older versions of flex printed "/full/path/to/executable version X.Y"
-    # newer versions use "basename(executable) X.Y"
-    get_filename_component(FLEX_EXE_NAME_WE "${FLEX_EXECUTABLE}" NAME_WE)
-    get_filename_component(FLEX_EXE_EXT "${FLEX_EXECUTABLE}" EXT)
-    string(REGEX REPLACE "^.*${FLEX_EXE_NAME_WE}(${FLEX_EXE_EXT})?\"? (version )?([0-9]+[^ ]*)( .*)?$" "\\3"
-      FLEX_VERSION "${FLEX_version_output}")
-    unset(FLEX_EXE_EXT)
-    unset(FLEX_EXE_NAME_WE)
-  endif()
-
-  #============================================================
-  # FLEX_TARGET (public macro)
-  #============================================================
-  #
-  macro(FLEX_TARGET Name Input Output)
-    set(FLEX_TARGET_usage "FLEX_TARGET(<Name> <Input> <Output> [COMPILE_FLAGS <string>]")
-    if(${ARGC} GREATER 3)
-      if(${ARGC} EQUAL 5)
-        if("${ARGV3}" STREQUAL "COMPILE_FLAGS")
-          set(FLEX_EXECUTABLE_opts  "${ARGV4}")
-          separate_arguments(FLEX_EXECUTABLE_opts)
+    execute_process(COMMAND ${FLEX_EXECUTABLE} --version
+        OUTPUT_VARIABLE FLEX_version_output
+        ERROR_VARIABLE FLEX_version_error
+        RESULT_VARIABLE FLEX_version_result
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if(NOT ${FLEX_version_result} EQUAL 0)
+        if(FLEX_FIND_REQUIRED)
+            message(SEND_ERROR "Command \"${FLEX_EXECUTABLE} --version\" failed with output:\n${FLEX_version_output}\n${FLEX_version_error}")
         else()
-          message(SEND_ERROR ${FLEX_TARGET_usage})
+            message("Command \"${FLEX_EXECUTABLE} --version\" failed with output:\n${FLEX_version_output}\n${FLEX_version_error}\nFLEX_VERSION will not be available")
         endif()
-      else()
-        message(SEND_ERROR ${FLEX_TARGET_usage})
-      endif()
+    else()
+        # older versions of flex printed "/full/path/to/executable version X.Y"
+        # newer versions use "basename(executable) X.Y"
+        get_filename_component(FLEX_EXE_NAME_WE "${FLEX_EXECUTABLE}" NAME_WE)
+        get_filename_component(FLEX_EXE_EXT "${FLEX_EXECUTABLE}" EXT)
+        string(REGEX REPLACE "^.*${FLEX_EXE_NAME_WE}(${FLEX_EXE_EXT})?\"? (version )?([0-9]+[^ ]*)( .*)?$" "\\3"
+        FLEX_VERSION "${FLEX_version_output}")
+        unset(FLEX_EXE_EXT)
+        unset(FLEX_EXE_NAME_WE)
     endif()
 
-    add_custom_command(OUTPUT ${Output}
-      COMMAND ${FLEX_EXECUTABLE}
-      ARGS ${FLEX_EXECUTABLE_opts} --wincompat -o${Output} ${Input}
-      DEPENDS ${Input}
-      COMMENT "[FLEX][${Name}] Building scanner with flex ${FLEX_VERSION}"
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    #============================================================
+    # FLEX_TARGET (public macro)
+    #============================================================
+    #
+    macro(FLEX_TARGET Name Input Output)
+        set(FLEX_TARGET_usage "FLEX_TARGET(<Name> <Input> <Output> [COMPILE_FLAGS <string>]")
+        if(${ARGC} GREATER 3)
+            if(${ARGC} EQUAL 5)
+                if("${ARGV3}" STREQUAL "COMPILE_FLAGS")
+                    set(FLEX_EXECUTABLE_opts  "${ARGV4}")
+                    separate_arguments(FLEX_EXECUTABLE_opts)
+                else()
+                    message(SEND_ERROR ${FLEX_TARGET_usage})
+                endif()
+            else()
+                message(SEND_ERROR ${FLEX_TARGET_usage})
+            endif()
+        endif()
 
-    set(FLEX_${Name}_DEFINED TRUE)
-    set(FLEX_${Name}_OUTPUTS ${Output})
-    set(FLEX_${Name}_INPUT ${Input})
-    set(FLEX_${Name}_COMPILE_FLAGS ${FLEX_EXECUTABLE_opts})
-  endmacro()
-  #============================================================
+        add_custom_command(OUTPUT ${Output}
+        COMMAND ${FLEX_EXECUTABLE}
+        ARGS ${FLEX_EXECUTABLE_opts} --wincompat -o${Output} ${Input}
+        DEPENDS ${Input}
+        COMMENT "[FLEX][${Name}] Building scanner with flex ${FLEX_VERSION}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+        set(FLEX_${Name}_DEFINED TRUE)
+        set(FLEX_${Name}_OUTPUTS ${Output})
+        set(FLEX_${Name}_INPUT ${Input})
+        set(FLEX_${Name}_COMPILE_FLAGS ${FLEX_EXECUTABLE_opts})
+    endmacro()
+    #============================================================
 
 
-  #============================================================
-  # ADD_FLEX_BISON_DEPENDENCY (public macro)
-  #============================================================
-  #
-  macro(ADD_FLEX_BISON_DEPENDENCY FlexTarget BisonTarget)
+    #============================================================
+    # ADD_FLEX_BISON_DEPENDENCY (public macro)
+    #============================================================
+    #
+    macro(ADD_FLEX_BISON_DEPENDENCY FlexTarget BisonTarget)
 
-    if(NOT FLEX_${FlexTarget}_OUTPUTS)
-      message(SEND_ERROR "Flex target `${FlexTarget}' does not exists.")
-    endif()
+        if(NOT FLEX_${FlexTarget}_OUTPUTS)
+            message(SEND_ERROR "Flex target `${FlexTarget}' does not exists.")
+        endif()
 
-    if(NOT BISON_${BisonTarget}_OUTPUT_HEADER)
-      message(SEND_ERROR "Bison target `${BisonTarget}' does not exists.")
-    endif()
+        if(NOT BISON_${BisonTarget}_OUTPUT_HEADER)
+            message(SEND_ERROR "Bison target `${BisonTarget}' does not exists.")
+        endif()
 
-    set_source_files_properties(${FLEX_${FlexTarget}_OUTPUTS}
-      PROPERTIES OBJECT_DEPENDS ${BISON_${BisonTarget}_OUTPUT_HEADER})
-  endmacro()
-  #============================================================
+        set_source_files_properties(${FLEX_${FlexTarget}_OUTPUTS}
+        PROPERTIES OBJECT_DEPENDS ${BISON_${BisonTarget}_OUTPUT_HEADER})
+    endmacro()
+    #============================================================
 
 endif()
 

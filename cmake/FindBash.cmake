@@ -32,40 +32,40 @@ Example usage:
 set(_doc "Bash command line executable")
 
 if(CMAKE_HOST_WIN32)
-  # First search the directories under the user's AppData
-  set(_bash_path
-    "$ENV{LOCALAPPDATA}/Programs/Git/bin"
-    "$ENV{LOCALAPPDATA}/Programs/Git/usr/bin"
-    "$ENV{APPDATA}/Programs/Git/bin"
-    "$ENV{APPDATA}/Programs/Git/usr/bin"
-    )
-  find_program(Bash_EXECUTABLE
-    NAMES bash
-    NO_DEFAULT_PATH
-    PATHS ${_bash_path}
-    DOC ${_doc}
-    )
+    # First search the directories under the user's AppData
+    set(_bash_path
+        "$ENV{LOCALAPPDATA}/Programs/Git/bin"
+        "$ENV{LOCALAPPDATA}/Programs/Git/usr/bin"
+        "$ENV{APPDATA}/Programs/Git/bin"
+        "$ENV{APPDATA}/Programs/Git/usr/bin"
+        )
+    find_program(Bash_EXECUTABLE
+        NAMES bash
+        NO_DEFAULT_PATH
+        PATHS ${_bash_path}
+        DOC ${_doc}
+        )
 
-  # Now look for installations in Git/ directories under typical installation
-  # prefixes on Windows.
-  find_program(Bash_EXECUTABLE
-    NAMES bash
-    NO_SYSTEM_ENVIRONMENT_PATH
-    PATH_SUFFIXES Git/usr/bin Git/bin GnuWin32/bin
-    DOC ${_doc}
-    )
+    # Now look for installations in Git/ directories under typical installation
+    # prefixes on Windows.
+    find_program(Bash_EXECUTABLE
+        NAMES bash
+        NO_SYSTEM_ENVIRONMENT_PATH
+        PATH_SUFFIXES Git/usr/bin Git/bin GnuWin32/bin
+        DOC ${_doc}
+        )
 
-  unset(_bash_path)
+    unset(_bash_path)
 else()
-  find_program(Bash_EXECUTABLE
-    NAMES bash
-    DOC ${_doc}
-    )
+    find_program(Bash_EXECUTABLE
+        NAMES bash
+        DOC ${_doc}
+        )
 endif()
 
 if(Bash_EXECUTABLE AND NOT TARGET Bash::bash)
-  add_executable(Bash::bash IMPORTED)
-  set_property(TARGET Bash::bash PROPERTY IMPORTED_LOCATION ${Bash_EXECUTABLE})
+    add_executable(Bash::bash IMPORTED)
+    set_property(TARGET Bash::bash PROPERTY IMPORTED_LOCATION ${Bash_EXECUTABLE})
 endif()
 
 unset(_doc)

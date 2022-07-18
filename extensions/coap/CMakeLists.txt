@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_ALL OR ENABLE_COAP STREQUAL "ON"))
-  return()
+    return()
 endif()
 
 include(BundledLibCoAP)

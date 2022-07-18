@@ -18,15 +18,15 @@
 #
 
 if (DISABLE_ROCKSDB)
-  return()
+    return()
 endif()
 
 if (BUILD_ROCKSDB)
-  include(BundledRocksDB)
-  use_bundled_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+    include(BundledRocksDB)
+    use_bundled_rocksdb(${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
 else()
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/rocksdb/sys")
-  find_package(RocksDB REQUIRED)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/rocksdb/sys")
+    find_package(RocksDB REQUIRED)
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)

@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_ALL OR ENABLE_GCP))
-  return()
+    return()
 endif()
 
 include(GoogleCloudCpp)

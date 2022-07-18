@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_ALL OR ENABLE_AWS))
-  return()
+    return()
 endif()
 
 include(BundledAwsSdkCpp)
@@ -37,8 +37,8 @@ target_wholearchive_library_private(minifi-aws AWS::aws-cpp-sdk-s3)
 get_target_property(AWS_SDK_INCLUDE_DIRS AWS::aws-cpp-sdk-s3 INTERFACE_INCLUDE_DIRECTORIES)
 target_include_directories(minifi-aws INTERFACE ${AWS_SDK_INCLUDE_DIRS})
 if(WIN32)
-  target_compile_definitions(minifi-aws INTERFACE "AWS_CORE_API=__declspec(dllimport)")
-  target_compile_definitions(minifi-aws INTERFACE "AWS_S3_API=__declspec(dllimport)")
+    target_compile_definitions(minifi-aws INTERFACE "AWS_CORE_API=__declspec(dllimport)")
+    target_compile_definitions(minifi-aws INTERFACE "AWS_S3_API=__declspec(dllimport)")
 endif()
 
 register_extension(minifi-aws "AWS EXTENSIONS" AWS-EXTENSIONS "This enables AWS support" "${TEST_DIR}/aws-tests")

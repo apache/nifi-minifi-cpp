@@ -18,7 +18,7 @@
 #
 
 if (NOT (WIN32 AND ENABLE_PDH))
-  return()
+    return()
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
