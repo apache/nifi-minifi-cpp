@@ -60,5 +60,5 @@ if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LAN
 
     add_subdirectory(tools)
 else()
-  message("Could find Java and Maven to build SFTPTestServer, disabling SFTP tests")
+    message("Could find Java and Maven to build SFTPTestServer, disabling SFTP tests")
 endif()
