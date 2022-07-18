@@ -54,14 +54,14 @@ if(WIN32)
         )
 
         file(COPY ${winflexbison_SOURCE_DIR}/bison/Data DESTINATION ${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/)
-  endif()
+    endif()
 
-  set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/win_bison.exe" CACHE PATH "bison executable")
-  set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/flex/RelWithDebInfo/win_flex.exe" CACHE PATH "flex executable")
+    set(BISON_EXECUTABLE "${winflexbison_SOURCE_DIR}/bison/RelWithDebInfo/win_bison.exe" CACHE PATH "bison executable")
+    set(FLEX_EXECUTABLE "${winflexbison_SOURCE_DIR}/flex/RelWithDebInfo/win_flex.exe" CACHE PATH "flex executable")
 
-  include_directories(${winflexbison_SOURCE_DIR}/flex/src/)
+    include_directories(${winflexbison_SOURCE_DIR}/flex/src/)
 
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/winflexbison")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/winflexbison")
 endif()
 
 find_package(BISON REQUIRED)

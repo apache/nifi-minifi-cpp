@@ -34,7 +34,7 @@ target_link_libraries(minifi-script-extensions ${LIBMINIFI} Threads::Threads)
 if (NOT DISABLE_PYTHON_SCRIPTING)
     find_package(PythonLibs 3.5)
     if (NOT PYTHONLIBS_FOUND)
-      find_package(PythonLibs 3.0 REQUIRED)
+        find_package(PythonLibs 3.0 REQUIRED)
     endif()
 
     include(Pybind11)

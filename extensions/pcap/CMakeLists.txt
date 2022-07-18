@@ -18,7 +18,7 @@
 #
 
 if(NOT (ENABLE_ALL OR ENABLE_PCAP))
-  return()
+    return()
 endif()
 
 find_package(PCAP REQUIRED)

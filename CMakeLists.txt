@@ -211,7 +211,7 @@ endif()
 # ossp-uuid
 if(NOT WIN32)
     include(BundledOSSPUUID)
-     use_bundled_osspuuid(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+    use_bundled_osspuuid(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
 # OpenSSL/LibreSSL
@@ -577,7 +577,7 @@ include(CPack)
 ### include modules
 
 if (NOT SKIP_TESTS)
-  include(BuildTests)
+    include(BuildTests)
 endif()
 
 ## Add KeyValueStorageService tests
