@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_PROMETHEUS OR ENABLE_ALL))
-  return()
+    return()
 endif()
 
 include(Prometheus)

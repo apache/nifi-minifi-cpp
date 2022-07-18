@@ -18,7 +18,7 @@
 #
 
 if (NOT ((ENABLE_ALL OR ENABLE_SFTP) AND NOT DISABLE_CURL))
-  return()
+    return()
 endif()
 
 include(BundledLibSSH2)

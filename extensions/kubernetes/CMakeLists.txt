@@ -16,7 +16,7 @@
 # under the License.
 
 if (NOT ENABLE_KUBERNETES)
-  return()
+    return()
 endif()
 
 include(KubernetesClientC)

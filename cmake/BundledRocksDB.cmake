@@ -42,9 +42,9 @@ function(use_bundled_rocksdb SOURCE_DIR BINARY_DIR)
     if(PORTABLE)
         list(APPEND ROCKSDB_CMAKE_ARGS -DPORTABLE=ON)
     endif()
-	if(WIN32)
-		list(APPEND ROCKSDB_CMAKE_ARGS -DROCKSDB_INSTALL_ON_WINDOWS=ON)
-	endif()
+    if(WIN32)
+        list(APPEND ROCKSDB_CMAKE_ARGS -DROCKSDB_INSTALL_ON_WINDOWS=ON)
+    endif()
 
     # Build project
     ExternalProject_Add(

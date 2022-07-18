@@ -5,9 +5,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -46,15 +46,15 @@ mark_as_advanced(
 )
 
 if(ROCKSDB_INCLUDE_DIR AND ROCKSDB_LIBRARIES)
-  set(ROCKSDB_FOUND "YES")
-  message(STATUS "Found RocksDB...${ROCKSDB_LIBRARIES}")
+    set(ROCKSDB_FOUND "YES")
+    message(STATUS "Found RocksDB...${ROCKSDB_LIBRARIES}")
 endif()
 
 if(NOT TARGET RocksDB::RocksDB)
-  add_library(RocksDB::RocksDB UNKNOWN IMPORTED)
-  set_target_properties(RocksDB::RocksDB PROPERTIES
-          INTERFACE_INCLUDE_DIRECTORIES "${ROCKSDB_INCLUDE_DIR}")
-  set_target_properties(RocksDB::RocksDB PROPERTIES
-          IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
-          IMPORTED_LOCATION "${ROCKSDB_LIBRARIES}")
+    add_library(RocksDB::RocksDB UNKNOWN IMPORTED)
+    set_target_properties(RocksDB::RocksDB PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${ROCKSDB_INCLUDE_DIR}")
+    set_target_properties(RocksDB::RocksDB PROPERTIES
+        IMPORTED_LINK_INTERFACE_LANGUAGES "CXX"
+        IMPORTED_LOCATION "${ROCKSDB_LIBRARIES}")
 endif()

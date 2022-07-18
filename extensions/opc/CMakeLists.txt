@@ -18,7 +18,7 @@
 #
 
 if (NOT ENABLE_OPC)
-  return()
+    return()
 endif()
 
 include(BundledMbedTLS)

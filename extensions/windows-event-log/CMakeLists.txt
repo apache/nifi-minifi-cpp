@@ -18,7 +18,7 @@
 #
 
 if (NOT (WIN32 AND (ENABLE_ALL OR ENABLE_WEL)))
-  return()
+    return()
 endif()
 
 include(BundledPugiXml)

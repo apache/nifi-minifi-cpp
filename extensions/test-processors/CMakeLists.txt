@@ -18,7 +18,7 @@
 #
 
 if (SKIP_TESTS AND NOT ENABLE_TEST_PROCESSORS)
-  return()
+    return()
 endif()
 
 include(../ExtensionHeader.txt)

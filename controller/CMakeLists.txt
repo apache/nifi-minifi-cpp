@@ -22,9 +22,9 @@ cmake_minimum_required(VERSION 3.16)
 include_directories(../main/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core)
 
 if(WIN32)
-	include_directories(../libminifi/opsys/win)
+    include_directories(../libminifi/opsys/win)
 else()
-	include_directories(../libminifi/opsys/posix)
+    include_directories(../libminifi/opsys/posix)
 endif()
 
 include(CppVersion)
@@ -34,17 +34,17 @@ add_executable(minificontroller MiNiFiController.cpp ../main/MainHelper.cpp)
 target_link_libraries(minificontroller ${LIBMINIFI} cxxopts Threads::Threads)
 
 set_target_properties(minificontroller PROPERTIES
-		OUTPUT_NAME minificontroller
-		RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    OUTPUT_NAME minificontroller
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
 if (NOT WIN32)
-	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-		target_link_options(minificontroller PRIVATE "-Wl,--disable-new-dtags")
-	endif()
-	set_target_properties(minificontroller PROPERTIES INSTALL_RPATH "$ORIGIN")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+        target_link_options(minificontroller PRIVATE "-Wl,--disable-new-dtags")
+    endif()
+    set_target_properties(minificontroller PROPERTIES INSTALL_RPATH "$ORIGIN")
 endif()
 
 install(TARGETS minificontroller RUNTIME DESTINATION bin COMPONENT bin)
 
 add_custom_command(TARGET minificontroller POST_BUILD
-           COMMAND cat ${CMAKE_BINARY_DIR}/all.log)
+    COMMAND cat ${CMAKE_BINARY_DIR}/all.log)

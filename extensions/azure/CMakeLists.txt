@@ -18,7 +18,7 @@
 #
 
 if (NOT (ENABLE_ALL OR ENABLE_AZURE))
-  return()
+    return()
 endif()
 
 include(BundledAzureSdkCpp)
@@ -42,7 +42,7 @@ target_link_libraries(minifi-azure CURL::libcurl LibXml2::LibXml2)
 target_link_libraries(minifi-azure AZURE::azure-storage-files-datalake AZURE::azure-storage-blobs AZURE::azure-storage-common AZURE::azure-core AZURE::azure-identity)
 
 if (WIN32)
-  target_link_libraries(minifi-azure crypt32.lib bcrypt.lib)
+    target_link_libraries(minifi-azure crypt32.lib bcrypt.lib)
 endif()
 
 register_extension(minifi-azure "AZURE EXTENSIONS" AZURE-EXTENSIONS "This enables Azure support" "${TEST_DIR}/azure-tests")

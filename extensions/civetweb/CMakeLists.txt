@@ -18,7 +18,7 @@
 #
 
 if (DISABLE_CIVET)
-  return()
+    return()
 endif()
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)

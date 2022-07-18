@@ -18,7 +18,7 @@
 #
 
 if (DISABLE_CURL OR DISABLE_CIVET)
-  return()
+    return()
 endif()
 
 message("minifi-http-curl will depend on curl-external")

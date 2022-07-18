@@ -18,7 +18,7 @@
 #
 
 if (NOT ENABLE_BUSTACHE)
-  return()
+    return()
 endif()
 
 include(BundledBustache)
