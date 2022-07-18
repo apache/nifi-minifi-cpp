@@ -53,6 +53,7 @@ class FlowFileQueue {
   void setMinSize(size_t min_size);
   void setTargetSize(size_t target_size);
   void setMaxSize(size_t max_size);
+  void clear();
 
  private:
   std::optional<value_type> tryPopImpl(std::optional<std::chrono::milliseconds> timeout);

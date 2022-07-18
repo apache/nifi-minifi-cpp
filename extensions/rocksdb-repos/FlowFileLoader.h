@@ -52,7 +52,7 @@ class FlowFileLoader {
   std::future<FlowFilePtrVec> load(std::vector<SwappedFlowFile> flow_files);
 
  private:
-  utils::TaskRescheduleInfo loadImpl(const std::vector<SwappedFlowFile>& flow_files, std::shared_ptr<std::promise<FlowFilePtrVec>>& output);
+  utils::TaskRescheduleInfo loadImpl(const std::vector<SwappedFlowFile>& flow_files, const std::shared_ptr<std::promise<FlowFilePtrVec>>& output);
 
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_{thread_count_, false, nullptr, "FlowFileLoaderThreadPool"};
 

@@ -168,6 +168,12 @@ size_t FlowFileQueue::size() const {
   return queue_.size() + (load_task_ ? load_task_->size()  : 0) + swapped_flow_files_.size();
 }
 
+void FlowFileQueue::clear() {
+  queue_.clear();
+  load_task_.reset();
+  swapped_flow_files_.clear();
+}
+
 void FlowFileQueue::initiateLoadIfNeeded() {
   if (load_task_) {
     throw std::logic_error("There is already an active load task running");

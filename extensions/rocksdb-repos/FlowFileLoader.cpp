@@ -43,10 +43,16 @@ void FlowFileLoader::initialize(gsl::not_null<minifi::internal::RocksDatabase *>
 std::future<FlowFileLoader::FlowFilePtrVec> FlowFileLoader::load(std::vector<SwappedFlowFile> flow_files) {
   auto promise = std::make_shared<std::promise<FlowFilePtrVec>>();
   std::future<FlowFilePtrVec> future = promise->get_future();
-  utils::Worker<utils::TaskRescheduleInfo> task{
-    std::bind(&FlowFileLoader::loadImpl, this, std::move(flow_files), std::move(promise)),
+  utils::Worker<utils::TaskRescheduleInfo> task{[this, flow_files = std::move(flow_files), promise = std::move(promise)] {
+      return loadImpl(flow_files, promise);
+    },
     "",  // doesn't matter that tasks alias by name, as we never actually query their status or stop a single task
     std::make_unique<utils::ComplexMonitor>()};
+  // the dummy_future is for the return value of the Worker's lambda, rerunning this lambda
+  // depends on run_determinant + result
+  // we could create a custom run_determinant to instead determine if/when it should be rerun
+  // based on the lambda's return value (e.g. it could return a nonstd::expected<FlowFilePtrVec, TaskRescheduleInfo>)
+  // but then the std::future would also bear this type
   std::future<utils::TaskRescheduleInfo> dummy_future;
   thread_pool_.execute(std::move(task), dummy_future);
   return future;
@@ -60,7 +66,7 @@ void FlowFileLoader::stop() {
   thread_pool_.shutdown();
 }
 
-utils::TaskRescheduleInfo FlowFileLoader::loadImpl(const std::vector<SwappedFlowFile>& flow_files, std::shared_ptr<std::promise<FlowFilePtrVec>>& output) {
+utils::TaskRescheduleInfo FlowFileLoader::loadImpl(const std::vector<SwappedFlowFile>& flow_files, const std::shared_ptr<std::promise<FlowFilePtrVec>>& output) {
   auto opendb = db_->open();
   if (!opendb) {
     logger_->log_error("Couldn't open database to swap-in flow files");
