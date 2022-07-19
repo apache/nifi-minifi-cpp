@@ -109,8 +109,8 @@ class ListenHTTP : public core::Processor {
    public:
     Handler(std::string base_uri,
             core::ProcessContext *context,
-            std::string &&authDNPattern,
-            std::optional<std::string> &&headersAsAttributesPattern);
+            std::string &&auth_dn_regex,
+            std::optional<utils::Regex> &&headers_as_attrs_regex);
     bool handlePost(CivetServer *server, struct mg_connection *conn) override;
     bool handleGet(CivetServer *server, struct mg_connection *conn) override;
     bool handleHead(CivetServer *server, struct mg_connection *conn) override;

@@ -81,7 +81,7 @@ const core::Property GetFile::Recurse(
     core::PropertyBuilder::createProperty("Recurse Subdirectories")->withDescription("Indicates whether or not to pull files from subdirectories")->withDefaultValue<bool>(true)->build());
 
 const core::Property GetFile::FileFilter(
-    core::PropertyBuilder::createProperty("File Filter")->withDescription("Only files whose names match the given regular expression will be picked up")->withDefaultValue("[^\\.].*")->build());
+    core::PropertyBuilder::createProperty("File Filter")->withDescription("Only files whose names match the given regular expression will be picked up")->withDefaultValue(".*")->build());
 
 const core::Relationship GetFile::Success("success", "All files are routed to success");
 
