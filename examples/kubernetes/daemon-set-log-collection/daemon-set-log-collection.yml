@@ -65,7 +65,7 @@ data:
         Client Name: test-client
         Compress Codec: none
         Delivery Guarantee: '1'
-        Known Brokers: kafka-broker:9092
+        Known Brokers: kafka-service.default.svc.cluster.local:9092
         Message Timeout: 12 sec
         Request Timeout: 10 sec
         Topic Name: ${kubernetes.namespace}_${kubernetes.pod}_${kubernetes.container}_logs
@@ -87,16 +87,18 @@ metadata:
   labels:
     k8s-app: minifi-log-collection
   name: minifi-log-collection-config
-  namespace: default
+  namespace: daemon
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: log-collection-minifi
-  namespace: default
+  namespace: daemon
   labels:
     k8s-app: minifi-log-collection
 spec:
+  securityContext:
+    runAsUser: 0
   selector:
     matchLabels:
       name: log-collection-minifi
@@ -108,6 +110,8 @@ spec:
       containers:
       - name: minifi
         image: apache/nifi-minifi-cpp:latest
+        securityContext:
+          allowPrivilegeEscalation: false
         volumeMounts:
         - name: minificonfig
           mountPath: /opt/minifi/minifi-current/conf/config.yml
@@ -115,10 +119,14 @@ spec:
         - name: minificonfig
           mountPath: /opt/minifi/minifi-current/conf/minifi-log.properties
           subPath: minifi-log.properties
+        - name: var-log-pods
+          mountPath: /var/log/pods
+          readOnly: true
       volumes:
-      - name: nifi-logs
-        emptyDir: {}
       - configMap:
           defaultMode: 420
           name: minifi-log-collection-config
         name: minificonfig
+      - name: var-log-pods
+        hostPath:
+          path: /var/log/pods
