@@ -203,7 +203,8 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
   context->getProperty(BatchSize.getName(), batch_size_);
   logger_->log_debug("ListenHTTP using %s: %zu", BatchSize.getName(), batch_size_);
 
-  handler_ = std::make_unique<Handler>(basePath, context, std::move(authDNPattern), std::move(headersAsAttributesPattern));
+  handler_ = std::make_unique<Handler>(basePath, context, std::move(authDNPattern),
+    headersAsAttributesPattern.empty() ? std::nullopt : std::make_optional<std::string>(std::move(headersAsAttributesPattern)));
   server_->addHandler(basePath, handler_.get());
 
   if (randomPort) {

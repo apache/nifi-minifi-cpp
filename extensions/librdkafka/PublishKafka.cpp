@@ -184,7 +184,7 @@ class ReadCallback {
     });
   }
 
-  static rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, std::optional<utils::Regex>& attribute_name_regex) {
+  static rd_kafka_headers_unique_ptr make_headers(const core::FlowFile& flow_file, const std::optional<utils::Regex>& attribute_name_regex) {
     const gsl::owner<rd_kafka_headers_t*> result{ rd_kafka_headers_new(8) };
     if (!result) { throw std::bad_alloc{}; }
 
@@ -238,7 +238,7 @@ class ReadCallback {
       rd_kafka_topic_t* const rkt,
       rd_kafka_t* const rk,
       const core::FlowFile& flowFile,
-      std::optional<utils::Regex>& attributeNameRegex,
+      const std::optional<utils::Regex>& attributeNameRegex,
       std::shared_ptr<PublishKafka::Messages> messages,
       const size_t flow_file_index,
       const bool fail_empty_flow_files,
