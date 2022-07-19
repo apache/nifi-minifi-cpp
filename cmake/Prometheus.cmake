@@ -20,7 +20,7 @@ include(FetchContent)
 set(ENABLE_PUSH OFF CACHE BOOL "" FORCE)
 set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 set(USE_THIRDPARTY_LIBRARIES OFF CACHE BOOL "" FORCE)
-set(ENABLE_COMPRESSION OFF CACHE BOOL "" FORCE)
+set(ENABLE_COMPRESSION ON CACHE BOOL "" FORCE)
 
 set(PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/prometheus-cpp/remove-find_package.patch")
 set(PC ${Bash_EXECUTABLE}  -c "set -x &&\
