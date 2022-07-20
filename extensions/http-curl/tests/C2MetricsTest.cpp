@@ -173,7 +173,11 @@ class MetricsHandler: public HeartbeatHandler {
     return processor_metrics.HasMember("GetTCPMetrics") &&
       processor_metrics["GetTCPMetrics"].HasMember(GETTCP1_UUID) &&
       processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("OnTriggerInvocations") &&
-      processor_metrics["GetTCPMetrics"][GETTCP1_UUID]["OnTriggerInvocations"].GetUint() > 0;
+      processor_metrics["GetTCPMetrics"][GETTCP1_UUID]["OnTriggerInvocations"].GetUint() > 0 &&
+      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("TransferredFlowFiles") &&
+      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("AverageOnTriggerRunTime") &&
+      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("LastOnTriggerRunTime") &&
+      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("TransferredBytes");
   }
 
   [[nodiscard]] static std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) {

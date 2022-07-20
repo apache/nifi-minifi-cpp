@@ -97,48 +97,7 @@ class DataHandler {
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;
 };
 
-class GetTCPMetrics : public state::response::ResponseNode {
- public:
-  explicit GetTCPMetrics(const CoreComponent& source_component)
-    : state::response::ResponseNode("GetTCPMetrics"),
-      source_component_(source_component) {
-  }
-
-  std::string getName() const override {
-    return core::Connectable::getName();
-  }
-
-  std::vector<state::response::SerializedResponseNode> serialize() override {
-    std::vector<state::response::SerializedResponseNode> resp;
-
-    state::response::SerializedResponseNode root_node;
-    root_node.name = source_component_.getUUIDStr();
-
-    state::response::SerializedResponseNode iter;
-    iter.name = "OnTriggerInvocations";
-    iter.value = (uint32_t)iterations_.load();
-
-    root_node.children.push_back(iter);
-    resp.push_back(root_node);
-
-    return resp;
-  }
-
-  std::vector<state::PublishedMetric> calculateMetrics() override {
-    return {
-      {"onTrigger_invocations", static_cast<double>(iterations_.load()),
-        {{"metric_class", getName()}, {"processor_name", source_component_.getName()}, {"processor_uuid", source_component_.getUUIDStr()}}}
-    };
-  }
-
- protected:
-  friend class GetTCP;
-
-  const CoreComponent& source_component_;
-  std::atomic<size_t> iterations_{0};
-};
-
-class GetTCP : public core::Processor, public state::response::MetricsNodeSource {
+class GetTCP : public core::Processor {
  public:
   explicit GetTCP(const std::string& name, const utils::Identifier& uuid = {})
     : Processor(name, uuid),
@@ -147,8 +106,7 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
       concurrent_handlers_(2),
       endOfMessageByte(static_cast<std::byte>(13)),
       receive_buffer_size_(16 * 1024 * 1024),
-      connection_attempt_limit_(3),
-      metrics_(std::make_shared<GetTCPMetrics>(*this)) {
+      connection_attempt_limit_(3) {
   }
 
   ~GetTCP() override {
@@ -200,8 +158,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   }
   void initialize() override;
 
-  int16_t getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) override;
-
  protected:
   void notifyStop() override;
 
@@ -218,7 +174,6 @@ class GetTCP : public core::Processor, public state::response::MetricsNodeSource
   std::chrono::milliseconds reconnect_interval_{5000};
   uint64_t receive_buffer_size_;
   uint16_t connection_attempt_limit_;
-  std::shared_ptr<GetTCPMetrics> metrics_;
   // Mutex for ensuring clients are running
   std::mutex mutex_;
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_service_;

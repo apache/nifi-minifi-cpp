@@ -154,46 +154,8 @@ class ObjectNode : public ResponseNode {
  */
 class ResponseNodeSource {
  public:
-  ResponseNodeSource() = default;
-
   virtual ~ResponseNodeSource() = default;
-
-  /**
-   * Retrieves all metrics from this source.
-   * @param metric_vector -- metrics will be placed in this vector.
-   * @return result of the get operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
-   */
-  virtual int16_t getResponseNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
-
-  virtual int16_t getMetricNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
-};
-
-/**
- * Purpose: Retrieves Metrics from the defined class. The current Metric, which is a consumable for any reader of Metrics must have the ability to set metrics.
- *
- */
-class MetricsNodeSource : public ResponseNodeSource {
- public:
-  MetricsNodeSource() = default;
-
-  virtual ~MetricsNodeSource() = default;
-
-  /**
-   * Retrieves all metrics from this source.
-   * @param metric_vector -- metrics will be placed in this vector.
-   * @return result of the get operation.
-   *  0 Success
-   *  1 No error condition, but cannot obtain lock in timely manner.
-   *  -1 failure
-   */
-  virtual int16_t getResponseNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) {
-    return getMetricNodes(metric_vector);
-  }
-
-  virtual int16_t getMetricNodes(std::vector<std::shared_ptr<ResponseNode>> &metric_vector) = 0;
+  virtual std::shared_ptr<ResponseNode> getResponseNodes() = 0;
 };
 
 class NodeReporter {

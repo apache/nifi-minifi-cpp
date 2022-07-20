@@ -20,9 +20,18 @@ This readme defines the metrics published by Apache NiFi. All options defined ar
 
 ## Table of Contents
 
-- [Description](#description)
-- [Configuration](#configuration)
-- [Metrics](#metrics)
+- [Apache NiFi - MiNiFi - C++ Metrics Readme.](#apache-nifi---minifi---c-metrics-readme)
+  - [Table of Contents](#table-of-contents)
+  - [Description](#description)
+  - [Configuration](#configuration)
+  - [System Metrics](#system-metrics)
+    - [QueueMetrics](#queuemetrics)
+    - [RepositoryMetrics](#repositorymetrics)
+    - [DeviceInfoNode](#deviceinfonode)
+    - [FlowInformation](#flowinformation)
+  - [Processor Metrics](#processor-metrics)
+    - [General Metrics](#general-metrics)
+    - [GetFileMetrics](#getfilemetrics)
 
 ## Description
 
@@ -35,22 +44,22 @@ Aside from the publisher exposed metrics, metrics are also sent through C2 proto
 
 To configure the a metrics publisher first we have to set which publisher class should be used:
 
-	# in minifi.properties
+    # in minifi.properties
 
-	nifi.metrics.publisher.class=PrometheusMetricsPublisher
+    nifi.metrics.publisher.class=PrometheusMetricsPublisher
 
 Currently PrometheusMetricsPublisher is the only available publisher in MiNiFi C++ which publishes metrics to a Prometheus server.
 To use the publisher a port should also be configured where the metrics will be available to be scraped through:
 
-	# in minifi.properties
+    # in minifi.properties
 
-	nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936
+    nifi.metrics.publisher.PrometheusMetricsPublisher.port=9936
 
 The following option defines which metric classes should be exposed through the metrics publisher in configured with a comma separated value:
 
-	# in minifi.properties
+    # in minifi.properties
 
-	nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation
+    nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation
 
 An agent identifier should also be defined to identify which agent the metric is exposed from. If not set, the hostname is used as the identifier.
 
@@ -58,7 +67,7 @@ An agent identifier should also be defined to identify which agent the metric is
 
 	nifi.metrics.publisher.agent.identifier=Agent1
 
-## Metrics
+## System Metrics
 
 The following section defines the currently available metrics to be published by the MiNiFi C++ agent.
 
@@ -103,34 +112,6 @@ RepositoryMetrics is a system level metric that reports metrics for the register
 |--------------------------|-----------------------------------------------------------------|
 | repository_name          | Name of the reported repository                                 |
 
-### GetFileMetrics
-
-Processor level metric that reports metrics for the GetFile processor if defined in the flow configuration
-
-| Metric name           | Labels                         | Description                                    |
-|-----------------------|--------------------------------|------------------------------------------------|
-| onTrigger_invocations | processor_name, processor_uuid | Number of times the processor was triggered    |
-| accepted_files        | processor_name, processor_uuid | Number of files that matched the set criterias |
-| input_bytes           | processor_name, processor_uuid | Sum of file sizes processed                    |
-
-| Label          | Description                                                    |
-|----------------|----------------------------------------------------------------|
-| processor_name | Name of the processor                                          |
-| processor_uuid | UUID of the processor                                          |
-
-### GetTCPMetrics
-
-Processor level metric that reports metrics for the GetTCPMetrics processor if defined in the flow configuration
-
-| Metric name           | Labels                         | Description                                    |
-|-----------------------|--------------------------------|------------------------------------------------|
-| onTrigger_invocations | processor_name, processor_uuid | Number of times the processor was triggered    |
-
-| Label          | Description                                                    |
-|----------------|----------------------------------------------------------------|
-| processor_name | Name of the processor                                          |
-| processor_uuid | UUID of the processor                                          |
-
 ### DeviceInfoNode
 
 DeviceInfoNode is a system level metric that reports metrics about the system resources used and available
@@ -159,3 +140,40 @@ DeviceInfoNode is a system level metric that reports metrics about the system re
 | connection_name | Name of the connection defined in the flow configuration     |
 | component_uuid  | UUID of the component                                        |
 | component_name  | Name of the component                                        |
+
+## Processor Metrics
+
+Processor level metrics can be accessed for any processor provided by MiNiFi. These metrics correspond to the name of the processor appended by the "Metrics" suffix (e.g. GetFileMetrics, TailFileMetrics, etc.).
+
+### General Metrics
+
+There are general metrics that are available for all processors. Besides these metrics processors can implement additional metrics that are speicific to that processor.
+
+| Metric name                            | Labels                                       | Description                                                                         |
+|----------------------------------------|----------------------------------------------|-------------------------------------------------------------------------------------|
+| average_onTrigger_runtime_milliseconds | metric_class, processor_name, processor_uuid | The average runtime in milliseconds of the last 10 onTrigger calls of the processor |
+| last_onTrigger_runtime_milliseconds    | metric_class, processor_name, processor_uuid | The runtime in milliseconds of the last onTrigger call of the processor             |
+| transferred_flow_files                 | metric_class, processor_name, processor_uuid | Number of flow files transferred to a relationship                                  |
+| transferred_bytes                      | metric_class, processor_name, processor_uuid | Number of bytes transferred to a relationship                                       |
+| transferred_to_\<relationship\>        | metric_class, processor_name, processor_uuid | Number of flow files transferred to a specific relationship                         |
+
+| Label          | Description                                                    |
+|----------------|----------------------------------------------------------------|
+| metric_class   | Class name to filter for this metric, set to GetFileMetrics    |
+| processor_name | Name of the processor                                          |
+| processor_uuid | UUID of the processor                                          |
+
+### GetFileMetrics
+
+Processor level metric that reports metrics for the GetFile processor if defined in the flow configuration.
+
+| Metric name           | Labels                                       | Description                                    |
+|-----------------------|----------------------------------------------|------------------------------------------------|
+| accepted_files        | metric_class, processor_name, processor_uuid | Number of files that matched the set criterias |
+| input_bytes           | metric_class, processor_name, processor_uuid | Sum of file sizes processed                    |
+
+| Label          | Description                                                    |
+|----------------|----------------------------------------------------------------|
+| metric_class   | Class name to filter for this metric, set to GetFileMetrics    |
+| processor_name | Name of the processor                                          |
+| processor_uuid | UUID of the processor                                          |

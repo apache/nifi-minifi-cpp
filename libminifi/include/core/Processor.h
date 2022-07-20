@@ -29,6 +29,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "ConfigurableComponent.h"
 #include "Connectable.h"
@@ -36,12 +37,28 @@
 #include "core/Annotation.h"
 #include "Scheduling.h"
 #include "utils/TimeUtil.h"
+#include "core/state/nodes/MetricsBase.h"
+#include "utils/gsl.h"
+
+#if WIN32
+#define ADD_GET_PROCESSOR_NAME \
+  std::string getProcessorType() const override { \
+    return org::apache::nifi::minifi::utils::StringUtils::split(__FUNCDNAME__, "@")[1]; \
+  }
+#else
+#define ADD_GET_PROCESSOR_NAME \
+  std::string getProcessorType() const override { \
+    auto splitted = org::apache::nifi::minifi::utils::StringUtils::split(__PRETTY_FUNCTION__, "::"); \
+    return splitted[splitted.size() - 2]; \
+  }
+#endif
 
 #define ADD_COMMON_VIRTUAL_FUNCTIONS_FOR_PROCESSORS \
   bool supportsDynamicProperties() const override { return SupportsDynamicProperties; } \
   bool supportsDynamicRelationships() const override { return SupportsDynamicRelationships; } \
   minifi::core::annotation::Input getInputRequirement() const override { return InputRequirement; } \
-  bool isSingleThreaded() const override { return IsSingleThreaded; }
+  bool isSingleThreaded() const override { return IsSingleThreaded; } \
+  ADD_GET_PROCESSOR_NAME
 
 namespace org::apache::nifi::minifi {
 
@@ -62,10 +79,41 @@ constexpr std::chrono::nanoseconds MINIMUM_SCHEDULING_NANOS{30000};
 
 #define BUILDING_DLL 1
 
-class Processor : public Connectable, public ConfigurableComponent {
+class Processor;
+
+class ProcessorMetrics : public state::response::ResponseNode {
  public:
-  Processor(const std::string& name, const utils::Identifier& uuid);
-  explicit Processor(const std::string& name);
+  explicit ProcessorMetrics(const Processor& source_component);
+
+  [[nodiscard]] std::string getName() const override;
+
+  std::vector<state::response::SerializedResponseNode> serialize() override;
+  std::vector<state::PublishedMetric> calculateMetrics() override;
+  void incrementRelationshipTransferCount(const std::string& relationship);
+  std::chrono::milliseconds getAverageOnTriggerRuntime() const;
+  std::chrono::milliseconds getLastOnTriggerRuntime() const;
+  void addLastOnTriggerRuntime(std::chrono::milliseconds runtime);
+
+  std::atomic<size_t> iterations{0};
+  std::atomic<size_t> transferred_flow_files{0};
+  std::atomic<uint64_t> transferred_bytes{0};
+
+ protected:
+  [[nodiscard]] std::unordered_map<std::string, std::string> getCommonLabels() const;
+  static const uint8_t STORED_ON_TRIGGER_RUNTIME_COUNT = 10;
+
+  std::mutex relationship_mutex_;
+  std::unordered_map<std::string, size_t> transferred_relationships_;
+  mutable std::mutex average_on_trigger_runtime_mutex_;
+  uint32_t next_average_index_ = 0;
+  std::vector<std::chrono::milliseconds> on_trigger_runtimes_;
+  const Processor& source_processor_;
+};
+
+class Processor : public Connectable, public ConfigurableComponent, public state::response::ResponseNodeSource {
+ public:
+  Processor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
+  explicit Processor(const std::string& name, std::shared_ptr<ProcessorMetrics> metrics = nullptr);
 
   Processor(const Processor& parent) = delete;
   Processor& operator=(const Processor& parent) = delete;
@@ -126,6 +174,8 @@ class Processor : public Connectable, public ConfigurableComponent {
 
   virtual bool isSingleThreaded() const = 0;
 
+  virtual std::string getProcessorType() const = 0;
+
   void setTriggerWhenEmpty(bool value) {
     _triggerWhenEmpty = value;
   }
@@ -172,7 +222,6 @@ class Processor : public Connectable, public ConfigurableComponent {
     return !isRunning();
   }
 
- public:
   virtual void onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSession> &session) {
     onTrigger(context.get(), session.get());
   }
@@ -206,6 +255,10 @@ class Processor : public Connectable, public ConfigurableComponent {
 
   virtual annotation::Input getInputRequirement() const = 0;
 
+  std::shared_ptr<state::response::ResponseNode> getResponseNodes() override {
+    return metrics_;
+  }
+
  protected:
   virtual void notifyStop() {
   }
@@ -222,6 +275,7 @@ class Processor : public Connectable, public ConfigurableComponent {
   std::atomic<bool> _triggerWhenEmpty;
 
   std::string cron_period_;
+  gsl::not_null<std::shared_ptr<ProcessorMetrics>> metrics_;
 
  private:
   mutable std::mutex mutex_;

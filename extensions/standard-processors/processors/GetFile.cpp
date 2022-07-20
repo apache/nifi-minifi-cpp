@@ -136,8 +136,6 @@ void GetFile::onSchedule(core::ProcessContext *context, core::ProcessSessionFact
 }
 
 void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession* session) {
-  metrics_->iterations_++;
-
   const bool is_dir_empty_before_poll = isListingEmpty();
   logger_->log_debug("Listing is %s before polling directory", is_dir_empty_before_poll ? "empty" : "not empty");
   if (is_dir_empty_before_poll) {
@@ -248,8 +246,9 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
     return false;
   }
 
-  metrics_->input_bytes_ += file_size;
-  metrics_->accepted_files_++;
+  auto getfile_metrics = static_cast<GetFileMetrics*>(metrics_.get());
+  getfile_metrics->input_bytes += file_size;
+  ++getfile_metrics->accepted_files;
   return true;
 }
 
@@ -262,11 +261,6 @@ void GetFile::performListing(const GetFileRequest &request) {
     return isRunning();
   };
   utils::file::list_dir(request.inputDirectory, callback, logger_, request.recursive);
-}
-
-int16_t GetFile::getMetricNodes(std::vector<std::shared_ptr<state::response::ResponseNode>> &metric_vector) {
-  metric_vector.push_back(metrics_);
-  return 0;
 }
 
 REGISTER_RESOURCE(GetFile, Processor);

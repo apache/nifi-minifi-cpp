@@ -822,3 +822,11 @@ TEST_CASE("isSingleThreaded - two threads for a single threaded processor", "[is
   REQUIRE(LogTestController::getInstance().contains("[warning] Processor myProc can not be run in parallel, its "
                                                     "\"max concurrent tasks\" value is too high. It was set to 1 from 2."));
 }
+
+TEST_CASE("Test getProcessorName", "[getProcessorName]") {
+  TestController testController;
+
+  std::shared_ptr<TestPlan> plan = testController.createPlan();
+  auto processor = plan->addProcessor("GenerateFlowFile", "myProc");
+  REQUIRE(processor->getProcessorType() == "GenerateFlowFile");
+}

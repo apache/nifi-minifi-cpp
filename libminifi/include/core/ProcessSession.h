@@ -37,6 +37,7 @@
 #include "WeakReference.h"
 #include "provenance/Provenance.h"
 #include "utils/gsl.h"
+#include "Processor.h"
 
 namespace org::apache::nifi::minifi::core {
 namespace detail {
@@ -144,6 +145,10 @@ class ProcessSession : public ReferenceContainer {
 
   bool existsFlowFileInRelationship(const Relationship &relationship);
 
+  void setMetrics(const std::shared_ptr<ProcessorMetrics>& metrics) {
+    metrics_ = metrics;
+  }
+
 // Prevent default copy constructor and assignment operation
 // Only support pass by reference or pointer
   ProcessSession(const ProcessSession &parent) = delete;
@@ -197,6 +202,8 @@ class ProcessSession : public ReferenceContainer {
   CoreComponentStateManager* stateManager_;
 
   static std::shared_ptr<utils::IdGenerator> id_generator_;
+
+  std::shared_ptr<ProcessorMetrics> metrics_;
 };
 
 }  // namespace org::apache::nifi::minifi::core

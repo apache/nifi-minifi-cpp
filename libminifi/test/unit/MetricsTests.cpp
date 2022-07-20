@@ -25,6 +25,11 @@
 #include "core/ClassLoader.h"
 #include "repository/VolatileContentRepository.h"
 #include "ProvenanceTestHelper.h"
+#include "../DummyProcessor.h"
+
+using namespace std::literals::chrono_literals;
+
+namespace org::apache::nifi::minifi::test {
 
 TEST_CASE("QueueMetricsTestNoConnections", "[c2m2]") {
   minifi::state::response::QueueMetrics metrics;
@@ -203,3 +208,32 @@ TEST_CASE("RepositorymetricsHaveRepo", "[c2m4]") {
     REQUIRE("0" == size.value);
   }
 }
+
+TEST_CASE("Test ProcessorMetrics", "[ProcessorMetrics]") {
+  DummyProcessor dummy_processor("dummy");
+  minifi::core::ProcessorMetrics metrics(dummy_processor);
+
+  REQUIRE("DummyProcessorMetrics" == metrics.getName());
+
+  REQUIRE(metrics.getLastOnTriggerRuntime() == 0ms);
+  REQUIRE(metrics.getAverageOnTriggerRuntime() == 0ms);
+
+  metrics.addLastOnTriggerRuntime(10ms);
+  metrics.addLastOnTriggerRuntime(20ms);
+  metrics.addLastOnTriggerRuntime(30ms);
+
+  REQUIRE(metrics.getLastOnTriggerRuntime() == 30ms);
+  REQUIRE(metrics.getAverageOnTriggerRuntime() == 20ms);
+
+  for (auto i = 0; i < 10; ++i) {
+    metrics.addLastOnTriggerRuntime(50ms);
+  }
+
+  REQUIRE(metrics.getAverageOnTriggerRuntime() == 50ms);
+  REQUIRE(metrics.getLastOnTriggerRuntime() == 50ms);
+
+  metrics.addLastOnTriggerRuntime(10ms);
+  REQUIRE(metrics.getLastOnTriggerRuntime() == 10ms);
+}
+
+}  // namespace org::apache::nifi::minifi::test

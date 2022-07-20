@@ -56,12 +56,9 @@ void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
       continue;
     }
     // we have a metrics source.
-    std::vector<std::shared_ptr<ResponseNode>> metric_vector;
-    node_source->getResponseNodes(metric_vector);
+    auto metric = node_source->getResponseNodes();
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
-    for (const auto& metric : metric_vector) {
-      component_metrics_[metric->getName()].push_back(metric);
-    }
+    component_metrics_[metric->getName()].push_back(metric);
   }
 }
 

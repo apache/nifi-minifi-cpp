@@ -782,6 +782,11 @@ ProcessSession::RouteResult ProcessSession::routeFlowFile(const std::shared_ptr<
       }
     }
   }
+  if (metrics_) {
+    metrics_->transferred_bytes += record->getSize();
+    ++metrics_->transferred_flow_files;
+    metrics_->incrementRelationshipTransferCount(relationship.getName());
+  }
   return RouteResult::Ok_Routed;
 }
 

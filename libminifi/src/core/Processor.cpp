@@ -20,6 +20,7 @@
 #include "core/Processor.h"
 
 #include <ctime>
+#include <cctype>
 
 #include <memory>
 #include <set>
@@ -40,9 +41,133 @@ using namespace std::literals::chrono_literals;
 
 namespace org::apache::nifi::minifi::core {
 
-Processor::Processor(const std::string& name)
+ProcessorMetrics::ProcessorMetrics(const Processor& source_processor)
+    : source_processor_(source_processor) {
+  on_trigger_runtimes_.reserve(STORED_ON_TRIGGER_RUNTIME_COUNT);
+}
+
+std::string ProcessorMetrics::getName() const {
+  return source_processor_.getProcessorType() + "Metrics";
+}
+
+std::unordered_map<std::string, std::string> ProcessorMetrics::getCommonLabels() const {
+  return {{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}};
+}
+
+std::vector<state::response::SerializedResponseNode> ProcessorMetrics::serialize() {
+  std::vector<state::response::SerializedResponseNode> resp;
+
+  state::response::SerializedResponseNode root_node;
+  root_node.name = source_processor_.getUUIDStr();
+
+  state::response::SerializedResponseNode iter;
+  iter.name = "OnTriggerInvocations";
+  iter.value = static_cast<uint32_t>(iterations.load());
+
+  root_node.children.push_back(iter);
+
+  state::response::SerializedResponseNode average_ontrigger_runtime_node;
+  average_ontrigger_runtime_node.name = "AverageOnTriggerRunTime";
+  average_ontrigger_runtime_node.value = static_cast<uint64_t>(getAverageOnTriggerRuntime().count());
+
+  root_node.children.push_back(average_ontrigger_runtime_node);
+
+  state::response::SerializedResponseNode last_ontrigger_runtime_node;
+  last_ontrigger_runtime_node.name = "LastOnTriggerRunTime";
+  last_ontrigger_runtime_node.value = static_cast<uint64_t>(getLastOnTriggerRuntime().count());
+
+  root_node.children.push_back(last_ontrigger_runtime_node);
+
+  state::response::SerializedResponseNode transferred_flow_files_node;
+  transferred_flow_files_node.name = "TransferredFlowFiles";
+  transferred_flow_files_node.value = static_cast<uint32_t>(transferred_flow_files.load());
+
+  root_node.children.push_back(transferred_flow_files_node);
+
+  for (const auto& [relationship, count] : transferred_relationships_) {
+    state::response::SerializedResponseNode transferred_to_relationship_node;
+    transferred_to_relationship_node.name = std::string("TransferredTo").append(1, toupper(relationship[0])).append(relationship.substr(1));
+    transferred_to_relationship_node.value = static_cast<uint32_t>(count);
+
+    root_node.children.push_back(transferred_to_relationship_node);
+  }
+
+  state::response::SerializedResponseNode transferred_bytes_node;
+  transferred_bytes_node.name = "TransferredBytes";
+  transferred_bytes_node.value = transferred_bytes.load();
+
+  root_node.children.push_back(transferred_bytes_node);
+
+  resp.push_back(root_node);
+
+  return resp;
+}
+
+std::vector<state::PublishedMetric> ProcessorMetrics::calculateMetrics() {
+  std::vector<state::PublishedMetric> metrics = {
+    {"onTrigger_invocations", static_cast<double>(iterations.load()), getCommonLabels()},
+    {"average_onTrigger_runtime_milliseconds", static_cast<double>(getAverageOnTriggerRuntime().count()), getCommonLabels()},
+    {"last_onTrigger_runtime_milliseconds", static_cast<double>(getLastOnTriggerRuntime().count()), getCommonLabels()},
+    {"transferred_flow_files", static_cast<double>(transferred_flow_files.load()), getCommonLabels()},
+    {"transferred_bytes", static_cast<double>(transferred_bytes.load()), getCommonLabels()}
+  };
+
+  {
+    std::lock_guard<std::mutex> lock(relationship_mutex_);
+    for (const auto& [relationship, count] : transferred_relationships_) {
+      metrics.push_back({"transferred_to_" + relationship, static_cast<double>(count),
+        {{"metric_class", getName()}, {"processor_name", source_processor_.getName()}, {"processor_uuid", source_processor_.getUUIDStr()}}});
+    }
+  }
+
+  return metrics;
+}
+
+void ProcessorMetrics::incrementRelationshipTransferCount(const std::string& relationship) {
+  std::lock_guard<std::mutex> lock(relationship_mutex_);
+  ++transferred_relationships_[relationship];
+}
+
+std::chrono::milliseconds ProcessorMetrics::getAverageOnTriggerRuntime() const {
+  if (on_trigger_runtimes_.empty()) {
+    return 0ms;
+  }
+  std::chrono::milliseconds sum = 0ms;
+  std::lock_guard<std::mutex> lock(average_on_trigger_runtime_mutex_);
+  for (const auto& runtime : on_trigger_runtimes_) {
+    sum += runtime;
+  }
+  return sum / on_trigger_runtimes_.size();
+}
+
+void ProcessorMetrics::addLastOnTriggerRuntime(std::chrono::milliseconds runtime) {
+  std::lock_guard<std::mutex> lock(average_on_trigger_runtime_mutex_);
+  if (on_trigger_runtimes_.size() < STORED_ON_TRIGGER_RUNTIME_COUNT) {
+    on_trigger_runtimes_.push_back(runtime);
+  } else {
+    if (next_average_index_ >= on_trigger_runtimes_.size()) {
+      next_average_index_ = 0;
+    }
+    on_trigger_runtimes_[next_average_index_] = runtime;
+    ++next_average_index_;
+  }
+}
+
+std::chrono::milliseconds ProcessorMetrics::getLastOnTriggerRuntime() const {
+  std::lock_guard<std::mutex> lock(average_on_trigger_runtime_mutex_);
+  if (on_trigger_runtimes_.size() == 0) {
+    return 0ms;
+  } else if (on_trigger_runtimes_.size() < STORED_ON_TRIGGER_RUNTIME_COUNT) {
+    return on_trigger_runtimes_[on_trigger_runtimes_.size() - 1];
+  } else {
+    return on_trigger_runtimes_[next_average_index_ - 1];
+  }
+}
+
+Processor::Processor(const std::string& name, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(name),
-      logger_(logging::LoggerFactory<Processor>::getLogger()) {
+      logger_(logging::LoggerFactory<Processor>::getLogger()),
+      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -58,9 +183,10 @@ Processor::Processor(const std::string& name)
   logger_->log_debug("Processor %s created UUID %s", name_, getUUIDStr());
 }
 
-Processor::Processor(const std::string& name, const utils::Identifier& uuid)
+Processor::Processor(const std::string& name, const utils::Identifier& uuid, std::shared_ptr<ProcessorMetrics> metrics)
     : Connectable(name, uuid),
-      logger_(logging::LoggerFactory<Processor>::getLogger()) {
+      logger_(logging::LoggerFactory<Processor>::getLogger()),
+      metrics_(metrics ? std::move(metrics) : std::make_shared<ProcessorMetrics>(*this)) {
   has_work_.store(false);
   // Setup the default values
   state_ = DISABLED;
@@ -174,11 +300,15 @@ bool Processor::flowFilesOutGoingFull() const {
 }
 
 void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessionFactory) {
+  ++metrics_->iterations;
   auto session = sessionFactory->createSession();
+  session->setMetrics(metrics_);
 
   try {
     // Call the virtual trigger function
+    const auto start = std::chrono::steady_clock::now();
     onTrigger(context, session.get());
+    metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
     session->commit();
   } catch (std::exception &exception) {
     logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
@@ -193,11 +323,15 @@ void Processor::onTrigger(ProcessContext *context, ProcessSessionFactory *sessio
 }
 
 void Processor::onTrigger(const std::shared_ptr<ProcessContext> &context, const std::shared_ptr<ProcessSessionFactory> &sessionFactory) {
+  ++metrics_->iterations;
   auto session = sessionFactory->createSession();
+  session->setMetrics(metrics_);
 
   try {
     // Call the virtual trigger function
+    const auto start = std::chrono::steady_clock::now();
     onTrigger(context, session);
+    metrics_->addLastOnTriggerRuntime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start));
     session->commit();
   } catch (std::exception &exception) {
     logger_->log_warn("Caught \"%s\" (%s) during Processor::onTrigger of processor: %s (%s)",
