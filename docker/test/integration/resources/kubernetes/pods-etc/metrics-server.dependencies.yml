@@ -1,3 +1,5 @@
+# downloaded from https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml
+# with a --kubelet-insecure-tls argument added because `kind` doesn't like TLS here
 apiVersion: v1
 kind: ServiceAccount
 metadata:
