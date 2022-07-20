@@ -124,7 +124,10 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     }
   }
   if (client_) {
-    MQTTAsync_setCallbacks(client_, this, connectionLost, msgReceived, nullptr);
+    if (MQTTAsync_setCallbacks(client_, this, connectionLost, msgReceived, nullptr) == MQTTASYNC_FAILURE) {
+      logger_->log_error("Setting MQTT client callbacks failed");
+      return;
+    }
     // call reconnect to bootstrap
     reconnect();
   }

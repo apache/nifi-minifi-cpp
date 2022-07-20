@@ -50,19 +50,17 @@ void ConsumeMQTT::enqueueReceivedMQTTMsg(std::unique_ptr<MQTTAsync_message, MQTT
 }
 
 void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &context, const std::shared_ptr<core::ProcessSessionFactory> &factory) {
-  std::string value;
-  int64_t valInt;
-  value = "";
-  if (context->getProperty(CleanSession.getName(), value)) {
-    cleanSession_ = utils::StringUtils::toBool(value).value_or(cleanSession_);
+  if (const auto value = context->getProperty<bool>(CleanSession)) {
+    cleanSession_ = *value;
     logger_->log_debug("ConsumeMQTT: CleanSession [%d]", cleanSession_);
   }
-  value = "";
-  if (context->getProperty(QueueBufferMaxMessage.getName(), value) && !value.empty() && core::Property::StringToInt(value, valInt)) {
-    maxQueueSize_ = valInt;
+
+  if (const auto value = context->getProperty<uint64_t>(QueueBufferMaxMessage)) {
+    maxQueueSize_ = *value;
     logger_->log_debug("ConsumeMQTT: Queue Max Message [%" PRIu64 "]", maxQueueSize_);
   }
 
+  // this connects to broker, so properties of this processor must be read before
   AbstractMQTTProcessor::onSchedule(context, factory);
 
   // Check properties
