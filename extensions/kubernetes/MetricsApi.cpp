@@ -23,6 +23,7 @@ extern "C" {
 }
 
 #include "ApiClient.h"
+#include "utils/gsl.h"
 
 namespace {
 struct genericClient_t_deleter {
@@ -35,7 +36,7 @@ namespace org::apache::nifi::minifi::kubernetes::metrics {
 
 nonstd::expected<std::string, std::string> podMetricsList(const kubernetes::ApiClient& api_client) {
   genericClient_unique_ptr genericClient{genericClient_create(api_client.getClient(), "metrics.k8s.io", "v1beta1", "pods")};
-  char* api_response = Generic_list(genericClient.get());
+  gsl::owner<char*> api_response = Generic_list(genericClient.get());
   if (api_response) {
     std::string result{api_response};
     free(api_response);
