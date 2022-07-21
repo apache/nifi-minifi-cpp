@@ -46,7 +46,7 @@ TEST_CASE("TestHaveCommonItem", "[haveCommonItem]") {
 template<typename T>
 struct MockSet : std::set<T> {
   using std::set<T>::set;
-  [[nodiscard]] auto find(const T& item) const -> decltype(this->std::set<T>::find(item)) {
+  auto find(const T& item) const -> decltype(this->std::set<T>::find(item)) {  // NOLINT(modernize-use-nodiscard)
     on_find_();
     return std::set<T>::find(item);
   }

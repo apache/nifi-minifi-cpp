@@ -30,6 +30,7 @@ ARG GID=1000
 # use it to define cmake options (e.g. -DENABLE_AWS=ON -DENABLE_AZURE=ON)
 ARG MINIFI_OPTIONS=""
 ARG CMAKE_BUILD_TYPE=Release
+ARG DOCKER_SKIP_TESTS=ON
 
 # Install the system dependencies needed for a build
 RUN apk --no-cache add gcc \
@@ -77,7 +78,7 @@ USER ${USER}
 ENV PATH /usr/lib/ccache/bin:${PATH}
 RUN mkdir ${MINIFI_BASE_DIR}/build
 WORKDIR ${MINIFI_BASE_DIR}/build
-RUN cmake -DSTATIC_BUILD= -DSKIP_TESTS=true ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
+RUN cmake -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
     make -j "$(nproc)" package && \
     tar -xzvf "${MINIFI_BASE_DIR}/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" -C "${MINIFI_BASE_DIR}"
 

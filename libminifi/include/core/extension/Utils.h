@@ -29,6 +29,7 @@
 #include "utils/gsl.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 
 namespace org::apache::nifi::minifi::core::extension::internal {
 
@@ -84,13 +85,15 @@ std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& p
 #else
   static const std::string_view prefix = "lib";
 #endif
-  const std::string filename = path.filename().string();
+  std::string filepath;
+  std::string filename;
+  utils::file::getFileNameAndPath(path.string(), filepath, filename);
   if (!utils::StringUtils::startsWith(filename, prefix) || !utils::StringUtils::endsWith(filename, extension)) {
     return {};
   }
   return LibraryDescriptor{
       filename.substr(prefix.length(), filename.length() - extension.length() - prefix.length()),
-      path.parent_path(),
+      filepath,
       filename
   };
 }
