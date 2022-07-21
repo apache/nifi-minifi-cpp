@@ -42,9 +42,11 @@ class GetFileTestController {
   GetFileTestController();
   [[nodiscard]] std::string getFullPath(const std::string& filename) const;
   [[nodiscard]] std::string getInputFilePath() const;
-  void setProperty(const core::Property& property, const std::string& value) const;
+  void setProperty(const core::Property& property, const std::string& value);
   void runSession();
+  void resetTestPlan();
 
+ private:
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan_;
   std::string temp_dir_;
@@ -90,12 +92,16 @@ std::string GetFileTestController::getInputFilePath() const {
   return getFullPath(input_file_name_);
 }
 
-void GetFileTestController::setProperty(const core::Property& property, const std::string& value) const {
+void GetFileTestController::setProperty(const core::Property& property, const std::string& value) {
   test_plan_->setProperty(get_file_processor_, property.getName(), value);
 }
 
 void GetFileTestController::runSession() {
   test_controller_.runSession(test_plan_);
+}
+
+void GetFileTestController::resetTestPlan() {
+  test_plan_->reset();
 }
 
 }  // namespace
@@ -129,7 +135,7 @@ TEST_CASE("GetFile ignores files smaller than MinSize", "[GetFile]") {
 TEST_CASE("GetFile onSchedule() throws if the required Directory property is not set", "[GetFile]") {
   GetFileTestController test_controller;
   test_controller.setProperty(minifi::processors::GetFile::Directory, "");
-  REQUIRE_THROWS_AS(test_controller.test_plan_->runNextProcessor(), minifi::Exception);
+  REQUIRE_THROWS_AS(test_controller.runSession(), minifi::Exception);
 }
 
 TEST_CASE("GetFile removes the source file if KeepSourceFile is false") {
@@ -254,7 +260,7 @@ TEST_CASE("Test if GetFile honors PollInterval property when triggered multiple 
   auto start_time = std::chrono::steady_clock::now();
   test_controller.runSession();
   while (LogTestController::getInstance().countOccurrences("Logged 2 flow files") < 2) {
-    test_controller.test_plan_->reset();
+    test_controller.resetTestPlan();
     test_controller.runSession();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
