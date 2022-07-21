@@ -157,6 +157,10 @@ std::optional<std::vector<KubernetesControllerService::AttributeMap>> Kubernetes
   return container_attribute_maps;
 }
 
+bool KubernetesControllerService::matchesRegexFilters(const kubernetes::ContainerInfo& container_info) const {
+  return matchesRegexFilters(container_info.name_space, container_info.pod_name, container_info.container_name);
+}
+
 bool KubernetesControllerService::matchesRegexFilters(const std::string& name_space, const std::string& pod_name, const std::string& container_name) const {
   static constexpr auto matchesFilter = [](const std::string& target, const std::optional<utils::Regex>& filter) {
     return !filter || utils::regexMatch(target, *filter);

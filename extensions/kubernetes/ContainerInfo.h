@@ -16,16 +16,14 @@
  */
 #pragma once
 
-#include <functional>
 #include <string>
 
-#include "ContainerInfo.h"
-#include "utils/expected.h"
+namespace org::apache::nifi::minifi::kubernetes {
 
-namespace org::apache::nifi::minifi::kubernetes::metrics {
+struct ContainerInfo {
+  std::string name_space;
+  std::string pod_name;
+  std::string container_name;
+};
 
-[[nodiscard]] nonstd::expected<std::string, std::string> filter(
-    const std::string& metrics_json,
-    const std::function<bool(const kubernetes::ContainerInfo&)>& filter_function);
-
-}  // namespace org::apache::nifi::minifi::kubernetes::metrics
+}  // namespace org::apache::nifi::minifi::kubernetes

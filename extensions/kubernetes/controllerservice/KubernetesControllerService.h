@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "../ApiClient.h"
+#include "../ContainerInfo.h"
 #include "controllers/AttributeProviderService.h"
 #include "core/logging/Logger.h"
 #include "core/Property.h"
@@ -55,9 +56,11 @@ class KubernetesControllerService : public AttributeProviderService {
   std::optional<std::vector<AttributeMap>> getAttributes() override;
   std::string_view name() const override { return "kubernetes"; }
   const kubernetes::ApiClient* apiClient() const { return api_client_.get(); }
-  bool matchesRegexFilters(const std::string& name_space, const std::string& pod_name, const std::string& container_name) const;
+  bool matchesRegexFilters(const kubernetes::ContainerInfo& container_info) const;
 
  private:
+  bool matchesRegexFilters(const std::string& name_space, const std::string& pod_name, const std::string& container_name) const;
+
   std::mutex initialization_mutex_;
   bool initialized_ = false;
   std::optional<utils::Regex> namespace_filter_;

@@ -20,6 +20,7 @@
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
+#include "../ContainerInfo.h"
 #include "../MetricsApi.h"
 #include "../MetricsFilter.h"
 
@@ -71,8 +72,8 @@ void CollectKubernetesPodMetrics::onTrigger(const std::shared_ptr<core::ProcessC
     return;
   }
 
-  const auto metrics_filtered = kubernetes::metrics::filter(metrics.value(), [this](const std::string& name_space, const std::string& pod_name, const std::string& container_name) {
-    return kubernetes_controller_service_->matchesRegexFilters(name_space, pod_name, container_name);
+  const auto metrics_filtered = kubernetes::metrics::filter(metrics.value(), [this](const kubernetes::ContainerInfo& container_info) {
+    return kubernetes_controller_service_->matchesRegexFilters(container_info);
   });
   if (!metrics_filtered) {
     logger_->log_error("Error parsing or filtering the metrics received from the Kubernetes API: %s", metrics_filtered.error());

@@ -24,7 +24,7 @@
 
 namespace org::apache::nifi::minifi::kubernetes::metrics {
 
-nonstd::expected<std::string, std::string> filter(const std::string& metrics_json, const std::function<bool(const std::string&, const std::string&, const std::string&)>& filter_function) {
+nonstd::expected<std::string, std::string> filter(const std::string& metrics_json, const std::function<bool(const kubernetes::ContainerInfo&)>& filter_function) {
   rapidjson::Document document;
   rapidjson::ParseResult parse_result = document.Parse<rapidjson::kParseStopWhenDoneFlag>(metrics_json.data());
   if (parse_result.IsError()) {
@@ -58,7 +58,7 @@ nonstd::expected<std::string, std::string> filter(const std::string& metrics_jso
       if (!container_metrics.HasMember("name") || !container_metrics["name"].IsString()) { ++container_it; continue; }
       const std::string container_name = container_metrics["name"].GetString();
 
-      if (!filter_function(name_space, pod_name, container_name)) {
+      if (!filter_function(kubernetes::ContainerInfo{.name_space = name_space, .pod_name = pod_name, .container_name = container_name})) {
         container_it = containers.Erase(container_it);
       } else {
         ++container_it;
