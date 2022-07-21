@@ -237,7 +237,7 @@ class HTTPClient : public BaseHTTPClient, public core::Connectable {
   }
 
   static bool isValidHttpHeaderField(std::string_view field_name);
-  static std::string replaceInvalidCharactersInHttpHeaderFieldName(std::string_view field_name);
+  static std::string replaceInvalidCharactersInHttpHeaderFieldName(std::string field_name);
 
  private:
   static int onProgress(void *client, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow);

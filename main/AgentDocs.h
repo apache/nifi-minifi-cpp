@@ -26,7 +26,7 @@ class AgentDocs {
  public:
   void generate(const std::string &docsdir, std::ostream &genStream);
  private:
-  [[nodiscard]] static inline std::string extractClassName(const std::string &processor);
+  [[nodiscard]] static std::string extractClassName(const std::string &processor);
   BuildDescription build_description_;
 };
 
