@@ -67,8 +67,7 @@ void ListenTCP::initialize() {
 
 void ListenTCP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>&) {
   gsl_Expects(context);
-  auto client_auth = utils::parseEnumProperty<utils::net::SslServer::ClientAuthOption>(*context, ClientAuth);
-  startServer(*context, MaxBatchSize, MaxQueueSize, Port, SSLContextService, utils::net::IpProtocol::TCP, client_auth);
+  startTcpServer(*context);
 }
 
 void ListenTCP::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
@@ -77,6 +76,26 @@ void ListenTCP::transferAsFlowFile(const utils::net::Message& message, core::Pro
   flow_file->setAttribute("tcp.port", std::to_string(message.server_port));
   flow_file->setAttribute("tcp.sender", message.sender_address.to_string());
   session.transfer(flow_file, Success);
+}
+
+const core::Property& ListenTCP::getMaxBatchSizeProperty() {
+  return MaxBatchSize;
+}
+
+const core::Property& ListenTCP::getMaxQueueSizeProperty() {
+  return MaxQueueSize;
+}
+
+const core::Property& ListenTCP::getPortProperty() {
+  return Port;
+}
+
+const core::Property& ListenTCP::getSslContextProperty() {
+  return SSLContextService;
+}
+
+const core::Property& ListenTCP::getClientAuthProperty() {
+  return ClientAuth;
 }
 
 REGISTER_RESOURCE(ListenTCP, Processor);

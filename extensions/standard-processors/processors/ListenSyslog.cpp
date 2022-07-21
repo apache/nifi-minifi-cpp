@@ -64,6 +64,13 @@ const core::Property ListenSyslog::SSLContextService(
         ->asType<minifi::controllers::SSLContextService>()
         ->build());
 
+const core::Property ListenSyslog::ClientAuth(
+    core::PropertyBuilder::createProperty("Client Auth")
+      ->withDescription("The client authentication policy to use for the SSL Context. Only used if an SSL Context Service is provided.")
+      ->withDefaultValue<std::string>(toString(utils::net::SslServer::ClientAuthOption::NONE))
+      ->withAllowableValues<std::string>(utils::net::SslServer::ClientAuthOption::values())
+      ->build());
+
 const core::Relationship ListenSyslog::Success("success", "Incoming messages that match the expected format when parsing will be sent to this relationship. "
                                                           "When Parse Messages is set to false, all incoming message will be sent to this relationship.");
 const core::Relationship ListenSyslog::Invalid("invalid", "Incoming messages that do not match the expected format when parsing will be sent to this relationship.");
@@ -99,7 +106,13 @@ void ListenSyslog::onSchedule(const std::shared_ptr<core::ProcessContext>& conte
   utils::net::IpProtocol protocol;
   context->getProperty(ProtocolProperty.getName(), protocol);
 
-  startServer(*context, MaxBatchSize, MaxQueueSize, Port, SSLContextService, protocol);
+  if (protocol == utils::net::IpProtocol::TCP) {
+    startTcpServer(*context);
+  } else if (protocol == utils::net::IpProtocol::UDP) {
+    startUdpServer(*context);
+  } else {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Invalid protocol");
+  }
 }
 
 void ListenSyslog::transferAsFlowFile(const utils::net::Message& message, core::ProcessSession& session) {
@@ -141,6 +154,26 @@ void ListenSyslog::transferAsFlowFile(const utils::net::Message& message, core::
   flow_file->setAttribute("syslog.port", std::to_string(message.server_port));
   flow_file->setAttribute("syslog.sender", message.sender_address.to_string());
   session.transfer(flow_file, valid ? Success : Invalid);
+}
+
+const core::Property& ListenSyslog::getMaxBatchSizeProperty() {
+  return MaxBatchSize;
+}
+
+const core::Property& ListenSyslog::getMaxQueueSizeProperty() {
+  return MaxQueueSize;
+}
+
+const core::Property& ListenSyslog::getPortProperty() {
+  return Port;
+}
+
+const core::Property& ListenSyslog::getSslContextProperty() {
+  return SSLContextService;
+}
+
+const core::Property& ListenSyslog::getClientAuthProperty() {
+  return ClientAuth;
 }
 
 REGISTER_RESOURCE(ListenSyslog, Processor);

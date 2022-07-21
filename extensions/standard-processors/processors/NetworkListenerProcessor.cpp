@@ -18,6 +18,7 @@
 #include "utils/net/UdpServer.h"
 #include "utils/net/TcpServer.h"
 #include "utils/net/Ssl.h"
+#include "utils/ProcessorConfigUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -37,44 +38,54 @@ void NetworkListenerProcessor::onTrigger(const std::shared_ptr<core::ProcessCont
   }
 }
 
-void NetworkListenerProcessor::startServer(
-    const core::ProcessContext& context, const core::Property& max_batch_size_prop, const core::Property& max_queue_size_prop,
-    const core::Property& port_prop, const core::Property& ssl_prop, utils::net::IpProtocol protocol, utils::net::SslServer::ClientAuthOption client_auth) {
-  gsl_Expects(!server_thread_.joinable() && !server_);
-  context.getProperty(max_batch_size_prop.getName(), max_batch_size_);
+NetworkListenerProcessor::ServerOptions NetworkListenerProcessor::readServerOptions(const core::ProcessContext& context) {
+  ServerOptions options;
+  context.getProperty(getMaxBatchSizeProperty().getName(), max_batch_size_);
   if (max_batch_size_ < 1)
     throw Exception(PROCESSOR_EXCEPTION, "Max Batch Size property is invalid");
 
   uint64_t max_queue_size = 0;
-  context.getProperty(max_queue_size_prop.getName(), max_queue_size);
-  auto max_queue_size_opt = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
+  context.getProperty(getMaxQueueSizeProperty().getName(), max_queue_size);
+  options.max_queue_size = max_queue_size > 0 ? std::optional<uint64_t>(max_queue_size) : std::nullopt;
 
-  int port;
-  context.getProperty(port_prop.getName(), port);
+  context.getProperty(getPortProperty().getName(), options.port);
+  return options;
+}
 
-  if (protocol == utils::net::IpProtocol::UDP) {
-    server_ = std::make_unique<utils::net::UdpServer>(max_queue_size_opt, port, logger_);
-  } else if (protocol == utils::net::IpProtocol::TCP) {
-    std::string ssl_value;
-    if (context.getProperty(ssl_prop.getName(), ssl_value) && !ssl_value.empty()) {
-      auto ssl_data = utils::net::getSslData(context, ssl_prop, logger_);
-      if (!ssl_data || !ssl_data->isValid()) {
-        throw Exception(PROCESSOR_EXCEPTION, "SSL Context Service is set, but no valid SSL data was found!");
-      }
-      server_ = std::make_unique<utils::net::SslServer>(max_queue_size_opt, port, logger_, *ssl_data, client_auth);
-    } else {
-      server_ = std::make_unique<utils::net::TcpServer>(max_queue_size_opt, port, logger_);
-    }
-  } else {
-    throw Exception(PROCESSOR_EXCEPTION, "Invalid protocol");
-  }
-
+void NetworkListenerProcessor::startServer(const ServerOptions& options, utils::net::IpProtocol protocol) {
   server_thread_ = std::thread([this]() { server_->run(); });
   logger_->log_debug("Started %s server on port %d with %s max queue size and %zu max batch size",
                      protocol.toString(),
-                     port,
-                     max_queue_size_opt ? std::to_string(*max_queue_size_opt) : "unlimited",
+                     options.port,
+                     options.max_queue_size ? std::to_string(*options.max_queue_size) : "unlimited",
                      max_batch_size_);
+}
+
+void NetworkListenerProcessor::startTcpServer(const core::ProcessContext& context) {
+  gsl_Expects(!server_thread_.joinable() && !server_);
+  auto options = readServerOptions(context);
+
+  std::string ssl_value;
+  auto& ssl_prop = getSslContextProperty();
+  if (context.getProperty(ssl_prop.getName(), ssl_value) && !ssl_value.empty()) {
+    auto ssl_data = utils::net::getSslData(context, ssl_prop, logger_);
+    if (!ssl_data || !ssl_data->isValid()) {
+      throw Exception(PROCESSOR_EXCEPTION, "SSL Context Service is set, but no valid SSL data was found!");
+    }
+    auto client_auth = utils::parseEnumProperty<utils::net::SslServer::ClientAuthOption>(context, getClientAuthProperty());
+    server_ = std::make_unique<utils::net::SslServer>(options.max_queue_size, options.port, logger_, *ssl_data, client_auth);
+  } else {
+    server_ = std::make_unique<utils::net::TcpServer>(options.max_queue_size, options.port, logger_);
+  }
+
+  startServer(options, utils::net::IpProtocol::TCP);
+}
+
+void NetworkListenerProcessor::startUdpServer(const core::ProcessContext& context) {
+  gsl_Expects(!server_thread_.joinable() && !server_);
+  auto options = readServerOptions(context);
+  server_ = std::make_unique<utils::net::UdpServer>(options.max_queue_size, options.port, logger_);
+  startServer(options, utils::net::IpProtocol::UDP);
 }
 
 void NetworkListenerProcessor::stopServer() {
