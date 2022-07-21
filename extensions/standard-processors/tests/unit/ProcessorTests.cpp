@@ -231,7 +231,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   session->commit();
   std::shared_ptr<core::FlowFile> ffr = session->get();
 
-  REQUIRE(repo->getRepoMap().size() == 0);
+  REQUIRE(repo->getRepoMap().empty());
   prev++;
 }
 
@@ -304,7 +304,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   std::fstream file;
   std::stringstream ss;
@@ -370,7 +370,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   std::vector<std::string> files;
 
@@ -432,7 +432,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
   REQUIRE(record == nullptr);
-  REQUIRE(records.size() == 0);
+  REQUIRE(records.empty());
 
   std::fstream file;
   std::stringstream ss;
