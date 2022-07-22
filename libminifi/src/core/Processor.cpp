@@ -289,14 +289,14 @@ bool Processor::partOfCycle(Connection* conn) {
 }
 
 bool Processor::isThrottledByBackpressure() const {
-  bool isThrottledByOutgoing = ranges::any_of(outgoing_connections_, [&](auto& outIt) {
-    return ranges::any_of(outIt.second, [&](auto* out) {
-      auto connection = dynamic_cast<Connection*>(out);
+  bool isThrottledByOutgoing = ranges::any_of(outgoing_connections_, [](auto& name_connection_set_pair) {
+    return ranges::any_of(name_connection_set_pair.second, [](auto& connectable) {
+      auto connection = dynamic_cast<Connection*>(connectable);
       return connection && connection->isFull();
     });
   });
-  bool isForcedByIncomingCycle = ranges::any_of(incoming_connections_, [&](auto& inConn) {
-    auto connection = dynamic_cast<Connection*>(inConn);
+  bool isForcedByIncomingCycle = ranges::any_of(incoming_connections_, [](auto& connectable) {
+    auto connection = dynamic_cast<Connection*>(connectable);
     return connection && partOfCycle(connection) && connection->isFull();
   });
   return isThrottledByOutgoing && !isForcedByIncomingCycle;
