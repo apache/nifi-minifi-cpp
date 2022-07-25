@@ -36,6 +36,9 @@
 #include "FlowController.h"
 #include "SchedulingAgent.h"
 #include "core/ProcessGroup.h"
+#include "SingleProcessorTestController.h"
+
+namespace org::apache::nifi::minifi::test {
 
 class ListenHTTPTestsFixture {
  public:
@@ -655,3 +658,20 @@ TEST_CASE_METHOD(ListenHTTPTestsFixture, "HTTPS minimum SSL version", "[https]")
 }
 #endif
 #endif
+
+TEST_CASE("ListenHTTP bored yield", "[listenhttp][bored][yield]") {
+  using processors::ListenHTTP;
+  const auto listen_http = std::make_shared<ListenHTTP>("listenhttp");
+  SingleProcessorTestController controller{listen_http};
+  listen_http->setProperty(ListenHTTP::Port, "0");
+
+  REQUIRE(!listen_http->isYield());
+  const auto output = controller.trigger();
+  REQUIRE(std::all_of(std::begin(output), std::end(output), [](const auto& kv) {
+    const auto& [relationship, flow_files] = kv;
+    return flow_files.empty();
+  }));
+  REQUIRE(listen_http->isYield());
+}
+
+}  // namespace org::apache::nifi::minifi::test

@@ -185,8 +185,8 @@ class ListenHTTP : public core::Processor {
  private:
   static const uint64_t DEFAULT_BUFFER_SIZE;
 
-  void processIncomingFlowFile(core::ProcessSession *session);
-  void processRequestBuffer(core::ProcessSession *session);
+  bool processIncomingFlowFile(core::ProcessSession &session);
+  bool processRequestBuffer(core::ProcessSession &session);
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListenHTTP>::getLogger();
   CivetCallbacks callbacks_;
