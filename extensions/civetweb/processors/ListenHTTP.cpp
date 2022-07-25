@@ -221,16 +221,21 @@ void ListenHTTP::onSchedule(core::ProcessContext *context, core::ProcessSessionF
 
 ListenHTTP::~ListenHTTP() = default;
 
-void ListenHTTP::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession *session) {
-  logger_->log_debug("OnTrigger ListenHTTP");
-  processIncomingFlowFile(session);
-  processRequestBuffer(session);
+void ListenHTTP::onTrigger(core::ProcessContext*, core::ProcessSession* session) {
+  gsl_Expects(session);
+  logger_->log_trace("OnTrigger ListenHTTP");
+  const bool incoming_processed = processIncomingFlowFile(*session);
+  const bool request_processed = processRequestBuffer(*session);
+  if (!incoming_processed && !request_processed) {
+    yield();
+  }
 }
 
-void ListenHTTP::processIncomingFlowFile(core::ProcessSession *session) {
-  std::shared_ptr<core::FlowFile> flow_file = session->get();
+/// @return Whether there was a flow file processed.
+bool ListenHTTP::processIncomingFlowFile(core::ProcessSession &session) {
+  std::shared_ptr<core::FlowFile> flow_file = session.get();
   if (!flow_file) {
-    return;
+    return false;
   }
 
   std::string type;
@@ -244,14 +249,16 @@ void ListenHTTP::processIncomingFlowFile(core::ProcessSession *session) {
       logger_->log_warn("Using default mime type of application/octet-stream for response body file: %s", response.uri);
       response.mime_type = "application/octet-stream";
     }
-    response.body = to_string(session->readBuffer(flow_file));
+    response.body = to_string(session.readBuffer(flow_file));
     handler_->setResponseBody(std::move(response));
   }
 
-  session->remove(flow_file);
+  session.remove(flow_file);
+  return true;
 }
 
-void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
+/// @return Whether there was a request processed
+bool ListenHTTP::processRequestBuffer(core::ProcessSession& session) {
   std::size_t flow_file_count = 0;
   for (; batch_size_ == 0 || batch_size_ > flow_file_count; ++flow_file_count) {
     FlowFileBufferPair flow_file_buffer_pair;
@@ -260,19 +267,17 @@ void ListenHTTP::processRequestBuffer(core::ProcessSession *session) {
     }
 
     auto flow_file = flow_file_buffer_pair.first;
-    session->add(flow_file);
+    session.add(flow_file);
 
     if (flow_file_buffer_pair.second) {
-      session->write(flow_file, [request_content = flow_file_buffer_pair.second.get()](const std::shared_ptr<io::BaseStream>& stream) -> int64_t {
-        const auto write_ret = stream->write(request_content->getBuffer());
-        return io::isError(write_ret) ? -1 : gsl::narrow<int64_t>(write_ret);
-      });
+      session.writeBuffer(flow_file, flow_file_buffer_pair.second->getBuffer());
     }
 
-    session->transfer(flow_file, Success);
+    session.transfer(flow_file, Success);
   }
 
   logger_->log_debug("ListenHTTP transferred %zu flow files from HTTP request buffer", flow_file_count);
+  return flow_file_count > 0;
 }
 
 ListenHTTP::Handler::Handler(std::string base_uri, core::ProcessContext *context, std::string &&auth_dn_regex, std::string &&header_as_attrs_regex)
