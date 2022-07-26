@@ -201,7 +201,7 @@ jobs:
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
-        run: mkdir build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT .. && make centos
+        run: mkdir build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT -DENABLE_KUBERNETES=ON .. && make centos
   docker_integration_tests:
     name: "Docker integration tests"
     runs-on: ubuntu-20.04

@@ -41,6 +41,8 @@ FetchContent_Declare(websockets
         PATCH_COMMAND "${WEBSOCKETS_PC}"
 )
 
+FetchContent_MakeAvailable(yaml websockets)
+
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(K8S_PATCH_FILE "${CMAKE_SOURCE_DIR}/thirdparty/kubernetes-client-c/remove-findpackage.patch")
 set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
@@ -48,10 +50,17 @@ set(K8S_PC ${Bash_EXECUTABLE} -c "set -x &&\
 FetchContent_Declare(kubernetes
     GIT_REPOSITORY https://github.com/kubernetes-client/c
     GIT_TAG 9581cd9a8426a5ad7d543b146d5c5ede37cc32e0  # latest commit on master as of 2022-01-05
-    SOURCE_SUBDIR kubernetes
     PATCH_COMMAND "${K8S_PC}"
 )
 
-FetchContent_MakeAvailable(yaml websockets kubernetes)
+# With CMake >= 3.18, this block could be replaced with FetchContent_MakeAvailable(kubernetes),
+# if we add the `SOURCE_SUBDIR kubernetes` option to FetchContent_Declare() [this option is not available in CMake < 3.18].
+# As of July 2022, one of our supported platforms, Centos 7, comes with CMake 3.17.
+FetchContent_GetProperties(kubernetes)
+if(NOT kubernetes_POPULATED)
+    FetchContent_Populate(kubernetes)
+    # the top level doesn't contain CMakeLists.txt, it is in the "kubernetes" subdirectory
+    add_subdirectory(${kubernetes_SOURCE_DIR}/kubernetes ${kubernetes_BINARY_DIR})
+endif()
 
 add_dependencies(websockets CURL::libcurl OpenSSL::Crypto OpenSSL::SSL)
