@@ -87,7 +87,8 @@ bool FlowFileQueue::processLoadTaskWait(std::optional<std::chrono::milliseconds>
   gsl_Assert(status == std::future_status::ready);
 
   logger_->log_debug("Getting loaded flow files");
-  size_t swapped_in_count = 0, intermediate_count = 0;
+  size_t swapped_in_count = 0;
+  size_t intermediate_count = 0;
   for (auto&& item : load_task_->items.get()) {
     ++swapped_in_count;
     queue_.push(std::move(item));

@@ -28,7 +28,7 @@ TEST_CASE("After construction, a FlowFileQueue is empty", "[FlowFileQueue]") {
   utils::FlowFileQueue queue;
 
   REQUIRE(queue.empty());
-  REQUIRE(queue.size() == 0);
+  REQUIRE(queue.size() == 0);  // NOLINT(readability-container-size-empty)
   REQUIRE_FALSE(queue.isWorkAvailable());
   REQUIRE_THROWS(queue.pop());
 }
@@ -94,7 +94,7 @@ namespace {
 
 class PenaltyHasExpired {
  public:
-  explicit PenaltyHasExpired(const std::shared_ptr<core::FlowFile>& flow_file) : flow_file_(flow_file) {}
+  explicit PenaltyHasExpired(std::shared_ptr<core::FlowFile> flow_file) : flow_file_(std::move(flow_file)) {}
   bool operator()() { return !flow_file_->isPenalized(); }
 
  private:
