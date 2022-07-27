@@ -36,14 +36,12 @@ class FlowFileLoader {
   using FlowFilePtr = std::shared_ptr<core::FlowFile>;
   using FlowFilePtrVec = std::vector<FlowFilePtr>;
 
-  static constexpr size_t thread_count_ = 2;
+  static constexpr size_t thread_count_ = 1;
 
  public:
-  FlowFileLoader();
+  FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo);
 
   ~FlowFileLoader();
-
-  void initialize(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo);
 
   void start();
 
@@ -56,8 +54,10 @@ class FlowFileLoader {
 
   utils::ThreadPool<utils::TaskRescheduleInfo> thread_pool_{thread_count_, false, nullptr, "FlowFileLoaderThreadPool"};
 
-  minifi::internal::RocksDatabase* db_{nullptr};
+  gsl::not_null<minifi::internal::RocksDatabase*> db_;
 
+  // TODO(adebreceni): shared_ptr is needed to call FlowFileRecord::Deserialize
+  //    this ownership could be removed if that changes
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::shared_ptr<core::logging::Logger> logger_;
 };

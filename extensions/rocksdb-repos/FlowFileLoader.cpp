@@ -28,16 +28,13 @@
 
 namespace org::apache::nifi::minifi {
 
-FlowFileLoader::FlowFileLoader()
-  : logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()) {}
+FlowFileLoader::FlowFileLoader(gsl::not_null<minifi::internal::RocksDatabase*> db, std::shared_ptr<core::ContentRepository> content_repo)
+  : db_(db),
+    content_repo_(std::move(content_repo)),
+    logger_(core::logging::LoggerFactory<FlowFileLoader>::getLogger()) {}
 
 FlowFileLoader::~FlowFileLoader() {
   stop();
-}
-
-void FlowFileLoader::initialize(gsl::not_null<minifi::internal::RocksDatabase *> db, std::shared_ptr<core::ContentRepository> content_repo) {
-  db_ = db;
-  content_repo_ = std::move(content_repo);
 }
 
 std::future<FlowFileLoader::FlowFilePtrVec> FlowFileLoader::load(std::vector<SwappedFlowFile> flow_files) {

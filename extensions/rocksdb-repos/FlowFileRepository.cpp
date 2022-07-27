@@ -251,7 +251,7 @@ void FlowFileRepository::initialize_repository() {
 void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {
   content_repo_ = content_repo;
   repo_size_ = 0;
-  swap_loader.initialize(gsl::make_not_null(db_.get()), content_repo_);
+  swap_loader_ = std::make_unique<FlowFileLoader>(gsl::make_not_null(db_.get()), content_repo_);
 
   initialize_repository();
 }

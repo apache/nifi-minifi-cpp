@@ -36,6 +36,7 @@
 #include "utils/crypto/EncryptionProvider.h"
 #include "SwapManager.h"
 #include "FlowFileLoader.h"
+#include "range/v3/algorithm/all_of.hpp"
 
 namespace org::apache::nifi::minifi::core::repository {
 
@@ -205,24 +206,21 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
     running_ = true;
     thread_ = std::thread(&FlowFileRepository::run, this);
     logger_->log_debug("%s Repository Monitor Thread Start", getName());
-    swap_loader.start();
+    swap_loader_->start();
   }
 
   void stop() override {
-    swap_loader.stop();
+    swap_loader_->stop();
     core::Repository::stop();
   }
 
   void store(std::vector<std::shared_ptr<core::FlowFile>> flow_files) override {
-    for (auto& flow_file : flow_files) {
-      if (!flow_file->isStored()) {
-        throw Exception(FLOW_EXCEPTION, "A flow file that is being swapped out is not stored in the flow repository");
-      }
-    }
+    gsl_Expects(ranges::all_of(flow_files, &FlowFile::isStored));
+    // pass, flowfiles are already persisted in the repository
   }
 
   std::future<std::vector<std::shared_ptr<core::FlowFile>>> load(std::vector<SwappedFlowFile> flow_files) override {
-    return swap_loader.load(std::move(flow_files));
+    return swap_loader_->load(std::move(flow_files));
   }
 
  private:
@@ -249,7 +247,7 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;
   std::unique_ptr<rocksdb::Checkpoint> checkpoint_;
-  FlowFileLoader swap_loader;
+  std::unique_ptr<FlowFileLoader> swap_loader_;
   std::shared_ptr<logging::Logger> logger_;
   std::shared_ptr<minifi::Configure> config_;
 };

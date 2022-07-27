@@ -84,9 +84,8 @@ bool FlowFileQueue::processLoadTaskWait(std::optional<std::chrono::milliseconds>
     logger_->log_debug("Load task is not yet completed");
     return false;
   }
-  if (status != std::future_status::ready) {
-    throw std::logic_error("Unknown future status deferred future?");
-  }
+  gsl_Assert(status == std::future_status::ready);
+
   logger_->log_debug("Getting loaded flow files");
   size_t swapped_in_count = 0, intermediate_count = 0;
   for (auto&& item : load_task_->items.get()) {
