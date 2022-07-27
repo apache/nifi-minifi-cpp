@@ -206,11 +206,15 @@ class FlowFileRepository : public core::Repository, public SwapManager, public s
     running_ = true;
     thread_ = std::thread(&FlowFileRepository::run, this);
     logger_->log_debug("%s Repository Monitor Thread Start", getName());
-    swap_loader_->start();
+    if (swap_loader_) {
+      swap_loader_->start();
+    }
   }
 
   void stop() override {
-    swap_loader_->stop();
+    if (swap_loader_) {
+      swap_loader_->stop();
+    }
     core::Repository::stop();
   }
 
