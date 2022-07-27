@@ -201,7 +201,7 @@ TEST_CASE("QueryDatabaseTable changing table name resets state", "[QueryDatabase
   sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "empty_test_table");
   plan->run(true);
   flow_files = plan->getOutputs({"success", "d"});
-  REQUIRE(flow_files.size() == 0);
+  REQUIRE(flow_files.empty());
 
   // again query "test_table", by now the stored state is reset, so all rows are returned
   sql_proc->setProperty(minifi::processors::QueryDatabaseTable::TableName.getName(), "test_table");

@@ -120,7 +120,7 @@ bool sendMessagesViaTCP(const std::vector<std::string_view>& contents, uint64_t 
   for (auto& content : contents) {
     std::string tcp_message(content);
     tcp_message += '\n';
-    socket.send(asio::buffer(tcp_message, tcp_message.size()), 0, err);
+    asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
   }
   if (err) {
     return false;
@@ -166,7 +166,7 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents, uint64_t 
   for (auto& content : contents) {
     std::string tcp_message(content);
     tcp_message += '\n';
-    socket.write_some(asio::buffer(tcp_message, tcp_message.size()));
+    asio::write(socket, asio::buffer(tcp_message, tcp_message.size()), err);
   }
   if (err) {
     return false;

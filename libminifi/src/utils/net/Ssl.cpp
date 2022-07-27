@@ -37,8 +37,7 @@ std::optional<utils::net::SslData> getSslData(const core::ProcessContext& contex
     return nullptr;
   };
 
-  if (auto service = getSslContextService()) {
-    auto ssl_service = std::static_pointer_cast<minifi::controllers::SSLContextService>(service);
+  if (auto ssl_service = getSslContextService()) {
     utils::net::SslData ssl_data;
     ssl_data.ca_loc = ssl_service->getCACertificate();
     ssl_data.cert_loc = ssl_service->getCertificateFile();
