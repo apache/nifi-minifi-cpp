@@ -32,6 +32,7 @@
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
 #include "utils/file/FileUtils.h"
+#include "utils/StringUtils.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -120,7 +121,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
 
   for (const std::string& metricsClass : classes) {
     try {
-      std::string option = std::string(prefix).append(".").append(metricsClass);
+      std::string option = utils::StringUtils::join_pack(prefix, ".", metricsClass);
       std::string classOption = option + ".classes";
       std::string nameOption = option + ".name";
 
@@ -132,7 +133,7 @@ void C2Client::loadC2ResponseConfiguration(const std::string &prefix) {
       if (configuration_->get(classOption, class_definitions)) {
         loadNodeClasses(class_definitions, new_node);
       } else {
-        std::string optionName = std::string(option).append(".").append(name);
+        std::string optionName = utils::StringUtils::join_pack(option, ".", name);
         loadC2ResponseConfiguration(optionName, new_node);
       }
 
@@ -153,7 +154,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 
   for (const std::string& metricsClass : classes) {
     try {
-      std::string option = std::string(prefix).append(".").append(metricsClass);
+      std::string option = utils::StringUtils::join_pack(prefix, ".", metricsClass);
       std::string classOption = option + ".classes";
       std::string nameOption = option + ".name";
 
@@ -177,7 +178,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
             std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(new_node);
           }
         } else {
-          std::string optionName = std::string(option).append(".").append(name);
+          std::string optionName = utils::StringUtils::join_pack(option, ".", name);
           auto sub_node = loadC2ResponseConfiguration(optionName, new_node);
           std::static_pointer_cast<state::response::ObjectNode>(prev_node)->add_node(sub_node);
         }

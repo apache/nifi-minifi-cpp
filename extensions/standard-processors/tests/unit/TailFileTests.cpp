@@ -43,6 +43,7 @@
 #include "TailFile.h"
 #include "LogAttribute.h"
 #include "utils/TestUtils.h"
+#include "utils/StringUtils.h"
 
 using namespace std::literals::chrono_literals;
 
@@ -1349,7 +1350,7 @@ TEST_CASE("TailFile handles the Delimiter setting correctly", "[delimiter]") {
     auto temp_directory = testController.createTempDirectory();
 
     std::string delimiter = test_case.second;
-    std::string full_file_name = createTempFile(temp_directory, "test.log", std::string("one").append(delimiter).append("two").append(delimiter));
+    std::string full_file_name = createTempFile(temp_directory, "test.log", utils::StringUtils::join_pack("one", delimiter, "two", delimiter));
 
     auto plan = testController.createPlan();
 
