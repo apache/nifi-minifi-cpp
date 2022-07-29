@@ -21,6 +21,8 @@
 #include <string_view>
 #include <vector>
 
+#include "../ApiClient.h"
+#include "../ContainerInfo.h"
 #include "controllers/AttributeProviderService.h"
 #include "core/logging/Logger.h"
 #include "core/Property.h"
@@ -53,10 +55,10 @@ class KubernetesControllerService : public AttributeProviderService {
   void onEnable() override;
   std::optional<std::vector<AttributeMap>> getAttributes() override;
   std::string_view name() const override { return "kubernetes"; }
+  const kubernetes::ApiClient* apiClient() const { return api_client_.get(); }
+  bool matchesRegexFilters(const kubernetes::ContainerInfo& container_info) const;
 
  private:
-  class APIClient;
-
   bool matchesRegexFilters(const std::string& name_space, const std::string& pod_name, const std::string& container_name) const;
 
   std::mutex initialization_mutex_;
@@ -65,7 +67,7 @@ class KubernetesControllerService : public AttributeProviderService {
   std::optional<utils::Regex> pod_name_filter_;
   std::optional<utils::Regex> container_name_filter_;
   std::shared_ptr<core::logging::Logger> logger_;
-  std::unique_ptr<APIClient> api_client_;
+  std::unique_ptr<kubernetes::ApiClient> api_client_;
 };
 
 }  // namespace org::apache::nifi::minifi::controllers

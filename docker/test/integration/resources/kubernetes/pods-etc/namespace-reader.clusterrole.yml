@@ -4,6 +4,6 @@ metadata:
   namespace: default
   name: namespace-reader
 rules:
-- apiGroups: [""]  # "" indicates the core API group
+- apiGroups: ["", "metrics.k8s.io"]  # "" indicates the core API group
   resources: ["namespaces"]
   verbs: ["get", "watch", "list"]

@@ -23,6 +23,7 @@
 #else
 #include <ifaddrs.h>
 #endif /* WIN32 */
+#include <memory>
 #include <utility>
 #include "utils/net/DNS.h"
 
@@ -38,6 +39,9 @@ struct FreeDeleter {
     free(ptr);
   }
 };
+
+template<typename T>
+using freeing_unique_ptr = std::unique_ptr<T, FreeDeleter>;
 
 /**
  * Allows smart pointers to store a pointer both

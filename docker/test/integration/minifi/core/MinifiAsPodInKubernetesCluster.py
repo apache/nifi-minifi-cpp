@@ -45,10 +45,10 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
 
         logging.info('Setting up container: %s', self.name)
 
+        self.kubernetes_proxy.create_helper_objects()
         self._create_config()
-
         self.kubernetes_proxy.load_docker_image(MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_NAME, MinifiAsPodInKubernetesCluster.MINIFI_IMAGE_TAG)
-        self.kubernetes_proxy.create_objects()
+        self.kubernetes_proxy.create_minifi_pod()
 
         logging.info('Finished setting up container: %s', self.name)
 
@@ -56,7 +56,7 @@ class MinifiAsPodInKubernetesCluster(MinifiContainer):
         return LogSource.FROM_GET_APP_LOG_METHOD
 
     def get_app_log(self):
-        return 'OK', self.kubernetes_proxy.get_logs('daemon', 'log-collector')
+        return 'OK', self.kubernetes_proxy.get_logs('daemon', 'minifi')
 
     def cleanup(self):
         # cleanup is done through the kubernetes cluster in the environment.py

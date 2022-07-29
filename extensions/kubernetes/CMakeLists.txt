@@ -23,9 +23,9 @@ include(KubernetesClientC)
 
 include(${CMAKE_SOURCE_DIR}/extensions/ExtensionHeader.txt)
 
-file(GLOB SOURCES "*.cpp" "controllerservice/*.cpp")
+file(GLOB SOURCES "*.cpp" "controllerservice/*.cpp" "processors/*.cpp")
 add_library(minifi-kubernetes-extensions SHARED ${SOURCES})
 target_link_libraries(minifi-kubernetes-extensions ${LIBMINIFI} kubernetes CURL::libcurl)
 
-register_extension(minifi-kubernetes-extensions "KUBERNETES EXTENSIONS" KUBERNETES-EXTENSIONS "This enables Kubernetes support")
+register_extension(minifi-kubernetes-extensions "KUBERNETES EXTENSIONS" KUBERNETES-EXTENSIONS "This enables Kubernetes support" "extensions/kubernetes/tests")
 register_extension_linter(minifi-kubernetes-extensions-linter)
