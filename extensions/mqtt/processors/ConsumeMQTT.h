@@ -119,6 +119,8 @@ class ConsumeMQTT : public processors::AbstractMQTTProcessor {
 
   bool startupClient() override;
 
+  void checkProperties() override;
+
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ConsumeMQTT>::getLogger();
   bool cleanSession_ = true;
   uint64_t maxQueueSize_;

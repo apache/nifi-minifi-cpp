@@ -62,15 +62,6 @@ void ConsumeMQTT::onSchedule(const std::shared_ptr<core::ProcessContext> &contex
 
   // this connects to broker, so properties of this processor must be read before
   AbstractMQTTProcessor::onSchedule(context, factory);
-
-  // Check properties
-  if (!cleanSession_ && clientID_.empty()) {
-    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Processor must have a Client ID for durable (non-clean) sessions");
-  }
-  if (!cleanSession_ && qos_ == 0) {
-    logger_->log_warn("Messages are not preserved during client disconnection "
-      "by the broker when QoS is less than 1 for durable (non-clean) sessions. Only subscriptions are preserved.");
-  }
 }
 
 void ConsumeMQTT::onTrigger(const std::shared_ptr<core::ProcessContext>& /*context*/, const std::shared_ptr<core::ProcessSession> &session) {
@@ -138,6 +129,16 @@ void ConsumeMQTT::onMessageReceived(char* topic_name, int /*topic_len*/, MQTTAsy
 
   std::unique_ptr<MQTTAsync_message, MQTTMessageDeleter> smartMessage(message);
   enqueueReceivedMQTTMsg(std::move(smartMessage));
+}
+
+void ConsumeMQTT::checkProperties() {
+  if (!cleanSession_ && clientID_.empty()) {
+    throw Exception(PROCESS_SCHEDULE_EXCEPTION, "Processor must have a Client ID for durable (non-clean) sessions");
+  }
+  if (!cleanSession_ && qos_ == 0) {
+    logger_->log_warn("Messages are not preserved during client disconnection "
+                      "by the broker when QoS is less than 1 for durable (non-clean) sessions. Only subscriptions are preserved.");
+  }
 }
 
 }  // namespace org::apache::nifi::minifi::processors

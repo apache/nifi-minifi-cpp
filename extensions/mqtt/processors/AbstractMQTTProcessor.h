@@ -185,6 +185,12 @@ class AbstractMQTTProcessor : public core::Processor {
 
   void freeResources();
 
+  /**
+   * Checks property consistency before connecting to broker
+   */
+  virtual void checkProperties() {
+  }
+
   // SSL
   std::optional<MQTTAsync_SSLOptions> sslOpts_;
   std::string securityCA_;

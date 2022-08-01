@@ -118,6 +118,8 @@ void AbstractMQTTProcessor::onSchedule(const std::shared_ptr<core::ProcessContex
     }
   }
 
+  checkProperties();
+
   if (!client_) {
     if (MQTTAsync_create(&client_, uri_.c_str(), clientID_.c_str(), MQTTCLIENT_PERSISTENCE_NONE, nullptr) != MQTTASYNC_SUCCESS) {
       logger_->log_error("Creating MQTT client failed");
