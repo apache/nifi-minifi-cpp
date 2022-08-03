@@ -478,8 +478,8 @@ if(WIN32)
         if (NOT VC_RUNTIME_X86_REDIST_CRT_DIR_LIST OR NOT VC_RUNTIME_X64_REDIST_CRT_DIR_LIST)
             message(FATAL_ERROR "Could not find the VC Redistributable. Please set VCRUNTIME_X86_REDIST_CRT_DIR and VCRUNTIME_X64_REDIST_CRT_DIR manually!")
         else()
-            list(GET VCRUNTIME_X86_REDIST_CRT_DIR 0 VC_RUNTIME_X86_REDIST_CRT_DIR_LIST)
-            list(GET VCRUNTIME_X64_REDIST_CRT_DIR 0 VC_RUNTIME_X64_REDIST_CRT_DIR_LIST)
+            list(GET VC_RUNTIME_X86_REDIST_CRT_DIR_LIST 0 VCRUNTIME_X86_REDIST_CRT_DIR)
+            list(GET VC_RUNTIME_X64_REDIST_CRT_DIR_LIST 0 VCRUNTIME_X64_REDIST_CRT_DIR)
         endif()
 
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
@@ -563,10 +563,33 @@ if(NOT WIN32)
 endif()
 
 cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
+set(EXTENSIONS_ENABLED_BY_DEFAULT (
+    minifi-aws
+    minifi-azure
+    minifi-civet-extensions
+    minifi-elasticsearch
+    minifi-expression-language-extensions
+    minifi-gcp
+    minifi-http-curl
+    minifi-archive-extensions
+    minifi-rdkafka-extensions
+    minifi-pdh
+    minifi-prometheus
+    minifi-rocksdb-repos
+    minifi-splunk
+    minifi-sql
+    minifi-standard-processors
+    minifi-wel
+))
 foreach(extension ${selected_extensions})
     get_component_name(${extension} component-name)
     list(APPEND CPACK_COMPONENTS_ALL ${component-name})
-    cpack_add_component(${component-name} DISPLAY_NAME ${extension} GROUP extensions DEPENDS bin)
+    if(${extension} IN_LIST EXTENSIONS_ENABLED_BY_DEFAULT)
+        set(maybe_disabled "")
+    else()
+        set(maybe_disabled DISABLED)
+    endif()
+    cpack_add_component(${component-name} DISPLAY_NAME ${extension} ${maybe_disabled} GROUP extensions DEPENDS bin)
 endforeach()
 
 include(CPack)
