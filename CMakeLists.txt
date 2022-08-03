@@ -563,10 +563,33 @@ if(NOT WIN32)
 endif()
 
 cpack_add_component_group(extensions DISPLAY_NAME "Extensions" EXPANDED)
+set(EXTENSIONS_ENABLED_BY_DEFAULT (
+    minifi-aws
+    minifi-azure
+    minifi-civet-extensions
+    minifi-elasticsearch
+    minifi-expression-language-extensions
+    minifi-gcp
+    minifi-http-curl
+    minifi-archive-extensions
+    minifi-rdkafka-extensions
+    minifi-pdh
+    minifi-prometheus
+    minifi-rocksdb-repos
+    minifi-splunk
+    minifi-sql
+    minifi-standard-processors
+    minifi-wel
+))
 foreach(extension ${selected_extensions})
     get_component_name(${extension} component-name)
     list(APPEND CPACK_COMPONENTS_ALL ${component-name})
-    cpack_add_component(${component-name} DISPLAY_NAME ${extension} GROUP extensions DEPENDS bin)
+    if(${extension} IN_LIST EXTENSIONS_ENABLED_BY_DEFAULT)
+        set(maybe_disabled "")
+    else()
+        set(maybe_disabled DISABLED)
+    endif()
+    cpack_add_component(${component-name} DISPLAY_NAME ${extension} ${maybe_disabled} GROUP extensions DEPENDS bin)
 endforeach()
 
 include(CPack)
