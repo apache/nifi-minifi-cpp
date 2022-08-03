@@ -33,24 +33,15 @@ namespace minifi {
 namespace core {
 
 template<typename T>
-T* instantiate(
-    const std::shared_ptr<core::Repository> &repo, const std::shared_ptr<core::Repository> &flow_file_repo,
-    const std::shared_ptr<core::ContentRepository> &content_repo, const std::shared_ptr<io::StreamFactory> &stream_factory,
-    std::shared_ptr<Configure> configuration, const std::optional<std::string>& path,
-    const std::shared_ptr<utils::file::FileSystem>& filesystem) {
-  return new T(repo, flow_file_repo, content_repo, stream_factory, configuration, path, filesystem);
+T* instantiate(ConfigurationContext ctx) {
+  return new T(std::move(ctx));
 }
 
 /**
  * Configuration factory is used to create a new FlowConfiguration
  * object.
  */
-std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(
-    std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo,
-    std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<Configure> configure,
-    std::shared_ptr<io::StreamFactory> stream_factory, const std::string& configuration_class_name,
-    const std::optional<std::string>& path = {}, std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>(),
-    bool fail_safe = false);
+std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::string& configuration_class_name, bool fail_safe = false);
 
 }  // namespace core
 }  // namespace minifi

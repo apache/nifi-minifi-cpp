@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #pragma once
 
 #include <memory>
@@ -23,7 +24,7 @@
 #include <unordered_set>
 
 #include "core/FlowConfiguration.h"
-#include "core/logging/LoggerFactory.h"
+#include "core/logging/LoggerConfiguration.h"
 #include "core/ProcessorConfig.h"
 #include "Exception.h"
 #include "io/StreamFactory.h"
@@ -34,22 +35,15 @@
 #include "utils/file/FileSystem.h"
 #include "core/flow/StructuredConfiguration.h"
 
-class YamlConfigurationTestAccessor;
+class JsonConfigurationTestAccessor;
 
 namespace org::apache::nifi::minifi::core {
 
-#define YAML_CONFIGURATION_USE_REGEX
-
-// Disable regex in EL for incompatible compilers
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
-#undef YAML_CONFIGURATION_USE_REGEX
-#endif
-
-class YamlConfiguration : public StructuredConfiguration {
+class JsonConfiguration : public StructuredConfiguration {
  public:
-  explicit YamlConfiguration(ConfigurationContext ctx);
+  explicit JsonConfiguration(ConfigurationContext ctx);
 
-  ~YamlConfiguration() override = default;
+  ~JsonConfiguration() override = default;
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
@@ -71,7 +65,6 @@ class YamlConfiguration : public StructuredConfiguration {
    * @return                 the root ProcessGroup node of the flow
    *                           configuration tree
    */
-  std::unique_ptr<core::ProcessGroup> getYamlRoot(std::istream &yamlConfigStream);
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the

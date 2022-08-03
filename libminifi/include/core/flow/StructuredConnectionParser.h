@@ -24,38 +24,42 @@
 #include "core/ProcessGroup.h"
 #include "core/logging/LoggerFactory.h"
 
-#include "yaml-cpp/yaml.h"
+#include "core/flow/Node.h"
 #include "utils/gsl.h"
 
-namespace org::apache::nifi::minifi::core::yaml {
+namespace org::apache::nifi::minifi::core::flow {
 
-class YamlConnectionParser {
+class StructuredConnectionParser {
  public:
   static constexpr const char* CONFIG_YAML_CONNECTIONS_KEY{ "Connections" };
 
-  explicit YamlConnectionParser(const YAML::Node& connectionNode, const std::string& name, gsl::not_null<core::ProcessGroup*> parent, const std::shared_ptr<logging::Logger>& logger) :
+  explicit StructuredConnectionParser(const Node& connectionNode, const std::string& name, gsl::not_null<core::ProcessGroup*> parent, const std::shared_ptr<logging::Logger>& logger) :
       connectionNode_(connectionNode),
       name_(name),
       parent_(parent),
-      logger_(logger) {}
+      logger_(logger) {
+    if (!connectionNode.isMap()) {
+      throw std::logic_error("Connection node is not a map");
+    }
+  }
 
-  void configureConnectionSourceRelationshipsFromYaml(minifi::Connection& connection) const;
-  [[nodiscard]] uint64_t getWorkQueueSizeFromYaml() const;
-  [[nodiscard]] uint64_t getWorkQueueDataSizeFromYaml() const;
-  [[nodiscard]] utils::Identifier getSourceUUIDFromYaml() const;
-  [[nodiscard]] uint64_t getSwapThresholdFromYaml() const;
-  [[nodiscard]] utils::Identifier getDestinationUUIDFromYaml() const;
-  [[nodiscard]] std::chrono::milliseconds getFlowFileExpirationFromYaml() const;
-  [[nodiscard]] bool getDropEmptyFromYaml() const;
+  void configureConnectionSourceRelationships(minifi::Connection& connection) const;
+  [[nodiscard]] uint64_t getWorkQueueSize() const;
+  [[nodiscard]] uint64_t getWorkQueueDataSize() const;
+  [[nodiscard]] uint64_t getSwapThreshold() const;
+  [[nodiscard]] utils::Identifier getSourceUUID() const;
+  [[nodiscard]] utils::Identifier getDestinationUUID() const;
+  [[nodiscard]] std::chrono::milliseconds getFlowFileExpiration() const;
+  [[nodiscard]] bool getDropEmpty() const;
 
  private:
   void addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const;
   void addFunnelRelationshipToConnection(minifi::Connection& connection) const;
 
-  const YAML::Node& connectionNode_;
+  const Node& connectionNode_;
   const std::string& name_;
   gsl::not_null<core::ProcessGroup*> parent_;
   const std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace org::apache::nifi::minifi::core::yaml
+}  // namespace org::apache::nifi::minifi::core::flow

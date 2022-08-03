@@ -39,7 +39,7 @@ TEST_CASE("Test YAML Config Processing", "[YamlConfiguration]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
 
   SECTION("loading YAML without optional component IDs works") {
     static const std::string CONFIG_YAML_WITHOUT_IDS =
@@ -230,7 +230,7 @@ TEST_CASE("Test YAML v3 Invalid Type", "[YamlConfiguration3]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
 
   static const std::string TEST_CONFIG_YAML =
       R"(
@@ -356,7 +356,7 @@ TEST_CASE("Test YAML v3 Config Processing", "[YamlConfiguration3]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
 
   static const std::string TEST_CONFIG_YAML =
       R"(
@@ -510,7 +510,7 @@ TEST_CASE("Test Dynamic Unsupported", "[YamlConfigurationDynamicUnsupported]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
 
   static const std::string TEST_CONFIG_YAML = R"(
 Flow Controller:
@@ -546,7 +546,7 @@ TEST_CASE("Test Required Property", "[YamlConfigurationRequiredProperty]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
 
   static const std::string TEST_CONFIG_YAML = R"(
 Flow Controller:
@@ -591,7 +591,7 @@ TEST_CASE("Test Required Property 2", "[YamlConfigurationRequiredProperty2]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
 
   static const std::string TEST_CONFIG_YAML = R"(
 Flow Controller:
@@ -640,7 +640,7 @@ TEST_CASE("Test Dependent Property", "[YamlConfigurationDependentProperty]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array{
     core::Property("Prop A", "Prop A desc", "val A", true, "", { }, { }),
@@ -662,7 +662,7 @@ TEST_CASE("Test Dependent Property 2", "[YamlConfigurationDependentProperty2]") 
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
   const auto component = std::make_shared<DummyComponent>();
   component->setSupportedProperties(std::array{
     core::Property("Prop A", "Prop A desc", "", false, "", { }, { }),
@@ -789,7 +789,7 @@ TEST_CASE("Test YAML Config With Funnel", "[YamlConfiguration]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> streamFactory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yamlConfig(testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration);
+  core::YamlConfiguration yamlConfig({testProvRepo, testFlowFileRepo, content_repo, streamFactory, configuration});
 
   static const std::string CONFIG_YAML_WITH_FUNNEL =
     R"(
@@ -880,7 +880,7 @@ TEST_CASE("Test UUID duplication checks", "[YamlConfiguration]") {
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
   std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration);
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
-  core::YamlConfiguration yaml_config(test_prov_repo, test_flow_file_repo, content_repo, stream_factory, configuration);
+  core::YamlConfiguration yaml_config({test_prov_repo, test_flow_file_repo, content_repo, stream_factory, configuration});
 
   for (char i = '1'; i <= '8'; ++i) {
     DYNAMIC_SECTION("Changing UUID 00000000-0000-0000-0000-00000000000" << i << " to be a duplicate") {

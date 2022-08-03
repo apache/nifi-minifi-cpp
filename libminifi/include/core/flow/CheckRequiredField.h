@@ -21,18 +21,13 @@
 #include <memory>
 #include <vector>
 
-#include "core/logging/LoggerFactory.h"
-#include "yaml-cpp/yaml.h"
+#include "core/logging/LoggerConfiguration.h"
+#include "core/flow/Node.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace yaml {
+namespace org::apache::nifi::minifi::core::flow {
 
-bool isFieldPresent(const YAML::Node &yaml_node, std::string_view field_name);
-std::string buildErrorMessage(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_field_names, std::string_view yaml_section = "");
+bool isFieldPresent(const Node &node, std::string_view field_name);
+std::string buildErrorMessage(const Node &node, const std::vector<std::string> &alternate_field_names, std::string_view section = "");
 
 /**
  * This is a helper function for verifying the existence of a required
@@ -53,13 +48,8 @@ std::string buildErrorMessage(const YAML::Node &yaml_node, const std::vector<std
  *                               not present in 'yaml_node'
  */
 void checkRequiredField(
-    const YAML::Node &yaml_node, std::string_view field_name, std::string_view yaml_section = "", std::string_view error_message = "");
+    const Node &node, std::string_view field_name, std::string_view yaml_section = "", std::string_view error_message = "");
 
-std::string getRequiredField(const YAML::Node &yaml_node, const std::vector<std::string> &alternate_names, std::string_view yaml_section, std::string_view error_message = {});
+std::string getRequiredField(const Node &node, const std::vector<std::string> &alternate_names, std::string_view section, std::string_view error_message = {});
 
-}  // namespace yaml
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::flow
