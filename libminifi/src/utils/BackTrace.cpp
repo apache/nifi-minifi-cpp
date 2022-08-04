@@ -54,7 +54,7 @@ namespace {
 }  // namespace
 #endif
 
-void pull_trace(uint8_t frames_to_skip /* = 1 */) {
+void pull_trace([[maybe_unused]] uint8_t frames_to_skip /* = 1 */) {
 #ifdef HAS_EXECINFO
   void* stack_buffer[TRACE_BUFFER_SIZE + 1];
 
@@ -71,9 +71,9 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
 #ifdef __linux__
     struct link_map* l_map = nullptr;
     int res = dladdr1(stack_buffer[i], &dl_info, reinterpret_cast<void**>(&l_map), RTLD_DL_LINKMAP);
-#else
+#else  // __linux__
     int res = dladdr(stack_buffer[i], &dl_info);
-#endif
+#endif  // __linux__
     if (res == 0 || dl_info.dli_fname == nullptr || dl_info.dli_fname[0] == '\0') {
       /* We could not determine symbolic information for this address*/
       TraceResolver::getResolver().addTraceLine(file_name, nullptr, symbol_offset);
@@ -110,17 +110,17 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
       if (l_map != nullptr) {
         dl_info.dli_fbase = reinterpret_cast<void*>(l_map->l_addr);
       }
-#endif
+#endif  // __linux__
       base_address = reinterpret_cast<uintptr_t>(dl_info.dli_fbase);
     }
     symbol_offset = reinterpret_cast<uintptr_t>(stack_buffer[i]) - base_address;
 
     TraceResolver::getResolver().addTraceLine(file_name, symbol_name.c_str(), symbol_offset);
   }
-#endif
+#endif  // HAS_EXECINFO
 }
 
-BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::native_handle_type thread_handle) {
+BackTrace TraceResolver::getBackTrace(std::string thread_name, [[maybe_unused]] std::thread::native_handle_type thread_handle) {
   // lock so that we only perform one backtrace at a time.
 #ifdef HAS_EXECINFO
   std::lock_guard<std::mutex> lock(mutex_);
@@ -129,9 +129,6 @@ BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::nati
   if (0 == thread_handle || pthread_equal(pthread_self(), thread_handle)) {
     pull_trace();
   } else {
-    if (thread_handle == 0) {
-      return std::move(trace_);
-    }
     emplace_handler();
     std::unique_lock<std::mutex> ulock(trace_mutex_);
     if (pthread_kill(thread_handle, SIGUSR2) != 0) {
