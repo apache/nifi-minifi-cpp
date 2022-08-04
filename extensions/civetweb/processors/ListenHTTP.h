@@ -114,6 +114,8 @@ class ListenHTTP : public core::Processor {
     bool handlePost(CivetServer *server, struct mg_connection *conn) override;
     bool handleGet(CivetServer *server, struct mg_connection *conn) override;
     bool handleHead(CivetServer *server, struct mg_connection *conn) override;
+    bool handlePut(CivetServer *server, struct mg_connection *conn) override;
+    bool handleDelete(CivetServer *server, struct mg_connection *conn) override;
 
     /**
      * Sets a static response body string to be used for a given URI, with a number of seconds it will be kept in memory.

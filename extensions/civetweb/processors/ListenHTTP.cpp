@@ -410,6 +410,20 @@ bool ListenHTTP::Handler::handleHead(CivetServer* /*server*/, struct mg_connecti
   return true;
 }
 
+bool ListenHTTP::Handler::handlePut(CivetServer* /*server*/, struct mg_connection* conn) {
+  mg_printf(conn, "HTTP/1.1 405 Method Not Allowed\r\n"
+                  "Content-Type: text/html\r\n"
+                  "Content-Length: 0\r\n\r\n");
+  return true;
+}
+
+bool ListenHTTP::Handler::handleDelete(CivetServer* /*server*/, struct mg_connection* conn) {
+  mg_printf(conn, "HTTP/1.1 405 Method Not Allowed\r\n"
+                  "Content-Type: text/html\r\n"
+                  "Content-Length: 0\r\n\r\n");
+  return true;
+}
+
 void ListenHTTP::Handler::setResponseBody(const ResponseBody& response) {
   std::lock_guard<std::mutex> guard(uri_map_mutex_);
 
