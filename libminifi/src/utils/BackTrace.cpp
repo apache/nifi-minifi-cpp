@@ -117,6 +117,8 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
 
     TraceResolver::getResolver().addTraceLine(file_name, symbol_name.c_str(), symbol_offset);
   }
+#else
+  (void)(frames_to_skip);
 #endif
 }
 
@@ -143,6 +145,7 @@ BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::nati
 #else
   // even if tracing is disabled, include thread name into the trace object
   trace_ = BackTrace(std::move(thread_name));
+  (void)(thread_handle);
 #endif
   return std::move(trace_);
 }
