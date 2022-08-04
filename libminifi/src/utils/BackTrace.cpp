@@ -54,8 +54,10 @@ namespace {
 }  // namespace
 #endif
 
+#ifndef HAS_EXECINFO
+void pull_trace(uint8_t) {
+#else  // HAS_EXECINFO
 void pull_trace(uint8_t frames_to_skip /* = 1 */) {
-#ifdef HAS_EXECINFO
   void* stack_buffer[TRACE_BUFFER_SIZE + 1];
 
   /* Get the backtrace of the current thread */
@@ -71,9 +73,9 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
 #ifdef __linux__
     struct link_map* l_map = nullptr;
     int res = dladdr1(stack_buffer[i], &dl_info, reinterpret_cast<void**>(&l_map), RTLD_DL_LINKMAP);
-#else
+#else  // __linux__
     int res = dladdr(stack_buffer[i], &dl_info);
-#endif
+#endif  // __linux__
     if (res == 0 || dl_info.dli_fname == nullptr || dl_info.dli_fname[0] == '\0') {
       /* We could not determine symbolic information for this address*/
       TraceResolver::getResolver().addTraceLine(file_name, nullptr, symbol_offset);
@@ -110,16 +112,14 @@ void pull_trace(uint8_t frames_to_skip /* = 1 */) {
       if (l_map != nullptr) {
         dl_info.dli_fbase = reinterpret_cast<void*>(l_map->l_addr);
       }
-#endif
+#endif  // __linux__
       base_address = reinterpret_cast<uintptr_t>(dl_info.dli_fbase);
     }
     symbol_offset = reinterpret_cast<uintptr_t>(stack_buffer[i]) - base_address;
 
     TraceResolver::getResolver().addTraceLine(file_name, symbol_name.c_str(), symbol_offset);
   }
-#else
-  (void)(frames_to_skip);
-#endif
+#endif  // HAS_EXECINFO
 }
 
 BackTrace TraceResolver::getBackTrace(std::string thread_name, std::thread::native_handle_type thread_handle) {
