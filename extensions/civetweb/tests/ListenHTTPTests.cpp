@@ -180,7 +180,7 @@ class ListenHTTPTestsFixture {
     if (endpoint == "test") {
       REQUIRE("Hello response body" == response_body);
     } else {
-      REQUIRE("" == response_body);
+      REQUIRE(response_body.empty());
     }
   }
 
