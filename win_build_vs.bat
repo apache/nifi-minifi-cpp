@@ -32,6 +32,21 @@ set build_SQL=OFF
 set build_AWS=OFF
 set build_SFTP=OFF
 set build_azure=OFF
+set enable_bustache=OFF
+set enable_coap=OFF
+set enable_encrypt_config=OFF
+set enable_gps=OFF
+set enable_lua_scripting=OFF
+set enable_mqtt=OFF
+set enable_opc=OFF
+set enable_openwsman=OFF
+set enable_ops=OFF
+set enable_pcap=OFF
+set enable_python=OFF
+set enable_scripting=OFF
+set enable_sensors=OFF
+set enable_tensorflow=OFF
+set enable_usb_camera=OFF
 set test_custom_wel_provider=OFF
 set generator="Visual Studio 16 2019"
 set cpack=OFF
@@ -66,6 +81,21 @@ for %%x in (%*) do (
     if [%%~x] EQU [/N]           set build_nanofi=ON
     if [%%~x] EQU [/O]           set build_opencv=ON
     if [%%~x] EQU [/PR]          set build_prometheus=ON
+    if [%%~x] EQU [/BUSTACHE]    set enable_bustache=ON
+    if [%%~x] EQU [/COAP]        set enable_coap=ON
+    if [%%~x] EQU [/ENCRYPT_CONFIG]   set enable_encrypt_config=ON
+    if [%%~x] EQU [/GPS]         set enable_gps=ON
+    if [%%~x] EQU [/LUA_SCRIPTING]    set enable_lua_scripting=ON
+    if [%%~x] EQU [/MQTT]        set enable_mqtt=ON
+    if [%%~x] EQU [/OPC]         set enable_opc=ON
+    if [%%~x] EQU [/OPENWSMAN]   set enable_openwsman=ON
+    if [%%~x] EQU [/OPS]         set enable_ops=ON
+    if [%%~x] EQU [/PCAP]        set enable_pcap=ON
+    if [%%~x] EQU [/PYTHON]      set enable_python=ON
+    if [%%~x] EQU [/SCRIPTING]   set enable_scripting=ON
+    if [%%~x] EQU [/SENSORS]     set enable_sensors=ON
+    if [%%~x] EQU [/TENSORFLOW]  set enable_tensorflow=ON
+    if [%%~x] EQU [/USB_CAMERA]  set enable_usb_camera=ON
     if [%%~x] EQU [/64]          set build_platform=x64
     if [%%~x] EQU [/D]           set cmake_build_type=RelWithDebInfo
     if [%%~x] EQU [/DD]          set cmake_build_type=Debug
@@ -84,7 +114,15 @@ if [%generator%] EQU ["Ninja"] (
 ) else (
     set "buildcmd=msbuild /m nifi-minifi-cpp.sln /property:Configuration=%cmake_build_type% /property:Platform=%build_platform% && copy bin\%cmake_build_type%\minifi.exe main\"
 )
-cmake -G %generator% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%build_SQL% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF -DENABLE_COAP=%build_coap% -DENABLE_AWS=%build_AWS% -DENABLE_PDH=%build_PDH% -DENABLE_AZURE=%build_azure% -DENABLE_SFTP=%build_SFTP% -DENABLE_SPLUNK=%build_SPLUNK% -DENABLE_GCP=%build_GCP% -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DENABLE_PROMETHEUS=%build_prometheus% -DENABLE_ELASTICSEARCH=%build_ELASTIC% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DENABLE_SCRIPTING=OFF -DEXCLUDE_BOOST=ON -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% %strict_gsl_checks% %redist% -DENABLE_LINTER=%build_linter% "%scriptdir%" && %buildcmd%
+cmake -G %generator% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_CUSTOM_WEL_PROVIDER=%test_custom_wel_provider% -DENABLE_SQL=%build_SQL% -DUSE_REAL_ODBC_TEST_DRIVER=%real_odbc% ^
+        -DCMAKE_BUILD_TYPE_INIT=%cmake_build_type% -DCMAKE_BUILD_TYPE=%cmake_build_type% -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=%build_kafka% -DENABLE_JNI=%build_jni% -DOPENSSL_OFF=OFF ^
+        -DENABLE_COAP=%build_coap% -DENABLE_AWS=%build_AWS% -DENABLE_PDH=%build_PDH% -DENABLE_AZURE=%build_azure% -DENABLE_SFTP=%build_SFTP% -DENABLE_SPLUNK=%build_SPLUNK% -DENABLE_GCP=%build_GCP% ^
+        -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DENABLE_PROMETHEUS=%build_prometheus% -DENABLE_ELASTICSEARCH=%build_ELASTIC% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  ^
+        -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_COAP=%enable_coap% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_GPS=%enable_gps% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% ^
+        -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% -DENABLE_PYTHON=%enable_python% ^
+        -DENABLE_SCRIPTING=%enable_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_TENSORFLOW=%enable_tensorflow% -DENABLE_USB_CAMERA=%enable_usb_camera% ^
+        -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DEXCLUDE_BOOST=ON -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
+        %strict_gsl_checks% %redist% -DENABLE_LINTER=%build_linter% "%scriptdir%" && %buildcmd%
 IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 if [%cpack%] EQU [ON] (
     cpack -C %cmake_build_type%
