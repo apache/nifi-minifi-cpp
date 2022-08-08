@@ -40,11 +40,11 @@ class VerifyEmptyC2Metric : public VerifyC2Base {
   }
 
   void testSetup() override {
-    LogTestController::getInstance().setTrace<minifi::c2::C2Agent>();
-    LogTestController::getInstance().setTrace<minifi::c2::C2Client>();
-    LogTestController::getInstance().setDebug<minifi::c2::RESTSender>();
-    LogTestController::getInstance().setDebug<minifi::FlowController>();
-    LogTestController::getInstance().setOff<minifi::processors::GetTCP>();
+    LogTestController::getInstance().setTrace<c2::C2Agent>();
+    LogTestController::getInstance().setTrace<c2::C2Client>();
+    LogTestController::getInstance().setDebug<c2::RESTSender>();
+    LogTestController::getInstance().setDebug<FlowController>();
+    LogTestController::getInstance().setOff<processors::GetTCP>();
     VerifyC2Base::testSetup();
   }
 
@@ -59,7 +59,7 @@ class VerifyEmptyC2Metric : public VerifyC2Base {
 
 class MetricsHandler: public HeartbeatHandler {
  public:
-  explicit MetricsHandler(std::atomic_bool& metrics_found, std::shared_ptr<minifi::Configure> configuration)
+  explicit MetricsHandler(std::atomic_bool& metrics_found, std::shared_ptr<Configure> configuration)
     : HeartbeatHandler(std::move(configuration)),
       metrics_found_(metrics_found) {
   }
