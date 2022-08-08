@@ -56,7 +56,7 @@ struct LoggerNamespace {
   std::vector<std::shared_ptr<spdlog::sinks::sink>> exported_sinks;
   std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
 
-  bool findSink(std::function<bool(const std::shared_ptr<spdlog::sinks::sink>&)> filter) const;
+  void forEachSink(std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)> op) const;
 
   LoggerNamespace()
       : level(spdlog::level::off),

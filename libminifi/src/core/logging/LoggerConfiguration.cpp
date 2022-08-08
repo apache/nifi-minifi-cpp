@@ -64,23 +64,16 @@ const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e
 
 namespace internal {
 
-bool LoggerNamespace::findSink(std::function<bool(const std::shared_ptr<spdlog::sinks::sink>&)> filter) const {
+void LoggerNamespace::forEachSink(std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)> op) const {
   for (auto& sink : sinks) {
-    if (filter(sink)) {
-      return true;
-    }
+    op(sink);
   }
   for (auto& sink : exported_sinks) {
-    if (filter(sink)) {
-      return true;
-    }
+    op(sink);
   }
   for (auto& [name, child] : children) {
-    if (child->findSink(filter)) {
-      return true;
-    }
+    child->forEachSink(op);
   }
-  return false;
 }
 
 }  // namespace internal
@@ -114,11 +107,10 @@ void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &lo
   std::lock_guard<std::mutex> lock(mutex);
   root_namespace_ = initialize_namespaces(logger_properties, logger_);
   alert_sinks_.clear();
-  root_namespace_->findSink([&] (const std::shared_ptr<spdlog::sinks::sink>& sink) -> bool {
+  root_namespace_->forEachSink([&] (const std::shared_ptr<spdlog::sinks::sink>& sink) {
     if (auto alert_sink = std::dynamic_pointer_cast<AlertSink>(sink)) {
       alert_sinks_.insert(std::move(alert_sink));
     }
-    return false;  // check all sinks
   });
   initializeCompression(lock, logger_properties);
   std::string spdlog_pattern;

@@ -75,8 +75,8 @@ TEST_CASE("Alert system forwards logs") {
   utils::timeutils::setClock(clock);
 
   TempDirectory dir;
-  auto flow_file = std::filesystem::path(dir.getPath()) / "config.yml";
-  std::ofstream(flow_file) << empty_flow;
+  auto flow_config_file = std::filesystem::path(dir.getPath()) / "config.yml";
+  std::ofstream(flow_config_file) << empty_flow;
 
   std::string agent_id = "test-agent-1";
   VerifyAlerts harness;
@@ -144,5 +144,5 @@ TEST_CASE("Alert system forwards logs") {
     return true;
   };
 
-  harness.run(flow_file, dir.getPath());
+  harness.run(flow_config_file.string(), dir.getPath());
 }

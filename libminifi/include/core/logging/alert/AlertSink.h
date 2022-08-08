@@ -25,7 +25,6 @@
 #include <string>
 #include <memory>
 
-#include "controllers/SSLContextService.h"
 #include "core/controller/ControllerServiceProvider.h"
 #include "core/logging/LoggerProperties.h"
 #include "utils/ThreadPool.h"
@@ -33,6 +32,9 @@
 #include "properties/Configure.h"
 #include "spdlog/sinks/base_sink.h"
 
+namespace org::apache::nifi::minifi::controllers {
+class SSLContextService;
+}  // namespace org::apache::nifi::minifi::controllers
 
 namespace org::apache::nifi::minifi::core::logging {
 
@@ -64,11 +66,12 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
   };
 
   class LiveLogSet {
+    using Hash = size_t;
     std::chrono::milliseconds lifetime_{};
-    std::unordered_set<size_t> ignored_;
-    std::deque<std::pair<std::chrono::milliseconds, size_t>> ordered_;
+    std::unordered_set<Hash> hashes_to_ignore_;
+    std::deque<std::pair<std::chrono::milliseconds, Hash>> timestamped_hashes_;
    public:
-    bool tryAdd(std::chrono::milliseconds now, size_t hash);
+    bool tryAdd(std::chrono::milliseconds now, Hash hash);
     void setLifetime(std::chrono::milliseconds lifetime);
   };
 

@@ -21,6 +21,7 @@
 #include "utils/HTTPClient.h"
 #include "utils/Hash.h"
 #include "core/logging/Utils.h"
+#include "controllers/SSLContextService.h"
 
 #include "rapidjson/rapidjson.h"
 #include "rapidjson/document.h"
@@ -129,7 +130,7 @@ void AlertSink::sink_it_(const spdlog::details::log_msg& msg) {
   for (size_t idx = 1; idx < match.size(); ++idx) {
     std::string_view submatch;
     if (match[idx].first != match[idx].second) {
-      // TODO(adebreceni): std::string_view(It begin, It end) is not yet supported on all platforms
+      // TODO(adebreceni): std::string_view(It begin, It end) is not yet supported on all platforms (Apple clang 13.0.0)
       submatch = std::string_view(std::to_address(match[idx].first), std::distance(match[idx].first, match[idx].second));
     }
     hash = utils::hash_combine(hash, std::hash<std::string_view>{}(submatch));
@@ -183,6 +184,7 @@ AlertSink::~AlertSink() {
   if (flush_thread_.joinable()) {
     flush_thread_.join();
   }
+  delete services_.exchange(nullptr);
 }
 
 void AlertSink::send(Services& services) {
@@ -220,10 +222,13 @@ void AlertSink::send(Services& services) {
   bool req_success = client->submit();
 
   int64_t resp_code = client->getResponseCode();
+  const bool response_success = 200 <= resp_code && resp_code < 300;
   const bool client_err = 400 <= resp_code && resp_code < 500;
   const bool server_err = 500 <= resp_code && resp_code < 600;
   if (client_err || server_err) {
     logger_->log_error("Error response code '" "%" PRId64 "' from '%s'", resp_code, config_.url);
+  } else if (!response_success) {
+    logger_->log_warn("Non-success response code '" "%" PRId64 "' from '%s'", resp_code, config_.url);
   } else {
     logger_->log_debug("Response code '" "%" PRId64 "' from '%s'", resp_code, config_.url);
   }
@@ -251,16 +256,16 @@ void AlertSink::LiveLogSet::setLifetime(std::chrono::milliseconds lifetime) {
 
 bool AlertSink::LiveLogSet::tryAdd(std::chrono::milliseconds now, size_t hash) {
   auto limit = now - lifetime_;
-  while (!ordered_.empty() && ordered_.front().first < limit) {
-    ignored_.erase(ordered_.front().second);
-    ordered_.pop_front();
+  while (!timestamped_hashes_.empty() && timestamped_hashes_.front().first < limit) {
+    hashes_to_ignore_.erase(timestamped_hashes_.front().second);
+    timestamped_hashes_.pop_front();
   }
 
-  if (!ignored_.insert(hash).second) {
+  if (!hashes_to_ignore_.insert(hash).second) {
     return false;
   }
 
-  ordered_.emplace_back(now, hash);
+  timestamped_hashes_.emplace_back(now, hash);
   return true;
 }
 
