@@ -79,10 +79,10 @@ class MetricsHandler: public HeartbeatHandler {
       root.HasMember("metrics") &&
       root["metrics"].HasMember("ProcessorMetrics") &&
       root["metrics"]["ProcessorMetrics"].HasMember("GetFileMetrics") &&
-      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile1") &&
-      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("GetFile2") &&
-      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("GetTCP1") &&
-      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("GetTCP2");
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("471deef6-2a6e-4a7d-912a-81cc17e3a206") &&
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("471deef6-2a6e-4a7d-912a-81cc17e3a207") &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1995") &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1996");
     if (initial_metrics_verified) {
       metrics_found_ = true;
     }

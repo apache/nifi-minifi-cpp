@@ -63,7 +63,7 @@ class GetFileMetrics : public state::response::ResponseNode {
     std::vector<state::response::SerializedResponseNode> resp;
 
     state::response::SerializedResponseNode root_node;
-    root_node.name = source_component_.getName();
+    root_node.name = source_component_.getUUIDStr();
 
     state::response::SerializedResponseNode iter;
     iter.name = "OnTriggerInvocations";
