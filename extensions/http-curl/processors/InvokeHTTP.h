@@ -140,7 +140,7 @@ class InvokeHTTP : public core::Processor {
  private:
   void route(const std::shared_ptr<core::FlowFile>& request, const std::shared_ptr<core::FlowFile>& response, const std::shared_ptr<core::ProcessSession>& session,
              const std::shared_ptr<core::ProcessContext>& context, bool is_success, int64_t status_code);
-  bool shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client) const;
+  static bool shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client);
   void onTriggerWithClient(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session, minifi::extensions::curl::HTTPClient& client);
   [[nodiscard]] bool appendHeaders(const core::FlowFile& flow_file, /*std::invocable<std::string, std::string>*/ auto append_header);
 

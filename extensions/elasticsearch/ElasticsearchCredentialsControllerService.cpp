@@ -43,7 +43,8 @@ void ElasticsearchCredentialsControllerService::initialize() {
 
 void ElasticsearchCredentialsControllerService::onEnable() {
   getProperty(ApiKey.getName(), api_key_);
-  std::string username, password;
+  std::string username;
+  std::string password;
   getProperty(Username.getName(), username);
   getProperty(Password.getName(), password);
   if (!username.empty() && !password.empty())

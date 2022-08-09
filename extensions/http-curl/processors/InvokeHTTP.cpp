@@ -252,7 +252,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context
   client_queue_ = gsl::make_not_null(utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_));
 }
 
-bool InvokeHTTP::shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client) const {
+bool InvokeHTTP::shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client) {
   auto method = client.getRequestMethod();
   return ("POST" == method || "PUT" == method || "PATCH" == method);
 }

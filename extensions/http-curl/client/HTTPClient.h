@@ -96,7 +96,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   void setVerbose(bool use_stderr) override;
 
-  void addFormPart(const std::string& content_type, const std::string& name, std::unique_ptr<utils::HTTPUploadCallback>&& read_callback, const std::optional<std::string>& filename);
+  void addFormPart(const std::string& content_type, const std::string& name, std::unique_ptr<utils::HTTPUploadCallback>&& form_callback, const std::optional<std::string>& filename);
 
   void forceClose();
 
