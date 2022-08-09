@@ -387,4 +387,5 @@ class DockerTestCluster(SingleNodeDockerCluster):
 
     def verify_metric_exists(self, prometheus_client, metric_name, metric_class, labels={}):
         labels['metric_class'] = metric_class
+        labels['agent_identifier'] = "Agent1"
         return len(prometheus_client.get_current_metric_value(metric_name=metric_name, label_config=labels)) > 0

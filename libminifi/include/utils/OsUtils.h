@@ -14,20 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
+#pragma once
 
 #include <string>
 
 struct sockaddr;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace OsUtils {
-
+namespace org::apache::nifi::minifi::utils::OsUtils {
 
 /// Resolves a user ID to a username
 extern std::string userIdToUsername(const std::string &uid);
@@ -54,12 +47,6 @@ std::string getMachineArchitecture();
 extern std::string resolve_common_identifiers(const std::string &id);
 #endif
 
+std::string getHostName();
 
-} /* namespace OsUtils */
-} /* namespace utils */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_OSUTILS_H_
+}  // namespace org::apache::nifi::minifi::utils::OsUtils

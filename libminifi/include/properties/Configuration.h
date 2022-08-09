@@ -167,6 +167,7 @@ class Configuration : public Properties {
   static constexpr const char *nifi_asset_directory = "nifi.asset.directory";
 
   // Metrics publisher options
+  static constexpr const char *nifi_metrics_publisher_agent_identifier = "nifi.metrics.publisher.agent.identifier";
   static constexpr const char *nifi_metrics_publisher_class = "nifi.metrics.publisher.class";
   static constexpr const char *nifi_metrics_publisher_prometheus_metrics_publisher_port = "nifi.metrics.publisher.PrometheusMetricsPublisher.port";
   static constexpr const char *nifi_metrics_publisher_metrics = "nifi.metrics.publisher.metrics";
