@@ -106,8 +106,8 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   }
 
   /* Parse processor-specific properties */
-  std::string filename;
-  std::string remote_path;
+  std::filesystem::path filename;
+  std::filesystem::path remote_path;
   bool disable_directory_listing = false;
   std::string temp_file_name;
   std::optional<std::chrono::system_clock::time_point> last_modified_;
@@ -118,18 +118,18 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   bool remote_group_set = false;
   uint64_t remote_group = 0U;
 
-  flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME, filename);
+  if (auto file_name_str = flow_file->getAttribute(core::SpecialFlowAttribute::FILENAME))
+    filename = *file_name_str;
 
   std::string value;
-  context->getProperty(RemotePath, remote_path, flow_file);
-  /* Remove trailing slashes */
-  while (remote_path.size() > 1U && remote_path.back() == '/') {
-    remote_path.resize(remote_path.size() - 1);
+  if (auto remote_path_str = context->getProperty(RemotePath, flow_file)) {
+    remote_path = std::filesystem::path(*remote_path_str, std::filesystem::path::format::generic_format).lexically_normal();
+    while (remote_path.filename().empty() && !remote_path.empty())
+      remote_path = remote_path.parent_path();
+    if (remote_path.empty())
+      remote_path = ".";
   }
-  /* Empty path means current directory, so we change it to '.' */
-  if (remote_path.empty()) {
-    remote_path = ".";
-  }
+
   if (context->getDynamicProperty(DisableDirectoryListing.getName(), value) ||
       context->getProperty(DisableDirectoryListing.getName(), value)) {
     disable_directory_listing = utils::StringUtils::toBool(value).value_or(false);
@@ -156,7 +156,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Reject zero-byte files if needed */
   if (reject_zero_byte_ && flow_file->getSize() == 0U) {
-    logger_->log_debug("Rejecting %s because it is zero bytes", filename);
+    logger_->log_debug("Rejecting %s because it is zero bytes", filename.generic_string());
     session->transfer(flow_file, Reject);
     return true;
   }
@@ -188,9 +188,9 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   };
 
   /* Try to detect conflicts if needed */
-  std::string resolved_filename = filename;
+  std::string resolved_filename = filename.generic_string();
   if (conflict_resolution_ != CONFLICT_RESOLUTION_NONE) {
-    std::string target_path = utils::file::concat_path(remote_path, filename, true /*force_posix*/);
+    auto target_path = (remote_path / filename).generic_string();
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     if (!client->stat(target_path, true /*follow_symlinks*/, attrs)) {
       if (client->getLastError() != utils::SFTPError::FileDoesNotExist) {
@@ -225,10 +225,8 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
         std::string possible_resolved_filename;
         bool unique_name_generated = false;
         for (int i = 1; i < 100; i++) {
-          std::stringstream possible_resolved_filename_ss;
-          possible_resolved_filename_ss << i << "." << filename;
-          possible_resolved_filename = possible_resolved_filename_ss.str();
-          std::string possible_resolved_path = utils::file::concat_path(remote_path, possible_resolved_filename, true /*force_posix*/);
+          possible_resolved_filename = std::to_string(i) + "." + filename.generic_string();
+          auto possible_resolved_path = (remote_path / possible_resolved_filename).generic_string();
           if (!client->stat(possible_resolved_path, true /*follow_symlinks*/, attrs)) {
             if (client->getLastError() == utils::SFTPError::FileDoesNotExist) {
               unique_name_generated = true;
@@ -241,7 +239,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
           }
         }
         if (unique_name_generated) {
-          logger_->log_debug("Resolved %s to %s", filename.c_str(), possible_resolved_filename.c_str());
+          logger_->log_debug("Resolved %s to %s", filename.generic_string(), possible_resolved_filename);
           resolved_filename = std::move(possible_resolved_filename);
         } else {
           logger_->log_error("Rejecting %s because a unique name could not be determined after 99 attempts", filename.c_str());
@@ -255,7 +253,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Create remote directory if needed */
   if (create_directory_) {
-    auto res = createDirectoryHierarchy(*client, remote_path, disable_directory_listing);
+    auto res = createDirectoryHierarchy(*client, remote_path.generic_string(), disable_directory_listing);
     switch (res) {
       case SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_OK:
         break;
@@ -276,22 +274,21 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   }
 
   /* Upload file */
-  std::stringstream target_path_ss;
-  target_path_ss << remote_path << "/";
+  auto target_path = remote_path;
   if (!IsNullOrEmpty(temp_file_name)) {
-    target_path_ss << temp_file_name;
+    target_path /= temp_file_name;
   } else if (dot_rename_) {
-    target_path_ss << "." << resolved_filename;
+    target_path /= "." + resolved_filename;
   } else {
-    target_path_ss << resolved_filename;
+    target_path /= resolved_filename;
   }
-  auto target_path = target_path_ss.str();
-  std::string final_target_path = utils::file::concat_path(remote_path, resolved_filename, true /*force_posix*/);
+
+  std::string final_target_path = (remote_path / resolved_filename).generic_string();
   logger_->log_debug("The target path is %s, final target path is %s", target_path.c_str(), final_target_path.c_str());
 
   try {
     session->read(flow_file, [&client, &target_path, this](const std::shared_ptr<io::InputStream>& stream) {
-      if (!client->putFile(target_path,
+      if (!client->putFile(target_path.generic_string(),
           *stream,
           conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/,
           stream->size() /*expected_size*/)) {
@@ -307,10 +304,10 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Move file to its final place */
   if (target_path != final_target_path) {
-    if (!client->rename(target_path, final_target_path, conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/)) {
-      logger_->log_error("Failed to move temporary file %s to final path %s", target_path, final_target_path);
-      if (!client->removeFile(target_path)) {
-        logger_->log_error("Failed to remove temporary file %s", target_path.c_str());
+    if (!client->rename(target_path.generic_string(), final_target_path, conflict_resolution_ == CONFLICT_RESOLUTION_REPLACE /*overwrite*/)) {
+      logger_->log_error("Failed to move temporary file %s to final path %s", target_path.generic_string(), final_target_path);
+      if (!client->removeFile(target_path.generic_string())) {
+        logger_->log_error("Failed to remove temporary file %s", target_path.generic_string());
       }
       session->transfer(flow_file, Failure);
       return true;
@@ -348,7 +345,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     }
     if (!client->setAttributes(final_target_path, attrs)) {
       /* This is not fatal, just log a warning */
-      logger_->log_warn("Failed to set file attributes for %s", target_path);
+      logger_->log_warn("Failed to set file attributes for %s", target_path.generic_string());
     }
   }
 

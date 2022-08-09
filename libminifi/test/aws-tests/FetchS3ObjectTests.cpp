@@ -27,7 +27,6 @@ namespace {
 
 using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 using org::apache::nifi::minifi::utils::file::get_content;
-using org::apache::nifi::minifi::utils::file::get_separator;
 
 class FetchS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws::processors::FetchS3Object> {
  public:
@@ -38,10 +37,10 @@ class FetchS3ObjectTestsFixture : public FlowProcessorS3TestsFixture<minifi::aws
       core::Relationship("success", "d"),
       true);
     output_dir = test_controller.createTempDirectory();
-    plan->setProperty(putfile, "Directory", output_dir);
+    plan->setProperty(putfile, "Directory", output_dir.string());
   }
 
-  std::string output_dir;
+  std::filesystem::path output_dir;
 };
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test AWS credential setting", "[awsCredentials]") {
@@ -120,7 +119,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test default properties", "[awsS3Co
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.expirationTimeRuleId value:" + S3_EXPIRATION_TIME_RULE_ID));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.sseAlgorithm value:" + S3_SSEALGORITHM_STR));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:s3.version value:" + S3_VERSION_1));
-  REQUIRE(get_content(output_dir + get_separator() + INPUT_FILENAME) == S3_CONTENT);
+  REQUIRE(get_content(output_dir / INPUT_FILENAME) == S3_CONTENT);
   REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetVersionId().empty());
   REQUIRE(!mock_s3_request_sender_ptr->get_object_request.VersionIdHasBeenSet());
   REQUIRE(mock_s3_request_sender_ptr->get_object_request.GetRequestPayer() == Aws::S3::Model::RequestPayer::NOT_SET);
@@ -140,7 +139,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test empty optional S3 results", "[
   REQUIRE(!LogTestController::getInstance().contains("key:s3.expirationTimeRuleId", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   REQUIRE(!LogTestController::getInstance().contains("key:s3.sseAlgorithm", std::chrono::seconds(0), std::chrono::milliseconds(0)));
   REQUIRE(!LogTestController::getInstance().contains("key:s3.version", std::chrono::seconds(0), std::chrono::milliseconds(0)));
-  REQUIRE(get_content(output_dir + get_separator() + INPUT_FILENAME).empty());
+  REQUIRE(get_content(output_dir / INPUT_FILENAME).empty());
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test subdirectories on AWS", "[awsS3Config]") {
@@ -150,7 +149,7 @@ TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test subdirectories on AWS", "[awsS
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:filename value:logs.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:path value:dir1/dir2"));
   REQUIRE(verifyLogLinePresenceInPollTime(std::chrono::seconds(3), "key:absolute.path value:dir1/dir2/logs.txt"));
-  REQUIRE(get_content(output_dir + get_separator() + INPUT_FILENAME).empty());
+  REQUIRE(get_content(output_dir / INPUT_FILENAME).empty());
 }
 
 TEST_CASE_METHOD(FetchS3ObjectTestsFixture, "Test optional values are set in request", "[awsS3Config]") {

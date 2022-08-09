@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include <chrono>
 
 #include "TestBase.h"
@@ -28,6 +29,7 @@
 #include "utils/file/FileUtils.h"
 #include "utils/TestUtils.h"
 #include "unit/ProvenanceTestHelper.h"
+#include "Utils.h"
 
 #ifdef WIN32
 #include <fileapi.h>
@@ -40,8 +42,8 @@ namespace {
 class GetFileTestController {
  public:
   GetFileTestController();
-  [[nodiscard]] std::string getFullPath(const std::string& filename) const;
-  [[nodiscard]] std::string getInputFilePath() const;
+  [[nodiscard]] std::filesystem::path getFullPath(const std::filesystem::path& filename) const;
+  [[nodiscard]] std::filesystem::path getInputFilePath() const;
   void setProperty(const core::Property& property, const std::string& value);
   void runSession();
   void resetTestPlan();
@@ -49,10 +51,10 @@ class GetFileTestController {
  private:
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan_;
-  std::string temp_dir_;
-  std::string input_file_name_;
-  std::string large_input_file_name_;
-  std::string hidden_input_file_name_;
+  std::filesystem::path temp_dir_;
+  std::filesystem::path input_file_name_;
+  std::filesystem::path large_input_file_name_;
+  std::filesystem::path hidden_input_file_name_;
   std::shared_ptr<core::Processor> get_file_processor_;
 };
 
@@ -70,25 +72,25 @@ GetFileTestController::GetFileTestController()
 
   // Build MiNiFi processing graph
   get_file_processor_ = test_plan_->addProcessor("GetFile", "Get");
-  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir_);
+  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir_.string());
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
-  utils::putFileToDir(temp_dir_, input_file_name_, "The quick brown fox jumps over the lazy dog\n");
-  utils::putFileToDir(temp_dir_, large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
-  utils::putFileToDir(temp_dir_, hidden_input_file_name_, "But noone has ever seen it\n");
+  utils::putFileToDir(temp_dir_.string(), input_file_name_, "The quick brown fox jumps over the lazy dog\n");
+  utils::putFileToDir(temp_dir_.string(), large_input_file_name_, "The quick brown fox jumps over the lazy dog who is 2 legit to quit\n");
+  utils::putFileToDir(temp_dir_.string(), hidden_input_file_name_, "But noone has ever seen it\n");
 
 #ifdef WIN32
-  const auto hide_file_err = utils::file::FileUtils::hide_file(getFullPath(hidden_input_file_name_).c_str());
+  const auto hide_file_err = minifi::test::utils::hide_file(getFullPath(hidden_input_file_name_).c_str());
   REQUIRE(!hide_file_err);
 #endif
 }
 
-std::string GetFileTestController::getFullPath(const std::string& filename) const {
-  return temp_dir_ + utils::file::FileUtils::get_separator() + filename;
+std::filesystem::path GetFileTestController::getFullPath(const std::filesystem::path& filename) const {
+  return temp_dir_ / filename;
 }
 
-std::string GetFileTestController::getInputFilePath() const {
+std::filesystem::path GetFileTestController::getInputFilePath() const {
   return getFullPath(input_file_name_);
 }
 

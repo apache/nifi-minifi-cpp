@@ -175,7 +175,7 @@ class TempDirectory {
     path_ = minifi::utils::file::FileUtils::create_temp_directory(format);
     is_owner_ = true;
   }
-  explicit TempDirectory(std::string path): path_{std::move(path)}, is_owner_{false} {}
+  explicit TempDirectory(std::filesystem::path path): path_{std::move(path)}, is_owner_{false} {}
 
   // disable copy
   TempDirectory(const TempDirectory&) = delete;
@@ -188,12 +188,12 @@ class TempDirectory {
   }
 
   [[nodiscard]]
-  std::string getPath() const {
+  std::filesystem::path getPath() const {
     return path_;
   }
 
  private:
-  std::string path_;
+  std::filesystem::path path_;
   bool is_owner_;
 };
 
@@ -271,7 +271,7 @@ class TestPlan {
     return logger_;
   }
 
-  [[nodiscard]] std::string getStateDir() const {
+  [[nodiscard]] std::filesystem::path getStateDir() const {
     return state_dir_->getPath();
   }
 
@@ -361,7 +361,7 @@ class TestController {
     return log;
   }
 
-  std::string createTempDirectory();
+  std::filesystem::path createTempDirectory();
 
  protected:
   std::shared_ptr<minifi::state::response::FlowVersion> flow_version_;

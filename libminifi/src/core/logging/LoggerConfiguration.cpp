@@ -169,9 +169,9 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::getSpdlogLogger(const std::
 std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger) {
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sink_map = logger_properties->initial_sinks();
 
-  std::string appender_type = "appender";
-  for (auto const & appender_key : logger_properties->get_keys_of_type(appender_type)) {
-    std::string appender_name = appender_key.substr(appender_type.length() + 1);
+  std::string appender = "appender";
+  for (auto const & appender_key : logger_properties->get_keys_of_type(appender)) {
+    std::string appender_name = appender_key.substr(appender.length() + 1);
     std::string appender_type;
     if (!logger_properties->getString(appender_key, appender_type)) {
       appender_type = "stderr";
@@ -244,8 +244,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
   return root_namespace;
 }
 
-std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::shared_ptr<Logger> &logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
-                                                                const std::shared_ptr<spdlog::formatter> &formatter, bool remove_if_present) {
+std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::shared_ptr<Logger>& logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                                const std::shared_ptr<spdlog::formatter>& formatter, bool remove_if_present) {
   std::shared_ptr<spdlog::logger> spdlogger = spdlog::get(name);
   if (spdlogger) {
     if (remove_if_present) {
@@ -340,20 +340,20 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRo
   static std::map<std::filesystem::path, std::shared_ptr<spdlog::sinks::rotating_file_sink_mt>> rotating_file_sinks;
   static std::mutex sink_map_mtx;
 
-  std::string file_name;
-  if (!properties->getString(appender_key + ".file_name", file_name)) {
-    file_name = "minifi-app.log";
+  std::string file_name_str;
+  if (!properties->getString(appender_key + ".file_name", file_name_str)) {
+    file_name_str = "minifi-app.log";
   }
-  std::string directory;
-  if (!properties->getString(appender_key + ".directory", directory)) {
+  std::string directory_str;
+  if (!properties->getString(appender_key + ".directory", directory_str)) {
     // The below part assumes logger_properties->getHome() is existing
     // Cause minifiHome must be set at MiNiFiMain.cpp?
-    directory = properties->getHome() + utils::file::FileUtils::get_separator() + "logs";
+    directory_str = (properties->getHome() / "logs").string();
   }
 
-  file_name = directory + utils::file::FileUtils::get_separator() + file_name;
-  if (utils::file::FileUtils::create_dir(directory) == -1) {
-    std::cerr << directory << " cannot be created\n";
+  auto file_name = std::filesystem::path(directory_str) / file_name_str;
+  if (utils::file::FileUtils::create_dir(directory_str) == -1) {
+    std::cerr << directory_str << " cannot be created\n";
     exit(1);
   }
 
@@ -382,7 +382,7 @@ std::shared_ptr<spdlog::sinks::rotating_file_sink_mt> LoggerConfiguration::getRo
   if (it != rotating_file_sinks.end()) {
     return it->second;
   }
-  auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name, max_file_size, max_files);
+  auto sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(file_name.string(), max_file_size, max_files);
   rotating_file_sinks.emplace(file_name, sink);
   return sink;
 }

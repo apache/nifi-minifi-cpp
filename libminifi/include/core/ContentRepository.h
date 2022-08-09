@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
-#define LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -30,11 +29,7 @@
 #include "ContentSession.h"
 #include "utils/GeneralUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 /**
  * Content repository definition that extends StreamManager.
@@ -68,10 +63,4 @@ class ContentRepository : public StreamManager<minifi::ResourceClaim>, public ut
   std::map<std::string, uint32_t> count_map_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_CONTENTREPOSITORY_H_
+}  // namespace org::apache::nifi::minifi::core

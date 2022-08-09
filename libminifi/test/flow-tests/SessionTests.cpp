@@ -66,8 +66,8 @@ TEST_CASE("Import null data") {
   auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
-  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
-  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
   std::shared_ptr<core::Repository> prov_repo = core::createRepository("nooprepository");
   std::shared_ptr<core::Repository> ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", SESSIONTEST_FLOWFILE_CHECKPOINT_DIR);

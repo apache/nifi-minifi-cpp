@@ -64,11 +64,11 @@ class AzureBlobStorageTestsFixture {
     azure_blob_storage_processor_ = std::shared_ptr<ProcessorType>(
       new ProcessorType("AzureBlobStorageProcessor", utils::Identifier(), std::move(mock_blob_storage)));
     auto input_dir = test_controller_.createTempDirectory();
-    std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + GET_FILE_NAME);
+    std::ofstream input_file_stream(input_dir / GET_FILE_NAME);
     input_file_stream << TEST_DATA;
     input_file_stream.close();
     get_file_processor_ = plan_->addProcessor("GetFile", "GetFile");
-    plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), input_dir);
+    plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), input_dir.string());
     plan_->setProperty(get_file_processor_, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
     update_attribute_processor_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
     plan_->addProcessor(azure_blob_storage_processor_, "AzureBlobStorageProcessor", { {"success", "d"} }, true);
@@ -77,13 +77,13 @@ class AzureBlobStorageTestsFixture {
     plan_->addConnection(logattribute, {"success", "d"}, success_putfile_);
     success_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     success_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_);
+    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_.string());
 
     failure_putfile_ = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(azure_blob_storage_processor_, {"failure", "d"}, failure_putfile_);
     failure_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     failure_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_);
+    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_.string());
   }
 
   void setDefaultCredentials() {
@@ -93,11 +93,11 @@ class AzureBlobStorageTestsFixture {
     plan_->setProperty(azure_blob_storage_processor_, "Storage Account Key", "${test.account_key}");
   }
 
-  std::vector<std::string> getFileContents(const std::string& dir) {
+  std::vector<std::string> getFileContents(const std::filesystem::path& dir) {
     std::vector<std::string> file_contents;
 
-    auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      std::ifstream is(path / filename, std::ifstream::binary);
       file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
       return true;
     };
@@ -127,6 +127,6 @@ class AzureBlobStorageTestsFixture {
   std::shared_ptr<core::Processor> update_attribute_processor_;
   std::shared_ptr<core::Processor> success_putfile_;
   std::shared_ptr<core::Processor> failure_putfile_;
-  std::string failure_output_dir_;
-  std::string success_output_dir_;
+  std::filesystem::path failure_output_dir_;
+  std::filesystem::path success_output_dir_;
 };

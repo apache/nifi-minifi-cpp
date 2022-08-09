@@ -494,12 +494,9 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
   SingleProcessorTestController controller{listen_syslog};
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
   const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate.getName(),
-      minifi::utils::file::concat_path(executable_dir, "resources/ca_A.crt")));
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate.getName(),
-      minifi::utils::file::concat_path(executable_dir, "resources/localhost_by_A.pem")));
-  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey.getName(),
-      minifi::utils::file::concat_path(executable_dir, "resources/localhost_by_A.pem")));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate.getName(), (executable_dir / "resources/ca_cert.crt").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate.getName(), (executable_dir / "resources/cert_and_private_key.pem").string()));
+  REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey.getName(), (executable_dir / "resources/cert_and_private_key.pem").string()));
   LogTestController::getInstance().setTrace<ListenSyslog>();
   REQUIRE(listen_syslog->setProperty(ListenSyslog::Port, std::to_string(SYSLOG_PORT)));
   REQUIRE(listen_syslog->setProperty(ListenSyslog::MaxBatchSize, "2"));
@@ -508,8 +505,8 @@ TEST_CASE("Test ListenSyslog via TCP with SSL connection", "[ListenSyslog][Netwo
   REQUIRE(listen_syslog->setProperty(ListenSyslog::SSLContextService, "SSLContextService"));
   ssl_context_service->enable();
   controller.plan->scheduleProcessor(listen_syslog);
-  REQUIRE(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, minifi::utils::file::concat_path(executable_dir, "resources/ca_A.crt")));
-  REQUIRE(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, minifi::utils::file::concat_path(executable_dir, "/resources/ca_A.crt")));
+  REQUIRE(utils::sendMessagesViaSSL({rfc5424_logger_example_1}, endpoint, executable_dir / "resources/ca_cert.crt"));
+  REQUIRE(utils::sendMessagesViaSSL({invalid_syslog}, endpoint, executable_dir / "resources/ca_cert.crt"));
 
   std::unordered_map<core::Relationship, std::vector<std::shared_ptr<core::FlowFile>>> result;
   REQUIRE(controller.triggerUntil({{ListenSyslog::Success, 2}}, result, 300ms, 50ms));

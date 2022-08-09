@@ -59,7 +59,7 @@ class YamlConfiguration : public FlowConfiguration {
  public:
   explicit YamlConfiguration(const std::shared_ptr<core::Repository>& repo, const std::shared_ptr<core::Repository>& flow_file_repo,
                              const std::shared_ptr<core::ContentRepository>& content_repo, const std::shared_ptr<io::StreamFactory>& stream_factory,
-                             const std::shared_ptr<Configure>& configuration, const std::optional<std::string>& path = {},
+                             const std::shared_ptr<Configure>& configuration, const std::optional<std::filesystem::path>& path = {},
                              const std::shared_ptr<utils::file::FileSystem>& filesystem = std::make_shared<utils::file::FileSystem>());
 
   ~YamlConfiguration() override = default;

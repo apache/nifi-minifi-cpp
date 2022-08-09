@@ -75,7 +75,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   REQUIRE(!tempdir.empty());
 
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
 
   std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
@@ -96,9 +96,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute",
       core::Relationship("success", "description"), true);
 
-  std::stringstream ss1;
-  ss1 << tempdir << utils::file::get_separator() << TEST_FILE;
-  std::string test_file_path = ss1.str();
+  auto test_file_path = tempdir / TEST_FILE;
 
   std::ofstream test_file(test_file_path, std::ios::binary);
 
@@ -144,7 +142,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 
   auto tempdir = testController.createTempDirectory();
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), tempdir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
 
   std::shared_ptr<core::Processor> md5processor = plan->addProcessor("HashContent", "HashContentMD5",
@@ -154,9 +152,7 @@ TEST_CASE("TestingFailOnEmptyProperty", "[HashContentPropertiesCheck]") {
 
   md5processor->setAutoTerminatedRelationships(std::array{HashContent::Success, HashContent::Failure});
 
-  std::stringstream stream_dir;
-  stream_dir << tempdir << utils::file::get_separator() << TEST_FILE;
-  std::string test_file_path = stream_dir.str();
+  auto test_file_path = tempdir / TEST_FILE;
   std::ofstream test_file(test_file_path, std::ios::binary);
 
   SECTION("with an empty file and fail on empty property set to false") {

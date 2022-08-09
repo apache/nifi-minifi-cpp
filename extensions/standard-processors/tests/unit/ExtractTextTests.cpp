@@ -70,7 +70,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   auto temp_dir = testController.createTempDirectory();
   REQUIRE(!temp_dir.empty());
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), temp_dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), temp_dir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
 
   std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ExtractText", "testExtractText", core::Relationship("success", "description"), true);
@@ -79,9 +79,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
   plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
 
-  std::stringstream ss1;
-  ss1 << temp_dir << utils::file::get_separator() << TEST_FILE;
-  std::string test_file_path = ss1.str();
+  auto test_file_path = temp_dir / TEST_FILE;
 
   std::ofstream test_file(test_file_path);
   if (test_file.is_open()) {
@@ -106,7 +104,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   LogTestController::getInstance().reset();
   LogTestController::getInstance().setTrace<org::apache::nifi::minifi::processors::LogAttribute>();
 
-  std::ofstream test_file_2(test_file_path + "2");
+  std::ofstream test_file_2(test_file_path.string() + "2");
   if (test_file_2.is_open()) {
     test_file_2 << TEST_TEXT << std::endl;
     test_file_2.close();
@@ -138,7 +136,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   auto dir = testController.createTempDirectory();
   REQUIRE(!dir.empty());
   std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
 
   std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ExtractText", "testExtractText", core::Relationship("success", "description"), true);
@@ -150,9 +148,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
   plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
 
-  std::stringstream ss;
-  ss << dir << utils::file::get_separator() << TEST_FILE;
-  std::string test_file_path = ss.str();
+  auto test_file_path = dir / TEST_FILE;
 
   std::ofstream test_file(test_file_path);
   if (test_file.is_open()) {
@@ -209,7 +205,7 @@ TEST_CASE("Test usage of ExtractText in regex mode with large regex matches", "[
   auto dir = test_controller.createTempDirectory();
   REQUIRE(!dir.empty());
   auto getfile = plan->addProcessor("GetFile", "GetFile");
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
 
   auto extract_text_processor = plan->addProcessor("ExtractText", "ExtractText", core::Relationship("success", "description"), true);

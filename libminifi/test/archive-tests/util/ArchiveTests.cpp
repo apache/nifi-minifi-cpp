@@ -68,12 +68,12 @@ OrderedTestArchive build_ordered_test_archive(int NUM_FILES, const char** FILE_N
   return ret;
 }
 
-void build_test_archive(const std::string& path, const TAE_MAP_T& entries, FN_VEC_T order) {
+void build_test_archive(const std::filesystem::path& path, const TAE_MAP_T& entries, FN_VEC_T order) {
   std::cout << "Creating " << path << std::endl;
   archive * test_archive = archive_write_new();
 
   archive_write_set_format_ustar(test_archive);
-  archive_write_open_filename(test_archive, path.c_str());
+  archive_write_open_filename(test_archive, path.string().c_str());
   struct archive_entry* entry = archive_entry_new();
 
   if (order.empty()) {  // Use map sort order
@@ -104,11 +104,11 @@ void build_test_archive(const std::string& path, const TAE_MAP_T& entries, FN_VE
   archive_write_close(test_archive);
 }
 
-void build_test_archive(const std::string& path, OrderedTestArchive& ordered_archive) {
+void build_test_archive(const std::filesystem::path& path, OrderedTestArchive& ordered_archive) {
   build_test_archive(path, ordered_archive.map, ordered_archive.order);
 }
 
-bool check_archive_contents(const std::string& path, const TAE_MAP_T& entries, bool check_attributes, const FN_VEC_T& order) {
+bool check_archive_contents(const std::filesystem::path& path, const TAE_MAP_T& entries, bool check_attributes, const FN_VEC_T& order) {
   FN_VEC_T read_names;
   FN_VEC_T extra_names;
   bool ok = true;
@@ -118,7 +118,7 @@ bool check_archive_contents(const std::string& path, const TAE_MAP_T& entries, b
   archive_read_support_format_all(a);
   archive_read_support_filter_all(a);
 
-  int r = archive_read_open_filename(a, path.c_str(), 16384);
+  int r = archive_read_open_filename(a, path.string().c_str(), 16384);
 
   if (r != ARCHIVE_OK) {
     std::cout << "Unable to open archive " << path << " for checking!" << std::endl;
@@ -203,6 +203,6 @@ bool check_archive_contents(const std::string& path, const TAE_MAP_T& entries, b
   return ok;
 }
 
-bool check_archive_contents(const std::string& path, const OrderedTestArchive& archive, bool check_attributes) {
+bool check_archive_contents(const std::filesystem::path& path, const OrderedTestArchive& archive, bool check_attributes) {
   return check_archive_contents(path, archive.map, check_attributes, archive.order);
 }

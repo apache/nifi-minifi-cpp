@@ -15,29 +15,18 @@
  * limitations under the License.
  */
 
-#include <memory>
 #include "utils/crypto/EncryptionProvider.h"
 #include "utils/OptionalUtils.h"
 #include "utils/crypto/EncryptionManager.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
 constexpr const char* CONFIG_ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.key";
 
-std::optional<EncryptionProvider> EncryptionProvider::create(const std::string& home_path) {
+std::optional<EncryptionProvider> EncryptionProvider::create(const std::filesystem::path& home_path) {
   return EncryptionManager{home_path}.createXSalsa20Cipher(CONFIG_ENCRYPTION_KEY_PROPERTY_NAME)
     | utils::map([] (const XSalsa20Cipher& cipher) {return EncryptionProvider{cipher};});
 }
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto

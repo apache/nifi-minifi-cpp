@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <fstream>
+#include <filesystem>
 #include <stdexcept>
 #include <string>
 
@@ -31,11 +32,11 @@ namespace org::apache::nifi::minifi::utils {
  */
 class FileReaderCallback {
  public:
-  explicit FileReaderCallback(std::string file_name);
+  explicit FileReaderCallback(std::filesystem::path file_path);
   int64_t operator()(const std::shared_ptr<io::OutputStream>& output_stream) const;
 
  private:
-  std::string file_name_;
+  std::filesystem::path file_path_;
   std::shared_ptr<core::logging::Logger> logger_;
 };
 

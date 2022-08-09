@@ -32,55 +32,6 @@
 
 namespace org::apache::nifi::minifi::utils::file {
 
-bool getFileNameAndPath(const std::string &path, std::string &filePath, std::string &fileName) {
-  const std::size_t found = path.find_last_of(FileUtils::get_separator());
-  /**
-   * Don't make an assumption about about the path, return false for this case.
-   * Could make the assumption that the path is just the file name but with the function named
-   * getFileNameAndPath we expect both to be there ( a fully qualified path ).
-   *
-   */
-  if (found == std::string::npos || found == path.length() - 1) {
-    return false;
-  }
-  if (found == 0) {
-    filePath = "";  // don't assume that path is not empty
-    filePath += FileUtils::get_separator();
-    fileName = path.substr(found + 1);
-    return true;
-  }
-  filePath = path.substr(0, found);
-  fileName = path.substr(found + 1);
-  return true;
-}
-
-std::string getFullPath(const std::string& path) {
-#ifdef WIN32
-  std::vector<char> buffer(MAX_PATH);
-  uint32_t len = 0U;
-  while (true) {
-    len = GetFullPathNameA(path.c_str(), gsl::narrow<DWORD>(buffer.size()), buffer.data(), nullptr /*lpFilePart*/);
-    if (len < buffer.size()) {
-      break;
-    }
-    buffer.resize(len);
-  }
-  if (len > 0U) {
-    return std::string(buffer.data(), len);
-  } else {
-    return "";
-  }
-#else
-  std::vector<char> buffer(PATH_MAX);
-  char* res = realpath(path.c_str(), buffer.data());
-  if (res == nullptr) {
-    return "";
-  } else {
-    return res;
-  }
-#endif
-}
-
 std::string globToRegex(std::string glob) {
   utils::StringUtils::replaceAll(glob, ".", "\\.");
   utils::StringUtils::replaceAll(glob, "*", ".*");

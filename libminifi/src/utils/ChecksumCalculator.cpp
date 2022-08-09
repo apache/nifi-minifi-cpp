@@ -31,19 +31,15 @@ const std::string AGENT_IDENTIFIER_KEY = std::string(org::apache::nifi::minifi::
 
 }
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
-void ChecksumCalculator::setFileLocation(const std::string& file_location) {
+void ChecksumCalculator::setFileLocation(const std::filesystem::path& file_location) {
   file_location_ = file_location;
-  file_name_ = utils::file::get_child_path(file_location);
+  file_name_ = file_location.filename();
   invalidateChecksum();
 }
 
-std::string ChecksumCalculator::getFileName() const {
+std::filesystem::path ChecksumCalculator::getFileName() const {
   gsl_Expects(file_name_);
   return *file_name_;
 }
@@ -56,12 +52,12 @@ std::string ChecksumCalculator::getChecksum() {
   return *checksum_;
 }
 
-std::string ChecksumCalculator::computeChecksum(const std::string& file_location) {
+std::string ChecksumCalculator::computeChecksum(const std::filesystem::path& file_location) {
   using org::apache::nifi::minifi::utils::StringUtils;
 
   std::ifstream input_file{file_location, std::ios::in | std::ios::binary};
   if (!input_file.is_open()) {
-    throw std::runtime_error(StringUtils::join_pack("Could not open config file '", file_location, "' to compute the checksum: ", std::strerror(errno)));
+    throw std::runtime_error(StringUtils::join_pack("Could not open config file '", file_location.string(), "' to compute the checksum: ", std::strerror(errno)));
   }
 
   crypto_hash_sha256_state state;
@@ -79,7 +75,7 @@ std::string ChecksumCalculator::computeChecksum(const std::string& file_location
     crypto_hash_sha256_update(&state, reinterpret_cast<const unsigned char*>(line.data()), line.size());
   }
   if (input_file.bad()) {
-    throw std::runtime_error(StringUtils::join_pack("Error reading config file '", file_location, "' while computing the checksum: ", std::strerror(errno)));
+    throw std::runtime_error(StringUtils::join_pack("Error reading config file '", file_location.string(), "' while computing the checksum: ", std::strerror(errno)));
   }
 
   std::array<unsigned char, LENGTH_OF_HASH_IN_BYTES> hash{};
@@ -88,8 +84,4 @@ std::string ChecksumCalculator::computeChecksum(const std::string& file_location
   return StringUtils::to_hex(gsl::make_span(hash).as_span<std::byte>());
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

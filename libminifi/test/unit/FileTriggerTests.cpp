@@ -49,19 +49,15 @@ TEST_CASE("invalidfile file", "[t2]") {
 TEST_CASE("test valid  file no update", "[t3]") {
   TestController testController;
 
-  auto dir = testController.createTempDirectory();
-
+  auto path = testController.createTempDirectory() / "tstFile.ext";
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
 
   minifi::c2::FileUpdateTrigger trigger("test");
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_c2_file_watch, path);
+  configuration->set(minifi::Configure::nifi_c2_file_watch, path.string());
   trigger.initialize(configuration);
 
   REQUIRE(false == trigger.triggered());
@@ -71,19 +67,15 @@ TEST_CASE("test valid  file no update", "[t3]") {
 TEST_CASE("test valid file update", "[t4]") {
   TestController testController;
 
-  auto dir = testController.createTempDirectory();
-
+  auto path = testController.createTempDirectory() / "tstFile.ext";
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
 
   minifi::c2::FileUpdateTrigger trigger("test");
   std::shared_ptr<minifi::Configure> configuration = std::make_shared<minifi::Configure>();
-  configuration->set(minifi::Configure::nifi_c2_file_watch, path);
+  configuration->set(minifi::Configure::nifi_c2_file_watch, path.string());
   trigger.initialize(configuration);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));

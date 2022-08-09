@@ -97,9 +97,9 @@ struct PutObjectResult {
 };
 
 struct RequestParameters {
-  RequestParameters(const Aws::Auth::AWSCredentials& creds, const Aws::Client::ClientConfiguration& config)
-    : credentials(creds)
-    , client_config(config) {}
+  RequestParameters(Aws::Auth::AWSCredentials creds, Aws::Client::ClientConfiguration  config)
+    : credentials(std::move(creds))
+    , client_config(std::move(config)) {}
   Aws::Auth::AWSCredentials credentials;
   Aws::Client::ClientConfiguration client_config;
 
@@ -146,9 +146,9 @@ struct GetObjectRequestParameters : public RequestParameters {
 };
 
 struct HeadObjectResult {
-  std::string path;
-  std::string absolute_path;
-  std::string filename;
+  std::filesystem::path path;
+  std::filesystem::path absolute_path;
+  std::filesystem::path filename;
   std::string mime_type;
   std::string etag;
   Expiration expiration;
@@ -174,11 +174,11 @@ struct ListRequestParameters : public RequestParameters {
 };
 
 struct ListedObjectAttributes : public minifi::utils::ListedObject {
-  std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
+  [[nodiscard]] std::chrono::time_point<std::chrono::system_clock> getLastModified() const override {
     return last_modified;
   }
 
-  std::string getKey() const override {
+  [[nodiscard]] std::string getKey() const override {
     return filename;
   }
 
@@ -212,7 +212,7 @@ class S3Wrapper {
   static Expiration getExpiration(const std::string& expiration);
 
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
-  static int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::OutputStream& output);
+  static int64_t writeFetchedBody(Aws::IOStream& source, int64_t data_size, io::OutputStream& output);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
 
   std::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);

@@ -41,7 +41,7 @@ class ArchiveEntryMetadata {
   uint64_t entryMTimeNsec;
   uint64_t entrySize;
 
-  std::string tmpFileName;
+  std::filesystem::path tmpFileName;
   std::string stashKey;
 
   inline rapidjson::Value toJson(rapidjson::Document::AllocatorType &alloc) const;

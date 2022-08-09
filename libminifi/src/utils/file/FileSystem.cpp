@@ -37,7 +37,7 @@ FileSystem::FileSystem(bool should_encrypt_on_write, std::optional<utils::crypto
   }
 }
 
-std::optional<std::string> FileSystem::read(const std::string& file_name) {
+std::optional<std::string> FileSystem::read(const std::filesystem::path& file_name) {
   std::ifstream input{file_name, std::ios::binary};
   if (!input) {
     return std::nullopt;
@@ -46,26 +46,26 @@ std::optional<std::string> FileSystem::read(const std::string& file_name) {
   std::string content{std::istreambuf_iterator<char>(input), {}};
   if (encryptor_) {
     try {
-      logger_->log_debug("Trying to decrypt file %s", file_name);
+      logger_->log_debug("Trying to decrypt file %s", file_name.string());
       content = encryptor_->decrypt(content);
     } catch(...) {
       // tried to decrypt file but failed, use file as-is
-      logger_->log_debug("Decrypting file %s failed, using the file as-is", file_name);
+      logger_->log_debug("Decrypting file %s failed, using the file as-is", file_name.string());
     }
   }
   return content;
 }
 
-bool FileSystem::write(const std::string& file_name, const std::string& file_content) {
+bool FileSystem::write(const std::filesystem::path& file_name, const std::string& file_content) {
   std::ofstream output{file_name, std::ios::binary};
   if (should_encrypt_on_write_) {
     // allow a possible exception to propagate upward
     // if we fail to encrypt the file DON'T just write
     // it as-is
-    logger_->log_debug("Encrypting file %s", file_name);
+    logger_->log_debug("Encrypting file %s", file_name.string());
     output << encryptor_->encrypt(file_content);
   } else {
-    logger_->log_debug("No encryption is required for file %s", file_name);
+    logger_->log_debug("No encryption is required for file %s", file_name.string());
     output << file_content;
   }
   output.close();

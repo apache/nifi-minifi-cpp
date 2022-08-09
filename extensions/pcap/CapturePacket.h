@@ -62,11 +62,11 @@ class CapturePacketMechanism {
 
   pcpp::PcapFileWriterDevice *writer_;
 
-  const std::string &getBasePath() {
+  const std::filesystem::path &getBasePath() {
     return path_;
   }
 
-  const std::string &getFile() {
+  const std::filesystem::path &getFile() {
     return file_;
   }
 
@@ -76,8 +76,8 @@ class CapturePacketMechanism {
 
  protected:
   CapturePacketMechanism &operator=(const CapturePacketMechanism &other) = delete;
-  std::string path_;
-  std::string file_;
+  std::filesystem::path path_;
+  std::filesystem::path file_;
   int64_t *max_size_;
   std::atomic<int64_t> atomic_count_;
 };
@@ -138,30 +138,30 @@ class CapturePacket : public core::Processor {
     logger_->log_trace("Stopped device capture. clearing queues");
     CapturePacketMechanism *capture;
     while (mover->source.try_dequeue(capture)) {
-      std::remove(capture->getFile().c_str());
+      std::filesystem::remove(capture->getFile());
       delete capture;
     }
     logger_->log_trace("Cleared source queue");
     while (mover->sink.try_dequeue(capture)) {
-      std::remove(capture->getFile().c_str());
+      std::filesystem::remove(capture->getFile());
       delete capture;
     }
     device_list_.clear();
     logger_->log_trace("Cleared sink queue");
   }
 
-  static std::string generate_new_pcap(const std::string &base_path);
+  static std::filesystem::path generate_new_pcap(const std::string &base_path);
 
   static CapturePacketMechanism *create_new_capture(const std::string &base_path, int64_t *max_size);
 
  private:
-  inline std::string getPath() {
-    return base_dir_ + "/" + base_path_;
+  inline std::filesystem::path getPath() {
+    return base_dir_ / base_path_;
   }
   bool capture_bluetooth_ = false;
-  std::string base_dir_;
+  std::filesystem::path base_dir_;
   std::vector<std::string> attached_controllers_;
-  std::string base_path_;
+  std::filesystem::path base_path_;
   int64_t pcap_batch_size_ = 50;
   std::unique_ptr<PacketMovers> mover;
   static std::atomic<int> num_;

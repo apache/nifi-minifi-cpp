@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     assert(ssl_client_cont->getControllerServiceImplementation() != nullptr);
     ssl_client = std::static_pointer_cast<minifi::controllers::SSLContextService>(ssl_client_cont->getControllerServiceImplementation());
   }
-  assert(ssl_client->getCACertificate().length() > 0);
+  assert(!ssl_client->getCACertificate().empty());
   // now let's disable one of the controller services.
   std::shared_ptr<core::controller::ControllerServiceNode> cs_id = controller->getControllerServiceNode("ID");
   const auto checkCsIdEnabledMatchesDisabledFlag = [&cs_id] { return !disabled == cs_id->enabled(); };

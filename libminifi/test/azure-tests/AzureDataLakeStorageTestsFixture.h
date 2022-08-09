@@ -67,7 +67,7 @@ class AzureDataLakeStorageTestsFixture {
     utils::putFileToDir(input_dir, GETFILE_FILE_NAME, TEST_DATA);
 
     get_file_ = plan_->addProcessor("GetFile", "GetFile");
-    plan_->setProperty(get_file_, minifi::processors::GetFile::Directory.getName(), input_dir);
+    plan_->setProperty(get_file_, minifi::processors::GetFile::Directory.getName(), input_dir.string());
     plan_->setProperty(get_file_, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
 
     update_attribute_ = plan_->addProcessor("UpdateAttribute", "UpdateAttribute", { {"success", "d"} },  true);
@@ -78,13 +78,13 @@ class AzureDataLakeStorageTestsFixture {
     plan_->addConnection(logattribute, {"success", "d"}, success_putfile_);
     success_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     success_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_);
+    plan_->setProperty(success_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir_.string());
 
     failure_putfile_ = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(azure_data_lake_storage_, {"failure", "d"}, failure_putfile_);
     failure_putfile_->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     failure_output_dir_ = test_controller_.createTempDirectory();
-    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_);
+    plan_->setProperty(failure_putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir_.string());
 
     azure_storage_cred_service_ = plan_->addController("AzureStorageCredentialsService", "AzureStorageCredentialsService");
     setDefaultProperties();
@@ -98,11 +98,11 @@ class AzureDataLakeStorageTestsFixture {
     return getFileContents(success_output_dir_);
   }
 
-  std::vector<std::string> getFileContents(const std::string& dir) {
+  std::vector<std::string> getFileContents(const std::filesystem::path& dir) {
     std::vector<std::string> file_contents;
 
-    auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      std::ifstream is(path / filename, std::ifstream::binary);
       file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
       return true;
     };
@@ -134,6 +134,6 @@ class AzureDataLakeStorageTestsFixture {
   std::shared_ptr<core::Processor> success_putfile_;
   std::shared_ptr<core::Processor> failure_putfile_;
   std::shared_ptr<core::controller::ControllerServiceNode> azure_storage_cred_service_;
-  std::string failure_output_dir_;
-  std::string success_output_dir_;
+  std::filesystem::path failure_output_dir_;
+  std::filesystem::path success_output_dir_;
 };

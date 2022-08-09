@@ -27,7 +27,7 @@
 
 namespace org::apache::nifi::minifi::utils::file {
 
-uint64_t computeChecksum(const std::string &file_name, uint64_t up_to_position) {
+uint64_t computeChecksum(const std::filesystem::path& file_name, uint64_t up_to_position) {
   constexpr uint64_t BUFFER_SIZE = 4096U;
   std::array<char, std::size_t{BUFFER_SIZE}> buffer;
 
@@ -82,13 +82,6 @@ std::chrono::time_point<std::chrono::system_clock> to_sys(std::filesystem::file_
 #else
   return std::chrono::file_clock::to_sys(file_time);
 #endif
-}
-
-void put_content(const std::filesystem::path& filename, std::string_view new_contents) {
-  std::ofstream ofs;
-  ofs.exceptions(std::ofstream::badbit | std::ofstream::failbit);
-  ofs.open(filename, std::ofstream::binary);
-  ofs.write(new_contents.data(), gsl::narrow<std::streamsize>(new_contents.size()));
 }
 
 }  // namespace org::apache::nifi::minifi::utils::file

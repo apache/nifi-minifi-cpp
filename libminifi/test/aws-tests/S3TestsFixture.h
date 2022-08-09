@@ -67,12 +67,12 @@ class S3TestsFixture {
   void setCredentialFile(const Component &component) {
     auto temp_path = test_controller.createTempDirectory();
     REQUIRE(!temp_path.empty());
-    std::string aws_credentials_file(temp_path + utils::file::FileUtils::get_separator() + "aws_creds.conf");
+    auto aws_credentials_file = temp_path / "aws_creds.conf";
     std::ofstream aws_credentials_file_stream(aws_credentials_file);
     aws_credentials_file_stream << "accessKey=key" << std::endl;
     aws_credentials_file_stream << "secretKey=secret" << std::endl;
     aws_credentials_file_stream.close();
-    plan->setProperty(component, "Credentials File", aws_credentials_file);
+    plan->setProperty(component, "Credentials File", aws_credentials_file.string());
   }
 
   template<typename Component>
@@ -131,11 +131,11 @@ class FlowProcessorS3TestsFixture : public S3TestsFixture<T> {
     LogTestController::getInstance().setDebug<minifi::processors::UpdateAttribute>();
 
     auto input_dir = this->test_controller.createTempDirectory();
-    std::ofstream input_file_stream(input_dir + utils::file::FileUtils::get_separator() + INPUT_FILENAME);
+    std::ofstream input_file_stream(input_dir / INPUT_FILENAME);
     input_file_stream << INPUT_DATA;
     input_file_stream.close();
     auto get_file = this->plan->addProcessor("GetFile", "GetFile");
-    this->plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), input_dir);
+    this->plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), input_dir.string());
     this->plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
     update_attribute = this->plan->addProcessor(
       "UpdateAttribute",

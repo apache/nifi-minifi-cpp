@@ -18,6 +18,7 @@
 #include <utility>
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include "utils/file/FileUtils.h"
 #include "TestBase.h"
 #include "Catch.h"
@@ -81,14 +82,13 @@ void custom_ontrigger_logic(processor_session *ps, processor_context *ctx) {
   free(buffer);
 }
 
-std::string create_testfile_for_getfile(const char* sourcedir, const std::string& filename = test_file_name) {
+std::string create_testfile_for_getfile(const std::filesystem::path& sourcedir, const std::string& filename = test_file_name) {
   std::fstream file;
-  std::stringstream ss;
-  ss << sourcedir << "/" << filename;
-  file.open(ss.str(), std::ios::out);
+  auto path = sourcedir / filename;
+  file.open(path, std::ios::out);
   file << test_file_content;
   file.close();
-  return ss.str();
+  return path;
 }
 
 TEST_CASE("Test Creation of instance, one processor", "[createInstanceAndFlow]") {
@@ -153,10 +153,9 @@ TEST_CASE("get file and put file", "[getAndPutFile]") {
   flow_file_record *record = get_next_flow_file(instance, test_flow);
   REQUIRE(record != nullptr);
 
-  std::stringstream ss;
+  auto path = putfiledir / test_file_name;
 
-  ss << putfiledir << "/" << test_file_name;
-  std::ifstream t(ss.str());
+  std::ifstream t(path);
   std::string put_data((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
   REQUIRE(test_file_content == put_data);
@@ -375,10 +374,8 @@ TEST_CASE("Test interaction of flow and standlone processors", "[testStandaloneW
   free_flowfile(record);
   free_flowfile(put_record);
 
-  std::stringstream ss;
-
-  ss << putfiledir << "/" << test_file_name;
-  std::ifstream t(ss.str());
+  auto path = putfiledir / test_file_name;
+  std::ifstream t(path);
   std::string put_data((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
 
   REQUIRE(test_file_content == put_data);

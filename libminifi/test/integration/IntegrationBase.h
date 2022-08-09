@@ -70,7 +70,7 @@ class IntegrationBase {
   }
   virtual ~IntegrationBase() = default;
 
-  virtual void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& home_path = {});
+  virtual void run(const std::optional<std::filesystem::path>& test_file_location = {}, const std::optional<std::filesystem::path>& home_path = {});
 
   void setKeyDir(const std::string& key_dir) {
     this->key_dir = key_dir;
@@ -117,7 +117,7 @@ class IntegrationBase {
   std::chrono::milliseconds wait_time_;
   std::string port, scheme;
   std::string key_dir;
-  std::string state_dir;
+  std::filesystem::path state_dir;
   std::atomic<int> restart_requested_count_{0};
 };
 
@@ -136,7 +136,7 @@ void IntegrationBase::configureSecurity() {
   }
 }
 
-void IntegrationBase::run(const std::optional<std::string>& test_file_location, const std::optional<std::string>& home_path) {
+void IntegrationBase::run(const std::optional<std::filesystem::path>& test_file_location, const std::optional<std::filesystem::path>& home_path) {
   using namespace std::literals::chrono_literals;
   testSetup();
 
@@ -144,7 +144,7 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
   std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
   if (test_file_location) {
-    configuration->set(minifi::Configure::nifi_flow_configuration_file, *test_file_location);
+    configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location->string());
   }
   configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
 
@@ -180,7 +180,7 @@ void IntegrationBase::run(const std::optional<std::string>& test_file_location, 
     char state_dir_name_template[] = "/var/tmp/integrationstate.XXXXXX";
     state_dir = utils::file::create_temp_directory(state_dir_name_template);
     if (!configuration->get(minifi::Configure::nifi_state_management_provider_local_path)) {
-      configuration->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir);
+      configuration->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir.string());
     }
     core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_service_provider.get(), configuration);
 

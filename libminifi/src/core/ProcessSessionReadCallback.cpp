@@ -22,18 +22,19 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::core {
 
-ProcessSessionReadCallback::ProcessSessionReadCallback(const std::string &tmpFile,
-                                                       std::string destFile,
+ProcessSessionReadCallback::ProcessSessionReadCallback(std::filesystem::path tmpFile,
+                                                       std::filesystem::path destFile,
                                                        std::shared_ptr<logging::Logger> logger)
     : logger_(std::move(logger)),
     _tmpFileOs(tmpFile, std::ios::binary),
-    _tmpFile(tmpFile),
+    _tmpFile(std::move(tmpFile)),
     _destFile(std::move(destFile)) {
 }
 
@@ -61,7 +62,7 @@ int64_t ProcessSessionReadCallback::operator()(const std::shared_ptr<io::InputSt
 bool ProcessSessionReadCallback::commit() {
   bool success = false;
 
-  logger_->log_debug("committing export operation to %s", _destFile);
+  logger_->log_debug("committing export operation to %s", _destFile.string());
 
   if (_writeSucceeded) {
     if (!_tmpFileOs.flush()) {
@@ -69,14 +70,17 @@ bool ProcessSessionReadCallback::commit() {
     }
     _tmpFileOs.close();
 
-    if (rename(_tmpFile.c_str(), _destFile.c_str())) {
-      logger_->log_warn("commit export operation to %s failed because rename() call failed", _destFile);
+    std::error_code rename_error;
+    std::filesystem::rename(_tmpFile, _destFile, rename_error);
+
+    if (rename_error) {
+      logger_->log_warn("commit export operation to %s failed because rename() call failed", _destFile.string());
     } else {
       success = true;
-      logger_->log_debug("commit export operation to %s succeeded", _destFile);
+      logger_->log_debug("commit export operation to %s succeeded", _destFile.string());
     }
   } else {
-    logger_->log_error("commit export operation to %s failed because write failed", _destFile);
+    logger_->log_error("commit export operation to %s failed because write failed", _destFile.string());
   }
   return success;
 }
@@ -87,7 +91,7 @@ ProcessSessionReadCallback::~ProcessSessionReadCallback() {
   _tmpFileOs.close();
 
   // Clean up tmp file, if necessary
-  std::remove(_tmpFile.c_str());
+  std::filesystem::remove(_tmpFile);
 }
 
 }  // namespace org::apache::nifi::minifi::core

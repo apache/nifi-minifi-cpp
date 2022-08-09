@@ -36,11 +36,7 @@
 #include "FocusArchiveEntry.h"
 #include "UnfocusArchiveEntry.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace processors {
+namespace org::apache::nifi::minifi::processors {
 
 const core::Property ManipulateArchive::Operation("Operation", "Operation to perform on the archive (touch, remove, copy, move).", "");
 const core::Property ManipulateArchive::Target("Target", "An existing entry within the archive to perform the operation on.", "");
@@ -95,7 +91,7 @@ void ManipulateArchive::onSchedule(core::ProcessContext *context, core::ProcessS
     }
 
     // Users may specify one or none of before or after, but never both.
-    if (before_.size() && after_.size()) {
+    if (!before_.empty() && !after_.empty()) {
         logger_->log_error("ManipulateArchive: cannot specify both before and after.");
         invalid = true;
     }
@@ -143,7 +139,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
 
     auto position = entries_end;
 
-    // Small speedup for when neither before or after are provided or needed
+    // Small speedup for when neither before nor after are provided or needed
     if ((!before_.empty() || !after_.empty()) && operation_ != OPERATION_REMOVE) {
         std::string positionEntry = after_.empty() ? before_ : after_;
         position = archiveMetadata.find(positionEntry);
@@ -164,7 +160,7 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
     }
 
     if (operation_ == OPERATION_REMOVE) {
-        std::remove((*target_position).tmpFileName.c_str());
+        std::filesystem::remove((*target_position).tmpFileName);
         target_position = archiveMetadata.eraseEntry(target_position);
     } else if (operation_ == OPERATION_COPY) {
         ArchiveEntryMetadata copy = *target_position;
@@ -204,8 +200,4 @@ void ManipulateArchive::onTrigger(core::ProcessContext* /*context*/, core::Proce
 
 REGISTER_RESOURCE(ManipulateArchive, Processor);
 
-} /* namespace processors */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::processors

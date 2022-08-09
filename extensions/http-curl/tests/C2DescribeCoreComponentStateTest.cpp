@@ -32,8 +32,8 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
     : VerifyC2Describe(verified) {
     temp_dir_ = testController.createTempDirectory();
 
-    test_file_1_ = utils::file::FileUtils::concat_path(temp_dir_, "test1.txt");
-    test_file_2_ = utils::file::FileUtils::concat_path(temp_dir_, "test2.txt");
+    test_file_1_ = temp_dir_ / "test1.txt";
+    test_file_2_ = temp_dir_ / "test2.txt";
 
     std::ofstream f1(test_file_1_, std::ios::out | std::ios::binary);
     f1 << "foo\n";
@@ -44,9 +44,9 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
 
  protected:
   void updateProperties(minifi::FlowController& flow_controller) override {
-    auto setFileName = [] (const std::string& fileName, minifi::state::StateController& component){
+    auto setFileName = [] (const std::filesystem::path& file_name, minifi::state::StateController& component){
       auto& processor = dynamic_cast<minifi::state::ProcessorController&>(component).getProcessor();
-      processor.setProperty(minifi::processors::TailFile::FileName, fileName);
+      processor.setProperty(minifi::processors::TailFile::FileName, file_name.string());
     };
 
     flow_controller.executeOnComponent("TailFile1",
@@ -56,9 +56,9 @@ class VerifyC2DescribeCoreComponentState : public VerifyC2Describe {
   }
 
   TestController testController;
-  std::string temp_dir_;
-  std::string test_file_1_;
-  std::string test_file_2_;
+  std::filesystem::path temp_dir_;
+  std::filesystem::path test_file_1_;
+  std::filesystem::path test_file_2_;
 };
 
 class DescribeCoreComponentStateHandler: public HeartbeatHandler {

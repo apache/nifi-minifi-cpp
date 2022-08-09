@@ -72,10 +72,6 @@
           "value": "OFF"
         },
         {
-          "name": "EXCLUDE_BOOST",
-          "value": "ON"
-        },
-        {
           "name": "ENABLE_WEL",
           "value": "TRUE"
         },

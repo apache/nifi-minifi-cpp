@@ -14,21 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
-#define LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
+#pragma once
 
 #include <string>
 #include <vector>
-
-#ifdef USE_BOOST
-#include <boost/filesystem.hpp>
-
-#else
 #include <cstdlib>
-
-#endif
-#include <fcntl.h>
-
 #include <cstdio>
 
 #include "io/validation.h"
@@ -36,21 +26,7 @@
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 
-#ifndef FILE_SEPARATOR
-  #ifdef WIN32
-  #define FILE_SEPARATOR "\\"
-  #else
-  #define FILE_SEPARATOR "/"
-  #endif
-#endif
-
-
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 /**
  * Simple implementation of simple file manager utilities.
@@ -62,53 +38,31 @@ class FileManager {
   FileManager() = default;
 
   ~FileManager() {
-    for (auto file : unique_files_) {
-      std::remove(file.c_str());
+    for (const auto& file : unique_files_) {
+      std::filesystem::remove(file);
     }
   }
-  std::string unique_file(const std::string &location, bool keep = false) {
-    const std::string& dir = !IsNullOrEmpty(location) ? location : utils::file::FileUtils::get_temp_directory();
+  std::filesystem::path unique_file(const std::filesystem::path& location, bool keep = false) {
+    auto dir = !location.empty() ? location : std::filesystem::temp_directory_path();
 
-    std::string file_name = utils::file::FileUtils::concat_path(dir, non_repeating_string_generator_.generate());
-    while (!verify_not_exist(file_name)) {
-      file_name = utils::file::FileUtils::concat_path(dir, non_repeating_string_generator_.generate());
+    auto file_name = dir / non_repeating_string_generator_.generate();
+    while (std::filesystem::exists(file_name)) {
+      file_name = dir / non_repeating_string_generator_.generate();
     }
     if (!keep)
       unique_files_.push_back(file_name);
     return file_name;
   }
 
-  std::string unique_file(bool keep = false) {
-#ifdef USE_BOOST
-    (void)keep;  // against unused variable warnings
-    return boost::filesystem::unique_path().native();
-#else  // USE_BOOST
+  std::filesystem::path unique_file(bool keep = false) {
     return unique_file(std::string{}, keep);
-#endif  // USE_BOOST
   }
 
 
  protected:
-  inline bool verify_not_exist(const std::string& name) {
-#ifdef WIN32
-    struct _stat buffer;
-    return _stat(name.c_str(), &buffer) != 0;
-#else
-    struct stat buffer;
-    return stat(name.c_str(), &buffer) != 0;
-#endif
-  }
-
   utils::NonRepeatingStringGenerator non_repeating_string_generator_;
 
-  std::vector<std::string> unique_files_;
+  std::vector<std::filesystem::path> unique_files_;
 };
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_FILEMANAGER_H_
+}  // namespace org::apache::nifi::minifi::utils::file

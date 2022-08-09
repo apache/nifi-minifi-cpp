@@ -38,9 +38,9 @@
 
 namespace utils = org::apache::nifi::minifi::utils;
 
-SFTPTestServer::SFTPTestServer(std::string working_directory,
-                               const std::string& host_key_file /*= "resources/host.pem"*/,
-                               const std::string& jar_path /*= "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar"*/)
+SFTPTestServer::SFTPTestServer(std::filesystem::path working_directory,
+                               const std::filesystem::path& host_key_file /*= "resources/host.pem"*/,
+                               const std::filesystem::path& jar_path /*= "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar"*/)
     : working_directory_(std::move(working_directory)),
       started_(false),
       port_(0U)
@@ -48,8 +48,8 @@ SFTPTestServer::SFTPTestServer(std::string working_directory,
       , server_pid_(-1)
 #endif
 {
-  host_key_file_ = utils::file::FileUtils::concat_path(get_sftp_test_dir(), host_key_file);
-  jar_path_ = utils::file::FileUtils::concat_path(get_sftp_test_dir(), jar_path);
+  host_key_file_ = get_sftp_test_dir() / host_key_file;
+  jar_path_ = get_sftp_test_dir() / jar_path;
 }
 
 SFTPTestServer::~SFTPTestServer() {
@@ -67,13 +67,13 @@ bool SFTPTestServer::start() {
   throw std::runtime_error("Not implemented");
 #else
   /* Delete possible previous port.txt */
-  port_file_path_ = utils::file::FileUtils::concat_path(working_directory_, "port.txt");
+  port_file_path_ = working_directory_ / "port.txt";
   if (!port_file_path_.empty()) {
     logger_->log_debug("Deleting port file %s", port_file_path_.c_str());
     ::unlink(port_file_path_.c_str());
   }
 
-  auto server_log_file_path = utils::file::FileUtils::concat_path(working_directory_, "log.txt");
+  auto server_log_file_path = working_directory_ / "log.txt";
 
   /* fork */
   pid_t pid = fork();
@@ -82,7 +82,9 @@ bool SFTPTestServer::start() {
     std::vector<char*> args(4U);
     args[0] = strdup("/bin/sh");
     args[1] = strdup("-c");
-    args[2] = strdup(("exec java -Djava.security.egd=file:/dev/./urandom -jar " + jar_path_ + " -w " + working_directory_ + " -k " + host_key_file_ + " >" + server_log_file_path + " 2>&1").c_str());
+    args[2] = strdup(("exec java -Djava.security.egd=file:/dev/./urandom -jar " + jar_path_.string()
+        + " -w " + working_directory_.string()
+        + " -k " + host_key_file_.string() + " >" + server_log_file_path.string() + " 2>&1").c_str());
     args[3] = nullptr;
     execv("/bin/sh", args.data());
     std::cerr << "Failed to start server, errno: " << strerror(errno) << std::endl;
@@ -147,6 +149,6 @@ uint16_t SFTPTestServer::getPort() const {
   return port_;
 }
 
-std::string get_sftp_test_dir() {
-  return utils::file::FileUtils::concat_path(utils::file::FileUtils::get_executable_dir(), "sftp-test");
+std::filesystem::path get_sftp_test_dir() {
+  return utils::file::FileUtils::get_executable_dir() / "sftp-test";
 }

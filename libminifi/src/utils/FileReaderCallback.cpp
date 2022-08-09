@@ -31,20 +31,20 @@ constexpr std::size_t BUFFER_SIZE = 4096;
 
 namespace org::apache::nifi::minifi::utils {
 
-FileReaderCallback::FileReaderCallback(std::string file_name)
-    : file_name_{std::move(file_name)},
+FileReaderCallback::FileReaderCallback(std::filesystem::path file_path)
+    : file_path_{std::move(file_path)},
     logger_(core::logging::LoggerFactory<FileReaderCallback>::getLogger()) {
 }
 
 int64_t FileReaderCallback::operator()(const std::shared_ptr<io::OutputStream>& output_stream) const {
-  std::array<char, BUFFER_SIZE> buffer;
+  std::array<char, BUFFER_SIZE> buffer{};
   uint64_t num_bytes_written = 0;
 
-  std::ifstream input_stream{file_name_, std::ifstream::in | std::ifstream::binary};
+  std::ifstream input_stream{file_path_, std::ifstream::in | std::ifstream::binary};
   if (!input_stream.is_open()) {
     throw FileReaderCallbackIOError(StringUtils::join_pack("Error opening file: ", std::strerror(errno)), errno);
   }
-  logger_->log_debug("Opening %s", file_name_);
+  logger_->log_debug("Opening %s", file_path_.string());
   while (input_stream.good()) {
     input_stream.read(buffer.data(), buffer.size());
     if (input_stream.bad()) {

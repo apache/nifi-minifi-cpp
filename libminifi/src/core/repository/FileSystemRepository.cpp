@@ -26,11 +26,11 @@
 namespace org::apache::nifi::minifi::core::repository {
 
 bool FileSystemRepository::initialize(const std::shared_ptr<minifi::Configure>& configuration) {
-  std::string value;
-  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value)) {
-    directory_ = value;
+  std::string directory_str;
+  if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, directory_str)) {
+    directory_ = directory_str;
   } else {
-    directory_ = configuration->getHome();
+    directory_ = configuration->getHome().string();
   }
   utils::file::create_dir(directory_);
   return true;

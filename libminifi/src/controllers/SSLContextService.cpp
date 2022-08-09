@@ -129,7 +129,7 @@ void SSLContextService::initialize() {
 
 #ifdef OPENSSL_SUPPORT
 bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
-  if (!IsNullOrEmpty(certificate_)) {
+  if (!certificate_.empty()) {
     if (isFileTypeP12(certificate_)) {
       if (!addP12CertificateToSSLContext(ctx)) {
         return false;
@@ -148,20 +148,20 @@ bool SSLContextService::configure_ssl_context(SSL_CTX *ctx) {
 
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, nullptr);
 
-  if (!IsNullOrEmpty(ca_certificate_)) {
-    if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.c_str(), nullptr) == 0) {
+  if (!ca_certificate_.empty()) {
+    if (SSL_CTX_load_verify_locations(ctx, ca_certificate_.string().c_str(), nullptr) == 0) {
       core::logging::LOG_ERROR(logger_) << "Cannot load CA certificate, exiting, " << getLatestOpenSSLErrorString();
       return false;
     }
   }
 
-  if (use_system_cert_store_ && IsNullOrEmpty(certificate_)) {
+  if (use_system_cert_store_ && certificate_.empty()) {
     if (!addClientCertificateFromSystemStoreToSSLContext(ctx)) {
       return false;
     }
   }
 
-  if (use_system_cert_store_ && IsNullOrEmpty(ca_certificate_)) {
+  if (use_system_cert_store_ && ca_certificate_.empty()) {
     if (!addServerCertificatesFromSystemStoreToSSLContext(ctx)) {
       return false;
     }
@@ -200,8 +200,8 @@ bool SSLContextService::addP12CertificateToSSLContext(SSL_CTX* ctx) const {
 }
 
 bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
-  if (SSL_CTX_use_certificate_chain_file(ctx, certificate_.c_str()) <= 0) {
-    core::logging::LOG_ERROR(logger_) << "Could not load client certificate " << certificate_ << ", " << getLatestOpenSSLErrorString();
+  if (SSL_CTX_use_certificate_chain_file(ctx, certificate_.string().c_str()) <= 0) {
+    core::logging::LOG_ERROR(logger_) << "Could not load client certificate " << certificate_.string() << ", " << getLatestOpenSSLErrorString();
     return false;
   }
 
@@ -212,7 +212,7 @@ bool SSLContextService::addPemCertificateToSSLContext(SSL_CTX* ctx) const {
   }
 
   if (!IsNullOrEmpty(private_key_)) {
-    int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.c_str(), SSL_FILETYPE_PEM);
+    int retp = SSL_CTX_use_PrivateKey_file(ctx, private_key_.string().c_str(), SSL_FILETYPE_PEM);
     if (retp != 1) {
       core::logging::LOG_ERROR(logger_) << "Could not load private key, " << retp << " on " << private_key_ << ", " << getLatestOpenSSLErrorString();
       return false;
@@ -407,7 +407,7 @@ std::unique_ptr<SSLContext> SSLContextService::createSSLContext() {
 #endif
 }
 
-const std::string &SSLContextService::getCertificateFile() {
+const std::filesystem::path &SSLContextService::getCertificateFile() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return certificate_;
 }
@@ -417,87 +417,81 @@ const std::string &SSLContextService::getPassphrase() {
   return passphrase_;
 }
 
-const std::string &SSLContextService::getPassphraseFile() {
-  std::lock_guard<std::mutex> lock(initialization_mutex_);
-  return passphrase_file_;
-}
-
-const std::string &SSLContextService::getPrivateKeyFile() {
+const std::filesystem::path &SSLContextService::getPrivateKeyFile() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return private_key_;
 }
 
-const std::string &SSLContextService::getCACertificate() {
+const std::filesystem::path &SSLContextService::getCACertificate() {
   std::lock_guard<std::mutex> lock(initialization_mutex_);
   return ca_certificate_;
 }
 
-void SSLContextService::onEnable() {
-  valid_ = true;
-  std::string default_dir;
+namespace {
+bool is_valid_and_readable_path(const std::filesystem::path& path_to_be_tested) {
+  std::ifstream file_to_be_tested(path_to_be_tested);
+  return file_to_be_tested.good();
+}
+}  // namespace
 
-  if (nullptr != configuration_)
-    configuration_->get(Configure::nifi_default_directory, default_dir);
+void SSLContextService::onEnable() {
+  std::filesystem::path default_dir;
+
+  if (configuration_) {
+    if (auto default_dir_str = configuration_->get(Configure::nifi_default_directory)) {
+      default_dir = default_dir_str.value();
+    }
+  }
 
   logger_->log_trace("onEnable()");
 
-  bool has_certificate_property = getProperty(ClientCertificate.getName(), certificate_);
-  if (has_certificate_property) {
-    std::ifstream cert_file(certificate_);
-    if (!cert_file.good()) {
-      logger_->log_warn("Cannot open certificate file %s", certificate_);
-      std::string test_cert = default_dir + certificate_;
-      std::ifstream cert_file_test(test_cert);
-      if (cert_file_test.good()) {
-        certificate_ = test_cert;
-        logger_->log_info("Using certificate file %s", certificate_);
+  certificate_.clear();
+  if (auto certificate = getProperty(ClientCertificate.getName())) {
+    if (is_valid_and_readable_path(*certificate)) {
+      certificate_ = *certificate;
+    } else {
+      logger_->log_warn("Cannot open certificate file %s", *certificate);
+      if (is_valid_and_readable_path(default_dir / *certificate)) {
+        certificate_ = default_dir / *certificate;
       } else {
-        logger_->log_error("Cannot open certificate file %s", test_cert);
-        valid_ = false;
+        logger_->log_error("Cannot open certificate file %s", (default_dir / *certificate).string());
       }
-      cert_file_test.close();
     }
-    cert_file.close();
   } else {
     logger_->log_debug("Certificate empty");
   }
 
-  if (has_certificate_property && !isFileTypeP12(certificate_)) {
-    if (getProperty(PrivateKey.getName(), private_key_)) {
-      std::ifstream priv_file(private_key_);
-      if (!priv_file.good()) {
-        logger_->log_warn("Cannot open private key file %s", private_key_);
-        std::string test_priv = default_dir + private_key_;
-        std::ifstream private_file_test(test_priv);
-        if (private_file_test.good()) {
-          private_key_ = test_priv;
-          logger_->log_info("Using private key file %s", private_key_);
+  private_key_.clear();
+  if (!certificate_.empty() && !isFileTypeP12(certificate_)) {
+    if (auto private_key = getProperty(PrivateKey.getName())) {
+      if (is_valid_and_readable_path(*private_key)) {
+        private_key_ = *private_key;
+      } else {
+        logger_->log_warn("Cannot open private key file %s", *private_key);
+        if (is_valid_and_readable_path(default_dir / *private_key)) {
+          private_key_ = default_dir / *private_key;
         } else {
-          logger_->log_error("Cannot open private key file %s", test_priv);
-          valid_ = false;
+          logger_->log_error("Cannot open private key file %s", (default_dir / *private_key).string());
         }
-        private_file_test.close();
       }
-      priv_file.close();
+      logger_->log_info("Using private key file %s", private_key_.string());
     } else {
       logger_->log_debug("Private key empty");
     }
   }
 
+  passphrase_.clear();
   if (!getProperty(Passphrase.getName(), passphrase_)) {
-    logger_->log_debug("No pass phrase for %s", certificate_);
+    logger_->log_debug("No pass phrase for %s", certificate_.string());
   } else {
     std::ifstream passphrase_file(passphrase_);
     if (passphrase_file.good()) {
-      passphrase_file_ = passphrase_;
       // we should read it from the file
       passphrase_.assign((std::istreambuf_iterator<char>(passphrase_file)), std::istreambuf_iterator<char>());
     } else {
-      std::string test_passphrase = default_dir + passphrase_;
+      auto test_passphrase = default_dir / passphrase_;
       std::ifstream passphrase_file_test(test_passphrase);
       if (passphrase_file_test.good()) {
-        passphrase_ = test_passphrase;
-        passphrase_file_ = test_passphrase;
         passphrase_.assign((std::istreambuf_iterator<char>(passphrase_file_test)), std::istreambuf_iterator<char>());
       } else {
         // not an invalid file since we support a passphrase of unencrypted text
@@ -507,19 +501,21 @@ void SSLContextService::onEnable() {
     passphrase_file.close();
   }
 
-  if (getProperty(CACertificate.getName(), ca_certificate_)) {
-    std::ifstream cert_file(ca_certificate_);
-    if (!cert_file.good()) {
-      std::string test_ca_cert = default_dir + ca_certificate_;
-      std::ifstream ca_cert_file_file_test(test_ca_cert);
-      if (ca_cert_file_file_test.good()) {
-        ca_certificate_ = test_ca_cert;
+  ca_certificate_.clear();
+  if (auto ca_certificate = getProperty(CACertificate.getName())) {
+    if (is_valid_and_readable_path(*ca_certificate)) {
+      ca_certificate_ = *ca_certificate;
+    } else {
+      logger_->log_warn("Cannot open CA certificate file %s", *ca_certificate);
+      if (is_valid_and_readable_path(default_dir / *ca_certificate)) {
+        ca_certificate_ = default_dir / *ca_certificate;
       } else {
-        valid_ = false;
+        logger_->log_error("Cannot open CA certificate file %s", (default_dir / *ca_certificate).string());
       }
-      ca_cert_file_file_test.close();
     }
-    cert_file.close();
+    logger_->log_info("Using CA certificate file %s", ca_certificate_.string());
+  } else {
+    logger_->log_debug("CA Certificate empty");
   }
 
   getProperty(UseSystemCertStore.getName(), use_system_cert_store_);
@@ -543,7 +539,7 @@ void SSLContextService::initializeProperties() {
 }
 
 void SSLContextService::verifyCertificateExpiration() {
-  auto verify = [&] (const std::string& cert_file, const utils::tls::X509_unique_ptr& cert) {
+  auto verify = [&] (const std::filesystem::path& cert_file, const utils::tls::X509_unique_ptr& cert) {
     if (auto end_date = utils::tls::getCertificateExpiration(cert)) {
       std::string end_date_str = utils::timeutils::getTimeStr(*end_date);
       if (end_date.value() < std::chrono::system_clock::now()) {

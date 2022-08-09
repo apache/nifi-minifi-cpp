@@ -22,10 +22,7 @@
 #include <utility>
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 PropertiesFile::Line::Line(std::string line) : line_(line) {
   line = utils::StringUtils::trim(line);
@@ -131,7 +128,7 @@ int PropertiesFile::erase(const std::string& key) {
   return gsl::narrow<int>(num_removed);
 }
 
-void PropertiesFile::writeTo(const std::string& file_path) const {
+void PropertiesFile::writeTo(const std::filesystem::path& file_path) const {
   try {
     std::ofstream file{file_path};
     file.exceptions(std::ios::failbit | std::ios::badbit);
@@ -140,7 +137,7 @@ void PropertiesFile::writeTo(const std::string& file_path) const {
       file << line.getLine() << '\n';
     }
   } catch (const std::exception&) {
-    throw std::runtime_error{"Could not write to file " + file_path};
+    throw std::runtime_error{"Could not write to file " + file_path.string()};
   }
 }
 
@@ -152,7 +149,4 @@ PropertiesFile::Lines::const_iterator PropertiesFile::end() const {
   return lines_.end();
 }
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

@@ -40,39 +40,39 @@ constexpr const char *EMPTY_MESSAGE_ERROR_MSG = "empty message";
 constexpr const char *SEEKG_CALL_ERROR_MSG = "seekg call on file stream failed";
 constexpr const char *SEEKP_CALL_ERROR_MSG = "seekp call on file stream failed";
 
-FileStream::FileStream(const std::string &path, bool append)
+FileStream::FileStream(std::filesystem::path path, bool append)
     : offset_(0),
-      path_(path) {
+      path_(std::move(path)) {
   file_stream_ = std::make_unique<std::fstream>();
   if (append) {
-    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
+    file_stream_->open(path_, std::fstream::in | std::fstream::out | std::fstream::app | std::fstream::binary);
     if (file_stream_->is_open()) {
       seekToEndOfFile(FILE_OPENING_ERROR_MSG);
       auto len = file_stream_->tellg();
       if (len == std::streampos(-1))
         core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << TELLG_CALL_ERROR_MSG;
       length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
-      seek(offset_);
+      FileStream::seek(offset_);
     } else {
-      core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path << " " << strerror(errno);
+      core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path_.string() << " " << strerror(errno);
     }
   } else {
-    file_stream_->open(path.c_str(), std::fstream::out | std::fstream::binary);
+    file_stream_->open(path_, std::fstream::out | std::fstream::binary);
     length_ = 0;
     if (!file_stream_->is_open()) {
-      core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path << " " << strerror(errno);
+      core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path_.string() << " " << strerror(errno);
     }
   }
 }
 
-FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enable)
+FileStream::FileStream(std::filesystem::path path, uint32_t offset, bool write_enable)
     : offset_(offset),
-      path_(path) {
+      path_(std::move(path)) {
   file_stream_ = std::make_unique<std::fstream>();
   if (write_enable) {
-    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::out | std::fstream::binary);
+    file_stream_->open(path_, std::fstream::in | std::fstream::out | std::fstream::binary);
   } else {
-    file_stream_->open(path.c_str(), std::fstream::in | std::fstream::binary);
+    file_stream_->open(path_, std::fstream::in | std::fstream::binary);
   }
   if (file_stream_->is_open()) {
     seekToEndOfFile(FILE_OPENING_ERROR_MSG);
@@ -80,9 +80,9 @@ FileStream::FileStream(const std::string &path, uint32_t offset, bool write_enab
     if (len == std::streampos(-1))
       core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << TELLG_CALL_ERROR_MSG;
     length_ = len > 0 ? gsl::narrow<size_t>(len) : 0;
-    seek(offset_);
+    FileStream::seek(offset_);
   } else {
-    core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path << " " << strerror(errno);
+    core::logging::LOG_ERROR(logger_) << FILE_OPENING_ERROR_MSG << path_.string() << " " << strerror(errno);
   }
 }
 

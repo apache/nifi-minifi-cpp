@@ -41,7 +41,7 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
 
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::BatchSize.getName(), "2");
@@ -57,9 +57,9 @@ TEST_CASE("GenerateFlowFileTest", "[generateflowfiletest]") {
 
   std::vector<std::string> file_contents;
 
-  auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
-    file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
+  auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+    std::ifstream is(path / filename, std::ifstream::binary);
+    file_contents.emplace_back((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
     return true;
   };
 
@@ -85,7 +85,7 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
 
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::BatchSize.getName(), "2");
@@ -100,12 +100,12 @@ TEST_CASE("GenerateFlowFileWithNonUniqueBinaryData", "[generateflowfiletest]") {
 
   std::vector<std::vector<char>> fileContents;
 
-  auto lambda = [&fileContents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
+  auto lambda = [&fileContents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+    std::ifstream is(path / filename, std::ifstream::binary);
 
-    is.seekg(0, is.end);
+    is.seekg(0, std::ifstream::end);
     auto length = gsl::narrow<size_t>(is.tellg());
-    is.seekg(0, is.beg);
+    is.seekg(0, std::ifstream::beg);
 
     std::vector<char> content(length);
 
@@ -137,7 +137,7 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
 
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "0");
 
@@ -146,10 +146,10 @@ TEST_CASE("GenerateFlowFileTestEmpty", "[generateemptyfiletest]") {
 
   size_t counter = 0;
 
-  auto lambda = [&counter](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
+  auto lambda = [&counter](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+    std::ifstream is(path / filename, std::ifstream::binary);
 
-    is.seekg(0, is.end);
+    is.seekg(0, std::ifstream::end);
     REQUIRE(is.tellg() == 0);
 
     counter++;
@@ -174,7 +174,7 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
 
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "${UUID()}");
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::UniqueFlowFiles.getName(), "false");
@@ -186,9 +186,9 @@ TEST_CASE("GenerateFlowFileCustomTextTest", "[generateflowfiletest]") {
 
   std::vector<std::string> file_contents;
 
-  auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
-    file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
+  auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+    std::ifstream is(path / filename, std::ifstream::binary);
+    file_contents.emplace_back((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
     return true;
   };
 
@@ -210,7 +210,7 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
 
   std::shared_ptr<core::Processor> putfile = plan->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
 
-  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir);
+  plan->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir.string());
 
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::FileSize.getName(), "10");
   plan->setProperty(genfile, org::apache::nifi::minifi::processors::GenerateFlowFile::CustomText.getName(), "");
@@ -223,9 +223,9 @@ TEST_CASE("GenerateFlowFileCustomTextEmptyTest", "[generateflowfiletest]") {
 
   std::vector<std::string> file_contents;
 
-  auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::get_separator() + filename, std::ifstream::binary);
-    file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
+  auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+    std::ifstream is(path / filename, std::ifstream::binary);
+    file_contents.emplace_back((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>());
     return true;
   };
 

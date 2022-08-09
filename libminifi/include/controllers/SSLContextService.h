@@ -82,14 +82,12 @@ class SSLContextService : public core::controller::ControllerService {
   explicit SSLContextService(std::string name, const utils::Identifier &uuid = {})
       : ControllerService(std::move(name), uuid),
         initialized_(false),
-        valid_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {
   }
 
   explicit SSLContextService(std::string name, const std::shared_ptr<Configure> &configuration)
       : ControllerService(std::move(name)),
         initialized_(false),
-        valid_(false),
         logger_(core::logging::LoggerFactory<SSLContextService>::getLogger()) {
     setConfiguration(configuration);
     initialize();
@@ -143,15 +141,13 @@ class SSLContextService : public core::controller::ControllerService {
 
   std::unique_ptr<SSLContext> createSSLContext();
 
-  const std::string &getCertificateFile();
+  const std::filesystem::path &getCertificateFile();
 
   const std::string &getPassphrase();
 
-  const std::string &getPassphraseFile();
+  const std::filesystem::path &getPrivateKeyFile();
 
-  const std::string &getPrivateKeyFile();
-
-  const std::string &getCACertificate();
+  const std::filesystem::path &getCACertificate();
 
   void yield() override {
   }
@@ -209,12 +205,10 @@ class SSLContextService : public core::controller::ControllerService {
 
   std::mutex initialization_mutex_;
   bool initialized_;
-  std::atomic<bool> valid_;
-  std::string certificate_;
-  std::string private_key_;
+  std::filesystem::path certificate_;
+  std::filesystem::path private_key_;
   std::string passphrase_;
-  std::string passphrase_file_;
-  std::string ca_certificate_;
+  std::filesystem::path ca_certificate_;
   bool use_system_cert_store_ = false;
 #ifdef WIN32
   std::string cert_store_location_;
@@ -236,8 +230,8 @@ class SSLContextService : public core::controller::ControllerService {
   }
 #endif
 
-  static bool isFileTypeP12(const std::string& filename) {
-    return utils::StringUtils::endsWith(filename, "p12", false);
+  static bool isFileTypeP12(const std::filesystem::path& filename) {
+    return utils::StringUtils::endsWith(filename.string(), "p12", false);
   }
 
  private:

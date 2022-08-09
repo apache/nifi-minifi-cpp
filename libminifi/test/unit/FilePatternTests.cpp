@@ -271,13 +271,13 @@ TEST_CASE("Check only relevant subdir contents") {
   for (const auto& file : {file1, file2, file3}) {std::ofstream{file};}
 
   std::set<std::filesystem::path> checked_files;
-  auto file_cb = [&] (const std::string& dir, const std::string& file) -> bool {
-    checked_files.insert(utils::file::concat_path(dir, file));
+  auto file_cb = [&] (const std::filesystem::path& dir, const std::filesystem::path& file) -> bool {
+    checked_files.insert(dir / file);
     return true;
   };
-  auto dir_cb = [&] (const std::string& dir) -> bool {
+  auto dir_cb = [&] (const std::filesystem::path& dir) -> bool {
     // only check the "one" subdir
-    return std::filesystem::path{dir} == root / "one";
+    return dir == root / "one";
   };
   utils::file::list_dir(root.string(), file_cb, controller.getLogger(), dir_cb);
 

@@ -62,14 +62,14 @@ bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchiv
     std::shared_ptr<TestPlan> plan = testController.createPlan();
     std::shared_ptr<TestRepository> repo = std::make_shared<TestRepository>();
 
-    std::string dir1 = testController.createTempDirectory();
-    std::string dir2 = testController.createTempDirectory();
+    auto dir1 = testController.createTempDirectory();
+    auto dir2 = testController.createTempDirectory();
 
     REQUIRE(!dir1.empty());
     REQUIRE(!dir2.empty());
 
     std::shared_ptr<core::Processor> getfile = plan->addProcessor("GetFile", "getfileCreate2");
-    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1);
+    plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir1.string());
     plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
 
     std::shared_ptr<core::Processor> maprocessor = plan->addProcessor("ManipulateArchive", "testManipulateArchive", core::Relationship("success", "description"), true);
@@ -79,11 +79,11 @@ bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchiv
     }
 
     std::shared_ptr<core::Processor> putfile2 = plan->addProcessor("PutFile", "PutFile2", core::Relationship("success", "description"), true);
-    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir2);
+    plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir2.string());
     plan->setProperty(putfile2, org::apache::nifi::minifi::processors::PutFile::ConflictResolution.getName(),
                       org::apache::nifi::minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
 
-    std::string archive_path_1 = utils::file::FileUtils::concat_path(dir1, TEST_ARCHIVE_NAME);
+    auto archive_path_1 = dir1 / TEST_ARCHIVE_NAME;
 
     build_test_archive(archive_path_1, input_archive);
     REQUIRE(check_archive_contents(archive_path_1, input_archive, true));
@@ -92,7 +92,7 @@ bool run_archive_test(OrderedTestArchive& input_archive, const OrderedTestArchiv
     plan->runNextProcessor();  // ManipulateArchive
     plan->runNextProcessor();  // PutFile 2 (manipulated)
 
-    std::string output_path = utils::file::FileUtils::concat_path(dir2, TEST_ARCHIVE_NAME);
+    auto output_path = dir2 / TEST_ARCHIVE_NAME;
     return check_archive_contents(output_path, output_archive, check_attributes);
 }
 

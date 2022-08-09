@@ -42,7 +42,7 @@ class PerformanceDataMonitorTester {
     plan_ = test_controller_.createPlan();
     performance_monitor_ = plan_->addProcessor("PerformanceDataMonitor", "pdhsys");
     putfile_ = plan_->addProcessor("PutFile", "putfile", core::Relationship("success", "description"), true);
-    plan_->setProperty(putfile_, PutFile::Directory.getName(), dir_);
+    plan_->setProperty(putfile_, PutFile::Directory.getName(), dir_.string());
   }
 
   bool runWithRetries(std::function<bool()>&& assertions, uint32_t max_tries = 10) {
@@ -63,7 +63,7 @@ class PerformanceDataMonitorTester {
   }
 
   TestController test_controller_;
-  std::string dir_;
+  std::filesystem::path dir_;
   std::shared_ptr<TestPlan> plan_;
   std::shared_ptr<core::Processor> performance_monitor_;
   std::shared_ptr<core::Processor> putfile_;
@@ -89,8 +89,8 @@ TEST_CASE("PerformanceDataMonitorPartiallyInvalidGroupPropertyTest", "[performan
 
     bool ff_contains_all_data = false;
 
-    const auto lambda = [&ff_contains_all_data](const std::string& path, const std::string& filename) -> bool {
-      FILE* fp = fopen((path + utils::file::FileUtils::get_separator() + filename).c_str(), "r");
+    const auto lambda = [&ff_contains_all_data](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      FILE* fp = fopen((path / filename).string().c_str(), "r");
       REQUIRE(fp != nullptr);
       char readBuffer[500];
       rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
@@ -118,8 +118,8 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTest", "[performancedatamonito
 
   const auto assertions = [&tester]() {
     bool ff_contains_all_data = false;
-    const auto lambda = [&ff_contains_all_data](const std::string& path, const std::string& filename) -> bool {
-      FILE* fp = fopen((path + utils::file::FileUtils::get_separator() + filename).c_str(), "r");
+    const auto lambda = [&ff_contains_all_data](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      FILE* fp = fopen((path / filename).string().c_str(), "r");
       REQUIRE(fp != nullptr);
       char readBuffer[50000];
       rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
@@ -152,8 +152,8 @@ TEST_CASE("PerformanceDataMonitorCustomPDHCountersTestOpenTelemetry", "[performa
 
   const auto assertions = [&tester]() {
     bool ff_contains_all_data = false;
-    const auto lambda = [&ff_contains_all_data](const std::string& path, const std::string& filename) -> bool {
-      FILE* fp = fopen((path + utils::file::FileUtils::get_separator() + filename).c_str(), "r");
+    const auto lambda = [&ff_contains_all_data](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      FILE* fp = fopen((path / filename).string().c_str(), "r");
       REQUIRE(fp != nullptr);
       char readBuffer[50000];
       rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
@@ -188,8 +188,8 @@ TEST_CASE("PerformanceDataMonitorAllPredefinedGroups", "[performancedatamonitora
 
   const auto assertions = [&tester]() {
     bool ff_contains_all_data = false;
-    const auto lambda = [&ff_contains_all_data](const std::string& path, const std::string& filename) -> bool {
-      FILE* fp = fopen((path + utils::file::FileUtils::get_separator() + filename).c_str(), "r");
+    const auto lambda = [&ff_contains_all_data](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      FILE* fp = fopen((path / filename).string().c_str(), "r");
       REQUIRE(fp != nullptr);
       char readBuffer[50000];
       rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));

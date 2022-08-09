@@ -32,19 +32,19 @@ utils::crypto::Bytes encryption_key = utils::StringUtils::from_hex("4024b327fdc9
 struct FileSystemTest : TestController {
   FileSystemTest() {
     dir = createTempDirectory();
-    encrypted_file = utils::file::FileUtils::concat_path(dir, "encrypted.txt");
-    raw_file = utils::file::FileUtils::concat_path(dir, "raw.txt");
-    new_file = utils::file::FileUtils::concat_path(dir, "new.txt");
+    encrypted_file = dir / "encrypted.txt";
+    raw_file = dir / "raw.txt";
+    new_file = dir / "new.txt";
 
     std::ofstream{encrypted_file, std::ios::binary} << crypto.encrypt("banana");
     std::ofstream{raw_file, std::ios::binary} << "banana";
   }
 
   EncryptionProvider crypto{encryption_key};
-  std::string encrypted_file;
-  std::string raw_file;
-  std::string new_file;
-  std::string dir;
+  std::filesystem::path encrypted_file;
+  std::filesystem::path raw_file;
+  std::filesystem::path new_file;
+  std::filesystem::path dir;
 };
 
 TEST_CASE_METHOD(FileSystemTest, "Can read encrypted or non-encrypted file", "[file_system]") {

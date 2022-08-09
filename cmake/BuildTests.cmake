@@ -30,13 +30,6 @@ ENDMACRO()
 
 set(NANOFI_TEST_DIR "${CMAKE_SOURCE_DIR}/nanofi/tests/")
 
-if(NOT EXCLUDE_BOOST)
-    find_package(Boost COMPONENTS system filesystem)
-    if(Boost_FOUND)
-        add_definitions(-DUSE_BOOST)
-    endif()
-endif()
-
 function(appendIncludes testName)
     target_include_directories(${testName} SYSTEM BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/catch")
     target_include_directories(${testName} BEFORE PRIVATE "${CMAKE_SOURCE_DIR}/include")

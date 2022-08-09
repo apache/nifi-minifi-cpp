@@ -16,44 +16,22 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
-#include <cstring>
-#include <utility>
-#include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
 #include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <functional>
 #include <iterator>
-#include <random>
-#ifndef WIN32
-#include <unistd.h>
-#endif
 
 #include "TestBase.h"
 #include "Catch.h"
-#include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
 #include "processors/FetchSFTP.h"
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
-#include "processors/UpdateAttribute.h"
 #include "processors/PutFile.h"
 #include "tools/SFTPTestServer.h"
 
@@ -122,7 +100,7 @@ class FetchSFTPTestsFixture {
     plan->setProperty(fetch_sftp, "Use Compression", "false");
 
     // Configure PutFile processor
-    plan->setProperty(put_file, "Directory", dst_dir + "/${path}");
+    plan->setProperty(put_file, "Directory", (dst_dir / "${path}").string());
     plan->setProperty(put_file, "Conflict Resolution Strategy", minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
@@ -133,11 +111,11 @@ class FetchSFTPTestsFixture {
 
   // Create source file
   void createFile(const std::string& relative_path, const std::string& content) {
+    const auto file_path = src_dir / "vfs" / relative_path;
+    std::filesystem::create_directories(file_path.parent_path());
+
     std::fstream file;
-    std::stringstream ss;
-    ss << src_dir << "/vfs/" << relative_path;
-    utils::file::create_dir(utils::file::get_parent_path(ss.str()));
-    file.open(ss.str(), std::ios::out);
+    file.open(file_path, std::ios::out);
     file << content;
     file.close();
   }
@@ -148,17 +126,17 @@ class FetchSFTPTestsFixture {
   };
 
   void testFile(TestWhere where, const std::string& relative_path, const std::string& expected_content) {
-    std::stringstream resultFile;
+    std::filesystem::path result_file;
     if (where == IN_DESTINATION) {
-      resultFile << dst_dir << "/" << relative_path;
+      result_file = dst_dir / relative_path;
     } else {
-      resultFile << src_dir << "/vfs/" << relative_path;
+      result_file = src_dir / "vfs" / relative_path;
 #ifndef WIN32
       /* Workaround for mina-sshd setting the read file's permissions to 0000 */
-      REQUIRE(0 == chmod(resultFile.str().c_str(), 0644));
+      REQUIRE(0 == chmod(result_file.string().c_str(), 0644));
 #endif
     }
-    std::ifstream file(resultFile.str());
+    std::ifstream file(result_file);
     REQUIRE(true == file.good());
     std::stringstream content;
     std::vector<char> buffer(1024U);
@@ -170,25 +148,25 @@ class FetchSFTPTestsFixture {
   }
 
   void testFileNotExists(TestWhere where, const std::string& relative_path) {
-    std::stringstream resultFile;
+    std::filesystem::path result_file;
     if (where == IN_DESTINATION) {
-      resultFile << dst_dir << "/" << relative_path;
+      result_file = dst_dir / relative_path;
     } else {
-      resultFile << src_dir << "/vfs/" << relative_path;
+      result_file = src_dir / "vfs" / relative_path;
 #ifndef WIN32
       /* Workaround for mina-sshd setting the read file's permissions to 0000 */
-      REQUIRE(-1 == chmod(resultFile.str().c_str(), 0644));
+      REQUIRE(-1 == chmod(result_file.string().c_str(), 0644));
 #endif
     }
-    std::ifstream file(resultFile.str());
+    std::ifstream file(result_file);
     REQUIRE(false == file.is_open());
     REQUIRE(false == file.good());
   }
 
  protected:
   TestController testController;
-  std::string src_dir = testController.createTempDirectory();
-  std::string dst_dir = testController.createTempDirectory();
+  std::filesystem::path src_dir{testController.createTempDirectory()};
+  std::filesystem::path dst_dir{testController.createTempDirectory()};
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::unique_ptr<SFTPTestServer> sftp_server;
   std::shared_ptr<core::Processor> generate_flow_file;
@@ -217,7 +195,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch one file", "[FetchSFTP]
 
 TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP public key authentication", "[FetchSFTP][basic]") {
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(fetch_sftp, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(fetch_sftp, "Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").generic_string());
   plan->setProperty(fetch_sftp, "Private Key Passphrase", "privatekeypassword");
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
@@ -256,7 +234,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch non-readable file", "[F
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
-  REQUIRE(0 == chmod((src_dir + "/vfs/nifi_test/tstFile.ext").c_str(), 0000));
+  REQUIRE(0 == chmod((src_dir / "vfs" / "nifi_test" / "tstFile.ext").string().c_str(), 0000));
 
   testController.runSession(plan, true);
 
@@ -311,7 +289,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
   /* By making the parent directory non-writable we make it impossible do delete the source file */
-  REQUIRE(0 == chmod((src_dir + "/vfs/nifi_test").c_str(), 0500));
+  REQUIRE(0 == chmod((src_dir / "vfs" / "nifi_test").string().c_str(), 0500));
 
   testController.runSession(plan, true);
 
@@ -327,7 +305,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP Completion Strategy Delete Fi
   REQUIRE(LogTestController::getInstance().contains("key:sftp.remote.port value:" + std::to_string(sftp_server->getPort())));
   REQUIRE(LogTestController::getInstance().contains("key:path value:nifi_test/"));
   REQUIRE(LogTestController::getInstance().contains("key:filename value:tstFile.ext"));
-  REQUIRE(0 == chmod((src_dir + "/vfs/nifi_test").c_str(), 0755));
+  REQUIRE(0 == chmod((src_dir / "vfs" / "nifi_test").string().c_str(), 0755));
 }
 #endif
 
@@ -384,8 +362,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP expression language test", "[
   plan->setProperty(update_attribute, "attr_Port", std::to_string(sftp_server->getPort()), true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Username", "nifiuser", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Password", "nifipassword", true /*dynamic*/);
-  plan->setProperty(update_attribute, "attr_Private Key Path",
-    utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"), true /*dynamic*/);
+  plan->setProperty(update_attribute, "attr_Private Key Path", (get_sftp_test_dir() / "resources" / "id_rsa").generic_string(), true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Private Key Passphrase", "privatekeypassword", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Remote File", "nifi_test/tstFile.ext", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Move Destination Directory", "nifi_done/", true /*dynamic*/);

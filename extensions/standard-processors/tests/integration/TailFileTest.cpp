@@ -41,11 +41,9 @@ class TailFileTestHarness : public IntegrationBase {
   TailFileTestHarness() : IntegrationBase(2s) {
     dir = testController.createTempDirectory();
 
-    statefile = dir + utils::file::get_separator();
-    statefile += "statefile";
+    statefile = dir / "statefile";
     std::fstream file;
-    ss << dir << utils::file::get_separator() << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
+    file.open(dir / "tstFile.ext", std::ios::out);
     file << "Lin\\e1\nli\\nen\nli\\ne3\nli\\ne4\nli\\ne5\n";
     file.close();
   }
@@ -60,8 +58,8 @@ class TailFileTestHarness : public IntegrationBase {
   }
 
   void cleanup() override {
-    std::remove(ss.str().c_str());
-    std::remove(statefile.c_str());
+    std::filesystem::remove(dir / "tstFile.ext");
+    std::filesystem::remove(statefile);
     IntegrationBase::cleanup();
   }
 
@@ -78,15 +76,14 @@ class TailFileTestHarness : public IntegrationBase {
     fc.executeOnComponent("tf", [this] (minifi::state::StateController& component) {
       auto proc = dynamic_cast<minifi::state::ProcessorController*>(&component);
       if (nullptr != proc) {
-        proc->getProcessor().setProperty(minifi::processors::TailFile::FileName, ss.str());
-        proc->getProcessor().setProperty(minifi::processors::TailFile::StateFile, statefile);
+        proc->getProcessor().setProperty(minifi::processors::TailFile::FileName, (dir / "tstFile.ext").string());
+        proc->getProcessor().setProperty(minifi::processors::TailFile::StateFile, statefile.string());
       }
     });
   }
 
-  std::string statefile;
-  std::string dir;
-  std::stringstream ss;
+  std::filesystem::path statefile;
+  std::filesystem::path dir;
   TestController testController;
 };
 

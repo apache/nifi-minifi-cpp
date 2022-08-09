@@ -175,14 +175,16 @@ int main(int argc, char **argv) {
   }
 #endif
   // Determine MINIFI_HOME
-  const std::string minifiHome = determineMinifiHome(logger);
+  const auto minifiHome = determineMinifiHome(logger);
   if (minifiHome.empty()) {
     // determineMinifiHome already logged everything we need
     return -1;
   }
   // chdir to MINIFI_HOME
-  if (!utils::Environment::setCurrentWorkingDirectory(minifiHome.c_str())) {
-    logger->log_error("Failed to change working directory to MINIFI_HOME (%s)", minifiHome);
+  std::error_code current_path_error;
+  std::filesystem::current_path(minifiHome, current_path_error);
+  if (current_path_error) {
+    logger->log_error("Failed to change working directory to MINIFI_HOME (%s)", minifiHome.string());
     return -1;
   }
   const auto flow_controller_semaphore_path = "/MiNiFiMain";
@@ -231,7 +233,7 @@ int main(int argc, char **argv) {
     utils::IdGenerator::getIdGenerator()->initialize(uid_properties);
 
     // Make a record of minifi home in the configured log file.
-    logger->log_info("MINIFI_HOME=%s", minifiHome);
+    logger->log_info("MINIFI_HOME=%s", minifiHome.string());
 
     auto decryptor = minifi::Decryptor::create(minifiHome);
     if (decryptor) {
@@ -254,11 +256,11 @@ int main(int argc, char **argv) {
 
       std::cerr << "Dumping docs to " << argv[2] << std::endl;
       if (argc == 4) {
-        std::string filepath;
-        std::string filename;
-        utils::file::PathUtils::getFileNameAndPath(argv[3], filepath, filename);
-        if (filepath == argv[2]) {
-          std::cerr << "Target file should be out of the working directory: " << filepath << std::endl;
+        auto path = std::filesystem::path(argv[3]);
+        auto dir = path.parent_path();
+        auto filename = path.filename();
+        if (dir == argv[2]) {
+          std::cerr << "Target file should be out of the working directory: " << dir << std::endl;
           exit(1);
         }
         std::ofstream outref(argv[3]);

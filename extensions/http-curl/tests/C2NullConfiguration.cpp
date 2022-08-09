@@ -50,8 +50,8 @@ class VerifyC2Server : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<processors::LogAttribute>();
     LogTestController::getInstance().setDebug<core::ProcessSession>();
     std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
+    auto path = dir / "tstFile.ext";
+    file.open(path, std::ios::out);
     file << "tempFile";
     file.close();
   }
@@ -88,8 +88,7 @@ class VerifyC2Server : public HTTPIntegrationBase {
 
  protected:
   bool isSecure;
-  std::string dir;
-  std::stringstream ss;
+  std::filesystem::path dir;
   TestController testController;
 };
 

@@ -95,7 +95,7 @@ class JVMCreator : public minifi::core::CoreComponent {
 
   std::vector<std::string> jvm_options_;
 
-  std::vector<std::string> classpaths_;
+  std::vector<std::filesystem::path> classpaths_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<JVMCreator>::getLogger();
 };

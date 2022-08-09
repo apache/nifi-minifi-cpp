@@ -25,7 +25,7 @@
 class RocksDBStreamTest : TestController {
  public:
   RocksDBStreamTest() {
-    dbPath = createTempDirectory();
+    dbPath = createTempDirectory().string();
     auto set_db_opts = [] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
       db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
       db_opts.set(&rocksdb::DBOptions::use_direct_io_for_flush_and_compaction, true);

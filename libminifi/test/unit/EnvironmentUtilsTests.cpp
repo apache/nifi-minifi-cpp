@@ -30,64 +30,63 @@
 
 TEST_CASE("getenv already existing", "[getenv]") {
   auto res = utils::Environment::getEnvironmentVariable("PATH");
-  REQUIRE(true == res.first);
-  REQUIRE(0 < res.second.length());
+  REQUIRE(res.has_value());
+  REQUIRE(0 < res->length());
 }
 
 TEST_CASE("getenv not existing", "[getenv]") {
   auto res = utils::Environment::getEnvironmentVariable("GETENV1");
-  REQUIRE(false == res.first);
-  REQUIRE("" == res.second);
+  REQUIRE(!res);
 }
 
 TEST_CASE("getenv empty existing", "[getenv]") {
   REQUIRE(true == utils::Environment::setEnvironmentVariable("GETENV2", ""));
   auto res = utils::Environment::getEnvironmentVariable("GETENV2");
-  REQUIRE(true == res.first);
-  REQUIRE("" == res.second);
+  REQUIRE(res);
+  CHECK(res->empty());
 }
 
 TEST_CASE("setenv not existing overwrite", "[setenv]") {
   REQUIRE(true == utils::Environment::setEnvironmentVariable("SETENV1", "test"));
   auto res = utils::Environment::getEnvironmentVariable("SETENV1");
-  REQUIRE(true == res.first);
-  REQUIRE("test" == res.second);
+  REQUIRE(res);
+  CHECK("test" == *res);
 }
 
 TEST_CASE("setenv existing overwrite", "[setenv]") {
   REQUIRE(true == utils::Environment::setEnvironmentVariable("SETENV2", "test"));
   REQUIRE(true == utils::Environment::setEnvironmentVariable("SETENV2", "test2"));
   auto res = utils::Environment::getEnvironmentVariable("SETENV2");
-  REQUIRE(true == res.first);
-  REQUIRE("test2" == res.second);
+  REQUIRE(res);
+  CHECK("test2" == *res);
 }
 
 TEST_CASE("setenv not existing no overwrite", "[setenv]") {
   REQUIRE(true == utils::Environment::setEnvironmentVariable("SETENV3", "test", false /*overwrite*/));
   auto res = utils::Environment::getEnvironmentVariable("SETENV3");
-  REQUIRE(true == res.first);
-  REQUIRE("test" == res.second);
+  REQUIRE(res);
+  CHECK("test" == *res);
 }
 
 TEST_CASE("setenv existing no overwrite", "[setenv]") {
   REQUIRE(true == utils::Environment::setEnvironmentVariable("SETENV4", "test"));
   REQUIRE(true == utils::Environment::setEnvironmentVariable("SETENV4", "test2", false /*overwrite*/));
   auto res = utils::Environment::getEnvironmentVariable("SETENV4");
-  REQUIRE(true == res.first);
-  REQUIRE("test" == res.second);
+  REQUIRE(res);
+  CHECK("test" == *res);
 }
 
 TEST_CASE("unsetenv not existing", "[unsetenv]") {
-  REQUIRE(false == utils::Environment::getEnvironmentVariable("UNSETENV1").first);
+  REQUIRE(!utils::Environment::getEnvironmentVariable("UNSETENV1"));
   REQUIRE(true == utils::Environment::unsetEnvironmentVariable("UNSETENV1"));
-  REQUIRE(false == utils::Environment::getEnvironmentVariable("UNSETENV1").first);
+  REQUIRE(!utils::Environment::getEnvironmentVariable("UNSETENV1"));
 }
 
 TEST_CASE("unsetenv existing", "[unsetenv]") {
   REQUIRE(true == utils::Environment::setEnvironmentVariable("UNSETENV2", "test"));
-  REQUIRE(true == utils::Environment::getEnvironmentVariable("UNSETENV2").first);
+  REQUIRE(utils::Environment::getEnvironmentVariable("UNSETENV2"));
   REQUIRE(true == utils::Environment::unsetEnvironmentVariable("UNSETENV2"));
-  REQUIRE(false == utils::Environment::getEnvironmentVariable("UNSETENV2").first);
+  REQUIRE(!utils::Environment::getEnvironmentVariable("UNSETENV2"));
 }
 
 TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]") {
@@ -130,29 +129,11 @@ TEST_CASE("multithreaded environment manipulation", "[getenv][setenv][unsetenv]"
   }
   for (size_t i = 0U; i < 8U; i++) {
     const std::string env_name = "GETSETUNSETENV" + std::to_string(i);
-    bool isset = false;
-    std::string value;
-    std::tie(isset, value) = utils::Environment::getEnvironmentVariable(env_name.c_str());
-    if (isset) {
-      std::cerr << env_name << " is set to " << value << std::endl;
+    auto value = utils::Environment::getEnvironmentVariable(env_name.c_str());
+    if (value) {
+      std::cerr << env_name << " is set to " << *value << std::endl;
     } else {
       std::cerr << env_name << " is not set" << std::endl;
     }
   }
-}
-
-TEST_CASE("getcwd", "[getcwd]") {
-  const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
-  std::cerr << "cwd is " << cwd << std::endl;
-  REQUIRE(false == cwd.empty());
-}
-
-TEST_CASE("setcwd", "[setcwd]") {
-  TestController testController;
-  const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
-  const std::string tempDir = utils::file::getFullPath(testController.createTempDirectory());
-  REQUIRE(true == utils::Environment::setCurrentWorkingDirectory(tempDir.c_str()));
-  REQUIRE(tempDir == utils::Environment::getCurrentWorkingDirectory());
-  REQUIRE(true == utils::Environment::setCurrentWorkingDirectory(cwd.c_str()));
-  REQUIRE(cwd == utils::Environment::getCurrentWorkingDirectory());
 }

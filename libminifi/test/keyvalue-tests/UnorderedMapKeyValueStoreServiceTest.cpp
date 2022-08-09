@@ -62,13 +62,7 @@ class UnorderedMapKeyValueStoreServiceTestFixture {
     LogTestController::getInstance().setTrace<minifi::controllers::PersistableKeyValueStoreService>();
     LogTestController::getInstance().setTrace<minifi::controllers::AbstractAutoPersistingKeyValueStoreService>();
 
-    const auto state_dir = testController.createTempDirectory();
-    REQUIRE(!state_dir.empty());
-#ifdef WIN32
-    REQUIRE(0 == _chdir(state_dir.c_str()));
-#else
-    REQUIRE(0 == chdir(state_dir.c_str()));
-#endif
+    std::filesystem::current_path(testController.createTempDirectory());
 
     configuration->set(minifi::Configure::nifi_flow_configuration_file, config_yaml);
     content_repo->initialize(configuration);

@@ -154,15 +154,8 @@ class ListThenFetchSFTPTestsFixture {
     std::fstream file;
     std::stringstream ss;
     ss << src_dir << "/vfs/" << relative_path;
-    auto full_path = ss.str();
-    std::deque<std::string> parent_dirs;
-    std::string parent_dir = full_path;
-    while (!(parent_dir = utils::file::get_parent_path(parent_dir)).empty()) {
-      parent_dirs.push_front(parent_dir);
-    }
-    for (const auto& dir : parent_dirs) {
-      utils::file::create_dir(dir);
-    }
+    auto full_path = std::filesystem::path(ss.str());
+    std::filesystem::create_directories(full_path.parent_path());
     file.open(ss.str(), std::ios::out);
     file << content;
     file.close();

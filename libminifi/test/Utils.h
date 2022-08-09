@@ -168,14 +168,14 @@ struct FlowFileQueueTestAccessor {
 
 bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
                         const asio::ip::tcp::endpoint& remote_endpoint,
-                        const std::string& ca_cert_path,
+                        const std::filesystem::path& ca_cert_path,
                         const std::optional<minifi::utils::net::SslData>& ssl_data = std::nullopt) {
   asio::ssl::context ctx(asio::ssl::context::sslv23);
-  ctx.load_verify_file(ca_cert_path);
+  ctx.load_verify_file(ca_cert_path.string());
   if (ssl_data) {
     ctx.set_verify_mode(asio::ssl::verify_peer);
-    ctx.use_certificate_file(ssl_data->cert_loc, asio::ssl::context::pem);
-    ctx.use_private_key_file(ssl_data->key_loc, asio::ssl::context::pem);
+    ctx.use_certificate_file(ssl_data->cert_loc.string(), asio::ssl::context::pem);
+    ctx.use_private_key_file(ssl_data->key_loc.string(), asio::ssl::context::pem);
     ctx.set_password_callback([password = ssl_data->key_pw](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
   }
   asio::io_context io_context;
@@ -199,5 +199,17 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents,
   }
   return true;
 }
+
+#ifdef WIN32
+inline std::error_code hide_file(const std::filesystem::path& file_name) {
+    const bool success = SetFileAttributesA(file_name.string().c_str(), FILE_ATTRIBUTE_HIDDEN);
+    if (!success) {
+      // note: All possible documented error codes from GetLastError are in [0;15999] at the time of writing.
+      // The below casting is safe in [0;std::numeric_limits<int>::max()], int max is guaranteed to be at least 32767
+      return { static_cast<int>(GetLastError()), std::system_category() };
+    }
+    return {};
+  }
+#endif /* WIN32 */
 
 }  // namespace org::apache::nifi::minifi::test::utils

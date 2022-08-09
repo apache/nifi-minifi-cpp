@@ -38,7 +38,7 @@ using namespace std::literals::chrono_literals;
 class HttpTestHarness : public HTTPIntegrationBase {
  public:
   HttpTestHarness() : HTTPIntegrationBase(4s) {
-    dir = testController.createTempDirectory();
+    dir_ = test_controller_.createTempDirectory();
   }
 
   void testSetup() override {
@@ -56,8 +56,8 @@ class HttpTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setDebug<minifi::TimerDrivenSchedulingAgent>();
     LogTestController::getInstance().setDebug<minifi::core::ProcessSession>();
     std::fstream file;
-    ss << dir << "/" << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
+    path_ = dir_ / "tstFile.ext";
+    file.open(path_, std::ios::out);
     file << "tempFile";
     file.close();
     configuration->set(org::apache::nifi::minifi::Configuration::nifi_flow_engine_threads, "8");
@@ -65,7 +65,7 @@ class HttpTestHarness : public HTTPIntegrationBase {
   }
 
   void cleanup() override {
-    std::remove(ss.str().c_str());
+    std::filesystem::remove(path_);
     IntegrationBase::cleanup();
   }
 
@@ -78,9 +78,9 @@ class HttpTestHarness : public HTTPIntegrationBase {
   }
 
  protected:
-  std::string dir;
-  std::stringstream ss;
-  TestController testController;
+  std::filesystem::path dir_;
+  std::filesystem::path path_;
+  TestController test_controller_;
 };
 
 int main(int argc, char **argv) {

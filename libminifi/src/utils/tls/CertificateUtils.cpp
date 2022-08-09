@@ -179,12 +179,12 @@ std::optional<std::chrono::system_clock::time_point> getCertificateExpiration(co
   return utils::timeutils::to_sys_time(end);
 }
 
-std::error_code processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler) {
+std::error_code processP12Certificate(const std::filesystem::path& cert_file, const std::string& passphrase, const CertHandler& handler) {
   utils::tls::BIO_unique_ptr fp{BIO_new(BIO_s_file())};
   if (fp == nullptr) {
     return get_last_ssl_error_code();
   }
-  if (BIO_read_filename(fp.get(), cert_file.c_str()) <= 0) {
+  if (BIO_read_filename(fp.get(), cert_file.string().c_str()) <= 0) {
     return get_last_ssl_error_code();
   }
   utils::tls::PKCS12_unique_ptr  p12{d2i_PKCS12_bio(fp.get(), nullptr)};
@@ -223,12 +223,12 @@ std::error_code processP12Certificate(const std::string& cert_file, const std::s
   return {};
 }
 
-std::error_code processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler) {
+std::error_code processPEMCertificate(const std::filesystem::path& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler) {
   utils::tls::BIO_unique_ptr fp{BIO_new(BIO_s_file())};
   if (fp == nullptr) {
     return get_last_ssl_error_code();
   }
-  if (BIO_read_filename(fp.get(), cert_file.c_str()) <= 0) {
+  if (BIO_read_filename(fp.get(), cert_file.string().c_str()) <= 0) {
     return get_last_ssl_error_code();
   }
   std::decay_t<decltype(pemPassWordCb)> pwd_cb = nullptr;

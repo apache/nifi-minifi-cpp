@@ -17,8 +17,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
-#define LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
+#pragma once
 
 #include <map>
 #include <memory>
@@ -31,10 +30,7 @@
 #include "utils/ChecksumCalculator.h"
 #include "utils/StringUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 enum class PropertyChangeLifetime {
   TRANSIENT,  // the changed value will not be committed to disk
@@ -78,7 +74,7 @@ class Properties {
         it->second.need_to_persist_new_value = true;
       }
     } else {
-      // brand new property
+      // brand-new property
       properties_[key] = PropertyValue{value, active_value, should_persist};
     }
 
@@ -117,10 +113,10 @@ class Properties {
    * Load configure file
    * @param fileName path of the configuration file RELATIVE to MINIFI_HOME set by setHome()
    */
-  void loadConfigureFile(const char *fileName);
+  void loadConfigureFile(std::filesystem::path configuration_file);
 
   // Set the determined MINIFI_HOME
-  void setHome(std::string minifiHome) {
+  void setHome(std::filesystem::path minifiHome) {
     minifi_home_ = std::move(minifiHome);
   }
 
@@ -133,7 +129,7 @@ class Properties {
   }
 
   // Get the determined MINIFI_HOME
-  std::string getHome() const {
+  std::filesystem::path getHome() const {
     return minifi_home_;
   }
 
@@ -141,7 +137,7 @@ class Properties {
 
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
-  std::string getFilePath() const;
+  std::filesystem::path getFilePath() const;
 
  protected:
   std::map<std::string, std::string> getProperties() const;
@@ -151,7 +147,7 @@ class Properties {
 
   bool dirty_{false};
 
-  std::string properties_file_;
+  std::filesystem::path properties_file_;
 
   utils::ChecksumCalculator checksum_calculator_;
 
@@ -160,13 +156,9 @@ class Properties {
   // Logger
   std::shared_ptr<core::logging::Logger> logger_;
   // Home location for this executable
-  std::string minifi_home_;
+  std::filesystem::path minifi_home_;
 
   std::string name_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_PROPERTIES_PROPERTIES_H_
+}  // namespace org::apache::nifi::minifi

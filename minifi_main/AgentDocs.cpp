@@ -36,7 +36,7 @@ std::string AgentDocs::extractClassName(const std::string &processor) {
   return processor;
 }
 
-void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
+void AgentDocs::generate(const std::filesystem::path& docsdir, std::ostream &genStream) {
   std::map<std::string, ClassDescription> processorSet;
   for (const auto &group : minifi::AgentBuild::getExtensions()) {
     struct Components descriptions = build_description_.getClassDescriptions(group);
@@ -45,7 +45,7 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     }
   }
   for (const auto &processor : processorSet) {
-    const std::string &filename = docsdir + utils::file::get_separator() + processor.first;
+    const auto& filename = docsdir / processor.first;
     std::ofstream outfile(filename);
 
     {
@@ -106,11 +106,11 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
     outfile << std::endl;
   }
 
-  std::map<std::string, std::string> fileList;
+  std::map<std::filesystem::path, std::filesystem::path> fileList;
 
-  auto fileFind = [&fileList](const std::string& base_path, const std::string& file) -> bool {
-    if (file.find(".extra") == std::string::npos)
-      fileList.insert(std::make_pair(file, base_path + utils::file::get_separator() + file));
+  auto fileFind = [&fileList](const std::filesystem::path& base_path, const std::filesystem::path& file) -> bool {
+    if (file.string().find(".extra") == std::string::npos)
+      fileList.insert(std::make_pair(file, base_path / file));
     return true;
   };
 
@@ -133,16 +133,18 @@ void AgentDocs::generate(const std::string &docsdir, std::ostream &genStream) {
   genStream << "# Processors" << std::endl << std::endl;
   genStream << "## Table of Contents" << std::endl << std::endl;
 
-  for (const auto &file : fileList) {
-    std::string lcfile = file.first;
+  for (const auto& file : fileList) {
+    std::string lcfile = file.first.string();
     std::transform(lcfile.begin(), lcfile.end(), lcfile.begin(), ::tolower);
     genStream << "- [" << file.first << "](#" << lcfile << ")" << std::endl;
   }
 
-  for (const auto &file : fileList) {
+  for (const auto& file : fileList) {
       std::ifstream filestream(file.second);
       genStream << filestream.rdbuf() << std::endl;
-      std::ifstream filestreamExtra(file.second + ".extra");
+      auto extra_path = file.second;
+      extra_path += ".extra";
+      std::ifstream filestreamExtra(extra_path);
       if (filestreamExtra.good()) {
         genStream << filestreamExtra.rdbuf()<< std::endl;
       }

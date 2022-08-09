@@ -186,7 +186,7 @@ ListSFTP::Child::Child(const std::string& parent_path_, std::tuple<std::string /
 }
 
 std::string ListSFTP::Child::getPath() const {
-  return utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
+  return (parent_path / filename).generic_string();
 }
 
 bool ListSFTP::filter(const std::string& parent_path, const std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>& sftp_child) {
@@ -290,7 +290,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
 
   /* Path Filter Regex */
   if (compiled_path_filter_regex_) {
-    std::string dir_path = utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
+    std::string dir_path = utils::StringUtils::join_pack(parent_path, "/", filename);
     bool match = false;
     match = utils::regexMatch(dir_path, *compiled_path_filter_regex_);
     if (!match) {
@@ -344,8 +344,8 @@ bool ListSFTP::createAndTransferFlowFileFromChild(
   /* mtime */
   session->putAttribute(flow_file, ATTRIBUTE_FILE_LASTMODIFIEDTIME, mtime_str);
 
-  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child.filename);
-  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, child.parent_path);
+  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child.filename.generic_string());
+  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, child.parent_path.generic_string());
 
   session->transfer(flow_file, Success);
 
@@ -584,7 +584,7 @@ void ListSFTP::listByTrackingTimestamps(
         if (createAndTransferFlowFileFromChild(session, hostname, port, username, file)) {
           flow_files_created++;
         } else {
-          logger_->log_error("Failed to emit FlowFile for \"%s\"", file.filename);
+          logger_->log_error("Failed to emit FlowFile for \"%s\"", file.filename.generic_string());
           context->yield();
           return;
         }
@@ -831,16 +831,16 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
     return;
   }
 
-  /* Parse processor-specific properties */
-  std::string remote_path;
-  std::chrono::milliseconds entity_tracking_time_window = 3h;  /* The default is 3 hours */
+  std::string remote_path_str;
+  context->getProperty(RemotePath.getName(), remote_path_str);
+  /* Remove trailing slashes */
+  while (remote_path_str.size() > 1 && remote_path_str.ends_with('/')) {
+    remote_path_str.pop_back();
+  }
+  std::filesystem::path remote_path{remote_path_str, std::filesystem::path::format::generic_format};
 
   std::string value;
-  context->getProperty(RemotePath.getName(), remote_path);
-  /* Remove trailing slashes */
-  while (remote_path.size() > 1U && remote_path.back() == '/') {
-    remote_path.resize(remote_path.size() - 1);
-  }
+  std::chrono::milliseconds entity_tracking_time_window = 3h;  /* The default is 3 hours */
   if (context->getProperty(EntityTrackingTimeWindow.getName(), value)) {
     if (auto parsed_entity_time_window = utils::timeutils::StringToDuration<std::chrono::milliseconds>(value)) {
       entity_tracking_time_window = parsed_entity_time_window.value();
@@ -890,7 +890,8 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Add initial directory */
   Child root;
-  std::tie(root.parent_path, root.filename) = utils::file::FileUtils::split_path(remote_path, true /*force_posix*/);
+  root.parent_path = remote_path.parent_path();
+  root.filename = remote_path.filename();
   root.directory = true;
   directories.emplace_back(std::move(root));
 
@@ -901,7 +902,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
     std::string new_parent_path;
     if (directory.parent_path.empty()) {
-      new_parent_path = directory.filename;
+      new_parent_path = directory.filename.generic_string();
     } else {
       new_parent_path = directory.getPath();
     }
@@ -923,9 +924,10 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Process the files with the appropriate tracking strategy */
   if (listing_strategy_ == LISTING_STRATEGY_TRACKING_TIMESTAMPS) {
-    listByTrackingTimestamps(context, session, common_properties.hostname, common_properties.port, common_properties.username, remote_path, std::move(files));
+    listByTrackingTimestamps(context, session, common_properties.hostname, common_properties.port, common_properties.username, remote_path.generic_string(), std::move(files));
   } else if (listing_strategy_ == LISTING_STRATEGY_TRACKING_ENTITIES) {
-    listByTrackingEntities(context, session, common_properties.hostname, common_properties.port, common_properties.username, remote_path, entity_tracking_time_window, std::move(files));
+    listByTrackingEntities(context, session, common_properties.hostname, common_properties.port,
+        common_properties.username, remote_path.generic_string(), entity_tracking_time_window, std::move(files));
   } else {
     logger_->log_error("Unknown Listing Strategy: \"%s\"", listing_strategy_.c_str());
     context->yield();

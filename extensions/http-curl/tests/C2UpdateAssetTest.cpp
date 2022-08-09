@@ -102,7 +102,7 @@ int main() {
   // setup minifi home
   const std::filesystem::path home_dir = controller.createTempDirectory();
   const auto asset_dir = home_dir / "asset";
-  utils::Environment::setCurrentWorkingDirectory(home_dir.string().c_str());
+  std::filesystem::current_path(home_dir);
 
   C2AcknowledgeHandler ack_handler;
   std::string file_A = "hello from file A";

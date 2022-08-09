@@ -1,3 +1,4 @@
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -19,13 +20,10 @@
 
 #include <utility>
 #include <functional>
+#include <optional>
 #include <string>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 /**
  * A helper class for interacting with the environment in a thread-safe manner.
@@ -45,7 +43,7 @@ class Environment {
    * @return a pair consisting of a bool indicating whether the environment variable is set
    * and an std::string containing the value of the environemnt variable
    */
-  static std::pair<bool, std::string> getEnvironmentVariable(const char* name);
+  static std::optional<std::string> getEnvironmentVariable(const char* name);
 
   /**
    * Sets an environment variable using the native OS API
@@ -64,19 +62,6 @@ class Environment {
   static bool unsetEnvironmentVariable(const char* name);
 
   /**
-   * Determines the current working directory
-   * @return current working directory on success, empty string on failure
-   */
-  static std::string getCurrentWorkingDirectory();
-
-  /**
-   * Changes the current working directory
-   * @param directory the directory to change to
-   * @return true on success
-   */
-  static bool setCurrentWorkingDirectory(const char* directory);
-
-  /**
    * Sets whether the current process is running as a service
    * @param runningAsService true if the current process is running as a service
    */
@@ -89,10 +74,6 @@ class Environment {
   static bool isRunningAsService();
 };
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils
 
 #endif  // LIBMINIFI_INCLUDE_UTILS_ENVIRONMENT_H_

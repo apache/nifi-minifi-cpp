@@ -68,7 +68,7 @@ class FlowConfiguration : public CoreComponent {
    */
   explicit FlowConfiguration(const std::shared_ptr<core::Repository>& repo, std::shared_ptr<core::Repository> flow_file_repo,
                              std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-                             const std::shared_ptr<Configure>& configuration, const std::optional<std::string>& path,
+                             std::shared_ptr<Configure>& configuration, const std::optional<std::filesystem::path>& path,
                              std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>());
 
   ~FlowConfiguration() override;
@@ -104,7 +104,7 @@ class FlowConfiguration : public CoreComponent {
    * Returns the configuration path string
    * @return config_path_
    */
-  const std::optional<std::string> &getConfigurationPath() {
+  const std::optional<std::filesystem::path>& getConfigurationPath() {
     return config_path_;
   }
 
@@ -130,7 +130,7 @@ class FlowConfiguration : public CoreComponent {
   // based, shared controller service map.
   std::shared_ptr<core::controller::ControllerServiceMap> controller_services_;
   // configuration path
-  std::optional<std::string> config_path_;
+  std::optional<std::filesystem::path> config_path_;
   // flow file repo
   std::shared_ptr<core::Repository> flow_file_repo_;
   // content repository.
@@ -153,4 +153,3 @@ class FlowConfiguration : public CoreComponent {
 }  // namespace org
 
 #endif  // LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
-

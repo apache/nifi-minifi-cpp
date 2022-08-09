@@ -53,8 +53,8 @@ class AttributesToJSONTestFixture {
     logattribute_ = plan_->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
     putfile_ = plan_->addProcessor("PutFile", "PutFile", core::Relationship("success", "description"), true);
 
-    plan_->setProperty(getfile_, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir_);
-    plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_);
+    plan_->setProperty(getfile_, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir_.string());
+    plan_->setProperty(putfile_, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_.string());
 
     update_attribute_->setDynamicProperty("my_attribute", "my_value");
     update_attribute_->setDynamicProperty("my_attribute_1", "my_value_1");
@@ -93,8 +93,8 @@ class AttributesToJSONTestFixture {
   std::vector<std::string> getOutputFileContents() {
     std::vector<std::string> file_contents;
 
-    auto callback = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    auto callback = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      std::ifstream is(path / filename, std::ifstream::binary);
       std::string file_content(std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{});
       file_contents.push_back(file_content);
       return true;
@@ -108,7 +108,7 @@ class AttributesToJSONTestFixture {
  protected:
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
-  std::string dir_;
+  std::filesystem::path dir_;
   std::shared_ptr<core::Processor> getfile_;
   std::shared_ptr<core::Processor> update_attribute_;
   std::shared_ptr<core::Processor> attribute_to_json_;
@@ -123,14 +123,14 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Move all attributes to a flowfile
   REQUIRE(file_contents[0] == TEST_FILE_CONTENT);
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
-    {"absolute.path", dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME},
+    {"absolute.path", (dir_ / TEST_FILE_NAME).string()},
     {"empty_attribute", ""},
     {"filename", TEST_FILE_NAME},
     {"flow.id", "test"},
     {"my_attribute", "my_value"},
     {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"},
-    {"path", dir_ + utils::file::FileUtils::get_separator()}
+    {"path", (dir_ / "").string()}
   };
   assertJSONAttributesFromLog(expected_attributes);
 }
@@ -184,14 +184,14 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "JSON attributes are written in fl
   test_controller_.runSession(plan_);
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
-    {"absolute.path", dir_ + utils::file::FileUtils::get_separator() + TEST_FILE_NAME},
+    {"absolute.path", (dir_ / TEST_FILE_NAME).string()},
     {"empty_attribute", ""},
     {"filename", TEST_FILE_NAME},
     {"flow.id", "test"},
     {"my_attribute", "my_value"},
     {"my_attribute_1", "my_value_1"},
     {"other_attribute", "other_value"},
-    {"path", dir_ + utils::file::FileUtils::get_separator()}
+    {"path", (dir_ / "").string()}
   };
   assertJSONAttributesFromFile(expected_attributes);
 }
@@ -243,7 +243,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Attributes from attributes list a
     {"empty_attribute", ""},
     {"filename", TEST_FILE_NAME},
     {"my_attribute", "my_value"},
-    {"path", dir_ + utils::file::FileUtils::get_separator()}
+    {"path", (dir_ / "").string()}
   };
   assertJSONAttributesFromLog(expected_attributes);
 }
@@ -272,7 +272,7 @@ TEST_CASE_METHOD(AttributesToJSONTestFixture, "Core attributes are written if th
 
   const std::unordered_map<std::string, std::optional<std::string>> expected_attributes {
     {"filename", TEST_FILE_NAME},
-    {"path", dir_ + utils::file::FileUtils::get_separator()},
+    {"path", (dir_ / "").string()},
     {"my_attribute", "my_value"}
   };
   assertJSONAttributesFromLog(expected_attributes);

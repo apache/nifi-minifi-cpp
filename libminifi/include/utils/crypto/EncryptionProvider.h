@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <filesystem>
 
 #include "utils/crypto/EncryptionUtils.h"
 #include "utils/crypto/ciphers/XSalsa20.h"
@@ -38,7 +39,7 @@ class EncryptionProvider {
   explicit EncryptionProvider(Bytes key) : cipher_impl_(std::move(key)) {}
   explicit EncryptionProvider(XSalsa20Cipher cipher_impl) : cipher_impl_(std::move(cipher_impl)) {}
 
-  static std::optional<EncryptionProvider> create(const std::string& home_path);
+  static std::optional<EncryptionProvider> create(const std::filesystem::path& home_path);
 
   [[nodiscard]] std::string encrypt(const std::string& data) const {
     return cipher_impl_.encrypt(data);

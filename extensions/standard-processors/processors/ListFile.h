@@ -85,14 +85,14 @@ class ListFile : public core::Processor {
     }
 
     [[nodiscard]] std::string getKey() const override {
-      return absolute_path;
+      return absolute_path.string();
     }
 
-    std::string filename;
-    std::string absolute_path;
+    std::filesystem::path filename;
+    std::filesystem::path absolute_path;
     std::filesystem::file_time_type last_modified_time;
-    std::string relative_path;
-    std::string full_file_path;
+    std::filesystem::path relative_path;
+    std::filesystem::path full_file_path;
     uint64_t file_size = 0;
   };
 
@@ -100,7 +100,7 @@ class ListFile : public core::Processor {
   std::shared_ptr<core::FlowFile> createFlowFile(core::ProcessSession& session, const ListedFile& listed_file);
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ListFile>::getLogger();
-  std::string input_directory_;
+  std::filesystem::path input_directory_;
   std::unique_ptr<minifi::utils::ListingStateManager> state_manager_;
   bool recurse_subdirectories_ = true;
   std::optional<std::regex> file_filter_;

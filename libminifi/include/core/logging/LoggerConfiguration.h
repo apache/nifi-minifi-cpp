@@ -21,6 +21,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vector>
 #include <map>
 #include <mutex>
@@ -49,8 +50,8 @@ namespace org::apache::nifi::minifi::core::logging {
 
 namespace internal {
 struct LoggerNamespace {
-  spdlog::level::level_enum level;
-  bool has_level;
+  spdlog::level::level_enum level{spdlog::level::off};
+  bool has_level{false};
   std::vector<std::shared_ptr<spdlog::sinks::sink>> sinks;
   // sinks made available to all descendants
   std::vector<std::shared_ptr<spdlog::sinks::sink>> exported_sinks;
@@ -59,9 +60,7 @@ struct LoggerNamespace {
   void forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const;
 
   LoggerNamespace()
-      : level(spdlog::level::off),
-        has_level(false),
-        sinks(std::vector<std::shared_ptr<spdlog::sinks::sink>>()),
+      : sinks(std::vector<std::shared_ptr<spdlog::sinks::sink>>()),
         children(std::map<std::string, std::shared_ptr<LoggerNamespace>>()) {
   }
 };
@@ -117,8 +116,8 @@ class LoggerConfiguration {
 
  protected:
   static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger = {});
-  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<Logger> &logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
-                                                    const std::shared_ptr<spdlog::formatter> &formatter, bool remove_if_present = false);
+  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<Logger>& logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                    const std::shared_ptr<spdlog::formatter>& formatter, bool remove_if_present = false);
 
  private:
   std::shared_ptr<Logger> getLogger(const std::string& name, const std::lock_guard<std::mutex>& lock);
@@ -134,14 +133,14 @@ class LoggerConfiguration {
 
   class LoggerImpl : public Logger {
    public:
-    explicit LoggerImpl(const std::string &name, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
+    explicit LoggerImpl(std::string name, const std::shared_ptr<LoggerControl> &controller, const std::shared_ptr<spdlog::logger> &delegate)
         : Logger(delegate, controller),
-          name(name) {
+          name(std::move(name)) {
     }
 
     void set_delegate(std::shared_ptr<spdlog::logger> delegate) {
       std::lock_guard<std::mutex> lock(mutex_);
-      delegate_ = delegate;
+      delegate_ = std::move(delegate);
     }
     const std::string name;
   };

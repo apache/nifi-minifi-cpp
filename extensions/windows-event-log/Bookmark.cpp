@@ -36,7 +36,7 @@ static const std::string BOOKMARK_KEY = "bookmark";
 
 Bookmark::Bookmark(const std::wstring& channel,
     const std::wstring& query,
-    const std::string& bookmarkRootDir,
+    const std::filesystem::path& bookmarkRootDir,
     const utils::Identifier& uuid,
     bool processOldEvents,
     core::CoreComponentStateManager* state_manager,
@@ -47,17 +47,17 @@ Bookmark::Bookmark(const std::wstring& channel,
   if (state_manager_->get(state_map) && state_map.count(BOOKMARK_KEY) == 1U) {
     bookmarkXml_ = wel::to_wstring(state_map[BOOKMARK_KEY].c_str());
   } else if (!bookmarkRootDir.empty()) {
-    filePath_ = utils::file::concat_path(
-      utils::file::concat_path(
-        utils::file::concat_path(bookmarkRootDir, "uuid"), uuid.to_string()), "Bookmark.txt");
+    filePath_ = bookmarkRootDir / "uuid" / uuid.to_string().view() / "Bookmark.txt";
 
     std::wstring bookmarkXml;
     if (getBookmarkXmlFromFile(bookmarkXml)) {
       if (saveBookmarkXml(bookmarkXml) && state_manager_->persist()) {
         logger_->log_info("State migration successful");
-        rename(filePath_.c_str(), (filePath_ + "-migrated").c_str());
+        auto migrated_path = filePath_;
+        migrated_path += "-migrated";
+        std::filesystem::rename(filePath_, migrated_path);
       } else {
-        logger_->log_warn("Could not migrate state from specified State Directory %s", bookmarkRootDir);
+        logger_->log_warn("Could not migrate state from specified State Directory %s", bookmarkRootDir.string());
       }
     }
   } else {

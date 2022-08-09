@@ -35,11 +35,7 @@ constexpr const char* ENCRYPTION_KEY_PROPERTY_NAME = "nifi.bootstrap.sensitive.k
 
 }  // namespace
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace encrypt_config {
+namespace org::apache::nifi::minifi::encrypt_config {
 
 EncryptConfig::EncryptConfig(const std::string& minifi_home) : minifi_home_(minifi_home) {
   if (sodium_init() < 0) {
@@ -59,7 +55,7 @@ EncryptConfig::EncryptionType EncryptConfig::encryptSensitiveProperties() const 
 
 void EncryptConfig::encryptFlowConfig() const {
   encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
-  std::optional<std::string> config_path = properties_file.getValue(Configure::nifi_flow_configuration_file);
+  std::optional<std::filesystem::path> config_path{properties_file.getValue(Configure::nifi_flow_configuration_file)};
   if (!config_path) {
     config_path = utils::file::PathUtils::resolve(minifi_home_, "conf/config.yml");
     std::cout << "Couldn't find path of configuration file, using default: \"" << *config_path << "\"\n";
@@ -73,7 +69,7 @@ void EncryptConfig::encryptFlowConfig() const {
     config_file.exceptions(std::ios::failbit | std::ios::badbit);
     config_content = std::string{std::istreambuf_iterator<char>(config_file), {}};
   } catch (...) {
-    throw std::runtime_error("Error while reading flow configuration file \"" + *config_path + "\"");
+    throw std::runtime_error("Error while reading flow configuration file \"" + config_path->string() + "\"");
   }
   try {
     utils::crypto::decrypt(config_content, keys_.encryption_key);
@@ -101,17 +97,17 @@ void EncryptConfig::encryptFlowConfig() const {
     encrypted_file.exceptions(std::ios::failbit | std::ios::badbit);
     encrypted_file << encrypted_content;
   } catch (...) {
-    throw std::runtime_error("Error while writing encrypted flow configuration file \"" + *config_path + "\"");
+    throw std::runtime_error("Error while writing encrypted flow configuration file \"" + config_path->string() + "\"");
   }
   std::cout << "Successfully encrypted flow configuration file: \"" << *config_path << "\"\n";
 }
 
-std::string EncryptConfig::bootstrapFilePath() const {
-  return utils::file::concat_path(minifi_home_, DEFAULT_BOOTSTRAP_FILE);
+std::filesystem::path EncryptConfig::bootstrapFilePath() const {
+  return minifi_home_ / DEFAULT_BOOTSTRAP_FILE;
 }
 
-std::string EncryptConfig::propertiesFilePath() const {
-  return utils::file::concat_path(minifi_home_, DEFAULT_NIFI_PROPERTIES_FILE);
+std::filesystem::path EncryptConfig::propertiesFilePath() const {
+  return minifi_home_ / DEFAULT_NIFI_PROPERTIES_FILE;
 }
 
 EncryptionKeys EncryptConfig::getEncryptionKeys() const {
@@ -170,7 +166,7 @@ void EncryptConfig::writeEncryptionKeyToBootstrapFile(const utils::crypto::Bytes
 void EncryptConfig::encryptSensitiveProperties(const EncryptionKeys& keys) const {
   encrypt_config::ConfigFile properties_file{std::ifstream{propertiesFilePath()}};
   if (properties_file.size() == 0) {
-    throw std::runtime_error{"Properties file " + propertiesFilePath() + " not found!"};
+    throw std::runtime_error{"Properties file " + propertiesFilePath().string() + " not found!"};
   }
 
   uint32_t num_properties_encrypted = encryptSensitivePropertiesInFile(properties_file, keys);
@@ -184,8 +180,4 @@ void EncryptConfig::encryptSensitiveProperties(const EncryptionKeys& keys) const
       << (num_properties_encrypted == 1 ? "property" : "properties") << " in " << propertiesFilePath() << '\n';
 }
 
-}  // namespace encrypt_config
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::encrypt_config

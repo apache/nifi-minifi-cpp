@@ -36,7 +36,7 @@ bool DatabaseContentRepository::initialize(const std::shared_ptr<minifi::Configu
   if (configuration->get(Configure::nifi_dbcontent_repository_directory_default, value)) {
     directory_ = value;
   } else {
-    directory_ = configuration->getHome() + "/dbcontentrepository";
+    directory_ = (configuration->getHome() / "dbcontentrepository").string();
   }
   const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{configuration->getHome()}, DbEncryptionOptions{directory_, ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s DatabaseContentRepository", encrypted_env ? "encrypted" : "plaintext");

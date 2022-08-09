@@ -167,9 +167,9 @@ TEST_CASE("ConfigFile can write to a new file", "[encrypt-config][writeTo]") {
   test_file.update(Configuration::nifi_bored_yield_duration, "20 millis");
 
   TestController test_controller;
-  std::string temp_dir = test_controller.createTempDirectory();
+  auto temp_dir = test_controller.createTempDirectory();
   auto remove_directory = minifi::gsl::finally([&temp_dir]() { utils::file::delete_dir(temp_dir); });
-  std::string file_path = utils::file::concat_path(temp_dir, "minifi.properties");
+  auto file_path = temp_dir / "minifi.properties";
 
   test_file.writeTo(file_path);
 

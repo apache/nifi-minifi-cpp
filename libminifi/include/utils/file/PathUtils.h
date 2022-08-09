@@ -19,6 +19,7 @@
 #include <climits>
 #include <cctype>
 #include <cinttypes>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <string>
@@ -30,47 +31,15 @@ namespace org::apache::nifi::minifi::utils::file {
 namespace PathUtils = ::org::apache::nifi::minifi::utils::file;
 using path = const char*;
 
-/**
- * Extracts the filename and path performing some validation of the path and output to ensure
- * we don't provide invalid results.
- * @param path input path
- * @param filePath output file path
- * @param fileName output file name
- * @return result of the operation.
- */
-bool getFileNameAndPath(const std::string &path, std::string &filePath, std::string &fileName);
-
-/**
- * Resolves the supplied path to an absolute pathname using the native OS functions
- * (realpath(3) on *nix, GetFullPathNameA on Windows)
- * @param path the name of the file
- * @return the canonicalized absolute pathname on success, empty string on failure
- */
-std::string getFullPath(const std::string& path);
-
 std::string globToRegex(std::string glob);
 
-inline bool isAbsolutePath(const char* const path) noexcept {
-#ifdef _WIN32
-  return path && std::isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/');
-#else
-  return path && path[0] == '/';
-#endif
-}
-
-inline std::optional<std::string> canonicalize(const std::string &path) {
-  const char *resolved = nullptr;
-#ifndef WIN32
-  char full_path[PATH_MAX];
-  resolved = realpath(path.c_str(), full_path);
-#else
-  resolved = path.c_str();
-#endif
-
-  if (resolved == nullptr) {
+inline std::optional<std::filesystem::path> canonicalize(const std::filesystem::path& path) {
+  std::error_code canonical_error;
+  auto result = std::filesystem::canonical(path, canonical_error);
+  if (canonical_error)
     return std::nullopt;
-  }
-  return std::string(path);
+
+  return result;
 }
 
 

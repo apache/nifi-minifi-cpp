@@ -136,13 +136,13 @@ class GetFile : public core::Processor {
 
  private:
   bool isListingEmpty() const;
-  void putListing(const std::string& fileName);
-  std::queue<std::string> pollListing(uint64_t batch_size);
-  bool fileMatchesRequestCriteria(const std::string& fullName, const std::string& name, const GetFileRequest &request);
-  void getSingleFile(core::ProcessSession& session, const std::string& file_name) const;
+  void putListing(const std::filesystem::path& file_path);
+  std::queue<std::filesystem::path> pollListing(uint64_t batch_size);
+  bool fileMatchesRequestCriteria(const std::filesystem::path& full_name, const std::filesystem::path& name, const GetFileRequest &request);
+  void getSingleFile(core::ProcessSession& session, const std::filesystem::path& file_path) const;
 
   GetFileRequest request_;
-  std::queue<std::string> directory_listing_;
+  std::queue<std::filesystem::path> directory_listing_;
   mutable std::mutex directory_listing_mutex_;
   std::atomic<std::chrono::time_point<std::chrono::system_clock>> last_listing_time_{};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<GetFile>::getLogger();

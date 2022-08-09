@@ -29,13 +29,13 @@
 #include "core/logging/Logger.h"
 #include "core/logging/LoggerConfiguration.h"
 
-std::string get_sftp_test_dir();
+std::filesystem::path get_sftp_test_dir();
 
 class SFTPTestServer {
  public:
-  SFTPTestServer(std::string working_directory,
-      const std::string& host_key_file = "resources/host.pem",
-      const std::string& jar_path = "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar");
+  SFTPTestServer(std::filesystem::path working_directory,
+      const std::filesystem::path& host_key_file = "resources/host.pem",
+      const std::filesystem::path& jar_path = "tools/sftp-test-server/target/SFTPTestServer-1.0.0.jar");
   ~SFTPTestServer();
 
   bool start();
@@ -45,11 +45,11 @@ class SFTPTestServer {
  private:
   std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger> logger_ = org::apache::nifi::minifi::core::logging::LoggerFactory<SFTPTestServer>::getLogger();
 
-  std::string host_key_file_;
-  std::string jar_path_;
-  std::string working_directory_;
+  std::filesystem::path host_key_file_;
+  std::filesystem::path jar_path_;
+  std::filesystem::path working_directory_;
   bool started_;
-  std::string port_file_path_;
+  std::filesystem::path port_file_path_;
   uint16_t port_;
 #ifndef WIN32
   pid_t server_pid_;
