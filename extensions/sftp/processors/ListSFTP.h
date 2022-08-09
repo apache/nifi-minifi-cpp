@@ -138,7 +138,7 @@ class ListSFTP : public SFTPProcessorBase {
   std::string last_listing_strategy_;
   std::string last_hostname_;
   std::string last_username_;
-  std::string last_remote_path_;
+  std::filesystem::path last_remote_path_;
 
   struct Child {
     Child();
@@ -146,8 +146,8 @@ class ListSFTP : public SFTPProcessorBase {
     [[nodiscard]] std::string getPath() const;
 
     bool directory;
-    std::string parent_path;
-    std::string filename;
+    std::filesystem::path parent_path;
+    std::filesystem::path filename;
     LIBSSH2_SFTP_ATTRIBUTES attrs;
   };
 

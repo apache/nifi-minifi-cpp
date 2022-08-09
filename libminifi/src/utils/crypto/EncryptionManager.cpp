@@ -25,18 +25,9 @@
 #include "utils/crypto/ciphers/Aes256Ecb.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace crypto {
+namespace org::apache::nifi::minifi::utils::crypto {
 
-#ifdef WIN32
-constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "\\conf\\bootstrap.conf";
-#else
-constexpr const char* DEFAULT_NIFI_BOOTSTRAP_FILE = "./conf/bootstrap.conf";
-#endif  // WIN32
+const auto DEFAULT_NIFI_BOOTSTRAP_FILE = std::filesystem::path("conf") / "bootstrap.conf";
 
 std::shared_ptr<core::logging::Logger> EncryptionManager::logger_{core::logging::LoggerFactory<EncryptionManager>::getLogger()};
 
@@ -81,9 +72,4 @@ bool EncryptionManager::writeKey(const std::string &key_name, const Bytes& key) 
   return bootstrap_conf.commitChanges();
 }
 
-}  // namespace crypto
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::crypto

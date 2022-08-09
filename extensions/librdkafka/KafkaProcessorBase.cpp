@@ -36,12 +36,12 @@ void KafkaProcessorBase::setKafkaAuthenticationParameters(core::ProcessContext& 
       if (ssl_data->ca_loc.empty() && ssl_data->cert_loc.empty() && ssl_data->key_loc.empty() && ssl_data->key_pw.empty()) {
         logger_->log_warn("Security protocol is set to %s, but no valid security parameters are set in the properties or in the SSL Context Service.", security_protocol_.toString());
       } else {
-        utils::setKafkaConfigurationField(*config, "ssl.ca.location", ssl_data->ca_loc);
-        logger_->log_debug("Kafka ssl.ca.location [%s]", ssl_data->ca_loc);
-        utils::setKafkaConfigurationField(*config, "ssl.certificate.location", ssl_data->cert_loc);
-        logger_->log_debug("Kafka ssl.certificate.location [%s]", ssl_data->cert_loc);
-        utils::setKafkaConfigurationField(*config, "ssl.key.location", ssl_data->key_loc);
-        logger_->log_debug("Kafka ssl.key.location [%s]", ssl_data->key_loc);
+        utils::setKafkaConfigurationField(*config, "ssl.ca.location", ssl_data->ca_loc.string());
+        logger_->log_debug("Kafka ssl.ca.location [%s]", ssl_data->ca_loc.string());
+        utils::setKafkaConfigurationField(*config, "ssl.certificate.location", ssl_data->cert_loc.string());
+        logger_->log_debug("Kafka ssl.certificate.location [%s]", ssl_data->cert_loc.string());
+        utils::setKafkaConfigurationField(*config, "ssl.key.location", ssl_data->key_loc.string());
+        logger_->log_debug("Kafka ssl.key.location [%s]", ssl_data->key_loc.string());
         utils::setKafkaConfigurationField(*config, "ssl.key.password", ssl_data->key_pw);
         logger_->log_debug("Kafka ssl.key.password was set");
       }

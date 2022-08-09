@@ -105,9 +105,9 @@ struct CertHandler {
   std::function<std::error_code(EVP_PKEY_unique_ptr priv_key)> priv_key_cb;
 };
 
-std::error_code processP12Certificate(const std::string& cert_file, const std::string& passphrase, const CertHandler& handler);
+std::error_code processP12Certificate(const std::filesystem::path& cert_file, const std::string& passphrase, const CertHandler& handler);
 
-std::error_code processPEMCertificate(const std::string& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler);
+std::error_code processPEMCertificate(const std::filesystem::path& cert_file, const std::optional<std::string>& passphrase, const CertHandler& handler);
 
 }  // namespace org::apache::nifi::minifi::utils::tls
 

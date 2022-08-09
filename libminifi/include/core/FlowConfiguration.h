@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
-#define LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -42,11 +41,7 @@
 #include "utils/file/FileSystem.h"
 #include "utils/ChecksumCalculator.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class static_initializers {
  public:
@@ -68,7 +63,7 @@ class FlowConfiguration : public CoreComponent {
    */
   explicit FlowConfiguration(const std::shared_ptr<core::Repository>& repo, std::shared_ptr<core::Repository> flow_file_repo,
                              std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
-                             const std::shared_ptr<Configure>& configuration, const std::optional<std::string>& path,
+                             std::shared_ptr<Configure> configuration, const std::optional<std::filesystem::path>& path,
                              std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>());
 
   ~FlowConfiguration() override;
@@ -86,11 +81,11 @@ class FlowConfiguration : public CoreComponent {
       const utils::Identifier &uuid);
 
   // Create Connection
-  std::unique_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
+  [[nodiscard]] std::unique_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
   // Create Provenance Report Task
   std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> createProvenanceReportTask();
 
-  std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
+  [[nodiscard]] std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
     return flow_version_;
   }
 
@@ -104,7 +99,7 @@ class FlowConfiguration : public CoreComponent {
    * Returns the configuration path string
    * @return config_path_
    */
-  const std::optional<std::string> &getConfigurationPath() {
+  const std::optional<std::filesystem::path>& getConfigurationPath() {
     return config_path_;
   }
 
@@ -130,7 +125,7 @@ class FlowConfiguration : public CoreComponent {
   // based, shared controller service map.
   std::shared_ptr<core::controller::ControllerServiceMap> controller_services_;
   // configuration path
-  std::optional<std::string> config_path_;
+  std::optional<std::filesystem::path> config_path_;
   // flow file repo
   std::shared_ptr<core::Repository> flow_file_repo_;
   // content repository.
@@ -146,11 +141,4 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
-
+}  // namespace org::apache::nifi::minifi::core

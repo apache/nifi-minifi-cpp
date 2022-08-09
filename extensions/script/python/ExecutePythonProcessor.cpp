@@ -29,6 +29,7 @@
 #include "utils/file/FileUtils.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
+#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::python::processors {
 
@@ -118,7 +119,7 @@ void ExecutePythonProcessor::appendPathForImportModules() {
   std::string module_directory;
   getProperty(ModuleDirectory.getName(), module_directory);
   if (!module_directory.empty()) {
-    python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory, ","));
+    python_script_engine_->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(module_directory, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 }
 

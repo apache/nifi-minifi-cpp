@@ -73,9 +73,9 @@ SslServer::SslServer(std::optional<size_t> max_queue_size, uint16_t port, std::s
         | asio::ssl::context::no_sslv2
         | asio::ssl::context::single_dh_use);
     context_.set_password_callback([this](std::size_t&, asio::ssl::context_base::password_purpose&) { return ssl_data_.key_pw; });
-    context_.use_certificate_file(ssl_data_.cert_loc, asio::ssl::context::pem);
-    context_.use_private_key_file(ssl_data_.key_loc, asio::ssl::context::pem);
-    context_.load_verify_file(ssl_data_.ca_loc);
+    context_.use_certificate_file(ssl_data_.cert_loc.string(), asio::ssl::context::pem);
+    context_.use_private_key_file(ssl_data_.key_loc.string(), asio::ssl::context::pem);
+    context_.load_verify_file(ssl_data_.ca_loc.string());
     if (client_auth == ClientAuthOption::REQUIRED) {
       context_.set_verify_mode(asio::ssl::verify_peer|asio::ssl::verify_fail_if_no_peer_cert);
     } else if (client_auth == ClientAuthOption::WANT) {

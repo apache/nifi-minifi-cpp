@@ -30,13 +30,13 @@ TEST_CASE("If no checksum calculators are added, we get an empty node", "[Config
 
   REQUIRE(serialized_response_nodes.size() == 1);
   const auto& checksum_node = serialized_response_nodes[0];
-  REQUIRE(checksum_node.children.size() == 0);
+  REQUIRE(checksum_node.children.empty());
 }
 
 TEST_CASE("If one checksum calculator is added, we get a node with one child", "[ConfigurationChecksums]") {
   TestController test_controller;
-  std::string test_dir = test_controller.createTempDirectory();
-  std::string file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
+  auto test_dir = test_controller.createTempDirectory();
+  auto file_location = utils::putFileToDir(test_dir, "simple.txt", "one line of text\n");
 
   utils::ChecksumCalculator checksum_calculator;
   checksum_calculator.setFileLocation(file_location);
@@ -57,9 +57,9 @@ TEST_CASE("If one checksum calculator is added, we get a node with one child", "
 
 TEST_CASE("If two checksum calculators are added, we get a node with two children", "[ConfigurationChecksums]") {
   TestController test_controller;
-  std::string test_dir = test_controller.createTempDirectory();
-  std::string file_location_1 = utils::putFileToDir(test_dir, "first.txt", "this is the first file\n");
-  std::string file_location_2 = utils::putFileToDir(test_dir, "second.txt", "this is the second file\n");
+  auto test_dir = test_controller.createTempDirectory();
+  auto file_location_1 = utils::putFileToDir(test_dir, "first.txt", "this is the first file\n");
+  auto file_location_2 = utils::putFileToDir(test_dir, "second.txt", "this is the second file\n");
 
   utils::ChecksumCalculator checksum_calculator_1;
   checksum_calculator_1.setFileLocation(file_location_1);

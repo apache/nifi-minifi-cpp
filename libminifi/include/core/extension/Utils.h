@@ -85,15 +85,13 @@ std::optional<LibraryDescriptor> asDynamicLibrary(const std::filesystem::path& p
 #else
   static const std::string_view prefix = "lib";
 #endif
-  std::string filepath;
-  std::string filename;
-  utils::file::getFileNameAndPath(path.string(), filepath, filename);
-  if (!utils::StringUtils::startsWith(filename, prefix) || !utils::StringUtils::endsWith(filename, extension)) {
+  if (!path.filename().string().starts_with(prefix) || path.filename().extension().string() != extension) {
     return {};
   }
+  std::string filename = path.filename().string();
   return LibraryDescriptor{
       filename.substr(prefix.length(), filename.length() - extension.length() - prefix.length()),
-      filepath,
+      path.parent_path(),
       filename
   };
 }

@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <filesystem>
 
 namespace org::apache::nifi::minifi::script {
 
@@ -40,7 +41,7 @@ class ScriptEngine {
    */
   virtual void evalFile(const std::string &file_name) = 0;
 
-  void setModulePaths(std::vector<std::string>&& module_paths) {
+  void setModulePaths(std::vector<std::filesystem::path>&& module_paths) {
     module_paths_ = std::move(module_paths);
   }
 
@@ -49,7 +50,7 @@ class ScriptEngine {
   virtual ~ScriptEngine() = default;
 
  protected:
-  std::vector<std::string> module_paths_;
+  std::vector<std::filesystem::path> module_paths_;
 };
 
 }  // namespace org::apache::nifi::minifi::script

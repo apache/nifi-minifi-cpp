@@ -46,8 +46,8 @@ struct UploadDataLakeStorageResult {
 struct ListDataLakeStorageElement : public minifi::utils::ListedObject {
   std::string filesystem;
   std::string file_path;
-  std::string directory;
-  std::string filename;
+  std::filesystem::path directory;
+  std::filesystem::path filename;
   uint64_t length = 0;
   std::chrono::time_point<std::chrono::system_clock> last_modified;
   std::string etag;

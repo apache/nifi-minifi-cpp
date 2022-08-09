@@ -53,13 +53,13 @@ void init_file_paths() {
   struct Initializer {
     Initializer() {
       static TestController global_controller;
-      std::string tempDir = global_controller.createTempDirectory();
-      FLOW_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent");
-      EXPECT_MERGE_CONTENT_FIRST = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent1.txt");
-      EXPECT_MERGE_CONTENT_SECOND = utils::file::FileUtils::concat_path(tempDir, "minifi-expect-mergecontent2.txt");
-      HEADER_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.header");
-      FOOTER_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.footer");
-      DEMARCATOR_FILE = utils::file::FileUtils::concat_path(tempDir, "minifi-mergecontent.demarcator");
+      auto tempDir = global_controller.createTempDirectory();
+      FLOW_FILE = (tempDir / "minifi-mergecontent").string();
+      EXPECT_MERGE_CONTENT_FIRST = (tempDir / "minifi-expect-mergecontent1.txt").string();
+      EXPECT_MERGE_CONTENT_SECOND = (tempDir / "minifi-expect-mergecontent2.txt").string();
+      HEADER_FILE = (tempDir / "minifi-mergecontent.header").string();
+      FOOTER_FILE = (tempDir / "minifi-mergecontent.footer").string();
+      DEMARCATOR_FILE = (tempDir / "minifi-mergecontent.demarcator").string();
     }
   };
   static Initializer initializer;

@@ -27,9 +27,9 @@
 namespace org::apache::nifi::minifi::utils::net {
 
 struct SslData {
-  std::string ca_loc;
-  std::string cert_loc;
-  std::string key_loc;
+  std::filesystem::path ca_loc;
+  std::filesystem::path cert_loc;
+  std::filesystem::path key_loc;
   std::string key_pw;
 
   bool isValid() const {

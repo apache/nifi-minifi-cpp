@@ -66,8 +66,7 @@ class SecureSocketTest : public IntegrationBase {
     LogTestController::getInstance().setTrace<minifi::io::TLSSocket>();
     LogTestController::getInstance().setTrace<minifi::processors::GetTCP>();
     std::fstream file;
-    ss << dir << utils::file::get_separator() << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
+    file.open(dir / "tstFile.ext", std::ios::out);
     file << "tempFile";
     file.close();
   }
@@ -128,8 +127,7 @@ class SecureSocketTest : public IntegrationBase {
  protected:
   bool isSecure;
   std::atomic<bool> isRunning_;
-  std::string dir;
-  std::stringstream ss;
+  std::filesystem::path dir;
   TestController testController;
   std::shared_ptr<org::apache::nifi::minifi::io::TLSServerSocket> server_socket_;
 };

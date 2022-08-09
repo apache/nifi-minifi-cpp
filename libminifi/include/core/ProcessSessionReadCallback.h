@@ -29,16 +29,16 @@
 namespace org::apache::nifi::minifi::core {
 class ProcessSessionReadCallback {
  public:
-  ProcessSessionReadCallback(const std::string &tmpFile, std::string destFile, std::shared_ptr<logging::Logger> logger);
+  ProcessSessionReadCallback(std::filesystem::path temp_file, std::filesystem::path dest_file, std::shared_ptr<logging::Logger> logger);
   ~ProcessSessionReadCallback();
   int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
   bool commit();
 
  private:
   std::shared_ptr<logging::Logger> logger_;
-  std::ofstream _tmpFileOs;
-  bool _writeSucceeded = false;
-  std::string _tmpFile;
-  std::string _destFile;
+  std::ofstream tmp_file_os_;
+  bool write_succeeded_ = false;
+  std::filesystem::path tmp_file_;
+  std::filesystem::path dest_file_;
 };
 }  // namespace org::apache::nifi::minifi::core

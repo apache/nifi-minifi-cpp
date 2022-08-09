@@ -34,120 +34,18 @@
 
 namespace FileUtils = org::apache::nifi::minifi::utils::file;
 
-TEST_CASE("TestFileUtils::concat_path", "[TestConcatPath]") {
-  std::string child = "baz";
-#ifdef WIN32
-  std::string base = "foo\\bar";
-  REQUIRE("foo\\bar\\baz" == FileUtils::concat_path(base, child));
-  std::string base2 = "foo\\bar\\";
-  REQUIRE("foo\\bar\\baz" == FileUtils::concat_path(base2, child));
-#else
-  std::string base = "foo/bar";
-  REQUIRE("foo/bar/baz" == FileUtils::concat_path(base, child));
-  std::string base2 = "foo/bar/";
-  REQUIRE("foo/bar/baz" == FileUtils::concat_path(base2, child));
-#endif
-  REQUIRE(base + FileUtils::get_separator() + child == FileUtils::concat_path(base, child));
-}
-
-TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
-#ifdef WIN32
-  REQUIRE("foo\\" == FileUtils::get_parent_path("foo\\bar"));
-  REQUIRE("foo\\" == FileUtils::get_parent_path("foo\\bar\\"));
-  REQUIRE("C:\\foo\\" == FileUtils::get_parent_path("C:\\foo\\bar"));
-  REQUIRE("C:\\foo\\" == FileUtils::get_parent_path("C:\\foo\\bar\\"));
-  REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo"));
-  REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo\\"));
-  REQUIRE("" == FileUtils::get_parent_path("C:\\"));  // NOLINT(readability-container-size-empty)
-  REQUIRE("" == FileUtils::get_parent_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
-#else
-  REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar"));
-  REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar/"));
-  REQUIRE("/foo/" == FileUtils::get_parent_path("/foo/bar"));
-  REQUIRE("/foo/" == FileUtils::get_parent_path("/foo/bar/"));
-  REQUIRE("/" == FileUtils::get_parent_path("/foo"));
-  REQUIRE("/" == FileUtils::get_parent_path("/foo/"));
-  REQUIRE("" == FileUtils::get_parent_path("/"));  // NOLINT(readability-container-size-empty)
-  REQUIRE("" == FileUtils::get_parent_path("//"));  // NOLINT(readability-container-size-empty)
-#endif
-}
-
-TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
-#ifdef WIN32
-  REQUIRE("bar" == FileUtils::get_child_path("foo\\bar"));
-  REQUIRE("bar\\" == FileUtils::get_child_path("foo\\bar\\"));
-  REQUIRE("bar" == FileUtils::get_child_path("C:\\foo\\bar"));
-  REQUIRE("bar\\" == FileUtils::get_child_path("C:\\foo\\bar\\"));
-  REQUIRE("foo" == FileUtils::get_child_path("C:\\foo"));
-  REQUIRE("foo\\" == FileUtils::get_child_path("C:\\foo\\"));
-  REQUIRE("" == FileUtils::get_child_path("C:\\"));  // NOLINT(readability-container-size-empty)
-  REQUIRE("" == FileUtils::get_child_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
-#else
-  REQUIRE("bar" == FileUtils::get_child_path("foo/bar"));
-  REQUIRE("bar/" == FileUtils::get_child_path("foo/bar/"));
-  REQUIRE("bar" == FileUtils::get_child_path("/foo/bar"));
-  REQUIRE("bar/" == FileUtils::get_child_path("/foo/bar/"));
-  REQUIRE("foo" == FileUtils::get_child_path("/foo"));
-  REQUIRE("foo/" == FileUtils::get_child_path("/foo/"));
-  REQUIRE("" == FileUtils::get_child_path("/"));  // NOLINT(readability-container-size-empty)
-  REQUIRE("" == FileUtils::get_child_path("//"));  // NOLINT(readability-container-size-empty)
-#endif
-}
-
-TEST_CASE("TestFilePath", "[TestGetFileNameAndPath]") {
-  SECTION("VALID FILE AND PATH") {
-  std::stringstream path;
-  path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c";
-  std::stringstream file;
-  file << path.str() << FileUtils::get_separator() << "file";
-  std::string filename;
-  std::string filepath;
-  REQUIRE(true == utils::file::getFileNameAndPath(file.str(), filepath, filename) );
-  REQUIRE(path.str() == filepath);
-  REQUIRE("file" == filename);
-}
-SECTION("NO FILE VALID PATH") {
-  std::stringstream path;
-  path << "a" << FileUtils::get_separator() << "b" << FileUtils::get_separator() << "c" << FileUtils::get_separator();
-  std::string filename;
-  std::string filepath;
-  REQUIRE(false == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
-  REQUIRE(filepath.empty());
-  REQUIRE(filename.empty());
-}
-SECTION("FILE NO PATH") {
-  std::stringstream path;
-  path << FileUtils::get_separator() << "file";
-  std::string filename;
-  std::string filepath;
-  std::string expectedPath;
-  expectedPath += FileUtils::get_separator();
-  REQUIRE(true == utils::file::getFileNameAndPath(path.str(), filepath, filename) );
-  REQUIRE(expectedPath == filepath);
-  REQUIRE("file" == filename);
-}
-SECTION("NO FILE NO PATH") {
-  std::string path = "file";
-  std::string filename;
-  std::string filepath;
-  REQUIRE(false == utils::file::getFileNameAndPath(path, filepath, filename) );
-  REQUIRE(filepath.empty());
-  REQUIRE(filename.empty());
-}
-}
-
 TEST_CASE("TestFileUtils::get_executable_path", "[TestGetExecutablePath]") {
-  std::string executable_path = FileUtils::get_executable_path();
+  auto executable_path = FileUtils::get_executable_path();
   std::cerr << "Executable path: " << executable_path << std::endl;
   REQUIRE(!executable_path.empty());
 }
 
 TEST_CASE("TestFileUtils::get_executable_dir", "[TestGetExecutableDir]") {
-  std::string executable_path = FileUtils::get_executable_path();
-  std::string executable_dir = FileUtils::get_executable_dir();
+  auto executable_path = FileUtils::get_executable_path();
+  auto executable_dir = FileUtils::get_executable_dir();
   REQUIRE(!executable_dir.empty());
   std::cerr << "Executable dir: " << executable_dir << std::endl;
-  REQUIRE(FileUtils::get_parent_path(executable_path) == executable_dir);
+  REQUIRE(executable_path.parent_path() == executable_dir);
 }
 
 TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
@@ -155,7 +53,7 @@ TEST_CASE("TestFileUtils::create_dir", "[TestCreateDir]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir";
+  auto test_dir_path = dir / "random_dir";
 
   REQUIRE(FileUtils::create_dir(test_dir_path, false) == 0);  // Dir has to be created successfully
   REQUIRE(std::filesystem::exists(test_dir_path));  // Check if directory exists
@@ -170,8 +68,7 @@ TEST_CASE("TestFileUtils::create_dir recursively", "[TestCreateDir]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::string test_dir_path = std::string(dir) + FileUtils::get_separator() + "random_dir" + FileUtils::get_separator() +
-    "random_dir2" + FileUtils::get_separator() + "random_dir3";
+  auto test_dir_path = dir / "random_dir" / "random_dir2" / "random_dir3";
 
   REQUIRE(FileUtils::create_dir(test_dir_path) == 0);  // Dir has to be created successfully
   REQUIRE(std::filesystem::exists(test_dir_path));  // Check if directory exists
@@ -188,18 +85,18 @@ TEST_CASE("TestFileUtils::list_dir", "[TestListDir]") {
 
   // Callback, called for each file entry in the listed directory
   // Return value is used to break (false) or continue (true) listing
-  auto lambda = [](const std::string &, const std::string &) -> bool {
+  auto lambda = [](const std::filesystem::path&, const std::filesystem::path&) -> bool {
     return true;
   };
 
   auto dir = testController.createTempDirectory();
-  auto foo = FileUtils::concat_path(dir, "foo");
+  auto foo = dir / "foo";
   FileUtils::create_dir(foo);
 
   FileUtils::list_dir(dir, lambda, logger_, false);
 
-  REQUIRE(LogTestController::getInstance().contains(dir));
-  REQUIRE_FALSE(LogTestController::getInstance().contains(foo));
+  REQUIRE(LogTestController::getInstance().contains(dir.string()));
+  REQUIRE_FALSE(LogTestController::getInstance().contains(foo.string()));
 }
 
 TEST_CASE("TestFileUtils::list_dir recursively", "[TestListDir]") {
@@ -211,14 +108,14 @@ TEST_CASE("TestFileUtils::list_dir recursively", "[TestListDir]") {
 
   // Callback, called for each file entry in the listed directory
   // Return value is used to break (false) or continue (true) listing
-  auto lambda = [](const std::string &, const std::string &) -> bool {
+  auto lambda = [](const std::filesystem::path&, const std::filesystem::path&) -> bool {
     return true;
   };
 
   auto dir = testController.createTempDirectory();
-  auto foo = FileUtils::concat_path(dir, "foo");
-  auto bar = FileUtils::concat_path(dir, "bar");
-  auto fooBaz = FileUtils::concat_path(foo, "baz");
+  auto foo = dir / "foo";
+  auto bar = dir / "bar";
+  auto fooBaz = foo / "baz";
 
   FileUtils::create_dir(foo);
   FileUtils::create_dir(bar);
@@ -226,10 +123,10 @@ TEST_CASE("TestFileUtils::list_dir recursively", "[TestListDir]") {
 
   FileUtils::list_dir(dir, lambda, logger_, true);
 
-  REQUIRE(LogTestController::getInstance().contains(dir));
-  REQUIRE(LogTestController::getInstance().contains(foo));
-  REQUIRE(LogTestController::getInstance().contains(bar));
-  REQUIRE(LogTestController::getInstance().contains(fooBaz));
+  REQUIRE(LogTestController::getInstance().contains(dir.string()));
+  REQUIRE(LogTestController::getInstance().contains(foo.string()));
+  REQUIRE(LogTestController::getInstance().contains(bar.string()));
+  REQUIRE(LogTestController::getInstance().contains(fooBaz.string()));
 }
 
 TEST_CASE("TestFileUtils::addFilesMatchingExtension", "[TestAddFilesMatchingExtension]") {
@@ -256,15 +153,15 @@ TEST_CASE("TestFileUtils::addFilesMatchingExtension", "[TestAddFilesMatchingExte
    * */
 
   auto dir = testController.createTempDirectory();
-  auto foo = FileUtils::concat_path(dir, "foo");
-  auto fooGood = FileUtils::concat_path(foo, "fooFile.ext");
-  auto fooBad = FileUtils::concat_path(foo, "fooFile.noext");
-  auto fooBaz = FileUtils::concat_path(foo, "baz");
+  auto foo = dir / "foo";
+  auto fooGood = foo / "fooFile.ext";
+  auto fooBad = foo / "fooFile.noext";
+  auto fooBaz = foo / "baz";
 
-  auto bar = FileUtils::concat_path(dir, "bar");
-  auto barGood = FileUtils::concat_path(bar, "barFile.ext");
+  auto bar = dir / "bar";
+  auto barGood = bar / "barFile.ext";
 
-  auto level1 = FileUtils::concat_path(dir, "level1.ext");
+  auto level1 = dir / "level1.ext";
 
   FileUtils::create_dir(foo);
   FileUtils::create_dir(bar);
@@ -274,46 +171,17 @@ TEST_CASE("TestFileUtils::addFilesMatchingExtension", "[TestAddFilesMatchingExte
   std::ofstream out3(barGood);
   std::ofstream out4(level1);
 
-  std::vector<std::string> expectedFiles = {barGood, fooGood, level1};
-  std::vector<std::string> accruedFiles;
+  std::vector<std::filesystem::path> expectedFiles = {barGood, fooGood, level1};
+  std::vector<std::filesystem::path> accruedFiles;
 
   FileUtils::addFilesMatchingExtension(logger_, dir, ".ext", accruedFiles);
   std::sort(accruedFiles.begin(), accruedFiles.end());
 
   CHECK(accruedFiles == expectedFiles);
 
-  auto fakeDir = FileUtils::concat_path(dir, "fake");
+  auto fakeDir = dir / "fake";
   FileUtils::addFilesMatchingExtension(logger_, fakeDir, ".ext", accruedFiles);
-  REQUIRE(LogTestController::getInstance().contains("Failed to open directory: " + fakeDir));
-}
-
-TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
-  TestController testController;
-
-  const std::string tempDir = utils::file::getFullPath(testController.createTempDirectory());
-
-  const std::string cwd = utils::Environment::getCurrentWorkingDirectory();
-
-  REQUIRE(utils::Environment::setCurrentWorkingDirectory(tempDir.c_str()));
-  const auto cwdGuard = gsl::finally([&cwd]() {
-    utils::Environment::setCurrentWorkingDirectory(cwd.c_str());
-  });
-
-  const std::string tempDir1 = utils::file::FileUtils::concat_path(tempDir, "test1");
-  const std::string tempDir2 = utils::file::FileUtils::concat_path(tempDir, "test2");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir1));
-  REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir2));
-
-  REQUIRE(tempDir1 == utils::file::getFullPath(tempDir1));
-  REQUIRE(tempDir1 == utils::file::getFullPath("test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath("./test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath("././test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath("./test2/../test1"));
-#ifdef WIN32
-  REQUIRE(tempDir1 == utils::file::getFullPath(".\\test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath(".\\.\\test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath(".\\test2\\..\\test1"));
-#endif
+  REQUIRE(LogTestController::getInstance().contains("Failed to open directory: " + fakeDir.string()));
 }
 
 TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_write_time][last_write_time_point]") {
@@ -325,9 +193,9 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
 
   TestController testController;
 
-  std::string dir = testController.createTempDirectory();
+  auto dir = testController.createTempDirectory();
 
-  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  auto test_file = dir / "test.txt";
   REQUIRE_FALSE(FileUtils::last_write_time(test_file).has_value());  // non existent file should not return last w.t.
   REQUIRE(FileUtils::last_write_time_point(test_file) == (time_point<file_clock, seconds>{}));
 
@@ -379,9 +247,9 @@ TEST_CASE("FileUtils::last_write_time and last_write_time_point work", "[last_wr
 TEST_CASE("FileUtils::file_size works", "[file_size]") {
   TestController testController;
 
-  std::string dir = testController.createTempDirectory();
+  auto dir = testController.createTempDirectory();
 
-  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  auto test_file = dir / "test.txt";
   REQUIRE(FileUtils::file_size(test_file) == 0);
 
   std::ofstream test_file_stream(test_file, std::ios::out | std::ios::binary);
@@ -407,9 +275,9 @@ TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
 
   TestController testController;
 
-  std::string dir = testController.createTempDirectory();
+  auto dir = testController.createTempDirectory();
 
-  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  auto test_file = dir / "test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
   std::ofstream test_file_stream{test_file, std::ios::out | std::ios::binary};
@@ -430,7 +298,7 @@ TEST_CASE("FileUtils::computeChecksum works", "[computeChecksum]") {
   REQUIRE(FileUtils::computeChecksum(test_file, 11) == CHECKSUM_OF_11_BYTES);
 
 
-  std::string another_file = dir + FileUtils::get_separator() + "another_test.txt";
+  auto another_file = dir / "another_test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
   std::ofstream another_file_stream{another_file, std::ios::out | std::ios::binary};
@@ -451,9 +319,9 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
 
   TestController testController;
 
-  std::string dir = testController.createTempDirectory();
+  auto dir = testController.createTempDirectory();
 
-  std::string test_file = dir + FileUtils::get_separator() + "test.txt";
+  auto test_file = dir / "test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
   std::ofstream test_file_stream{test_file, std::ios::out | std::ios::binary};
@@ -476,7 +344,7 @@ TEST_CASE("FileUtils::computeChecksum with large files", "[computeChecksum]") {
   REQUIRE(FileUtils::computeChecksum(test_file, 4097) == CHECKSUM_OF_4097_BYTES);
 
 
-  std::string another_file = dir + FileUtils::get_separator() + "another_test.txt";
+  auto another_file = dir / "another_test.txt";
   REQUIRE(FileUtils::computeChecksum(test_file, 0) == CHECKSUM_OF_0_BYTES);
 
   std::ofstream another_file_stream{another_file, std::ios::out | std::ios::binary};
@@ -496,7 +364,7 @@ TEST_CASE("FileUtils::set_permissions and get_permissions", "[TestSetPermissions
   TestController testController;
 
   auto dir = testController.createTempDirectory();
-  auto path = dir + FileUtils::get_separator() + "test_file.txt";
+  auto path = dir / "test_file.txt";
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
 
   REQUIRE(FileUtils::set_permissions(path, 0644) == 0);
@@ -509,7 +377,7 @@ TEST_CASE("FileUtils::get_permission_string", "[TestGetPermissionString]") {
   TestController testController;
 
   auto dir = testController.createTempDirectory();
-  auto path = dir + FileUtils::get_separator() + "test_file.txt";
+  auto path = dir / "test_file.txt";
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
 
   REQUIRE(FileUtils::set_permissions(path, 0644) == 0);
@@ -523,9 +391,9 @@ TEST_CASE("FileUtils::exists", "[TestExists]") {
   TestController testController;
 
   auto dir = testController.createTempDirectory();
-  auto path = dir + FileUtils::get_separator() + "test_file.txt";
+  auto path = dir / "test_file.txt";
   std::ofstream outfile(path, std::ios::out | std::ios::binary);
-  auto invalid_path = dir + FileUtils::get_separator() + "test_file2.txt";
+  auto invalid_path = dir / "test_file2.txt";
 
   REQUIRE(utils::file::exists(path));
   REQUIRE(!utils::file::exists(invalid_path));
@@ -605,7 +473,7 @@ TEST_CASE("FileUtils::get_relative_path", "[TestGetRelativePath]") {
   auto path = std::filesystem::path{"/random/non-existent/dir"};
   REQUIRE(FileUtils::get_relative_path(path.string(), base_path) == std::nullopt);
   path = std::filesystem::path{base_path} / "subdir" / "file.log";
-  REQUIRE(*FileUtils::get_relative_path(path.string(), base_path) == std::string("subdir") + FileUtils::get_separator() + "file.log");
-  REQUIRE(*FileUtils::get_relative_path(path.string(), base_path + FileUtils::get_separator()) == std::string("subdir") + FileUtils::get_separator() + "file.log");
+  REQUIRE(*FileUtils::get_relative_path(path.string(), base_path) == std::filesystem::path("subdir") / "file.log");
+  REQUIRE(*FileUtils::get_relative_path(path.string(), base_path / "") == std::filesystem::path("subdir") / "file.log");
   REQUIRE(*FileUtils::get_relative_path(base_path, base_path) == ".");
 }

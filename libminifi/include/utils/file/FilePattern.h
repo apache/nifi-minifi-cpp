@@ -27,12 +27,7 @@
 
 struct FilePatternTestAccessor;
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 class FilePatternError : public std::invalid_argument {
  public:
@@ -59,15 +54,15 @@ class FilePattern {
       NOT_MATCHING  // dir/file does not match pattern, do what you may
     };
 
-    bool isExcluding() const {
+    [[nodiscard]] bool isExcluding() const {
       return excluding_;
     }
 
-    MatchResult match(const std::string& directory) const;
+    [[nodiscard]] MatchResult matchDir(const std::filesystem::path& directory) const;
 
-    MatchResult match(const std::string& directory, const std::string& filename) const;
+    [[nodiscard]] MatchResult matchFile(const std::filesystem::path& directory, const std::filesystem::path& filename) const;
 
-    MatchResult match(const std::filesystem::path& path) const;
+    [[nodiscard]] MatchResult match(const std::filesystem::path& path) const;
     /**
      * @return The lowermost parent directory without wildcards.
      */
@@ -83,7 +78,7 @@ class FilePattern {
     };
 
     using DirIt = std::filesystem::path::const_iterator;
-    static DirMatchResult matchDirectory(DirIt pattern_it, DirIt pattern_end, DirIt value_it, DirIt value_end);
+    static DirMatchResult matchDirectory(DirIt pattern_it, const DirIt& pattern_end, DirIt value_it, const DirIt& value_end);
 
     std::filesystem::path directory_pattern_;
     std::string file_pattern_;
@@ -101,7 +96,7 @@ class FilePattern {
   }
 
  public:
-  explicit FilePattern(const std::string& pattern, ErrorHandler error_handler = defaultErrorHandler);
+  explicit FilePattern(const std::string& pattern, const ErrorHandler& error_handler = defaultErrorHandler);
 
  private:
   std::vector<FilePatternSegment> segments_;
@@ -109,9 +104,4 @@ class FilePattern {
 
 std::set<std::filesystem::path> match(const FilePattern& pattern);
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::file

@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <utility>
+#include <filesystem>
 #include "utils/crypto/EncryptionUtils.h"
 #include "utils/crypto/ciphers/XSalsa20.h"
 #include "utils/crypto/ciphers/Aes256Ecb.h"
@@ -36,7 +37,7 @@ namespace crypto {
 class EncryptionManager {
   static std::shared_ptr<core::logging::Logger> logger_;
  public:
-  explicit EncryptionManager(std::string key_dir) : key_dir_(std::move(key_dir)) {}
+  explicit EncryptionManager(std::filesystem::path key_dir) : key_dir_(std::move(key_dir)) {}
 
   [[nodiscard]] std::optional<XSalsa20Cipher> createXSalsa20Cipher(const std::string& key_name) const;
   [[nodiscard]] std::optional<Aes256EcbCipher> createAes256EcbCipher(const std::string& key_name) const;
@@ -44,7 +45,7 @@ class EncryptionManager {
   [[nodiscard]] virtual std::optional<Bytes> readKey(const std::string& key_name) const;
   [[nodiscard]] virtual bool writeKey(const std::string& key_name, const Bytes& key) const;
 
-  std::string key_dir_;
+  std::filesystem::path key_dir_;
 };
 
 }  // namespace crypto

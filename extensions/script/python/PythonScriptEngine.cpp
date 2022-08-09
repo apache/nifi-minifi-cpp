@@ -44,13 +44,10 @@ void PythonScriptEngine::evaluateModuleImports() {
 
   py::eval<py::eval_statements>("import sys", *bindings_, *bindings_);
   for (const auto& module_path : module_paths_) {
-    if (std::filesystem::is_regular_file(std::filesystem::status(module_path))) {
-      std::string path;
-      std::string filename;
-      utils::file::getFileNameAndPath(module_path, path, filename);
-      py::eval<py::eval_statements>("sys.path.append(r'" + path + "')", *bindings_, *bindings_);
+    if (std::filesystem::is_regular_file(module_path)) {
+      py::eval<py::eval_statements>("sys.path.append(r'" + module_path.parent_path().string() + "')", *bindings_, *bindings_);
     } else {
-      py::eval<py::eval_statements>("sys.path.append(r'" + module_path + "')", *bindings_, *bindings_);
+      py::eval<py::eval_statements>("sys.path.append(r'" + module_path.string() + "')", *bindings_, *bindings_);
     }
   }
 }

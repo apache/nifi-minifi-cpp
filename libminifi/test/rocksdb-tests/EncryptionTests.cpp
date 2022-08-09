@@ -20,11 +20,9 @@
 #include "../Catch.h"
 #include "FlowFileRepository.h"
 #include "utils/IntegrationTestUtils.h"
-#include "../Path.h"
 #include "repository/VolatileContentRepository.h"
 #include "FlowFileRecord.h"
 
-using utils::Path;
 using core::repository::FlowFileRepository;
 
 class FFRepoFixture : public TestController {
@@ -33,11 +31,11 @@ class FFRepoFixture : public TestController {
     LogTestController::getInstance().setDebug<minifi::FlowFileRecord>();
     LogTestController::getInstance().setDebug<minifi::Connection>();
     LogTestController::getInstance().setTrace<FlowFileRepository>();
-    home_ = utils::Path{createTempDirectory()};
+    home_ = createTempDirectory();
     repo_dir_ = home_ / "flowfile_repo";
     checkpoint_dir_ = home_ / "checkpoint_dir";
     config_ = std::make_shared<minifi::Configure>();
-    config_->setHome(home_.str());
+    config_->setHome(home_);
     container_ = std::make_unique<minifi::Connection>(nullptr, nullptr, "container");
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
     content_repo_->initialize(config_);
@@ -52,7 +50,7 @@ class FFRepoFixture : public TestController {
 
   template<typename Fn>
   void runWithNewRepository(Fn&& fn) {
-    auto repository = std::make_shared<FlowFileRepository>("ff", checkpoint_dir_.str(), repo_dir_.str());
+    auto repository = std::make_shared<FlowFileRepository>("ff", checkpoint_dir_, repo_dir_.string());
     repository->initialize(config_);
     std::map<std::string, core::Connectable*> container_map;
     container_map[container_->getUUIDStr()] = container_.get();
@@ -65,9 +63,9 @@ class FFRepoFixture : public TestController {
 
  protected:
   std::unique_ptr<minifi::Connection> container_;
-  Path home_;
-  Path repo_dir_;
-  Path checkpoint_dir_;
+  std::filesystem::path home_;
+  std::filesystem::path repo_dir_;
+  std::filesystem::path checkpoint_dir_;
   std::shared_ptr<minifi::Configure> config_;
   std::shared_ptr<core::repository::VolatileContentRepository> content_repo_;
 };
@@ -77,8 +75,8 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
     // pass
   }
   SECTION("With encryption") {
-    utils::file::FileUtils::create_dir((home_ / "conf").str());
-    std::ofstream{(home_ / "conf" / "bootstrap.conf").str()}
+    utils::file::FileUtils::create_dir(home_ / "conf");
+    std::ofstream{home_ / "conf" / "bootstrap.conf"}
       << static_cast<const char*>(FlowFileRepository::ENCRYPTION_KEY_NAME) << "="
       << "805D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E"
       << "\n";
@@ -102,7 +100,7 @@ TEST_CASE_METHOD(FFRepoFixture, "FlowFileRepository creates checkpoint and loads
     REQUIRE(success);
     REQUIRE(utils::verifyLogLinePresenceInPollTime(
         std::chrono::seconds{5},
-        "Successfully opened checkpoint database at '" + checkpoint_dir_.str() + "'"));
+        "Successfully opened checkpoint database at '" + checkpoint_dir_.string() + "'"));
     std::set<std::shared_ptr<core::FlowFile>> expired;
     auto flowfile = container_->poll(expired);
     REQUIRE(expired.empty());

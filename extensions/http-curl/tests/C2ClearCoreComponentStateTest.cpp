@@ -51,15 +51,15 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
     assert(verifyEventHappenedInPollTime(40s, [&] { return component_cleared_successfully_.load(); }, 1s));
   }
 
-  [[nodiscard]] std::string getFile1Location() const {
+  [[nodiscard]] std::filesystem::path getFile1Location() const {
     return test_file_1_;
   }
 
  protected:
   void updateProperties(minifi::FlowController& flow_controller) override {
-    auto setFileName = [] (const std::string& fileName, minifi::state::StateController& component){
+    auto setFileName = [] (const std::filesystem::path& fileName, minifi::state::StateController& component){
       auto& processor = dynamic_cast<minifi::state::ProcessorController&>(component).getProcessor();
-      processor.setProperty(minifi::processors::TailFile::FileName, fileName);
+      processor.setProperty(minifi::processors::TailFile::FileName, fileName.string());
     };
 
     flow_controller.executeOnComponent("TailFile1",
@@ -69,8 +69,8 @@ class VerifyC2ClearCoreComponentState : public VerifyC2Base {
   }
 
   TestController testController;
-  std::string test_file_1_;
-  std::string test_file_2_;
+  std::filesystem::path test_file_1_;
+  std::filesystem::path test_file_2_;
   const std::atomic_bool& component_cleared_successfully_;
 };
 
@@ -78,7 +78,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
  public:
   explicit ClearCoreComponentStateHandler(std::atomic_bool& component_cleared_successfully,
                                           std::shared_ptr<minifi::Configure> configuration,
-                                          std::string file1Location)
+                                          std::filesystem::path file1Location)
     : HeartbeatHandler(std::move(configuration)),
       component_cleared_successfully_(component_cleared_successfully),
       file_1_location_(std::move(file1Location)) {
@@ -138,7 +138,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
       case FlowState::CLEAR_SENT: {
         auto tail_file_ran_again_checker = [this] {
           const auto log_contents = LogTestController::getInstance().log_output.str();
-          const std::string tailing_file_pattern = "[debug] Tailing file " + file_1_location_;
+          const std::string tailing_file_pattern = "[debug] Tailing file " + file_1_location_.string();
           const std::string tail_file_committed_pattern = "[trace] ProcessSession committed for TailFile1";
           const std::vector<std::string> patterns = {tailing_file_pattern, tailing_file_pattern, tail_file_committed_pattern};
           return utils::StringUtils::matchesSequence(log_contents, patterns);
@@ -187,7 +187,7 @@ class ClearCoreComponentStateHandler: public HeartbeatHandler {
   std::atomic_bool& component_cleared_successfully_;
   std::string last_read_time_1_;
   std::string last_read_time_2_;
-  std::string file_1_location_;
+  std::filesystem::path file_1_location_;
 };
 
 int main(int argc, char **argv) {

@@ -59,6 +59,18 @@ class ConfigurableComponent {
   template<typename T>
   bool getProperty(const std::string name, T &value) const;
 
+  template<typename T = std::string>
+  std::enable_if_t<std::is_default_constructible<T>::value, std::optional<T>>
+  getProperty(const std::string& property_name) const {
+    T value;
+    try {
+      if (!getProperty(property_name, value)) return std::nullopt;
+    } catch (const utils::internal::ValueException&) {
+      return std::nullopt;
+    }
+    return value;
+  }
+
   /**
    * Provides a reference for the property.
    */

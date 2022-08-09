@@ -17,6 +17,7 @@
 #pragma once
 
 #include <string>
+#include <filesystem>
 
 #include "Utils.h"
 
@@ -39,8 +40,8 @@ class EncryptConfig {
   void encryptFlowConfig() const;
 
  private:
-  std::string bootstrapFilePath() const;
-  std::string propertiesFilePath() const;
+  std::filesystem::path bootstrapFilePath() const;
+  std::filesystem::path propertiesFilePath() const;
 
   EncryptionKeys getEncryptionKeys() const;
   std::string hexDecodeAndValidateKey(const std::string& key, const std::string& key_name) const;
@@ -48,7 +49,7 @@ class EncryptConfig {
 
   void encryptSensitiveProperties(const EncryptionKeys& keys) const;
 
-  const std::string minifi_home_;
+  const std::filesystem::path minifi_home_;
   EncryptionKeys keys_;
 };
 

@@ -81,7 +81,7 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   void onEnable() override;
 
-  std::vector<std::string> getPaths() const {
+  std::vector<std::filesystem::path> getPaths() const {
     return classpaths_;
   }
 
@@ -149,7 +149,7 @@ class JavaControllerService : public core::controller::ControllerService, public
 
   bool initialized_ = false;
 
-  std::vector<std::string> classpaths_;
+  std::vector<std::filesystem::path> classpaths_;
 
   std::unique_ptr<NarClassLoader> nar_loader_;
 

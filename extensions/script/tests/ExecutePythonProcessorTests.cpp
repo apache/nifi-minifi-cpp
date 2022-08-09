@@ -34,20 +34,15 @@
 namespace {
 using org::apache::nifi::minifi::utils::putFileToDir;
 using org::apache::nifi::minifi::utils::getFileContent;
-using org::apache::nifi::minifi::utils::file::getFileNameAndPath;
-using org::apache::nifi::minifi::utils::file::concat_path;
 using org::apache::nifi::minifi::utils::file::resolve;
-using org::apache::nifi::minifi::utils::file::getFullPath;
 
 class ExecutePythonProcessorTestBase {
  public:
   ExecutePythonProcessorTestBase() :
       logTestController_(LogTestController::getInstance()),
       logger_(logging::LoggerFactory<ExecutePythonProcessorTestBase>::getLogger()) {
-    std::string path;
-    std::string filename;
-    getFileNameAndPath(__FILE__, path, filename);
-    SCRIPT_FILES_DIRECTORY = getFullPath(concat_path(minifi::utils::file::FileUtils::get_executable_dir(), "test_python_scripts"));
+    auto path = std::filesystem::path(__FILE__).parent_path();
+    SCRIPT_FILES_DIRECTORY = minifi::utils::file::FileUtils::get_executable_dir() / "test_python_scripts";
     reInitialize();
   }
   virtual ~ExecutePythonProcessorTestBase() {
@@ -63,14 +58,14 @@ class ExecutePythonProcessorTestBase {
     logTestController_.setDebug<minifi::processors::PutFile::ReadCallback>();
   }
 
-  std::string getScriptFullPath(const std::string& script_file_name) {
+  auto getScriptFullPath(const std::filesystem::path& script_file_name) {
     return resolve(SCRIPT_FILES_DIRECTORY, script_file_name);
   }
 
   static const std::string TEST_FILE_NAME;
   static const std::string TEST_FILE_CONTENT;
 
-  std::string SCRIPT_FILES_DIRECTORY;
+  std::filesystem::path SCRIPT_FILES_DIRECTORY;
   std::unique_ptr<TestController> testController_;
   std::shared_ptr<TestPlan> plan_;
   LogTestController& logTestController_;
@@ -91,13 +86,13 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
   void testSimpleFilePassthrough(const Expectation expectation, const core::Relationship& execute_python_out_conn, const std::string& used_as_script_file, const std::string& used_as_script_body) {
     reInitialize();
 
-    const std::string input_dir = testController_->createTempDirectory();
+    auto input_dir = testController_->createTempDirectory();
     putFileToDir(input_dir, TEST_FILE_NAME, TEST_FILE_CONTENT);
     addGetFileProcessorToPlan(input_dir);
     REQUIRE_NOTHROW(addExecutePythonProcessorToPlan(used_as_script_file, used_as_script_body));
 
-    const std::string output_dir = testController_->createTempDirectory();
-    addPutFileProcessorToPlan(execute_python_out_conn, output_dir);
+    const auto output_dir = testController_->createTempDirectory();
+    addPutFileProcessorToPlan(execute_python_out_conn, output_dir.string());
 
     plan_->runNextProcessor();  // GetFile
     if (Expectation::RUNTIME_RELATIONSHIP_EXCEPTION == expectation) {
@@ -107,7 +102,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     REQUIRE_NOTHROW(plan_->runNextProcessor());  // ExecutePythonProcessor
     plan_->runNextProcessor();  // PutFile
 
-    const std::string output_file_path = output_dir + utils::file::FileUtils::get_separator() +  TEST_FILE_NAME;
+    const auto output_file_path = output_dir / TEST_FILE_NAME;
 
     if (Expectation::OUTPUT_FILE_MATCHES_INPUT == expectation) {
       const std::string output_file_content{ getFileContent(output_file_path) };
@@ -116,10 +111,10 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
   }
   void testsStatefulProcessor() {
     reInitialize();
-    const std::string output_dir = testController_->createTempDirectory();
+    const auto output_dir = testController_->createTempDirectory();
 
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor");
-    plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath("stateful_processor.py"));
+    plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath("stateful_processor.py").string());
 
     addPutFileProcessorToPlan(core::Relationship("success", "description"), output_dir);
     plan_->runNextProcessor();  // ExecutePythonProcessor
@@ -130,23 +125,23 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     for (std::size_t i = 0; i < 10; ++i) {
       plan_->runCurrentProcessor();  // PutFile
       const std::string state_name = std::to_string(i);
-      const std::string output_file_path = concat_path(output_dir, state_name);
+      const auto output_file_path = output_dir / state_name;
       const std::string output_file_content{ getFileContent(output_file_path) };
       REQUIRE(output_file_content == state_name);
     }
   }
 
-  std::shared_ptr<core::Processor> addGetFileProcessorToPlan(const std::string& dir_path) {
+  std::shared_ptr<core::Processor> addGetFileProcessorToPlan(const std::filesystem::path& dir_path) {
     std::shared_ptr<core::Processor> getfile = plan_->addProcessor("GetFile", "getfileCreate2");
-    plan_->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir_path);
+    plan_->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir_path.string());
     plan_->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::KeepSourceFile.getName(), "true");
     return getfile;
   }
 
-  std::shared_ptr<core::Processor> addExecutePythonProcessorToPlan(const std::string& used_as_script_file, const std::string& used_as_script_body) {
+  std::shared_ptr<core::Processor> addExecutePythonProcessorToPlan(const std::filesystem::path& used_as_script_file, const std::string& used_as_script_body) {
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor", core::Relationship("success", "description"), true);
     if (!used_as_script_file.empty()) {
-      plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath(used_as_script_file));
+      plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath(used_as_script_file).string());
     }
     if (!used_as_script_body.empty()) {
       plan_->setProperty(executePythonProcessor, "Script Body", getFileContent(getScriptFullPath(used_as_script_body)));
@@ -154,21 +149,21 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     return executePythonProcessor;
   }
 
-  std::shared_ptr<core::Processor> addPutFileProcessorToPlan(const core::Relationship& execute_python_outbound_connection, const std::string& dir_path) {
+  std::shared_ptr<core::Processor> addPutFileProcessorToPlan(const core::Relationship& execute_python_outbound_connection, const std::filesystem::path& dir_path) {
     std::shared_ptr<core::Processor> putfile = plan_->addProcessor("PutFile", "putfile", execute_python_outbound_connection, true);
-    plan_->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_path);
+    plan_->setProperty(putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), dir_path.string());
     return putfile;
   }
 
   void testReloadOnScriptProperty(std::optional<bool> reload_on_script_change, uint32_t expected_success_file_count, uint32_t expected_failure_file_count) {
-    const std::string input_dir = testController_->createTempDirectory();
+    const auto input_dir = testController_->createTempDirectory();
     putFileToDir(input_dir, TEST_FILE_NAME, TEST_FILE_CONTENT);
     addGetFileProcessorToPlan(input_dir);
     auto script_content{ getFileContent(getScriptFullPath("passthrough_processor_transfering_to_success.py")) };
-    const std::string reloaded_script_dir = testController_->createTempDirectory();
+    const auto reloaded_script_dir = testController_->createTempDirectory();
     putFileToDir(reloaded_script_dir, "reloaded_script.py", script_content);
 
-    auto execute_python_processor = addExecutePythonProcessorToPlan(concat_path(reloaded_script_dir, "reloaded_script.py"), "");
+    auto execute_python_processor = addExecutePythonProcessorToPlan(reloaded_script_dir / "reloaded_script.py", "");
     if (reload_on_script_change) {
       plan_->setProperty(execute_python_processor, "Reload on Script Change", *reload_on_script_change ? "true" : "false");
     }
@@ -177,13 +172,13 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
     success_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     auto success_output_dir = testController_->createTempDirectory();
-    plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir);
+    plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir.string());
 
     auto failure_putfile = plan_->addProcessor("PutFile", "FailurePutFile", { {"success", "d"} }, false);
     plan_->addConnection(execute_python_processor, {"failure", "d"}, failure_putfile);
     failure_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
     auto failure_output_dir = testController_->createTempDirectory();
-    plan_->setProperty(failure_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir);
+    plan_->setProperty(failure_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), failure_output_dir.string());
 
     testController_->runSession(plan_);
     plan_->reset();
@@ -194,8 +189,8 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
     std::vector<std::string> file_contents;
 
-    auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+      std::ifstream is(path / filename, std::ifstream::binary);
       file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
       return true;
     };
@@ -284,26 +279,26 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test the Reload On Script Ch
 }
 
 TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test module load of processor", "[executePythonProcessorModuleLoad]") {
-  const std::string input_dir = testController_->createTempDirectory();
+  const auto input_dir = testController_->createTempDirectory();
   putFileToDir(input_dir, TEST_FILE_NAME, TEST_FILE_CONTENT);
   addGetFileProcessorToPlan(input_dir);
 
   auto execute_python_processor = addExecutePythonProcessorToPlan("foo_bar_processor.py", "");
-  plan_->setProperty(execute_python_processor, "Module Directory", getScriptFullPath(concat_path("foo_modules", "foo.py")) + "," + getScriptFullPath("bar_modules"));
+  plan_->setProperty(execute_python_processor, "Module Directory", getScriptFullPath(std::filesystem::path("foo_modules")/"foo.py").string() + "," + getScriptFullPath("bar_modules").string());
 
   auto success_putfile = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
   plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
   success_putfile->setAutoTerminatedRelationships(std::array{core::Relationship{"success", "d"}, core::Relationship{"failure", "d"}});
   auto success_output_dir = testController_->createTempDirectory();
-  plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir);
+  plan_->setProperty(success_putfile, org::apache::nifi::minifi::processors::PutFile::Directory.getName(), success_output_dir.string());
 
   testController_->runSession(plan_);
   plan_->reset();
 
   std::vector<std::string> file_contents;
 
-  auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+  auto lambda = [&file_contents](const std::filesystem::path& path, const std::filesystem::path& filename) -> bool {
+    std::ifstream is(path / filename, std::ifstream::binary);
     file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
     return true;
   };

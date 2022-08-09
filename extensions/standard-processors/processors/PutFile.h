@@ -85,7 +85,7 @@ class PutFile : public core::Processor {
 
   class ReadCallback {
    public:
-    ReadCallback(std::string tmp_file, std::string dest_file);
+    ReadCallback(std::filesystem::path tmp_file, std::filesystem::path dest_file);
     ~ReadCallback();
     int64_t operator()(const std::shared_ptr<io::InputStream>& stream);
     bool commit();
@@ -93,8 +93,8 @@ class PutFile : public core::Processor {
    private:
     std::shared_ptr<core::logging::Logger> logger_{ core::logging::LoggerFactory<PutFile::ReadCallback>::getLogger() };
     bool write_succeeded_ = false;
-    std::string tmp_file_;
-    std::string dest_file_;
+    std::filesystem::path tmp_file_;
+    std::filesystem::path dest_file_;
   };
 
   /**
@@ -103,7 +103,7 @@ class PutFile : public core::Processor {
    * @param filename from which to generate temporary write file path
    * @return
    */
-  static std::string tmpWritePath(const std::string &filename, const std::string &directory);
+  static std::filesystem::path tmpWritePath(const std::filesystem::path& filename, const std::filesystem::path& directory);
 
  private:
   std::string conflict_resolution_;
@@ -112,9 +112,9 @@ class PutFile : public core::Processor {
 
   bool putFile(core::ProcessSession *session,
                const std::shared_ptr<core::FlowFile>& flowFile,
-               const std::string &tmpFile,
-               const std::string &destFile,
-               const std::string &destDir);
+               const std::filesystem::path& tmpFile,
+               const std::filesystem::path& destFile,
+               const std::filesystem::path& destDir);
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PutFile>::getLogger();
   static std::shared_ptr<utils::IdGenerator> id_generator_;
 

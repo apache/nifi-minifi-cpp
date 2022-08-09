@@ -60,7 +60,7 @@ class OutputFormatTestController : public TestController {
     auto dir = createTempDirectory();
 
     auto put_file = test_plan->addProcessor("PutFile", "putFile", Success, true);
-    test_plan->setProperty(put_file, PutFile::Directory.getName(), dir);
+    test_plan->setProperty(put_file, PutFile::Directory.getName(), dir.string());
 
     {
       dispatchBookmarkEvent();
@@ -80,7 +80,7 @@ class OutputFormatTestController : public TestController {
       auto files = utils::file::list_dir_all(dir, LogTestController::getInstance().getLogger<LogTestController>(), false);
       REQUIRE(files.size() == 1);
 
-      std::ifstream file{utils::file::concat_path(files[0].first, files[0].second)};
+      std::ifstream file{files[0].first / files[0].second};
       return {std::istreambuf_iterator<char>{file}, {}};
     }
   }

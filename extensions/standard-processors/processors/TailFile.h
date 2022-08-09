@@ -36,30 +36,31 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/Enum.h"
 #include "utils/Export.h"
+#include "utils/RegexUtils.h"
 
 namespace org::apache::nifi::minifi::processors {
 
 struct TailState {
-  TailState(std::string path, std::string file_name, uint64_t position,
+  TailState(std::filesystem::path path, std::filesystem::path file_name, uint64_t position,
             std::chrono::file_clock::time_point last_read_time,
             uint64_t checksum)
       : path_(std::move(path)), file_name_(std::move(file_name)), position_(position), last_read_time_(last_read_time), checksum_(checksum) {}
 
-  TailState(std::string path, std::string file_name)
+  TailState(std::filesystem::path path, std::filesystem::path file_name)
       : TailState{std::move(path), std::move(file_name), 0, std::chrono::file_clock::time_point{}, 0} {}
 
   TailState() = default;
 
-  std::string fileNameWithPath() const {
-    return path_ + utils::file::get_separator() + file_name_;
+  [[nodiscard]] std::filesystem::path fileNameWithPath() const {
+    return path_ / file_name_;
   }
 
-  int64_t lastReadTimeInMilliseconds() const {
+  [[nodiscard]] int64_t lastReadTimeInMilliseconds() const {
     return std::chrono::duration_cast<std::chrono::milliseconds>(last_read_time_.time_since_epoch()).count();
   }
 
-  std::string path_;
-  std::string file_name_;
+  std::filesystem::path path_;
+  std::filesystem::path file_name_;
   uint64_t position_ = 0;
   std::chrono::file_clock::time_point last_read_time_;
   uint64_t checksum_ = 0;
@@ -75,7 +76,7 @@ SMART_ENUM(InitialStartPositions,
   (BEGINNING_OF_TIME, "Beginning of Time"),
   (BEGINNING_OF_FILE, "Beginning of File"),
   (CURRENT_TIME, "Current Time")
-);
+)
 
 class TailFile : public core::Processor {
  public:
@@ -168,7 +169,7 @@ class TailFile : public core::Processor {
   };
 
   void parseAttributeProviderServiceProperty(core::ProcessContext& context);
-  void parseStateFileLine(char *buf, std::map<std::string, TailState> &state) const;
+  void parseStateFileLine(char *buf, std::map<std::filesystem::path, TailState> &state) const;
   void processAllRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
   void processRotatedFiles(const std::shared_ptr<core::ProcessSession> &session, TailState &state, std::vector<TailState> &rotated_file_states);
   void processRotatedFilesAfterLastReadTime(const std::shared_ptr<core::ProcessSession> &session, TailState &state);
@@ -177,19 +178,19 @@ class TailFile : public core::Processor {
   std::vector<TailState> findRotatedFilesAfterLastReadTime(const TailState &state) const;
   static std::vector<TailState> sortAndSkipMainFilePrefix(const TailState &state, std::vector<TailStateWithMtime>& matched_files_with_mtime);
   void processFile(const std::shared_ptr<core::ProcessSession> &session,
-                   const std::string &full_file_name,
+                   const std::filesystem::path& full_file_name,
                    TailState &state);
   void processSingleFile(const std::shared_ptr<core::ProcessSession> &session,
-                         const std::string &full_file_name,
+                         const std::filesystem::path& full_file_name,
                          TailState &state);
-  bool getStateFromStateManager(std::map<std::string, TailState> &new_tail_states) const;
+  bool getStateFromStateManager(std::map<std::filesystem::path, TailState> &new_tail_states) const;
   bool getStateFromLegacyStateFile(const std::shared_ptr<core::ProcessContext>& context,
-                                   std::map<std::string, TailState> &new_tail_states) const;
+                                   std::map<std::filesystem::path, TailState> &new_tail_states) const;
   void doMultifileLookup(core::ProcessContext& context);
   void checkForRemovedFiles();
   void checkForNewFiles(core::ProcessContext& context);
   static std::string baseDirectoryFromAttributes(const controllers::AttributeProviderService::AttributeMap& attribute_map, core::ProcessContext& context);
-  void updateFlowFileAttributes(const std::string &full_file_name, const TailState &state, const std::string &fileName,
+  void updateFlowFileAttributes(const std::filesystem::path& full_file_name, const TailState &state, const std::filesystem::path& fileName,
                                 const std::string &baseName, const std::string &extension,
                                 std::shared_ptr<core::FlowFile> &flow_file) const;
   static void updateStateAttributes(TailState &state, uint64_t size, uint64_t checksum);
@@ -201,10 +202,10 @@ class TailFile : public core::Processor {
 
   std::string delimiter_;  // Delimiter for the data incoming from the tailed file.
   core::CoreComponentStateManager* state_manager_ = nullptr;
-  std::map<std::string, TailState> tail_states_;
+  std::map<std::filesystem::path, TailState> tail_states_;
   Mode tail_mode_ = Mode::UNDEFINED;
-  std::string file_to_tail_;
-  std::string base_dir_;
+  std::optional<utils::Regex> pattern_regex_;
+  std::filesystem::path base_dir_;
   bool recursive_lookup_ = false;
   std::chrono::milliseconds lookup_frequency_{};
   std::chrono::steady_clock::time_point last_multifile_lookup_;

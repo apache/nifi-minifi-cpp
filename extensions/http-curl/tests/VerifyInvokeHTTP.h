@@ -78,14 +78,14 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     assert(executed);
   }
 
-  virtual void setupFlow(const std::optional<std::string>& flow_yml_path) {
+  virtual void setupFlow(const std::optional<std::filesystem::path>& flow_yml_path) {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
     if (flow_yml_path) {
-      configuration->set(minifi::Configure::nifi_flow_configuration_file, *flow_yml_path);
+      configuration->set(minifi::Configure::nifi_flow_configuration_file, flow_yml_path->string());
     }
     configuration->set(minifi::Configure::nifi_c2_agent_heartbeat_period, "200");
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -99,7 +99,7 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     setProperty(minifi::processors::InvokeHTTP::URL.getName(), url);
   }
 
-  void run(const std::optional<std::string>& flow_yml_path = {}, const std::optional<std::string>& = {}) override {
+  void run(const std::optional<std::filesystem::path>& flow_yml_path = {}, const std::optional<std::filesystem::path>& = {}) override {
     setupFlow(flow_yml_path);
     startFlowController();
 

@@ -71,16 +71,16 @@ class RetryFlowFileTest {
   }
 
   void retryRoutingTest(
-      optional<std::string> /*exp_retry_prop_name*/,
+      const optional<std::string>& /*exp_retry_prop_name*/,
       optional<int> /*exp_retry_prop_val*/,
-      core::Relationship exp_outbound_relationship,
+      const core::Relationship& exp_outbound_relationship,
       bool exp_penalty_on_flowfile,
-      optional<std::string> retry_attr_name_on_flowfile,
-      optional<std::string> retry_attribute_value_before_processing,
+      const optional<std::string>& retry_attr_name_on_flowfile,
+      const optional<std::string>& retry_attribute_value_before_processing,
       optional<int> maximum_retries,
       optional<bool> penalize_retries,
       optional<bool> fail_on_non_numerical_overwrite,
-      optional<std::string> reuse_mode,
+      const optional<std::string>& reuse_mode,
       optional<bool> processor_uuid_matches_flowfile) {
     reInitialize();
 
@@ -136,13 +136,13 @@ class RetryFlowFileTest {
     plan_->setProperty(retryflowfile, "retries_exceeded_property_key_1", "retries_exceeded_property_value_1", true);
     plan_->setProperty(retryflowfile, "retries_exceeded_property_key_2", "retries_exceeded_property_value_2", true);
 
-    const std::string retry_dir            = testController_->createTempDirectory();
-    const std::string retries_exceeded_dir = testController_->createTempDirectory();
-    const std::string failure_dir          = testController_->createTempDirectory();
+    const auto retry_dir            = testController_->createTempDirectory();
+    const auto retries_exceeded_dir = testController_->createTempDirectory();
+    const auto failure_dir          = testController_->createTempDirectory();
 
-    plan_->setProperty(putfile_on_retry, PutFile::Directory.getName(), retry_dir);
-    plan_->setProperty(putfile_on_retries_exceeded, PutFile::Directory.getName(), retries_exceeded_dir);
-    plan_->setProperty(putfile_on_failure, PutFile::Directory.getName(), failure_dir);
+    plan_->setProperty(putfile_on_retry, PutFile::Directory.getName(), retry_dir.string());
+    plan_->setProperty(putfile_on_retries_exceeded, PutFile::Directory.getName(), retries_exceeded_dir.string());
+    plan_->setProperty(putfile_on_failure, PutFile::Directory.getName(), failure_dir.string());
 
     plan_->runNextProcessor();  // GenerateFlowFile
     plan_->runNextProcessor();  // UpdateAttribute
@@ -162,7 +162,7 @@ class RetryFlowFileTest {
     REQUIRE(expect_warning_on_reuse == retryFlowfileWarnedForReuse());
   }
 
-  static bool logContainsText(const std::string pattern) {
+  static bool logContainsText(const std::string& pattern) {
     const std::string logs = LogTestController::getInstance().log_output.str();
     return logs.find(pattern) != std::string::npos;
   }

@@ -87,12 +87,15 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
     return;
   }
 
-  /* Parse processor-specific properties */
-  std::string remote_file;
-  std::string move_destination_directory;
+  std::filesystem::path remote_file;
+  if (auto remote_file_str = context->getProperty(RemoteFile, flow_file)) {
+    remote_file = std::filesystem::path(*remote_file_str, std::filesystem::path::format::generic_format);
+  }
 
-  context->getProperty(RemoteFile, remote_file, flow_file);
-  context->getProperty(MoveDestinationDirectory, move_destination_directory, flow_file);
+  std::filesystem::path move_destination_directory;
+  if (auto move_destination_directory_str = context->getProperty(MoveDestinationDirectory, flow_file)) {
+    move_destination_directory = std::filesystem::path(*move_destination_directory_str, std::filesystem::path::format::generic_format);
+  }
 
   /* Get SFTPClient from cache or create it */
   const SFTPProcessorBase::ConnectionCacheKey connection_cache_key = {common_properties.hostname,
@@ -123,7 +126,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   /* Download file */
   try {
     session->write(flow_file, [&remote_file, &client](const std::shared_ptr<io::OutputStream>& stream) -> int64_t {
-      auto bytes_read = client->getFile(remote_file, *stream);
+      auto bytes_read = client->getFile(remote_file.generic_string(), *stream);
       if (!bytes_read) {
         throw utils::SFTPException{client->getLastError()};
       }
@@ -151,37 +154,35 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   }
 
   /* Set attributes */
-  std::string parent_path;
-  std::string child_path;
-  std::tie(parent_path, child_path) = utils::file::split_path(remote_file, true /*force_posix*/);
+  std::string child_path = remote_file.filename().generic_string();
 
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));
-  session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file);
+  session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_FILENAME, remote_file.generic_string());
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, child_path);
-  if (!parent_path.empty()) {
-    flow_file->setAttribute(core::SpecialFlowAttribute::PATH, parent_path);
+  if (!remote_file.parent_path().empty()) {
+    flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (remote_file.parent_path() / "").generic_string());
   }
 
   /* Execute completion strategy */
   if (completion_strategy_ == COMPLETION_STRATEGY_DELETE_FILE) {
-    if (!client->removeFile(remote_file)) {
-      logger_->log_warn("Completion Strategy is Delete File, but failed to delete remote file \"%s\"", remote_file);
+    if (!client->removeFile(remote_file.generic_string())) {
+      logger_->log_warn("Completion Strategy is Delete File, but failed to delete remote file \"%s\"", remote_file.generic_string());
     }
   } else if (completion_strategy_ == COMPLETION_STRATEGY_MOVE_FILE) {
     bool should_move = true;
     if (create_directory_) {
-      auto res = createDirectoryHierarchy(*client, move_destination_directory, disable_directory_listing_);
+      auto res = createDirectoryHierarchy(*client, move_destination_directory.generic_string(), disable_directory_listing_);
       if (res != SFTPProcessorBase::CreateDirectoryHierarchyError::CREATE_DIRECTORY_HIERARCHY_ERROR_OK) {
         should_move = false;
       }
     }
     if (!should_move) {
-      logger_->log_warn("Completion Strategy is Move File, but failed to create Move Destination Directory \"%s\"", move_destination_directory);
+      logger_->log_warn("Completion Strategy is Move File, but failed to create Move Destination Directory \"%s\"", move_destination_directory.generic_string());
     } else {
-      auto target_path = utils::file::concat_path(move_destination_directory, child_path);
-      if (!client->rename(remote_file, target_path, false /*overwrite*/)) {
-        logger_->log_warn(R"(Completion Strategy is Move File, but failed to move file "%s" to "%s")", remote_file, target_path);
+      auto target_path = move_destination_directory / child_path;
+      if (!client->rename(remote_file.generic_string(), target_path.generic_string(), false /*overwrite*/)) {
+        logger_->log_warn(R"(Completion Strategy is Move File, but failed to move file "%s" to "%s")", remote_file.generic_string(), target_path.generic_string());
       }
     }
   }

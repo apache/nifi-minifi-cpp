@@ -90,7 +90,7 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
   auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
-  context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
+  context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
@@ -113,16 +113,15 @@ TEST_CASE("Test GetFileMultiple", "[getfileCreate3]") {
     REQUIRE(records.empty());
 
     std::fstream file;
-    std::stringstream ss;
-    ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
+    auto path = dir / "tstFile.ext";
+    file.open(path, std::ios::out);
     file << "tempFile";
     file.close();
 
     processor->incrementActiveTasks();
     processor->setScheduledState(core::ScheduledState::RUNNING);
     processor->onTrigger(context, session);
-    std::remove(ss.str().c_str());
+    std::filesystem::remove(path);
     reporter = session->getProvenanceReporter();
 
     REQUIRE(processor->getName() == "getfileCreate2");
@@ -174,7 +173,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   auto node = std::make_shared<core::ProcessorNode>(processor.get());
   auto context = std::make_shared<core::ProcessContext>(node, nullptr, repo, repo, content_repo);
 
-  context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir);
+  context->setProperty(org::apache::nifi::minifi::processors::GetFile::Directory, dir.string());
   // replicate 10 threads
   processor->setScheduledState(core::ScheduledState::RUNNING);
 
@@ -197,11 +196,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.empty());
 
-  const std::string hidden_file_name = [&] {
-    std::stringstream ss;
-    ss << dir << utils::file::FileUtils::get_separator() << ".filewithoutanext";
-    return ss.str();
-  }();
+  const std::filesystem::path hidden_file_name = dir / ".filewithoutanext";
   {
     std::ofstream file{ hidden_file_name };
     file << "tempFile";
@@ -210,7 +205,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 #ifdef WIN32
   {
     // hide file on windows, because a . prefix in the filename doesn't imply a hidden file
-    const auto hide_file_error = utils::file::FileUtils::hide_file(hidden_file_name.c_str());
+    const auto hide_file_error = minifi::test::utils::hide_file(hidden_file_name.c_str());
     REQUIRE(!hide_file_error);
   }
 #endif /* WIN32 */
@@ -218,7 +213,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
   processor->incrementActiveTasks();
   processor->setScheduledState(core::ScheduledState::RUNNING);
   processor->onTrigger(context, session);
-  std::remove(hidden_file_name.c_str());
+  std::filesystem::remove(hidden_file_name);
   reporter = session->getProvenanceReporter();
 
   REQUIRE(processor->getName() == "getfileCreate2");
@@ -299,7 +294,7 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
 
   auto dir = testController.createTempDirectory();
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -307,15 +302,14 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   REQUIRE(records.empty());
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  auto path = dir / "tstFile.ext";
+  file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
   plan->reset();
   testController.runSession(plan, false);
 
-  std::remove(ss.str().c_str());
+  std::filesystem::remove(path);
 
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
@@ -324,9 +318,9 @@ TEST_CASE("LogAttributeTest", "[getfileCreate3]") {
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
 
-  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + ss.str()));
+  REQUIRE(true == LogTestController::getInstance().contains("key:absolute.path value:" + path.string()));
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
   LogTestController::getInstance().reset();
 }
 
@@ -342,7 +336,7 @@ TEST_CASE("LogAttributeTestInvalid", "[TestLogAttribute]") {
 
   auto dir = testController.createTempDirectory();
 
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), "1");
   REQUIRE_THROWS_AS(plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), "-1"), utils::internal::ParseException);
   LogTestController::getInstance().reset();
@@ -363,7 +357,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   auto flowsToLogStr = std::to_string(flowsToLog);
   if (verifyStringFlowsLogged.empty())
     verifyStringFlowsLogged = std::to_string(flowsToLog);
-  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
   plan->setProperty(getfile, org::apache::nifi::minifi::processors::GetFile::BatchSize.getName(), std::to_string(fileCount));
   plan->setProperty(loggattr, org::apache::nifi::minifi::processors::LogAttribute::FlowFilesToLog.getName(), flowsToLogStr);
   testController.runSession(plan, false);
@@ -372,24 +366,23 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   REQUIRE(record == nullptr);
   REQUIRE(records.empty());
 
-  std::vector<std::string> files;
+  std::vector<std::filesystem::path> files;
 
   for (int i = 0; i < fileCount; i++) {
     std::fstream file;
-    std::stringstream ss;
-    ss << dir << utils::file::FileUtils::get_separator() << "tstFile" << i << ".ext";
-    file.open(ss.str(), std::ios::out);
+    auto path = dir / ("tstFile" + std::to_string(i) + ".ext");
+    file.open(path, std::ios::out);
     file << "tempFile";
     file.close();
 
-    files.push_back(ss.str());
+    files.push_back(path);
   }
 
   plan->reset();
   testController.runSession(plan, false);
 
-  for (const auto &created_file : files) {
-    std::remove(created_file.c_str());
+  for (const auto& created_file : files) {
+    std::filesystem::remove(created_file);
   }
 
   records = plan->getProvenanceRecords();
@@ -400,7 +393,7 @@ void testMultiplesLogAttribute(int fileCount, int flowsToLog, std::string verify
   record = plan->getCurrentFlowFile();
 
   REQUIRE(true == LogTestController::getInstance().contains("Size:8 Offset:0"));
-  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + std::string(dir)));
+  REQUIRE(true == LogTestController::getInstance().contains("key:path value:" + dir.string()));
   REQUIRE(true == LogTestController::getInstance().contains("Logged " + verifyStringFlowsLogged + " flow files"));
   LogTestController::getInstance().reset();
 }
@@ -427,7 +420,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   plan->addProcessor(processorReport, "reporter", core::Relationship("success", "description"), false);
 
   auto dir = testController.createTempDirectory();
-  plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir);
+  plan->setProperty(processor, org::apache::nifi::minifi::processors::GetFile::Directory.getName(), dir.string());
   testController.runSession(plan, false);
   auto records = plan->getProvenanceRecords();
   std::shared_ptr<core::FlowFile> record = plan->getCurrentFlowFile();
@@ -435,9 +428,8 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
   REQUIRE(records.empty());
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  auto path = dir / "tstFile.ext";
+  file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
   plan->reset();

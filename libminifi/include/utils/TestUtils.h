@@ -33,14 +33,10 @@
 #include "date/tz.h"
 #endif
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
-std::string putFileToDir(const std::string& dir_path, const std::string& file_name, const std::string& content) {
-  std::string file_path(file::FileUtils::concat_path(dir_path, file_name));
+std::filesystem::path putFileToDir(const std::filesystem::path& dir_path, const std::filesystem::path& file_name, const std::string& content) {
+  auto file_path = dir_path/file_name;
   std::ofstream out_file(file_path, std::ios::binary | std::ios::out);
   if (out_file.is_open()) {
     out_file << content;
@@ -48,7 +44,7 @@ std::string putFileToDir(const std::string& dir_path, const std::string& file_na
   return file_path;
 }
 
-std::string getFileContent(const std::string& file_name) {
+std::string getFileContent(const std::filesystem::path& file_name) {
   std::ifstream file_handle(file_name, std::ios::binary | std::ios::in);
   assert(file_handle.is_open());
   std::string file_content{ (std::istreambuf_iterator<char>(file_handle)), (std::istreambuf_iterator<char>()) };
@@ -113,8 +109,4 @@ class ManualClock : public timeutils::SteadyClock {
 void dateSetInstall(const std::string& install);
 #endif
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

@@ -33,7 +33,6 @@
 #include "processors/ExecuteSQL.h"
 #include "processors/QueryDatabaseTable.h"
 #include "SQLTestPlan.h"
-#include "Path.h"
 
 #ifdef USE_REAL_ODBC_TEST_DRIVER
 #include "services/ODBCConnector.h"
@@ -67,7 +66,7 @@ class SQLTestController : public TestController {
 
     test_dir_ = createTempDirectory();
     database_ = test_dir_ / "test.db";
-    connection_str_ = "Driver=" + DRIVER + ";Database=" + database_.str();
+    connection_str_ = "Driver=" + DRIVER + ";Database=" + database_.string();
 
     // Create test dbs
     ODBCConnection{connection_str_}.prepareStatement("CREATE TABLE test_table (int_col INTEGER, text_col TEXT);")->execute();
@@ -97,12 +96,12 @@ class SQLTestController : public TestController {
     return rows;
   }
 
-  utils::Path getDB() const {
+  auto getDB() const {
     return database_;
   }
 
  private:
-  utils::Path test_dir_;
-  utils::Path database_;
+  std::filesystem::path test_dir_;
+  std::filesystem::path database_;
   std::string connection_str_;
 };

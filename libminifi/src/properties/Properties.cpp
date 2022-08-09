@@ -18,10 +18,10 @@
 #include "properties/Properties.h"
 #include <fstream>
 #include <string>
+#include <utility>
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
 #include "utils/file/PathUtils.h"
-#include "core/Core.h"
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/PropertiesFile.h"
 
@@ -63,25 +63,27 @@ int Properties::getInt(const std::string &key, int default_value) const {
 }
 
 // Load Configure File
-void Properties::loadConfigureFile(const char *fileName) {
+void Properties::loadConfigureFile(const std::filesystem::path& configuration_file) {
   std::lock_guard<std::mutex> lock(mutex_);
-  if (fileName == nullptr) {
-    logger_->log_error("Configuration file path for %s is a nullptr!", getName().c_str());
+  if (configuration_file.empty()) {
+    logger_->log_error("Configuration file path for %s is empty!", getName());
     return;
   }
 
-  properties_file_ = utils::file::getFullPath(utils::file::FileUtils::concat_path(getHome(), fileName));
-  if (properties_file_.empty()) {
-    logger_->log_warn("Configuration file '%s' does not exist, so it could not be loaded.", fileName);
+  std::error_code ec;
+  properties_file_ = std::filesystem::canonical(getHome() / configuration_file, ec);
+
+  if (ec.value() != 0) {
+    logger_->log_warn("Configuration file '%s' does not exist, so it could not be loaded.", configuration_file.string());
     return;
   }
 
   logger_->log_info("Using configuration file to load configuration for %s from %s (located at %s)",
-                    getName().c_str(), fileName, properties_file_);
+                    getName().c_str(), configuration_file.string(), properties_file_.string());
 
   std::ifstream file(properties_file_, std::ifstream::in);
   if (!file.good()) {
-    logger_->log_error("load configure file failed %s", properties_file_);
+    logger_->log_error("load configure file failed %s", properties_file_.string());
     return;
   }
   properties_.clear();
@@ -94,7 +96,7 @@ void Properties::loadConfigureFile(const char *fileName) {
   dirty_ = false;
 }
 
-std::string Properties::getFilePath() const {
+std::filesystem::path Properties::getFilePath() const {
   std::lock_guard<std::mutex> lock(mutex_);
   return properties_file_;
 }
@@ -107,11 +109,12 @@ bool Properties::commitChanges() {
   }
   std::ifstream file(properties_file_, std::ifstream::in);
   if (!file) {
-    logger_->log_error("load configure file failed %s", properties_file_);
+    logger_->log_error("load configure file failed %s", properties_file_.string());
     return false;
   }
 
-  std::string new_file = properties_file_ + ".new";
+  auto new_file = properties_file_;
+  new_file += ".new";
 
   PropertiesFile current_content{file};
   for (const auto& prop : properties_) {
@@ -128,19 +131,20 @@ bool Properties::commitChanges() {
   try {
     current_content.writeTo(new_file);
   } catch (const std::exception&) {
-    logger_->log_error("Could not update %s", properties_file_);
+    logger_->log_error("Could not update %s", properties_file_.string());
     return false;
   }
 
-  const std::string backup = properties_file_ + ".bak";
+  auto backup = properties_file_;
+  backup += ".bak";
   if (utils::file::FileUtils::copy_file(properties_file_, backup) == 0 && utils::file::FileUtils::copy_file(new_file, properties_file_) == 0) {
-    logger_->log_info("Persisted %s", properties_file_);
+    logger_->log_info("Persisted %s", properties_file_.string());
     checksum_calculator_.invalidateChecksum();
     dirty_ = false;
     return true;
   }
 
-  logger_->log_error("Could not update %s", properties_file_);
+  logger_->log_error("Could not update %s", properties_file_.string());
   return false;
 }
 

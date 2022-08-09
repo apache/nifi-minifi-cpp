@@ -206,7 +206,7 @@ TestPlan::TestPlan(std::shared_ptr<minifi::core::ContentRepository> content_repo
     state_dir_ = std::make_unique<TempDirectory>(state_dir);
   }
   if (!configuration_->get(minifi::Configure::nifi_state_management_provider_local_path)) {
-    configuration_->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir_->getPath());
+    configuration_->set(minifi::Configure::nifi_state_management_provider_local_path, state_dir_->getPath().string());
   }
   state_manager_provider_ = minifi::core::ProcessContext::getOrCreateDefaultStateManagerProvider(controller_services_provider_.get(), configuration_);
 }
@@ -623,7 +623,7 @@ std::shared_ptr<TestPlan> TestController::createPlan(PlanConfig config) {
   if (!config.configuration) {
     config.configuration = std::make_shared<minifi::Configure>();
     config.configuration->set(minifi::Configure::nifi_state_management_provider_local_class_name, "UnorderedMapKeyValueStoreService");
-    config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory());
+    config.configuration->set(minifi::Configure::nifi_dbcontent_repository_directory_default, createTempDirectory().string());
   }
 
   if (!config.flow_file_repo)
@@ -649,7 +649,7 @@ std::shared_ptr<TestPlan> TestController::createPlan(std::shared_ptr<minifi::Con
   });
 }
 
-std::string TestController::createTempDirectory() {
+std::filesystem::path TestController::createTempDirectory() {
   directories.push_back(std::make_unique<TempDirectory>());
   return directories.back()->getPath();
 }

@@ -152,36 +152,33 @@ void GetFile::onTrigger(core::ProcessContext* /*context*/, core::ProcessSession*
     return;
   }
 
-  std::queue<std::string> list_of_file_names = pollListing(request_.batchSize);
+  std::queue<std::filesystem::path> list_of_file_names = pollListing(request_.batchSize);
   while (!list_of_file_names.empty()) {
-    std::string file_name = list_of_file_names.front();
+    auto file_name = list_of_file_names.front();
     list_of_file_names.pop();
     getSingleFile(*session, file_name);
   }
 }
 
-void GetFile::getSingleFile(core::ProcessSession& session, const std::string& file_name) const {
-  logger_->log_info("GetFile process %s", file_name);
+void GetFile::getSingleFile(core::ProcessSession& session, const std::filesystem::path& file_path) const {
+  logger_->log_info("GetFile process %s", file_path.string());
   auto flow_file = session.create();
   gsl_Expects(flow_file);
-  std::string path;
-  std::string name;
-  std::tie(path, name) = utils::file::split_path(file_name);
-  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, name);
-  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, path);
-  flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, file_name);
+  flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, file_path.filename().string());
+  flow_file->setAttribute(core::SpecialFlowAttribute::PATH, (file_path.parent_path() / "").string());
+  flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, file_path.string());
 
   try {
-    session.write(flow_file, utils::FileReaderCallback{file_name});
+    session.write(flow_file, utils::FileReaderCallback{file_path});
     session.transfer(flow_file, Success);
     if (!request_.keepSourceFile) {
-      auto remove_status = remove(file_name.c_str());
-      if (remove_status != 0) {
-        logger_->log_error("GetFile could not delete file '%s', error %d: %s", file_name, errno, strerror(errno));
+      std::error_code remove_error;
+      if (!std::filesystem::remove(file_path, remove_error)) {
+        logger_->log_error("GetFile could not delete file '%s', error: %s", file_path.string(), remove_error.message());
       }
     }
   } catch (const utils::FileReaderCallbackIOError& io_error) {
-    logger_->log_error("IO error while processing file '%s': %s", file_name, io_error.what());
+    logger_->log_error("IO error while processing file '%s': %s", file_path.string(), io_error.what());
     flow_file->setDeleted(true);
   }
 }
@@ -192,18 +189,18 @@ bool GetFile::isListingEmpty() const {
   return directory_listing_.empty();
 }
 
-void GetFile::putListing(const std::string& fileName) {
-  logger_->log_trace("Adding file to queue: %s", fileName);
+void GetFile::putListing(const std::filesystem::path& file_path) {
+  logger_->log_trace("Adding file to queue: %s", file_path.string());
 
   std::lock_guard<std::mutex> lock(directory_listing_mutex_);
 
-  directory_listing_.push(fileName);
+  directory_listing_.push(file_path);
 }
 
-std::queue<std::string> GetFile::pollListing(uint64_t batch_size) {
+std::queue<std::filesystem::path> GetFile::pollListing(uint64_t batch_size) {
   std::lock_guard<std::mutex> lock(directory_listing_mutex_);
 
-  std::queue<std::string> list;
+  std::queue<std::filesystem::path> list;
   while (!directory_listing_.empty() && (batch_size == 0 || list.size() < batch_size)) {
     list.push(directory_listing_.front());
     directory_listing_.pop();
@@ -211,18 +208,18 @@ std::queue<std::string> GetFile::pollListing(uint64_t batch_size) {
   return list;
 }
 
-bool GetFile::fileMatchesRequestCriteria(const std::string& fullName, const std::string& name, const GetFileRequest &request) {
-  logger_->log_trace("Checking file: %s", fullName);
+bool GetFile::fileMatchesRequestCriteria(const std::filesystem::path& full_name, const std::filesystem::path& name, const GetFileRequest &request) {
+  logger_->log_trace("Checking file: %s", full_name.string());
 
   std::error_code ec;
-  uint64_t file_size = std::filesystem::file_size(fullName, ec);
+  uint64_t file_size = std::filesystem::file_size(full_name, ec);
   if (ec) {
-    logger_->log_error("file_size of %s: %s", fullName, ec.message());
+    logger_->log_error("file_size of %s: %s", full_name.string(), ec.message());
     return false;
   }
-  const auto modifiedTime = std::filesystem::last_write_time(fullName, ec);
+  const auto modifiedTime = std::filesystem::last_write_time(full_name, ec);
   if (ec) {
-    logger_->log_error("last_write_time of %s: %s", fullName, ec.message());
+    logger_->log_error("last_write_time of %s: %s", full_name.string(), ec.message());
     return false;
   }
 
@@ -238,11 +235,11 @@ bool GetFile::fileMatchesRequestCriteria(const std::string& fullName, const std:
   if (request.maxAge > 0ms && fileAge > request.maxAge)
     return false;
 
-  if (request.ignoreHiddenFile && utils::file::is_hidden(fullName))
+  if (request.ignoreHiddenFile && utils::file::is_hidden(full_name))
     return false;
 
   utils::Regex rgx(request.fileFilter);
-  if (!utils::regexMatch(name, rgx)) {
+  if (!utils::regexMatch(name.string(), rgx)) {
     return false;
   }
 
@@ -253,8 +250,8 @@ bool GetFile::fileMatchesRequestCriteria(const std::string& fullName, const std:
 }
 
 void GetFile::performListing(const GetFileRequest &request) {
-  auto callback = [this, request](const std::string& dir, const std::string& filename) -> bool {
-    std::string fullpath = dir + utils::file::get_separator() + filename;
+  auto callback = [this, request](const std::filesystem::path& dir, const std::filesystem::path& filename) -> bool {
+    auto fullpath = dir / filename;
     if (fileMatchesRequestCriteria(fullpath, filename, request)) {
       putListing(fullpath);
     }

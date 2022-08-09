@@ -127,7 +127,7 @@ void FlowFileRepository::run() {
 }
 
 void FlowFileRepository::prune_stored_flowfiles() {
-  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{config_->getHome()}, DbEncryptionOptions{checkpoint_dir_, ENCRYPTION_KEY_NAME});
+  const auto encrypted_env = createEncryptingEnv(utils::crypto::EncryptionManager{config_->getHome()}, DbEncryptionOptions{checkpoint_dir_.string(), ENCRYPTION_KEY_NAME});
   logger_->log_info("Using %s FlowFileRepository checkpoint", encrypted_env ? "encrypted" : "plaintext");
 
   auto set_db_opts = [encrypted_env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
@@ -140,14 +140,14 @@ void FlowFileRepository::prune_stored_flowfiles() {
       db_opts.set(&rocksdb::DBOptions::env, rocksdb::Env::Default());
     }
   };
-  auto checkpointDB = minifi::internal::RocksDatabase::create(set_db_opts, {}, checkpoint_dir_, minifi::internal::RocksDbMode::ReadOnly);
+  auto checkpointDB = minifi::internal::RocksDatabase::create(set_db_opts, {}, checkpoint_dir_.string(), minifi::internal::RocksDbMode::ReadOnly);
   std::optional<minifi::internal::OpenRocksDb> opendb;
   if (nullptr != checkpoint_) {
     opendb = checkpointDB->open();
     if (opendb) {
-      logger_->log_trace("Successfully opened checkpoint database at '%s'", checkpoint_dir_);
+      logger_->log_trace("Successfully opened checkpoint database at '%s'", checkpoint_dir_.string());
     } else {
-      logger_->log_error("Couldn't open checkpoint database at '%s' using live database", checkpoint_dir_);
+      logger_->log_error("Couldn't open checkpoint database at '%s' using live database", checkpoint_dir_.string());
       opendb = db_->open();
     }
     if (!opendb) {
@@ -230,7 +230,7 @@ void FlowFileRepository::initialize_repository() {
   }
   // delete any previous copy
   if (utils::file::delete_dir(checkpoint_dir_) < 0) {
-    logger_->log_error("Could not delete existing checkpoint directory '%s'", checkpoint_dir_);
+    logger_->log_error("Could not delete existing checkpoint directory '%s'", checkpoint_dir_.string());
     return;
   }
   std::unique_ptr<rocksdb::Checkpoint> checkpoint;
@@ -239,13 +239,13 @@ void FlowFileRepository::initialize_repository() {
     logger_->log_error("Could not create checkpoint object: %s", checkpoint_status.ToString());
     return;
   }
-  checkpoint_status = checkpoint->CreateCheckpoint(checkpoint_dir_);
+  checkpoint_status = checkpoint->CreateCheckpoint(checkpoint_dir_.string());
   if (!checkpoint_status.ok()) {
     logger_->log_error("Could not initialize checkpoint: %s", checkpoint_status.ToString());
     return;
   }
   checkpoint_ = std::move(checkpoint);
-  logger_->log_trace("Created checkpoint in directory '%s'", checkpoint_dir_);
+  logger_->log_trace("Created checkpoint in directory '%s'", checkpoint_dir_.string());
 }
 
 void FlowFileRepository::loadComponent(const std::shared_ptr<core::ContentRepository> &content_repo) {

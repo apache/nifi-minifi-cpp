@@ -61,12 +61,12 @@ const core::Property CapturePacket::CaptureBluetooth(core::PropertyBuilder::crea
 
 const core::Relationship CapturePacket::Success("success", "All files are routed to success");
 
-std::string CapturePacket::generate_new_pcap(const std::string &base_path) {
-  std::string path = base_path;
+std::filesystem::path CapturePacket::generate_new_pcap(const std::string &base_path) {
+  auto path = base_path;
   // can use relaxed for a counter
   int cnt = num_.fetch_add(1, std::memory_order_relaxed);
   std::string filename = std::to_string(cnt);
-  path.append(filename);
+  path += filename;
   return path;
 }
 
@@ -101,7 +101,7 @@ CapturePacketMechanism *CapturePacket::create_new_capture(const std::string &bas
   auto new_capture = new CapturePacketMechanism(base_path, generate_new_pcap(base_path), max_size);
   new_capture->writer_ = new pcpp::PcapFileWriterDevice(new_capture->getFile());
   if (!new_capture->writer_->open())
-    throw std::runtime_error{utils::StringUtils::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile())};
+    throw std::runtime_error{utils::StringUtils::join_pack("Failed to open PcapFileWriterDevice with file ", new_capture->getFile().string())};
 
   return new_capture;
 }
@@ -143,7 +143,7 @@ void CapturePacket::onSchedule(const std::shared_ptr<core::ProcessContext> &cont
 
   utils::Identifier dir_ext = id_generator_->generate();
 
-  base_path_ = dir_ext.to_string();
+  base_path_ = std::filesystem::path(dir_ext.to_string());
 
   const std::vector<pcpp::PcapLiveDevice*>& devList = pcpp::PcapLiveDeviceList::getInstance().getPcapLiveDevicesList();
   for (auto iter : devList) {

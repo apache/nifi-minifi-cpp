@@ -102,7 +102,7 @@ class ExecuteProcess : public core::Processor {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<ExecuteProcess>::getLogger();
   std::string command_;
   std::string command_argument_;
-  std::string working_dir_;
+  std::filesystem::path working_dir_;
   std::chrono::milliseconds batch_duration_  = std::chrono::milliseconds(0);
   bool redirect_error_stream_;
   std::string full_command_;

@@ -34,12 +34,10 @@
 #include "core/ProcessSession.h"
 #include "core/WeakReference.h"
 #include "utils/gsl.h"
+#include "range/v3/algorithm/remove_if.hpp"
+#include "range/v3/algorithm/all_of.hpp"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
+namespace org::apache::nifi::minifi::jni {
 
 /**
  * Represents a flow file. Exists to provide the ability to remove
@@ -47,18 +45,17 @@ namespace jni {
  */
 class JniFlowFile : public core::WeakReference {
  public:
-  JniFlowFile(std::shared_ptr<core::FlowFile> ref, const std::shared_ptr<JavaServicer> &servicer, jobject ff)
-      : removed(false),
-        ff_object(ff),
-        ref_(ref),
-        servicer_(servicer) {
+  JniFlowFile(std::shared_ptr<core::FlowFile> ref, std::shared_ptr<JavaServicer> servicer, jobject ff)
+      : ff_object(ff),
+        ref_(std::move(ref)),
+        servicer_(std::move(servicer)) {
   }
 
-  virtual ~JniFlowFile() = default;
+  ~JniFlowFile() override = default;
 
   void remove() override;
 
-  std::shared_ptr<core::FlowFile> get() const {
+  [[nodiscard]] std::shared_ptr<core::FlowFile> get() const {
     return ref_;
   }
 
@@ -71,12 +68,12 @@ class JniFlowFile : public core::WeakReference {
     return ref_ == other.ref_;
   }
 
-  bool empty() const {
+  [[nodiscard]] bool empty() const {
     return removed;
   }
 
  protected:
-  bool removed;
+  bool removed = false;
 
   jobject ff_object;
 
@@ -88,22 +85,12 @@ class JniFlowFile : public core::WeakReference {
 };
 
 /**
- * Quick check to determine if a FF is empty.
- */
-struct check_empty_ff : public std::unary_function<std::shared_ptr<JniFlowFile>, bool> {
-  bool operator()(std::shared_ptr<JniFlowFile> session) const {
-    return session->empty();
-  }
-};
-
-/**
  * Jni byte input stream
  */
 class JniByteInputStream {
  public:
   explicit JniByteInputStream(uint64_t size)
-      : buffer_(size),
-        read_size_(0) {
+      : buffer_(size) {
   }
   int64_t operator()(const std::shared_ptr<minifi::io::InputStream>& stream) {
     stream_ = stream;
@@ -147,16 +134,14 @@ class JniByteInputStream {
 
   std::shared_ptr<minifi::io::InputStream> stream_;
   std::vector<std::byte> buffer_;
-  uint64_t read_size_;
 };
 
 class JniInputStream : public core::WeakReference {
  public:
-  JniInputStream(std::unique_ptr<JniByteInputStream> jbi, jobject in_instance, const std::shared_ptr<JavaServicer> &servicer)
-      : removed_(false),
-        in_instance_(in_instance),
+  JniInputStream(std::unique_ptr<JniByteInputStream> jbi, jobject in_instance, std::shared_ptr<JavaServicer> servicer)
+      : in_instance_(in_instance),
         jbi_(std::move(jbi)),
-        servicer_(servicer) {
+        servicer_(std::move(servicer)) {
   }
 
   void remove() override {
@@ -184,7 +169,7 @@ class JniInputStream : public core::WeakReference {
 
  private:
   std::mutex mutex_;
-  bool removed_;
+  bool removed_ = false;
   jobject in_instance_;
   std::unique_ptr<JniByteInputStream> jbi_;
   std::shared_ptr<JavaServicer> servicer_;
@@ -192,21 +177,20 @@ class JniInputStream : public core::WeakReference {
 
 class JniSession : public core::WeakReference {
  public:
-  JniSession(const std::shared_ptr<core::ProcessSession> &session, jobject session_instance, const std::shared_ptr<JavaServicer> &servicer)
-      : removed_(false),
-        session_instance_(session_instance),
-        session_(session),
-        servicer_(servicer) {
+  JniSession(std::shared_ptr<core::ProcessSession> session, jobject session_instance, std::shared_ptr<JavaServicer> servicer)
+      : session_instance_(session_instance),
+        session_(std::move(session)),
+        servicer_(std::move(servicer)) {
   }
 
   void remove() override {
     std::lock_guard<std::mutex> guard(session_mutex_);
     if (!removed_) {
-      for (auto ff : global_ff_objects_) {
+      for (const auto& ff : global_ff_objects_) {
         ff->remove();
       }
 
-      for (auto in : input_streams_) {
+      for (const auto& in : input_streams_) {
         in->remove();
       }
       global_ff_objects_.clear();
@@ -228,13 +212,13 @@ class JniSession : public core::WeakReference {
     return nullptr;
   }
 
-  JniFlowFile * addFlowFile(std::shared_ptr<JniFlowFile> ff) {
+  JniFlowFile * addFlowFile(const std::shared_ptr<JniFlowFile>& ff) {
     std::lock_guard<std::mutex> guard(session_mutex_);
     global_ff_objects_.push_back(ff);
     return ff.get();
   }
 
-  void addInputStream(std::shared_ptr<JniInputStream> in) {
+  void addInputStream(const std::shared_ptr<JniInputStream>& in) {
     std::lock_guard<std::mutex> guard(session_mutex_);
     input_streams_.push_back(in);
   }
@@ -244,7 +228,7 @@ class JniSession : public core::WeakReference {
   }
 
   bool prune() {
-    global_ff_objects_.erase(std::remove_if(global_ff_objects_.begin(), global_ff_objects_.end(), check_empty_ff()), global_ff_objects_.end());
+    ranges::remove_if(global_ff_objects_, [](const std::shared_ptr<JniFlowFile>& flow_file) { return flow_file->empty(); });
     if (global_ff_objects_.empty()) {
       remove();
     }
@@ -252,15 +236,11 @@ class JniSession : public core::WeakReference {
   }
   bool empty() const {
     std::lock_guard<std::mutex> guard(session_mutex_);
-    for (auto ff : global_ff_objects_) {
-      if (!ff->empty())
-        return false;
-    }
-    return true;
+    return ranges::all_of(global_ff_objects_, [](const auto& ff) -> bool { return ff->empty(); });
   }
 
  protected:
-  bool removed_;
+  bool removed_ = false;
   mutable std::mutex session_mutex_;
   jobject session_instance_;
   std::shared_ptr<core::ProcessSession> session_;
@@ -270,25 +250,19 @@ class JniSession : public core::WeakReference {
   std::vector<std::shared_ptr<JniFlowFile>> global_ff_objects_;
 };
 
-struct check_empty : public std::unary_function<std::shared_ptr<JniSession>, bool> {
-  bool operator()(std::shared_ptr<JniSession> session) const {
-    return session->prune();
-  }
-};
-
 class JniSessionFactory : public core::WeakReference {
  public:
-  JniSessionFactory(const std::shared_ptr<core::ProcessSessionFactory> &factory, const std::shared_ptr<JavaServicer> &servicer, jobject java_object)
-      : servicer_(servicer),
-        factory_(factory),
+  JniSessionFactory(std::shared_ptr<core::ProcessSessionFactory> factory, std::shared_ptr<JavaServicer> servicer, jobject java_object)
+      : servicer_(std::move(servicer)),
+        factory_(std::move(factory)),
         java_object_(java_object) {
   }
 
   void remove() override {
     std::lock_guard<std::mutex> guard(session_mutex_);
-    // remove all of the sessions
+    // remove all sessions
     // this should spark their destructor
-    for (auto session : sessions_) {
+    for (const auto& session : sessions_) {
       session->remove();
     }
     sessions_.clear();
@@ -299,24 +273,24 @@ class JniSessionFactory : public core::WeakReference {
     }
   }
 
-  jobject getJavaReference() const {
+  [[nodiscard]] jobject getJavaReference() const {
     return java_object_;
   }
 
-  std::shared_ptr<JavaServicer> getServicer() const {
+  [[nodiscard]] std::shared_ptr<JavaServicer> getServicer() const {
     return servicer_;
   }
 
-  std::shared_ptr<core::ProcessSessionFactory> getFactory() const {
+  [[nodiscard]] std::shared_ptr<core::ProcessSessionFactory> getFactory() const {
     return factory_;
   }
 
   /**
    */
-  JniSession *addSession(std::shared_ptr<JniSession> session) {
+  JniSession *addSession(const std::shared_ptr<JniSession>& session) {
     std::lock_guard<std::mutex> guard(session_mutex_);
 
-    sessions_.erase(std::remove_if(sessions_.begin(), sessions_.end(), check_empty()), sessions_.end());
+    ranges::remove_if(sessions_, [](const auto& session) { return session->prune(); });
 
     sessions_.push_back(session);
 
@@ -336,8 +310,4 @@ class JniSessionFactory : public core::WeakReference {
 
 
 
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni

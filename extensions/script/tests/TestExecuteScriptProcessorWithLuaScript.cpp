@@ -95,7 +95,7 @@ TEST_CASE("Lua: Test Log", "[executescriptLuaLog]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
@@ -150,10 +150,10 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir.string());
 
   testController.runSession(plan, false);
 
@@ -163,9 +163,8 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   REQUIRE(records.empty());
 
   std::fstream file;
-  std::stringstream ss;
-  ss << getFileDir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  auto path = getFileDir / "tstFile.ext";
+  file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
   plan->reset();
@@ -178,17 +177,16 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::filesystem::remove(path);
 
   REQUIRE(logTestController.contains("[info] file content: tempFile"));
 
   // Verify that file content was preserved
-  REQUIRE(!std::ifstream(ss.str()).good());
-  std::stringstream movedFile;
-  movedFile << putFileDir << "/" << "tstFile.ext";
-  REQUIRE(std::ifstream(movedFile.str()).good());
+  REQUIRE(!std::ifstream(path).good());
+  auto moved_file = putFileDir / "tstFile.ext";
+  REQUIRE(std::ifstream(moved_file).good());
 
-  file.open(movedFile.str(), std::ios::in);
+  file.open(moved_file, std::ios::in);
   std::string contents((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
   REQUIRE("tempFile" == contents);
@@ -238,10 +236,10 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   auto putFileDir = testController.createTempDirectory();
-  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir);
+  plan->setProperty(putFile, minifi::processors::PutFile::Directory.getName(), putFileDir.string());
 
   testController.runSession(plan, false);
 
@@ -251,9 +249,8 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   REQUIRE(records.empty());
 
   std::fstream file;
-  std::stringstream ss;
-  ss << getFileDir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  auto path = getFileDir / "tstFile.ext";
+  file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
   plan->reset();
@@ -266,15 +263,14 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::filesystem::remove(path);
 
   // Verify new content was written
-  REQUIRE(!std::ifstream(ss.str()).good());
-  std::stringstream movedFile;
-  movedFile << putFileDir << "/" << "tstFile.ext";
-  REQUIRE(std::ifstream(movedFile.str()).good());
+  REQUIRE(!std::ifstream(path).good());
+  auto moved_file = putFileDir / "tstFile.ext";
+  REQUIRE(std::ifstream(moved_file).good());
 
-  file.open(movedFile.str(), std::ios::in);
+  file.open(moved_file, std::ios::in);
   std::string contents((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
   REQUIRE("hello 2" == contents);
@@ -318,7 +314,7 @@ TEST_CASE("Lua: Test Update Attribute", "[executescriptLuaUpdateAttribute]") {
   )");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
@@ -398,8 +394,6 @@ TEST_CASE("Lua: Test Require", "[executescriptLuaRequire]") {
 }
 
 TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirectoryProperty]") {
-  using org::apache::nifi::minifi::utils::file::concat_path;
-
   TestController testController;
 
   LogTestController &logTestController = LogTestController::getInstance();
@@ -422,7 +416,7 @@ TEST_CASE("Lua: Test Module Directory property", "[executescriptLuaModuleDirecto
       (SCRIPT_FILES_DIRECTORY / "foo_modules" / "foo.lua").string() + "," + (SCRIPT_FILES_DIRECTORY / "bar_modules").string());
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 
@@ -452,7 +446,7 @@ TEST_CASE("Lua: Non existent script file should throw", "[executescriptLuaNonExi
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), "/tmp/non-existent-file");
 
   auto getFileDir = testController.createTempDirectory();
-  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);
+  plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir.string());
 
   utils::putFileToDir(getFileDir, "tstFile.ext", "tempFile");
 

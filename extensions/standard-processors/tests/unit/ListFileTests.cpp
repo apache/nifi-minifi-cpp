@@ -27,10 +27,21 @@
 #include "utils/TestUtils.h"
 #include "utils/IntegrationTestUtils.h"
 #include "utils/file/PathUtils.h"
+#include "Utils.h"
 
 using namespace std::literals::chrono_literals;
 
 namespace {
+
+#ifdef WIN32
+inline char get_separator() {
+  return '\\';
+}
+#else
+inline char get_separator() {
+  return '/';
+}
+#endif
 
 using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
 
@@ -42,13 +53,13 @@ class ListFileTestFixture {
  protected:
   TestController test_controller_;
   std::shared_ptr<TestPlan> plan_;
-  const std::string input_dir_;
+  const std::filesystem::path input_dir_;
   std::shared_ptr<core::Processor> list_file_processor_;
-  std::string hidden_file_path_;
-  std::string empty_file_abs_path_;
-  std::string standard_file_abs_path_;
-  std::string first_sub_file_abs_path_;
-  std::string second_sub_file_abs_path_;
+  std::filesystem::path hidden_file_path_;
+  std::filesystem::path empty_file_abs_path_;
+  std::filesystem::path standard_file_abs_path_;
+  std::filesystem::path first_sub_file_abs_path_;
+  std::filesystem::path second_sub_file_abs_path_;
 };
 
 const std::string ListFileTestFixture::FORMAT_STRING = "%Y-%m-%dT%H:%M:%SZ";
@@ -63,29 +74,29 @@ ListFileTestFixture::ListFileTestFixture()
   REQUIRE(!input_dir_.empty());
 
   list_file_processor_ = plan_->addProcessor("ListFile", "ListFile");
-  plan_->setProperty(list_file_processor_, "Input Directory", input_dir_);
+  plan_->setProperty(list_file_processor_, "Input Directory", input_dir_.string());
   auto log_attribute = plan_->addProcessor("LogAttribute", "logAttribute", core::Relationship("success", "description"), true);
   plan_->setProperty(log_attribute, "FlowFiles To Log", "0");
 
   hidden_file_path_ = utils::putFileToDir(input_dir_, ".hidden_file.txt", "hidden");
   standard_file_abs_path_ = utils::putFileToDir(input_dir_, "standard_file.log", "test");
   empty_file_abs_path_ = utils::putFileToDir(input_dir_, "empty_file.txt", "");
-  utils::file::FileUtils::create_dir(input_dir_ + utils::file::FileUtils::get_separator() + "first_subdir");
-  first_sub_file_abs_path_ = utils::putFileToDir(input_dir_ + utils::file::FileUtils::get_separator() + "first_subdir", "sub_file_one.txt", "the");
-  utils::file::FileUtils::create_dir(input_dir_ + utils::file::FileUtils::get_separator() + "second_subdir");
-  second_sub_file_abs_path_ = utils::putFileToDir(input_dir_ + utils::file::FileUtils::get_separator() + "second_subdir", "sub_file_two.txt", "some_other_content");
+  utils::file::FileUtils::create_dir(input_dir_ / "first_subdir");
+  first_sub_file_abs_path_ = utils::putFileToDir(input_dir_ / "first_subdir", "sub_file_one.txt", "the");
+  utils::file::FileUtils::create_dir(input_dir_ / "second_subdir");
+  second_sub_file_abs_path_ = utils::putFileToDir(input_dir_ / "second_subdir", "sub_file_two.txt", "some_other_content");
 
   auto last_write_time = *utils::file::FileUtils::last_write_time(standard_file_abs_path_);
   utils::file::FileUtils::set_last_write_time(empty_file_abs_path_, last_write_time - 1h);
   utils::file::FileUtils::set_last_write_time(first_sub_file_abs_path_, last_write_time - 2h);
   utils::file::FileUtils::set_last_write_time(second_sub_file_abs_path_, last_write_time - 3h);
 #ifndef WIN32
-  REQUIRE(0 == utils::file::FileUtils::set_permissions(input_dir_ + utils::file::FileUtils::get_separator() + "empty_file.txt", 0755));
-  REQUIRE(0 == utils::file::FileUtils::set_permissions(input_dir_ + utils::file::FileUtils::get_separator() + "standard_file.log", 0644));
+  REQUIRE(0 == utils::file::FileUtils::set_permissions(input_dir_ / "empty_file.txt", 0755));
+  REQUIRE(0 == utils::file::FileUtils::set_permissions(input_dir_ / "standard_file.log", 0644));
 #endif
 
 #ifdef WIN32
-  const auto hide_file_error = utils::file::FileUtils::hide_file(hidden_file_path_.c_str());
+  const auto hide_file_error = minifi::test::utils::hide_file(hidden_file_path_.c_str());
   REQUIRE(!hide_file_error);
 #endif
 }
@@ -101,19 +112,15 @@ TEST_CASE_METHOD(ListFileTestFixture, "Test listing files only once with default
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:empty_file.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_one.txt"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:filename value:sub_file_two.txt"));
-  std::string file_path;
-  std::string file_name;
-  utils::file::getFileNameAndPath(empty_file_abs_path_, file_path, file_name);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
-  utils::file::getFileNameAndPath(standard_file_abs_path_, file_path, file_name);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
-  utils::file::getFileNameAndPath(first_sub_file_abs_path_, file_path, file_name);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
-  utils::file::getFileNameAndPath(second_sub_file_abs_path_, file_path, file_name);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + file_path + utils::file::FileUtils::get_separator() + "\n"));
-  REQUIRE(LogTestController::getInstance().countOccurrences(std::string("key:path value:.") + utils::file::FileUtils::get_separator() + "\n") == 2);
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:first_subdir") + utils::file::FileUtils::get_separator()));
-  REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:second_subdir") + utils::file::FileUtils::get_separator()));
+
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + (empty_file_abs_path_.parent_path() / "").string() + "\n"));
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + (standard_file_abs_path_.parent_path() / "").string() + "\n"));
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + (first_sub_file_abs_path_.parent_path() / "").string() + "\n"));
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:absolute.path value:" + (second_sub_file_abs_path_.parent_path() / "").string() + "\n"));
+
+  REQUIRE(LogTestController::getInstance().countOccurrences(std::string("key:path value:.") + get_separator() + "\n") == 2);
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:first_subdir") + get_separator()));
+  REQUIRE(verifyLogLinePresenceInPollTime(3s, std::string("key:path value:second_subdir") + get_separator()));
   REQUIRE(LogTestController::getInstance().countOccurrences("key:filename value:.hidden_file.txt") == 0);
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:file.size value:0"));
   REQUIRE(verifyLogLinePresenceInPollTime(3s, "key:file.size value:4"));

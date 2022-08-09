@@ -26,7 +26,6 @@
 #include "IntegrationTestUtils.h"
 #include "database/StringAppender.h"
 #include "../../extensions/rocksdb-repos/encryption/RocksDbEncryptionProvider.h"
-#include "../Path.h"
 
 #undef NDEBUG
 
@@ -43,7 +42,7 @@ struct RocksDBTest : TestController {
     LogTestController::getInstance().setTrace<minifi::internal::RocksDbInstance>();
     LogTestController::getInstance().setTrace<minifi::internal::ColumnHandle>();
     LogTestController::getInstance().setTrace<minifi::internal::DbHandle>();
-    db_dir = createTempDirectory();
+    db_dir = createTempDirectory().string();
   }
 
   [[nodiscard]] OpenDatabase openDB(const std::vector<std::string>& cf_names) const {
@@ -218,8 +217,8 @@ TEST_CASE_METHOD(RocksDBTest, "Column options are applied", "[rocksDBTest9]") {
   REQUIRE(value == "firstsecond");
 }
 
-minifi::internal::DBOptionsPatch createEncrSetter(const utils::Path& home_dir, const std::string& db_name, const std::string& key_name) {
-  auto env = core::repository::createEncryptingEnv(utils::crypto::EncryptionManager{home_dir.str()}, core::repository::DbEncryptionOptions{db_name, key_name});
+minifi::internal::DBOptionsPatch createEncrSetter(const std::filesystem::path& home_dir, const std::string& db_name, const std::string& key_name) {
+  auto env = core::repository::createEncryptingEnv(utils::crypto::EncryptionManager{home_dir}, core::repository::DbEncryptionOptions{db_name, key_name});
   REQUIRE(env);
   return [env] (minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
     db_opts.set(&rocksdb::DBOptions::create_if_missing, true);
@@ -232,9 +231,9 @@ void withDefaultEnv(minifi::internal::Writable<rocksdb::DBOptions>& db_opts) {
 }
 
 TEST_CASE_METHOD(RocksDBTest, "Error is logged if different encryption keys are used", "[rocksDBTest10]") {
-  utils::Path home_dir{createTempDirectory()};
-  utils::file::FileUtils::create_dir((home_dir / "conf").str());
-  std::ofstream{(home_dir / "conf" / "bootstrap.conf").str()}
+  auto home_dir = createTempDirectory();
+  utils::file::FileUtils::create_dir(home_dir / "conf");
+  std::ofstream{home_dir / "conf" / "bootstrap.conf"}
     << "encryption.key.one=" << "805D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n"
     << "encryption.key.two=" << "905D7B95EF44DC27C87FFBC4DFDE376DAE604D55DB2C5496DEEF5236362DE62E" << "\n";
 

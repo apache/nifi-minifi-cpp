@@ -409,9 +409,9 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
 void HTTPClient::configure_secure_connection() {
 #ifdef OPENSSL_SUPPORT
   if (ssl_context_service_) {
-    logger_->log_debug("Using certificate file \"%s\"", ssl_context_service_->getCertificateFile());
-    logger_->log_debug("Using private key file \"%s\"", ssl_context_service_->getPrivateKeyFile());
-    logger_->log_debug("Using CA certificate file \"%s\"", ssl_context_service_->getCACertificate());
+    logger_->log_debug("Using certificate file \"%s\"", ssl_context_service_->getCertificateFile().string());
+    logger_->log_debug("Using private key file \"%s\"", ssl_context_service_->getPrivateKeyFile().string());
+    logger_->log_debug("Using CA certificate file \"%s\"", ssl_context_service_->getCACertificate().string());
 
     curl_easy_setopt(http_session_.get(), CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
     curl_easy_setopt(http_session_.get(), CURLOPT_SSL_CTX_DATA, static_cast<void *>(ssl_context_service_.get()));

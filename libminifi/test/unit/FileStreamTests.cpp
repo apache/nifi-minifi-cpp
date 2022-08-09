@@ -27,18 +27,11 @@
 #include "utils/gsl.h"
 #include "utils/file/FileUtils.h"
 
-#ifdef USE_BOOST
-#include <boost/filesystem.hpp>
-#endif
-
 TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
@@ -65,18 +58,13 @@ TEST_CASE("TestFileOverWrite", "[TestFiles]") {
   data = verifybuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempfile");
-
-  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
@@ -103,18 +91,13 @@ TEST_CASE("TestFileBadArgumentNoChange", "[TestLoader]") {
   data = verifybuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
-
-  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
@@ -141,18 +124,13 @@ TEST_CASE("TestFileBadArgumentNoChange2", "[TestLoader]") {
   data = verifybuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()) == "tempFile");
-
-  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
@@ -176,18 +154,13 @@ TEST_CASE("TestFileBadArgumentNoChange3", "[TestLoader]") {
   data = verifybuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), verifybuffer.size()).empty());
-
-  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   file << "tempFile";
   file.close();
@@ -211,18 +184,13 @@ TEST_CASE("TestFileBeyondEnd3", "[TestLoader]") {
   data = verifybuffer.data();
 
   REQUIRE(std::string(reinterpret_cast<char*>(data), stream_size) == "tempFile");
-
-  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("TestFileExceedSize", "[TestLoader]") {
   TestController testController;
-  auto dir = testController.createTempDirectory();
+  auto path = testController.createTempDirectory() / "tstFile.ext";
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << "/" << "tstFile.ext";
-  std::string path = ss.str();
   file.open(path, std::ios::out);
   for (int i = 0; i < 10240; i++)
     file << "tempFile";
@@ -246,21 +214,19 @@ TEST_CASE("TestFileExceedSize", "[TestLoader]") {
     REQUIRE(stream.read(verifybuffer) == 8192);
   }
   REQUIRE(stream.read(verifybuffer) == 0);
-
-  std::remove(ss.str().c_str());
 }
 
 TEST_CASE("Write zero bytes") {
   TestController testController;
   auto dir = testController.createTempDirectory();
-  minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
+  minifi::io::FileStream stream(dir / "test.txt", 0, true);
   REQUIRE(stream.write(nullptr, 0) == 0);
 }
 
 TEST_CASE("Read zero bytes") {
   TestController testController;
   auto dir = testController.createTempDirectory();
-  minifi::io::FileStream stream(utils::file::concat_path(dir, "test.txt"), 0, true);
+  minifi::io::FileStream stream(dir / "test.txt", 0, true);
   std::byte fake_buffer[1];
   REQUIRE(stream.read(gsl::make_span(fake_buffer).subspan(0, 0)) == 0);
 }
@@ -268,7 +234,7 @@ TEST_CASE("Read zero bytes") {
 TEST_CASE("Non-existing file read/write test") {
   TestController test_controller;
   auto dir = test_controller.createTempDirectory();
-  minifi::io::FileStream stream(utils::file::concat_path(dir, "non_existing_file.txt"), 0, true);
+  minifi::io::FileStream stream(dir / "non_existing_file.txt", 0, true);
   REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
   REQUIRE(test_controller.getLog().getInstance().contains("No such file or directory", std::chrono::seconds(0)));
   REQUIRE(minifi::io::isError(stream.write("lorem ipsum", false)));
@@ -283,7 +249,7 @@ TEST_CASE("Non-existing file read/write test") {
 TEST_CASE("Existing file read/write test") {
   TestController test_controller;
   auto dir = test_controller.createTempDirectory();
-  std::string path_to_existing_file(utils::file::concat_path(dir, "existing_file.txt"));
+  auto path_to_existing_file = dir / "existing_file.txt";
   {
     std::ofstream outfile(path_to_existing_file);
     outfile << "lorem ipsum" << std::endl;
@@ -301,32 +267,25 @@ TEST_CASE("Existing file read/write test") {
   stream.seek(0);
 }
 
-#if !defined(WIN32) || defined(USE_BOOST)
-// This could be simplified with C++17 std::filesystem
 TEST_CASE("Opening file without permission creates error logs") {
   TestController test_controller;
   auto dir = test_controller.createTempDirectory();
-  std::string path_to_permissionless_file(utils::file::concat_path(dir, "permissionless_file.txt"));
+  auto path_to_permissionless_file = dir / "permissionless_file.txt";
   {
     std::ofstream outfile(path_to_permissionless_file);
     outfile << "this file has been just created" << std::endl;
     outfile.close();
-#ifndef WIN32
     utils::file::FileUtils::set_permissions(path_to_permissionless_file, 0);
-#else
-    boost::filesystem::permissions(path_to_permissionless_file, boost::filesystem::no_perms);
-#endif
   }
-  minifi::io::FileStream stream(path_to_permissionless_file, 0, false);
+  minifi::io::FileStream stream(path_to_permissionless_file, 0, true);  // write_enabled, because permissionless file only means read-only on Windows
   REQUIRE(test_controller.getLog().getInstance().contains("Error opening file", std::chrono::seconds(0)));
   REQUIRE(test_controller.getLog().getInstance().contains("Permission denied", std::chrono::seconds(0)));
 }
-#endif
 
 TEST_CASE("Readonly filestream write test") {
   TestController test_controller;
   auto dir = test_controller.createTempDirectory();
-  std::string path_to_file(utils::file::concat_path(dir, "file_to_seek_in.txt"));
+  auto path_to_file = dir / "file_to_seek_in.txt";
   {
     std::ofstream outfile(path_to_file);
     outfile << "lorem ipsum" << std::endl;

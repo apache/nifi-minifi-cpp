@@ -26,7 +26,7 @@ using namespace std::literals::chrono_literals;
 
 int main(int argc, char **argv) {
   TestController controller;
-  std::string minifi_home = controller.createTempDirectory();
+  auto minifi_home = controller.createTempDirectory();
   const cmd_args args = parse_cmdline_args(argc, argv);
   C2FlowProvider handler(args.test_file);
   VerifyFlowFetched harness(10s);
@@ -34,12 +34,10 @@ int main(int argc, char **argv) {
   harness.setUrl(args.url, &handler);
   harness.setFlowUrl(harness.getC2RestUrl());
 
-  std::string config_path = utils::file::PathUtils::concat_path(minifi_home, "config.yml");
-
-  harness.run(config_path);
+  harness.run(minifi_home / "config.yml");
 
   // check existence of the config file
-  assert(std::ifstream{config_path});
+  assert(std::ifstream{minifi_home / "config.yml"});
 
   return 0;
 }

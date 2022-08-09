@@ -19,6 +19,7 @@
 #define MAIN_MAINHELPER_H_
 
 #include <string>
+#include <filesystem>
 
 #include "core/logging/LoggerConfiguration.h"
 #include "core/logging/Logger.h"
@@ -67,7 +68,7 @@ void setSyslogLogger();
  * Determines the full path of MINIFI_HOME
  * @return MINIFI_HOME on success, empty string on failure
  */
-std::string determineMinifiHome(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
+std::filesystem::path determineMinifiHome(const std::shared_ptr<org::apache::nifi::minifi::core::logging::Logger>& logger);
 
 
 

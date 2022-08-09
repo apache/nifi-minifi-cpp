@@ -92,8 +92,8 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
     }
 
     if (entry.entryName == lensArchiveMetadata.focusedEntry) {
-      logger_->log_debug("UnfocusArchiveEntry exporting focused entry to %s", entry.tmpFileName);
-      session->exportContent(entry.tmpFileName, flowFile, false);
+      logger_->log_debug("UnfocusArchiveEntry exporting focused entry to %s", entry.tmpFileName.string());
+      session->exportContent(entry.tmpFileName.string(), flowFile, false);
     }
   }
 
@@ -107,10 +107,10 @@ void UnfocusArchiveEntry::onTrigger(core::ProcessContext *context, core::Process
       continue;
     }
 
-    logger_->log_debug("UnfocusArchiveEntry exporting entry %s to %s", entry.stashKey, entry.tmpFileName);
+    logger_->log_debug("UnfocusArchiveEntry exporting entry %s to %s", entry.stashKey, entry.tmpFileName.string());
     session->restore(entry.stashKey, flowFile);
     // TODO(calebj) implement copy export/don't worry about multiple claims/optimal efficiency for *now*
-    session->exportContent(entry.tmpFileName, flowFile, false);
+    session->exportContent(entry.tmpFileName.string(), flowFile, false);
   }
 
   if (lensArchiveMetadata.archiveName.empty()) {
@@ -170,9 +170,9 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
     logger_->log_info("UnfocusArchiveEntry writing entry %s", entryMetadata.entryName);
 
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
-      size_t stat_ok = stat(entryMetadata.tmpFileName.c_str(), &st);
+      size_t stat_ok = stat(entryMetadata.tmpFileName.string().c_str(), &st);
       if (stat_ok != 0) {
-        logger_->log_error("Error statting %s: %s", entryMetadata.tmpFileName, std::system_category().default_error_condition(errno).message());
+        logger_->log_error("Error statting %s: %s", entryMetadata.tmpFileName.string(), std::system_category().default_error_condition(errno).message());
       }
       archive_entry_copy_stat(entry, &st);
     }
@@ -194,7 +194,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
     if (entryMetadata.entryType == AE_IFREG && entryMetadata.entrySize > 0) {
       logger_->log_info("UnfocusArchiveEntry writing %d bytes of "
                         "data from tmp file %s to archive entry %s",
-                        st.st_size, entryMetadata.tmpFileName, entryMetadata.entryName);
+                        st.st_size, entryMetadata.tmpFileName.string(), entryMetadata.entryName);
       std::ifstream ifs(entryMetadata.tmpFileName, std::ifstream::in | std::ios::binary);
 
       while (ifs.good()) {
@@ -213,7 +213,7 @@ int64_t UnfocusArchiveEntry::WriteCallback::operator()(const std::shared_ptr<io:
       ifs.close();
 
       // Remove the tmp file as we are through with it
-      std::remove(entryMetadata.tmpFileName.c_str());
+      std::filesystem::remove(entryMetadata.tmpFileName);
     }
 
     archive_entry_clear(entry);

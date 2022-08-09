@@ -63,26 +63,26 @@ class PythonCreator : public minifi::core::CoreComponent {
     configure({pathListings.value()});
 
     for (const auto &path : classpaths_) {
-      const auto script_name = getScriptName(path);
-      const auto package = getPackage(pathListings.value(), path);
-      std::string class_name = script_name;
-      std::string full_name = "org.apache.nifi.minifi.processors." + script_name;
+      const auto script_name = path.stem();
+      const auto package = getPackage(pathListings.value(), path.string());
+      std::string class_name = script_name.string();
+      std::string full_name = "org.apache.nifi.minifi.processors." + script_name.string();
       if (!package.empty()) {
-        full_name = utils::StringUtils::join_pack("org.apache.nifi.minifi.processors.", package, ".", script_name);
+        full_name = utils::StringUtils::join_pack("org.apache.nifi.minifi.processors.", package, ".", script_name.string());
         class_name = full_name;
       }
-      core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path, class_name));
+      core::getClassLoader().registerClass(class_name, std::make_unique<PythonObjectFactory>(path.string(), class_name));
       registered_classes_.push_back(class_name);
       try {
-        registerScriptDescription(class_name, full_name, path, script_name);
+        registerScriptDescription(class_name, full_name, path, script_name.string());
       } catch (const std::exception &err) {
-        logger_->log_error("Cannot load %s: %s", script_name, err.what());
+        logger_->log_error("Cannot load %s: %s", script_name.string(), err.what());
       }
     }
   }
 
  private:
-  void registerScriptDescription(const std::string& class_name, const std::string& full_name, const std::string& path, const std::string& script_name) {
+  void registerScriptDescription(const std::string& class_name, const std::string& full_name, const std::filesystem::path& path, const std::string& script_name) {
     auto processor = core::ClassLoader::getDefaultClassLoader().instantiate<python::processors::ExecutePythonProcessor>(class_name, utils::IdGenerator::getIdGenerator()->generate());
     if (!processor) {
       logger_->log_error("Couldn't instantiate '%s' python processor", class_name);
@@ -90,7 +90,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
     processor->initialize();
     minifi::BundleDetails details;
-    details.artifact = getFileName(path);
+    details.artifact = path.filename().string();
     details.version = minifi::AgentBuild::VERSION;
     details.group = "python";
 
@@ -136,20 +136,8 @@ class PythonCreator : public minifi::core::CoreComponent {
     return python_package;
   }
 
-  std::string getPath(const std::string &pythonscript) {
-    return std::filesystem::path(pythonscript).parent_path().string();
-  }
-
-  std::string getFileName(const std::string &pythonscript) {
-    return std::filesystem::path(pythonscript).filename().string();
-  }
-
-  std::string getScriptName(const std::string &pythonscript) {
-    return std::filesystem::path(pythonscript).stem().string();
-  }
-
   std::vector<std::string> registered_classes_;
-  std::vector<std::string> classpaths_;
+  std::vector<std::filesystem::path> classpaths_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<PythonCreator>::getLogger();
 };

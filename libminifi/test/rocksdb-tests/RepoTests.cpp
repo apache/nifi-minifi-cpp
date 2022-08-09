@@ -72,7 +72,7 @@ TEST_CASE("Test Repo Empty Value Attribute", "[TestFFR1]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
 
@@ -94,7 +94,7 @@ TEST_CASE("Test Repo Empty Key Attribute ", "[TestFFR2]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<minifi::Configure>());
   std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
@@ -117,7 +117,7 @@ TEST_CASE("Test Repo Key Attribute Verify ", "[TestFFR3]") {
   LogTestController::getInstance().setDebug<core::repository::FlowFileRepository>();
   TestController testController;
   auto dir = testController.createTempDirectory();
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
 
   repository->initialize(std::make_shared<org::apache::nifi::minifi::Configure>());
 
@@ -167,12 +167,10 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  file.open(dir / "tstFile.ext", std::ios::out);
   file << "tempFile";
   file.close();
 
@@ -184,7 +182,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
 
 
   {
-    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
+    std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>((dir / "tstFile.ext").string(), content_repo);
     minifi::FlowFileRecord record;
     record.setResourceClaim(claim);
 
@@ -202,7 +200,7 @@ TEST_CASE("Test Delete Content ", "[TestFFR4]") {
     repository->stop();
   }
 
-  std::ifstream fileopen(ss.str(), std::ios::in);
+  std::ifstream fileopen(dir / "tstFile.ext", std::ios::in);
   REQUIRE(!fileopen.good());
 
   utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
@@ -221,12 +219,10 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   auto dir = testController.createTempDirectory();
 
-  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir, 0ms, 0, 1ms);
+  std::shared_ptr<core::repository::FlowFileRepository> repository = std::make_shared<core::repository::FlowFileRepository>("ff", REPOTEST_FLOWFILE_CHECKPOINT_DIR, dir.string(), 0ms, 0, 1ms);
 
   std::fstream file;
-  std::stringstream ss;
-  ss << dir << utils::file::FileUtils::get_separator() << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  file.open(dir / "tstFile.ext", std::ios::out);
   file << "tempFile";
   file.close();
 
@@ -236,7 +232,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
 
   repository->loadComponent(content_repo);
 
-  std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>(ss.str(), content_repo);
+  std::shared_ptr<minifi::ResourceClaim> claim = std::make_shared<minifi::ResourceClaim>((dir / "tstFile.ext").string(), content_repo);
   {
     minifi::FlowFileRecord record;
     record.setResourceClaim(claim);
@@ -265,7 +261,7 @@ TEST_CASE("Test Validate Checkpoint ", "[TestFFR5]") {
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
   }
 
-  std::ifstream fileopen(ss.str(), std::ios::in);
+  std::ifstream fileopen(dir / "tstFile.ext", std::ios::in);
   REQUIRE(fileopen.fail());
 
   utils::file::FileUtils::delete_dir(REPOTEST_FLOWFILE_CHECKPOINT_DIR, true);
@@ -284,8 +280,8 @@ TEST_CASE("Test FlowFile Restore", "[TestFFR6]") {
   auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
-  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, utils::file::FileUtils::concat_path(dir, "content_repository"));
-  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
+  config->set(minifi::Configure::nifi_dbcontent_repository_directory_default, (dir / "content_repository").string());
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
   std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestThreadedRepository>();
   auto ff_repository = std::make_shared<core::repository::FlowFileRepository>("flowFileRepository", REPOTEST_FLOWFILE_CHECKPOINT_DIR);
@@ -381,7 +377,7 @@ TEST_CASE("Flush deleted flowfiles before shutdown", "[TestFFR7]") {
   auto dir = testController.createTempDirectory();
 
   auto config = std::make_shared<minifi::Configure>();
-  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, utils::file::FileUtils::concat_path(dir, "flowfile_repository"));
+  config->set(minifi::Configure::nifi_flowfile_repository_directory_default, (dir / "flowfile_repository").string());
 
   auto content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 

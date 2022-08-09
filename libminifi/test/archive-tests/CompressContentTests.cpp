@@ -96,9 +96,9 @@ class ReadCallback {
  */
 class CompressDecompressionTestController : public TestController {
  protected:
-  static std::string tempDir_;
-  static std::string raw_content_path_;
-  static std::string compressed_content_path_;
+  static std::filesystem::path tempDir_;
+  static std::filesystem::path raw_content_path_;
+  static std::filesystem::path compressed_content_path_;
   static TestController& get_global_controller() {
     static TestController controller;
     return controller;
@@ -149,9 +149,9 @@ class CompressDecompressionTestController : public TestController {
     helper_session = std::make_shared<core::ProcessSession>(context);
   }
 
-  [[nodiscard]] std::shared_ptr<core::FlowFile> importFlowFile(const std::string& content_path) const {
+  [[nodiscard]] std::shared_ptr<core::FlowFile> importFlowFile(const std::filesystem::path& content_path) const {
     std::shared_ptr<core::FlowFile> flow = std::static_pointer_cast<core::FlowFile>(helper_session->create());
-    helper_session->import(content_path, flow, true, 0);
+    helper_session->import(content_path.string(), flow, true, 0);
     helper_session->flushContent();
     input->put(flow);
     return flow;
@@ -192,11 +192,11 @@ class CompressDecompressionTestController : public TestController {
     }
   };
 
-  [[nodiscard]] static std::string rawContentPath() {
+  [[nodiscard]] static std::filesystem::path rawContentPath() {
     return raw_content_path_;
   }
 
-  [[nodiscard]] static std::string compressedPath() {
+  [[nodiscard]] static std::filesystem::path compressedPath() {
     return compressed_content_path_;
   }
 
@@ -221,9 +221,9 @@ CompressDecompressionTestController::~CompressDecompressionTestController() {
   LogTestController::getInstance().reset();
 }
 
-std::string CompressDecompressionTestController::tempDir_;
-std::string CompressDecompressionTestController::raw_content_path_;
-std::string CompressDecompressionTestController::compressed_content_path_;
+std::filesystem::path CompressDecompressionTestController::tempDir_;
+std::filesystem::path CompressDecompressionTestController::raw_content_path_;
+std::filesystem::path CompressDecompressionTestController::compressed_content_path_;
 
 class CompressTestController : public CompressDecompressionTestController {
   static void initContentWithRandomData() {
@@ -242,8 +242,8 @@ class CompressTestController : public CompressDecompressionTestController {
   CompressTestController() {
     tempDir_ = get_global_controller().createTempDirectory();
     REQUIRE(!tempDir_.empty());
-    raw_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-expect-compresscontent.txt");
-    compressed_content_path_ = utils::file::FileUtils::concat_path(tempDir_, "minifi-compresscontent");
+    raw_content_path_ = tempDir_ / "minifi-expect-compresscontent.txt";
+    compressed_content_path_ = tempDir_ / "minifi-compresscontent";
     initContentWithRandomData();
     setupFlow();
   }
@@ -521,16 +521,16 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   LogTestController::getInstance().setTrace<minifi::processors::PutFile>();
 
   // Create temporary directories
-  std::string src_dir = createTempDirectory();
+  auto src_dir = createTempDirectory();
   REQUIRE(!src_dir.empty());
 
-  std::string dst_dir = createTempDirectory();
+  auto dst_dir = createTempDirectory();
   REQUIRE(!dst_dir.empty());
 
   // Define files
-  std::string src_file = utils::file::FileUtils::concat_path(src_dir, "src.txt");
-  std::string compressed_file = utils::file::FileUtils::concat_path(dst_dir, "src.txt.gz");
-  std::string decompressed_file = utils::file::FileUtils::concat_path(dst_dir, "src.txt");
+  auto src_file = src_dir / "src.txt";
+  auto compressed_file = dst_dir / "src.txt.gz";
+  auto decompressed_file = dst_dir / "src.txt";
 
   // Build MiNiFi processing graph
   auto plan = createPlan();
@@ -559,7 +559,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
       true);
 
   // Configure GetFile processor
-  plan->setProperty(get_file, "Input Directory", src_dir);
+  plan->setProperty(get_file, "Input Directory", src_dir.string());
 
   // Configure CompressContent processor for compression
   plan->setProperty(compress_content, "Mode", toString(CompressionMode::Compress));
@@ -568,7 +568,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(compress_content, "Encapsulate in TAR", "false");
 
   // Configure first PutFile processor
-  plan->setProperty(put_compressed, "Directory", dst_dir);
+  plan->setProperty(put_compressed, "Directory", dst_dir.string());
 
   // Configure CompressContent processor for decompression
   plan->setProperty(decompress_content, "Mode", toString(CompressionMode::Decompress));
@@ -577,7 +577,7 @@ TEST_CASE_METHOD(TestController, "RawGzipCompressionDecompression", "[compressfi
   plan->setProperty(decompress_content, "Encapsulate in TAR", "false");
 
   // Configure second PutFile processor
-  plan->setProperty(put_decompressed, "Directory", dst_dir);
+  plan->setProperty(put_decompressed, "Directory", dst_dir.string());
 
   // Create source file
   std::string content;

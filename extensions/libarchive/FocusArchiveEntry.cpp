@@ -69,8 +69,8 @@ void FocusArchiveEntry::onTrigger(core::ProcessContext *context, core::ProcessSe
 
   for (auto &entryMetadata : archiveMetadata.entryMetadata) {
     if (entryMetadata.entryType == AE_IFREG) {
-      logger_->log_info("FocusArchiveEntry importing %s from %s", entryMetadata.entryName, entryMetadata.tmpFileName);
-      session->import(entryMetadata.tmpFileName, flowFile, false, 0);
+      logger_->log_info("FocusArchiveEntry importing %s from %s", entryMetadata.entryName, entryMetadata.tmpFileName.string());
+      session->import(entryMetadata.tmpFileName.string(), flowFile, false, 0);
       utils::Identifier stashKeyUuid = id_generator_->generate();
       logger_->log_debug("FocusArchiveEntry generated stash key %s for entry %s", stashKeyUuid.to_string(), entryMetadata.entryName);
       entryMetadata.stashKey = stashKeyUuid.to_string();
@@ -212,9 +212,9 @@ int64_t FocusArchiveEntry::ReadCallback::operator()(const std::shared_ptr<io::In
       auto tmpFileName = file_man_->unique_file(true);
       metadata.tmpFileName = tmpFileName;
       metadata.entryType = entryType;
-      logger_->log_info("FocusArchiveEntry extracting %s to: %s", entryName, tmpFileName);
+      logger_->log_info("FocusArchiveEntry extracting %s to: %s", entryName, tmpFileName.string());
 
-      auto fd = fopen(tmpFileName.c_str(), "w");
+      auto fd = fopen(tmpFileName.string().c_str(), "w");
 
       if (archive_entry_size(entry) > 0) {
 #ifdef WIN32

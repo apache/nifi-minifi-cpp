@@ -105,14 +105,14 @@ class FetchFile : public core::Processor {
   void logWithLevel(LogLevelOption log_level, Args&&... args) const;
 
   static std::filesystem::path getFileToFetch(core::ProcessContext& context, const std::shared_ptr<core::FlowFile>& flow_file);
-  std::string getMoveAbsolutePath(const std::string& file_name) const;
-  bool moveDestinationConflicts(const std::string& file_name) const;
-  bool moveWouldFailWithDestinationConflict(const std::string& file_name) const;
-  void executeMoveConflictStrategy(const std::string& file_to_fetch_path, const std::string& file_name);
-  void processMoveCompletion(const std::string& file_to_fetch_path, const std::string& file_name);
-  void executeCompletionStrategy(const std::string& file_to_fetch_path, const std::string& file_name);
+  std::filesystem::path getMoveAbsolutePath(const std::filesystem::path& file_name) const;
+  bool moveDestinationConflicts(const std::filesystem::path& file_name) const;
+  bool moveWouldFailWithDestinationConflict(const std::filesystem::path& file_name) const;
+  void executeMoveConflictStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name);
+  void processMoveCompletion(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name);
+  void executeCompletionStrategy(const std::filesystem::path& file_to_fetch_path, const std::filesystem::path& file_name);
 
-  std::string move_destination_directory_;
+  std::filesystem::path move_destination_directory_;
   CompletionStrategyOption completion_strategy_;
   MoveConflictStrategyOption move_confict_strategy_;
   LogLevelOption log_level_when_file_not_found_;

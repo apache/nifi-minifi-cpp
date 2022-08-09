@@ -30,11 +30,7 @@
 
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
+namespace org::apache::nifi::minifi::utils {
 
 bool Environment::runningAsService_(false);
 
@@ -44,7 +40,7 @@ void Environment::accessEnvironment(const std::function<void(void)>& func) {
   func();
 }
 
-std::pair<bool, std::string> Environment::getEnvironmentVariable(const char* name) {
+std::optional<std::string> Environment::getEnvironmentVariable(const char* name) {
   bool exists = false;
   std::string value;
 
@@ -71,7 +67,10 @@ std::pair<bool, std::string> Environment::getEnvironmentVariable(const char* nam
 #endif
   });
 
-  return std::make_pair(exists, std::move(value));
+  if (exists)
+    return value;
+  else
+    return std::nullopt;
 }
 
 bool Environment::setEnvironmentVariable(const char* name, const char* value, bool overwrite /*= true*/) {
@@ -79,7 +78,7 @@ bool Environment::setEnvironmentVariable(const char* name, const char* value, bo
 
   Environment::accessEnvironment([&success, name, value, overwrite](){
 #ifdef WIN32
-    if (!overwrite && Environment::getEnvironmentVariable(name).first) {
+    if (!overwrite && Environment::getEnvironmentVariable(name)) {
       success = true;
     } else {
       success = SetEnvironmentVariableA(name, value);
@@ -108,62 +107,6 @@ bool Environment::unsetEnvironmentVariable(const char* name) {
   return success;
 }
 
-std::string Environment::getCurrentWorkingDirectory() {
-  std::string cwd;
-
-  Environment::accessEnvironment([&cwd](){
-#ifdef WIN32
-    uint32_t len = 0U;
-    std::vector<char> buffer;
-    // https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getcurrentdirectory
-    // "If the buffer that is pointed to by lpBuffer is not large enough,
-    // the return value specifies the required size of the buffer,
-    // in characters, including the null-terminating character."
-    while (true) {
-      len = GetCurrentDirectoryA(gsl::narrow<DWORD>(buffer.size()), buffer.data());
-      if (len < buffer.size()) {
-        break;
-      }
-      buffer.resize(len);
-    }
-    if (len > 0U) {
-      cwd = std::string(buffer.data(), len);
-    }
-#else
-    std::vector<char> buffer(1024U);
-    char* path = nullptr;
-    while (true) {
-      path = getcwd(buffer.data(), buffer.size());
-      if (path != nullptr) {
-        cwd = path;
-        break;
-      } else if (errno == ERANGE) {
-        buffer.resize(buffer.size() * 2);
-      } else {
-        break;
-      }
-    }
-#endif
-  });
-
-  return cwd;
-}
-
-bool Environment::setCurrentWorkingDirectory(const char* directory) {
-  bool success = false;
-
-  Environment::accessEnvironment([&success, directory](){
-#ifdef WIN32
-    success = SetCurrentDirectoryA(directory);
-#else
-    int ret = chdir(directory);
-    success = ret == 0;
-#endif
-  });
-
-  return success;
-}
-
 void Environment::setRunningAsService(bool runningAsService) {
   Environment::accessEnvironment([runningAsService](){
     runningAsService_ = runningAsService;
@@ -180,8 +123,4 @@ bool Environment::isRunningAsService() {
   return runningAsService;
 }
 
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils

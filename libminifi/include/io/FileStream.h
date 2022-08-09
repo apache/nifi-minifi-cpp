@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_FILESTREAM_H_
-#define LIBMINIFI_INCLUDE_IO_FILESTREAM_H_
+#pragma once
 
 #include <memory>
 #include <vector>
@@ -25,11 +24,7 @@
 #include "BaseStream.h"
 #include "core/logging/LoggerFactory.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 /**
  * Purpose: File Stream Base stream extension. This is intended to be a thread safe access to
@@ -44,7 +39,7 @@ class FileStream : public io::BaseStream {
    * File Stream constructor that accepts an fstream shared pointer.
    * It must already be initialized for read and write.
    */
-  explicit FileStream(const std::string &path, uint32_t offset, bool write_enable = false);
+  explicit FileStream(std::filesystem::path path, uint32_t offset, bool write_enable = false);
 
   /**
    * File Stream constructor that accepts an fstream shared pointer.
@@ -52,7 +47,7 @@ class FileStream : public io::BaseStream {
    * @param path path to file
    * @param append identifies if this is an append or overwriting the file
    */
-  explicit FileStream(const std::string &path, bool append = false);
+  explicit FileStream(std::filesystem::path path, bool append = false);
 
   ~FileStream() override {
     close();
@@ -65,9 +60,9 @@ class FileStream : public io::BaseStream {
    */
   void seek(size_t offset) override;
 
-  size_t tell() const override;
+  [[nodiscard]] size_t tell() const override;
 
-  size_t size() const override {
+  [[nodiscard]] size_t size() const override {
     return length_;
   }
 
@@ -94,16 +89,10 @@ class FileStream : public io::BaseStream {
   std::mutex file_lock_;
   std::unique_ptr<std::fstream> file_stream_;
   size_t offset_;
-  std::string path_;
+  std::filesystem::path path_;
   size_t length_;
 
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FileStream>::getLogger();
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_IO_FILESTREAM_H_
+}  // namespace org::apache::nifi::minifi::io

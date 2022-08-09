@@ -39,9 +39,9 @@ class FileSystem {
   FileSystem& operator=(const FileSystem&) = delete;
   FileSystem& operator=(FileSystem&&) = delete;
 
-  std::optional<std::string> read(const std::string& file_name);
+  std::optional<std::string> read(const std::filesystem::path& file_name);
 
-  bool write(const std::string& file_name, const std::string& file_content);
+  bool write(const std::filesystem::path& file_name, const std::string& file_content);
 
  private:
   bool should_encrypt_on_write_;

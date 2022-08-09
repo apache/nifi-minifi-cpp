@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <filesystem>
 #include <map>
 #include <vector>
 #include <string>
@@ -55,9 +56,9 @@ FN_VEC_T build_test_archive_order(int, const char**);
 
 OrderedTestArchive build_ordered_test_archive(int, const char**, const char**);
 
-void build_test_archive(const std::string&, const TAE_MAP_T& entries, FN_VEC_T order = FN_VEC_T());
-void build_test_archive(const std::string&, OrderedTestArchive&);
+void build_test_archive(const std::filesystem::path&, const TAE_MAP_T& entries, FN_VEC_T order = FN_VEC_T());
+void build_test_archive(const std::filesystem::path&, OrderedTestArchive&);
 
-bool check_archive_contents(const std::string&, const TAE_MAP_T& entries, bool check_attributes = true, const FN_VEC_T& order = FN_VEC_T());
-bool check_archive_contents(const std::string&, const OrderedTestArchive&, bool check_attributes = true);
+bool check_archive_contents(const std::filesystem::path&, const TAE_MAP_T& entries, bool check_attributes = true, const FN_VEC_T& order = FN_VEC_T());
+bool check_archive_contents(const std::filesystem::path&, const OrderedTestArchive&, bool check_attributes = true);
 

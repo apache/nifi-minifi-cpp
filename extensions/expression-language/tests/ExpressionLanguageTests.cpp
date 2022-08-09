@@ -196,20 +196,18 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   auto plan = testController.createPlan(conf);
   auto repo = std::make_shared<TestRepository>();
 
-  std::string in_dir = testController.createTempDirectory();
+  auto in_dir = testController.createTempDirectory();
   REQUIRE(!in_dir.empty());
 
-  std::string in_file(in_dir);
-  in_file.append("/file");
-  std::string out_dir = testController.createTempDirectory();
+  auto in_file = in_dir / "file";
+  auto out_dir = testController.createTempDirectory();
   REQUIRE(!out_dir.empty());
 
-  std::string out_file(out_dir);
-  out_file.append("/extracted_attr/file");
+  auto out_file = out_dir / "extracted_attr" / "file";
 
   // Build MiNiFi processing graph
   auto get_file = plan->addProcessor("GetFile", "GetFile");
-  plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), in_dir);
+  plan->setProperty(get_file, minifi::processors::GetFile::Directory.getName(), in_dir.string());
   plan->setProperty(get_file, minifi::processors::GetFile::KeepSourceFile.getName(), "false");
   auto update = plan->addProcessor("UpdateAttribute", "UpdateAttribute", core::Relationship("success", "description"), true);
   update->setDynamicProperty("prop_attr", "${'nifi.my.own.property'}_added");
@@ -218,7 +216,7 @@ TEST_CASE("GetFile PutFile dynamic attribute", "[expressionLanguageTestGetFilePu
   plan->setProperty(extract_text, minifi::processors::ExtractText::Attribute.getName(), "extracted_attr_name");
   plan->addProcessor("LogAttribute", "LogAttribute", core::Relationship("success", "description"), true);
   auto put_file = plan->addProcessor("PutFile", "PutFile", core::Relationship("success", "description"), true);
-  plan->setProperty(put_file, minifi::processors::PutFile::Directory.getName(), out_dir + "/${extracted_attr_name}");
+  plan->setProperty(put_file, minifi::processors::PutFile::Directory.getName(), (out_dir / "${extracted_attr_name}").string());
   plan->setProperty(put_file, minifi::processors::PutFile::ConflictResolution.getName(), minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_REPLACE);
   plan->setProperty(put_file, minifi::processors::PutFile::CreateDirs.getName(), "true");
 
@@ -1272,14 +1270,14 @@ TEST_CASE("IP", "[expressionIP]") {
   auto expr = expression::compile("${ip()}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  REQUIRE("" != expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asString().empty());
 }
 
 TEST_CASE("Full Hostname", "[expressionFullHostname]") {
   auto expr = expression::compile("${hostname('true')}");
 
   auto flow_file_a = std::make_shared<core::FlowFile>();
-  REQUIRE("" != expr(expression::Parameters{ flow_file_a }).asString());
+  REQUIRE(!expr(expression::Parameters{ flow_file_a }).asString().empty());
 }
 
 TEST_CASE("UUID", "[expressionUuid]") {
@@ -1557,7 +1555,6 @@ TEST_CASE("resolve_user_id_test", "[resolve_user_id tests]") {
 
   SECTION("TEST empty") {
   flow_file_a->addAttribute("attribute_sid", "");
-  REQUIRE("" == expr(expression::Parameters{flow_file_a}).asString());
+  REQUIRE(expr(expression::Parameters{flow_file_a}).asString().empty());
 }
 }
-

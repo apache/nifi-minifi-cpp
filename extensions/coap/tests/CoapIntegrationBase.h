@@ -50,14 +50,14 @@ class CoapIntegrationBase : public IntegrationBase {
     server.reset();
   }
 
-  void run(const std::optional<std::string>& test_file_location = {}, const std::optional<std::string>& = {}) override {
+  void run(const std::optional<std::filesystem::path>& test_file_location = {}, const std::optional<std::filesystem::path>& = {}) override {
     testSetup();
 
     std::shared_ptr<core::Repository> test_repo = std::make_shared<TestThreadedRepository>();
     std::shared_ptr<core::Repository> test_flow_repo = std::make_shared<TestFlowRepository>();
 
     if (test_file_location) {
-      configuration->set(minifi::Configure::nifi_flow_configuration_file, *test_file_location);
+      configuration->set(minifi::Configure::nifi_flow_configuration_file, test_file_location->string());
     }
     configuration->set(minifi::Configure::nifi_c2_agent_heartbeat_period, "200");
 

@@ -65,9 +65,9 @@ LuaScriptEngine::LuaScriptEngine() {
 void LuaScriptEngine::executeScriptWithAppendedModulePaths(std::string& script) {
   for (const auto& module_path : module_paths_) {
     if (std::filesystem::is_regular_file(std::filesystem::status(module_path))) {
-      script = utils::StringUtils::join_pack("package.path = package.path .. [[;", module_path, "]]\n", script);
+      script = utils::StringUtils::join_pack("package.path = package.path .. [[;", module_path.string(), "]]\n", script);
     } else {
-      script = utils::StringUtils::join_pack("package.path = package.path .. [[;", module_path, "/?.lua]]\n", script);
+      script = utils::StringUtils::join_pack("package.path = package.path .. [[;", module_path.string(), "/?.lua]]\n", script);
     }
   }
   lua_.script(script, sol::script_throw_on_error);

@@ -18,9 +18,9 @@
 #
 
 # Java is required for SFTPTestServer, we will disable tests if we can't find it
-message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
 find_package(Java)
 find_package(Maven)
+message(STATUS "JAVA_HOME: '$ENV{JAVA_HOME}'")
 message(STATUS "MAVEN: ${MAVEN_EXECUTABLE}")
 
 if (NOT SKIP_TESTS AND Java_FOUND AND Maven_FOUND AND NOT DISABLE_EXPRESSION_LANGUAGE)

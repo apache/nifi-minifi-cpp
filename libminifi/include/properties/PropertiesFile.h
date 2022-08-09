@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <filesystem>
 #include <istream>
 #include <optional>
 #include <string>
@@ -23,10 +24,7 @@
 
 #include "utils/crypto/EncryptionUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
 class PropertiesFile {
  public:
@@ -63,7 +61,7 @@ class PropertiesFile {
   void append(const std::string& key, const std::string& value);
   int erase(const std::string& key);
 
-  void writeTo(const std::string& file_path) const;
+  void writeTo(const std::filesystem::path& file_path) const;
 
   [[nodiscard]] size_t size() const { return lines_.size(); }
 
@@ -81,7 +79,4 @@ class PropertiesFile {
   Lines lines_;
 };
 
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi

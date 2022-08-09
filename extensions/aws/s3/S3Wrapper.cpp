@@ -32,8 +32,9 @@
 namespace org::apache::nifi::minifi::aws::s3 {
 
 void HeadObjectResult::setFilePaths(const std::string& key) {
-  absolute_path = key;
-  std::tie(path, filename) = minifi::utils::file::split_path(key, true /*force_posix*/);
+  absolute_path = std::filesystem::path(key, std::filesystem::path::format::generic_format);
+  path = absolute_path.parent_path();
+  filename = absolute_path.filename();
 }
 
 S3Wrapper::S3Wrapper() : request_sender_(std::make_unique<S3ClientRequestSender>()) {

@@ -65,8 +65,8 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
       : FlowFileRepository(std::move(name)) {
   }
 
-  explicit FlowFileRepository(std::string repo_name = "",
-                     std::string checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
+  explicit FlowFileRepository(const std::string& repo_name = "",
+                     std::filesystem::path checkpoint_dir = FLOWFILE_CHECKPOINT_DIRECTORY,
                      std::string directory = FLOWFILE_REPOSITORY_DIRECTORY,
                      std::chrono::milliseconds maxPartitionMillis = MAX_FLOWFILE_REPOSITORY_ENTRY_LIFE_TIME,
                      int64_t maxPartitionBytes = MAX_FLOWFILE_REPOSITORY_STORAGE_SIZE,
@@ -236,7 +236,7 @@ class FlowFileRepository : public ThreadedRepository, public SwapManager {
     return thread_;
   }
 
-  std::string checkpoint_dir_;
+  std::filesystem::path checkpoint_dir_;
   moodycamel::ConcurrentQueue<std::string> keys_to_delete;
   std::shared_ptr<core::ContentRepository> content_repo_;
   std::unique_ptr<minifi::internal::RocksDatabase> db_;

@@ -112,12 +112,11 @@ std::optional<ListDataLakeStorageResult> AzureDataLakeStorage::listDirectory(con
         continue;
       }
       ListDataLakeStorageElement element;
-      auto [directory, filename] = minifi::utils::file::FileUtils::split_path(azure_element.Name, true /*force_posix*/);
-      if (!directory.empty()) {
-        directory = directory.substr(0, directory.size() - 1);  // Remove ending '/' character
-      }
+      auto path = std::filesystem::path(azure_element.Name, std::filesystem::path::format::generic_format);
+      auto directory = path.parent_path();
+      auto filename = path.filename();
 
-      if (!matchesPathFilter(params.directory_name, params.path_regex, directory) || !matchesFileFilter(params.file_regex, filename)) {
+      if (!matchesPathFilter(params.directory_name, params.path_regex, directory.generic_string()) || !matchesFileFilter(params.file_regex, filename.generic_string())) {
         continue;
       }
 

@@ -36,11 +36,7 @@
 #endif
 #include "Core.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace jni {
+namespace org::apache::nifi::minifi::jni {
 
 /**
  * Purpose and Justification: Provides a mapping function for jfields.
@@ -103,8 +99,8 @@ class JVMLoader {
     jint ret = jvm_->GetEnv(reinterpret_cast<void**>(&jenv), JNI_VERSION_1_8);
 
     if (ret == JNI_EDETACHED) {
-      ret = jvm_->AttachCurrentThread(reinterpret_cast<void**>(&jenv), NULL);
-      if (ret != JNI_OK || jenv == NULL) {
+      ret = jvm_->AttachCurrentThread(reinterpret_cast<void**>(&jenv), nullptr);
+      if (ret != JNI_OK || jenv == nullptr) {
         throw std::runtime_error("Could not find class");
       }
     }
@@ -209,7 +205,7 @@ class JVMLoader {
    * @param pathVector vector of paths
    * @param otherOptions jvm options.
    */
-  static JVMLoader *getInstance(const std::vector<std::string> &pathVector, const std::vector<std::string> &otherOptions = std::vector<std::string>()) {
+  static JVMLoader *getInstance(const std::vector<std::filesystem::path> &pathVector, const std::vector<std::string> &otherOptions = std::vector<std::string>()) {
     JVMLoader *jvm = getInstance();
     if (!jvm->initialized()) {
       std::stringstream str;
@@ -505,8 +501,4 @@ class JVMLoader {
   }
 };
 
-} /* namespace jni */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::jni

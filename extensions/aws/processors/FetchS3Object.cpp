@@ -20,12 +20,10 @@
 
 #include "FetchS3Object.h"
 
-#include <set>
 #include <memory>
 
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
-#include "core/Resource.h"
 #include "utils/OptionalUtils.h"
 
 namespace org::apache::nifi::minifi::aws::processors {
@@ -99,9 +97,9 @@ void FetchS3Object::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
 
     logger_->log_debug("Successfully fetched S3 object %s from bucket %s", get_object_params->object_key, get_object_params->bucket);
     session->putAttribute(flow_file, "s3.bucket", get_object_params->bucket);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::PATH, result->path);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path);
-    session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, result->filename);
+    session->putAttribute(flow_file, core::SpecialFlowAttribute::PATH, result->path.generic_string());
+    session->putAttribute(flow_file, core::SpecialFlowAttribute::ABSOLUTE_PATH, result->absolute_path.generic_string());
+    session->putAttribute(flow_file, core::SpecialFlowAttribute::FILENAME, result->filename.generic_string());
     putAttributeIfNotEmpty(core::SpecialFlowAttribute::MIME_TYPE, result->mime_type);
     putAttributeIfNotEmpty("s3.etag", result->etag);
     putAttributeIfNotEmpty("s3.expirationTime", result->expiration.expiration_time);

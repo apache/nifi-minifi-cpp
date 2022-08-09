@@ -20,12 +20,7 @@
 #include "utils/StringUtils.h"
 #include "core/logging/LoggerConfiguration.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 static bool isGlobPattern(const std::string& pattern) {
   return pattern.find_first_of("?*") != std::string::npos;
@@ -84,10 +79,10 @@ std::filesystem::path FilePattern::FilePatternSegment::getBaseDirectory() const 
   return base_dir;
 }
 
-FilePattern::FilePattern(const std::string &pattern, ErrorHandler error_handler) {
+FilePattern::FilePattern(const std::string &pattern, const ErrorHandler& error_handler) {
   for (const auto& segment : StringUtils::split(pattern, ",")) {
     try {
-      segments_.push_back(FilePatternSegment(segment));
+      segments_.emplace_back(segment);
     } catch (const FilePatternSegmentError& segment_error) {
       error_handler(segment, segment_error.what());
     }
@@ -137,7 +132,7 @@ static bool matchGlob(std::string_view pattern, std::string_view value) {
   return value_idx == value.length();
 }
 
-auto FilePattern::FilePatternSegment::matchDirectory(DirIt pattern_it, DirIt pattern_end, DirIt value_it, DirIt value_end) -> DirMatchResult {
+auto FilePattern::FilePatternSegment::matchDirectory(DirIt pattern_it, const DirIt& pattern_end, DirIt value_it, const DirIt& value_end) -> DirMatchResult {
   for (; pattern_it != pattern_end; ++pattern_it) {
     if (is_this_dir(*pattern_it)) {
       continue;
@@ -179,14 +174,13 @@ auto FilePattern::FilePatternSegment::matchDirectory(DirIt pattern_it, DirIt pat
     // used up all pattern and value segments
     return DirMatchResult::EXACT;
   } else {
-    // used up all pattern segments but we still have value segments
+    // used up all pattern segments, but we still have value segments
     return DirMatchResult::NONE;
   }
 }
 
-auto FilePattern::FilePatternSegment::match(const std::string& directory) const -> MatchResult {
-  std::filesystem::path value = directory;
-  auto result = matchDirectory(directory_pattern_.begin(), directory_pattern_.end(), value.begin(), value.end());
+auto FilePattern::FilePatternSegment::matchDir(const std::filesystem::path& directory) const -> MatchResult {
+  auto result = matchDirectory(directory_pattern_.begin(), directory_pattern_.end(), directory.begin(), directory.end());
   if (excluding_) {
     if (result == DirMatchResult::TREE && file_pattern_ == "*") {
       // all files are excluded in this directory
@@ -197,14 +191,13 @@ auto FilePattern::FilePatternSegment::match(const std::string& directory) const 
   return result != DirMatchResult::NONE ? MatchResult::INCLUDE : MatchResult::NOT_MATCHING;
 }
 
-auto FilePattern::FilePatternSegment::match(const std::string& directory, const std::string& filename) const -> MatchResult {
-  std::filesystem::path value = directory;
-  auto result = matchDirectory(directory_pattern_.begin(), directory_pattern_.end(), value.begin(), value.end());
+auto FilePattern::FilePatternSegment::matchFile(const std::filesystem::path& directory, const std::filesystem::path& filename) const -> MatchResult {
+  auto result = matchDirectory(directory_pattern_.begin(), directory_pattern_.end(), directory.begin(), directory.end());
   if (result != DirMatchResult::EXACT && result != DirMatchResult::TREE) {
     // we only match a file if the directory fully matches
     return MatchResult::NOT_MATCHING;
   }
-  if (matchGlob(file_pattern_, filename)) {
+  if (matchGlob(file_pattern_, filename.string())) {
     return excluding_ ? MatchResult::EXCLUDE : MatchResult::INCLUDE;
   }
   return MatchResult::NOT_MATCHING;
@@ -212,9 +205,9 @@ auto FilePattern::FilePatternSegment::match(const std::string& directory, const 
 
 auto FilePattern::FilePatternSegment::match(const std::filesystem::path& path) const -> MatchResult {
   if (path.has_filename()) {
-    return match(path.parent_path().string(), path.filename().string());
+    return matchFile(path.parent_path(), path.filename());
   }
-  return match(path.parent_path().string());
+  return matchDir(path.parent_path());
 }
 
 static std::shared_ptr<core::logging::Logger> logger = core::logging::LoggerFactory<FilePattern>::getLogger();
@@ -224,15 +217,15 @@ std::set<std::filesystem::path> match(const FilePattern& pattern) {
   std::set<std::filesystem::path> files;
   for (auto it = pattern.segments_.begin(); it != pattern.segments_.end(); ++it) {
     if (it->isExcluding()) continue;
-    const auto match_file = [&] (const std::string& dir, const std::string& file) -> bool {
-      if (it->match(dir, file) != FilePatternSegment::MatchResult::INCLUDE) {
+    const auto match_file = [&] (const std::filesystem::path& dir, const std::filesystem::path& file) -> bool {
+      if (it->matchFile(dir, file) != FilePatternSegment::MatchResult::INCLUDE) {
         // our main pattern does not explicitly command us to process this file
         // keep iterating
         return true;
       }
       // check all subsequent patterns in reverse (later ones have higher precedence)
       for (auto rit = pattern.segments_.rbegin(); rit.base() != it + 1; ++rit) {
-        const auto result = rit->match(dir, file);
+        const auto result = rit->matchFile(dir, file);
         if (result == FilePatternSegment::MatchResult::INCLUDE) {
           break;
         } else if (result == FilePatternSegment::MatchResult::EXCLUDE) {
@@ -240,18 +233,18 @@ std::set<std::filesystem::path> match(const FilePattern& pattern) {
           return true;
         }
       }
-      files.insert(concat_path(dir, file));
+      files.insert(dir / file);
       return true;
     };
-    const auto descend_into_directory = [&] (const std::string& dir) -> bool {
-      if (it->match(dir) != FilePatternSegment::MatchResult::INCLUDE) {
+    const auto descend_into_directory = [&] (const std::filesystem::path& dir) -> bool {
+      if (it->matchDir(dir) != FilePatternSegment::MatchResult::INCLUDE) {
         // our main pattern does not explicitly command us to process this directory
         // do not descend into this directory
         return false;
       }
       // check all subsequent patterns in reverse (later ones have higher precedence)
       for (auto rit = pattern.segments_.rbegin(); rit.base() != it + 1; ++rit) {
-        const auto result = rit->match(dir);
+        const auto result = rit->matchDir(dir);
         if (result == FilePatternSegment::MatchResult::INCLUDE) {
           break;
         } else if (result == FilePatternSegment::MatchResult::EXCLUDE) {
@@ -266,9 +259,4 @@ std::set<std::filesystem::path> match(const FilePattern& pattern) {
   return files;
 }
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::utils::file

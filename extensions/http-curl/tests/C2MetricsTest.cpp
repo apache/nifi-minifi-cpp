@@ -61,10 +61,10 @@ class VerifyC2Metrics : public VerifyC2Base {
 
 class MetricsHandler: public HeartbeatHandler {
  public:
-  explicit MetricsHandler(std::atomic_bool& metrics_updated_successfully, std::shared_ptr<minifi::Configure> configuration, const std::string& replacement_config_path)
+  explicit MetricsHandler(std::atomic_bool& metrics_updated_successfully, std::shared_ptr<minifi::Configure> configuration, const std::filesystem::path& replacement_config_path)
     : HeartbeatHandler(std::move(configuration)),
       metrics_updated_successfully_(metrics_updated_successfully),
-      replacement_config_(getReplacementConfigAsJsonValue(replacement_config_path)) {
+      replacement_config_(getReplacementConfigAsJsonValue(replacement_config_path.string())) {
   }
 
   void handleHeartbeat(const rapidjson::Document& root, struct mg_connection* conn) override {
@@ -211,7 +211,6 @@ int main(int argc, char **argv) {
   harness.setKeyDir(args.key_dir);
   auto replacement_path = args.test_file;
   minifi::utils::StringUtils::replaceAll(replacement_path, "TestC2Metrics", "TestC2MetricsUpdate");
-  minifi::utils::StringUtils::replaceAll(replacement_path, "/", std::string(1, org::apache::nifi::minifi::utils::file::FileUtils::get_separator()));
   org::apache::nifi::minifi::test::MetricsHandler handler(metrics_updated_successfully, harness.getConfiguration(), replacement_path);
   harness.setUrl(args.url, &handler);
   harness.run(args.test_file);

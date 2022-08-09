@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::docs {
 
 class AgentDocs {
  public:
-  void generate(const std::string &docsdir, std::ostream &genStream);
+  void generate(const std::filesystem::path &docsdir, std::ostream &genStream);
  private:
   [[nodiscard]] static std::string extractClassName(const std::string &processor);
   BuildDescription build_description_;

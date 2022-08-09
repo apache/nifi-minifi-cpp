@@ -26,11 +26,14 @@
 #include <PythonScriptEngine.h>
 #endif  // PYTHON_SUPPORT
 
+#include <vector>
+
 #include "ExecuteScript.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "utils/ProcessorConfigUtils.h"
 #include "utils/StringUtils.h"
+#include "range/v3/range/conversion.hpp"
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -127,7 +130,7 @@ void ExecuteScript::onTrigger(const std::shared_ptr<core::ProcessContext> &conte
   }
 
   if (module_directory_) {
-    engine->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(*module_directory_, ","));
+    engine->setModulePaths(utils::StringUtils::splitAndTrimRemovingEmpty(*module_directory_, ",") | ranges::to<std::vector<std::filesystem::path>>());
   }
 
   if (!script_body_.empty()) {

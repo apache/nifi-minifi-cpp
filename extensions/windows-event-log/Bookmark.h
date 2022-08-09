@@ -41,7 +41,7 @@ class Bookmark {
  public:
   Bookmark(const std::wstring& channel,
       const std::wstring& query,
-      const std::string& bookmarkRootDir,
+      const std::filesystem::path& bookmarkRootDir,
       const utils::Identifier& uuid,
       bool processOldEvents,
       core::CoreComponentStateManager* state_manager,
@@ -61,7 +61,7 @@ class Bookmark {
 
   std::shared_ptr<core::logging::Logger> logger_;
   core::CoreComponentStateManager* state_manager_;
-  std::string filePath_;
+  std::filesystem::path filePath_;
   bool ok_{};
   unique_evt_handle hBookmark_;
   std::wstring bookmarkXml_;

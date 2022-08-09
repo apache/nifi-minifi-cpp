@@ -44,7 +44,7 @@ class VerifyInvokeHTTPOK200Response : public VerifyInvokeHTTP {
 
 class VerifyInvokeHTTPRedirectResponse : public VerifyInvokeHTTP {
  public:
-  void setupFlow(const std::optional<std::string>& flow_yml_path) override {
+  void setupFlow(const std::optional<std::filesystem::path>& flow_yml_path) override {
     VerifyInvokeHTTP::setupFlow(flow_yml_path);
     setProperty(minifi::processors::InvokeHTTP::FollowRedirects.getName(), "false");
   }

@@ -47,7 +47,7 @@ class LuaScriptEngine : public script::ScriptEngine {
    */
   template<typename... Args>
   void call(const std::string &fn_name, Args &&...args) {
-    sol::protected_function_result function_result;
+    sol::protected_function_result function_result{};
     try {
       sol::protected_function fn = lua_[fn_name.c_str()];
       function_result = fn(convert(args)...);
@@ -97,11 +97,11 @@ class LuaScriptEngine : public script::ScriptEngine {
     return value;
   }
 
-  std::shared_ptr<script::ScriptProcessContext> convert(const std::shared_ptr<core::ProcessContext> &context) {
+  static std::shared_ptr<script::ScriptProcessContext> convert(const std::shared_ptr<core::ProcessContext> &context) {
     return std::make_shared<script::ScriptProcessContext>(context);
   }
 
-  std::shared_ptr<LuaProcessSession> convert(const std::shared_ptr<core::ProcessSession> &session) {
+  static std::shared_ptr<LuaProcessSession> convert(const std::shared_ptr<core::ProcessSession> &session) {
     return std::make_shared<LuaProcessSession>(session);
   }
 
