@@ -52,7 +52,7 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
 
   if (auto filter_str = logger_properties->getString(prop_name_prefix + ".filter")) {
     try {
-      config.filter = filter_str.value();
+      config.filter = utils::Regex{filter_str.value()};
     } catch (const std::regex_error& err) {
       logger->log_error("Invalid '%s.filter' value, network logging won't be available: %s", prop_name_prefix, err.what());
       return {};
@@ -121,19 +121,16 @@ void AlertSink::initialize(core::controller::ControllerServiceProvider* controll
 void AlertSink::sink_it_(const spdlog::details::log_msg& msg) {
   // this method is protected upstream in base_sink by a mutex
 
-  std::match_results<std::string_view::const_iterator> match;
+  // TODO(adebreceni): revisit this after MINIFICPP-1903
+  utils::SMatch match;
   std::string_view payload(msg.payload.data(), msg.payload.size());
-  if (!std::regex_match(payload.begin(), payload.end(), match, config_.filter)) {
+  if (!utils::regexMatch(std::string{payload}, match, config_.filter)) {
     return;
   }
   size_t hash = 0;
   for (size_t idx = 1; idx < match.size(); ++idx) {
-    std::string_view submatch;
-    if (match[idx].first != match[idx].second) {
-      // TODO(adebreceni): std::string_view(It begin, It end) is not yet supported on all platforms (Apple clang 13.0.0)
-      submatch = std::string_view(std::to_address(match[idx].first), std::distance(match[idx].first, match[idx].second));
-    }
-    hash = utils::hash_combine(hash, std::hash<std::string_view>{}(submatch));
+    std::string submatch = match[idx].str();
+    hash = utils::hash_combine(hash, std::hash<std::string>{}(submatch));
   }
   if (!live_logs_.tryAdd(clock_->timeSinceEpoch(), hash)) {
     return;

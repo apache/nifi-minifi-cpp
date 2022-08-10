@@ -29,6 +29,7 @@
 #include "core/logging/LoggerProperties.h"
 #include "utils/ThreadPool.h"
 #include "utils/StagingQueue.h"
+#include "utils/RegexUtils.h"
 #include "properties/Configure.h"
 #include "spdlog/sinks/base_sink.h"
 
@@ -46,7 +47,7 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
     std::chrono::milliseconds flush_period;
     std::chrono::milliseconds rate_limit;
     int buffer_limit;
-    std::regex filter;
+    utils::Regex filter;
     spdlog::level::level_enum level;
   };
 
