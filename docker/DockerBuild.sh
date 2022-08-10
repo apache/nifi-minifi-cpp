@@ -46,6 +46,15 @@ function usage {
   exit 1
 }
 
+function dump_ccache() {
+  ccache_source_image=$1
+  docker_ccache_dump_location=$2
+  container_id=$(docker run --rm -d ${ccache_source_image} sh -c "while true; do sleep 1; done")
+  mkdir -p "${docker_ccache_dump_location}"
+  docker cp "${container_id}:/home/minificpp/.ccache/." "${docker_ccache_dump_location}"
+  docker rm -f "${container_id}"
+}
+
 BUILD_ARGS=()
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -157,19 +166,12 @@ if [ -n "${DISTRO_NAME}" ]; then
   DOCKER_BUILDKIT=0 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} -t apacheminificpp:"${TAG}" ..
 
   if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
-    container_id=$(docker run --rm -d apacheminificpp:"${TAG}" sh -c "while true; do sleep 1; done")
-    mkdir -p "${DOCKER_CCACHE_DUMP_LOCATION}"
-    docker cp "${container_id}:/home/minificpp/.ccache/." "${DOCKER_CCACHE_DUMP_LOCATION}"
-    docker rm -f "${container_id}"
+    dump_ccache "apacheminificpp:${TAG}" "${DOCKER_CCACHE_DUMP_LOCATION}"
   fi
 else
   if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
     DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} --target build -t minifi_build ..
-
-    container_id=$(docker run --rm -d minifi_build sh -c "while true; do sleep 1; done")
-    mkdir -p "${DOCKER_CCACHE_DUMP_LOCATION}"
-    docker cp "${container_id}:/home/minificpp/.ccache/." "${DOCKER_CCACHE_DUMP_LOCATION}"
-    docker rm -f "${container_id}"
+    dump_ccache "minifi_build" "${DOCKER_CCACHE_DUMP_LOCATION}"
   fi
   echo DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} -t apacheminificpp:"${TAG}" ..
   DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} -t apacheminificpp:"${TAG}" ..
