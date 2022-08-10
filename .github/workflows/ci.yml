@@ -4,7 +4,7 @@ jobs:
   macos_xcode:
     name: "macos-xcode"
     runs-on: macos-11
-    timeout-minutes: 90
+    timeout-minutes: 180
     env:
       CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
       CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
