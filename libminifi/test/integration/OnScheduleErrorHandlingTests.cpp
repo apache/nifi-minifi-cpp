@@ -93,7 +93,7 @@ class EventDriverScheduleErrorHandlingTests: public IntegrationBase {
         auto process_controller = dynamic_cast<org::apache::nifi::minifi::state::ProcessorController*>(&component);
         assert(process_controller != nullptr);
 
-        process_controller->getProcessor()->setSchedulingStrategy(org::apache::nifi::minifi::core::SchedulingStrategy::EVENT_DRIVEN);
+        process_controller->getProcessor().setSchedulingStrategy(org::apache::nifi::minifi::core::SchedulingStrategy::EVENT_DRIVEN);
       }
 
       ++controllerVecIdx;

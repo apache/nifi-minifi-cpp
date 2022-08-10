@@ -1,5 +1,4 @@
 /**
- *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,8 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
-#define LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
+#pragma once
 
 #include <string>
 #include <memory>
@@ -24,11 +22,7 @@
 #include "SchedulingAgent.h"
 #include "UpdateController.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
+namespace org::apache::nifi::minifi::state {
 
 /**
  * Purpose, Justification, & Design: ProcessController is the state control mechanism for processors.
@@ -38,20 +32,20 @@ namespace state {
  */
 class ProcessorController : public StateController {
  public:
-  ProcessorController(core::Processor* processor, const std::shared_ptr<SchedulingAgent> &scheduler);
+  ProcessorController(core::Processor& processor, std::shared_ptr<SchedulingAgent> scheduler);
 
   ~ProcessorController() override;
 
-  std::string getComponentName() const override {
+  [[nodiscard]] std::string getComponentName() const override {
     return processor_->getName();
   }
 
-  utils::Identifier getComponentUUID() const override {
+  [[nodiscard]] utils::Identifier getComponentUUID() const override {
     return processor_->getUUID();
   }
 
-  core::Processor* getProcessor() {
-    return processor_;
+  core::Processor& getProcessor() {
+    return *processor_;
   }
   /**
    * Start the client
@@ -69,15 +63,8 @@ class ProcessorController : public StateController {
   int16_t resume() override;
 
  protected:
-  core::Processor* processor_;
+  gsl::not_null<core::Processor*> processor_;
   std::shared_ptr<SchedulingAgent> scheduler_;
 };
 
-}  // namespace state
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_STATE_PROCESSORCONTROLLER_H_
-
+}  // namespace org::apache::nifi::minifi::state

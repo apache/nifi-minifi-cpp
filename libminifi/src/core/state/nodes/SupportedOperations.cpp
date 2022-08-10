@@ -112,7 +112,7 @@ void SupportedOperations::fillProperties(SerializedResponseNode& properties, min
       addProperty(properties, "c2");
       if (monitor_) {
         monitor_->executeOnAllComponents([&properties](StateController& component){
-          addProperty(properties, component.getComponentName());
+          addProperty(properties, component.getComponentUUID().to_string());
         });
       }
       break;

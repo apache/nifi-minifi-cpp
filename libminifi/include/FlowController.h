@@ -115,7 +115,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
     return -1;
   }
 
-  void executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) override;
+  void executeOnComponent(const std::string& id_or_name, std::function<void(state::StateController&)> func) override;
   void executeOnAllComponents(std::function<void(state::StateController&)> func) override;
 
   int16_t clearConnection(const std::string &connection) override;
@@ -238,15 +238,15 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
  private:
   std::vector<state::StateController*> getAllComponents();
 
-  state::StateController* getComponent(const std::string &name);
+  state::StateController* getComponent(const std::string& id_or_name);
 
-  state::StateController* getProcessorController(const std::string& name,
+  state::StateController* getProcessorController(const std::string& id_or_name,
                                                  const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
 
   std::vector<state::StateController*> getAllProcessorControllers(
-          const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+          const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);
 
-  std::unique_ptr<state::ProcessorController> createController(core::Processor& processor);
+  gsl::not_null<std::unique_ptr<state::ProcessorController>> createController(core::Processor& processor);
 
   std::chrono::milliseconds shutdown_check_interval_{1000};
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<FlowController>::getLogger();
