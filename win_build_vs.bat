@@ -42,7 +42,6 @@ set enable_opc=OFF
 set enable_openwsman=OFF
 set enable_ops=OFF
 set enable_pcap=OFF
-set enable_python=OFF
 set enable_scripting=OFF
 set enable_sensors=OFF
 set enable_tensorflow=OFF
@@ -91,7 +90,6 @@ for %%x in (%*) do (
     if [%%~x] EQU [/OPENWSMAN]   set enable_openwsman=ON
     if [%%~x] EQU [/OPS]         set enable_ops=ON
     if [%%~x] EQU [/PCAP]        set enable_pcap=ON
-    if [%%~x] EQU [/PYTHON]      set enable_python=ON
     if [%%~x] EQU [/SCRIPTING]   set enable_scripting=ON
     if [%%~x] EQU [/SENSORS]     set enable_sensors=ON
     if [%%~x] EQU [/TENSORFLOW]  set enable_tensorflow=ON
@@ -119,7 +117,7 @@ cmake -G %generator% -DINSTALLER_MERGE_MODULES=%installer_merge_modules% -DTEST_
         -DENABLE_COAP=%build_coap% -DENABLE_AWS=%build_AWS% -DENABLE_PDH=%build_PDH% -DENABLE_AZURE=%build_azure% -DENABLE_SFTP=%build_SFTP% -DENABLE_SPLUNK=%build_SPLUNK% -DENABLE_GCP=%build_GCP% ^
         -DENABLE_NANOFI=%build_nanofi% -DENABLE_OPENCV=%build_opencv% -DENABLE_PROMETHEUS=%build_prometheus% -DENABLE_ELASTICSEARCH=%build_ELASTIC% -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  ^
         -DENABLE_BUSTACHE=%enable_bustache% -DENABLE_COAP=%enable_coap% -DENABLE_ENCRYPT_CONFIG=%enable_encrypt_config% -DENABLE_GPS=%enable_gps% -DENABLE_LUA_SCRIPTING=%enable_lua_scripting% ^
-        -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% -DENABLE_PYTHON=%enable_python% ^
+        -DENABLE_MQTT=%enable_mqtt% -DENABLE_OPC=%enable_opc% -DENABLE_OPENWSMAN=%enable_openwsman% -DENABLE_OPS=%enable_ops% -DENABLE_PCAP=%enable_pcap% ^
         -DENABLE_SCRIPTING=%enable_scripting% -DENABLE_SENSORS=%enable_sensors% -DENABLE_TENSORFLOW=%enable_tensorflow% -DENABLE_USB_CAMERA=%enable_usb_camera% ^
         -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DEXCLUDE_BOOST=ON -DENABLE_WEL=ON -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=%skiptests% ^
         %strict_gsl_checks% %redist% -DENABLE_LINTER=%build_linter% "%scriptdir%" && %buildcmd%
