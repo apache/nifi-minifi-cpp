@@ -43,15 +43,9 @@ enum ScheduledState {
   RUNNING
 };
 
-/*
- * Scheduling Strategy
- */
 enum SchedulingStrategy {
-  // Event driven
   EVENT_DRIVEN,
-  // Timer driven
   TIMER_DRIVEN,
-  // Cron Driven
   CRON_DRIVEN
 };
 

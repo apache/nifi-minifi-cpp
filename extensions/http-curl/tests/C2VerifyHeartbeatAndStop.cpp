@@ -42,7 +42,7 @@ class VerifyC2Heartbeat : public VerifyC2Base {
     using org::apache::nifi::minifi::utils::verifyLogLinePresenceInPollTime;
     assert(verifyLogLinePresenceInPollTime(std::chrono::milliseconds(wait_time_),
         "Received Ack from Server",
-        "C2Agent] [debug] Stopping component invoke",
+        "C2Agent] [debug] Stopping component 2438e3c8-015a-1000-79ca-83af40ec1991",
         "C2Agent] [debug] Stopping component FlowController"));
   }
 

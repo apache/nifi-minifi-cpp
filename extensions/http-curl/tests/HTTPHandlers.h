@@ -590,7 +590,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       case minifi::c2::Operation::STOP: {
         auto operands = getOperandsOfProperties(operation_node);
         assert(operands.find("c2") != operands.end());
-        assert(operands.find("FlowController") != operands.end());
+        // FlowController is also present, but this handler has no way of knowing its UUID to test it
         for (const auto& component : verify_components) {
           assert(operands.find(component) != operands.end());
         }
@@ -630,7 +630,7 @@ class StoppingHeartbeatHandler : public HeartbeatHandler {
 
  private:
   static void sendStopOperation(struct mg_connection *conn) {
-    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"invoke\"  }, "
+    std::string resp = "{\"operation\" : \"heartbeat\", \"requested_operations\" : [{ \"operationid\" : 41, \"operation\" : \"stop\", \"operand\" : \"2438e3c8-015a-1000-79ca-83af40ec1991\"  }, "
         "{ \"operationid\" : 42, \"operation\" : \"stop\", \"operand\" : \"FlowController\"  } ]}";
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: "
               "text/plain\r\nContent-Length: %lu\r\nConnection: close\r\n\r\n",

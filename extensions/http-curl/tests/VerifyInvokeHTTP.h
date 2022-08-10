@@ -70,8 +70,8 @@ class VerifyInvokeHTTP : public HTTPIntegrationBase {
     flowController_->executeOnComponent("InvokeHTTP", [&](minifi::state::StateController& component) {
       const auto processorController = dynamic_cast<minifi::state::ProcessorController*>(&component);
       assert(processorController);
-      auto proc = processorController->getProcessor();
-      proc->setProperty(property, value);
+      auto& proc = processorController->getProcessor();
+      proc.setProperty(property, value);
       executed = true;
     });
 

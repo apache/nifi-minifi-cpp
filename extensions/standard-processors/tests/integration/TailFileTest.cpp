@@ -78,8 +78,8 @@ class TailFileTestHarness : public IntegrationBase {
     fc.executeOnComponent("tf", [this] (minifi::state::StateController& component) {
       auto proc = dynamic_cast<minifi::state::ProcessorController*>(&component);
       if (nullptr != proc) {
-        proc->getProcessor()->setProperty(minifi::processors::TailFile::FileName, ss.str());
-        proc->getProcessor()->setProperty(minifi::processors::TailFile::StateFile, statefile);
+        proc->getProcessor().setProperty(minifi::processors::TailFile::FileName, ss.str());
+        proc->getProcessor().setProperty(minifi::processors::TailFile::StateFile, statefile);
       }
     });
   }

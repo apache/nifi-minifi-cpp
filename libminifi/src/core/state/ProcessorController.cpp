@@ -18,16 +18,13 @@
 
 #include "core/state/ProcessorController.h"
 #include <memory>
+#include <utility>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace state {
+namespace org::apache::nifi::minifi::state {
 
-ProcessorController::ProcessorController(core::Processor* processor, const std::shared_ptr<SchedulingAgent> &scheduler)
-    : processor_(processor),
-      scheduler_(scheduler) {
+ProcessorController::ProcessorController(core::Processor& processor, std::shared_ptr<SchedulingAgent> scheduler)
+    : processor_(&processor),
+      scheduler_(std::move(scheduler)) {
 }
 
 ProcessorController::~ProcessorController() = default;
@@ -59,8 +56,4 @@ int16_t ProcessorController::resume() {
   return start();
 }
 
-} /* namespace state */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::state

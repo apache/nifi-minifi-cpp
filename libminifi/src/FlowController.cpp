@@ -462,52 +462,46 @@ void FlowController::executeOnAllComponents(std::function<void(state::StateContr
   }
 }
 
-void FlowController::executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) {
+void FlowController::executeOnComponent(const std::string &id_or_name, std::function<void(state::StateController&)> func) {
   if (updating_) {
     return;
   }
   std::lock_guard<std::recursive_mutex> lock(mutex_);
-  if (auto* component = getComponent(name); component != nullptr) {
+  if (auto* component = getComponent(id_or_name); component != nullptr) {
     func(*component);
   } else {
-    logger_->log_error("Could not get execute requested callback for component \"%s\", because component was not found", name);
+    logger_->log_error("Could not get execute requested callback for component \"%s\", because component was not found", id_or_name);
   }
 }
 
 std::vector<state::StateController*> FlowController::getAllComponents() {
   if (root_) {
-    auto controllerFactory = [this] (core::Processor& p) {
-      return createController(p);
-    };
-    return getAllProcessorControllers(controllerFactory);
+    return getAllProcessorControllers([this](core::Processor& p) { return createController(p); });
   }
 
   return {this};
 }
 
-state::StateController* FlowController::getComponent(const std::string& name) {
-  if (name == "FlowController") {
+state::StateController* FlowController::getComponent(const std::string& id_or_name) {
+  if (id_or_name == getUUIDStr() || id_or_name == "FlowController") {
     return this;
   } else if (root_) {
-    auto controllerFactory = [this] (core::Processor& p) {
-      return createController(p);
-    };
-    return getProcessorController(name, controllerFactory);
+    return getProcessorController(id_or_name, [this](core::Processor& p) { return createController(p); });
   }
 
   return nullptr;
 }
 
-std::unique_ptr<state::ProcessorController> FlowController::createController(core::Processor& processor) {
-  switch (processor.getSchedulingStrategy()) {
-    case core::SchedulingStrategy::TIMER_DRIVEN:
-      return std::make_unique<state::ProcessorController>(&processor, timer_scheduler_);
-    case core::SchedulingStrategy::EVENT_DRIVEN:
-      return std::make_unique<state::ProcessorController>(&processor, event_scheduler_);
-    case core::SchedulingStrategy::CRON_DRIVEN:
-      return std::make_unique<state::ProcessorController>(&processor, cron_scheduler_);
-  }
-  return {};
+gsl::not_null<std::unique_ptr<state::ProcessorController>> FlowController::createController(core::Processor& processor) {
+  const auto scheduler = [this, &processor]() -> std::shared_ptr<SchedulingAgent> {
+    switch (processor.getSchedulingStrategy()) {
+      case core::SchedulingStrategy::TIMER_DRIVEN: return timer_scheduler_;
+      case core::SchedulingStrategy::EVENT_DRIVEN: return event_scheduler_;
+      case core::SchedulingStrategy::CRON_DRIVEN: return cron_scheduler_;
+    }
+    gsl_Assert(false);
+  };
+  return gsl::make_not_null(std::make_unique<state::ProcessorController>(processor, scheduler()));
 }
 
 uint64_t FlowController::getUptime() {
@@ -541,7 +535,7 @@ std::map<std::string, std::unique_ptr<io::InputStream>> FlowController::getDebug
 }
 
 std::vector<state::StateController*> FlowController::getAllProcessorControllers(
-        const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+        const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
   std::vector<state::StateController*> controllerVec{this};
   std::vector<core::Processor*> processorVec;
   root_->getAllProcessors(processorVec);
@@ -558,19 +552,21 @@ std::vector<state::StateController*> FlowController::getAllProcessorControllers(
   return controllerVec;
 }
 
-state::StateController* FlowController::getProcessorController(const std::string& name, const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
-  auto* processor = root_->findProcessorByName(name);
-  if (processor == nullptr) {
-    logger_->log_error("Could not get processor controller for requested name \"%s\", because processor was not found either", name);
-    return nullptr;
-  }
-
-  // reference to the existing or newly created controller
-  auto& foundController = processor_to_controller_[processor->getUUID()];
-  if (!foundController) {
-    foundController = controllerFactory(*processor);
-  }
-  return foundController.get();
+state::StateController* FlowController::getProcessorController(const std::string& id_or_name,
+    const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
+  return utils::Identifier::parse(id_or_name)
+      | utils::flatMap([this](utils::Identifier id) { return utils::optional_from_ptr(root_->findProcessorById(id)); })
+      | utils::orElse([this, &id_or_name] { return utils::optional_from_ptr(root_->findProcessorByName(id_or_name)); })
+      | utils::map([this, &controllerFactory](gsl::not_null<core::Processor*> proc) -> gsl::not_null<state::ProcessorController*> {
+        return utils::optional_from_ptr(processor_to_controller_[proc->getUUID()].get())
+            | utils::valueOrElse([this, proc, &controllerFactory] {
+              return gsl::make_not_null((processor_to_controller_[proc->getUUID()] = controllerFactory(*proc)).get());
+            });
+      })
+      | utils::valueOrElse([this, &id_or_name]() -> state::ProcessorController* {
+        logger_->log_error("Could not get processor controller for requested id/name \"%s\", because the processor was not found", id_or_name);
+        return nullptr;
+      });
 }
 
 void FlowController::loadMetricsPublisher() {

@@ -114,11 +114,11 @@ class Pausable {
 
 class StateController : public Pausable {
  public:
-  virtual ~StateController() = default;
+  ~StateController() override = default;
 
-  virtual std::string getComponentName() const = 0;
+  [[nodiscard]] virtual std::string getComponentName() const = 0;
 
-  virtual utils::Identifier getComponentUUID() const = 0;
+  [[nodiscard]] virtual utils::Identifier getComponentUUID() const = 0;
   /**
    * Start the client
    */
@@ -141,8 +141,8 @@ class StateMonitor : public StateController {
  public:
   ~StateMonitor() override = default;
 
-  // Execute callback func on the named component. Thread safe, locking mutex_, preventing concurrent flow update
-  virtual void executeOnComponent(const std::string &name, std::function<void(state::StateController&)> func) = 0;
+  // Execute callback func on the component. Thread safe, locking mutex_, preventing concurrent flow update
+  virtual void executeOnComponent(const std::string &id_or_name, std::function<void(state::StateController&)> func) = 0;
 
   // Execute callback func on the all components. Thread safe, locking mutex_, preventing concurrent flow update
   virtual void executeOnAllComponents(std::function<void(state::StateController&)> func) = 0;
