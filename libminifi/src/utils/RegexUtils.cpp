@@ -22,58 +22,86 @@
 #include <vector>
 
 #include "Exception.h"
-
-#ifndef NO_MORE_REGFREEE
-namespace {
-
-std::size_t getMaxGroupCountOfRegex(const std::string& regex) {
-  return std::count(regex.begin(), regex.end(), '(') + 1;
-}
-
-}  // namespace
-#endif
+#include <regex.h>
 
 namespace org::apache::nifi::minifi::utils {
 
 #ifndef NO_MORE_REGFREEE
-SMatch::SuffixWrapper SMatch::suffix() const {
-  if ((size_t) matches_[0].match.rm_eo >= string_.size()) {
-    return SuffixWrapper{std::string()};
-  } else {
-    return SuffixWrapper{string_.substr(matches_[0].match.rm_eo)};
+
+SMatch::SMatch(const SMatch& other) {
+  *this = other;
+}
+
+SMatch::SMatch(SMatch&& other) {
+  *this = std::move(other);
+}
+
+SMatch& SMatch::operator=(const SMatch& other) {
+  if (this == &other) {
+    return *this;
   }
+  reset(other.string_);
+  matches_.reserve(other.matches_.size());
+  ready_ = other.ready_;
+  for (const auto& sub_match : other.matches_) {
+    size_t begin_off = gsl::narrow<size_t>(std::distance(other.string_.begin(), sub_match.first));
+    size_t end_off = gsl::narrow<size_t>(std::distance(other.string_.begin(), sub_match.second));
+    matches_.push_back(Regmatch{sub_match.matched, string_.begin() + begin_off, string_.begin() + end_off});
+  }
+  return *this;
+}
+
+SMatch& SMatch::operator=(SMatch&& other) {
+  // trigger the copy assignment, we could optimize this (by moving the string/matches)
+  // but we would need to maintain a separate offsets vector, as after the move the original
+  // sub_matches' iterators are invalidated, if this turns out to be a performance bottleneck
+  // revisit this
+  return *this = other;
+}
+
+const SMatch::Regmatch& SMatch::suffix() const {
+  return suffix_;
 }
 
 const SMatch::Regmatch& SMatch::operator[](std::size_t index) const {
+  if (index >= matches_.size()) {
+    return unmatched_;
+  }
   return matches_[index];
 }
 
 std::size_t SMatch::size() const {
-  std::size_t count = 0;
-  for (const auto &m : matches_) {
-    if (m.match.rm_so == -1) {
-      break;
-    }
-    ++count;
-  }
-  return count;
+  return matches_.size();
+}
+
+bool SMatch::empty() const {
+  return size() == 0;
 }
 
 bool SMatch::ready() const {
-  return !matches_.empty();
+  return ready_;
 }
 
 std::size_t SMatch::position(std::size_t index) const {
-  return matches_.at(index).match.rm_so;
+  if (index >= matches_.size()) {
+    return std::distance(string_.begin(), unmatched_.first);
+  }
+  return std::distance(string_.begin(), matches_[index].first);
 }
 
 std::size_t SMatch::length(std::size_t index) const {
-  return matches_.at(index).match.rm_eo - matches_.at(index).match.rm_so;
+  if (index >= matches_.size()) {
+    return std::distance(unmatched_.first, unmatched_.second);
+  }
+  return std::distance(matches_[index].first, matches_[index].second);
 }
 
-void SMatch::clear() {
+void SMatch::reset(std::string str) {
   matches_.clear();
-  string_.clear();
+  string_ = std::move(str);
+  unmatched_ = Regmatch{false, string_.end(), string_.end()};
+  suffix_ = unmatched_;
+  ready_ = false;
 }
 #endif
 
@@ -197,70 +225,6 @@ void Regex::compileRegex(regex_t& regex, const std::string& regex_string) const 
 }
 #endif
 
-bool regexSearch(const std::string &string, const Regex& regex) {
-  if (!regex.valid_) {
-    return false;
-  }
-#ifdef NO_MORE_REGFREEE
-  return std::regex_search(string, regex.compiled_regex_);
-#else
-  std::vector<regmatch_t> match;
-  match.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  return regexec(&regex.compiled_regex_, string.c_str(), match.size(), match.data(), 0) == 0;
-#endif
-}
-
-bool regexSearch(const std::string &string, SMatch& match, const Regex& regex) {
-  if (!regex.valid_) {
-    return false;
-  }
-#ifdef NO_MORE_REGFREEE
-  return std::regex_search(string, match, regex.compiled_regex_);
-#else
-  match.clear();
-  std::vector<regmatch_t> regmatches;
-  regmatches.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  bool result = regexec(&regex.compiled_regex_, string.c_str(), regmatches.size(), regmatches.data(), 0) == 0;
-  match.string_ = string;
-  for (const auto& regmatch : regmatches) {
-    match.matches_.push_back(SMatch::Regmatch{regmatch, match.string_});
-  }
-  return result;
-#endif
-}
-
-bool regexMatch(const std::string &string, const Regex& regex) {
-  if (!regex.valid_) {
-    return false;
-  }
-#ifdef NO_MORE_REGFREEE
-  return std::regex_match(string, regex.compiled_regex_);
-#else
-  std::vector<regmatch_t> match;
-  match.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  return regexec(&regex.compiled_full_input_regex_, string.c_str(), match.size(), match.data(), 0) == 0;
-#endif
-}
-
-bool regexMatch(const std::string &string, SMatch& match, const Regex& regex) {
-  if (!regex.valid_) {
-    return false;
-  }
-#ifdef NO_MORE_REGFREEE
-  return std::regex_match(string, match, regex.compiled_regex_);
-#else
-  match.clear();
-  std::vector<regmatch_t> regmatches;
-  regmatches.resize(getMaxGroupCountOfRegex(regex.regex_str_));
-  bool result = regexec(&regex.compiled_full_input_regex_, string.c_str(), regmatches.size(), regmatches.data(), 0) == 0;
-  match.string_ = string;
-  for (const auto& regmatch : regmatches) {
-    match.matches_.push_back(SMatch::Regmatch{regmatch, match.string_});
-  }
-  return result;
-#endif
-}
-
 SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex) {
 #ifdef NO_MORE_REGFREEE
   auto matches = std::sregex_iterator(string.begin(), string.end(), regex.compiled_regex_);
@@ -279,12 +243,13 @@ SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex) {
     current_str = search_result.suffix();
   }
 
-  auto diff = string.size() - last_match.string_.size();
+  // offset of the start of the last match into the original string
+  auto offset = string.size() - last_match.string_.size();
   last_match.string_ = string;
   for (auto& match : last_match.matches_) {
-    if (match.match.rm_so >= 0) {
-      match.match.rm_so += diff;
-      match.match.rm_eo += diff;
+    if (match.matched) {
+      match.first += offset;
+      match.second += offset;
     }
   }
   return last_match;
