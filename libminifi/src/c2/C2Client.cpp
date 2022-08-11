@@ -32,6 +32,7 @@
 #include "core/state/nodes/FlowInformation.h"
 #include "utils/file/FileSystem.h"
 #include "utils/file/FileUtils.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::c2 {
 
@@ -194,6 +195,7 @@ std::shared_ptr<state::response::ResponseNode> C2Client::loadC2ResponseConfigura
 std::optional<state::response::NodeReporter::ReportedNode> C2Client::getMetricsNode(const std::string& metrics_class) const {
   std::lock_guard<std::mutex> guard{metrics_mutex_};
   const auto createReportedNode = [](const std::vector<std::shared_ptr<state::response::ResponseNode>>& nodes) {
+    gsl_Expects(!nodes.empty());
     state::response::NodeReporter::ReportedNode reported_node;
     reported_node.is_array = nodes[0]->isArray();
     reported_node.name = nodes[0]->getName();
