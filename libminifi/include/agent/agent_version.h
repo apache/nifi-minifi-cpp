@@ -18,6 +18,8 @@
 #ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 #define LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 
+#undef COMPILER
+
 #include <string>
 #include <vector>
 #include "utils/Export.h"

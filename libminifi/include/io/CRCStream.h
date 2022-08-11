@@ -87,7 +87,7 @@ class InputCRCStream : public virtual CRCStreamBase<StreamType>, public InputStr
   size_t read(gsl::span<std::byte> buf) override {
     const auto ret = child_stream_->read(buf);
     if (ret > 0 && !io::isError(ret)) {
-      crc_ = crc32(crc_, reinterpret_cast<const unsigned char*>(buf.data()), ret);
+      crc_ = crc32(crc_, reinterpret_cast<const unsigned char*>(buf.data()), gsl::narrow<uInt>(ret));
     }
     return ret;
   }
@@ -107,7 +107,7 @@ class OutputCRCStream : public virtual CRCStreamBase<StreamType>, public OutputS
   size_t write(const uint8_t *value, size_t size) override {
     const auto ret = child_stream_->write(value, size);
     if (ret > 0 && !io::isError(ret)) {
-      crc_ = crc32(crc_, value, ret);
+      crc_ = crc32(crc_, value, gsl::narrow<uInt>(ret));
     }
     return ret;
   }

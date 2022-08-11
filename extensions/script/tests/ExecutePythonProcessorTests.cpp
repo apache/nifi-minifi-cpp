@@ -289,7 +289,7 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test module load of processo
   addGetFileProcessorToPlan(input_dir);
 
   auto execute_python_processor = addExecutePythonProcessorToPlan("foo_bar_processor.py", "");
-  plan_->setProperty(execute_python_processor, "Module Directory", getScriptFullPath("foo_modules/foo.py") + "," + getScriptFullPath("bar_modules"));
+  plan_->setProperty(execute_python_processor, "Module Directory", getScriptFullPath(concat_path("foo_modules", "foo.py")) + "," + getScriptFullPath("bar_modules"));
 
   auto success_putfile = plan_->addProcessor("PutFile", "SuccessPutFile", { {"success", "d"} }, false);
   plan_->addConnection(execute_python_processor, {"success", "d"}, success_putfile);
