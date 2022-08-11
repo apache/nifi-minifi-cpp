@@ -27,6 +27,7 @@
 
 #include "core/logging/LoggerConfiguration.h"
 #include "utils/ByteArrayCallback.h"
+#include "utils/BaseHTTPClient.h"
 
 namespace org::apache::nifi::minifi::extensions::curl {
 
@@ -49,7 +50,7 @@ namespace org::apache::nifi::minifi::extensions::curl {
  *  - because of this, all functions that request data at a specific offset are implicit seeks and potentially modify
  *    the current buffer
  */
-class HttpStreamingCallback final : public utils::ByteInputCallback {
+class HttpStreamingCallback final : public utils::HTTPUploadCallback {
  public:
   HttpStreamingCallback()
       : is_alive_(true),

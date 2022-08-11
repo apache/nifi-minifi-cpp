@@ -104,13 +104,12 @@ void setFlowFileAsPayload(core::ProcessSession& session,
                           core::ProcessContext& context,
                           curl::HTTPClient& client,
                           const gsl::not_null<std::shared_ptr<core::FlowFile>>& flow_file) {
-  auto payload_callback_obj = std::make_unique<utils::HTTPUploadCallback>(new utils::ByteInputCallback());
-  auto payload_callback = payload_callback_obj->getPtr();
-  session.read(flow_file, std::ref(*payload_callback));
-  payload_callback_obj->pos = 0;
+  auto payload = std::make_unique<utils::HTTPUploadCallback>();
+  session.read(flow_file, std::ref(*payload));
+  payload->pos = 0;
   client.setRequestHeader("Content-Length", std::to_string(flow_file->getSize()));
 
-  client.setUploadCallback(std::move(payload_callback_obj));
+  client.setUploadCallback(std::move(payload));
 
   if (auto content_type = getContentType(context, *flow_file)) {
     client.setContentType(content_type.value());

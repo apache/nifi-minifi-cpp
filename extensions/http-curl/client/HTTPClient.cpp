@@ -63,7 +63,7 @@ void HTTPClient::addFormPart(const std::string& content_type, const std::string&
     curl_mime_filename(part, filename->c_str());
   }
   curl_mime_name(part, name.c_str());
-  curl_mime_data_cb(part, form_callback_->getPtr()->getBufferSize(),
+  curl_mime_data_cb(part, form_callback_->getBufferSize(),
       &utils::HTTPRequestResponse::send_write, nullptr, nullptr, static_cast<void*>(form_callback_.get()));
 }
 
@@ -71,7 +71,7 @@ HTTPClient::~HTTPClient() {
   // forceClose ended up not being the issue in MINIFICPP-667, but leaving here
   // out of good hygiene.
   forceClose();
-  content_.getPtr()->close();
+  content_.close();
   logger_->log_trace("Closing HTTPClient for %s", url_);
 }
 
@@ -203,7 +203,7 @@ void HTTPClient::setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback>&& 
   logger_->log_debug("Setting callback for %s", url_);
   write_callback_ = std::move(callback);
   if (method_ == "PUT") {
-    curl_easy_setopt(http_session_.get(), CURLOPT_INFILESIZE_LARGE, (curl_off_t) write_callback_->getPtr()->getBufferSize());
+    curl_easy_setopt(http_session_.get(), CURLOPT_INFILESIZE_LARGE, (curl_off_t) write_callback_->getBufferSize());
   }
   curl_easy_setopt(http_session_.get(), CURLOPT_READFUNCTION, &utils::HTTPRequestResponse::send_write);
   curl_easy_setopt(http_session_.get(), CURLOPT_READDATA, static_cast<void*>(write_callback_.get()));
@@ -283,7 +283,7 @@ bool HTTPClient::submit() {
   }
   res_ = curl_easy_perform(http_session_.get());
   if (read_callback_ == nullptr) {
-    content_.getPtr()->close();
+    content_.close();
   }
   long http_code;  // NOLINT(runtime/int) long due to libcurl API
   curl_easy_getinfo(http_session_.get(), CURLINFO_RESPONSE_CODE, &http_code);
@@ -313,9 +313,9 @@ const char *HTTPClient::getContentType() {
 const std::vector<char> &HTTPClient::getResponseBody() {
   if (response_data_.response_body.empty()) {
     if (read_callback_) {
-      response_data_.response_body = read_callback_->getPtr()->to_string();
+      response_data_.response_body = read_callback_->to_string();
     } else {
-      response_data_.response_body = content_.getPtr()->to_string();
+      response_data_.response_body = content_.to_string();
     }
   }
   return response_data_.response_body;

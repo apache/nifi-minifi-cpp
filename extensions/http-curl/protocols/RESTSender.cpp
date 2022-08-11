@@ -115,12 +115,12 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
         if (filename.empty()) {
           throw std::logic_error("Missing filename");
         }
-        auto file_cb = std::make_unique<utils::HTTPUploadCallback>(new utils::ByteInputCallback());
-        file_cb->getPtr()->write(file.getRawDataAsString());
+        auto file_cb = std::make_unique<utils::HTTPUploadCallback>();
+        file_cb->write(file.getRawDataAsString());
         client.addFormPart("application/octet-stream", "file", std::move(file_cb), filename);
       }
     } else {
-      auto data_input = std::make_unique<utils::ByteInputCallback>();
+      auto data_input = std::make_unique<utils::HTTPUploadCallback>();
       if (data && req_encoding_ == RequestEncoding::Gzip) {
         io::BufferStream compressed_payload;
         bool compression_success = [&] {
@@ -142,9 +142,8 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
       } else {
         data_input->write(data.value_or(""));
       }
-      auto data_cb = std::make_unique<utils::HTTPUploadCallback>(data_input.release());
-      client.setPostSize(data_cb->getPtr()->getBufferSize());
-      client.setUploadCallback(std::move(data_cb));
+      client.setPostSize(data_input->getBufferSize());
+      client.setUploadCallback(std::move(data_input));
     }
   } else {
     // we do not need to set the upload callback
@@ -156,7 +155,7 @@ C2Payload RESTSender::sendPayload(const std::string& url, const Direction direct
   }
 
   if (payload.getOperation() == Operation::TRANSFER) {
-    auto read = std::make_unique<utils::HTTPReadCallback>(new utils::ByteOutputCallback(std::numeric_limits<size_t>::max()));
+    auto read = std::make_unique<utils::HTTPReadCallback>(std::numeric_limits<size_t>::max());
     client.setReadCallback(std::move(read));
   } else {
     client.setRequestHeader("Accept", "application/json");

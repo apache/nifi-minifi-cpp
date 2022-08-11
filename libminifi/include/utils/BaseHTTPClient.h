@@ -39,43 +39,30 @@ struct HTTPProxy {
   int port = 0;
 };
 
-class HTTPUploadCallback {
+class HTTPUploadCallback : public ByteInputCallback {
  public:
-  explicit HTTPUploadCallback(ByteInputCallback* byte_input_callback) : ptr(std::move(byte_input_callback)) {}
+  template<typename... Args>
+  explicit HTTPUploadCallback(Args&& ... args) : ByteInputCallback(std::forward<Args>(args)...) {}
 
   size_t getPos() {
-    std::lock_guard<std::mutex> lock(mutex);
     return pos;
   }
 
-  ByteInputCallback* getPtr() const { return ptr.get(); }
-
-
-  std::mutex mutex;
   std::atomic<bool> stop = false;
-  size_t pos = 0;
-
- private:
-  std::unique_ptr<ByteInputCallback> ptr;
+  std::atomic<size_t> pos = 0;
 };
 
-class HTTPReadCallback {
+class HTTPReadCallback : public ByteOutputCallback {
  public:
-  explicit HTTPReadCallback(ByteOutputCallback* byte_output_callback) : ptr(std::move(byte_output_callback)) {}
-
-  ByteOutputCallback* getPtr() const {return ptr.get(); }
-
-  std::mutex mutex;
-  std::atomic<bool> stop = false;
-  size_t pos = 0;
+  template<typename... Args>
+  explicit HTTPReadCallback(Args&& ... args) : ByteOutputCallback(std::forward<Args>(args)...) {}
 
   size_t getPos() {
-    std::lock_guard<std::mutex> lock(mutex);
     return pos;
   }
 
- private:
-  std::unique_ptr<ByteOutputCallback> ptr;
+  std::atomic<bool> stop = false;
+  std::atomic<size_t> pos = 0;
 };
 
 enum class SSLVersion : uint8_t {
@@ -190,7 +177,7 @@ class HTTPRequestResponse {
       if (callback->stop) {
         return CALLBACK_ABORT;
       }
-      callback->getPtr()->write(data, (size * nmemb));
+      callback->write(data, (size * nmemb));
       return (size * nmemb);
     } catch (...) {
       return CALLBACK_ABORT;
@@ -214,13 +201,13 @@ class HTTPRequestResponse {
       if (callback->stop) {
         return CALLBACK_ABORT;
       }
-      size_t buffer_size = callback->getPtr()->getBufferSize();
+      size_t buffer_size = callback->getBufferSize();
       if (callback->getPos() <= buffer_size) {
         size_t len = buffer_size - callback->pos;
         if (len <= 0) {
           return 0;
         }
-        auto *ptr = callback->getPtr()->getBuffer(callback->getPos());
+        auto *ptr = callback->getBuffer(callback->getPos());
 
         if (ptr == nullptr) {
           return 0;
@@ -229,7 +216,7 @@ class HTTPRequestResponse {
           len = size * nmemb;
         memcpy(data, ptr, len);
         callback->pos += len;
-        callback->getPtr()->seek(callback->getPos());
+        callback->seek(callback->getPos());
         return len;
       }
       return 0;
@@ -247,11 +234,11 @@ class HTTPRequestResponse {
       if (callback->stop) {
         return SEEKFUNC_FAIL;
       }
-      if (callback->getPtr()->getBufferSize() <= static_cast<size_t>(offset)) {
+      if (callback->getBufferSize() <= static_cast<size_t>(offset)) {
         return SEEKFUNC_FAIL;
       }
       callback->pos = offset;
-      callback->getPtr()->seek(callback->getPos());
+      callback->seek(callback->getPos());
       return SEEKFUNC_OK;
     } catch (...) {
       return SEEKFUNC_FAIL;

@@ -116,8 +116,8 @@ class HttpStream : public io::BaseStream {
   inline bool isFinished(int seconds = 0) {
     return http_client_future_.wait_for(std::chrono::seconds(seconds)) == std::future_status::ready
         && http_client_->getReadCallback()
-        && http_client_->getReadCallback()->getPtr()->getSize() == 0
-        && http_client_->getReadCallback()->getPtr()->waitingOps();
+        && http_client_->getReadCallback()->getSize() == 0
+        && http_client_->getReadCallback()->waitingOps();
   }
 
   /**
@@ -128,10 +128,10 @@ class HttpStream : public io::BaseStream {
       logger_->log_trace("Waiting for more data");
     } while (http_client_future_.wait_for(std::chrono::seconds(0)) != std::future_status::ready
         && http_client_->getReadCallback()
-        && http_client_->getReadCallback()->getPtr()->getSize() == 0);
+        && http_client_->getReadCallback()->getSize() == 0);
 
     return http_client_->getReadCallback()
-        && http_client_->getReadCallback()->getPtr()->getSize() > 0;
+        && http_client_->getReadCallback()->getSize() > 0;
   }
 
  protected:

@@ -326,12 +326,12 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
     logger_->log_trace("InvokeHTTP -- reading flowfile");
     std::shared_ptr<ResourceClaim> claim = flow_file->getResourceClaim();
     if (claim) {
-      auto callback_obj = std::make_unique<utils::HTTPUploadCallback>(new utils::ByteInputCallback());
+      auto callback_obj = std::make_unique<utils::HTTPUploadCallback>();
       callback_obj->pos = 0;
       if (send_body_) {
-        session->read(flow_file, std::ref(*callback_obj->getPtr()));
+        session->read(flow_file, std::ref(*callback_obj));
       }
-      logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback_obj->getPtr()->getBufferSize());
+      logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback_obj->getBufferSize());
       if (!send_body_) {
         client.setRequestHeader("Content-Length", "0");
       } else if (!use_chunked_encoding_) {

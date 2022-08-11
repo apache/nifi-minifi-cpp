@@ -110,8 +110,8 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   virtual void setReadCallback(std::unique_ptr<utils::HTTPReadCallback>&& callback);
 
-  const utils::HTTPUploadCallback* getUploadCallback() const { return write_callback_.get(); }
-  const utils::HTTPReadCallback* getReadCallback() const { return read_callback_.get(); }
+  utils::HTTPUploadCallback* getUploadCallback() const { return write_callback_.get(); }
+  utils::HTTPReadCallback* getReadCallback() const { return read_callback_.get(); }
 
   void setContentType(std::string content_type) override;
 
@@ -252,7 +252,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   std::chrono::milliseconds getAbsoluteTimeout() const { return 3*read_timeout_; }
 
-  utils::HTTPReadCallback content_{new utils::ByteOutputCallback(std::numeric_limits<size_t>::max())};
+  utils::HTTPReadCallback content_{std::numeric_limits<size_t>::max()};
 
   std::shared_ptr<minifi::controllers::SSLContextService> ssl_context_service_;
   std::string url_;
