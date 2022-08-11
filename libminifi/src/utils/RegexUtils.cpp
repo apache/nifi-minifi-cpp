@@ -243,14 +243,39 @@ SMatch getLastRegexMatch(const std::string& string, const utils::Regex& regex) {
     current_str = search_result.suffix();
   }
 
+  if (!last_match.ready()) {
+    return last_match;
+  }
+
+  struct MatchInfo {
+    bool matched;
+    size_t begin;
+    size_t end;
+  };
+
+  // we must save the sub matches' info in a way that does
+  // not get invalidated by SMatch::reset, and can be transferred
+  // to the updated match
+  std::vector<MatchInfo> match_infos;
+  match_infos.reserve(last_match.size());
+  for (auto& match : last_match.matches_) {
+    match_infos.push_back({
+      .matched = match.matched,
+      .begin = gsl::narrow<size_t>(std::distance(last_match.string_.cbegin(), match.first)),
+      .end = gsl::narrow<size_t>(std::distance(last_match.string_.cbegin(), match.second))
+    });
+  }
   // offset of the start of the last match into the original string
   auto offset = string.size() - last_match.string_.size();
-  last_match.string_ = string;
-  for (auto& match : last_match.matches_) {
-    if (match.matched) {
-      match.first += offset;
-      match.second += offset;
-    }
+  last_match.reset(string);
+  last_match.ready_ = true;
+  for (auto& info : match_infos) {
+    size_t match_off = info.matched ? offset : 0;
+    last_match.matches_.push_back(SMatch::Regmatch{
+      info.matched,
+      last_match.string_.cbegin() + info.begin + match_off,
+      last_match.string_.cbegin() + info.end + match_off
+    });
   }
   return last_match;
 #endif

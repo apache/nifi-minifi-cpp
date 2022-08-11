@@ -29,7 +29,7 @@
 #include <regex.h>
 #else
 #include <regex.h>
-//#define NO_MORE_REGFREEE
+#define NO_MORE_REGFREEE
 #endif
 
 namespace org::apache::nifi::minifi::utils {
