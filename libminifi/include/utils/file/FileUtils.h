@@ -14,8 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
-#define LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
+
+#pragma once
 
 #include <filesystem>
 #include <fstream>
@@ -80,12 +80,7 @@
 #endif
 
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace utils {
-namespace file {
+namespace org::apache::nifi::minifi::utils::file {
 
 namespace FileUtils = ::org::apache::nifi::minifi::utils::file;
 
@@ -373,7 +368,7 @@ inline void list_dir(const std::string& dir,
     std::string path = entry.path().string();
 
     if (utils::file::is_directory(path)) {  // if this is a directory
-      if (dir_callback(dir)) {
+      if (dir_callback(path)) {
         list_dir(path, callback, logger, dir_callback);
       }
     } else {
@@ -756,10 +751,4 @@ inline std::optional<std::string> get_relative_path(const std::string& path, con
   return std::filesystem::relative(path, base_path).string();
 }
 
-}  // namespace file
-}  // namespace utils
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_UTILS_FILE_FILEUTILS_H_
+}  // namespace org::apache::nifi::minifi::utils::file
