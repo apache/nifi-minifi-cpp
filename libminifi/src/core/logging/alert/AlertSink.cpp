@@ -89,7 +89,7 @@ std::shared_ptr<AlertSink> AlertSink::create(const std::string& prop_name_prefix
   config.level = readPropertyOr(".level", utils::parse_log_level, "trace");
   config.ssl_service_name = logger_properties->getString(prop_name_prefix + ".ssl.context.service");
 
-  return std::make_shared<AlertSink>(std::move(config), std::move(logger));
+  return std::shared_ptr<AlertSink>(new AlertSink(std::move(config), std::move(logger)));
 }
 
 void AlertSink::initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<AgentIdentificationProvider> agent_id) {
