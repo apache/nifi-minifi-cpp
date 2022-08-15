@@ -250,3 +250,36 @@ TEST_CASE("Excluding with directory wildcard exclusion") {
   REQUIRE_NOT_MATCHING(pattern.match(root / "one" / "six/"));
   REQUIRE_EXCLUDE(pattern.match(root / "one" / "ten" / "file.txt"));
 }
+
+TEST_CASE("Check only relevant subdir contents") {
+  TestController controller;
+  std::filesystem::path root{controller.createTempDirectory()};
+  // root
+  //   |- file1.txt
+  //   |- one
+  //   |   |- file2.txt
+  //   |
+  //   |- two
+  //       |- file3.txt
+  minifi::utils::file::create_dir((root / "one").string(), true);
+  minifi::utils::file::create_dir((root / "two").string(), true);
+
+  auto file1 = root / "file1.txt";
+  auto file2 = root / "one" / "file2.txt";
+  auto file3 = root / "two" / "file3.txt";
+
+  for (const auto& file : {file1, file2, file3}) {std::ofstream{file};}
+
+  std::set<std::filesystem::path> checked_files;
+  auto file_cb = [&] (const std::string& dir, const std::string& file) -> bool {
+    checked_files.insert(utils::file::concat_path(dir, file));
+    return true;
+  };
+  auto dir_cb = [&] (const std::string& dir) -> bool {
+    // only check the "one" subdir
+    return std::filesystem::path{dir} == root / "one";
+  };
+  utils::file::list_dir(root.string(), file_cb, controller.getLogger(), dir_cb);
+
+  REQUIRE((checked_files == std::set<std::filesystem::path>{file1, file2}));
+}
