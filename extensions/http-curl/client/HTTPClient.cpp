@@ -123,9 +123,8 @@ void HTTPClient::initialize(const std::string &method, const std::string url, co
   if (!url.empty()) {
     url_ = url;
   }
-  if (isSecure(url_) && ssl_context_service_ != nullptr) {
-    configure_secure_connection(http_session_);
-  }
+  if (isSecure(url_))
+    configure_secure_connection();
 }
 
 void HTTPClient::setDisablePeerVerification() {
@@ -387,41 +386,33 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
   return 0;
 }
 
-void HTTPClient::configure_secure_connection(CURL *http_session) {
-  logger_->log_debug("Using certificate file \"%s\"", ssl_context_service_->getCertificateFile());
-  logger_->log_debug("Using private key file \"%s\"", ssl_context_service_->getPrivateKeyFile());
-  logger_->log_debug("Using CA certificate file \"%s\"", ssl_context_service_->getCACertificate());
-#if 0  // Reenable this path once we change from the direct manipulation of the SSL context to using the cURL API
-  if (!ssl_context_service_->getCertificateFile().empty()) {
-    if (utils::StringUtils::endsWith(ssl_context_service_->getCertificateFile(), "p12", false)) {
-      curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "P12");
-    } else {
-      curl_easy_setopt(http_session, CURLOPT_SSLCERTTYPE, "PEM");
-    }
-    curl_easy_setopt(http_session, CURLOPT_SSLCERT, ssl_context_service_->getCertificateFile().c_str());
-  }
-  if (!ssl_context_service_->getPrivateKeyFile().empty()) {
-    if (utils::StringUtils::endsWith(ssl_context_service_->getPrivateKeyFile(), "p12", false)) {
-      curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "P12");
-    } else {
-      curl_easy_setopt(http_session, CURLOPT_SSLKEYTYPE, "PEM");
-    }
-    curl_easy_setopt(http_session, CURLOPT_SSLKEY, ssl_context_service_->getPrivateKeyFile().c_str());
-    curl_easy_setopt(http_session, CURLOPT_KEYPASSWD, ssl_context_service_->getPassphrase().c_str());
-  }
-  if (!ssl_context_service_->getCACertificate().empty()) {
-    curl_easy_setopt(http_session, CURLOPT_CAINFO, ssl_context_service_->getCACertificate().c_str());
-  } else {
-    curl_easy_setopt(http_session, CURLOPT_CAINFO, nullptr);
-  }
-  curl_easy_setopt(http_session, CURLOPT_CAPATH, nullptr);
-#else
+void HTTPClient::configure_secure_connection() {
 #ifdef OPENSSL_SUPPORT
-  curl_easy_setopt(http_session, CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
-  curl_easy_setopt(http_session, CURLOPT_SSL_CTX_DATA, static_cast<void*>(ssl_context_service_.get()));
-  curl_easy_setopt(http_session, CURLOPT_CAINFO, 0);
-  curl_easy_setopt(http_session, CURLOPT_CAPATH, 0);
-#endif
+  if (ssl_context_service_) {
+    logger_->log_debug("Using certificate file \"%s\"", ssl_context_service_->getCertificateFile());
+    logger_->log_debug("Using private key file \"%s\"", ssl_context_service_->getPrivateKeyFile());
+    logger_->log_debug("Using CA certificate file \"%s\"", ssl_context_service_->getCACertificate());
+
+    curl_easy_setopt(http_session_, CURLOPT_SSL_CTX_FUNCTION, &configure_ssl_context);
+    curl_easy_setopt(http_session_, CURLOPT_SSL_CTX_DATA, static_cast<void *>(ssl_context_service_.get()));
+    curl_easy_setopt(http_session_, CURLOPT_CAINFO, nullptr);
+    curl_easy_setopt(http_session_, CURLOPT_CAPATH, nullptr);
+  } else {
+    static const auto default_ca_path = getDefaultCAPath();
+
+    if (default_ca_path)
+      logger_->log_debug("Using CA certificate file \"%s\"", default_ca_path->string());
+    else
+      logger_->log_error("Could not find valid CA certificate file");
+
+    curl_easy_setopt(http_session_, CURLOPT_SSL_CTX_FUNCTION, nullptr);
+    curl_easy_setopt(http_session_, CURLOPT_SSL_CTX_DATA, nullptr);
+    if (default_ca_path)
+      curl_easy_setopt(http_session_, CURLOPT_CAINFO, default_ca_path->string().c_str());
+    else
+      curl_easy_setopt(http_session_, CURLOPT_CAINFO, nullptr);
+    curl_easy_setopt(http_session_, CURLOPT_CAPATH, nullptr);
+  }
 #endif
 }
 
@@ -463,6 +454,25 @@ std::string HTTPClient::replaceInvalidCharactersInHttpHeaderFieldName(std::strin
       return (ch >= 33 && ch <= 126 && ch != ':') ? ch : '-';
   });
   return field_name;
+}
+
+std::optional<std::filesystem::path> HTTPClient::getDefaultCAPath() {
+#ifndef WIN32
+  const std::vector<std::filesystem::path> possible_ca_paths = {
+      "/etc/ssl/certs/ca-certificates.crt",
+      "/etc/pki/tls/certs/ca-bundle.crt",
+      "/usr/share/ssl/certs/ca-bundle.crt",
+      "/usr/local/share/certs/ca-root-nss.crt",
+      "/etc/ssl/cert.pem"
+  };
+
+  for (const auto& possible_ca_path : possible_ca_paths) {
+    if (std::filesystem::exists(possible_ca_path)) {
+      return possible_ca_path;
+    }
+  }
+#endif
+  return std::nullopt;
 }
 
 REGISTER_RESOURCE(HTTPClient, InternalResource);
