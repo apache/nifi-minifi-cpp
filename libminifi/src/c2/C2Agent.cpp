@@ -358,7 +358,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
 
       // stop all referenced components.
       update_sink_->executeOnComponent(resp.name, [this, &resp] (state::StateController& component) {
-        logger_->log_debug("Stopping component %s", component.getComponentName());
+        logger_->log_debug("Stopping component %s", resp.name);
         if (resp.op == Operation::STOP) {
           component.stop();
         } else {

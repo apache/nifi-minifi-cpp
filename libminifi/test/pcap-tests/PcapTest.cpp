@@ -16,29 +16,13 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
 #undef NDEBUG
 #include <cassert>
-#include <utility>
 #include <chrono>
-#include <fstream>
-#include <memory>
 #include <string>
-#include <thread>
-#include <type_traits>
-#include <vector>
-#include <iostream>
-#include <sstream>
 #include "../TestBase.h"
-#include "utils/StringUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
-#include "../unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
 #include "core/ConfigurableComponent.h"
 #include "core/state/ProcessorController.h"
 #include "../integration/IntegrationBase.h"
@@ -47,9 +31,7 @@
 
 class PcapTestHarness : public IntegrationBase {
  public:
-  PcapTestHarness() {
-    dir = testController.createTempDirectory();
-  }
+  PcapTestHarness() = default;
 
   void testSetup() override {
     LogTestController::getInstance().setTrace<minifi::processors::CapturePacket>();
@@ -81,33 +63,26 @@ class PcapTestHarness : public IntegrationBase {
     fc.executeOnComponent("pcap", [this] (minifi::state::StateController& component) {
       auto proccontroller = dynamic_cast<minifi::state::ProcessorController*>(&component);
       if (proccontroller) {
-        auto processor = proccontroller->getProcessor();
-        processor->setProperty(minifi::processors::CapturePacket::BaseDir.getName(), dir);
-        processor->setProperty(minifi::processors::CapturePacket::NetworkControllers.getName(), ".*");
+        auto& processor = proccontroller->getProcessor();
+        processor.setProperty(minifi::processors::CapturePacket::BaseDir.getName(), dir);
+        processor.setProperty(minifi::processors::CapturePacket::NetworkControllers.getName(), ".*");
       }
     });
   }
 
  protected:
-  std::string dir;
   TestController testController;
+  std::string dir = testController.createTempDirectory();
 };
 
 int main(int argc, char **argv) {
-  std::string key_dir;
   std::string test_file_location;
-  std::string url;
-
   if (argc > 1) {
     test_file_location = argv[1];
   }
 
-
   PcapTestHarness harness;
-
-  harness.setKeyDir(key_dir);
-
+  harness.setKeyDir("");
   harness.run(test_file_location);
-
   return 0;
 }
