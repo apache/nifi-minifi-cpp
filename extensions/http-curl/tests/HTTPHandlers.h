@@ -590,7 +590,7 @@ class HeartbeatHandler : public ServerAwareHandler {
       case minifi::c2::Operation::STOP: {
         auto operands = getOperandsOfProperties(operation_node);
         assert(operands.find("c2") != operands.end());
-        assert(operands.find("FlowController") != operands.end());
+        // FlowController is also present, but this handler has no way of knowing its UUID to test it
         for (const auto& component : verify_components) {
           assert(operands.find(component) != operands.end());
         }

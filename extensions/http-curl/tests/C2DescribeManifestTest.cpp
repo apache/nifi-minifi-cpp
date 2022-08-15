@@ -18,12 +18,15 @@
 
 #undef NDEBUG
 #include <string>
-#include "TestBase.h"
 #include "Catch.h"
 #include "HTTPIntegrationBase.h"
 #include "HTTPHandlers.h"
 #include "properties/Configuration.h"
 #include "ConfigTestAccessor.h"
+
+// from TestHTTPGet.yml
+constexpr auto invokehttp_uuid = "2438e3c8-015a-1000-79ca-83af40ec1991";
+constexpr auto logattribute_uuid = "2438e3c8-015a-1000-79ca-83af40ec1992";
 
 class DescribeManifestHandler: public HeartbeatHandler {
  public:
@@ -37,7 +40,7 @@ class DescribeManifestHandler: public HeartbeatHandler {
   }
 
   void handleAcknowledge(const rapidjson::Document& root) override {
-    verifyJsonHasAgentManifest(root, {"InvokeHTTP", "LogAttribute"}, {"nifi.extension.path", "nifi.python.processor.dir"});
+    verifyJsonHasAgentManifest(root, {invokehttp_uuid, logattribute_uuid}, {"nifi.extension.path", "nifi.python.processor.dir"});
     verified_ = true;
   }
 
