@@ -151,7 +151,7 @@ bool regexSearch(const char* str, CMatch& match, const Regex& regex);
 
 bool regexMatch(const std::string_view& str, const Regex& regex);
 bool regexMatch(const std::string_view& str, SVMatch& match, const Regex& regex);
-bool regexSearch(const char* str, const Regex& regex);
+bool regexSearch(const std::string_view& str, const Regex& regex);
 bool regexSearch(const std::string_view& str, SVMatch& match, const Regex& regex);
 
 bool regexMatch(const std::string& str, const Regex& regex);
