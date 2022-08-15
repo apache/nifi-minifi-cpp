@@ -26,6 +26,7 @@
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "c2/C2Agent.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -69,7 +70,12 @@ std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getResponseNodes(
   if (ptr == nullptr) {
     return getComponentMetricsNodes(clazz);
   }
-  return {std::dynamic_pointer_cast<ResponseNode>(ptr)};
+  auto response_node = std::dynamic_pointer_cast<ResponseNode>(ptr);
+  if (!response_node) {
+    logger_->log_error("Instantiated class '%s' is not a ResponseNode!", clazz);
+    return {};
+  }
+  return {response_node};
 }
 
 void ResponseNodeLoader::initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node) {

@@ -258,7 +258,7 @@ void C2Client::initializeResponseNodes(core::ProcessGroup* root) {
         continue;
       }
 
-      for (auto response_node: response_nodes) {
+      for (auto&& response_node: response_nodes) {
         root_response_nodes_[response_node->getName()].push_back(std::move(response_node));
       }
     }
