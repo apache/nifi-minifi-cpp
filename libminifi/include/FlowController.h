@@ -241,7 +241,7 @@ class FlowController : public core::controller::ForwardingControllerServiceProvi
   state::StateController* getComponent(const std::string& id_or_name);
 
   state::StateController* getProcessorController(const std::string& id_or_name,
-                                                 const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory);
+      const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);
 
   std::vector<state::StateController*> getAllProcessorControllers(
           const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory);

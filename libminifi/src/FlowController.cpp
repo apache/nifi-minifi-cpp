@@ -552,7 +552,8 @@ std::vector<state::StateController*> FlowController::getAllProcessorControllers(
   return controllerVec;
 }
 
-state::StateController* FlowController::getProcessorController(const std::string& id_or_name, const std::function<std::unique_ptr<state::ProcessorController>(core::Processor&)>& controllerFactory) {
+state::StateController* FlowController::getProcessorController(const std::string& id_or_name,
+    const std::function<gsl::not_null<std::unique_ptr<state::ProcessorController>>(core::Processor&)>& controllerFactory) {
   return utils::Identifier::parse(id_or_name)
       | utils::flatMap([this](utils::Identifier id) { return utils::optional_from_ptr(root_->findProcessorById(id)); })
       | utils::orElse([this, &id_or_name] { return utils::optional_from_ptr(root_->findProcessorByName(id_or_name)); })
