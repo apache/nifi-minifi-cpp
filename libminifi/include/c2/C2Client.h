@@ -77,6 +77,10 @@ class C2Client : public core::Flow, public state::response::NodeReporter {
   bool initialized_ = false;
   std::shared_ptr<core::logging::Logger> logger_;
   mutable std::mutex metrics_mutex_;
+
+  // Name and response node value of the root response nodes defined in nifi.c2.root.classes and nifi.c2.root.class.definitions
+  // In case a root class is defined to be a processor metric there can be multiple response nodes if the same processor is defined
+  // multiple times in the flow
   std::unordered_map<std::string, std::vector<std::shared_ptr<state::response::ResponseNode>>> root_response_nodes_;
 
  protected:

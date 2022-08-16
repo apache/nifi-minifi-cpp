@@ -100,6 +100,11 @@ class MetricsHandler: public HeartbeatHandler {
     DESCRIBE_ALL_METRICS
   };
 
+  static constexpr const char* GETFILE1_UUID = "471deef6-2a6e-4a7d-912a-81cc17e3a206";
+  static constexpr const char* GETFILE2_UUID = "471deef6-2a6e-4a7d-912a-81cc17e3a207";
+  static constexpr const char* GETTCP1_UUID = "2438e3c8-015a-1000-79ca-83af40ec1995";
+  static constexpr const char* GETTCP2_UUID = "2438e3c8-015a-1000-79ca-83af40ec1996";
+
   static void sendEmptyHeartbeatResponse(struct mg_connection* conn) {
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
   }
@@ -108,8 +113,8 @@ class MetricsHandler: public HeartbeatHandler {
     auto getfile_metrics_verified =
       !root.HasMember("metrics") &&
       root.HasMember("GetFileMetrics") &&
-      root["GetFileMetrics"].HasMember("471deef6-2a6e-4a7d-912a-81cc17e3a206") &&
-      root["GetFileMetrics"].HasMember("471deef6-2a6e-4a7d-912a-81cc17e3a207");
+      root["GetFileMetrics"].HasMember(GETFILE1_UUID) &&
+      root["GetFileMetrics"].HasMember(GETFILE2_UUID);
     if (getfile_metrics_verified) {
       state_ = TestState::DESCRIBE_ALL_METRICS;
     }
@@ -120,10 +125,10 @@ class MetricsHandler: public HeartbeatHandler {
       root.HasMember("metrics") &&
       root["metrics"].HasMember("ProcessorMetrics") &&
       root["metrics"]["ProcessorMetrics"].HasMember("GetFileMetrics") &&
-      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("471deef6-2a6e-4a7d-912a-81cc17e3a206") &&
-      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember("471deef6-2a6e-4a7d-912a-81cc17e3a207") &&
-      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1995") &&
-      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember("2438e3c8-015a-1000-79ca-83af40ec1996") &&
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember(GETFILE1_UUID) &&
+      root["metrics"]["ProcessorMetrics"]["GetFileMetrics"].HasMember(GETFILE2_UUID) &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember(GETTCP1_UUID) &&
+      root["metrics"]["ProcessorMetrics"]["GetTCPMetrics"].HasMember(GETTCP2_UUID) &&
       root["metrics"].HasMember("SystemMetrics") &&
       root["metrics"]["SystemMetrics"].HasMember("QueueMetrics");
     if (all_metrics_verified) {
