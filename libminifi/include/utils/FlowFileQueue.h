@@ -28,7 +28,7 @@
 
 namespace org::apache::nifi::minifi::test::utils {
 struct FlowFileQueueTestAccessor;
-} // namespace org::apache::nifi::minifi::test::utils
+}  // namespace org::apache::nifi::minifi::test::utils
 
 namespace org::apache::nifi::minifi::utils {
 
