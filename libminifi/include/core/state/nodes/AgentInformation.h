@@ -20,7 +20,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <optional>
 
 #ifndef WIN32
 #include <arpa/inet.h>
