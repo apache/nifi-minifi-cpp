@@ -36,21 +36,21 @@
 
 namespace org::apache::nifi::minifi::core {
 
-static constexpr char const* CONFIG_YAML_FLOW_CONTROLLER_KEY = "Flow Controller";
-static constexpr char const* CONFIG_YAML_PROCESSORS_KEY = "Processors";
-static constexpr char const* CONFIG_YAML_CONTROLLER_SERVICES_KEY = "Controller Services";
-static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY = "Remote Processing Groups";
-static constexpr char const* CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3 = "Remote Process Groups";
-static constexpr char const* CONFIG_YAML_PROVENANCE_REPORT_KEY = "Provenance Reporting";
-static constexpr char const* CONFIG_YAML_FUNNELS_KEY = "Funnels";
-static constexpr char const* CONFIG_YAML_INPUT_PORTS_KEY = "Input Ports";
-static constexpr char const* CONFIG_YAML_OUTPUT_PORTS_KEY = "Output Ports";
+static constexpr char const* CONFIG_FLOW_CONTROLLER_KEY = "Flow Controller";
+static constexpr char const* CONFIG_PROCESSORS_KEY = "Processors";
+static constexpr char const* CONFIG_CONTROLLER_SERVICES_KEY = "Controller Services";
+static constexpr char const* CONFIG_REMOTE_PROCESS_GROUP_KEY = "Remote Processing Groups";
+static constexpr char const* CONFIG_REMOTE_PROCESS_GROUP_KEY_V3 = "Remote Process Groups";
+static constexpr char const* CONFIG_PROVENANCE_REPORT_KEY = "Provenance Reporting";
+static constexpr char const* CONFIG_FUNNELS_KEY = "Funnels";
+static constexpr char const* CONFIG_INPUT_PORTS_KEY = "Input Ports";
+static constexpr char const* CONFIG_OUTPUT_PORTS_KEY = "Output Ports";
 
-#define YAML_CONFIGURATION_USE_REGEX
+#define CONFIGURATION_USE_REGEX
 
 // Disable regex in EL for incompatible compilers
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
-#undef YAML_CONFIGURATION_USE_REGEX
+#undef CONFIGURATION_USE_REGEX
 #endif
 
 class StructuredConfiguration : public FlowConfiguration {
@@ -63,19 +63,17 @@ class StructuredConfiguration : public FlowConfiguration {
    *
    * @param component
    * @param component_name
-   * @param yaml_section
+   * @param section
    */
-  void validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &yaml_section) const;
+  void validateComponentProperties(ConfigurableComponent& component, const std::string &component_name, const std::string &section) const;
 
  protected:
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration. The rootYamlNode argument must point to
-   * an YAML::Node object containing the root node of the parsed YAML
-   * for the flow configuration.
+   * flow configuration.
    *
-   * @param rootYamlNode a pointer to a YAML::Node object containing the root
-   *                       node of the parsed YAML document
+   * @param root_node a pointer to a flow::Node object containing the root
+   *                       node of the parsed document
    * @return             the root ProcessGroup node of the flow
    *                       configuration tree
    */
@@ -85,98 +83,93 @@ class StructuredConfiguration : public FlowConfiguration {
 
   std::unique_ptr<core::ProcessGroup> parseProcessGroup(const flow::Node& header_node, const flow::Node& node, bool is_root = false);
   /**
-   * Parses a processor from its corresponding YAML config node and adds
-   * it to a parent ProcessGroup. The processorNode argument must point
-   * to a YAML::Node containing the processor configuration. A Processor
-   * object will be created a added to the parent ProcessGroup specified
+   * Parses processors from its corresponding config node and adds
+   * them to a parent ProcessGroup. The processors_node argument must point
+   * to a flow::Node containing the processors configuration. Processor
+   * objects will be created and added to the parent ProcessGroup specified
    * by the parent argument.
    *
-   * @param processorsNode the YAML::Node containing the processor configuration
-   * @param parent         the parent ProcessGroup to which the the created
-   *                       Processor should be added
+   * @param processor_node_seq  the flow::Node containing the processor configuration
+   * @param parent              the parent ProcessGroup to which the the created
+   *                            Processor should be added
    */
-  void parseProcessorNode(const flow::Node& processors_node, core::ProcessGroup* parent);
+  void parseProcessorNode(const flow::Node& processor_node_seq, core::ProcessGroup* parent);
 
   /**
-   * Parses a port from its corressponding YAML config node and adds
-   * it to a parent ProcessGroup. The portNode argument must point
-   * to a YAML::Node containing the port configuration. A RemoteProcessorGroupPort
+   * Parses a port from its corresponding config node and adds
+   * it to a parent ProcessGroup. The port_node argument must point
+   * to a flow::Node containing the port configuration. A RemoteProcessorGroupPort
    * object will be created a added to the parent ProcessGroup specified
    * by the parent argument.
    *
-   * @param portNode  the YAML::Node containing the port configuration
+   * @param port_node  the flow::Node containing the port configuration
    * @param parent    the parent ProcessGroup for the port
    * @param direction the TransferDirection of the port
    */
   void parsePort(const flow::Node& port_node, core::ProcessGroup* parent, sitetosite::TransferDirection direction);
 
   /**
-   * Parses the root level YAML node for the flow configuration and
+   * Parses the root level node for the flow configuration and
    * returns a ProcessGroup containing the tree of flow configuration
    * objects.
    *
-   * @param rootFlowNode
+   * @param root_flow_node
    * @return
    */
   std::unique_ptr<core::ProcessGroup> parseRootProcessGroup(const flow::Node& root_flow_node);
 
-  // Process Property YAML
   void parseProcessorProperty(const flow::Node& doc, const flow::Node& node, std::shared_ptr<core::Processor> processor);
-  /**
-   * Parse controller services
-   * @param controllerServicesNode controller services YAML node.
-   * @param parent parent process group.
-   */
+
   void parseControllerServices(const flow::Node& controller_services_node);
 
   /**
-   * Parses the Connections section of a configuration YAML.
+   * Parses the Connections section of a configuration.
    * The resulting Connections are added to the parent ProcessGroup.
    *
-   * @param node   the YAML::Node containing the Connections section
-   *                 of the configuration YAML
-   * @param parent the root node of flow configuration to which
-   *                 to add the connections that are parsed
+   * @param connection_node_seq   the Node containing the Connections section
+   *                              of the configuration
+   * @param parent                the root node of flow configuration to which
+   *                              to add the connections that are parsed
    */
-  void parseConnection(const flow::Node& node, core::ProcessGroup* parent);
+  void parseConnection(const flow::Node& connection_node_seq, core::ProcessGroup* parent);
 
   /**
-   * Parses the Remote Process Group section of a configuration YAML.
+   * Parses the Remote Process Group section of a configuration.
    * The resulting Process Group is added to the parent ProcessGroup.
    *
-   * @param node   the YAML::Node containing the Remote Process Group
-   *                 section of the configuration YAML
-   * @param parent the root node of flow configuration to which
-   *                 to add the process groups that are parsed
+   * @param rpg_node_seq  the flow::Node containing the Remote Process Group
+   *                      section of the configuration YAML
+   * @param parent        the root node of flow configuration to which
+   *                      to add the process groups that are parsed
    */
-  void parseRemoteProcessGroup(const flow::Node& node, core::ProcessGroup* parent);
+  void parseRemoteProcessGroup(const flow::Node& rpg_node_seq, core::ProcessGroup* parent);
 
   /**
-   * Parses the Provenance Reporting section of a configuration YAML.
+   * Parses the Provenance Reporting section of a configuration.
    * The resulting Provenance Reporting processor is added to the
    * parent ProcessGroup.
    *
-   * @param reportNode  the YAML::Node containing the provenance
+   * @param report_node  the flow::Node containing the provenance
    *                      reporting configuration
-   * @param parentGroup the root node of flow configuration to which
+   * @param parent_group the root node of flow configuration to which
    *                      to add the provenance reporting config
    */
-  void parseProvenanceReporting(const flow::Node& report_node, core::ProcessGroup* parentGroup);
+  void parseProvenanceReporting(const flow::Node& report_node, core::ProcessGroup* parent_group);
 
   /**
-   * A helper function to parse the Properties flow::Node YAML for a processor.
+   * A helper function to parse the Properties flow::Node for a processor.
    *
-   * @param propertiesNode the YAML::Node containing the properties
+   * @param properties_node the flow::Node containing the properties
    * @param processor      the Processor to which to add the resulting properties
    */
-  void parsePropertiesNode(const flow::Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, const std::string& yaml_section);
+  void parsePropertiesNode(const flow::Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, const std::string& section);
 
   /**
-   * Parses the Funnels section of a configuration YAML.
+   * Parses the Funnels section of a configuration.
    * The resulting Funnels are added to the parent ProcessGroup.
    *
-   * @param node   the YAML::Node containing the Funnels section
-   *                 of the configuration YAML
+   * @param node   the flow::Node containing the Funnels section
+   *                 of the configuration
    * @param parent the root node of flow configuration to which
    *                 to add the funnels that are parsed
    */
@@ -196,34 +189,34 @@ class StructuredConfiguration : public FlowConfiguration {
   /**
    * A helper function for parsing or generating optional id fields.
    *
-   * In parsing YAML flow configurations for config schema v1, the
+   * In parsing flow configurations for config schema v1, the
    * 'id' field of most component types that contains a UUID is optional.
    * This function will check for the existence of the specified
-   * idField in the specified yamlNode. If present, the field will be parsed
+   * idField in the specified node. If present, the field will be parsed
    * as a UUID and the UUID string will be returned. If not present, a
    * random UUID string will be generated and returned.
    *
-   * @param yamlNode a pointer to the YAML::Node that will be checked for the
+   * @param node     a pointer to the flow::Node that will be checked for the
    *                   presence of an idField
-   * @param idField  the string of the name of the idField to check for. This
+   * @param id_field  the string of the name of the idField to check for. This
    *                   is optional and defaults to 'id'
    * @return         the parsed or generated UUID string
    */
   std::string getOrGenerateId(const flow::Node& node, const std::string& id_field = "id");
 
-  std::string getRequiredIdField(const flow::Node& node, std::string_view yaml_section = "", std::string_view error_message = "");
+  std::string getRequiredIdField(const flow::Node& node, std::string_view section = "", std::string_view error_message = "");
 
   /**
    * This is a helper function for getting an optional value, if it exists.
    * If it does not exist, returns the provided default value.
    *
-   * @param yamlNode     the YAML node to check
-   * @param fieldName    the optional field key
-   * @param defaultValue the default value to use if field is not set
-   * @param yamlSection  [optional] the top level section of the YAML config
-   *                       for the yamlNode. This is used fpr generating a
+   * @param node         the flow node to check
+   * @param field_name    the optional field key
+   * @param default_value the default value to use if field is not set
+   * @param section  [optional] the top level section of the config
+   *                       for the node. This is used fpr generating a
    *                       useful info message for troubleshooting.
-   * @param infoMessage  [optional] the info message string to use if
+   * @param info_message  [optional] the info message string to use if
    *                       the optional field is missing. If not provided,
    *                       a default info message will be generated.
    */
@@ -244,10 +237,10 @@ class StructuredConfiguration : public FlowConfiguration {
    * Raises a human-readable configuration error for the given configuration component/section.
    *
    * @param component_name
-   * @param yaml_section
+   * @param section
    * @param reason
    */
-  void raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const;
+  void raiseComponentError(const std::string &component_name, const std::string &section, const std::string &reason) const;
 };
 
 }  // namespace org::apache::nifi::minifi::core

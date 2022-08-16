@@ -56,28 +56,16 @@ class JsonConfiguration : public StructuredConfiguration {
 
   /**
    * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration. The yamlConfigStream argument must point to
-   * an input stream for the raw YAML configuration.
+   * flow configuration. The json_config argument must be
+   * a payload for the raw JSON configuration.
    *
-   * @param yamlConfigStream an input stream for the raw YAML configutation
+   * @param json_config      an input payload for the raw JSON configuration
    *                           to be parsed and loaded into the flow
    *                           configuration tree
    * @return                 the root ProcessGroup node of the flow
    *                           configuration tree
    */
-
-  /**
-   * Returns a shared pointer to a ProcessGroup object containing the
-   * flow configuration. The yamlConfigPayload argument must be
-   * a payload for the raw YAML configuration.
-   *
-   * @param yamlConfigPayload an input payload for the raw YAML configuration
-   *                           to be parsed and loaded into the flow
-   *                           configuration tree
-   * @return                 the root ProcessGroup node of the flow
-   *                           configuration tree
-   */
-  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &yamlConfigPayload) override;
+  std::unique_ptr<core::ProcessGroup> getRootFromPayload(const std::string &json_config) override;
 };
 
 }  // namespace org::apache::nifi::minifi::core

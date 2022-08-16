@@ -27,6 +27,12 @@ namespace org::apache::nifi::minifi::core::flow {
 
 class Node {
  public:
+  struct Cursor {
+    int line;
+    int column;
+    int pos;
+  };
+
   class Impl;
   class Iterator {
    public:
@@ -90,6 +96,9 @@ class Node {
     virtual Iterator begin() const = 0;
     virtual Iterator end() const = 0;
     virtual Node operator[](std::string_view key) const = 0;
+
+    virtual std::optional<Cursor> getCursor() const {return std::nullopt;}
+
     virtual ~Impl() = default;
   };
 
@@ -119,6 +128,8 @@ class Node {
   Iterator begin() const {return impl_->begin();}
   Iterator end() const {return impl_->end();}
   Node operator[](std::string_view key) const {return impl_->operator[](key);}
+
+  std::optional<Cursor> getCursor() const {return impl_->getCursor();}
 
  private:
   std::shared_ptr<Impl> impl_;

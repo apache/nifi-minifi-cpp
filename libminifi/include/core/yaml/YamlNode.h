@@ -120,6 +120,18 @@ class YamlNode : public flow::Node::Impl {
     return flow::Node{std::make_shared<YamlNode>(node_[std::string{key}])};
   }
 
+  std::optional<flow::Node::Cursor> getCursor() const override {
+    YAML::Mark mark = node_.Mark();
+    if (mark.is_null()) {
+      return std::nullopt;
+    }
+    return flow::Node::Cursor{
+      .line = mark.line,
+      .column = mark.column,
+      .pos = mark.pos
+    };
+  }
+
  private:
   YAML::Node node_;
 };

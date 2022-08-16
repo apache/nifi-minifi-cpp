@@ -778,7 +778,7 @@ TEST_CASE("Test Dependent Property 2", "[JsonConfigurationDependentProperty2]") 
   REQUIRE(config_failed);
 }
 
-#ifdef JSON_CONFIGURATION_USE_REGEX
+#ifdef CONFIGURATION_USE_REGEX
 TEST_CASE("Test Exclusive Property", "[JsonConfigurationExclusiveProperty]") {
   TestController test_controller;
 
@@ -877,7 +877,7 @@ TEST_CASE("Test Regex Property 2", "[JsonConfigurationRegexProperty2]") {
   REQUIRE(config_failed);
 }
 
-#endif  // JSON_CONFIGURATION_USE_REGEX
+#endif  // CONFIGURATION_USE_REGEX
 
 TEST_CASE("Test JSON Config With Funnel", "[JsonConfiguration]") {
   TestController test_controller;

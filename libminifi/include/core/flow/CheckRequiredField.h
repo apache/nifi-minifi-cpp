@@ -31,24 +31,23 @@ std::string buildErrorMessage(const Node &node, const std::vector<std::string> &
 
 /**
  * This is a helper function for verifying the existence of a required
- * field in a YAML::Node object. If the field is not present, an error
+ * field in a Node object. If the field is not present, an error
  * message will be logged and an std::invalid_argument exception will be
- * thrown indicating the absence of the required field in the YAML node.
+ * thrown indicating the absence of the required field in the node.
  *
- * @param yaml_node     the YAML node to check
+ * @param node          the node to check
  * @param field_name    the required field key
- * @param yaml_section  [optional] the top level section of the YAML config
- *                       for the yaml_node. This is used for generating a
+ * @param section       [optional] the top level section of the config
+ *                       for the node. This is used for generating a
  *                       useful error message for troubleshooting.
  * @param error_message [optional] the error message string to use if
  *                       the required field is missing. If not provided,
  *                       a default error message will be generated.
  *
  * @throws std::invalid_argument if the required field 'field_name' is
- *                               not present in 'yaml_node'
+ *                               not present in 'node'
  */
-void checkRequiredField(
-    const Node &node, std::string_view field_name, std::string_view yaml_section = "", std::string_view error_message = "");
+void checkRequiredField(const Node &node, std::string_view field_name, std::string_view section = "", std::string_view error_message = "");
 
 std::string getRequiredField(const Node &node, const std::vector<std::string> &alternate_names, std::string_view section, std::string_view error_message = {});
 

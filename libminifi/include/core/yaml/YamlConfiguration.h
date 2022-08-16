@@ -38,13 +38,6 @@ class YamlConfigurationTestAccessor;
 
 namespace org::apache::nifi::minifi::core {
 
-#define YAML_CONFIGURATION_USE_REGEX
-
-// Disable regex in EL for incompatible compilers
-#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 9)
-#undef YAML_CONFIGURATION_USE_REGEX
-#endif
-
 class YamlConfiguration : public StructuredConfiguration {
  public:
   explicit YamlConfiguration(ConfigurationContext ctx);

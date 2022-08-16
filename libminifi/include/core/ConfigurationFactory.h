@@ -41,7 +41,7 @@ T* instantiate(ConfigurationContext ctx) {
  * Configuration factory is used to create a new FlowConfiguration
  * object.
  */
-std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::string& configuration_class_name, bool fail_safe = false);
+std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::optional<std::string>& configuration_class_name, bool fail_safe = false);
 
 }  // namespace core
 }  // namespace minifi

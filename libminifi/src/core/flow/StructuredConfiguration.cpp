@@ -28,9 +28,9 @@
 #include "Defaults.h"
 #include "utils/TimeUtil.h"
 
-#ifdef YAML_CONFIGURATION_USE_REGEX
+#ifdef CONFIGURATION_USE_REGEX
 #include "utils/RegexUtils.h"
-#endif  // YAML_CONFIGURATION_USE_REGEX
+#endif  // CONFIGURATION_USE_REGEX
 
 namespace org::apache::nifi::minifi::core {
 
@@ -41,7 +41,7 @@ StructuredConfiguration::StructuredConfiguration(ConfigurationContext ctx, std::
       logger_(std::move(logger)) {}
 
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseRootProcessGroup(const flow::Node& root_flow_node) {
-  auto flow_controller_node = root_flow_node[CONFIG_YAML_FLOW_CONTROLLER_KEY];
+  auto flow_controller_node = root_flow_node[CONFIG_FLOW_CONTROLLER_KEY];
   auto root_group = parseProcessGroup(flow_controller_node, root_flow_node, true);
   this->name_ = root_group->getName();
   return root_group;
@@ -50,7 +50,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseRootProcessGro
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(const flow::Node& node, bool is_root) {
   int version = 0;
 
-  flow::checkRequiredField(node, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  flow::checkRequiredField(node, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
   auto flowName = node["name"].getString().value();
 
   utils::Identifier uuid;
@@ -85,18 +85,18 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::createProcessGroup(
 
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(const flow::Node& headerNode, const flow::Node& yamlNode, bool is_root) {
   auto group = createProcessGroup(headerNode, is_root);
-  flow::Node processorsNode = yamlNode[CONFIG_YAML_PROCESSORS_KEY];
-  flow::Node connectionsNode = yamlNode[flow::StructuredConnectionParser::CONFIG_YAML_CONNECTIONS_KEY];
-  flow::Node funnelsNode = yamlNode[CONFIG_YAML_FUNNELS_KEY];
-  flow::Node inputPortsNode = yamlNode[CONFIG_YAML_INPUT_PORTS_KEY];
-  flow::Node outputPortsNode = yamlNode[CONFIG_YAML_OUTPUT_PORTS_KEY];
+  flow::Node processorsNode = yamlNode[CONFIG_PROCESSORS_KEY];
+  flow::Node connectionsNode = yamlNode[flow::StructuredConnectionParser::CONFIG_CONNECTIONS_KEY];
+  flow::Node funnelsNode = yamlNode[CONFIG_FUNNELS_KEY];
+  flow::Node inputPortsNode = yamlNode[CONFIG_INPUT_PORTS_KEY];
+  flow::Node outputPortsNode = yamlNode[CONFIG_OUTPUT_PORTS_KEY];
   flow::Node remoteProcessingGroupsNode = [&] {
     // assignment is not supported on invalid Yaml nodes
-    flow::Node candidate = yamlNode[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY];
+    flow::Node candidate = yamlNode[CONFIG_REMOTE_PROCESS_GROUP_KEY];
     if (candidate) {
       return candidate;
     }
-    return yamlNode[CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY_V3];
+    return yamlNode[CONFIG_REMOTE_PROCESS_GROUP_KEY_V3];
   }();
   flow::Node childProcessGroupNodeSeq = yamlNode["Process Groups"];
 
@@ -119,8 +119,8 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::parseProcessGroup(c
 
 std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const flow::Node& rootYamlNode) {
   uuids_.clear();
-  flow::Node controllerServiceNode = rootYamlNode[CONFIG_YAML_CONTROLLER_SERVICES_KEY];
-  flow::Node provenanceReportNode = rootYamlNode[CONFIG_YAML_PROVENANCE_REPORT_KEY];
+  flow::Node controllerServiceNode = rootYamlNode[CONFIG_CONTROLLER_SERVICES_KEY];
+  flow::Node provenanceReportNode = rootYamlNode[CONFIG_PROVENANCE_REPORT_KEY];
 
   parseControllerServices(controllerServiceNode);
   // Create the root process group
@@ -138,7 +138,7 @@ std::unique_ptr<core::ProcessGroup> StructuredConfiguration::getRootFrom(const f
   return root;
 }
 
-void StructuredConfiguration::parseProcessorNode(const flow::Node& processorsNode, core::ProcessGroup* parentGroup) {
+void StructuredConfiguration::parseProcessorNode(const flow::Node& processor_node_seq, core::ProcessGroup* parentGroup) {
   int64_t runDurationNanos = -1;
   utils::Identifier uuid;
   std::unique_ptr<core::Processor> processor;
@@ -148,24 +148,24 @@ void StructuredConfiguration::parseProcessorNode(const flow::Node& processorsNod
     return;
   }
 
-  if (!processorsNode) {
+  if (!processor_node_seq) {
     throw std::invalid_argument("Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
   }
-  if (!processorsNode.isSequence()) {
+  if (!processor_node_seq.isSequence()) {
     throw std::invalid_argument(
         "Cannot instantiate a MiNiFi instance without a defined Processors configuration node.");
   }
   // Evaluate sequence of processors
-  for (const auto procNode : processorsNode) {
+  for (const auto procNode : processor_node_seq) {
     core::ProcessorConfig procCfg;
 
-    flow::checkRequiredField(procNode, "name", CONFIG_YAML_PROCESSORS_KEY);
+    flow::checkRequiredField(procNode, "name", CONFIG_PROCESSORS_KEY);
     procCfg.name = procNode["name"].getString().value();
     procCfg.id = getOrGenerateId(procNode);
 
     uuid = procCfg.id;
     logger_->log_debug("parseProcessorNode: name => [%s] id => [%s]", procCfg.name, procCfg.id);
-    flow::checkRequiredField(procNode, "class", CONFIG_YAML_PROCESSORS_KEY);
+    flow::checkRequiredField(procNode, "class", CONFIG_PROCESSORS_KEY);
     procCfg.javaClass = procNode["class"].getString().value();
     logger_->log_debug("parseProcessorNode: class => [%s]", procCfg.javaClass);
 
@@ -189,10 +189,10 @@ void StructuredConfiguration::parseProcessorNode(const flow::Node& processorsNod
 
     processor->setFlowIdentifier(flow_version_->getFlowIdentifier());
 
-    procCfg.schedulingStrategy = getOptionalField(procNode, "scheduling strategy", DEFAULT_SCHEDULING_STRATEGY, CONFIG_YAML_PROCESSORS_KEY);
+    procCfg.schedulingStrategy = getOptionalField(procNode, "scheduling strategy", DEFAULT_SCHEDULING_STRATEGY, CONFIG_PROCESSORS_KEY);
     logger_->log_debug("parseProcessorNode: scheduling strategy => [%s]", procCfg.schedulingStrategy);
 
-    procCfg.schedulingPeriod = getOptionalField(procNode, "scheduling period", DEFAULT_SCHEDULING_PERIOD_STR, CONFIG_YAML_PROCESSORS_KEY);
+    procCfg.schedulingPeriod = getOptionalField(procNode, "scheduling period", DEFAULT_SCHEDULING_PERIOD_STR, CONFIG_PROCESSORS_KEY);
 
     logger_->log_debug("parseProcessorNode: scheduling period => [%s]", procCfg.schedulingPeriod);
 
@@ -239,7 +239,7 @@ void StructuredConfiguration::parseProcessorNode(const flow::Node& processorsNod
     // handle processor properties
     if (procNode["Properties"]) {
       flow::Node propertiesNode = procNode["Properties"];
-      parsePropertiesNode(propertiesNode, *processor, procCfg.name, CONFIG_YAML_PROCESSORS_KEY);
+      parsePropertiesNode(propertiesNode, *processor, procCfg.name, CONFIG_PROCESSORS_KEY);
     }
 
     // Take care of scheduling
@@ -301,7 +301,7 @@ void StructuredConfiguration::parseProcessorNode(const flow::Node& processorsNod
   }
 }
 
-void StructuredConfiguration::parseRemoteProcessGroup(const flow::Node& rpgNode, core::ProcessGroup* parentGroup) {
+void StructuredConfiguration::parseRemoteProcessGroup(const flow::Node& rpg_node_seq, core::ProcessGroup* parentGroup) {
   utils::Identifier uuid;
   std::string id;
 
@@ -310,18 +310,18 @@ void StructuredConfiguration::parseRemoteProcessGroup(const flow::Node& rpgNode,
     return;
   }
 
-  if (!rpgNode || !rpgNode.isSequence()) {
+  if (!rpg_node_seq || !rpg_node_seq.isSequence()) {
     return;
   }
-  for (const auto currRpgNode : rpgNode) {
+  for (const auto currRpgNode : rpg_node_seq) {
 
-    flow::checkRequiredField(currRpgNode, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+    flow::checkRequiredField(currRpgNode, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
     auto name = currRpgNode["name"].getString().value();
     id = getOrGenerateId(currRpgNode);
 
     logger_->log_debug("parseRemoteProcessGroupYaml: name => [%s], id => [%s]", name, id);
 
-    auto url = getOptionalField(currRpgNode, "url", "", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+    auto url = getOptionalField(currRpgNode, "url", "", CONFIG_REMOTE_PROCESS_GROUP_KEY);
 
     logger_->log_debug("parseRemoteProcessGroupYaml: url => [%s]", url);
 
@@ -397,7 +397,7 @@ void StructuredConfiguration::parseRemoteProcessGroup(const flow::Node& rpgNode,
     group->setTransmitting(true);
     group->setURL(url);
 
-    flow::checkRequiredField(currRpgNode, "Input Ports", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+    flow::checkRequiredField(currRpgNode, "Input Ports", CONFIG_REMOTE_PROCESS_GROUP_KEY);
     auto inputPorts = currRpgNode["Input Ports"];
     if (inputPorts && inputPorts.isSequence()) {
       for (const auto currPort : inputPorts) {
@@ -416,10 +416,10 @@ void StructuredConfiguration::parseRemoteProcessGroup(const flow::Node& rpgNode,
   }
 }
 
-void StructuredConfiguration::parseProvenanceReporting(const flow::Node& node, core::ProcessGroup* parentGroup) {
+void StructuredConfiguration::parseProvenanceReporting(const flow::Node& node, core::ProcessGroup* parent_group) {
   utils::Identifier port_uuid;
 
-  if (!parentGroup) {
+  if (!parent_group) {
     logger_->log_error("parseProvenanceReportingYaml: no parent group exists");
     return;
   }
@@ -431,9 +431,9 @@ void StructuredConfiguration::parseProvenanceReporting(const flow::Node& node, c
 
   auto reportTask = createProvenanceReportTask();
 
-  flow::checkRequiredField(node, "scheduling strategy", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  flow::checkRequiredField(node, "scheduling strategy", CONFIG_PROVENANCE_REPORT_KEY);
   auto schedulingStrategyStr = node["scheduling strategy"].getString().value();
-  flow::checkRequiredField(node, "scheduling period", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  flow::checkRequiredField(node, "scheduling period", CONFIG_PROVENANCE_REPORT_KEY);
   auto schedulingPeriodStr = node["scheduling period"].getString().value();
 
   if (auto scheduling_period = utils::timeutils::StringToDuration<std::chrono::nanoseconds>(schedulingPeriodStr)) {
@@ -472,9 +472,9 @@ void StructuredConfiguration::parseProvenanceReporting(const flow::Node& node, c
       logger_->log_debug("ProvenanceReportingTask URL %s", urlStr);
     }
   }
-  flow::checkRequiredField(node, "port uuid", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  flow::checkRequiredField(node, "port uuid", CONFIG_PROVENANCE_REPORT_KEY);
   auto portUUIDStr = node["port uuid"].getString().value();
-  flow::checkRequiredField(node, "batch size", CONFIG_YAML_PROVENANCE_REPORT_KEY);
+  flow::checkRequiredField(node, "batch size", CONFIG_PROVENANCE_REPORT_KEY);
   auto batchSizeStr = node["batch size"].getString().value();
 
   logger_->log_debug("ProvenanceReportingTask port uuid %s", portUUIDStr);
@@ -489,7 +489,7 @@ void StructuredConfiguration::parseProvenanceReporting(const flow::Node& node, c
 
   // add processor to parent
   reportTask->setScheduledState(core::RUNNING);
-  parentGroup->addProcessor(std::move(reportTask));
+  parent_group->addProcessor(std::move(reportTask));
 }
 
 void StructuredConfiguration::parseControllerServices(const flow::Node& controllerServicesNode) {
@@ -497,9 +497,9 @@ void StructuredConfiguration::parseControllerServices(const flow::Node& controll
     return;
   }
   for (const auto& controllerServiceNode : controllerServicesNode) {
-    flow::checkRequiredField(controllerServiceNode, "name", CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+    flow::checkRequiredField(controllerServiceNode, "name", CONFIG_CONTROLLER_SERVICES_KEY);
 
-    auto type = flow::getRequiredField(controllerServiceNode, std::vector<std::string>{"class", "type"}, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+    auto type = flow::getRequiredField(controllerServiceNode, std::vector<std::string>{"class", "type"}, CONFIG_CONTROLLER_SERVICES_KEY);
     logger_->log_debug("Using type %s for controller service node", type);
 
     std::string fullType = type;
@@ -510,7 +510,7 @@ void StructuredConfiguration::parseControllerServices(const flow::Node& controll
     }
 
     auto name = controllerServiceNode["name"].getString().value();
-    auto id = getRequiredIdField(controllerServiceNode, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+    auto id = getRequiredIdField(controllerServiceNode, CONFIG_CONTROLLER_SERVICES_KEY);
 
     utils::Identifier uuid;
     uuid = id;
@@ -520,9 +520,9 @@ void StructuredConfiguration::parseControllerServices(const flow::Node& controll
       controller_service_node->initialize();
       if (flow::Node propertiesNode = controllerServiceNode["Properties"]) {
         // we should propagate properties to the node and to the implementation
-        parsePropertiesNode(propertiesNode, *controller_service_node, name, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+        parsePropertiesNode(propertiesNode, *controller_service_node, name, CONFIG_CONTROLLER_SERVICES_KEY);
         if (auto controllerServiceImpl = controller_service_node->getControllerServiceImplementation(); controllerServiceImpl) {
-          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, CONFIG_YAML_CONTROLLER_SERVICES_KEY);
+          parsePropertiesNode(propertiesNode, *controllerServiceImpl, name, CONFIG_CONTROLLER_SERVICES_KEY);
         }
       }
     } else {
@@ -533,26 +533,26 @@ void StructuredConfiguration::parseControllerServices(const flow::Node& controll
   }
 }
 
-void StructuredConfiguration::parseConnection(const flow::Node& connectionsNode, core::ProcessGroup* parent) {
+void StructuredConfiguration::parseConnection(const flow::Node& connection_node_seq, core::ProcessGroup* parent) {
   if (!parent) {
     logger_->log_error("parseProcessNode: no parent group was provided");
     return;
   }
-  if (!connectionsNode || !connectionsNode.isSequence()) {
+  if (!connection_node_seq || !connection_node_seq.isSequence()) {
     return;
   }
 
-  for (const auto& connectionNode : connectionsNode) {
-    if (!connectionNode || !connectionNode.isMap()) {
+  for (const auto& connection_node : connection_node_seq) {
+    if (!connection_node || !connection_node.isMap()) {
       logger_->log_error("Invalid connection node, ignoring");
       continue;
     }
     // Configure basic connection
-    const std::string id = getOrGenerateId(connectionNode);
+    const std::string id = getOrGenerateId(connection_node);
 
     // Default name to be same as ID
     // If name is specified in configuration, use the value
-    const auto name = connectionNode["name"].getString().value_or(id);
+    const auto name = connection_node["name"].getString().value_or(id);
 
     const auto uuid = utils::Identifier::parse(id) | utils::orElse([this] {
       logger_->log_debug("Incorrect connection UUID format.");
@@ -561,7 +561,7 @@ void StructuredConfiguration::parseConnection(const flow::Node& connectionsNode,
 
     auto connection = createConnection(name, uuid.value());
     logger_->log_debug("Created connection with UUID %s and name %s", id, name);
-    const flow::StructuredConnectionParser connectionParser(connectionNode, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_);
+    const flow::StructuredConnectionParser connectionParser(connection_node, name, gsl::not_null<core::ProcessGroup*>{ parent }, logger_);
     connectionParser.configureConnectionSourceRelationships(*connection);
     connection->setMaxQueueSize(connectionParser.getWorkQueueSize());
     connection->setMaxQueueDataSize(connectionParser.getWorkQueueDataSize());
@@ -583,9 +583,9 @@ void StructuredConfiguration::parsePort(const flow::Node& inputPortsObj, core::P
   }
 
   // Check for required fields
-  flow::checkRequiredField(inputPortsObj, "name", CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+  flow::checkRequiredField(inputPortsObj, "name", CONFIG_REMOTE_PROCESS_GROUP_KEY);
   auto nameStr = inputPortsObj["name"].getString().value();
-  auto portId = getRequiredIdField(inputPortsObj, CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY,
+  auto portId = getRequiredIdField(inputPortsObj, CONFIG_REMOTE_PROCESS_GROUP_KEY,
     "The field 'id' is required for "
     "the port named '" + nameStr + "' in the YAML Config. If this port "
     "is an input port for a NiFi Remote Process Group, the port "
@@ -611,7 +611,7 @@ void StructuredConfiguration::parsePort(const flow::Node& inputPortsObj, core::P
 
   // handle port properties
   if (flow::Node propertiesNode = inputPortsObj["Properties"]) {
-    parsePropertiesNode(propertiesNode, *port, nameStr, CONFIG_YAML_REMOTE_PROCESS_GROUP_KEY);
+    parsePropertiesNode(propertiesNode, *port, nameStr, CONFIG_REMOTE_PROCESS_GROUP_KEY);
   }
 
   // add processor to parent
@@ -734,17 +734,16 @@ void StructuredConfiguration::parsePropertyNodeElement(const std::string& proper
   }
 }
 
-void StructuredConfiguration::parsePropertiesNode(const flow::Node& propertiesNode, core::ConfigurableComponent& component, const std::string& component_name,
-    const std::string& yaml_section) {
-  // Treat generically as a YAML node so we can perform inspection on entries to ensure they are populated
+void StructuredConfiguration::parsePropertiesNode(const flow::Node& properties_node, core::ConfigurableComponent& component, const std::string& component_name, const std::string& section) {
+  // Treat generically as a node so we can perform inspection on entries to ensure they are populated
   logger_->log_trace("Entered %s", component_name);
-  for (const auto& propertyElem : propertiesNode) {
-    const auto propertyName = propertyElem.first.getString().value();
-    const flow::Node propertyValueNode = propertyElem.second;
+  for (const auto& property_node : properties_node) {
+    const auto propertyName = property_node.first.getString().value();
+    const flow::Node propertyValueNode = property_node.second;
     parsePropertyNodeElement(propertyName, propertyValueNode, component);
   }
 
-  validateComponentProperties(component, component_name, yaml_section);
+  validateComponentProperties(component, component_name, section);
 }
 
 void StructuredConfiguration::parseFunnels(const flow::Node& node, core::ProcessGroup* parent) {
@@ -837,7 +836,7 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
     }
   }
 
-#ifdef YAML_CONFIGURATION_USE_REGEX
+#ifdef CONFIGURATION_USE_REGEX
   // Validate mutually-exclusive properties
   for (const auto &prop_pair : component_properties) {
     const auto &excl_props = prop_pair.second.getExclusiveOfProperties();
@@ -871,15 +870,15 @@ void StructuredConfiguration::validateComponentProperties(ConfigurableComponent&
 #else
   logging::LOG_INFO(logger_) << "Validation of mutally-exclusive properties is disabled in this build.";
   logging::LOG_INFO(logger_) << "Regex validation of properties is not available in this build.";
-#endif  // YAML_CONFIGURATION_USE_REGEX
+#endif  // CONFIGURATION_USE_REGEX
 }
 
-void StructuredConfiguration::raiseComponentError(const std::string &component_name, const std::string &yaml_section, const std::string &reason) const {
+void StructuredConfiguration::raiseComponentError(const std::string &component_name, const std::string &section, const std::string &reason) const {
   std::string err_msg = "Unable to parse configuration file for component named '";
   err_msg.append(component_name);
   err_msg.append("' because " + reason);
-  if (!yaml_section.empty()) {
-    err_msg.append(" [in '" + yaml_section + "' section of configuration file]");
+  if (!section.empty()) {
+    err_msg.append(" [in '" + section + "' section of configuration file]");
   }
 
   logging::LOG_ERROR(logger_) << err_msg;
@@ -887,12 +886,12 @@ void StructuredConfiguration::raiseComponentError(const std::string &component_n
   throw std::invalid_argument(err_msg);
 }
 
-std::string StructuredConfiguration::getOrGenerateId(const flow::Node& node, const std::string& idField) {
+std::string StructuredConfiguration::getOrGenerateId(const flow::Node& node, const std::string& id_field) {
   std::string id;
 
-  if (node[idField]) {
-    if (node[idField].isScalar()) {
-      id = node[idField].getString().value();
+  if (node[id_field]) {
+    if (node[id_field].isScalar()) {
+      id = node[id_field].getString().value();
       addNewId(id);
       return id;
     }
@@ -904,32 +903,32 @@ std::string StructuredConfiguration::getOrGenerateId(const flow::Node& node, con
   return id;
 }
 
-std::string StructuredConfiguration::getRequiredIdField(const flow::Node& yaml_node, std::string_view yaml_section, std::string_view error_message) {
-  flow::checkRequiredField(yaml_node, "id", yaml_section, error_message);
-  auto id = yaml_node["id"].getString().value();
+std::string StructuredConfiguration::getRequiredIdField(const flow::Node& node, std::string_view section, std::string_view error_message) {
+  flow::checkRequiredField(node, "id", section, error_message);
+  auto id = node["id"].getString().value();
   addNewId(id);
   return id;
 }
 
-std::string StructuredConfiguration::getOptionalField(const flow::Node& yamlNode, const std::string& fieldName, const std::string& defaultValue, const std::string& yamlSection,
-                                               const std::string& providedInfoMessage) {
-  std::string infoMessage = providedInfoMessage;
-  auto result = yamlNode[fieldName];
+std::string StructuredConfiguration::getOptionalField(const flow::Node& node, const std::string& field_name, const std::string& default_value, const std::string& section,
+                                               const std::string& info_message) {
+  std::string infoMessage = info_message;
+  auto result = node[field_name];
   if (!result) {
     if (infoMessage.empty()) {
       // Build a helpful info message for the user to inform them that a default is being used
       infoMessage =
-          yamlNode["name"] ?
-              "Using default value for optional field '" + fieldName + "' in component named '" + yamlNode["name"].getString().value() + "'" :
-              "Using default value for optional field '" + fieldName + "' ";
-      if (!yamlSection.empty()) {
-        infoMessage += " [in '" + yamlSection + "' section of configuration file]: ";
+          node["name"] ?
+              "Using default value for optional field '" + field_name + "' in component named '" + node["name"].getString().value() + "'" :
+              "Using default value for optional field '" + field_name + "' ";
+      if (!section.empty()) {
+        infoMessage += " [in '" + section + "' section of configuration file]: ";
       }
 
-      infoMessage += defaultValue;
+      infoMessage += default_value;
     }
     logging::LOG_INFO(logger_) << infoMessage;
-    return defaultValue;
+    return default_value;
   }
 
   return result.getString().value();

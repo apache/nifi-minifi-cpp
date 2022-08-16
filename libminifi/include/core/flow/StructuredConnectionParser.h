@@ -31,7 +31,7 @@ namespace org::apache::nifi::minifi::core::flow {
 
 class StructuredConnectionParser {
  public:
-  static constexpr const char* CONFIG_YAML_CONNECTIONS_KEY{ "Connections" };
+  static constexpr const char* CONFIG_CONNECTIONS_KEY{ "Connections" };
 
   explicit StructuredConnectionParser(const Node& connectionNode, const std::string& name, gsl::not_null<core::ProcessGroup*> parent, const std::shared_ptr<logging::Logger>& logger) :
       connectionNode_(connectionNode),

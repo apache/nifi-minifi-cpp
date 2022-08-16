@@ -356,8 +356,14 @@ int main(int argc, char **argv) {
         utils::crypto::EncryptionProvider::create(minifiHome));
 
     std::unique_ptr<core::FlowConfiguration> flow_configuration = core::createFlowConfiguration(
-        prov_repo, flow_repo, content_repo, configure, stream_factory, nifi_configuration_class_name,
-        configure->get(minifi::Configure::nifi_flow_configuration_file), filesystem);
+        core::ConfigurationContext{
+          .repo = prov_repo,
+          .flow_file_repo = flow_repo,
+          .content_repo = content_repo,
+          .stream_factory = stream_factory,
+          .configuration = configure,
+          .path = configure->get(minifi::Configure::nifi_flow_configuration_file),
+          .filesystem = filesystem}, nifi_configuration_class_name);
 
     const auto controller = std::make_unique<minifi::FlowController>(
         prov_repo, flow_repo, configure, std::move(flow_configuration), content_repo, filesystem, request_restart);

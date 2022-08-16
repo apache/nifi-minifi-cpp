@@ -37,8 +37,22 @@ namespace nifi {
 namespace minifi {
 namespace core {
 
-std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::string& configuration_class_name, bool fail_safe) {
-  std::string class_name_lc = configuration_class_name;
+std::unique_ptr<core::FlowConfiguration> createFlowConfiguration(const ConfigurationContext& ctx, const std::optional<std::string>& configuration_class_name, bool fail_safe) {
+  std::string class_name_lc;
+  if (configuration_class_name) {
+    class_name_lc = configuration_class_name.value();
+  } else if (ctx.path) {
+    if (utils::StringUtils::endsWith(ctx.path.value(), ".yml")) {
+      class_name_lc = "yamlconfiguration";
+    } else if (utils::StringUtils::endsWith(ctx.path.value(), ".json")) {
+      class_name_lc = "jsonconfiguration";
+    } else {
+      throw std::runtime_error("Could not infer config type from file path");
+    }
+  } else {
+    throw std::runtime_error("Neither configuration class nor config file path has been specified");
+  }
+
   std::transform(class_name_lc.begin(), class_name_lc.end(), class_name_lc.begin(), ::tolower);
   try {
     if (class_name_lc == "flowconfiguration") {
