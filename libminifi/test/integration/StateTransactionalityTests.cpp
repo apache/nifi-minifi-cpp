@@ -73,6 +73,7 @@ class StatefulIntegrationTest : public IntegrationBase {
         const auto processController = dynamic_cast<ProcessorController*>(&component);
         assert(processController != nullptr);
         stateful_processor_ = dynamic_cast<StatefulProcessor*>(&processController->getProcessor());
+        assert(stateful_processor_);
         stateful_processor_->setHooks(on_schedule_hook_, on_trigger_hooks_);
       }
 
