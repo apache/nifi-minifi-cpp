@@ -20,6 +20,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <optional>
 
 #ifndef WIN32
 #include <arpa/inet.h>
@@ -285,18 +286,12 @@ class ComponentManifest : public DeviceInformation {
           size_t nameLength = group.full_name_.length() - lastOfIdx;
           processorName = group.full_name_.substr(lastOfIdx, nameLength);
         }
-        std::string description;
 
-        bool foundDescription = AgentDocs::getDescription(processorName, description);
 
-        if (!foundDescription) {
-          foundDescription = AgentDocs::getDescription(group.full_name_, description);
-        }
-
-        if (foundDescription) {
+        {
           SerializedResponseNode proc_desc;
           proc_desc.name = "typeDescription";
-          proc_desc.value = description;
+          proc_desc.value = group.description_;
           desc.children.push_back(proc_desc);
         }
 
