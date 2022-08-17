@@ -19,7 +19,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-include_directories(../main/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core)
+include_directories(../minifi_main/ ../libminifi/include  ../libminifi/include/c2  ../libminifi/include/c2/protocols/  ../libminifi/include/core/state ./libminifi/include/core/statemanagement/metrics  ../libminifi/include/core/yaml  ../libminifi/include/core)
 
 if(WIN32)
     include_directories(../libminifi/opsys/win)
@@ -30,7 +30,7 @@ endif()
 include(CppVersion)
 set_cpp_version()
 
-add_executable(minificontroller MiNiFiController.cpp ../main/MainHelper.cpp)
+add_executable(minificontroller MiNiFiController.cpp ../minifi_main/MainHelper.cpp)
 target_link_libraries(minificontroller ${LIBMINIFI} cxxopts Threads::Threads)
 
 set_target_properties(minificontroller PROPERTIES
