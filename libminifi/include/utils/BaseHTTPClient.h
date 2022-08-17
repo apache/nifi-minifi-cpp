@@ -44,10 +44,6 @@ class HTTPUploadCallback : public ByteInputCallback {
   template<typename... Args>
   explicit HTTPUploadCallback(Args&& ... args) : ByteInputCallback(std::forward<Args>(args)...) {}
 
-  size_t getPos() {
-    return pos;
-  }
-
   std::atomic<bool> stop = false;
   std::atomic<size_t> pos = 0;
 };
@@ -56,10 +52,6 @@ class HTTPReadCallback : public ByteOutputCallback {
  public:
   template<typename... Args>
   explicit HTTPReadCallback(Args&& ... args) : ByteOutputCallback(std::forward<Args>(args)...) {}
-
-  size_t getPos() {
-    return pos;
-  }
 
   std::atomic<bool> stop = false;
   std::atomic<size_t> pos = 0;
@@ -202,12 +194,12 @@ class HTTPRequestResponse {
         return CALLBACK_ABORT;
       }
       size_t buffer_size = callback->getBufferSize();
-      if (callback->getPos() <= buffer_size) {
+      if (callback->pos <= buffer_size) {
         size_t len = buffer_size - callback->pos;
         if (len <= 0) {
           return 0;
         }
-        auto *ptr = callback->getBuffer(callback->getPos());
+        auto *ptr = callback->getBuffer(callback->pos);
 
         if (ptr == nullptr) {
           return 0;
@@ -216,7 +208,7 @@ class HTTPRequestResponse {
           len = size * nmemb;
         memcpy(data, ptr, len);
         callback->pos += len;
-        callback->seek(callback->getPos());
+        callback->seek(callback->pos);
         return len;
       }
       return 0;
@@ -238,7 +230,7 @@ class HTTPRequestResponse {
         return SEEKFUNC_FAIL;
       }
       callback->pos = offset;
-      callback->seek(callback->getPos());
+      callback->seek(callback->pos);
       return SEEKFUNC_OK;
     } catch (...) {
       return SEEKFUNC_FAIL;
