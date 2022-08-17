@@ -565,6 +565,7 @@ void StructuredConfiguration::parseConnection(const flow::Node& connection_node_
     connectionParser.configureConnectionSourceRelationships(*connection);
     connection->setMaxQueueSize(connectionParser.getWorkQueueSize());
     connection->setMaxQueueDataSize(connectionParser.getWorkQueueDataSize());
+    connection->setSwapThreshold(connectionParser.getSwapThreshold());
     connection->setSourceUUID(connectionParser.getSourceUUID());
     connection->setDestinationUUID(connectionParser.getDestinationUUID());
     connection->setFlowExpirationDuration(connectionParser.getFlowFileExpiration());
