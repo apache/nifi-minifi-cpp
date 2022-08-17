@@ -150,6 +150,7 @@ bool sendMessagesViaSSL(const std::vector<std::string_view>& contents, uint64_t 
     ctx.set_verify_mode(asio::ssl::verify_peer);
     ctx.use_certificate_file(ssl_data->cert_loc, asio::ssl::context::pem);
     ctx.use_private_key_file(ssl_data->key_loc, asio::ssl::context::pem);
+    ctx.set_password_callback([password = ssl_data->key_pw](std::size_t&, asio::ssl::context_base::password_purpose&) { return password; });
   }
   asio::io_context io_context;
   asio::ssl::stream<asio::ip::tcp::socket> socket(io_context, ctx);

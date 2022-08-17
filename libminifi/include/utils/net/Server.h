@@ -70,7 +70,7 @@ class Server {
 
  protected:
   Server(std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger)
-      : max_queue_size_(max_queue_size), logger_(logger) {}
+      : max_queue_size_(std::move(max_queue_size)), logger_(logger) {}
 
   utils::ConcurrentQueue<Message> concurrent_queue_;
   asio::io_context io_context_;

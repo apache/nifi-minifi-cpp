@@ -97,12 +97,13 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
   SingleProcessorTestController controller{listen_tcp};
   auto ssl_context_service = controller.plan->addController("SSLContextService", "SSLContextService");
   LogTestController::getInstance().setTrace<ListenTCP>();
+  const auto executable_dir = minifi::utils::file::FileUtils::get_executable_dir();
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::CACertificate.getName(),
-    minifi::utils::file::FileUtils::get_executable_dir() + "/resources/ca_cert.crt"));
+    minifi::utils::file::concat_path(executable_dir, "resources/ca_cert.crt")));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::ClientCertificate.getName(),
-    minifi::utils::file::FileUtils::get_executable_dir() + "/resources/cert_and_private_key.pem"));
+    minifi::utils::file::concat_path(executable_dir, "resources/cert_and_private_key.pem")));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::PrivateKey.getName(),
-    minifi::utils::file::FileUtils::get_executable_dir() + "/resources/cert_and_private_key.pem"));
+    minifi::utils::file::concat_path(executable_dir, "resources/cert_and_private_key.pem")));
   REQUIRE(controller.plan->setProperty(ssl_context_service, controllers::SSLContextService::Passphrase.getName(), "Password12"));
   REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::Port.getName(), std::to_string(PORT)));
   REQUIRE(controller.plan->setProperty(listen_tcp, ListenTCP::MaxBatchSize.getName(), "2"));
@@ -120,7 +121,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
 
     expected_successful_messages = {"test_message_1", "another_message"};
     for (const auto& message : expected_successful_messages) {
-      REQUIRE(utils::sendMessagesViaSSL({message}, PORT, minifi::utils::file::FileUtils::get_executable_dir() + "/resources/ca_cert.crt"));
+      REQUIRE(utils::sendMessagesViaSSL({message}, PORT, minifi::utils::file::concat_path(executable_dir, "resources/ca_cert.crt")));
     }
   }
 
@@ -151,7 +152,7 @@ TEST_CASE("Test ListenTCP with SSL connection", "[ListenTCP]") {
     ssl_context_service->enable();
     controller.plan->scheduleProcessor(listen_tcp);
 
-    REQUIRE_FALSE(utils::sendMessagesViaSSL({"test_message_1"}, PORT, minifi::utils::file::FileUtils::get_executable_dir() + "/resources/ca_cert.crt"));
+    REQUIRE_FALSE(utils::sendMessagesViaSSL({"test_message_1"}, PORT, minifi::utils::file::concat_path(executable_dir, "/resources/ca_cert.crt")));
   }
 
   ProcessorTriggerResult result;

@@ -21,7 +21,7 @@ namespace org::apache::nifi::minifi::utils::net {
 SslSession::SslSession(asio::io_context& io_context, asio::ssl::context& context, utils::ConcurrentQueue<Message>& concurrent_queue,
     std::optional<size_t> max_queue_size, std::shared_ptr<core::logging::Logger> logger)
   : concurrent_queue_(concurrent_queue),
-    max_queue_size_(max_queue_size),
+    max_queue_size_(std::move(max_queue_size)),
     logger_(std::move(logger)),
     socket_(io_context, context) {
 }
