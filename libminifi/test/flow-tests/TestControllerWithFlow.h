@@ -29,7 +29,7 @@
 
 class TestControllerWithFlow: public TestController{
  public:
-  explicit TestControllerWithFlow(const char* yamlConfigContent) {
+  explicit TestControllerWithFlow(const char* yamlConfigContent, bool setup_flow = true) {
     LogTestController::getInstance().setTrace<minifi::processors::TestProcessor>();
     LogTestController::getInstance().setTrace<minifi::processors::TestFlowFileGenerator>();
     LogTestController::getInstance().setTrace<minifi::Connection>();
@@ -40,22 +40,29 @@ class TestControllerWithFlow: public TestController{
     LogTestController::getInstance().setTrace<minifi::TimerDrivenSchedulingAgent>();
     LogTestController::getInstance().setTrace<minifi::EventDrivenSchedulingAgent>();
 
-    std::string dir = createTempDirectory();
+    home_ = createTempDirectory();
 
-    std::string yamlPath = utils::file::FileUtils::concat_path(dir, "config.yml");
-    std::ofstream{yamlPath} << yamlConfigContent;
+    yaml_path_ = home_ / "config.yml";
+    std::ofstream{yaml_path_} << yamlConfigContent;
 
     configuration_ = std::make_shared<minifi::Configure>();
+    configuration_->setHome(home_);
+    configuration_->set(minifi::Configure::nifi_flow_configuration_file, yaml_path_);
+
+    if (setup_flow) {
+      setupFlow();
+    }
+  }
+
+  void setupFlow() {
     std::shared_ptr<core::Repository> prov_repo = std::make_shared<TestRepository>();
     std::shared_ptr<core::Repository> ff_repo = std::make_shared<TestFlowRepository>();
     std::shared_ptr<core::ContentRepository> content_repo = std::make_shared<core::repository::VolatileContentRepository>();
 
-    configuration_->set(minifi::Configure::nifi_flow_configuration_file, yamlPath);
-
     REQUIRE(content_repo->initialize(configuration_));
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration_);
 
-    auto flow = std::make_unique<core::YamlConfiguration>(prov_repo, ff_repo, content_repo, stream_factory, configuration_, yamlPath);
+    auto flow = std::make_unique<core::YamlConfiguration>(prov_repo, ff_repo, content_repo, stream_factory, configuration_, yaml_path_);
     auto root = flow->getRoot();
     root_ = root.get();
     controller_ = std::make_shared<minifi::FlowController>(
@@ -76,7 +83,9 @@ class TestControllerWithFlow: public TestController{
     LogTestController::getInstance().reset();
   }
 
+  std::filesystem::path home_;
+  std::filesystem::path yaml_path_;
   std::shared_ptr<minifi::Configure> configuration_;
   std::shared_ptr<minifi::FlowController> controller_;
-  core::ProcessGroup* root_;
+  core::ProcessGroup* root_{nullptr};
 };

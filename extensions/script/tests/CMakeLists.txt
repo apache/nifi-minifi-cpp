@@ -18,7 +18,7 @@
 #
 
 if (NOT DISABLE_PYTHON_SCRIPTING)
-    file(GLOB EXECUTESCRIPT_PYTHON_TESTS  "TestExecuteScriptProcessorWithPythonScript.cpp" "PythonScriptEngineTests.cpp")
+    file(GLOB EXECUTESCRIPT_PYTHON_TESTS  "TestExecuteScriptProcessorWithPythonScript.cpp" "PythonScriptEngineTests.cpp" "PythonManifestTests.cpp")
     file(GLOB EXECUTEPYTHONPROCESSOR_UNIT_TESTS  "ExecutePythonProcessorTests.cpp")
     file(GLOB PY_SOURCES  "python/*.cpp")
     find_package(PythonLibs 3.5)
