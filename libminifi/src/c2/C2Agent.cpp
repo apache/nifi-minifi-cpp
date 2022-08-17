@@ -739,7 +739,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
         std::make_move_iterator(payload_batch.end()),
         [&] (C2Payload&& payload) {
           try {
-            C2Payload && response = protocol_.load()->consumePayload(payload);
+            C2Payload response = protocol_.load()->consumePayload(payload);
             enqueue_c2_server_response(std::move(response));
           }
           catch(const std::exception &e) {

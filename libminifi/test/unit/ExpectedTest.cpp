@@ -52,7 +52,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::map(mul2);
+    auto ret = std::move(e) | utils::map(mul2);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
@@ -80,7 +80,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::map(mul2);
+    auto ret = std::move(e) | utils::map(mul2);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
@@ -111,7 +111,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::map(ret_void);
+    auto ret = std::move(e) | utils::map(ret_void);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -143,7 +143,7 @@ TEST_CASE("expected map", "[expected][map]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::map(ret_void);
+    auto ret = std::move(e) | utils::map(ret_void);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     STATIC_REQUIRE(
         (std::is_same<decltype(ret), nonstd::expected<void, int>>::value));
@@ -186,7 +186,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::flatMap(succeed);
+    auto ret = std::move(e) | utils::flatMap(succeed);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
@@ -214,7 +214,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::flatMap(fail);
+    auto ret = std::move(e) | utils::flatMap(fail);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
@@ -242,7 +242,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::flatMap(succeed);
+    auto ret = std::move(e) | utils::flatMap(succeed);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
@@ -270,7 +270,7 @@ TEST_CASE("expected flatMap", "[expected][flatMap]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::flatMap(fail);
+    auto ret = std::move(e) | utils::flatMap(fail);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }
@@ -321,7 +321,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::orElse(succeed);
+    auto ret = std::move(e) | utils::orElse(succeed);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
@@ -359,7 +359,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e = 21;
-    auto ret = e | utils::orElse(fail);
+    auto ret = std::move(e) | utils::orElse(fail);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     REQUIRE(*ret == 21);
   }
@@ -396,7 +396,7 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::orElse(succeed);
+    auto ret = std::move(e) | utils::orElse(succeed);  // NOLINT(performance-move-const-arg)
     REQUIRE(ret);
     REQUIRE(*ret == 42);
   }
@@ -461,14 +461,14 @@ TEST_CASE("expected orElse", "[expected][orElse]") {
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::orElse(fail);
+    auto ret = std::move(e) | utils::orElse(fail);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 17);
   }
 
   {
     const nonstd::expected<int, int> e(nonstd::unexpect, 21);
-    auto ret = e | utils::orElse(failvoid);
+    auto ret = std::move(e) | utils::orElse(failvoid);  // NOLINT(performance-move-const-arg)
     REQUIRE(!ret);
     REQUIRE(ret.error() == 21);
   }

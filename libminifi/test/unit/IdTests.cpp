@@ -77,7 +77,7 @@ TEST_CASE("Test Generate Move", "[id]") {
 
   auto generated = generator->generate();
   auto str = generated.to_string();
-  utils::Identifier moved = generated;
+  utils::Identifier moved = std::move(generated);  // NOLINT(performance-move-const-arg)
   auto str2 = moved.to_string();
   REQUIRE(str == str2);
 }
