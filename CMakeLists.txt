@@ -338,7 +338,7 @@ foreach(extension-dir ${extension-directories})
 endforeach()
 
 ## NOW WE CAN ADD LIBRARIES AND EXTENSIONS TO MAIN
-add_subdirectory(main)
+add_subdirectory(minifi_main)
 
 if (ENABLE_NANOFI)
     add_subdirectory(nanofi)
