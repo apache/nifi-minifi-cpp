@@ -130,6 +130,7 @@ class PythonCreator : public minifi::core::CoreComponent {
     }
     const auto python_package_path = std::filesystem::relative(pythonscript, basePath).parent_path();
     std::vector<std::string> path_elements;
+    path_elements.reserve(std::distance(python_package_path.begin(), python_package_path.end()));
     std::transform(python_package_path.begin(), python_package_path.end(), std::back_inserter(path_elements), [](const auto& path) { return path.string(); });
     std::string python_package = minifi::utils::StringUtils::join(".", path_elements);
     if (python_package.length() > 1 && python_package.at(0) == '.') {
