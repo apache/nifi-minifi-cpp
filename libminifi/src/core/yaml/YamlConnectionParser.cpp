@@ -24,7 +24,7 @@ namespace org::apache::nifi::minifi::core::yaml {
 void YamlConnectionParser::addNewRelationshipToConnection(const std::string& relationship_name, minifi::Connection& connection) const {
   core::Relationship relationship(relationship_name, "");
   logger_->log_debug("parseConnection: relationship => [%s]", relationship_name);
-  connection.addRelationship(std::move(relationship));
+  connection.addRelationship(relationship);
 }
 
 void YamlConnectionParser::addFunnelRelationshipToConnection(minifi::Connection& connection) const {

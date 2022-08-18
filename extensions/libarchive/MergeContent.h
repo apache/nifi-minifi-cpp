@@ -363,7 +363,7 @@ class MergeContent : public processors::BinFiles {
   std::string footerContent_;
   std::string demarcatorContent_;
   std::string attributeStrategy_;
-  static std::string readContent(std::string path);
+  static std::string readContent(const std::string& path);
 };
 
 }  // namespace org::apache::nifi::minifi::processors

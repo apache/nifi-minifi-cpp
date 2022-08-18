@@ -20,12 +20,7 @@
 #include <memory>
 #include <mutex>
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace controller {
+namespace org::apache::nifi::minifi::core::controller {
 
 bool StandardControllerServiceNode::enable() {
   Property property("Linked Services", "Referenced Controller Services");
@@ -33,7 +28,7 @@ bool StandardControllerServiceNode::enable() {
   logger_->log_trace("Enabling CSN %s", getName());
   if (getProperty(property.getName(), property)) {
     active = true;
-    for (auto linked_service : property.getValues()) {
+    for (const auto& linked_service : property.getValues()) {
       std::shared_ptr<ControllerServiceNode> csNode = provider->getControllerServiceNode(linked_service);
       if (nullptr != csNode) {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -46,7 +41,7 @@ bool StandardControllerServiceNode::enable() {
   if (nullptr != impl) {
     std::lock_guard<std::mutex> lock(mutex_);
     std::vector<std::shared_ptr<ControllerService> > services;
-    for (auto service : linked_controller_services_) {
+    for (const auto& service : linked_controller_services_) {
       services.push_back(service->getControllerServiceImplementation());
     }
     impl->setLinkedControllerServices(services);
@@ -55,9 +50,4 @@ bool StandardControllerServiceNode::enable() {
   return true;
 }
 
-} /* namespace controller */
-} /* namespace core */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::core::controller

@@ -122,7 +122,7 @@ void C2Agent::checkTriggers() {
       // handle the response the same way. This means that
       // acknowledgements will be sent to the c2 server for every trigger action.
       // this is expected
-      extractPayload(std::move(triggerAction));
+      extractPayload(triggerAction);
       // call reset if the trigger supports this activity
       trigger->reset();
     } else {
@@ -346,7 +346,7 @@ void C2Agent::handle_c2_server_response(const C2ContentResponse &resp) {
     case Operation::RESTART: {
       update_sink_->stop();
       C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
-      protocol_.load()->consumePayload(std::move(response));
+      protocol_.load()->consumePayload(response);
       restart_needed_ = true;
     }
       break;
@@ -409,7 +409,7 @@ C2Payload C2Agent::prepareConfigurationOptions(const C2ContentResponse &resp) co
     auto unsanitized_keys = configuration_->getConfiguredKeys();
     std::vector<std::string> keys;
     std::copy_if(unsanitized_keys.begin(), unsanitized_keys.end(), std::back_inserter(keys),
-            [](std::string key) {return key.find("pass") == std::string::npos;});
+            [](const std::string& key) {return key.find("pass") == std::string::npos;});
 
     C2Payload response(Operation::ACKNOWLEDGE, resp.ident, true);
     C2Payload options(Operation::ACKNOWLEDGE);
@@ -625,13 +625,13 @@ void C2Agent::handlePropertyUpdate(const C2ContentResponse &resp) {
     }
   };
 
-  for (auto entry : resp.operation_arguments) {
+  for (const auto& [name, value] : resp.operation_arguments) {
     bool persist = (
-        entry.second.getAnnotation("persist")
+        value.getAnnotation("persist")
         | utils::map(&AnnotatedValue::to_string)
         | utils::flatMap(utils::StringUtils::toBool)).value_or(true);
     PropertyChangeLifetime lifetime = persist ? PropertyChangeLifetime::PERSISTENT : PropertyChangeLifetime::TRANSIENT;
-    changeUpdateState(update_property(entry.first, entry.second.to_string(), lifetime));
+    changeUpdateState(update_property(name, value.to_string(), lifetime));
   }
   // apply changes and persist properties requested to be persisted
   const bool propertyWasUpdated = result == state::UpdateState::FULLY_APPLIED || result == state::UpdateState::PARTIALLY_APPLIED;
@@ -739,7 +739,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
         std::make_move_iterator(payload_batch.end()),
         [&] (C2Payload&& payload) {
           try {
-            C2Payload && response = protocol_.load()->consumePayload(std::move(payload));
+            C2Payload response = protocol_.load()->consumePayload(payload);
             enqueue_c2_server_response(std::move(response));
           }
           catch(const std::exception &e) {
@@ -775,7 +775,7 @@ utils::TaskRescheduleInfo C2Agent::produce() {
 utils::TaskRescheduleInfo C2Agent::consume() {
   if (!responses.empty()) {
     const auto consume_success = responses.consume([this] (C2Payload&& payload) {
-      extractPayload(std::move(payload));
+      extractPayload(payload);
     });
     if (!consume_success) {
       extractPayload(C2Payload{ Operation::HEARTBEAT });

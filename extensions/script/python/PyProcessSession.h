@@ -29,11 +29,7 @@
 
 #pragma GCC visibility push(hidden)
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace python {
+namespace org::apache::nifi::minifi::python {
 
 namespace py = pybind11;
 
@@ -43,10 +39,10 @@ class PyProcessSession {
 
   std::shared_ptr<script::ScriptFlowFile> get();
   std::shared_ptr<script::ScriptFlowFile> create();
-  std::shared_ptr<script::ScriptFlowFile> create(std::shared_ptr<script::ScriptFlowFile> flow_file);
-  void transfer(std::shared_ptr<script::ScriptFlowFile> flow_file, core::Relationship relationship);
-  void read(std::shared_ptr<script::ScriptFlowFile> flow_file, py::object input_stream_callback);
-  void write(std::shared_ptr<script::ScriptFlowFile> flow_file, py::object output_stream_callback);
+  std::shared_ptr<script::ScriptFlowFile> create(const std::shared_ptr<script::ScriptFlowFile>& flow_file);
+  void transfer(const std::shared_ptr<script::ScriptFlowFile>& flow_file, const core::Relationship& relationship);
+  void read(const std::shared_ptr<script::ScriptFlowFile>& flow_file, py::object input_stream_callback);
+  void write(const std::shared_ptr<script::ScriptFlowFile>& flow_file, py::object output_stream_callback);
 
   /**
    * Sometimes we want to release shared pointers to core resources when
@@ -63,10 +59,6 @@ class PyProcessSession {
   std::shared_ptr<core::ProcessSession> session_;
 };
 
-} /* namespace python */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::python
 
 #pragma GCC visibility pop

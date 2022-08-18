@@ -27,12 +27,7 @@
 #include "yaml-cpp/yaml.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
-namespace yaml {
+namespace org::apache::nifi::minifi::core::yaml {
 
 class YamlConnectionParser {
  public:
@@ -63,9 +58,4 @@ class YamlConnectionParser {
   const std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace yaml
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::core::yaml

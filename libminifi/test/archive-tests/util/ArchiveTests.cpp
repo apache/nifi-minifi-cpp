@@ -68,7 +68,7 @@ OrderedTestArchive build_ordered_test_archive(int NUM_FILES, const char** FILE_N
   return ret;
 }
 
-void build_test_archive(std::string path, TAE_MAP_T entries, FN_VEC_T order) {
+void build_test_archive(const std::string& path, const TAE_MAP_T& entries, FN_VEC_T order) {
   std::cout << "Creating " << path << std::endl;
   archive * test_archive = archive_write_new();
 
@@ -81,7 +81,7 @@ void build_test_archive(std::string path, TAE_MAP_T entries, FN_VEC_T order) {
       order.push_back(kvp.first);
   }
 
-  for (std::string name : order) {
+  for (const std::string& name : order) {
     TestArchiveEntry test_entry = entries.at(name);
 
     std::cout << "Adding entry: " << name << std::endl;
@@ -104,11 +104,11 @@ void build_test_archive(std::string path, TAE_MAP_T entries, FN_VEC_T order) {
   archive_write_close(test_archive);
 }
 
-void build_test_archive(std::string path, OrderedTestArchive ordered_archive) {
+void build_test_archive(const std::string& path, OrderedTestArchive& ordered_archive) {
   build_test_archive(path, ordered_archive.map, ordered_archive.order);
 }
 
-bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attributes, FN_VEC_T order) {
+bool check_archive_contents(const std::string& path, const TAE_MAP_T& entries, bool check_attributes, const FN_VEC_T& order) {
   FN_VEC_T read_names;
   FN_VEC_T extra_names;
   bool ok = true;
@@ -133,7 +133,7 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
     } else {
       read_names.push_back(name);
       TestArchiveEntry test_entry = it->second;
-      size_t size = gsl::narrow<size_t>(archive_entry_size(entry));
+      auto size = gsl::narrow<size_t>(archive_entry_size(entry));
 
       std::cout << "Checking archive entry: " << name << std::endl;
 
@@ -179,7 +179,7 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
   if (!extra_names.empty()) {
     ok = false;
     std::cout << "Extra files found: ";
-    for (std::string filename : extra_names)
+    for (const std::string& filename : extra_names)
       std::cout << filename << " ";
     std::cout << std::endl;
   }
@@ -195,7 +195,7 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
   } else {
     std::set<std::string> read_names_set(read_names.begin(), read_names.end());
     std::set<std::string> test_file_entries_set;
-    std::transform(entries.begin(), entries.end(), std::inserter(test_file_entries_set, test_file_entries_set.end()), [](std::pair<std::string, TestArchiveEntry> p) {return p.first;});
+    std::transform(entries.begin(), entries.end(), std::inserter(test_file_entries_set, test_file_entries_set.end()), [](const std::pair<std::string, TestArchiveEntry>& p) {return p.first;});
 
     REQUIRE(read_names_set == test_file_entries_set);
   }
@@ -203,6 +203,6 @@ bool check_archive_contents(std::string path, TAE_MAP_T entries, bool check_attr
   return ok;
 }
 
-bool check_archive_contents(std::string path, OrderedTestArchive archive, bool check_attributes) {
+bool check_archive_contents(const std::string& path, const OrderedTestArchive& archive, bool check_attributes) {
   return check_archive_contents(path, archive.map, check_attributes, archive.order);
 }

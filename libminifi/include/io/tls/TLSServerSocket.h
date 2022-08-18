@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_
-#define LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_
+#pragma once
 
 #include <memory>
 #include <string>
@@ -25,11 +24,7 @@
 #include "TLSSocket.h"
 #include "../ServerSocket.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 /**
  * Purpose: Server socket abstraction that makes focusing the accept/block paradigm
@@ -74,9 +69,4 @@ class TLSServerSocket : public BaseServerSocket, public TLSSocket {
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<TLSServerSocket>::getLogger();
 };
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-#endif  // LIBMINIFI_INCLUDE_IO_TLS_TLSSERVERSOCKET_H_
+}  // namespace org::apache::nifi::minifi::io

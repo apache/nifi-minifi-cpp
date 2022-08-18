@@ -724,7 +724,7 @@ bool SFTPClient::listDirectory(const std::string& path, bool follow_symlinks,
         attrs = orig_attrs;
       }
     }
-    children_result.emplace_back(std::string(filename.data()), std::string(longentry.data()), std::move(attrs));
+    children_result.emplace_back(std::string(filename.data()), std::string(longentry.data()), attrs);
   } while (true);
   return true;
 }

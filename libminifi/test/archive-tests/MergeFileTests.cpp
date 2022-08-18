@@ -70,7 +70,7 @@ class FixedBuffer {
   explicit FixedBuffer(std::size_t capacity) : capacity_(capacity) {
     buf_.reset(new uint8_t[capacity_]);
   }
-  FixedBuffer(FixedBuffer&& other) : buf_(std::move(other.buf_)), size_(other.size_), capacity_(other.capacity_) {
+  FixedBuffer(FixedBuffer&& other) noexcept : buf_(std::move(other.buf_)), size_(other.size_), capacity_(other.capacity_) {
     other.size_ = 0;
     other.capacity_ = 0;
   }

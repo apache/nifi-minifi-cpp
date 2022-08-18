@@ -50,7 +50,7 @@ PYBIND11_EMBEDDED_MODULE(minifi_native, m) { // NOLINT
       .def("create",
            static_cast<std::shared_ptr<script::ScriptFlowFile> (python::PyProcessSession::*)()>(&python::PyProcessSession::create))
       .def("create",
-           static_cast<std::shared_ptr<script::ScriptFlowFile> (python::PyProcessSession::*)(std::shared_ptr<script::ScriptFlowFile>)>(&python::PyProcessSession::create))
+           static_cast<std::shared_ptr<script::ScriptFlowFile> (python::PyProcessSession::*)(const std::shared_ptr<script::ScriptFlowFile>&)>(&python::PyProcessSession::create))
       .def("read", &python::PyProcessSession::read)
       .def("write", &python::PyProcessSession::write)
       .def("transfer", &python::PyProcessSession::transfer);

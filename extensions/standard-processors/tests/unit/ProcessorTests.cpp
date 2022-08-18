@@ -225,7 +225,7 @@ TEST_CASE("Test GetFile Ignore", "[getfileCreate3]") {
 
   records = reporter->getEvents();
 
-  for (auto provEventRecord : records) {
+  for (const auto& provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == processor->getName());
   }
   session->commit();
@@ -445,7 +445,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
 
   records = plan->getProvenanceRecords();
   record = plan->getCurrentFlowFile();
-  for (auto provEventRecord : records) {
+  for (const auto& provEventRecord : records) {
     REQUIRE(provEventRecord->getComponentType() == processor->getName());
   }
   std::shared_ptr<core::FlowFile> ffr = plan->getCurrentFlowFile();
@@ -459,7 +459,7 @@ TEST_CASE("Test Find file", "[getfileCreate3]") {
     newRecord.DeSerialize(gsl::make_span(entry.second).as_span<const std::byte>());
 
     bool found = false;
-    for (auto provRec : records) {
+    for (const auto& provRec : records) {
       if (provRec->getEventId() == newRecord.getEventId()) {
         REQUIRE(provRec->getEventId() == newRecord.getEventId());
         REQUIRE(provRec->getComponentId() == newRecord.getComponentId());

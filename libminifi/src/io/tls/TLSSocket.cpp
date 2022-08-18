@@ -35,11 +35,7 @@
 #include "utils/gsl.h"
 #include "utils/tls/TLSUtils.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 TLSContext::TLSContext(const std::shared_ptr<Configure> &configure, std::shared_ptr<minifi::controllers::SSLContextService> ssl_service)
     : SocketContext(configure),
@@ -130,7 +126,7 @@ int16_t TLSContext::initialize(bool server_method) {
     }
     // load CA certificates
     if (ssl_service_ != nullptr || configure_->get(Configure::nifi_security_client_ca_certificate, caCertificate)) {
-      retp = SSL_CTX_load_verify_locations(local_context.get(), caCertificate.c_str(), 0);
+      retp = SSL_CTX_load_verify_locations(local_context.get(), caCertificate.c_str(), nullptr);
       if (retp == 0) {
         logger_->log_error("Can not load CA certificate, Exiting, error : %s", std::strerror(errno));
         error_value = TLS_ERROR_CERT_ERROR;
@@ -150,7 +146,7 @@ TLSSocket::~TLSSocket() {
 }
 
 void TLSSocket::close() {
-  if (ssl_ != 0) {
+  if (ssl_ != nullptr) {
     SSL_free(ssl_);
     ssl_ = nullptr;
   }
@@ -176,7 +172,7 @@ TLSSocket::TLSSocket(const std::shared_ptr<TLSContext> &context, const std::stri
   context_ = context;
 }
 
-TLSSocket::TLSSocket(TLSSocket &&other)
+TLSSocket::TLSSocket(TLSSocket &&other) noexcept
     : Socket(std::move(other)),
       context_{ std::exchange(other.context_, nullptr) } {
   std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };  // NOLINT(bugprone-use-after-move)
@@ -187,7 +183,7 @@ TLSSocket::TLSSocket(TLSSocket &&other)
   ssl_map_ = std::exchange(other.ssl_map_, {});  // NOLINT(bugprone-use-after-move)
 }
 
-TLSSocket& TLSSocket::operator=(TLSSocket&& other) {
+TLSSocket& TLSSocket::operator=(TLSSocket&& other) noexcept {
   if (&other == this) return *this;
   this->Socket::operator=(static_cast<Socket&&>(other));
   std::lock_guard<std::mutex> lg{ other.ssl_mutex_ };
@@ -276,9 +272,9 @@ int16_t TLSSocket::select_descriptor(const uint16_t msec) {
   std::lock_guard<std::recursive_mutex> guard(selection_mutex_);
 
   if (msec > 0)
-    select(socket_max_ + 1, &read_fds_, NULL, NULL, &tv);
+    select(socket_max_ + 1, &read_fds_, nullptr, nullptr, &tv);
   else
-    select(socket_max_ + 1, &read_fds_, NULL, NULL, NULL);
+    select(socket_max_ + 1, &read_fds_, nullptr, nullptr, nullptr);
 
   for (int i = 0; i <= socket_max_; i++) {
     if (!FD_ISSET(i, &read_fds_)) continue;
@@ -451,8 +447,4 @@ size_t TLSSocket::read(gsl::span<std::byte> buffer) {
   return total_read;
 }
 
-} /* namespace io */
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi::io

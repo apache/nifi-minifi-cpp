@@ -48,11 +48,7 @@
 #include "utils/GeneralUtils.h"
 #include "utils/gsl.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace io {
+namespace org::apache::nifi::minifi::io {
 
 TLSServerSocket::TLSServerSocket(const std::shared_ptr<TLSContext> &context, const std::string &hostname, const uint16_t port, const uint16_t listeners = -1)
     : TLSSocket(context, hostname, port, listeners),
@@ -70,7 +66,7 @@ TLSServerSocket::~TLSServerSocket() {
  * @return result of the creation operation.
  */
 void TLSServerSocket::registerCallback(std::function<bool()> accept_function, std::function<void(io::BaseStream *)> handler) {
-  auto fx = [this](std::function<bool()> /*accept_function*/, std::function<void(io::BaseStream *)> handler) {
+  auto fx = [this](const std::function<bool()>& /*accept_function*/, const std::function<void(io::BaseStream *)>& handler) {
     while (running_) {
       int fd = select_descriptor(1000);
       if (fd >= 0) {
@@ -145,8 +141,4 @@ void TLSServerSocket::close_fd(int fd) {
   close_ssl(fd);
 }
 
-}  // namespace io
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
+}  // namespace org::apache::nifi::minifi::io

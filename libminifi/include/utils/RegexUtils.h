@@ -129,8 +129,8 @@ class Regex {
   Regex(std::string value, const std::vector<Mode> &mode);
   Regex(const Regex &);
   Regex& operator=(const Regex &);
-  Regex(Regex&& other);
-  Regex& operator=(Regex&& other);
+  Regex(Regex&& other) noexcept;
+  Regex& operator=(Regex&& other) noexcept;
 #ifndef NO_MORE_REGFREEE
   ~Regex();
 #endif
