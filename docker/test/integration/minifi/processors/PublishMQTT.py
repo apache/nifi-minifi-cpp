@@ -23,6 +23,7 @@ class PublishMQTT(Processor):
             'PublishMQTT',
             properties={
                 'Broker URI': 'mqtt-broker:1883',
-                'Topic': 'testtopic'},
+                'Topic': 'testtopic',
+                'Client ID': 'publisher-client'},
             auto_terminate=['success', 'failure'],
             schedule=schedule)
