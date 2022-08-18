@@ -64,14 +64,16 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
     std::shared_ptr<AgentIdentificationProvider> agent_id;
   };
 
-  struct LogBuffer {
-    size_t size_{0};
-    std::deque<std::pair<std::string, size_t>> data_;
-
+  class LogBuffer {
+    friend class AlertSink;
+   public:
     static LogBuffer allocate(size_t size);
     LogBuffer commit();
     [[nodiscard]]
     size_t size() const;
+   private:
+    size_t size_{0};
+    std::deque<std::pair<std::string, size_t>> data_;
   };
 
   class LiveLogSet {
