@@ -145,10 +145,10 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
 
   std::shared_ptr<core::Processor> addExecutePythonProcessorToPlan(const std::string& used_as_script_file, const std::string& used_as_script_body) {
     auto executePythonProcessor = plan_->addProcessor("ExecutePythonProcessor", "executePythonProcessor", core::Relationship("success", "description"), true);
-    if ("" != used_as_script_file) {
+    if (!used_as_script_file.empty()) {
       plan_->setProperty(executePythonProcessor, "Script File", getScriptFullPath(used_as_script_file));
     }
-    if ("" != used_as_script_body) {
+    if (!used_as_script_body.empty()) {
       plan_->setProperty(executePythonProcessor, "Script Body", getFileContent(getScriptFullPath(used_as_script_body)));
     }
     return executePythonProcessor;
