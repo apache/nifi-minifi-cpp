@@ -17,33 +17,47 @@
 #
 
 # First stage: the build environment
-FROM centos:7 AS build_deps
+FROM centos:7
 LABEL maintainer="Apache NiFi <dev@nifi.apache.org>"
 
 ARG MINIFI_VERSION
-
-# Install the system dependencies needed for a build
-
-ENV MINIFI_BASE_DIR /opt/minifi
-ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
-
-# gpsd-devel is in EPEL
-RUN yum -y install epel-release && yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel sudo git which maven make libarchive boost-devel lua-devel libusbx-devel libpng-devel \
-    gpsd-devel libpcap-devel
-
-RUN mkdir -p $MINIFI_BASE_DIR
-COPY . ${MINIFI_BASE_DIR}
-
-FROM build_deps AS release
+ARG UID=1000
+ARG GID=1000
 
 # MINIFI_OPTIONS will be passed directly to cmake
 # use it to define cmake options (e.g. -DENABLE_AWS=ON -DENABLE_AZURE=ON)
 ARG MINIFI_OPTIONS=""
 ARG CMAKE_BUILD_TYPE=Release
-# Perform the build
-RUN cd $MINIFI_BASE_DIR \
-	&& ./bootstrap.sh -t \
-	&& cd build \
-    && scl enable devtoolset-10 -- cmake3 -DSTATIC_BUILD= -DSKIP_TESTS=true ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. \
-    && scl enable devtoolset-10 -- make -j "$(nproc)" package
+ARG DOCKER_SKIP_TESTS=ON
 
+# Install the system dependencies needed for a build
+
+ENV MINIFI_BASE_DIR /opt/minifi
+ENV MINIFI_HOME $MINIFI_BASE_DIR/nifi-minifi-cpp-$MINIFI_VERSION
+ENV USER minificpp
+
+# gpsd-devel is in EPEL
+RUN yum -y install epel-release && yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel sudo git which maven make libarchive boost-devel lua-devel libusbx-devel libpng-devel \
+    gpsd-devel libpcap-devel ccache
+
+RUN mkdir -p $MINIFI_BASE_DIR
+COPY . ${MINIFI_BASE_DIR}
+
+RUN cd $MINIFI_BASE_DIR && \
+    ./bootstrap.sh -t && \
+    ln -s /usr/bin/ccache /usr/lib64/ccache/c++
+
+# Setup minificpp user
+RUN groupadd -g ${GID} ${USER} && useradd -g ${GID} ${USER} && \
+    chown -R ${USER}:${USER} ${MINIFI_BASE_DIR} && \
+    if [ -d "${MINIFI_BASE_DIR}/.ccache" ]; then mv ${MINIFI_BASE_DIR}/.ccache /home/${USER}/.ccache; fi
+
+USER ${USER}
+
+# Perform the build
+RUN cd $MINIFI_BASE_DIR && \
+    cd build && \
+    source /opt/rh/devtoolset-10/enable && \
+    export PATH=/usr/lib64/ccache${PATH:+:${PATH}} && \
+    cmake3 -DSTATIC_BUILD= -DSKIP_TESTS=${DOCKER_SKIP_TESTS} ${MINIFI_OPTIONS} -DAWS_ENABLE_UNITY_BUILD=OFF -DEXCLUDE_BOOST=ON -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}" .. && \
+    make -j "$(nproc)" package

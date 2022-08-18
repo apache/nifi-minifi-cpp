@@ -4,7 +4,7 @@ jobs:
   macos_xcode:
     name: "macos-xcode"
     runs-on: macos-11
-    timeout-minutes: 90
+    timeout-minutes: 180
     env:
       CCACHE_BASEDIR: ${{ GITHUB.WORKSPACE }}
       CCACHE_DIR: ${{ GITHUB.WORKSPACE }}/.ccache
@@ -107,7 +107,7 @@ jobs:
       - id: install_deps
         run: |
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev libsqliteodbc flake8 lua5.3 liblua5.3-dev
+          sudo apt install -y ccache libfl-dev libboost-all-dev libpcap-dev
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
@@ -116,19 +116,11 @@ jobs:
           cd build
           export CC=gcc-11
           export CXX=g++-11
-          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_BUSTACHE=ON -DENABLE_COAP=ON \
-              -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_JNI=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_LINTER=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON \
-              -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PCAP=ON -DENABLE_PYTHON=ON -DENABLE_SENSORS=ON -DENABLE_SFTP=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON -DENABLE_TENSORFLOW=OFF \
-              -DENABLE_USB_CAMERA=ON -DENABLE_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON -DENABLE_ELASTICSEARCH=ON ..
+          cmake -DUSE_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_SQL=OFF -DENABLE_LIBRDKAFKA=OFF -DENABLE_AWS=OFF \
+              -DENABLE_AZURE=OFF -DENABLE_SPLUNK=OFF -DENABLE_GCP=OFF -DENABLE_PROCFS=OFF -DENABLE_BUSTACHE=ON -DENABLE_PCAP=ON ..
           make -j$(nproc) VERBOSE=1
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j2 --output-on-failure"
-      - name: linter
-        run: cd build && make -j$(nproc) linter
-      - name: shellcheck
-        run: cd build && make shellcheck
-      - id: flake8_check
-        run: cd build && make flake8
   ubuntu_20_04_clang:
     name: "ubuntu-20.04-clang"
     runs-on: ubuntu-20.04
@@ -152,7 +144,7 @@ jobs:
           echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" | sudo tee -a /etc/apt/sources.list
           echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-14 main" | sudo tee -a /etc/apt/sources.list
           sudo apt update
-          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev clang-14 clang-tidy-14 libc++-14-dev libc++abi-14-dev libsqliteodbc lua5.3 liblua5.3-dev
+          sudo apt install -y ccache libfl-dev libpcap-dev libboost-all-dev openjdk-8-jdk maven libusb-1.0-0-dev libpng-dev libgps-dev clang-14 clang-tidy-14 libc++-14-dev libc++abi-14-dev libsqliteodbc lua5.3 liblua5.3-dev flake8
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
           echo -e "127.0.0.1\t$HOSTNAME" | sudo tee -a /etc/hosts > /dev/null
       - name: build
@@ -171,6 +163,12 @@ jobs:
           cmake --build . --parallel $(nproc)
       - name: test
         run: cd build && make test ARGS="--timeout 300 -j8 --output-on-failure"
+      - name: linter
+        run: cd build && make -j$(nproc) linter
+      - name: shellcheck
+        run: cd build && make shellcheck
+      - id: flake8_check
+        run: cd build && make flake8
       - id: files
         uses: Ana06/get-changed-files@v2.1.0
       - name: clang-tidy
@@ -183,7 +181,7 @@ jobs:
   centos:
     name: "centos"
     runs-on: ubuntu-20.04
-    timeout-minutes: 60
+    timeout-minutes: 180
     steps:
       - id: checkout
         uses: actions/checkout@v2
@@ -201,11 +199,19 @@ jobs:
           sudo apt install -y ccache
           echo "PATH=/usr/lib/ccache:$PATH" >> $GITHUB_ENV
       - id: build
-        run: mkdir build && cd build && cmake -DSTRICT_GSL_CHECKS=AUDIT -DENABLE_KUBERNETES=ON .. && make centos
+        run: |
+          if [ -d ~/.ccache ]; then mv ~/.ccache .; fi
+          mkdir build && cd build && cmake -DUSE_SHARED_LIBS=ON -DCI_BUILD=ON -DSTRICT_GSL_CHECKS=AUDIT -DFAIL_ON_WARNINGS=ON -DENABLE_AWS=ON -DENABLE_AZURE=ON -DENABLE_COAP=ON \
+              -DENABLE_ENCRYPT_CONFIG=ON -DENABLE_GPS=ON -DENABLE_JNI=ON -DENABLE_LIBRDKAFKA=ON -DENABLE_LINTER=ON -DENABLE_MQTT=ON -DENABLE_NANOFI=ON -DENABLE_OPC=ON -DENABLE_OPENCV=ON \
+              -DENABLE_OPENWSMAN=ON -DENABLE_OPS=ON -DENABLE_PYTHON=ON -DENABLE_SENSORS=ON -DENABLE_SFTP=ON -DENABLE_SQL=ON -DENABLE_SYSTEMD=ON -DENABLE_TENSORFLOW=OFF \
+              -DENABLE_USB_CAMERA=ON -DENABLE_SCRIPTING=ON -DENABLE_LUA_SCRIPTING=ON -DENABLE_KUBERNETES=ON -DENABLE_GCP=ON -DENABLE_PROCFS=ON -DENABLE_PROMETHEUS=ON -DENABLE_ELASTICSEARCH=ON \
+              -DDOCKER_SKIP_TESTS=OFF -DDOCKER_BUILD_ONLY=ON -DDOCKER_CCACHE_DUMP_LOCATION=$HOME/.ccache .. && make centos
+      - id: test
+        run: docker run --rm apacheminificpp:$(docker images | grep apacheminificpp | grep centos | awk '{print $2}') bash -c 'cd /opt/minifi/build && make test ARGS="--timeout 300 -j8 --output-on-failure"'
   docker_integration_tests:
     name: "Docker integration tests"
     runs-on: ubuntu-20.04
-    timeout-minutes: 120
+    timeout-minutes: 180
     steps:
       - id: checkout
         uses: actions/checkout@v2

@@ -29,6 +29,7 @@ DUMP_LOCATION=
 DISTRO_NAME=
 BUILD_NUMBER=
 DOCKER_CCACHE_DUMP_LOCATION=
+DOCKER_SKIP_TESTS=ON
 
 function usage {
   echo "Usage: ./DockerBuild.sh -v <MINIFI_VERSION> [additional options]"
@@ -43,6 +44,15 @@ function usage {
   echo "-o  --options         Minifi options string"
   echo "-h  --help            Show this help message"
   exit 1
+}
+
+function dump_ccache() {
+  ccache_source_image=$1
+  docker_ccache_dump_location=$2
+  container_id=$(docker run --rm -d "${ccache_source_image}" sh -c "while true; do sleep 1; done")
+  mkdir -p "${docker_ccache_dump_location}"
+  docker cp "${container_id}:/home/minificpp/.ccache/." "${docker_ccache_dump_location}"
+  docker rm -f "${container_id}"
 }
 
 BUILD_ARGS=()
@@ -88,6 +98,8 @@ while [[ $# -gt 0 ]]; do
         BUILD_ARGS+=("--build-arg" "BASE_ALPINE_IMAGE=${ARR[1]}")
       elif [ "${ARR[0]}" == "DOCKER_CCACHE_DUMP_LOCATION" ]; then
         DOCKER_CCACHE_DUMP_LOCATION="${ARR[1]}"
+      elif [ "${ARR[0]}" == "DOCKER_SKIP_TESTS" ]; then
+        DOCKER_SKIP_TESTS="${ARR[1]}"
       else
         BUILD_ARGS+=("--build-arg" "${ARR[0]}=${ARR[1]}")
       fi
@@ -146,18 +158,24 @@ BUILD_ARGS+=("--build-arg" "UID=${UID_ARG}"
             "--build-arg" "GID=${GID_ARG}"
             "--build-arg" "MINIFI_VERSION=${MINIFI_VERSION}"
             "--build-arg" "DUMP_LOCATION=${DUMP_LOCATION}"
-            "--build-arg" "DISTRO_NAME=${DISTRO_NAME}")
+            "--build-arg" "DISTRO_NAME=${DISTRO_NAME}"
+            "--build-arg" "DOCKER_SKIP_TESTS=${DOCKER_SKIP_TESTS}")
 
-if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
-  DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} --target build -t minifi_build ..
+if [ -n "${DISTRO_NAME}" ]; then
+  echo DOCKER_BUILDKIT=0 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
+  DOCKER_BUILDKIT=0 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
 
-  container_id=$(docker run --rm -d minifi_build sh -c "while true; do sleep 1; done")
-  mkdir -p "${DOCKER_CCACHE_DUMP_LOCATION}"
-  docker cp "${container_id}:/home/minificpp/.ccache/." "${DOCKER_CCACHE_DUMP_LOCATION}"
-  docker rm -f "${container_id}"
+  if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
+    dump_ccache "apacheminificpp:${TAG}" "${DOCKER_CCACHE_DUMP_LOCATION}"
+  fi
+else
+  if [ -n "${DOCKER_CCACHE_DUMP_LOCATION}" ]; then
+    DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" --target build -t minifi_build ..
+    dump_ccache "minifi_build" "${DOCKER_CCACHE_DUMP_LOCATION}"
+  fi
+  echo DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
+  DOCKER_BUILDKIT=1 docker build "${BUILD_ARGS[@]}" -f "${DOCKERFILE}" -t apacheminificpp:"${TAG}" ..
 fi
-
-DOCKER_BUILDKIT=0 docker build "${BUILD_ARGS[@]}" -f ${DOCKERFILE} -t apacheminificpp:"${TAG}" ..
 
 if [ -n "${DUMP_LOCATION}" ]; then
   docker run --rm --entrypoint cat "apacheminificpp:${TAG}" "/opt/minifi/build/nifi-minifi-cpp-${MINIFI_VERSION}.tar.gz" >"${DUMP_LOCATION}/nifi-minifi-cpp-${MINIFI_VERSION}-${TARGZ_TAG}.tar.gz"
