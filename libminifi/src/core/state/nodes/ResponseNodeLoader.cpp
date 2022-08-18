@@ -26,6 +26,7 @@
 #include "core/state/nodes/AgentInformation.h"
 #include "core/state/nodes/ConfigurationChecksums.h"
 #include "c2/C2Agent.h"
+#include "utils/gsl.h"
 
 namespace org::apache::nifi::minifi::state::response {
 
@@ -59,17 +60,22 @@ void ResponseNodeLoader::initializeComponentMetrics(core::ProcessGroup* root) {
     node_source->getResponseNodes(metric_vector);
     std::lock_guard<std::mutex> guard(component_metrics_mutex_);
     for (const auto& metric : metric_vector) {
-      component_metrics_[metric->getName()] = metric;
+      component_metrics_[metric->getName()].push_back(metric);
     }
   }
 }
 
-std::shared_ptr<ResponseNode> ResponseNodeLoader::getResponseNode(const std::string& clazz) const {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getResponseNodes(const std::string& clazz) const {
   std::shared_ptr<core::CoreComponent> ptr = core::ClassLoader::getDefaultClassLoader().instantiate(clazz, clazz);
   if (ptr == nullptr) {
-    return getComponentMetricsNode(clazz);
+    return getComponentMetricsNodes(clazz);
   }
-  return std::dynamic_pointer_cast<ResponseNode>(ptr);
+  auto response_node = std::dynamic_pointer_cast<ResponseNode>(ptr);
+  if (!response_node) {
+    logger_->log_error("Instantiated class '%s' is not a ResponseNode!", clazz);
+    return {};
+  }
+  return {response_node};
 }
 
 void ResponseNodeLoader::initializeRepositoryMetrics(const std::shared_ptr<ResponseNode>& response_node) {
@@ -153,24 +159,26 @@ void ResponseNodeLoader::initializeFlowMonitor(const std::shared_ptr<ResponseNod
   }
 }
 
-std::shared_ptr<ResponseNode> ResponseNodeLoader::loadResponseNode(const std::string& clazz, core::ProcessGroup* root) {
-  auto response_node = getResponseNode(clazz);
-  if (!response_node) {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::loadResponseNodes(const std::string& clazz, core::ProcessGroup* root) {
+  auto response_nodes = getResponseNodes(clazz);
+  if (response_nodes.empty()) {
     logger_->log_error("No metric defined for %s", clazz);
-    return nullptr;
+    return {};
   }
 
-  initializeRepositoryMetrics(response_node);
-  initializeQueueMetrics(response_node, root);
-  initializeAgentIdentifier(response_node);
-  initializeAgentMonitor(response_node);
-  initializeAgentNode(response_node);
-  initializeConfigurationChecksums(response_node);
-  initializeFlowMonitor(response_node, root);
-  return response_node;
+  for (const auto& response_node : response_nodes) {
+    initializeRepositoryMetrics(response_node);
+    initializeQueueMetrics(response_node, root);
+    initializeAgentIdentifier(response_node);
+    initializeAgentMonitor(response_node);
+    initializeAgentNode(response_node);
+    initializeConfigurationChecksums(response_node);
+    initializeFlowMonitor(response_node, root);
+  }
+  return response_nodes;
 }
 
-std::shared_ptr<state::response::ResponseNode> ResponseNodeLoader::getComponentMetricsNode(const std::string& metrics_class) const {
+std::vector<std::shared_ptr<ResponseNode>> ResponseNodeLoader::getComponentMetricsNodes(const std::string& metrics_class) const {
   if (!metrics_class.empty()) {
     std::lock_guard<std::mutex> lock(component_metrics_mutex_);
     const auto citer = component_metrics_.find(metrics_class);
@@ -178,7 +186,7 @@ std::shared_ptr<state::response::ResponseNode> ResponseNodeLoader::getComponentM
       return citer->second;
     }
   }
-  return nullptr;
+  return {};
 }
 
 void ResponseNodeLoader::setControllerServiceProvider(core::controller::ControllerServiceProvider* controller) {

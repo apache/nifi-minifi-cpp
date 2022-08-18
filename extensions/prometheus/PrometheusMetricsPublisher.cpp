@@ -71,12 +71,12 @@ std::vector<std::shared_ptr<state::response::ResponseNode>> PrometheusMetricsPub
   if (auto metric_classes_str = configuration_->get(minifi::Configuration::nifi_metrics_publisher_metrics)) {
     auto metric_classes = utils::StringUtils::split(*metric_classes_str, ",");
     for (const std::string& clazz : metric_classes) {
-      auto response_node = response_node_loader_->loadResponseNode(clazz, root);
-      if (!response_node) {
+      auto response_nodes = response_node_loader_->loadResponseNodes(clazz, root);
+      if (response_nodes.empty()) {
         logger_->log_warn("Metric class '%s' could not be loaded.", clazz);
         continue;
       }
-      nodes.push_back(response_node);
+      nodes.insert(nodes.end(), response_nodes.begin(), response_nodes.end());
     }
   }
   return nodes;

@@ -111,11 +111,15 @@ class GetTCPMetrics : public state::response::ResponseNode {
   std::vector<state::response::SerializedResponseNode> serialize() override {
     std::vector<state::response::SerializedResponseNode> resp;
 
+    state::response::SerializedResponseNode root_node;
+    root_node.name = source_component_.getUUIDStr();
+
     state::response::SerializedResponseNode iter;
     iter.name = "OnTriggerInvocations";
     iter.value = (uint32_t)iterations_.load();
 
-    resp.push_back(iter);
+    root_node.children.push_back(iter);
+    resp.push_back(root_node);
 
     return resp;
   }

@@ -94,6 +94,8 @@ class MetricsHandler: public HeartbeatHandler {
     VERIFY_UPDATED_METRICS
   };
 
+  static constexpr const char* GETTCP1_UUID = "2438e3c8-015a-1000-79ca-83af40ec1991";
+
   static void sendEmptyHeartbeatResponse(struct mg_connection* conn) {
     mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
   }
@@ -169,8 +171,9 @@ class MetricsHandler: public HeartbeatHandler {
 
   static bool verifyProcessorMetrics(const rapidjson::Value& processor_metrics) {
     return processor_metrics.HasMember("GetTCPMetrics") &&
-      processor_metrics["GetTCPMetrics"].HasMember("OnTriggerInvocations") &&
-      processor_metrics["GetTCPMetrics"]["OnTriggerInvocations"].GetUint() > 0;
+      processor_metrics["GetTCPMetrics"].HasMember(GETTCP1_UUID) &&
+      processor_metrics["GetTCPMetrics"][GETTCP1_UUID].HasMember("OnTriggerInvocations") &&
+      processor_metrics["GetTCPMetrics"][GETTCP1_UUID]["OnTriggerInvocations"].GetUint() > 0;
   }
 
   [[nodiscard]] static std::string getReplacementConfigAsJsonValue(const std::string& replacement_config_path) {
