@@ -76,12 +76,13 @@ class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
 
   class LiveLogSet {
     using Hash = size_t;
-    std::chrono::milliseconds lifetime_{};
+    const std::chrono::milliseconds lifetime_{};
     std::unordered_set<Hash> hashes_to_ignore_;
     std::deque<std::pair<std::chrono::milliseconds, Hash>> timestamped_hashes_;
    public:
+    explicit LiveLogSet(std::chrono::milliseconds lifetime): lifetime_(lifetime) {}
+
     bool tryAdd(std::chrono::milliseconds now, Hash hash);
-    void setLifetime(std::chrono::milliseconds lifetime);
   };
 
   AlertSink(Config config, std::shared_ptr<Logger> logger);

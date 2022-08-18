@@ -32,10 +32,10 @@ namespace org::apache::nifi::minifi::core::logging {
 
 AlertSink::AlertSink(Config config, std::shared_ptr<Logger> logger)
     : config_(std::move(config)),
+      live_logs_(config_.rate_limit),
       buffer_(config_.buffer_limit, config_.batch_size),
       logger_(std::move(logger)) {
   set_level(config_.level);
-  live_logs_.setLifetime(config_.rate_limit);
   next_flush_ = clock_->timeSinceEpoch() + config_.flush_period;
   flush_thread_ = std::thread([this] {run();});
 }
@@ -245,10 +245,6 @@ AlertSink::LogBuffer AlertSink::LogBuffer::commit() {
 
 size_t AlertSink::LogBuffer::size() const {
   return size_;
-}
-
-void AlertSink::LiveLogSet::setLifetime(std::chrono::milliseconds lifetime) {
-  lifetime_ = lifetime;
 }
 
 bool AlertSink::LiveLogSet::tryAdd(std::chrono::milliseconds now, size_t hash) {
