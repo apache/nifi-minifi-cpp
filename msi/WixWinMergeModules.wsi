@@ -329,7 +329,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                 <File Id="MiNiFiExe"
                          Name="minifi.exe"
                          KeyPath="yes"
-                         Source="main\minifi.exe"/>
+                         Source="minifi_main\minifi.exe"/>
                 <!--
                 It is not possible to set 'ServiceConfig' for 2 'Component' (error LGHT0130 : The primary key 'Apache NiFi MiNiFi' is duplicated in table 'ServiceConfig').
                 Problem is described: http://windows-installer-xml-wix-toolset.687559.n2.nabble.com/Installing-a-Service-with-Varying-Dependencies-td693097.html
@@ -370,7 +370,7 @@ Licensed to the Apache Software Foundation (ASF) under one or more
                 <File Id="MiNiFiExeWithPassword"
                          Name="minifi.exe"
                          KeyPath="yes"
-                         Source="main\minifi.exe"/>
+                         Source="minifi_main\minifi.exe"/>
                 <ServiceInstall Id="MiNiFiExeServiceWithPassword"
                                 Type="ownProcess"
                                 Vital="yes"

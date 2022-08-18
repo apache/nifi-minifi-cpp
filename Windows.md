@@ -95,7 +95,7 @@ mkdir build
 cd build
 cmake -G "Visual Studio 16 2019" -DINSTALLER_MERGE_MODULES=OFF -DENABLE_SQL=OFF -DCMAKE_BUILD_TYPE_INIT=Release -DCMAKE_BUILD_TYPE=Release -DWIN32=WIN32 -DENABLE_LIBRDKAFKA=OFF -DENABLE_JNI=OFF -DOPENSSL_OFF=OFF -DENABLE_COAP=OFF -DUSE_SHARED_LIBS=OFF -DDISABLE_CONTROLLER=ON  -DBUILD_ROCKSDB=ON -DFORCE_WINDOWS=ON -DUSE_SYSTEM_UUID=OFF -DDISABLE_LIBARCHIVE=OFF -DDISABLE_SCRIPTING=ON -DEXCLUDE_BOOST=ON -DENABLE_WEL=TRUE -DFAIL_ON_WARNINGS=OFF -DSKIP_TESTS=OFF ..
 msbuild /m nifi-minifi-cpp.sln /property:Configuration=Release /property:Platform=Win32
-copy main\Release\minifi.exe main\
+copy minifi_main\Release\minifi.exe minifi_main\
 cpack
 ctest -C Release
 ```
