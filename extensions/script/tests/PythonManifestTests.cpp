@@ -18,12 +18,12 @@
 #define CUSTOM_EXTENSION_INIT
 
 #undef NDEBUG
+#include <fstream>
+
 #include "TestBase.h"
 #include "Catch.h"
 #include "flow-tests/TestControllerWithFlow.h"
 #include "EmptyFlow.h"
-
-#include <fstream>
 
 using minifi::state::response::SerializedResponseNode;
 
@@ -45,7 +45,7 @@ const SerializedResponseNode& getNode(const std::vector<SerializedResponseNode>&
 TEST_CASE("Python processor's description is part of the manifest") {
   TestControllerWithFlow controller(empty_flow, false /* DEFER FLOW SETUP */);
 
-  auto python_dir = std::filesystem::path{controller.configuration_->getHome()} / "minifi-python";
+  auto python_dir = std::filesystem::path(controller.configuration_->getHome()) / "minifi-python";
   utils::file::create_dir(python_dir);
   std::ofstream{python_dir / "MyPyProc.py"} <<
     "def describe(proc):\n"
