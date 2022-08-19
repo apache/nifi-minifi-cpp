@@ -151,13 +151,20 @@ jobs:
         run: cd build && make flake8
       - id: files
         uses: Ana06/get-changed-files@v2.1.0
+        continue-on-error: true
       - name: clang-tidy
         run: |
+          if [[ -n "${{ steps.files.outputs.all }}" ]]; then
+            FILES="${{ steps.files.outputs.all }}"
+          else
+            git fetch origin main && git checkout -b main origin/main || true
+            FILES=$(git diff --name-only main ${{ github.sha }} --)
+          fi
           # https://stackoverflow.com/questions/58466701/clang-tidy-cant-locate-stdlib-headers
           sed -i -e 's/\/usr\/lib\/ccache\/clang++-14/\/lib\/llvm-14\/bin\/clang++/g' build/compile_commands.json
           sed -i -e 's/\/usr\/lib\/ccache\/clang-14/\/lib\/llvm-14\/bin\/clang/g' build/compile_commands.json
 
-          ./run_clang_tidy.sh "${{ steps.files.outputs.all }}"
+          ./run_clang_tidy.sh "${FILES}"
   centos:
     name: "centos"
     runs-on: ubuntu-20.04
