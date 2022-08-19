@@ -151,7 +151,10 @@ void AlertSink::run() {
   while (running_) {
     {
       std::unique_lock lock(mtx_);
-      next_flush_ = clock_->wait_until(cv_, lock, next_flush_, [&] {return !running_;}) + config_.flush_period;
+      if (clock_->wait_until(cv_, lock, next_flush_, [&] {return !running_;})) {
+        break;
+      }
+      next_flush_ = clock_->timeSinceEpoch() + config_.flush_period;
     }
     std::unique_ptr<Services> services(services_.exchange(nullptr));
     if (!services || !running_) {

@@ -72,15 +72,8 @@ class Clock {
  public:
   virtual ~Clock() = default;
   virtual std::chrono::milliseconds timeSinceEpoch() const = 0;
-  virtual std::chrono::milliseconds wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) {
-    auto now = timeSinceEpoch();
-    if (now < time) {
-      cv.wait_for(lck, time - now, [&] {
-        now = timeSinceEpoch();
-        return now >= time || pred();
-      });
-    }
-    return timeSinceEpoch();
+  virtual bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) {
+    return cv.wait_for(lck, time - timeSinceEpoch(), pred);
   }
 };
 

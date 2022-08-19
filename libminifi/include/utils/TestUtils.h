@@ -74,24 +74,22 @@ class ManualClock : public timeutils::Clock {
       cv->notify_all();
     }
   }
-  std::chrono::milliseconds wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) override {
+  bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) override {
     std::chrono::milliseconds now;
     {
       std::unique_lock lock(mtx_);
       now = time_;
       cvs_.insert(&cv);
     }
-    if (now < time) {
-      cv.wait_for(lck, time - now, [&] {
-        now = timeSinceEpoch();
-        return now >= time || pred();
-      });
-    }
+    cv.wait_for(lck, time - now, [&] {
+      now = timeSinceEpoch();
+      return now >= time || pred();
+    });
     {
       std::unique_lock lock(mtx_);
       cvs_.erase(&cv);
     }
-    return now;
+    return pred();
   }
 
  private:
