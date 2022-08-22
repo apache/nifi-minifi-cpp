@@ -71,9 +71,9 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Request Timeout        | 10 sec                                     |
       | PublishKafka   | Message Timeout        | 12 sec                                     |
       | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
-      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_LMN_client.pem |
+      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_cert.pem |
       | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
-      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_LMN_client.key |
+      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_cert.key |
       | PublishKafka   | Security Protocol      | ssl                                        |
     And a PutFile processor with the "Directory" property set to "/tmp/output"
     And the "success" relationship of the GetFile processor is connected to the PublishKafka
@@ -126,9 +126,9 @@ Feature: Sending data to using Kafka streaming platform using PublishKafka
       | PublishKafka   | Request Timeout        | 10 sec                                     |
       | PublishKafka   | Message Timeout        | 12 sec                                     |
       | PublishKafka   | Security CA            | /tmp/resources/certs/ca-cert               |
-      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_LMN_client.pem |
+      | PublishKafka   | Security Cert          | /tmp/resources/certs/client_cert.pem |
       | PublishKafka   | Security Pass Phrase   | abcdefgh                                   |
-      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_LMN_client.key |
+      | PublishKafka   | Security Private Key   | /tmp/resources/certs/client_cert.key |
       | PublishKafka   | Security Protocol      | sasl_ssl                                   |
       | PublishKafka   | SASL Mechanism         | PLAIN                                      |
       | PublishKafka   | Username               | alice                                      |
