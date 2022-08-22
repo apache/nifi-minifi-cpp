@@ -48,7 +48,7 @@ FOREACH(testfile ${EXECUTESCRIPT_PYTHON_TESTS})
     target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
     createTests("${testfilename}")
     MATH(EXPR EXTENSIONS_TEST_COUNT "${EXTENSIONS_TEST_COUNT}+1")
-    add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+    add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 ENDFOREACH()
 
 FOREACH(testfile ${EXECUTEPYTHONPROCESSOR_UNIT_TESTS})
