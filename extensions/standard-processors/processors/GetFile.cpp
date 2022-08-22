@@ -192,7 +192,7 @@ bool GetFile::isListingEmpty() const {
   return directory_listing_.empty();
 }
 
-void GetFile::putListing(std::string fileName) {
+void GetFile::putListing(const std::string& fileName) {
   logger_->log_trace("Adding file to queue: %s", fileName);
 
   std::lock_guard<std::mutex> lock(directory_listing_mutex_);
@@ -211,7 +211,7 @@ std::queue<std::string> GetFile::pollListing(uint64_t batch_size) {
   return list;
 }
 
-bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request) {
+bool GetFile::fileMatchesRequestCriteria(const std::string& fullName, const std::string& name, const GetFileRequest &request) {
   logger_->log_trace("Checking file: %s", fullName);
 
   std::error_code ec;

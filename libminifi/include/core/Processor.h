@@ -83,7 +83,7 @@ class Processor;
 
 class ProcessorMetrics : public state::response::ResponseNode {
  public:
-  explicit ProcessorMetrics(const Processor& source_component);
+  explicit ProcessorMetrics(const Processor& source_processor);
 
   [[nodiscard]] std::string getName() const override;
 

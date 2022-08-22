@@ -142,9 +142,9 @@ class GetFile : public core::Processor {
 
  private:
   bool isListingEmpty() const;
-  void putListing(std::string fileName);
+  void putListing(const std::string& fileName);
   std::queue<std::string> pollListing(uint64_t batch_size);
-  bool fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request);
+  bool fileMatchesRequestCriteria(const std::string& fullName, const std::string& name, const GetFileRequest &request);
   void getSingleFile(core::ProcessSession& session, const std::string& file_name) const;
 
   GetFileRequest request_;

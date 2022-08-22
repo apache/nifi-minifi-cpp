@@ -28,7 +28,7 @@ class DummyProcessor : public minifi::core::Processor {
   using minifi::core::Processor::Processor;
 
  public:
-  DummyProcessor(const std::string& name, const utils::Identifier& uuid) : Processor(name, uuid) {}
+  DummyProcessor(const std::string& name, const minifi::utils::Identifier& uuid) : Processor(name, uuid) {}
   explicit DummyProcessor(const std::string& name) : Processor(name) {}
   static constexpr const char* Description = "A processor that does nothing.";
   static auto properties() { return std::array<core::Property, 0>{}; }

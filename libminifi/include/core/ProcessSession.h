@@ -83,11 +83,11 @@ class ProcessSession : public ReferenceContainer {
   // Clone a new UUID FlowFile from parent for attributes and sub set of parent content resource claim
   std::shared_ptr<core::FlowFile> clone(const std::shared_ptr<core::FlowFile> &parent, int64_t offset, int64_t size);
   // Transfer the FlowFile to the relationship
-  virtual void transfer(const std::shared_ptr<core::FlowFile> &flow, const Relationship& relationship);
+  virtual void transfer(const std::shared_ptr<core::FlowFile>& flow, const Relationship& relationship);
   // Put Attribute
-  void putAttribute(const std::shared_ptr<core::FlowFile> &flow, const std::string& key, const std::string& value);
+  void putAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key, const std::string& value);
   // Remove Attribute
-  void removeAttribute(const std::shared_ptr<core::FlowFile> &flow, const std::string& key);
+  void removeAttribute(const std::shared_ptr<core::FlowFile>& flow, const std::string& key);
   // Remove Flow File
   void remove(const std::shared_ptr<core::FlowFile> &flow);
   // Access the contents of the flow file as an input stream; returns null if the flow file has no content claim

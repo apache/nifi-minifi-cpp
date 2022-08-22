@@ -91,7 +91,7 @@ class DataHandler {
   }
   static const char *SOURCE_ENDPOINT_ATTRIBUTE;
 
-  int16_t handle(std::string source, uint8_t *message, size_t size, bool partial);
+  int16_t handle(const std::string& source, uint8_t *message, size_t size, bool partial);
 
  private:
   std::shared_ptr<core::ProcessSessionFactory> sessionFactory_;

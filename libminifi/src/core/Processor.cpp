@@ -155,7 +155,7 @@ void ProcessorMetrics::addLastOnTriggerRuntime(std::chrono::milliseconds runtime
 
 std::chrono::milliseconds ProcessorMetrics::getLastOnTriggerRuntime() const {
   std::lock_guard<std::mutex> lock(average_on_trigger_runtime_mutex_);
-  if (on_trigger_runtimes_.size() == 0) {
+  if (on_trigger_runtimes_.empty()) {
     return 0ms;
   } else if (on_trigger_runtimes_.size() < STORED_ON_TRIGGER_RUNTIME_COUNT) {
     return on_trigger_runtimes_[on_trigger_runtimes_.size() - 1];

@@ -77,7 +77,7 @@ const core::Property GetTCP::EndOfMessageByte(
 const core::Relationship GetTCP::Success("success", "All files are routed to success");
 const core::Relationship GetTCP::Partial("partial", "Indicates an incomplete message as a result of encountering the end of message byte trigger");
 
-int16_t DataHandler::handle(std::string source, uint8_t *message, size_t size, bool partial) {
+int16_t DataHandler::handle(const std::string& source, uint8_t *message, size_t size, bool partial) {
   std::shared_ptr<core::ProcessSession> my_session = sessionFactory_->createSession();
   std::shared_ptr<core::FlowFile> flowFile = my_session->create();
 
