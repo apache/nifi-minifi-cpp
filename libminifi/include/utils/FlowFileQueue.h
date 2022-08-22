@@ -104,7 +104,7 @@ class FlowFileQueue {
   std::optional<LoadTask> load_task_;
   MinMaxHeap<value_type, FlowFilePenaltyExpirationComparator> queue_;
 
-  std::unique_ptr<timeutils::SteadyClock> clock_{std::make_unique<timeutils::SteadyClock>()};
+  std::shared_ptr<timeutils::SteadyClock> clock_{timeutils::getClock()};
 
   std::shared_ptr<core::logging::Logger> logger_;
 };

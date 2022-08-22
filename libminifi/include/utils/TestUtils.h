@@ -61,19 +61,28 @@ Identifier generateUUID() {
   return id_generator->generate();
 }
 
-class ManualClock : public timeutils::Clock {
+class ManualClock : public timeutils::SteadyClock {
  public:
   [[nodiscard]] std::chrono::milliseconds timeSinceEpoch() const override {
     std::lock_guard lock(mtx_);
     return time_;
   }
+
+  [[nodiscard]] std::chrono::time_point<std::chrono::steady_clock> now() const override {
+    return std::chrono::steady_clock::time_point{timeSinceEpoch()};
+  }
+
   void advance(std::chrono::milliseconds elapsed_time) {
+    if (elapsed_time.count() < 0) {
+      throw std::logic_error("A steady clock can only be advanced forward");
+    }
     std::lock_guard lock(mtx_);
     time_ += elapsed_time;
     for (auto* cv : cvs_) {
       cv->notify_all();
     }
   }
+
   bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) override {
     std::chrono::milliseconds now;
     {

@@ -95,10 +95,10 @@ class SteadyClock : public Clock {
   }
 };
 
-std::shared_ptr<Clock> getClock();
+std::shared_ptr<SteadyClock> getClock();
 
 // test-only utility to specify what clock to use
-void setClock(std::shared_ptr<Clock> clock);
+void setClock(std::shared_ptr<SteadyClock> clock);
 
 inline std::string getTimeStr(std::chrono::system_clock::time_point tp) {
   std::ostringstream stream;

@@ -20,15 +20,15 @@
 namespace org::apache::nifi::minifi::utils::timeutils {
 
 static std::mutex global_clock_mtx;
-static std::shared_ptr<Clock> global_clock{std::make_shared<SteadyClock>()};
+static std::shared_ptr<SteadyClock> global_clock{std::make_shared<SteadyClock>()};
 
-std::shared_ptr<Clock> getClock() {
+std::shared_ptr<SteadyClock> getClock() {
   std::lock_guard lock(global_clock_mtx);
   return global_clock;
 }
 
 // test-only utility to specify what clock to use
-void setClock(std::shared_ptr<Clock> clock) {
+void setClock(std::shared_ptr<SteadyClock> clock) {
   std::lock_guard lock(global_clock_mtx);
   global_clock = std::move(clock);
 }
