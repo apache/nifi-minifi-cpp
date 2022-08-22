@@ -149,7 +149,7 @@ inline int64_t delete_dir(const std::string &path, bool delete_files_recursively
         std::filesystem::remove(path);
       }
     }
-  } catch (std::filesystem::filesystem_error const &e) {
+  } catch (std::filesystem::filesystem_error const &) {
     return -1;
     // display error message
   }

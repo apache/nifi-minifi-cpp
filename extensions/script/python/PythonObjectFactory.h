@@ -27,7 +27,9 @@
 #include "ExecutePythonProcessor.h"
 #include "utils/StringUtils.h"
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility push(hidden)
+#endif
 
 class PythonObjectFactory : public org::apache::nifi::minifi::core::DefautObjectFactory<org::apache::nifi::minifi::python::processors::ExecutePythonProcessor> {
  public:
@@ -77,4 +79,6 @@ class PythonObjectFactory : public org::apache::nifi::minifi::core::DefautObject
   std::string name_;
 };
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility pop
+#endif

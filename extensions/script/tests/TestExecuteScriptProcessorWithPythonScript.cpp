@@ -28,6 +28,7 @@
 #include "processors/GetFile.h"
 #include "processors/PutFile.h"
 #include "utils/file/FileUtils.h"
+#include "utils/file/PathUtils.h"
 #include "utils/TestUtils.h"
 
 TEST_CASE("Script engine is not set", "[executescriptMisconfiguration]") {
@@ -357,7 +358,10 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
   logTestController.setDebug<TestPlan>();
   logTestController.setDebug<minifi::processors::ExecuteScript>();
 
-  const std::string SCRIPT_FILES_DIRECTORY = concat_path(get_executable_dir(), "test_python_scripts");
+  std::string path;
+  std::string filename;
+  minifi::utils::file::getFileNameAndPath(__FILE__, path, filename);
+  const std::string SCRIPT_FILES_DIRECTORY = minifi::utils::file::getFullPath(concat_path(path, "test_python_scripts"));
 
   auto getScriptFullPath = [&SCRIPT_FILES_DIRECTORY](const std::string& script_file_name) {
     return concat_path(SCRIPT_FILES_DIRECTORY, script_file_name);
@@ -372,7 +376,7 @@ TEST_CASE("Python: Test Module Directory property", "[executescriptPythonModuleD
                                           true);
 
   plan->setProperty(executeScript, minifi::processors::ExecuteScript::ScriptFile.getName(), getScriptFullPath("foo_bar_processor.py"));
-  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath("foo_modules/foo.py") + "," + getScriptFullPath("bar_modules"));
+  plan->setProperty(executeScript, minifi::processors::ExecuteScript::ModuleDirectory.getName(), getScriptFullPath(concat_path("foo_modules", "foo.py")) + "," + getScriptFullPath("bar_modules"));
 
   auto getFileDir = testController.createTempDirectory();
   plan->setProperty(getFile, minifi::processors::GetFile::Directory.getName(), getFileDir);

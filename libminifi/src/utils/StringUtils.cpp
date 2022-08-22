@@ -476,9 +476,7 @@ std::string StringUtils::escapeUnprintableBytes(gsl::span<const std::byte> data)
   std::string result;
   for (auto byte : data) {
     char ch = static_cast<char>(byte);
-    if (std::isprint(static_cast<unsigned char>(ch))) {
-      result += ch;
-    } else if (ch == '\n') {
+    if (ch == '\n') {
       result += "\\n";
     } else if (ch == '\t') {
       result += "\\t";
@@ -488,6 +486,8 @@ std::string StringUtils::escapeUnprintableBytes(gsl::span<const std::byte> data)
       result += "\\v";
     } else if (ch == '\f') {
       result += "\\f";
+    } else if (std::isprint(static_cast<unsigned char>(byte))) {
+      result += ch;
     } else {
       result += "\\x";
       result += hex_digits[(std::to_integer<int>(byte) >> 4) & 0xf];

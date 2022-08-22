@@ -18,6 +18,11 @@
 #ifndef LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 #define LIBMINIFI_INCLUDE_AGENT_AGENT_VERSION_H_
 
+// The Windows version of pyconfig.h (https://github.com/python/cpython/blob/3.10/PC/pyconfig.h, also on main as of 2022-08-18)
+// rather unhelpfully #define's COMPILER as the detected compiler version.  Since we have a COMPILER variable below, we need to #undef it
+// to make anything which requires cpython (e.g. the script extension) compile on Windows.
+#undef COMPILER
+
 #include <string>
 #include <vector>
 #include "utils/Export.h"

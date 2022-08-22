@@ -32,7 +32,9 @@
 #include "PyProcessSession.h"
 #include "../ScriptException.h"
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility push(hidden)
+#endif
 
 namespace org::apache::nifi::minifi::python {
 
@@ -53,7 +55,11 @@ struct Interpreter {
 
 Interpreter *getInterpreter();
 
+#if defined(__GNUC__) || defined(__GNUG__)
 class __attribute__((visibility("default"))) PythonScriptEngine : public script::ScriptEngine {
+#else
+class PythonScriptEngine : public script::ScriptEngine {
+#endif
  public:
   PythonScriptEngine();
   virtual ~PythonScriptEngine() {
@@ -231,4 +237,6 @@ class __attribute__((visibility("default"))) PythonScriptEngine : public script:
 
 }  // namespace org::apache::nifi::minifi::python
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility pop
+#endif

@@ -28,7 +28,7 @@ if(NOT EXISTS "${SOL2_INCLUDE_DIR}/sol.hpp")
     file(DOWNLOAD "https://github.com/ThePhD/sol2/releases/download/v3.2.2/forward.hpp" "${SOL2_INCLUDE_DIR}/sol/forward.hpp"
          EXPECTED_HASH SHA256=491c59790c242f8ec766deb35a18a5aae34772da3393c1b8f0719f5c50d01fdf)
 
-    set(PC "${Patch_EXECUTABLE}" -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/sol2/add-missing-include.patch" "${SOL2_INCLUDE_DIR}/sol/sol.hpp")
+    set(PC "${Patch_EXECUTABLE}" --binary -p1 -i "${CMAKE_SOURCE_DIR}/thirdparty/sol2/add-missing-include.patch" "${SOL2_INCLUDE_DIR}/sol/sol.hpp")
 
     execute_process(COMMAND ${PC} RESULT_VARIABLE patch_result_code)
     if(NOT patch_result_code EQUAL "0")

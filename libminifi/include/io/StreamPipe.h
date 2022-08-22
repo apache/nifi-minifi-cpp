@@ -37,7 +37,7 @@ inline int64_t pipe(io::InputStream& src, io::OutputStream& dst) {
     if (io::isError(readRet)) return -1;
     if (readRet == 0) break;
     auto remaining = readRet;
-    int transferred = 0;
+    size_t transferred = 0;
     while (remaining > 0) {
       const auto writeRet = dst.write(gsl::make_span(buffer).subspan(transferred, remaining));
       // TODO(adebreceni):

@@ -32,7 +32,9 @@
 #include "PythonScriptEngine.h"
 #include "core/PropertyBuilder.h"
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility push(hidden)
+#endif
 
 namespace org {
 namespace apache {
@@ -142,4 +144,6 @@ class ExecutePythonProcessor : public core::Processor {
 } /* namespace apache */
 } /* namespace org */
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility pop
+#endif

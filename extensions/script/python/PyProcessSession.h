@@ -27,7 +27,9 @@
 #include "../ScriptFlowFile.h"
 #include "PyBaseStream.h"
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility push(hidden)
+#endif
 
 namespace org::apache::nifi::minifi::python {
 
@@ -61,4 +63,6 @@ class PyProcessSession {
 
 }  // namespace org::apache::nifi::minifi::python
 
+#if defined(__GNUC__) || defined(__GNUG__)
 #pragma GCC visibility pop
+#endif

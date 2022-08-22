@@ -48,9 +48,9 @@ void PythonScriptEngine::evaluateModuleImports() {
       std::string path;
       std::string filename;
       utils::file::getFileNameAndPath(module_path, path, filename);
-      py::eval<py::eval_statements>("sys.path.append('" + path + "')", *bindings_, *bindings_);
+      py::eval<py::eval_statements>("sys.path.append(r'" + path + "')", *bindings_, *bindings_);
     } else {
-      py::eval<py::eval_statements>("sys.path.append('" + module_path + "')", *bindings_, *bindings_);
+      py::eval<py::eval_statements>("sys.path.append(r'" + module_path + "')", *bindings_, *bindings_);
     }
   }
 }
