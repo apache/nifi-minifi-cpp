@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
       logger->log_info("No encryption key found, will not decrypt sensitive properties in the configuration");
     }
 
-    const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(std::move(decryptor), std::move(log_properties));
+    std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(std::move(decryptor), std::move(log_properties));
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
