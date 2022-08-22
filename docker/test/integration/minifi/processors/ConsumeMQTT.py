@@ -23,6 +23,7 @@ class ConsumeMQTT(Processor):
             'ConsumeMQTT',
             properties={
                 'Broker URI': 'mqtt-broker:1883',
-                'Topic': 'testtopic'},
+                'Topic': 'testtopic',
+                'Client ID': 'consumer-client'},
             auto_terminate=['success'],
             schedule=schedule)
