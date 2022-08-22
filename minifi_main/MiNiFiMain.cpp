@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
     std::string nifi_configuration_class_name = "yamlconfiguration";
     std::string content_repo_class = "filesystemrepository";
 
-    const auto log_properties = std::make_shared<core::logging::LoggerProperties>();
+    auto log_properties = std::make_shared<core::logging::LoggerProperties>();
     log_properties->setHome(minifiHome);
     log_properties->loadConfigureFile(DEFAULT_LOG_PROPERTIES_FILE);
     core::logging::LoggerConfiguration::getConfiguration().initialize(log_properties);
@@ -240,7 +240,7 @@ int main(int argc, char **argv) {
       logger->log_info("No encryption key found, will not decrypt sensitive properties in the configuration");
     }
 
-    std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(std::move(decryptor), std::move(log_properties));
+    const std::shared_ptr<minifi::Configure> configure = std::make_shared<minifi::Configure>(std::move(decryptor), std::move(log_properties));
     configure->setHome(minifiHome);
     configure->loadConfigureFile(DEFAULT_NIFI_PROPERTIES_FILE);
 
