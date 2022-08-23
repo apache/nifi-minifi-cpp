@@ -46,8 +46,8 @@ class TestControllerWithFlow: public TestController{
     std::ofstream{yaml_path_} << yamlConfigContent;
 
     configuration_ = std::make_shared<minifi::Configure>();
-    configuration_->setHome(home_);
-    configuration_->set(minifi::Configure::nifi_flow_configuration_file, yaml_path_);
+    configuration_->setHome(home_.string());
+    configuration_->set(minifi::Configure::nifi_flow_configuration_file, yaml_path_.string());
 
     if (setup_flow) {
       setupFlow();
@@ -62,7 +62,7 @@ class TestControllerWithFlow: public TestController{
     REQUIRE(content_repo->initialize(configuration_));
     std::shared_ptr<minifi::io::StreamFactory> stream_factory = minifi::io::StreamFactory::getInstance(configuration_);
 
-    auto flow = std::make_unique<core::YamlConfiguration>(prov_repo, ff_repo, content_repo, stream_factory, configuration_, yaml_path_);
+    auto flow = std::make_unique<core::YamlConfiguration>(prov_repo, ff_repo, content_repo, stream_factory, configuration_, yaml_path_.string());
     auto root = flow->getRoot();
     root_ = root.get();
     controller_ = std::make_shared<minifi::FlowController>(

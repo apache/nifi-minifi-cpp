@@ -46,7 +46,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
   TestControllerWithFlow controller(empty_flow, false /* DEFER FLOW SETUP */);
 
   auto python_dir = std::filesystem::path(controller.configuration_->getHome()) / "minifi-python";
-  utils::file::create_dir(python_dir);
+  utils::file::create_dir(python_dir.string());
   std::ofstream{python_dir / "MyPyProc.py"} <<
     "def describe(proc):\n"
     "  proc.setDescription('An amazing processor')\n";
@@ -57,7 +57,7 @@ TEST_CASE("Python processor's description is part of the manifest") {
     "  proc.setSupportsDynamicProperties()\n"
     "  proc.addProperty('Prop1', 'A great property', 'banana', True, False)\n";
 
-  controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir);
+  controller.configuration_->set(minifi::Configuration::nifi_python_processor_dir, python_dir.string());
   controller.configuration_->set(minifi::Configuration::nifi_extension_path, "*minifi-script*");
 
   core::extension::ExtensionManager::get().initialize(controller.configuration_);
