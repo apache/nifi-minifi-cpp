@@ -17,10 +17,8 @@
 # under the License.
 #
 include(FetchContent)
-include(Nlohmann)
 include(Abseil)
 
-set(GOOGLE_CLOUD_CPP_NLOHMANN_JSON_HEADER ${NLOHMANN_JSON_INCLUDE_DIR})
 set(CRC32C_USE_GLOG OFF CACHE INTERNAL crc32c-glog-off)
 set(CRC32C_BUILD_TESTS OFF CACHE INTERNAL crc32c-gtest-off)
 set(CRC32C_BUILD_BENCHMARKS OFF CACHE INTERNAL crc32-benchmarks-off)

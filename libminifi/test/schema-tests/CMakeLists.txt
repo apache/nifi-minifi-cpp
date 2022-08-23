@@ -17,8 +17,18 @@
 # under the License.
 #
 
-set(NLOHMANN_JSON_INCLUDE_DIR "${CMAKE_BINARY_DIR}/_deps/nlohmann/" CACHE STRING "" FORCE)
-if(NOT EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp")
-    file(DOWNLOAD "https://github.com/nlohmann/json/releases/download/v3.10.5/json.hpp" "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp"
-            EXPECTED_HASH SHA256=e832d339d9e0c042e7dff807754769d778cf5d6ae9730ce21eed56de99cb5e86)
-endif()
+include(JsonSchemaValidator)
+
+file(GLOB SCHEMA_TESTS  "*.cpp")
+SET(SCHEMA_TEST_COUNT 0)
+FOREACH(testfile ${SCHEMA_TESTS})
+  get_filename_component(testfilename "${testfile}" NAME_WE)
+  add_executable("${testfilename}" "${testfile}")
+  createTests("${testfilename}")
+  target_link_libraries(${testfilename} ${CATCH_MAIN_LIB})
+  target_link_libraries(${testfilename} minifi-standard-processors)
+  target_link_libraries(${testfilename} nlohmann_json_schema_validator)
+  MATH(EXPR SCHEMA_TEST_COUNT "${SCHEMA_TEST_COUNT}+1")
+  add_test(NAME "${testfilename}" COMMAND "${testfilename}" WORKING_DIRECTORY ${TEST_DIR})
+ENDFOREACH()
+message("-- Finished building ${SCHEMA_TEST_COUNT} Json Schema related test file(s)...")

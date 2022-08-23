@@ -1,13 +1,26 @@
-diff --git a/cmake/IncludeNlohmannJson.cmake b/cmake/IncludeNlohmannJson.cmake
-index db8056ae0..613f18b97 100644
---- a/cmake/IncludeNlohmannJson.cmake
-+++ b/cmake/IncludeNlohmannJson.cmake
-@@ -23,7 +23,7 @@ function (find_nlohmann_json)
-     # library that is all we need.
-     find_path(GOOGLE_CLOUD_CPP_NLOHMANN_JSON_HEADER "nlohmann/json.hpp"
-               REQUIRED)
+diff -rupN orig/cmake/IncludeNlohmannJson.cmake patched/cmake/IncludeNlohmannJson.cmake
+--- google-cloud-cpp-1.37.0/cmake/IncludeNlohmannJson.cmake	2022-03-01 19:09:39.000000000 +0100
++++ google-cloud-cpp-1.37.0-new/cmake/IncludeNlohmannJson.cmake	2022-12-09 10:32:45.000000000 +0100
+@@ -14,21 +14,4 @@
+ # limitations under the License.
+ # ~~~
+ 
+-function (find_nlohmann_json)
+-    find_package(nlohmann_json CONFIG QUIET)
+-    if (nlohmann_json_FOUND)
+-        return()
+-    endif ()
+-    # As a fall back, try finding the header. Since this is a header-only
+-    # library that is all we need.
+-    find_path(GOOGLE_CLOUD_CPP_NLOHMANN_JSON_HEADER "nlohmann/json.hpp"
+-              REQUIRED)
 -    add_library(nlohmann_json::nlohmann_json UNKNOWN IMPORTED)
-+    add_library(nlohmann_json::nlohmann_json INTERFACE IMPORTED)
-     set_property(
-         TARGET nlohmann_json::nlohmann_json
-         APPEND
+-    set_property(
+-        TARGET nlohmann_json::nlohmann_json
+-        APPEND
+-        PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+-                 ${GOOGLE_CLOUD_CPP_NLOHMANN_JSON_HEADER})
+-endfunction ()
+-
+-find_nlohmann_json()
++find_package(nlohmann_json REQUIRED)

@@ -106,6 +106,10 @@ class PropertyValue : public state::response::ValueNode {
     return convertImpl<bool>("bool");
   }
 
+  operator double() const {
+    return convertImpl<double>("double");
+  }
+
   const char* c_str() const {
     if (!isValueUsable()) {
       throw utils::internal::InvalidValueException("Cannot convert invalid value");
