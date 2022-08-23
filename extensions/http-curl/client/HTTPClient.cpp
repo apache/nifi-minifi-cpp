@@ -52,7 +52,7 @@ HTTPClient::HTTPClient()
   http_session_.reset(curl_easy_init());
 }
 
-void HTTPClient::addFormPart(const std::string& content_type, const std::string& name, std::unique_ptr<utils::HTTPUploadCallback>&& form_callback, const std::optional<std::string>& filename) {
+void HTTPClient::addFormPart(const std::string& content_type, const std::string& name, std::unique_ptr<utils::HTTPUploadCallback> form_callback, const std::optional<std::string>& filename) {
   if (!form_) {
     form_.reset(curl_mime_init(http_session_.get()));
   }
@@ -177,6 +177,16 @@ bool HTTPClient::setMinimumSSLVersion(utils::SSLVersion minimum_version) {
   return ret == CURLE_OK;
 }
 
+void HTTPClient::setKeepAliveProbe(std::optional<KeepAliveProbeData> probe_data) {
+  if (probe_data) {
+    curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPALIVE, true);
+    curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPINTVL, probe_data->keep_alive_interval.count());
+    curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPIDLE, probe_data->keep_alive_delay.count());
+  } else {
+    curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPALIVE, false);
+  }
+}
+
 void HTTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
   if (timeout < 0ms) {
     logger_->log_error("Invalid timeout");
@@ -193,13 +203,13 @@ void HTTPClient::setReadTimeout(std::chrono::milliseconds timeout) {
   read_timeout_ = timeout;
 }
 
-void HTTPClient::setReadCallback(std::unique_ptr<utils::HTTPReadCallback>&& callback) {
+void HTTPClient::setReadCallback(std::unique_ptr<utils::HTTPReadCallback> callback) {
   read_callback_ = std::move(callback);
   curl_easy_setopt(http_session_.get(), CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
   curl_easy_setopt(http_session_.get(), CURLOPT_WRITEDATA, static_cast<void*>(read_callback_.get()));
 }
 
-void HTTPClient::setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback>&& callback) {
+void HTTPClient::setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback> callback) {
   logger_->log_debug("Setting callback for %s", url_);
   write_callback_ = std::move(callback);
   if (method_ == "PUT") {
@@ -231,6 +241,17 @@ void HTTPClient::setPostSize(size_t size) {
   curl_easy_setopt(http_session_.get(), CURLOPT_POSTFIELDSIZE, size);
 }
 
+void HTTPClient::setHTTPProxy(const utils::HTTPProxy &proxy) {
+  if (!proxy.host.empty()) {
+    curl_easy_setopt(http_session_.get(), CURLOPT_PROXY, proxy.host.c_str());
+    curl_easy_setopt(http_session_.get(), CURLOPT_PROXYPORT, proxy.port);
+    if (!proxy.username.empty()) {
+      curl_easy_setopt(http_session_.get(), CURLOPT_PROXYAUTH, CURLAUTH_ANY);
+      std::string value = proxy.username + ":" + proxy.password;
+      curl_easy_setopt(http_session_.get(), CURLOPT_PROXYUSERPWD, value.c_str());
+    }
+  }
+}
 
 void HTTPClient::setRequestHeader(std::string key, std::optional<std::string> value) {
   if (value)
@@ -356,8 +377,8 @@ int HTTPClient::onProgress(void *clientp, curl_off_t /*dltotal*/, curl_off_t dln
   if (elapsed > client.read_timeout_) {
     // timeout
     client.logger_->log_error("HTTP operation has been idle for %" PRId64 " ms, limit (%" PRId64 "ms) reached, terminating connection\n",
-                              std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count(),
-                              client.read_timeout_.count());
+        int64_t{std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count()},
+        int64_t{client.read_timeout_.count()});
     return 1;
   }
   return 0;
@@ -443,6 +464,14 @@ std::optional<std::filesystem::path> HTTPClient::getDefaultCAPath() {
   }
 #endif
   return std::nullopt;
+}
+
+void HTTPClient::CurlEasyCleanup::operator()(CURL* curl) const {
+  curl_easy_cleanup(curl);
+}
+
+void HTTPClient::CurlMimeFree::operator()(curl_mime* curl_mime) const {
+  curl_mime_free(curl_mime);
 }
 
 REGISTER_RESOURCE(HTTPClient, InternalResource);

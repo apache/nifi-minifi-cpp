@@ -723,12 +723,8 @@ def step_impl(context):
 
 @then("a flowfile with the content \"{content}\" is placed in the monitored directory in less than {duration}")
 @then("a flowfile with the content '{content}' is placed in the monitored directory in less than {duration}")
-def step_impl(context, content, duration):
-    context.test.check_for_single_file_with_content_generated(content, timeparse(duration))
-
-
 @then("{number_of_flow_files:d} flowfiles with the content \"{content}\" are placed in the monitored directory in less than {duration}")
-def step_impl(context, number_of_flow_files, content, duration):
+def step_impl(context, content, duration, number_of_flow_files=1):
     context.test.check_for_multiple_files_generated(number_of_flow_files, timeparse(duration), [content])
 
 

@@ -20,6 +20,17 @@
 #include <utility>
 #include "utils/StringUtils.h"
 
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib" )
+#pragma comment(lib, "crypt32.lib" )
+#pragma comment(lib, "Ws2_32.lib")
+
+#define CURL_STATICLIB
+#include <curl/curl.h>
+#else
+#include <curl/curl.h>
+#endif
+
 namespace org::apache::nifi::minifi::extensions::curl {
 
 void RequestHeaders::appendHeader(std::string key, std::string value) {
@@ -30,12 +41,12 @@ void RequestHeaders::disableExpectHeader() {
   headers_["Expect"] = "";
 }
 
-std::unique_ptr<struct curl_slist, decltype(&curl_slist_free_all)> RequestHeaders::get() const {
+std::unique_ptr<struct curl_slist, RequestHeaders::CurlSListFreeAll> RequestHeaders::get() const {
   curl_slist* new_list = nullptr;
   for (const auto& [header_key, header_value] : headers_)
     new_list = curl_slist_append(new_list, utils::StringUtils::join_pack(header_key, ": ", header_value).c_str());
 
-  return {new_list, curl_slist_free_all};
+  return {new_list, {}};
 }
 
 bool RequestHeaders::empty() const {
@@ -57,5 +68,7 @@ std::string& RequestHeaders::operator[](const std::string& key) {
 std::string& RequestHeaders::operator[](std::string&& key) {
   return headers_[std::move(key)];
 }
+
+void RequestHeaders::CurlSListFreeAll::operator()(struct curl_slist* s_list) const { curl_slist_free_all(s_list); }
 
 }  // namespace org::apache::nifi::minifi::extensions::curl

@@ -52,14 +52,7 @@ namespace org::apache::nifi::minifi::extensions::curl {
  */
 class HttpStreamingCallback final : public utils::HTTPUploadCallback {
  public:
-  HttpStreamingCallback()
-      : is_alive_(true),
-        total_bytes_loaded_(0U),
-        current_buffer_start_(0U),
-        current_pos_(0U),
-        ptr_(nullptr) {
-  }
-
+  HttpStreamingCallback() = default;
   ~HttpStreamingCallback() override = default;
 
   void close() override {
@@ -153,11 +146,11 @@ class HttpStreamingCallback final : public utils::HTTPUploadCallback {
       current_pos_ = current_buffer_start_;
       total_bytes_loaded_ += current_vec_.size();
       logger_->log_trace("loadNextBuffer() loaded new buffer, ptr_: %p, size: %zu, current_buffer_start_: %zu, current_pos_: %zu, total_bytes_loaded_: %zu",
-                         ptr_,
-                         current_vec_.size(),
-                         current_buffer_start_,
-                         current_pos_,
-                         total_bytes_loaded_);
+          ptr_,
+          current_vec_.size(),
+          current_buffer_start_,
+          current_pos_,
+          total_bytes_loaded_);
     }
   }
 
@@ -207,15 +200,15 @@ class HttpStreamingCallback final : public utils::HTTPUploadCallback {
   std::mutex mutex_;
   std::condition_variable cv;
 
-  bool is_alive_;
-  size_t total_bytes_loaded_;
-  size_t current_buffer_start_;
-  size_t current_pos_;
+  bool is_alive_{true};
+  size_t total_bytes_loaded_{0U};
+  size_t current_buffer_start_{0U};
+  size_t current_pos_{0U};
 
   std::deque<std::vector<std::byte>> byte_arrays_;
 
   std::vector<std::byte> current_vec_;
-  std::byte* ptr_;
+  std::byte* ptr_{nullptr};
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::curl

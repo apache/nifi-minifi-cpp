@@ -270,7 +270,7 @@ class BaseHTTPClient {
 
   virtual void setReadTimeout(std::chrono::milliseconds timeout) = 0;
 
-  virtual void setUploadCallback(std::unique_ptr<HTTPUploadCallback>&& callbackObj) = 0;
+  virtual void setUploadCallback(std::unique_ptr<HTTPUploadCallback> callbackObj) = 0;
 
   virtual void setContentType(std::string content_type) = 0;
 

@@ -22,16 +22,7 @@
 #include <string>
 #include <string_view>
 
-#ifdef WIN32
-#pragma comment(lib, "wldap32.lib" )
-#pragma comment(lib, "crypt32.lib" )
-#pragma comment(lib, "Ws2_32.lib")
-
-#define CURL_STATICLIB
-#include <curl/curl.h>
-#else
-#include <curl/curl.h>
-#endif
+struct curl_slist;
 
 namespace org::apache::nifi::minifi::extensions::curl {
 class RequestHeaders {
@@ -42,7 +33,9 @@ class RequestHeaders {
 
   void disableExpectHeader();
 
-  [[nodiscard]] std::unique_ptr<struct curl_slist, decltype(&curl_slist_free_all)> get() const;
+  struct CurlSListFreeAll { void operator()(struct curl_slist* curl) const; };
+
+  [[nodiscard]] std::unique_ptr<struct curl_slist, CurlSListFreeAll> get() const;
   [[nodiscard]] auto size() const { return headers_.size(); }
   [[nodiscard]] bool empty() const;
 

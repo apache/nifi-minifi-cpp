@@ -33,6 +33,13 @@
 
 namespace org::apache::nifi::minifi::utils {
 
+/*
+ * utils::ResourceQueue a threadsafe resource pool that lends out existing resources or creates them if necessary.
+ * getResource will return an existing unused resource or use the create_resource function to create one.
+ * If the number of existing resources reached the maximum_number_of_creatable_resources_, the call will block until a resource is returned to the queue.
+ * The lent out resource is in a ResourceWrapper that returns the resource to the queue on destruction.
+ * */
+
 template<class ResourceType>
 class ResourceQueue : public std::enable_shared_from_this<ResourceQueue<ResourceType>> {
  public:

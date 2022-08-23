@@ -19,6 +19,17 @@
 #include "RequestHeaders.h"
 #include "Catch.h"
 
+#ifdef WIN32
+#pragma comment(lib, "wldap32.lib" )
+#pragma comment(lib, "crypt32.lib" )
+#pragma comment(lib, "Ws2_32.lib")
+
+#define CURL_STATICLIB
+#include <curl/curl.h>
+#else
+#include <curl/curl.h>
+#endif
+
 namespace org::apache::nifi::minifi::extensions::curl::testing {
 
 bool containsHeaderString(const curl_slist* const headers, std::string_view string_to_contain) {

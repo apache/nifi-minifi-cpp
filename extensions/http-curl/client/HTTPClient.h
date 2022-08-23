@@ -16,11 +16,6 @@
  */
 #pragma once
 
-#ifdef WIN32
-#pragma warning(push)
-#pragma warning(disable: 4996)
-#endif
-
 #include "utils/BaseHTTPClient.h"
 #include "RequestHeaders.h"
 #ifdef WIN32
@@ -41,11 +36,6 @@
 #include <string>
 #include <utility>
 #include <limits>
-#ifdef WIN32
-#include <regex>
-#else
-#include <regex.h>
-#endif
 #include <string_view>
 
 #include "utils/ByteArrayCallback.h"
@@ -63,8 +53,8 @@ struct KeepAliveProbeData {
 struct HTTPResponseData {
   std::vector<char> response_body;
   utils::HTTPHeaderResponse header_response;
-  char* response_content_type;
-  int64_t response_code;
+  char* response_content_type{nullptr};
+  int64_t response_code{0};
 
   void clear() {
     header_response.clear();
@@ -80,7 +70,6 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   HTTPClient(const std::string& name, const utils::Identifier& uuid);
 
-  // class uses raw pointers
   HTTPClient(const HTTPClient&) = delete;
   HTTPClient& operator=(const HTTPClient&) = delete;
 
@@ -96,7 +85,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   void setVerbose(bool use_stderr) override;
 
-  void addFormPart(const std::string& content_type, const std::string& name, std::unique_ptr<utils::HTTPUploadCallback>&& form_callback, const std::optional<std::string>& filename);
+  void addFormPart(const std::string& content_type, const std::string& name, std::unique_ptr<utils::HTTPUploadCallback> form_callback, const std::optional<std::string>& filename);
 
   void forceClose();
 
@@ -106,9 +95,9 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   void setReadTimeout(std::chrono::milliseconds timeout) override;
 
-  void setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback>&& callback) override;
+  void setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback> callback) override;
 
-  virtual void setReadCallback(std::unique_ptr<utils::HTTPReadCallback>&& callback);
+  virtual void setReadCallback(std::unique_ptr<utils::HTTPReadCallback> callback);
 
   utils::HTTPUploadCallback* getUploadCallback() const { return write_callback_.get(); }
   utils::HTTPReadCallback* getReadCallback() const { return read_callback_.get(); }
@@ -142,15 +131,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   bool setMinimumSSLVersion(utils::SSLVersion minimum_version) override;
 
-  void setKeepAliveProbe(std::optional<KeepAliveProbeData> probe_data) {
-    if (probe_data) {
-      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPALIVE, true);
-      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPINTVL, probe_data->keep_alive_interval.count());
-      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPIDLE, probe_data->keep_alive_delay.count());
-    } else {
-      curl_easy_setopt(http_session_.get(), CURLOPT_TCP_KEEPALIVE, false);
-    }
-  }
+  void setKeepAliveProbe(std::optional<KeepAliveProbeData> probe_data);
 
   const std::string& getURL() const {
     return url_;
@@ -203,17 +184,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   void setPostSize(size_t size);
 
-  void setHTTPProxy(const utils::HTTPProxy &proxy) override {
-    if (!proxy.host.empty()) {
-      curl_easy_setopt(http_session_.get(), CURLOPT_PROXY, proxy.host.c_str());
-      curl_easy_setopt(http_session_.get(), CURLOPT_PROXYPORT, proxy.port);
-      if (!proxy.username.empty()) {
-        curl_easy_setopt(http_session_.get(), CURLOPT_PROXYAUTH, CURLAUTH_ANY);
-        std::string value = proxy.username + ":" + proxy.password;
-        curl_easy_setopt(http_session_.get(), CURLOPT_PROXYUSERPWD, value.c_str());
-      }
-    }
-  }
+  void setHTTPProxy(const utils::HTTPProxy &proxy) override;
 
   static bool isValidHttpHeaderField(std::string_view field_name);
   static std::string replaceInvalidCharactersInHttpHeaderFieldName(std::string field_name);
@@ -267,8 +238,11 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   RequestHeaders request_headers_;
 
-  std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> http_session_{nullptr, curl_easy_cleanup};
-  std::unique_ptr<curl_mime, decltype(&curl_mime_free)> form_{nullptr, curl_mime_free};
+  struct CurlEasyCleanup { void operator()(CURL* curl) const; };
+  struct CurlMimeFree { void operator()(curl_mime* curl_mime) const; };
+
+  std::unique_ptr<CURL, CurlEasyCleanup> http_session_;
+  std::unique_ptr<curl_mime, CurlMimeFree> form_;
   std::unique_ptr<utils::HTTPReadCallback> read_callback_;
   std::unique_ptr<utils::HTTPUploadCallback> write_callback_;
   std::unique_ptr<utils::HTTPUploadCallback> form_callback_;
@@ -277,7 +251,3 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::curl
-
-#ifdef WIN32
-#pragma warning(pop)
-#endif
