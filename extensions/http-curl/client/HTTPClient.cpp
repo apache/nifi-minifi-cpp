@@ -260,6 +260,22 @@ void HTTPClient::setRequestHeader(std::string key, std::optional<std::string> va
     request_headers_.erase(key);
 }
 
+namespace {
+struct CurlSListFreeAll {
+  void operator()(struct curl_slist* slist) const {
+    curl_slist_free_all(slist);
+  }
+};
+
+std::unique_ptr<struct curl_slist, CurlSListFreeAll> getCurlSList(const std::unordered_map<std::string, std::string>& request_headers) {
+  curl_slist* new_list = nullptr;
+  for (const auto& [header_key, header_value] : request_headers)
+    new_list = curl_slist_append(new_list, utils::StringUtils::join_pack(header_key, ": ", header_value).c_str());
+
+  return {new_list, {}};
+}
+}  // namespace
+
 
 bool HTTPClient::submit() {
   if (url_.empty()) {
@@ -283,7 +299,7 @@ bool HTTPClient::submit() {
     curl_easy_setopt(http_session_.get(), CURLOPT_NOPROGRESS, 1);
   }
 
-  auto headers = request_headers_.get();
+  auto headers = getCurlSList(request_headers_);
   if (headers) {
     curl_slist_append(headers.get(), "Expect:");
     curl_easy_setopt(http_session_.get(), CURLOPT_HTTPHEADER, headers.get());

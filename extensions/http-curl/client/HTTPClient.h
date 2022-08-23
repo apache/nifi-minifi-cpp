@@ -17,7 +17,6 @@
 #pragma once
 
 #include "utils/BaseHTTPClient.h"
-#include "RequestHeaders.h"
 #ifdef WIN32
 #pragma comment(lib, "wldap32.lib" )
 #pragma comment(lib, "crypt32.lib" )
@@ -29,14 +28,15 @@
 #include <curl/curl.h>
 #endif
 #include <curl/easy.h>
-#include <vector>
-#include <memory>
-#include <map>
 #include <chrono>
-#include <string>
-#include <utility>
 #include <limits>
+#include <map>
+#include <memory>
+#include <string>
 #include <string_view>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include "utils/ByteArrayCallback.h"
 #include "controllers/SSLContextService.h"
@@ -236,7 +236,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   CURLcode res_{CURLE_OK};
 
-  RequestHeaders request_headers_;
+  std::unordered_map<std::string, std::string> request_headers_;
 
   struct CurlEasyCleanup { void operator()(CURL* curl) const; };
   struct CurlMimeFree { void operator()(curl_mime* curl_mime) const; };
