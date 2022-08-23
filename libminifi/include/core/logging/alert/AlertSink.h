@@ -41,6 +41,11 @@ namespace org::apache::nifi::minifi::core::logging {
 
 class AlertSink : public spdlog::sinks::base_sink<std::mutex> {
  public:
+  AlertSink(const AlertSink&) = delete;
+  AlertSink(AlertSink&&) = delete;
+  AlertSink& operator=(const AlertSink&&) = delete;
+  AlertSink& operator=(AlertSink&&) = delete;
+
   static std::shared_ptr<AlertSink> create(const std::string& prop_name_prefix, const std::shared_ptr<LoggerProperties>& logger_properties, std::shared_ptr<Logger> logger);
 
   void initialize(core::controller::ControllerServiceProvider* controller, std::shared_ptr<AgentIdentificationProvider> agent_id);
