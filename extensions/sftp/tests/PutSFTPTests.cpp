@@ -244,7 +244,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP bad password", "[PutSFTP][authent
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources", "id_rsa"));
   plan->setProperty(put, "Private Key Passphrase", "privatekeypassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -257,7 +257,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication success
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase", "[PutSFTP][authentication]") {
   plan->setProperty(put, "Password", "");
-  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources", "id_rsa"));
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -273,7 +273,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad passphrase fallback to password", "[PutSFTP][authentication]") {
-  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(put, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources", "id_rsa"));
   plan->setProperty(put, "Private Key Passphrase", "badpassword");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -286,7 +286,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP public key authentication bad pas
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources", "known_hosts"));
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -300,7 +300,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking success", "[Put
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources", "known_hosts"));
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -318,7 +318,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing strict"
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-strict", "[PutSFTP][hostkey]") {
   plan->setProperty(put, "Hostname", "127.0.0.1");
 
-  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources", "known_hosts"));
   plan->setProperty(put, "Strict Host Key Checking", "false");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -330,7 +330,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking missing non-str
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP host key checking mismatch strict", "[PutSFTP][hostkey]") {
-  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources/known_hosts_mismatch"));
+  plan->setProperty(put, "Host Key File", utils::file::concat_path(get_sftp_test_dir(), "resources", "known_hosts_mismatch"));
   plan->setProperty(put, "Strict Host Key Checking", "true");
 
   createFile(src_dir, "tstFile.ext", "tempFile");
@@ -847,7 +847,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP expression language test", "[PutS
   plan->setProperty(update_attribute, "attr_Username", "nifiuser", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Password", "nifipassword", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Private Key Path",
-      utils::file::FileUtils::concat_path(get_sftp_test_dir(), "resources/id_rsa"), true /*dynamic*/);
+      utils::file::concat_path(get_sftp_test_dir(), "resources", "id_rsa"), true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Private Key Passphrase", "privatekeypassword", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Remote Path", "nifi_test/", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Temporary Filename", "tempfile", true /*dynamic*/);

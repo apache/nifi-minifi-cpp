@@ -217,7 +217,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP fetch one file", "[FetchSFTP]
 
 TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP public key authentication", "[FetchSFTP][basic]") {
   plan->setProperty(fetch_sftp, "Remote File", "nifi_test/tstFile.ext");
-  plan->setProperty(fetch_sftp, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"));
+  plan->setProperty(fetch_sftp, "Private Key Path", utils::file::concat_path(get_sftp_test_dir(), "resources", "id_rsa"));
   plan->setProperty(fetch_sftp, "Private Key Passphrase", "privatekeypassword");
 
   createFile("nifi_test/tstFile.ext", "Test content 1");
@@ -385,7 +385,7 @@ TEST_CASE_METHOD(FetchSFTPTestsFixture, "FetchSFTP expression language test", "[
   plan->setProperty(update_attribute, "attr_Username", "nifiuser", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Password", "nifipassword", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Private Key Path",
-    utils::file::concat_path(get_sftp_test_dir(), "resources/id_rsa"), true /*dynamic*/);
+    utils::file::concat_path(get_sftp_test_dir(), "resources", "id_rsa"), true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Private Key Passphrase", "privatekeypassword", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Remote File", "nifi_test/tstFile.ext", true /*dynamic*/);
   plan->setProperty(update_attribute, "attr_Move Destination Directory", "nifi_done/", true /*dynamic*/);

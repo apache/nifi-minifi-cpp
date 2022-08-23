@@ -331,17 +331,10 @@ inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logge
   }
 }
 
-inline std::string concat_path(const std::string& root, const std::string& child, bool force_posix = false) {
-  if (root.empty()) {
-    return child;
-  }
-  std::stringstream new_path;
-  if (root.back() == get_separator(force_posix)) {
-    new_path << root << child;
-  } else {
-    new_path << root << get_separator(force_posix) << child;
-  }
-  return new_path.str();
+template<typename ...T>
+requires (std::is_convertible_v<std::decay_t<T>, std::filesystem::path> && ...)
+inline std::string concat_path(const T&... segments) {
+  return (... / std::filesystem::path{segments}).string();
 }
 
 /**
