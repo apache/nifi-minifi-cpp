@@ -63,6 +63,7 @@
 #include "FlowController.h"
 #include "AgentDocs.h"
 #include "MainHelper.h"
+#include "JsonSchema.h"
 
 namespace minifi = org::apache::nifi::minifi;
 namespace core = minifi::core;
@@ -117,6 +118,15 @@ void dumpDocs(const std::shared_ptr<minifi::Configure> &configuration, const std
   minifi::docs::AgentDocs docsCreator;
 
   docsCreator.generate(dir, out);
+}
+
+void writeJsonSchema(const std::shared_ptr<minifi::Configure> &configuration, std::ostream& out) {
+  auto pythoncreator = core::ClassLoader::getDefaultClassLoader().instantiate("PythonCreator", "PythonCreator");
+  if (nullptr != pythoncreator) {
+    pythoncreator->configure(configuration);
+  }
+
+  out << minifi::docs::generateJsonSchema();
 }
 
 int main(int argc, char **argv) {
@@ -267,6 +277,21 @@ int main(int argc, char **argv) {
         dumpDocs(configure, argv[2], std::cout);
       }
       exit(0);
+    }
+
+    if (argc >= 2 && std::string("schema") == argv[1]) {
+      if (argc != 3) {
+        std::cerr << "Malformed schema command, expected '<minifiexe> schema <output-file>'" << std::endl;
+        std::exit(1);
+      }
+
+      std::cerr << "Writing json schema to " << argv[2] << std::endl;
+
+      {
+        std::ofstream schema_file{argv[2]};
+        writeJsonSchema(configure, schema_file);
+      }
+      std::exit(0);
     }
 
     if (configure->get(minifi::Configure::nifi_graceful_shutdown_seconds, graceful_shutdown_seconds)) {
