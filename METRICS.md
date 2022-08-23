@@ -52,7 +52,7 @@ The following option defines which metric classes should be exposed through the 
 
 	nifi.metrics.publisher.metrics=QueueMetrics,RepositoryMetrics,GetFileMetrics,DeviceInfoNode,FlowInformation
 
-An agent identifier should also be defined to identify which agent the metric is exposed from. If not set the hostname is used as the identifier.
+An agent identifier should also be defined to identify which agent the metric is exposed from. If not set, the hostname is used as the identifier.
 
 	# in minifi.properties
 
