@@ -17,20 +17,15 @@
  */
 #include "GetFile.h"
 
-#include <sys/stat.h>
-#include <sys/types.h>
-
 #include <cstring>
+#include <filesystem>
 #include <vector>
 #include <queue>
-#include <map>
 #include <memory>
-#include <regex>
 #include <string>
 
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "utils/TimeUtil.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
@@ -166,9 +161,9 @@ void GetFile::getSingleFile(core::ProcessSession& session, const std::string& fi
   logger_->log_info("GetFile process %s", file_name);
   auto flow_file = session.create();
   gsl_Expects(flow_file);
-  std::string path;
-  std::string name;
-  std::tie(path, name) = utils::file::split_path(file_name);
+  const std::filesystem::path file_path{file_name};
+  std::string path = file_path.parent_path().string();
+  std::string name = file_path.filename().string();
   flow_file->setAttribute(core::SpecialFlowAttribute::FILENAME, name);
   flow_file->setAttribute(core::SpecialFlowAttribute::PATH, path);
   flow_file->addAttribute(core::SpecialFlowAttribute::ABSOLUTE_PATH, file_name);
@@ -213,7 +208,7 @@ std::queue<std::string> GetFile::pollListing(uint64_t batch_size) {
   return list;
 }
 
-bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name, const GetFileRequest &request) {
+bool GetFile::fileMatchesRequestCriteria(const std::string& fullName, const std::string& name, const GetFileRequest& request) {
   logger_->log_trace("Checking file: %s", fullName);
 
   std::error_code ec;
@@ -255,7 +250,7 @@ bool GetFile::fileMatchesRequestCriteria(std::string fullName, std::string name,
 
 void GetFile::performListing(const GetFileRequest &request) {
   auto callback = [this, request](const std::string& dir, const std::string& filename) -> bool {
-    std::string fullpath = dir + utils::file::get_separator() + filename;
+    std::string fullpath = utils::file::concat_path(dir, filename);
     if (fileMatchesRequestCriteria(fullpath, filename, request)) {
       putListing(fullpath);
     }

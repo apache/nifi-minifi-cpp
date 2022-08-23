@@ -38,41 +38,17 @@ using path = const char*;
  * @param fileName output file name
  * @return result of the operation.
  */
-bool getFileNameAndPath(const std::string &path, std::string &filePath, std::string &fileName);
+bool getFileNameAndPath(const std::string& path_string, std::string& file_path, std::string& file_name);
 
 /**
- * Resolves the supplied path to an absolute pathname using the native OS functions
- * (realpath(3) on *nix, GetFullPathNameA on Windows)
- * @param path the name of the file
+ * Resolves the supplied path to an absolute pathname
  * @return the canonicalized absolute pathname on success, empty string on failure
  */
 std::string getFullPath(const std::string& path);
 
+std::optional<std::string> canonicalize(const std::string& path);
+
 std::string globToRegex(std::string glob);
-
-inline bool isAbsolutePath(const char* const path) noexcept {
-#ifdef _WIN32
-  return path && std::isalpha(path[0]) && path[1] == ':' && (path[2] == '\\' || path[2] == '/');
-#else
-  return path && path[0] == '/';
-#endif
-}
-
-inline std::optional<std::string> canonicalize(const std::string &path) {
-  const char *resolved = nullptr;
-#ifndef WIN32
-  char full_path[PATH_MAX];
-  resolved = realpath(path.c_str(), full_path);
-#else
-  resolved = path.c_str();
-#endif
-
-  if (resolved == nullptr) {
-    return std::nullopt;
-  }
-  return std::string(path);
-}
-
 
 /**
  * Represents filesystem space information in bytes

@@ -16,47 +16,29 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
 #include <cstring>
-#include <utility>
 #include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
 #include <iostream>
-#include <sstream>
-#include <algorithm>
 #include <functional>
 #include <iterator>
 #include <random>
-#ifndef WIN32
-#include <unistd.h>
-#endif
 
 #include "TestBase.h"
 #include "Catch.h"
 #include "Exception.h"
 #include "date/date.h"
-#include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
 #include "processors/PutSFTP.h"
 #include "processors/GetFile.h"
 #include "processors/LogAttribute.h"
 #include "processors/ExtractText.h"
-#include "processors/UpdateAttribute.h"
 #include "tools/SFTPTestServer.h"
 
 constexpr const char* PUBLIC_KEY_AUTH_ERROR_MESSAGE = "Failed to authenticate with publickey, error: Unable to extract public key from private key file: Wrong passphrase or invalid/unrecognized private key file format";  // NOLINT(whitespace/line_length)
@@ -83,7 +65,7 @@ class PutSFTPTestsFixture {
     REQUIRE(plan);
 
     // Start SFTP server
-    sftp_server = std::make_unique<SFTPTestServer>(dst_dir);
+    sftp_server = std::make_unique<SFTPTestServer>(dst_dir.string());
     REQUIRE(true == sftp_server->start());
 
     // Build MiNiFi processing graph
@@ -103,7 +85,7 @@ class PutSFTPTestsFixture {
           true);
 
     // Configure GetFile processor
-    plan->setProperty(get_file, "Input Directory", src_dir);
+    plan->setProperty(get_file, "Input Directory", src_dir.string());
 
     // Configure PutSFTP processor
     plan->setProperty(put, "Hostname", "localhost");
@@ -127,20 +109,17 @@ class PutSFTPTestsFixture {
   }
 
   // Create source file
-  static void createFile(const std::string &dir, const std::string& relative_path, const std::string& content) {
+  static void createFile(const std::filesystem::path& dir, const std::string& relative_path, const std::string& content) {
     std::fstream file;
-    std::stringstream ss;
-    ss << dir << "/" << relative_path;
-    file.open(ss.str(), std::ios::out);
+    file.open(dir / relative_path, std::ios::out);
     file << content;
     file.close();
   }
 
   // Test target file
   void testFile(const std::string& relative_path, const std::string& expected_content) {
-    std::stringstream resultFile;
-    resultFile << dst_dir << "/vfs/" << relative_path;
-    std::ifstream file(resultFile.str());
+    const auto result_file = dst_dir / "vfs" / relative_path;
+    std::ifstream file(result_file);
     REQUIRE(true == file.good());
     std::stringstream content;
     std::vector<char> buffer(1024U);
@@ -152,42 +131,33 @@ class PutSFTPTestsFixture {
   }
 
   void testFileNotExists(const std::string& relative_path) {
-    std::stringstream resultFile;
-    resultFile << dst_dir << "/vfs/" << relative_path;
-    std::ifstream file(resultFile.str());
+    const auto result_file = dst_dir / "vfs" / relative_path;
+    std::ifstream file(result_file);
     REQUIRE(false == file.is_open());
     REQUIRE(false == file.good());
   }
 
   void testModificationTime(const std::string& relative_path, std::filesystem::file_time_type mtime) {
-    std::stringstream resultFile;
-    resultFile << dst_dir << "/vfs/" << relative_path;
-    REQUIRE(mtime == utils::file::last_write_time(resultFile.str()).value());
+    REQUIRE(mtime == utils::file::last_write_time((dst_dir / "vfs" / relative_path).string()).value());
   }
 
   void testPermissions(const std::string& relative_path, uint32_t expected_permissions) {
-    std::stringstream resultFile;
-    resultFile << dst_dir << "/vfs/" << relative_path;
     uint32_t permissions = 0U;
-    REQUIRE(true == utils::file::get_permissions(resultFile.str(), permissions));
+    REQUIRE(true == utils::file::get_permissions((dst_dir / "vfs" / relative_path).string(), permissions));
     REQUIRE(expected_permissions == permissions);
   }
 
   void testOwner(const std::string& relative_path, uint64_t expected_uid) {
-    std::stringstream resultFile;
-    resultFile << dst_dir << "/vfs/" << relative_path;
     uint64_t uid = 0U;
     uint64_t gid = 0U;
-    REQUIRE(true == utils::file::get_uid_gid(resultFile.str(), uid, gid));
+    REQUIRE(true == utils::file::get_uid_gid((dst_dir / "vfs" / relative_path).string(), uid, gid));
     REQUIRE(expected_uid == uid);
   }
 
   void testGroup(const std::string& relative_path, uint64_t expected_gid) {
-    std::stringstream resultFile;
-    resultFile << dst_dir << "/vfs/" << relative_path;
     uint64_t uid = 0U;
     uint64_t gid = 0U;
-    REQUIRE(true == utils::file::get_uid_gid(resultFile.str(), uid, gid));
+    REQUIRE(true == utils::file::get_uid_gid((dst_dir / "vfs" / relative_path).string(), uid, gid));
     REQUIRE(expected_gid == gid);
   }
 
@@ -202,8 +172,8 @@ class PutSFTPTestsFixture {
 
  protected:
   TestController testController;
-  std::string src_dir = testController.createTempDirectory();
-  std::string dst_dir = testController.createTempDirectory();
+  std::filesystem::path src_dir{testController.createTempDirectory()};
+  std::filesystem::path dst_dir{testController.createTempDirectory()};
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::unique_ptr<SFTPTestServer> sftp_server;
   std::shared_ptr<core::Processor> get_file;
@@ -362,8 +332,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution rename", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_RENAME);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::create_dir(utils::file::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -376,8 +346,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution reject", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REJECT);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -389,8 +359,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution fail", "[PutS
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_FAIL);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -402,8 +372,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution ignore", "[Pu
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_IGNORE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -416,8 +386,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution replace", "[P
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_REPLACE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -429,8 +399,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution none", "[PutS
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -461,8 +431,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP conflict resolution with director
   }
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test/tstFile1.ext")));
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test/tstFile1.ext"));
 
   testController.runSession(plan, true);
 
@@ -571,8 +541,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test dot rename", "[PutSFTP]") {
    * We create the would-be dot renamed file in the target, and because we don't overwrite temporary files,
    * if we really use a dot renamed temporary file, we should fail.
    */
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/.tstFile1.ext", "");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", ".tstFile1.ext", "");
 
   testController.runSession(plan, true);
 
@@ -603,8 +573,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test temporary filename", "[PutSF
    * We create the would-be temporary file in the target, and because we don't overwrite temporary files,
    * if we really use the temporary file, we should fail.
    */
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext.temp", "");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext.temp", "");
 
   testController.runSession(plan, true);
 
@@ -621,8 +591,8 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP test temporary file cleanup", "[P
   plan->setProperty(put, "Conflict Resolution", minifi::processors::PutSFTP::CONFLICT_RESOLUTION_NONE);
 
   createFile(src_dir, "tstFile1.ext", "content 1");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content 2");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content 2");
 
   testController.runSession(plan, true);
 
@@ -763,7 +733,7 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching two files in one batch",
 
   testController.runSession(plan, true);
 
-  REQUIRE(2U == directoryContentCount(std::string(dst_dir) + "/vfs/nifi_test"));
+  REQUIRE(2U == directoryContentCount((dst_dir / "vfs" / "nifi_test").string()));
 }
 
 TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching two files in two batches", "[PutSFTP][batching]") {
@@ -773,14 +743,14 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching two files in two batches
   createFile(src_dir, "tstFile2.ext", "content 2");
 
   testController.runSession(plan, true);
-  REQUIRE(1U == directoryContentCount(std::string(dst_dir) + "/vfs/nifi_test"));
+  REQUIRE(1U == directoryContentCount((dst_dir / "vfs" / "nifi_test").string()));
   plan->reset();
 
   createFile(src_dir, "tstFile1.ext", "content 1");
   createFile(src_dir, "tstFile2.ext", "content 2");
 
   testController.runSession(plan, true);
-  REQUIRE(2U == directoryContentCount(std::string(dst_dir) + "/vfs/nifi_test"));
+  REQUIRE(2U == directoryContentCount((dst_dir / "vfs" / "nifi_test").string()));
   plan->reset();
 }
 
@@ -792,9 +762,9 @@ TEST_CASE_METHOD(PutSFTPTestsFixture, "PutSFTP batching does not fail even if on
   createFile(src_dir, "tstFile2.ext", "content 2");
   createFile(src_dir, "tstFile3.ext", "content 3");
 
-  REQUIRE(0 == utils::file::FileUtils::create_dir(utils::file::FileUtils::concat_path(dst_dir, "vfs/nifi_test")));
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile1.ext", "content other");
-  createFile(utils::file::FileUtils::concat_path(dst_dir, "vfs"), "nifi_test/tstFile2.ext", "content other");
+  REQUIRE(std::filesystem::create_directories(dst_dir / "vfs" / "nifi_test"));
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile1.ext", "content other");
+  createFile(dst_dir / "vfs" / "nifi_test", "tstFile2.ext", "content other");
 
   testController.runSession(plan, true);
 

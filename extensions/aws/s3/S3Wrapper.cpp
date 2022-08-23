@@ -33,7 +33,7 @@ namespace org::apache::nifi::minifi::aws::s3 {
 
 void HeadObjectResult::setFilePaths(const std::string& key) {
   absolute_path = key;
-  std::tie(path, filename) = minifi::utils::file::split_path(key, true /*force_posix*/);
+  std::tie(path, filename) = minifi::utils::file::split_path(key);
 }
 
 S3Wrapper::S3Wrapper() : request_sender_(std::make_unique<S3ClientRequestSender>()) {
@@ -74,7 +74,7 @@ std::string S3Wrapper::getEncryptionString(Aws::S3::Model::ServerSideEncryption 
   return "";
 }
 
-std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream) {
+std::optional<PutObjectResult> S3Wrapper::putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<Aws::IOStream>& data_stream) {
   Aws::S3::Model::PutObjectRequest request;
   request.SetBucket(put_object_params.bucket);
   request.SetKey(put_object_params.object_key);

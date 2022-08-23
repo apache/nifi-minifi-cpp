@@ -15,8 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
-#define LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
+#pragma once
 
 #include <memory>
 #include <optional>
@@ -42,11 +41,7 @@
 #include "utils/file/FileSystem.h"
 #include "utils/ChecksumCalculator.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
-namespace core {
+namespace org::apache::nifi::minifi::core {
 
 class static_initializers {
  public:
@@ -62,21 +57,15 @@ extern static_initializers &get_static_functions();
  */
 class FlowConfiguration : public CoreComponent {
  public:
-  /**
-   * Constructor that will be used for configuring
-   * the flow controller.
-   */
-  explicit FlowConfiguration(std::shared_ptr<core::Repository> repo, std::shared_ptr<core::Repository> flow_file_repo,
+  explicit FlowConfiguration(const std::shared_ptr<core::Repository>& repo, std::shared_ptr<core::Repository> flow_file_repo,
                              std::shared_ptr<core::ContentRepository> content_repo, std::shared_ptr<io::StreamFactory> stream_factory,
                              std::shared_ptr<Configure> configuration, const std::optional<std::string>& path,
                              std::shared_ptr<utils::file::FileSystem> filesystem = std::make_shared<utils::file::FileSystem>());
 
   ~FlowConfiguration() override;
 
-  // Create Processor (Node/Input/Output Port) based on the name
   std::unique_ptr<core::Processor> createProcessor(const std::string &name, const utils::Identifier &uuid);
   std::unique_ptr<core::Processor> createProcessor(const std::string &name, const std::string &fullname, const utils::Identifier &uuid);
-  // Create Root Processor Group
 
   static std::unique_ptr<core::ProcessGroup> createRootProcessGroup(const std::string &name, const utils::Identifier &uuid, int version);
   static std::unique_ptr<core::ProcessGroup> createSimpleProcessGroup(const std::string &name, const utils::Identifier &uuid, int version);
@@ -85,12 +74,10 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<core::controller::ControllerServiceNode> createControllerService(const std::string &class_name, const std::string &full_class_name, const std::string &name,
       const utils::Identifier &uuid);
 
-  // Create Connection
-  std::unique_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
-  // Create Provenance Report Task
+  [[nodiscard]] std::unique_ptr<minifi::Connection> createConnection(const std::string &name, const utils::Identifier &uuid) const;
   std::unique_ptr<core::reporting::SiteToSiteProvenanceReportingTask> createProvenanceReportTask();
 
-  std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
+  [[nodiscard]] std::shared_ptr<state::response::FlowVersion> getFlowVersion() const {
     return flow_version_;
   }
 
@@ -100,10 +87,6 @@ class FlowConfiguration : public CoreComponent {
 
   bool persist(const std::string& configuration);
 
-  /**
-   * Returns the configuration path string
-   * @return config_path_
-   */
   const std::optional<std::string> &getConfigurationPath() {
     return config_path_;
   }
@@ -125,17 +108,11 @@ class FlowConfiguration : public CoreComponent {
   utils::ChecksumCalculator& getChecksumCalculator() { return checksum_calculator_; }
 
  protected:
-  // service provider reference.
   std::shared_ptr<core::controller::StandardControllerServiceProvider> service_provider_;
-  // based, shared controller service map.
   std::shared_ptr<core::controller::ControllerServiceMap> controller_services_;
-  // configuration path
   std::optional<std::string> config_path_;
-  // flow file repo
   std::shared_ptr<core::Repository> flow_file_repo_;
-  // content repository.
   std::shared_ptr<core::ContentRepository> content_repo_;
-  // stream factory
   std::shared_ptr<io::StreamFactory> stream_factory_;
   std::shared_ptr<Configure> configuration_;
   std::shared_ptr<state::response::FlowVersion> flow_version_;
@@ -146,11 +123,4 @@ class FlowConfiguration : public CoreComponent {
   std::shared_ptr<logging::Logger> logger_;
 };
 
-}  // namespace core
-}  // namespace minifi
-}  // namespace nifi
-}  // namespace apache
-}  // namespace org
-
-#endif  // LIBMINIFI_INCLUDE_CORE_FLOWCONFIGURATION_H_
-
+}  // namespace org::apache::nifi::minifi::core

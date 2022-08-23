@@ -152,7 +152,7 @@ void FetchSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, 
   /* Set attributes */
   std::string parent_path;
   std::string child_path;
-  std::tie(parent_path, child_path) = utils::file::split_path(remote_file, true /*force_posix*/);
+  std::tie(parent_path, child_path) = utils::file::split_path(remote_file);
 
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_HOST, common_properties.hostname);
   session->putAttribute(flow_file, ATTRIBUTE_SFTP_REMOTE_PORT, std::to_string(common_properties.port));

@@ -49,7 +49,7 @@ class GetFileTestController {
  private:
   TestController test_controller_;
   std::shared_ptr<TestPlan> test_plan_;
-  std::string temp_dir_;
+  std::filesystem::path temp_dir_;
   std::string input_file_name_;
   std::string large_input_file_name_;
   std::string hidden_input_file_name_;
@@ -70,7 +70,7 @@ GetFileTestController::GetFileTestController()
 
   // Build MiNiFi processing graph
   get_file_processor_ = test_plan_->addProcessor("GetFile", "Get");
-  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir_);
+  test_plan_->setProperty(get_file_processor_, minifi::processors::GetFile::Directory.getName(), temp_dir_.string());
   auto log_attr = test_plan_->addProcessor("LogAttribute", "Log", core::Relationship("success", "description"), true);
   test_plan_->setProperty(log_attr, minifi::processors::LogAttribute::FlowFilesToLog.getName(), "0");
 
@@ -85,7 +85,7 @@ GetFileTestController::GetFileTestController()
 }
 
 std::string GetFileTestController::getFullPath(const std::string& filename) const {
-  return temp_dir_ + utils::file::FileUtils::get_separator() + filename;
+  return (temp_dir_ / filename).string();
 }
 
 std::string GetFileTestController::getInputFilePath() const {

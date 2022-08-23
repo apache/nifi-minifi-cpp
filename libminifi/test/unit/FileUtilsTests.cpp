@@ -52,43 +52,43 @@ TEST_CASE("TestFileUtils::concat_path", "[TestConcatPath]") {
 
 TEST_CASE("TestFileUtils::get_parent_path", "[TestGetParentPath]") {
 #ifdef WIN32
-  REQUIRE("foo\\" == FileUtils::get_parent_path("foo\\bar"));
-  REQUIRE("foo\\" == FileUtils::get_parent_path("foo\\bar\\"));
-  REQUIRE("C:\\foo\\" == FileUtils::get_parent_path("C:\\foo\\bar"));
-  REQUIRE("C:\\foo\\" == FileUtils::get_parent_path("C:\\foo\\bar\\"));
-  REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo"));
-  REQUIRE("C:\\" == FileUtils::get_parent_path("C:\\foo\\"));
-  REQUIRE("" == FileUtils::get_parent_path("C:\\"));  // NOLINT(readability-container-size-empty)
-  REQUIRE("" == FileUtils::get_parent_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
+  CHECK("foo" == FileUtils::get_parent_path("foo\\bar"));
+  CHECK("foo\\bar" == FileUtils::get_parent_path("foo\\bar\\"));
+  CHECK("C:\\foo" == FileUtils::get_parent_path("C:\\foo\\bar"));
+  CHECK("C:\\foo\\bar" == FileUtils::get_parent_path("C:\\foo\\bar\\"));
+  CHECK("C:\\" == FileUtils::get_parent_path("C:\\foo"));
+  CHECK("C:\\foo" == FileUtils::get_parent_path("C:\\foo\\"));
+  CHECK("C:\\" == FileUtils::get_parent_path("C:\\"));
+  CHECK("C:\\\\" == FileUtils::get_parent_path("C:\\\\"));
 #else
-  REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar"));
-  REQUIRE("foo/" == FileUtils::get_parent_path("foo/bar/"));
-  REQUIRE("/foo/" == FileUtils::get_parent_path("/foo/bar"));
-  REQUIRE("/foo/" == FileUtils::get_parent_path("/foo/bar/"));
-  REQUIRE("/" == FileUtils::get_parent_path("/foo"));
-  REQUIRE("/" == FileUtils::get_parent_path("/foo/"));
-  REQUIRE("" == FileUtils::get_parent_path("/"));  // NOLINT(readability-container-size-empty)
-  REQUIRE("" == FileUtils::get_parent_path("//"));  // NOLINT(readability-container-size-empty)
+  CHECK("foo" == FileUtils::get_parent_path("foo/bar"));
+  CHECK("foo/bar" == FileUtils::get_parent_path("foo/bar/"));
+  CHECK("/foo" == FileUtils::get_parent_path("/foo/bar"));
+  CHECK("/foo/bar" == FileUtils::get_parent_path("/foo/bar/"));
+  CHECK("/" == FileUtils::get_parent_path("/foo"));
+  CHECK("/foo" == FileUtils::get_parent_path("/foo/"));
+  CHECK("/" == FileUtils::get_parent_path("/"));
+  CHECK("//" == FileUtils::get_parent_path("//"));
 #endif
 }
 
 TEST_CASE("TestFileUtils::get_child_path", "[TestGetChildPath]") {
 #ifdef WIN32
   REQUIRE("bar" == FileUtils::get_child_path("foo\\bar"));
-  REQUIRE("bar\\" == FileUtils::get_child_path("foo\\bar\\"));
+  REQUIRE("" == FileUtils::get_child_path("foo\\bar\\"));  // NOLINT(readability-container-size-empty)
   REQUIRE("bar" == FileUtils::get_child_path("C:\\foo\\bar"));
-  REQUIRE("bar\\" == FileUtils::get_child_path("C:\\foo\\bar\\"));
+  REQUIRE("" == FileUtils::get_child_path("C:\\foo\\bar\\"));  // NOLINT(readability-container-size-empty)
   REQUIRE("foo" == FileUtils::get_child_path("C:\\foo"));
-  REQUIRE("foo\\" == FileUtils::get_child_path("C:\\foo\\"));
+  REQUIRE("" == FileUtils::get_child_path("C:\\foo\\"));  // NOLINT(readability-container-size-empty)
   REQUIRE("" == FileUtils::get_child_path("C:\\"));  // NOLINT(readability-container-size-empty)
   REQUIRE("" == FileUtils::get_child_path("C:\\\\"));  // NOLINT(readability-container-size-empty)
 #else
   REQUIRE("bar" == FileUtils::get_child_path("foo/bar"));
-  REQUIRE("bar/" == FileUtils::get_child_path("foo/bar/"));
+  REQUIRE("" == FileUtils::get_child_path("foo/bar/"));  // NOLINT(readability-container-size-empty)
   REQUIRE("bar" == FileUtils::get_child_path("/foo/bar"));
-  REQUIRE("bar/" == FileUtils::get_child_path("/foo/bar/"));
+  REQUIRE("" == FileUtils::get_child_path("/foo/bar/"));  // NOLINT(readability-container-size-empty)
   REQUIRE("foo" == FileUtils::get_child_path("/foo"));
-  REQUIRE("foo/" == FileUtils::get_child_path("/foo/"));
+  REQUIRE("" == FileUtils::get_child_path("/foo/"));  // NOLINT(readability-container-size-empty)
   REQUIRE("" == FileUtils::get_child_path("/"));  // NOLINT(readability-container-size-empty)
   REQUIRE("" == FileUtils::get_child_path("//"));  // NOLINT(readability-container-size-empty)
 #endif
@@ -301,18 +301,18 @@ TEST_CASE("TestFileUtils::getFullPath", "[TestGetFullPath]") {
 
   const std::string tempDir1 = utils::file::FileUtils::concat_path(tempDir, "test1");
   const std::string tempDir2 = utils::file::FileUtils::concat_path(tempDir, "test2");
-  REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir1));
-  REQUIRE(0 == utils::file::FileUtils::create_dir(tempDir2));
+  CHECK(0 == utils::file::FileUtils::create_dir(tempDir1));
+  CHECK(0 == utils::file::FileUtils::create_dir(tempDir2));
 
-  REQUIRE(tempDir1 == utils::file::getFullPath(tempDir1));
-  REQUIRE(tempDir1 == utils::file::getFullPath("test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath("./test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath("././test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath("./test2/../test1"));
+  CHECK(tempDir1 == utils::file::getFullPath(tempDir1));
+  CHECK(tempDir1 == utils::file::getFullPath("test1"));
+  CHECK(tempDir1 == utils::file::getFullPath("./test1"));
+  CHECK(tempDir1 == utils::file::getFullPath("././test1"));
+  CHECK(tempDir1 == utils::file::getFullPath("./test2/../test1"));
 #ifdef WIN32
-  REQUIRE(tempDir1 == utils::file::getFullPath(".\\test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath(".\\.\\test1"));
-  REQUIRE(tempDir1 == utils::file::getFullPath(".\\test2\\..\\test1"));
+  CHECK(tempDir1 == utils::file::getFullPath(".\\test1"));
+  CHECK(tempDir1 == utils::file::getFullPath(".\\.\\test1"));
+  CHECK(tempDir1 == utils::file::getFullPath(".\\test2\\..\\test1"));
 #endif
 }
 

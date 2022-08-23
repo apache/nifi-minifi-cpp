@@ -127,10 +127,7 @@ void PutFile::onTrigger(core::ProcessContext *context, core::ProcessSession *ses
 
   logger_->log_debug("PutFile using temporary file %s", tmpFile);
 
-  // Determine dest full file paths
-  std::stringstream destFileSs;
-  destFileSs << directory << utils::file::get_separator() << filename;
-  std::string destFile = destFileSs.str();
+  std::string destFile = utils::file::concat_path(directory, filename);
 
   logger_->log_debug("PutFile writing file %s into directory %s", filename, directory);
 
@@ -185,7 +182,7 @@ std::string PutFile::tmpWritePath(const std::string &filename, const std::string
   return tmpFile;
 }
 
-bool PutFile::putFile(core::ProcessSession *session, std::shared_ptr<core::FlowFile> flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
+bool PutFile::putFile(core::ProcessSession *session, const std::shared_ptr<core::FlowFile>& flowFile, const std::string &tmpFile, const std::string &destFile, const std::string &destDir) {
   if (!utils::file::exists(destDir) && try_mkdirs_) {
     // Attempt to create directories in file's path
     std::stringstream dir_path_stream;

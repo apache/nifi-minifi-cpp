@@ -115,15 +115,6 @@ time_t to_time_t(std::filesystem::file_time_type time);
 
 std::chrono::system_clock::time_point to_sys(std::filesystem::file_time_type time);
 
-inline std::string normalize_path_separators(std::string path, bool force_posix = false) {
-  const auto normalize_separators = [force_posix](const char c) {
-    if (c == '\\' || c == '/') { return get_separator(force_posix); }
-    return c;
-  };
-  std::transform(std::begin(path), std::end(path), std::begin(path), normalize_separators);
-  return path;
-}
-
 inline std::string get_temp_directory() {
 #ifdef WIN32
   char tempBuffer[MAX_PATH];
@@ -331,8 +322,8 @@ inline void addFilesMatchingExtension(const std::shared_ptr<core::logging::Logge
   }
 }
 
-template<typename ...T>
-requires (std::is_convertible_v<std::decay_t<T>, std::filesystem::path> && ...)
+template<typename... T>
+requires (std::is_convertible_v<std::decay_t<T>, std::filesystem::path> && ...)  // NOLINT(whitespace/parens)
 inline std::string concat_path(const T&... segments) {
   return (... / std::filesystem::path{segments}).string();
 }
@@ -397,7 +388,7 @@ inline std::vector<std::pair<std::string, std::string>> list_dir_all(const std::
 inline std::string create_temp_directory(char* format) {
 #ifdef WIN32
   const std::string tempDirectory = concat_path(get_temp_directory(),
-      minifi::utils::IdGenerator::getIdGenerator()->generate().to_string());
+      minifi::utils::IdGenerator::getIdGenerator()->generate().to_string().view());
   create_dir(tempDirectory);
   return tempDirectory;
 #else
@@ -406,59 +397,28 @@ inline std::string create_temp_directory(char* format) {
 #endif
 }
 
-inline std::tuple<std::string /*parent_path*/, std::string /*child_path*/> split_path(const std::string& path, bool force_posix = false) {
+/**
+ * Splits a /-separated path into last element and rest of elements.
+ * Do not use for filesystem paths (which use / or \ depending on the platform); use std::filesystem::path::filename() and parent_path() instead.
+ */
+inline std::tuple<std::string /*parent_path*/, std::string /*child_path*/> split_path(const std::string& path) {
   if (path.empty()) {
     /* Empty path has no parent and no child*/
     return std::make_tuple("", "");
   }
   bool absolute = false;
   size_t root_pos = 0U;
-#ifdef WIN32
-  if (!force_posix) {
-      if (path[0] == '\\') {
-        absolute = true;
-        if (path.size() < 2U) {
-          return std::make_tuple("", "");
-        }
-        if (path[1] == '\\') {
-          if (path.size() >= 4U &&
-             (path[2] == '?' || path[2] == '.') &&
-              path[3] == '\\') {
-            /* Probably an UNC path */
-            root_pos = 4U;
-          } else {
-            /* Probably a \\server\-type path */
-            root_pos = 2U;
-          }
-          root_pos = path.find_first_of("\\", root_pos);
-          if (root_pos == std::string::npos) {
-            return std::make_tuple("", "");
-          }
-        }
-      } else if (path.size() >= 3U &&
-                 toupper(path[0]) >= 'A' &&
-                 toupper(path[0]) <= 'Z' &&
-                 path[1] == ':' &&
-                 path[2] == '\\') {
-        absolute = true;
-        root_pos = 2U;
-      }
-    } else {
-#else
-  if (true) {
-#endif
-    if (path[0] == '/') {
-      absolute = true;
-      root_pos = 0U;
-    }
+  if (path[0] == '/') {
+    absolute = true;
+    root_pos = 0U;
   }
   /* Maybe we are just a single relative child */
-  if (!absolute && path.find(get_separator(force_posix)) == std::string::npos) {
+  if (!absolute && path.find('/') == std::string::npos) {
     return std::make_tuple("", path);
   }
   /* Ignore trailing separators */
   size_t last_pos = path.size() - 1;
-  while (last_pos > root_pos && path[last_pos] == get_separator(force_posix)) {
+  while (last_pos > root_pos && path[last_pos] == '/') {
     last_pos--;
   }
   if (absolute && last_pos == root_pos) {
@@ -466,7 +426,7 @@ inline std::tuple<std::string /*parent_path*/, std::string /*child_path*/> split
     return std::make_tuple("", "");
   }
   /* Find parent-child separator */
-  size_t last_separator = path.find_last_of(get_separator(force_posix), last_pos);
+  size_t last_separator = path.find_last_of('/', last_pos);
   if (last_separator == std::string::npos || last_separator < root_pos) {
     return std::make_tuple("", "");
   }
@@ -476,16 +436,12 @@ inline std::tuple<std::string /*parent_path*/, std::string /*child_path*/> split
   return std::make_tuple(std::move(parent), std::move(child));
 }
 
-inline std::string get_parent_path(const std::string& path, bool force_posix = false) {
-  std::string parent_path;
-  std::tie(parent_path, std::ignore) = split_path(path, force_posix);
-  return parent_path;
+inline std::string get_parent_path(const std::string& path) {
+  return std::filesystem::path{path}.parent_path().string();
 }
 
-inline std::string get_child_path(const std::string& path, bool force_posix = false) {
-  std::string child_path;
-  std::tie(std::ignore, child_path) = split_path(path, force_posix);
-  return child_path;
+inline std::string get_child_path(const std::string& path) {
+  return std::filesystem::path{path}.filename().string();
 }
 
 inline bool is_hidden(const std::string& path) {
@@ -493,7 +449,7 @@ inline bool is_hidden(const std::string& path) {
   DWORD attributes = GetFileAttributesA(path.c_str());
     return ((attributes != INVALID_FILE_ATTRIBUTES)  && ((attributes & FILE_ATTRIBUTE_HIDDEN) != 0));
 #else
-  return std::get<1>(split_path(path)).rfind(".", 0) == 0;
+  return get_child_path(path).rfind(".", 0) == 0;
 #endif
 }
 
@@ -550,7 +506,7 @@ inline std::string get_executable_path() {
 }
 
 inline std::string resolve(const std::string& base, const std::string& path) {
-  if (utils::file::isAbsolutePath(path.c_str())) {
+  if (std::filesystem::path{path}.is_absolute()) {
     return path;
   }
   return concat_path(base, path);

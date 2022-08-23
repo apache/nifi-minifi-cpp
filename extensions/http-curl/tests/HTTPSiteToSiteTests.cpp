@@ -56,8 +56,7 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
     LogTestController::getInstance().setTrace<minifi::extensions::curl::HttpStreamingCallback>();
 
     std::fstream file;
-    ss << dir << utils::file::get_separator() << "tstFile.ext";
-    file.open(ss.str(), std::ios::out);
+    file.open(utils::file::concat_path(dir, "tstFile.ext"), std::ios::out);
     file << "tempFile";
     file.close();
 
@@ -72,7 +71,6 @@ class SiteToSiteTestHarness : public HTTPIntegrationBase {
  protected:
   bool isSecure;
   std::string dir;
-  std::stringstream ss;
   TestController testController;
 };
 

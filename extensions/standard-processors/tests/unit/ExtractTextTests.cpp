@@ -79,9 +79,7 @@ TEST_CASE("Test usage of ExtractText", "[extracttextTest]") {
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
   plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
 
-  std::stringstream ss1;
-  ss1 << temp_dir << utils::file::get_separator() << TEST_FILE;
-  std::string test_file_path = ss1.str();
+  std::string test_file_path = utils::file::concat_path(temp_dir, TEST_FILE);
 
   std::ofstream test_file(test_file_path);
   if (test_file.is_open()) {
@@ -150,9 +148,7 @@ TEST_CASE("Test usage of ExtractText in regex mode", "[extracttextRegexTest]") {
   std::shared_ptr<core::Processor> laprocessor = plan->addProcessor("LogAttribute", "outputLogAttribute", core::Relationship("success", "description"), true);
   plan->setProperty(laprocessor, org::apache::nifi::minifi::processors::LogAttribute::AttributesToLog.getName(), TEST_ATTR);
 
-  std::stringstream ss;
-  ss << dir << utils::file::get_separator() << TEST_FILE;
-  std::string test_file_path = ss.str();
+  std::string test_file_path = utils::file::concat_path(dir, TEST_FILE);
 
   std::ofstream test_file(test_file_path);
   if (test_file.is_open()) {

@@ -162,10 +162,9 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.empty());
 
+  std::string file_name = utils::file::concat_path(getFileDir, "tstFile.ext");
   std::fstream file;
-  std::stringstream ss;
-  ss << getFileDir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  file.open(file_name, std::ios::out);
   file << "tempFile";
   file.close();
   plan->reset();
@@ -178,17 +177,16 @@ TEST_CASE("Lua: Test Read File", "[executescriptLuaRead]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::filesystem::remove(file_name);
 
   REQUIRE(logTestController.contains("[info] file content: tempFile"));
 
   // Verify that file content was preserved
-  REQUIRE(!std::ifstream(ss.str()).good());
-  std::stringstream movedFile;
-  movedFile << putFileDir << "/" << "tstFile.ext";
-  REQUIRE(std::ifstream(movedFile.str()).good());
+  REQUIRE(!std::ifstream(file_name).good());
+  std::string moved_file_name = utils::file::concat_path(putFileDir, "tstFile.ext");
+  REQUIRE(std::ifstream(moved_file_name).good());
 
-  file.open(movedFile.str(), std::ios::in);
+  file.open(moved_file_name, std::ios::in);
   std::string contents((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
   REQUIRE("tempFile" == contents);
@@ -250,10 +248,9 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   REQUIRE(record == nullptr);
   REQUIRE(records.empty());
 
+  std::string file_name = utils::file::concat_path(getFileDir, "tstFile.ext");
   std::fstream file;
-  std::stringstream ss;
-  ss << getFileDir << "/" << "tstFile.ext";
-  file.open(ss.str(), std::ios::out);
+  file.open(file_name, std::ios::out);
   file << "tempFile";
   file.close();
   plan->reset();
@@ -266,15 +263,14 @@ TEST_CASE("Lua: Test Write File", "[executescriptLuaWrite]") {
   record = plan->getCurrentFlowFile();
   testController.runSession(plan, false);
 
-  unlink(ss.str().c_str());
+  std::filesystem::remove(file_name);
 
   // Verify new content was written
-  REQUIRE(!std::ifstream(ss.str()).good());
-  std::stringstream movedFile;
-  movedFile << putFileDir << "/" << "tstFile.ext";
-  REQUIRE(std::ifstream(movedFile.str()).good());
+  REQUIRE(!std::ifstream(file_name).good());
+  std::string moved_file_name = utils::file::concat_path(putFileDir, "tstFile.ext");
+  REQUIRE(std::ifstream(moved_file_name).good());
 
-  file.open(movedFile.str(), std::ios::in);
+  file.open(moved_file_name, std::ios::in);
   std::string contents((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
   REQUIRE("hello 2" == contents);

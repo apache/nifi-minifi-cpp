@@ -190,7 +190,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
   /* Try to detect conflicts if needed */
   std::string resolved_filename = filename;
   if (conflict_resolution_ != CONFLICT_RESOLUTION_NONE) {
-    std::string target_path = utils::file::concat_path(remote_path, filename, true /*force_posix*/);
+    std::string target_path = utils::StringUtils::join_pack(remote_path, "/", filename);
     LIBSSH2_SFTP_ATTRIBUTES attrs;
     if (!client->stat(target_path, true /*follow_symlinks*/, attrs)) {
       if (client->getLastError() != utils::SFTPError::FileDoesNotExist) {
@@ -228,7 +228,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
           std::stringstream possible_resolved_filename_ss;
           possible_resolved_filename_ss << i << "." << filename;
           possible_resolved_filename = possible_resolved_filename_ss.str();
-          std::string possible_resolved_path = utils::file::concat_path(remote_path, possible_resolved_filename, true /*force_posix*/);
+          std::string possible_resolved_path = utils::StringUtils::join_pack(remote_path, "/", possible_resolved_filename);
           if (!client->stat(possible_resolved_path, true /*follow_symlinks*/, attrs)) {
             if (client->getLastError() == utils::SFTPError::FileDoesNotExist) {
               unique_name_generated = true;
@@ -286,7 +286,7 @@ bool PutSFTP::processOne(const std::shared_ptr<core::ProcessContext> &context, c
     target_path_ss << resolved_filename;
   }
   auto target_path = target_path_ss.str();
-  std::string final_target_path = utils::file::concat_path(remote_path, resolved_filename, true /*force_posix*/);
+  std::string final_target_path = utils::StringUtils::join_pack(remote_path, "/", resolved_filename);
   logger_->log_debug("The target path is %s, final target path is %s", target_path.c_str(), final_target_path.c_str());
 
   try {

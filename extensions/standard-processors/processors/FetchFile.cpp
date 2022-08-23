@@ -141,7 +141,7 @@ void FetchFile::logWithLevel(LogLevelOption log_level, Args&&... args) const {
 }
 
 std::string FetchFile::getMoveAbsolutePath(const std::string& file_name) const {
-  return move_destination_directory_ + utils::file::FileUtils::get_separator() + file_name;
+  return utils::file::concat_path(move_destination_directory_, file_name);
 }
 
 bool FetchFile::moveDestinationConflicts(const std::string& file_name) const {

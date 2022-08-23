@@ -200,7 +200,7 @@ class S3Wrapper {
   S3Wrapper();
   explicit S3Wrapper(std::unique_ptr<S3RequestSender>&& request_sender);
 
-  std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& put_object_params, std::shared_ptr<Aws::IOStream> data_stream);
+  std::optional<PutObjectResult> putObject(const PutObjectRequestParameters& put_object_params, const std::shared_ptr<Aws::IOStream>& data_stream);
   bool deleteObject(const DeleteObjectRequestParameters& params);
   std::optional<GetObjectResult> getObject(const GetObjectRequestParameters& get_object_params, io::BaseStream& out_body);
   std::optional<std::vector<ListedObjectAttributes>> listBucket(const ListRequestParameters& params);
@@ -213,7 +213,7 @@ class S3Wrapper {
   static Expiration getExpiration(const std::string& expiration);
 
   void setCannedAcl(Aws::S3::Model::PutObjectRequest& request, const std::string& canned_acl) const;
-  static int64_t writeFetchedBody(Aws::IOStream& source, const int64_t data_size, io::BaseStream& output);
+  static int64_t writeFetchedBody(Aws::IOStream& source, int64_t data_size, io::BaseStream& output);
   static std::string getEncryptionString(Aws::S3::Model::ServerSideEncryption encryption);
 
   std::optional<std::vector<ListedObjectAttributes>> listVersions(const ListRequestParameters& params);

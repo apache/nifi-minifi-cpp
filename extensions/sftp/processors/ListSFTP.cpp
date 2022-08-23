@@ -186,7 +186,7 @@ ListSFTP::Child::Child(const std::string& parent_path_, std::tuple<std::string /
 }
 
 std::string ListSFTP::Child::getPath() const {
-  return utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
+  return utils::StringUtils::join_pack(parent_path, "/", filename);
 }
 
 bool ListSFTP::filter(const std::string& parent_path, const std::tuple<std::string /* filename */, std::string /* longentry */, LIBSSH2_SFTP_ATTRIBUTES /* attrs */>& sftp_child) {
@@ -290,7 +290,7 @@ bool ListSFTP::filterDirectory(const std::string& parent_path, const std::string
 
   /* Path Filter Regex */
   if (compiled_path_filter_regex_) {
-    std::string dir_path = utils::file::FileUtils::concat_path(parent_path, filename, true /*force_posix*/);
+    std::string dir_path = utils::StringUtils::join_pack(parent_path, "/", filename);
     bool match = false;
     match = utils::regexMatch(dir_path, *compiled_path_filter_regex_);
     if (!match) {
@@ -890,7 +890,7 @@ void ListSFTP::onTrigger(const std::shared_ptr<core::ProcessContext> &context, c
 
   /* Add initial directory */
   Child root;
-  std::tie(root.parent_path, root.filename) = utils::file::FileUtils::split_path(remote_path, true /*force_posix*/);
+  std::tie(root.parent_path, root.filename) = utils::file::FileUtils::split_path(remote_path);
   root.directory = true;
   directories.emplace_back(std::move(root));
 

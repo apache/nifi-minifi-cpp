@@ -623,7 +623,7 @@ std::vector<TailState> TailFile::findAllRotatedFiles(const TailState &state) con
   auto collect_matching_files = [&](const std::string &path, const std::string &file_name) -> bool {
     utils::Regex pattern_regex(pattern);
     if (file_name != state.file_name_ && utils::regexMatch(file_name, pattern_regex)) {
-      std::string full_file_name = path + utils::file::get_separator() + file_name;
+      std::string full_file_name = utils::file::concat_path(path, file_name);
       TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
       logger_->log_debug("File %s with mtime %" PRId64 " matches rolling filename pattern %s, so we are reading it", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
       matched_files_with_mtime.emplace_back(TailState{path, file_name}, mtime);
@@ -645,7 +645,7 @@ std::vector<TailState> TailFile::findRotatedFilesAfterLastReadTime(const TailSta
   auto collect_matching_files = [&](const std::string &path, const std::string &file_name) -> bool {
     utils::Regex pattern_regex(pattern);
     if (file_name != state.file_name_ && utils::regexMatch(file_name, pattern_regex)) {
-      std::string full_file_name = path + utils::file::get_separator() + file_name;
+      std::string full_file_name = utils::file::concat_path(path, file_name);
       TailStateWithMtime::TimePoint mtime{utils::file::last_write_time_point(full_file_name)};
       logger_->log_debug("File %s with mtime %" PRId64 " matches rolling filename pattern %s", file_name, int64_t{mtime.time_since_epoch().count()}, pattern);
       if (mtime >= std::chrono::time_point_cast<std::chrono::seconds>(state.last_read_time_)) {
@@ -871,7 +871,7 @@ void TailFile::checkForRemovedFiles() {
 
 void TailFile::checkForNewFiles(core::ProcessContext& context) {
   auto add_new_files_callback = [&](const std::string &path, const std::string &file_name) -> bool {
-    std::string full_file_name = path + utils::file::get_separator() + file_name;
+    std::string full_file_name = utils::file::concat_path(path, file_name);
     utils::Regex file_to_tail_regex(file_to_tail_);
     if (!containsKey(tail_states_, full_file_name) && utils::regexMatch(file_name, file_to_tail_regex)) {
       tail_states_.emplace(full_file_name, TailState{path, file_name});

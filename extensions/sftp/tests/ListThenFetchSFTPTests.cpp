@@ -16,42 +16,25 @@
  * limitations under the License.
  */
 
-#include <sys/stat.h>
-#undef NDEBUG
-#include <cassert>
-#include <cstring>
-#include <utility>
 #include <chrono>
-#include <fstream>
 #include <memory>
 #include <string>
 #include <thread>
 #include <type_traits>
 #include <vector>
 #include <iostream>
-#include <sstream>
-#include <algorithm>
-#include <functional>
 #include <iterator>
-#include <random>
 
 #include "TestBase.h"
 #include "Catch.h"
 #include "utils/StringUtils.h"
 #include "utils/file/FileUtils.h"
-#include "core/Core.h"
-#include "core/logging/Logger.h"
 #include "core/ProcessGroup.h"
-#include "core/yaml/YamlConfiguration.h"
 #include "FlowController.h"
-#include "properties/Configure.h"
-#include "unit/ProvenanceTestHelper.h"
-#include "io/StreamFactory.h"
 #include "processors/FetchSFTP.h"
 #include "processors/ListSFTP.h"
 #include "processors/GenerateFlowFile.h"
 #include "processors/LogAttribute.h"
-#include "processors/UpdateAttribute.h"
 #include "processors/PutFile.h"
 #include "tools/SFTPTestServer.h"
 
@@ -79,7 +62,7 @@ class ListThenFetchSFTPTestsFixture {
     REQUIRE(plan);
 
     // Start SFTP server
-    sftp_server = std::make_unique<SFTPTestServer>(src_dir);
+    sftp_server = std::make_unique<SFTPTestServer>(src_dir.string());
     REQUIRE(true == sftp_server->start());
 
     // Build MiNiFi processing graph
@@ -121,7 +104,7 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(list_sftp, "Minimum File Size", "0 B");
     plan->setProperty(list_sftp, "Target System Timestamp Precision", "Seconds");
     plan->setProperty(list_sftp, "Remote Path", "nifi_test/");
-    plan->setProperty(list_sftp, "State File", src_dir + "/state");
+    plan->setProperty(list_sftp, "State File", (src_dir / "state").string());
 
     // Configure FetchSFTP processor
     plan->setProperty(fetch_sftp, "Hostname", "localhost");
@@ -140,7 +123,7 @@ class ListThenFetchSFTPTestsFixture {
     plan->setProperty(log_attribute, "FlowFiles To Log", "0");
 
     // Configure PutFile processor
-    plan->setProperty(put_file, "Directory", dst_dir + "/${path}");
+    plan->setProperty(put_file, "Directory", (dst_dir / "${path}").string());
     plan->setProperty(put_file, "Conflict Resolution Strategy", minifi::processors::PutFile::CONFLICT_RESOLUTION_STRATEGY_FAIL);
     plan->setProperty(put_file, "Create Missing Directories", "true");
   }
@@ -151,24 +134,16 @@ class ListThenFetchSFTPTestsFixture {
 
   // Create source file
   void createFile(const std::string& relative_path, const std::string& content, std::optional<std::filesystem::file_time_type> modification_time) {
+    const auto full_path = src_dir / "vfs" / relative_path;
+    std::filesystem::create_directories(full_path.parent_path());
+
     std::fstream file;
-    std::stringstream ss;
-    ss << src_dir << "/vfs/" << relative_path;
-    auto full_path = ss.str();
-    std::deque<std::string> parent_dirs;
-    std::string parent_dir = full_path;
-    while (!(parent_dir = utils::file::get_parent_path(parent_dir)).empty()) {
-      parent_dirs.push_front(parent_dir);
-    }
-    for (const auto& dir : parent_dirs) {
-      utils::file::create_dir(dir);
-    }
-    file.open(ss.str(), std::ios::out);
+    file.open(full_path, std::ios::out);
     file << content;
     file.close();
     if (modification_time.has_value()) {
       std::error_code ec;
-      utils::file::set_last_write_time(full_path, modification_time.value());
+      utils::file::set_last_write_time(full_path.string(), modification_time.value());
       REQUIRE(ec.value() == 0);
     }
   }
@@ -183,17 +158,17 @@ class ListThenFetchSFTPTestsFixture {
   };
 
   void testFile(TestWhere where, const std::string& relative_path, const std::string& expected_content) {
-    std::stringstream resultFile;
+    std::filesystem::path result_file;
     if (where == IN_DESTINATION) {
-      resultFile << dst_dir << "/" << relative_path;
+      result_file = dst_dir / relative_path;
     } else {
-      resultFile << src_dir << "/vfs/" << relative_path;
+      result_file = src_dir / "vfs" / relative_path;
 #ifndef WIN32
       /* Workaround for mina-sshd setting the read file's permissions to 0000 */
-      REQUIRE(0 == chmod(resultFile.str().c_str(), 0644));
+      REQUIRE(0 == chmod(result_file.string().c_str(), 0644));
 #endif
     }
-    std::ifstream file(resultFile.str());
+    std::ifstream file(result_file);
     REQUIRE(true == file.good());
     std::stringstream content;
     std::vector<char> buffer(1024U);
@@ -205,25 +180,25 @@ class ListThenFetchSFTPTestsFixture {
   }
 
   void testFileNotExists(TestWhere where, const std::string& relative_path) {
-    std::stringstream resultFile;
+    std::filesystem::path result_file;
     if (where == IN_DESTINATION) {
-      resultFile << dst_dir << "/" << relative_path;
+      result_file = dst_dir / relative_path;
     } else {
-      resultFile << src_dir << "/vfs/" << relative_path;
+      result_file = src_dir / "vfs" / relative_path;
 #ifndef WIN32
       /* Workaround for mina-sshd setting the read file's permissions to 0000 */
-      REQUIRE(-1 == chmod(resultFile.str().c_str(), 0644));
+      REQUIRE(-1 == chmod(result_file.string().c_str(), 0644));
 #endif
     }
-    std::ifstream file(resultFile.str());
+    std::ifstream file(result_file);
     REQUIRE(false == file.is_open());
     REQUIRE(false == file.good());
   }
 
  protected:
   TestController testController;
-  std::string src_dir = testController.createTempDirectory();
-  std::string dst_dir = testController.createTempDirectory();
+  std::filesystem::path src_dir{testController.createTempDirectory()};
+  std::filesystem::path dst_dir{testController.createTempDirectory()};
   std::shared_ptr<TestPlan> plan = testController.createPlan();
   std::unique_ptr<SFTPTestServer> sftp_server;
   std::shared_ptr<core::Processor> list_sftp;

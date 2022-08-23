@@ -107,7 +107,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     REQUIRE_NOTHROW(plan_->runNextProcessor());  // ExecutePythonProcessor
     plan_->runNextProcessor();  // PutFile
 
-    const std::string output_file_path = output_dir + utils::file::FileUtils::get_separator() +  TEST_FILE_NAME;
+    const std::string output_file_path = utils::file::concat_path(output_dir, TEST_FILE_NAME);
 
     if (Expectation::OUTPUT_FILE_MATCHES_INPUT == expectation) {
       const std::string output_file_content{ getFileContent(output_file_path) };
@@ -195,7 +195,7 @@ class SimplePythonFlowFileTransferTest : public ExecutePythonProcessorTestBase {
     std::vector<std::string> file_contents;
 
     auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-      std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+      std::ifstream is(utils::file::concat_path(path, filename), std::ifstream::binary);
       file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
       return true;
     };
@@ -303,7 +303,7 @@ TEST_CASE_METHOD(SimplePythonFlowFileTransferTest, "Test module load of processo
   std::vector<std::string> file_contents;
 
   auto lambda = [&file_contents](const std::string& path, const std::string& filename) -> bool {
-    std::ifstream is(path + utils::file::FileUtils::get_separator() + filename, std::ifstream::binary);
+    std::ifstream is(utils::file::concat_path(path, filename), std::ifstream::binary);
     file_contents.push_back(std::string((std::istreambuf_iterator<char>(is)), std::istreambuf_iterator<char>()));
     return true;
   };

@@ -112,9 +112,9 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
     if (executablePath.empty()) {
       logger->log_error("Failed to determine location of the minifi executable");
     } else {
-      std::string minifiPath;
-      std::string minifiFileName;
-      std::tie(minifiPath, minifiFileName) = minifi::utils::file::split_path(executablePath);
+      const std::filesystem::path path{executablePath};
+      std::string minifiPath = path.parent_path().string();
+      std::string minifiFileName = path.filename().string();
       logger->log_info("Inferred " MINIFI_HOME_ENV_KEY "=%s based on the minifi executable location %s", minifiPath, executablePath);
       return minifiPath;
     }
@@ -146,9 +146,9 @@ std::string determineMinifiHome(const std::shared_ptr<logging::Logger>& logger) 
   } else {
     logger->log_info("%s is not a valid " MINIFI_HOME_ENV_KEY ", because there is no " DEFAULT_NIFI_PROPERTIES_FILE " file in it.", minifiHome);
 
-    std::string minifiHomeWithoutBin;
-    std::string binDir;
-    std::tie(minifiHomeWithoutBin, binDir) = minifi::utils::file::split_path(minifiHome);
+    const std::filesystem::path path{minifiHome};
+    std::string minifiHomeWithoutBin = path.parent_path().string();
+    std::string binDir = path.filename().string();
     if (!minifiHomeWithoutBin.empty() && (binDir == "bin" || binDir == std::string("bin") + minifi::utils::file::get_separator())) {
       if (validHome(minifiHomeWithoutBin)) {
         logger->log_info("%s is a valid " MINIFI_HOME_ENV_KEY ", falling back to it.", minifiHomeWithoutBin);
