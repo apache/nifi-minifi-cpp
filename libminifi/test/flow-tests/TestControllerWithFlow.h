@@ -46,8 +46,8 @@ class TestControllerWithFlow: public TestController{
     std::ofstream{yaml_path_} << yamlConfigContent;
 
     configuration_ = std::make_shared<minifi::Configure>();
-    configuration_->setHome(home_);
-    configuration_->set(minifi::Configure::nifi_flow_configuration_file, yaml_path_);
+    configuration_->setHome(home_.string());
+    configuration_->set(minifi::Configure::nifi_flow_configuration_file, yaml_path_.string());
 
     if (setup_flow) {
       setupFlow();
