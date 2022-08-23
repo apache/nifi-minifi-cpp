@@ -35,6 +35,7 @@ FetchContent_MakeAvailable(civetweb)
 add_dependencies(civetweb-c-library OpenSSL::Crypto OpenSSL::SSL)
 add_dependencies(civetweb-cpp OpenSSL::Crypto OpenSSL::SSL)
 
+target_compile_definitions(civetweb-c-library PRIVATE SOCKET_TIMEOUT_QUANTUM=200)
 if (NOT WIN32)
   target_compile_options(civetweb-c-library PRIVATE -Wno-error)
   target_compile_options(civetweb-cpp PRIVATE -Wno-error)
