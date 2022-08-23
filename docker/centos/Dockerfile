@@ -38,7 +38,7 @@ ENV USER minificpp
 
 # gpsd-devel is in EPEL
 RUN yum -y install epel-release && yum -y install java-1.8.0-openjdk java-1.8.0-openjdk-devel python36-devel sudo git which maven make libarchive boost-devel lua-devel libusbx-devel libpng-devel \
-    gpsd-devel libpcap-devel ccache
+    gpsd-devel libpcap-devel ccache ca-certificates
 
 RUN mkdir -p $MINIFI_BASE_DIR
 COPY . ${MINIFI_BASE_DIR}
