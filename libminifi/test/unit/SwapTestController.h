@@ -166,7 +166,7 @@ struct VerifiedQueue {
     return result;
   }
 
-  VerifiedQueue(std::shared_ptr<minifi::SwapManager> swap_manager)
+  explicit VerifiedQueue(std::shared_ptr<minifi::SwapManager> swap_manager)
     : impl(std::move(swap_manager)) {}
 
   utils::FlowFileQueue impl;
