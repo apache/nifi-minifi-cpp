@@ -42,44 +42,16 @@ struct BundleDetails {
 
 class ExternalBuildDescription {
  private:
-  static std::vector<struct BundleDetails> &getExternal() {
-    static std::vector<struct BundleDetails> external_groups;
-    return external_groups;
-  }
+  static std::vector<BundleDetails> &getExternal();
 
-  static std::map<std::string, struct Components> &getExternalMappings() {
-    static std::map<std::string, struct Components> external_mappings;
-    return external_mappings;
-  }
+  static std::map<std::string, Components> &getExternalMappings();
 
  public:
-  static void addExternalComponent(const BundleDetails& details, const ClassDescription& description) {
-    bool found = false;
-    for (const auto &d : getExternal()) {
-      if (d.artifact == details.artifact) {
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      getExternal().push_back(details);
-    }
-    if (description.type_ == ResourceType::Processor) {
-      getExternalMappings()[details.artifact].processors_.push_back(description);
-    } else if (description.type_ == ResourceType::ControllerService) {
-      getExternalMappings()[details.artifact].controller_services_.push_back(description);
-    } else {
-      getExternalMappings()[details.artifact].other_components_.push_back(description);
-    }
-  }
+  static void addExternalComponent(const BundleDetails& details, const ClassDescription& description);
 
-  static struct Components getClassDescriptions(const std::string &group) {
-    return getExternalMappings()[group];
-  }
+  static Components getClassDescriptions(const std::string &group);
 
-  static std::vector<struct BundleDetails> getExternalGroups() {
-    return getExternal();
-  }
+  static std::vector<BundleDetails> getExternalGroups();
 };
 
 class BuildDescription {
