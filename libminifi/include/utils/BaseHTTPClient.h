@@ -304,7 +304,7 @@ class BaseHTTPClient {
   virtual const std::map<std::string, std::string>& getResponseHeaderMap() = 0;
 };
 
-std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password);
+std::string get_token(utils::BaseHTTPClient *client, const std::string& username, const std::string& password);
 
 class URL {
  public:
