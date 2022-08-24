@@ -215,8 +215,8 @@ class ElasticPayload {
   std::optional<rapidjson::Document> payload_;
 };
 
-nonstd::expected<rapidjson::Document, std::string> submitRequest(curl::HTTPClient& client, std::string&& payload, const size_t expected_items) {
-  client.setPostFields(std::move(payload));
+nonstd::expected<rapidjson::Document, std::string> submitRequest(curl::HTTPClient& client, const std::string& payload, const size_t expected_items) {
+  client.setPostFields(payload);
   if (!client.submit())
     return nonstd::make_unexpected("Submit failed");
   auto response_code = client.getResponseCode();
@@ -303,7 +303,7 @@ void PostElasticsearch::onTrigger(const std::shared_ptr<core::ProcessContext>& c
     return;
   }
 
-  auto result = submitRequest(client_, std::move(payload), flowfiles_with_payload.size());
+  auto result = submitRequest(client_, payload, flowfiles_with_payload.size());
   if (!result) {
     logger_->log_error(result.error().c_str());
     for (const auto& flow_file_in_payload: flowfiles_with_payload)

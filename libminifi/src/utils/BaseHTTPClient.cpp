@@ -57,7 +57,7 @@ std::optional<int> parsePortNumber(const std::string& port_string) {
 
 namespace org::apache::nifi::minifi::utils {
 
-std::string get_token(utils::BaseHTTPClient *client, std::string username, std::string password) {
+std::string get_token(utils::BaseHTTPClient* client, const std::string& username, const std::string& password) {
   if (nullptr == client) {
     return "";
   }

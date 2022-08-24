@@ -102,7 +102,7 @@ struct timeout_test_profile{
   defaulted_handler delete_;
 };
 
-void run_timeout_variance(std::string test_file_location, bool isSecure, std::string url, const timeout_test_profile &profile) {
+void run_timeout_variance(std::string test_file_location, bool isSecure, const std::string& url, const timeout_test_profile &profile) {
   SiteToSiteTestHarness harness(isSecure);
 
   std::string in_port = "471deef6-2a6e-4a7d-912a-81cc17e3a204";
