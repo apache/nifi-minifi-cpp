@@ -56,7 +56,7 @@ struct LoggerNamespace {
   std::vector<std::shared_ptr<spdlog::sinks::sink>> exported_sinks;
   std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
 
-  void forEachSink(std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)> op) const;
+  void forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const;
 
   LoggerNamespace()
       : level(spdlog::level::off),
@@ -116,9 +116,9 @@ class LoggerConfiguration {
   static const char *spdlog_default_pattern;
 
  protected:
-  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, std::shared_ptr<Logger> logger = {});
-  static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
-                                                    std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
+  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger = {});
+  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<Logger> &logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                    const std::shared_ptr<spdlog::formatter> &formatter, bool remove_if_present = false);
 
  private:
   std::shared_ptr<Logger> getLogger(const std::string& name, const std::lock_guard<std::mutex>& lock);

@@ -64,7 +64,7 @@ const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e
 
 namespace internal {
 
-void LoggerNamespace::forEachSink(std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)> op) const {
+void LoggerNamespace::forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const {
   for (auto& sink : sinks) {
     op(sink);
   }
@@ -166,7 +166,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::getSpdlogLogger(const std::
   return spdlog::get(name);
 }
 
-std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, std::shared_ptr<Logger> logger) {
+std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger) {
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sink_map = logger_properties->initial_sinks();
 
   std::string appender_type = "appender";
@@ -244,8 +244,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
   return root_namespace;
 }
 
-std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
-                                                                std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present) {
+std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::shared_ptr<Logger> &logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                                const std::shared_ptr<spdlog::formatter> &formatter, bool remove_if_present) {
   std::shared_ptr<spdlog::logger> spdlogger = spdlog::get(name);
   if (spdlogger) {
     if (remove_if_present) {
