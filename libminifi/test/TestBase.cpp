@@ -147,6 +147,10 @@ void LogTestController::reset() {
   modified_loggers.clear();
   if (config)
     config = logging::LoggerConfiguration::newInstance();
+  clear();
+}
+
+void LogTestController::clear() {
   resetStream(log_output);
 }
 

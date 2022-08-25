@@ -145,6 +145,8 @@ class LogTestController {
 
   void reset();
 
+  void clear();
+
   static void resetStream(std::ostringstream &stream);
 
   std::shared_ptr<std::ostringstream> log_output_ptr = std::make_shared<std::ostringstream>();

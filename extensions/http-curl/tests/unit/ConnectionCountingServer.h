@@ -83,7 +83,7 @@ class ReverseBodyPostHandler : public CivetHandler {
     std::vector<char> request_body;
     request_body.reserve(2048);
     size_t read_size = mg_read(conn, request_body.data(), 2048);
-    assert(read_size <= 2048);
+    assert(read_size < 2048);
     std::string response_body{request_body.begin(), request_body.begin() + read_size};
     std::reverse(std::begin(response_body), std::end(response_body));
     mg_printf(conn, "HTTP/1.1 200 OK\r\n");
