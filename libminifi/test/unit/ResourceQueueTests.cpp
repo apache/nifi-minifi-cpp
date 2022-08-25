@@ -56,7 +56,7 @@ TEST_CASE("maximum_number_of_creatable_resources", "[utils::ResourceQueue]") {
 
 
   SECTION("No Maximum resources") {
-    auto resource_queue = ResourceQueue<int>::create(2, logger_);
+    auto resource_queue = ResourceQueue<int>::create(std::nullopt, logger_);
     std::thread thread_one{[&] { worker(1, resource_queue); }};
     std::thread thread_two{[&] { worker(2, resource_queue); }};
     std::thread thread_three{[&] { worker(3, resource_queue); }};
@@ -66,6 +66,7 @@ TEST_CASE("maximum_number_of_creatable_resources", "[utils::ResourceQueue]") {
     thread_three.join();
 
     CHECK(!resources_created.empty());
+    CHECK(!LogTestController::getInstance().contains("Waiting for resource", 0ms));
     CHECK(resources_created.size() <= 3);
   }
 }
