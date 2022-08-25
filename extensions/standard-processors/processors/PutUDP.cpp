@@ -16,28 +16,19 @@
  */
 #include "PutUDP.h"
 
-#ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#endif /* WIN32 */
-#include <utility>
-
-#include "range/v3/view/join.hpp"
 #include "range/v3/range/conversion.hpp"
 
 #include "utils/gsl.h"
 #include "utils/expected.h"
-#include "utils/net/DNS.h"
-#include "utils/net/Socket.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/PropertyBuilder.h"
 #include "core/Resource.h"
 #include "core/logging/LoggerConfiguration.h"
+
+#include "asio/ip/udp.hpp"
+
+using asio::ip::udp;
 
 namespace org::apache::nifi::minifi::processors {
 
@@ -107,48 +98,48 @@ void PutUDP::onTrigger(core::ProcessContext* context, core::ProcessSession* cons
     return;
   }
 
-  const auto nonthrowing_sockaddr_ntop = [](const sockaddr* const sa) -> std::string {
-    return utils::try_expression([sa] { return utils::net::sockaddr_ntop(sa); }).value_or("(n/a)");
+  asio::io_context io_context;
+
+  const auto resolve_hostname = [&io_context, &hostname, &port]() -> nonstd::expected<udp::resolver::results_type, std::error_code> {
+    udp::resolver resolver(io_context);
+    std::error_code error_code;
+    auto resolved_query = resolver.resolve(udp::v4(), hostname, port, error_code);
+    if (error_code)
+      return nonstd::make_unexpected(error_code);
+    return resolved_query;
   };
 
-  const auto debug_log_resolved_names = [&, this](const addrinfo& names) -> decltype(auto) {
-    if (logger_->should_log(core::logging::LOG_LEVEL::debug)) {
-      std::vector<std::string> names_vector;
-      for (const addrinfo* it = &names; it; it = it->ai_next) {
-        names_vector.push_back(nonthrowing_sockaddr_ntop(it->ai_addr));
-      }
-      logger_->log_debug("resolved \'%s\' to: %s",
-          hostname,
-          names_vector | ranges::views::join(',') | ranges::to<std::string>());
-    }
-    return names;
+  const auto debug_log_resolved_endpoint = [&hostname, &logger = this->logger_](const udp::resolver::results_type& resolved_query) -> udp::endpoint {
+    if (logger->should_log(core::logging::LOG_LEVEL::debug))
+      core::logging::LOG_WARN(logger) << "resolved " << hostname << " to: " << resolved_query->endpoint();
+    return resolved_query->endpoint();
   };
 
-  utils::net::resolveHost(hostname.c_str(), port.c_str(), utils::net::IpProtocol::UDP)
-      | utils::map(utils::dereference)
-      | utils::map(debug_log_resolved_names)
-      | utils::flatMap([](const auto& names) { return utils::net::open_socket(names); })
-      | utils::flatMap([&, this](utils::net::OpenSocketResult socket_handle_and_selected_name) -> nonstd::expected<void, std::error_code> {
-        const auto& [socket_handle, selected_name] = socket_handle_and_selected_name;
-        logger_->log_debug("connected to %s", nonthrowing_sockaddr_ntop(selected_name->ai_addr));
-#ifdef WIN32
-        const char* const buffer_ptr = reinterpret_cast<const char*>(data.buffer.data());
-#else
-        const void* const buffer_ptr = data.buffer.data();
-#endif
-        const auto send_result = ::sendto(socket_handle.get(), buffer_ptr, data.buffer.size(), 0, selected_name->ai_addr, selected_name->ai_addrlen);
-        logger_->log_trace("sendto returned %ld", static_cast<long>(send_result));  // NOLINT: sendto
-        if (send_result == utils::net::SocketError) {
-          return nonstd::make_unexpected(utils::net::get_last_socket_error());
-        }
-        session->transfer(flow_file, Success);
-        return {};
-      })
-      | utils::orElse([&, this](std::error_code ec) {
-        gsl_Expects(ec);
-        logger_->log_error("%s", ec.message());
-        session->transfer(flow_file, Failure);
-      });
+  const auto send_data_to_endpoint = [&io_context, &data](const udp::endpoint& endpoint) -> nonstd::expected<void, std::error_code> {
+    std::error_code send_error;
+    udp::socket socket(io_context);
+    socket.open(udp::v4());
+    socket.send_to(asio::buffer(data.buffer), endpoint, udp::socket::message_flags{}, send_error);
+    if (send_error)
+      return nonstd::make_unexpected(send_error);
+    return {};
+  };
+
+  const auto transfer_to_success = [&session, &flow_file]() -> void {
+    session->transfer(flow_file, Success);
+  };
+
+  const auto transfer_to_failure = [&session, &flow_file, &logger = this->logger_](std::error_code ec) -> void {
+    gsl_Expects(ec);
+    logger->log_error("%s", ec.message());
+    session->transfer(flow_file, Failure);
+  };
+
+  resolve_hostname()
+      | utils::map(debug_log_resolved_endpoint)
+      | utils::flatMap(send_data_to_endpoint)
+      | utils::map(transfer_to_success)
+      | utils::orElse(transfer_to_failure);
 }
 
 REGISTER_RESOURCE(PutUDP, Processor);
