@@ -154,13 +154,13 @@ class InvokeHTTP : public core::Processor {
   bool always_output_response_{false};
   bool use_chunked_encoding_{false};
   bool penalize_no_retry_{false};
-  bool send_body_{true};
+  bool send_message_body_{true};
+  bool send_date_header_{true};
 
   InvalidHTTPHeaderFieldHandlingOption invalid_http_header_field_handling_strategy_;
 
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<InvokeHTTP>::getLogger()};
-  gsl::not_null<std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>>> client_queue_ = gsl::make_not_null(
-      utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_));
+  std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>> client_queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::processors

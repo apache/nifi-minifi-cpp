@@ -392,6 +392,36 @@ TEST_CASE("InvokeHTTP empty Attributes to Send means no attributes are sent", "[
   REQUIRE_FALSE(LogTestController::getInstance().contains("key:invalid", 0s));
 }
 
+TEST_CASE("InvokeHTTP DateHeader", "[InvokeHTTP]") {
+  using minifi::processors::InvokeHTTP;
+  TestHTTPServer http_server;
+
+  auto invoke_http = std::make_shared<InvokeHTTP>("InvokeHTTP");
+  test::SingleProcessorTestController test_controller{invoke_http};
+  LogTestController::getInstance().setTrace<InvokeHTTP>();
+
+  invoke_http->setProperty(InvokeHTTP::Method, "GET");
+  invoke_http->setProperty(InvokeHTTP::URL, TestHTTPServer::URL);
+  invoke_http->setProperty(InvokeHTTP::InvalidHTTPHeaderFieldHandlingStrategy, "drop");
+  invoke_http->setAutoTerminatedRelationships(std::array{InvokeHTTP::RelNoRetry, InvokeHTTP::RelFailure, InvokeHTTP::RelResponse, InvokeHTTP::RelRetry});
+
+  bool date_header{};
+  SECTION("DateHeader false") {
+    date_header = false;
+  };
+  SECTION("DateHeader true") {
+    date_header = true;
+  };
+
+  invoke_http->setProperty(InvokeHTTP::DateHeader, date_header ? "true" : "false");
+  const auto result = test_controller.trigger("data");
+  auto file_contents = result.at(InvokeHTTP::Success);
+  REQUIRE(file_contents.size() == 1);
+  REQUIRE(test_controller.plan->getContent(file_contents[0]) == "data");
+  http_server.trigger();
+  REQUIRE(LogTestController::getInstance().contains("key:Date", 0ms) == date_header);
+}
+
 TEST_CASE("InvokeHTTP Attributes to Send uses full string matching, not substring", "[httptest1]") {
   using minifi::processors::InvokeHTTP;
   TestHTTPServer http_server;
@@ -450,7 +480,7 @@ TEST_CASE("HTTPTestsResponseBody", "[InvokeHTTP]") {
 
   invoke_http->setProperty(InvokeHTTP::Method, "POST");
   invoke_http->setProperty(InvokeHTTP::URL, "http://localhost:" + connection_counting_server.getPort()  + "/reverse");
-  invoke_http->setProperty(InvokeHTTP::SendBody, "true");
+  invoke_http->setProperty(InvokeHTTP::SendMessageBody, "true");
   const auto result = test_controller.trigger("data", {{"header1", "value1"}, {"header", "value2"}});
   CHECK(result.at(InvokeHTTP::RelFailure).empty());
   CHECK(result.at(InvokeHTTP::RelNoRetry).empty());

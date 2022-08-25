@@ -73,8 +73,7 @@ class PutSplunkHTTP final : public SplunkHECProcessor {
 
  private:
   std::shared_ptr<core::logging::Logger> logger_{core::logging::LoggerFactory<PutSplunkHTTP>::getLogger()};
-  gsl::not_null<std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>>> client_queue_ = gsl::make_not_null(
-      utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_));
+  std::shared_ptr<utils::ResourceQueue<extensions::curl::HTTPClient>> client_queue_;
 };
 
 }  // namespace org::apache::nifi::minifi::extensions::splunk

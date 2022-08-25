@@ -42,7 +42,7 @@ void PutSplunkHTTP::initialize() {
 
 void PutSplunkHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSessionFactory>& sessionFactory) {
   SplunkHECProcessor::onSchedule(context, sessionFactory);
-  client_queue_ = gsl::make_not_null(utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_));
+  client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_);
 }
 
 namespace {
@@ -118,7 +118,7 @@ void setFlowFileAsPayload(core::ProcessSession& session,
 }  // namespace
 
 void PutSplunkHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(context && session);
+  gsl_Expects(context && session && client_queue_);
 
   auto ff = session->get();
   if (!ff) {

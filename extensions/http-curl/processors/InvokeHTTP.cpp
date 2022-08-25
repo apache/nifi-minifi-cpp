@@ -203,7 +203,7 @@ void setupClientTransferEncoding(extensions::curl::HTTPClient& client, bool use_
 }  // namespace
 
 void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context) {
-  context.getProperty(SendMessageBody.getName(), send_body_);
+  context.getProperty(SendMessageBody.getName(), send_message_body_);
 
   attributes_to_send_ = context.getProperty(AttributesToSend)
                         | utils::filter([](const std::string& s) { return !s.empty(); })  // avoid compiling an empty string to regex
@@ -221,6 +221,9 @@ void InvokeHTTP::setupMembersFromProperties(const core::ProcessContext& context)
     logger_->log_warn("%s is set to an empty string", PutResponseBodyInAttribute.getName());
     put_response_body_in_attribute_.reset();
   }
+
+  use_chunked_encoding_ = context.getProperty<bool>(UseChunkedEncoding).value_or(false);
+  send_date_header_ = context.getProperty<bool>(DateHeader).value_or(true);
 }
 
 std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClientFromPropertiesAndMembers(const core::ProcessContext& context) const {
@@ -249,7 +252,7 @@ std::unique_ptr<minifi::extensions::curl::HTTPClient> InvokeHTTP::createHTTPClie
   setupClientProxy(*client, context);
   setupClientFollowRedirects(*client, context);
   setupClientPeerVerification(*client, context);
-  setupClientContentType(*client, context, send_body_);
+  setupClientContentType(*client, context, send_message_body_);
   setupClientTransferEncoding(*client, use_chunked_encoding_);
 
   return client;
@@ -260,7 +263,7 @@ void InvokeHTTP::onSchedule(const std::shared_ptr<core::ProcessContext>& context
   gsl_Expects(context);
 
   setupMembersFromProperties(*context);
-  client_queue_ = gsl::make_not_null(utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_));
+  client_queue_ = utils::ResourceQueue<extensions::curl::HTTPClient>::create(getMaxConcurrentTasks(), logger_);
 }
 
 bool InvokeHTTP::shouldEmitFlowFile(minifi::extensions::curl::HTTPClient& client) {
@@ -302,7 +305,7 @@ bool InvokeHTTP::appendHeaders(const core::FlowFile& flow_file, /*std::invocable
 }
 
 void InvokeHTTP::onTrigger(const std::shared_ptr<core::ProcessContext>& context, const std::shared_ptr<core::ProcessSession>& session) {
-  gsl_Expects(session && context);
+  gsl_Expects(session && context && client_queue_);
   auto create_client = [&]() -> std::unique_ptr<minifi::extensions::curl::HTTPClient> {
     return createHTTPClientFromPropertiesAndMembers(*context);
   };
@@ -339,11 +342,11 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
     if (claim) {
       auto callback_obj = std::make_unique<utils::HTTPUploadCallback>();
       callback_obj->pos = 0;
-      if (send_body_) {
+      if (send_message_body_) {
         session->read(flow_file, std::ref(*callback_obj));
       }
       logger_->log_trace("InvokeHTTP -- Setting callback, size is %d", callback_obj->getBufferSize());
-      if (!send_body_) {
+      if (!send_message_body_) {
         client.setRequestHeader("Content-Length", "0");
       } else if (!use_chunked_encoding_) {
         client.setRequestHeader("Content-Length", std::to_string(flow_file->getSize()));
@@ -355,6 +358,13 @@ void InvokeHTTP::onTriggerWithClient(const std::shared_ptr<core::ProcessContext>
 
   } else {
     logger_->log_trace("InvokeHTTP -- Not emitting flowfile to HTTP Server");
+  }
+
+  if (send_date_header_) {
+    auto current_time = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+    client.setRequestHeader("Date", utils::timeutils::getRFC2616Format(current_time));
+  } else {
+    client.setRequestHeader("Date", std::nullopt);
   }
 
   const auto append_header = [&](const std::string& key, const std::string& value) { client.setRequestHeader(key, value); };

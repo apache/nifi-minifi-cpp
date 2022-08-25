@@ -97,7 +97,7 @@ class HTTPClient : public utils::BaseHTTPClient, public core::Connectable {
 
   void setUploadCallback(std::unique_ptr<utils::HTTPUploadCallback> callback) override;
 
-  virtual void setReadCallback(std::unique_ptr<utils::HTTPReadCallback> callback);
+  void setReadCallback(std::unique_ptr<utils::HTTPReadCallback> callback);
 
   utils::HTTPUploadCallback* getUploadCallback() const { return write_callback_.get(); }
   utils::HTTPReadCallback* getReadCallback() const { return read_callback_.get(); }

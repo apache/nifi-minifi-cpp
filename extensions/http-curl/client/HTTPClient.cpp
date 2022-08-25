@@ -189,7 +189,7 @@ void HTTPClient::setKeepAliveProbe(std::optional<KeepAliveProbeData> probe_data)
 
 void HTTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
   if (timeout < 0ms) {
-    logger_->log_error("Invalid timeout");
+    logger_->log_error("Invalid HTTP connection timeout %" PRId64 " ms", timeout.count());
     return;
   }
   connect_timeout_ = timeout;
@@ -197,7 +197,7 @@ void HTTPClient::setConnectionTimeout(std::chrono::milliseconds timeout) {
 
 void HTTPClient::setReadTimeout(std::chrono::milliseconds timeout) {
   if (timeout < 0ms) {
-    logger_->log_error("Invalid timeout");
+    logger_->log_error("Invalid HTTP read timeout %" PRId64 " ms", timeout.count());
     return;
   }
   read_timeout_ = timeout;
@@ -205,7 +205,7 @@ void HTTPClient::setReadTimeout(std::chrono::milliseconds timeout) {
 
 void HTTPClient::setReadCallback(std::unique_ptr<utils::HTTPReadCallback> callback) {
   read_callback_ = std::move(callback);
-  curl_easy_setopt(http_session_.get(), CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
+  curl_easy_setopt(http_session_.get(), CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::receiveWrite);
   curl_easy_setopt(http_session_.get(), CURLOPT_WRITEDATA, static_cast<void*>(read_callback_.get()));
 }
 
@@ -308,7 +308,7 @@ bool HTTPClient::submit() {
   curl_easy_setopt(http_session_.get(), CURLOPT_URL, url_.c_str());
   logger_->log_debug("Submitting to %s", url_);
   if (read_callback_ == nullptr) {
-    curl_easy_setopt(http_session_.get(), CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::recieve_write);
+    curl_easy_setopt(http_session_.get(), CURLOPT_WRITEFUNCTION, &utils::HTTPRequestResponse::receiveWrite);
     curl_easy_setopt(http_session_.get(), CURLOPT_WRITEDATA, static_cast<void*>(&content_));
   }
 
@@ -359,10 +359,10 @@ const std::vector<char> &HTTPClient::getResponseBody() {
 }
 
 void HTTPClient::set_request_method(std::string method) {
+  ranges::actions::transform(method, [](auto ch) { return ::toupper(static_cast<unsigned char>(ch)); });
   if (method_ == method)
     return;
   method_ = std::move(method);
-  std::transform(method_.begin(), method_.end(), method_.begin(), ::toupper);
   if (method_ == "POST") {
     curl_easy_setopt(http_session_.get(), CURLOPT_POST, 1L);
     curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);

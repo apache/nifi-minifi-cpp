@@ -29,12 +29,7 @@
 namespace org::apache::nifi::minifi::extensions::curl {
 
 HttpStream::HttpStream(std::shared_ptr<HTTPClient> client)
-    : http_client_(std::move(client)),
-      written(0),
-    // given the nature of the stream we don't want to slow libCURL, we will produce
-    // a warning instead allowing us to adjust it server side or through the local configuration.
-      started_(false) {
-  // submit early on
+    : http_client_(std::move(client)) {
 }
 
 void HttpStream::close() {
@@ -65,7 +60,6 @@ size_t HttpStream::write(const uint8_t* value, size_t size) {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!started_) {
       auto callback = std::make_unique<HttpStreamingCallback>();
-      callback->pos = 0;
       http_client_->setUploadCallback(std::move(callback));
       http_client_future_ = std::async(std::launch::async, submit_client, http_client_);
       started_ = true;
@@ -85,7 +79,6 @@ size_t HttpStream::read(gsl::span<std::byte> buf) {
       std::lock_guard<std::mutex> lock(mutex_);
       if (!started_) {
         auto read_callback = std::make_unique<utils::HTTPReadCallback>(66560, true);
-        read_callback->pos = 0;
         http_client_future_ = std::async(std::launch::async, submit_read_client, http_client_, read_callback.get());
         http_client_->setReadCallback(std::move(read_callback));
         started_ = true;

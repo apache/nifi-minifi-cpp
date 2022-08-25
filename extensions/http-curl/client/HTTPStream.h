@@ -98,14 +98,14 @@ class HttpStream : public io::BaseStream {
    */
   size_t write(const uint8_t* value, size_t size) override;
 
-  static bool submit_client(std::shared_ptr<HTTPClient> client) {
+  static bool submit_client(const std::shared_ptr<HTTPClient>& client) {
     if (client == nullptr)
       return false;
     bool submit_status = client->submit();
     return submit_status;
   }
 
-  static bool submit_read_client(std::shared_ptr<HTTPClient> client, utils::ByteOutputCallback* callback) {
+  static bool submit_read_client(const std::shared_ptr<HTTPClient>& client, utils::ByteOutputCallback* callback) {
     if (client == nullptr)
       return false;
     bool submit_status = client->submit();
@@ -140,11 +140,11 @@ class HttpStream : public io::BaseStream {
   std::shared_ptr<HTTPClient> http_client_;
   std::future<bool> http_client_future_;
 
-  size_t written;
+  size_t written{0};
 
   std::mutex mutex_;
 
-  std::atomic<bool> started_;
+  std::atomic<bool> started_{false};
 
  private:
   std::shared_ptr<core::logging::Logger> logger_ = core::logging::LoggerFactory<HttpStream>::getLogger();

@@ -69,6 +69,20 @@ TEST_CASE("getDateTimeStr() works correctly", "[getDateTimeStr]") {
   CHECK("2087-07-31T01:33:50Z" == getDateTimeStr(std::chrono::sys_seconds{3710453630s}));
 }
 
+TEST_CASE("getRFC2616Format() works correctly", "[getRFC2616Format]") {
+  using namespace date::literals;
+  using namespace std::literals::chrono_literals;
+  using date::year_month_day;
+  using date::sys_days;
+  using org::apache::nifi::minifi::utils::timeutils::getRFC2616Format;
+
+  CHECK("Thu, 01 Jan 1970 00:00:00 UTC" == getRFC2616Format(std::chrono::sys_seconds{0s}));
+  CHECK("Thu, 01 Jan 1970 00:59:59 UTC" == getRFC2616Format(std::chrono::sys_seconds{1h - 1s}));
+
+  // Example from https://www.rfc-editor.org/rfc/rfc7231#page-67
+  CHECK("Tue, 15 Nov 1994 08:12:31 UTC" == getRFC2616Format(sys_days(year_month_day(1994_y/11/15)) + 8h + 12min + 31s));
+}
+
 TEST_CASE("Test time conversion", "[testtimeconversion]") {
   using org::apache::nifi::minifi::utils::timeutils::getTimeStr;
   CHECK("2017-02-16 20:14:56.196" == getTimeStr(std::chrono::system_clock::time_point{1487276096196ms}));

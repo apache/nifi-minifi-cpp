@@ -41,8 +41,7 @@ struct HTTPProxy {
 
 class HTTPUploadCallback : public ByteInputCallback {
  public:
-  template<typename... Args>
-  explicit HTTPUploadCallback(Args&& ... args) : ByteInputCallback(std::forward<Args>(args)...) {}
+  using ByteInputCallback::ByteInputCallback;
 
   std::atomic<bool> stop = false;
   std::atomic<size_t> pos = 0;
@@ -50,8 +49,7 @@ class HTTPUploadCallback : public ByteInputCallback {
 
 class HTTPReadCallback : public ByteOutputCallback {
  public:
-  template<typename... Args>
-  explicit HTTPReadCallback(Args&& ... args) : ByteOutputCallback(std::forward<Args>(args)...) {}
+  using ByteOutputCallback::ByteOutputCallback;
 
   std::atomic<bool> stop = false;
   std::atomic<size_t> pos = 0;
@@ -160,7 +158,7 @@ class HTTPRequestResponse {
   /**
    * Receive HTTP Response.
    */
-  static size_t recieve_write(char * data, size_t size, size_t nmemb, void * p) {
+  static size_t receiveWrite(char * data, size_t size, size_t nmemb, void * p) {
     try {
       if (p == nullptr) {
         return CALLBACK_ABORT;

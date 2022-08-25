@@ -52,9 +52,6 @@ namespace org::apache::nifi::minifi::extensions::curl {
  */
 class HttpStreamingCallback final : public utils::HTTPUploadCallback {
  public:
-  HttpStreamingCallback() = default;
-  ~HttpStreamingCallback() override = default;
-
   void close() override {
     logger_->log_trace("close() called");
     std::unique_lock<std::mutex> lock(mutex_);
