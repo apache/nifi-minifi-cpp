@@ -235,7 +235,7 @@ class TLSServerSocketSupportedProtocolsTest {
  protected:
     void configureSecurity() {
       host_ = minifi::io::Socket::getMyHostName();
-      port_ = "38778";
+      port_ = "28978";
       if (!key_dir_.empty()) {
         configuration_->set(minifi::Configure::nifi_remote_input_secure, "true");
         configuration_->set(minifi::Configure::nifi_security_client_certificate, key_dir_ + "cn.crt.pem");
