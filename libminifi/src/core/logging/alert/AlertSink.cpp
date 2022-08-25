@@ -122,9 +122,9 @@ void AlertSink::sink_it_(const spdlog::details::log_msg& msg) {
   // this method is protected upstream in base_sink by a mutex
 
   // TODO(adebreceni): revisit this after MINIFICPP-1903
+  std::string payload(msg.payload.data(), msg.payload.size());
   utils::SMatch match;
-  std::string_view payload(msg.payload.data(), msg.payload.size());
-  if (!utils::regexMatch(std::string{payload}, match, config_.filter)) {
+  if (!utils::regexMatch(payload, match, config_.filter)) {
     return;
   }
   size_t hash = 0;
