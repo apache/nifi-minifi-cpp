@@ -372,8 +372,14 @@ void HTTPClient::set_request_method(std::string method) {
   } else if (method_ == "GET") {
     curl_easy_setopt(http_session_.get(), CURLOPT_HTTPGET, 1L);
     curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
+  } else if (method_ == "PUT") {
+    curl_easy_setopt(http_session_.get(), CURLOPT_UPLOAD, 1L);
+    curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, nullptr);
   } else {
-    // PUT should also use CURLOPT_CUSTOMREQUEST too if we do not use CURLOPT_INFILE
+    curl_easy_setopt(http_session_.get(), CURLOPT_POST, 0L);
+    curl_easy_setopt(http_session_.get(), CURLOPT_NOBODY, 0L);
+    curl_easy_setopt(http_session_.get(), CURLOPT_HTTPGET, 0L);
+    curl_easy_setopt(http_session_.get(), CURLOPT_UPLOAD, 0L);
     curl_easy_setopt(http_session_.get(), CURLOPT_CUSTOMREQUEST, method_.c_str());
   }
 }

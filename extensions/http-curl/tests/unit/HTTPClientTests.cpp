@@ -126,7 +126,7 @@ TEST_CASE("HTTPClient should be reusable", "[basic]") {
   client.setKeepAliveProbe(KeepAliveProbeData{2s, 2s});
   client.initialize("GET", "http://localhost:" + keep_alive_server_.getPort() + "/method", nullptr);
 
-  std::vector<std::string> methods = {"GET", "GET", "POST", "PUT", "GET", "PUT", "POST", "POST"};
+  std::vector<std::string> methods = {"GET", "GET", "POST", "GET", "GET", "POST", "POST", "POST"};
   uint64_t request_number = 0;
   for (const auto& method: methods) {
     client.set_request_method(method);
