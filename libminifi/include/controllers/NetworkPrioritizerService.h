@@ -27,7 +27,7 @@
 #include "io/validation.h"
 #include "controllers/SSLContextService.h"
 #include "core/controller/ControllerService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "ThreadManagementService.h"
 #include "io/NetworkPrioritizer.h"
 #include "utils/Export.h"

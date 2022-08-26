@@ -27,6 +27,7 @@
 #include "core/state/Value.h"
 #include "c2/C2Protocol.h"
 #include "io/BaseStream.h"
+#include "io/BufferStream.h"
 #include "utils/gsl.h"
 
 namespace org {

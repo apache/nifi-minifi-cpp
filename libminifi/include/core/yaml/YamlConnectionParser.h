@@ -22,7 +22,7 @@
 #include <string>
 
 #include "core/ProcessGroup.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 #include "yaml-cpp/yaml.h"
 #include "utils/gsl.h"

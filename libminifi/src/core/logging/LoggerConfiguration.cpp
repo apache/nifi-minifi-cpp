@@ -36,8 +36,10 @@
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
 #include "core/logging/internal/LogCompressorSink.h"
+#include "core/logging/alert/AlertSink.h"
 #include "utils/Literals.h"
 #include "core/TypedValues.h"
+#include "core/logging/Utils.h"
 
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_sinks.h"
@@ -60,26 +62,21 @@ namespace org::apache::nifi::minifi::core::logging {
 
 const char* LoggerConfiguration::spdlog_default_pattern = "[%Y-%m-%d %H:%M:%S.%e] [%n] [%l] %v";
 
-namespace {
-std::optional<spdlog::level::level_enum> parse_log_level(const std::string& level_name) {
-  if (utils::StringUtils::equalsIgnoreCase(level_name, "trace")) {
-    return spdlog::level::trace;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "debug")) {
-    return spdlog::level::debug;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "info")) {
-    return spdlog::level::info;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "warn")) {
-    return spdlog::level::warn;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "error")) {
-    return spdlog::level::err;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "critical")) {
-    return spdlog::level::critical;
-  } else if (utils::StringUtils::equalsIgnoreCase(level_name, "off")) {
-    return spdlog::level::off;
+namespace internal {
+
+void LoggerNamespace::forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const {
+  for (auto& sink : sinks) {
+    op(sink);
   }
-  return std::nullopt;
+  for (auto& sink : exported_sinks) {
+    op(sink);
+  }
+  for (auto& [name, child] : children) {
+    child->forEachSink(op);
+  }
 }
-}  // namespace
+
+}  // namespace internal
 
 std::vector<std::string> LoggerProperties::get_keys_of_type(const std::string &type) {
   std::vector<std::string> appenders;
@@ -108,7 +105,13 @@ LoggerConfiguration& LoggerConfiguration::getConfiguration() {
 
 void LoggerConfiguration::initialize(const std::shared_ptr<LoggerProperties> &logger_properties) {
   std::lock_guard<std::mutex> lock(mutex);
-  root_namespace_ = initialize_namespaces(logger_properties);
+  root_namespace_ = initialize_namespaces(logger_properties, logger_);
+  alert_sinks_.clear();
+  root_namespace_->forEachSink([&] (const std::shared_ptr<spdlog::sinks::sink>& sink) {
+    if (auto alert_sink = std::dynamic_pointer_cast<AlertSink>(sink)) {
+      alert_sinks_.insert(std::move(alert_sink));
+    }
+  });
   initializeCompression(lock, logger_properties);
   std::string spdlog_pattern;
   if (!logger_properties->getString("spdlog.pattern", spdlog_pattern)) {
@@ -163,7 +166,7 @@ std::shared_ptr<spdlog::logger> LoggerConfiguration::getSpdlogLogger(const std::
   return spdlog::get(name);
 }
 
-std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties) {
+std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger) {
   std::map<std::string, std::shared_ptr<spdlog::sinks::sink>> sink_map = logger_properties->initial_sinks();
 
   std::string appender_type = "appender";
@@ -185,6 +188,10 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       sink_map[appender_name] = std::make_shared<spdlog::sinks::stderr_sink_mt>();
     } else if ("syslog" == appender_type) {
       sink_map[appender_name] = LoggerConfiguration::create_syslog_sink();
+    } else if ("alert" == appender_type) {
+      if (auto sink = AlertSink::create(appender_key, logger_properties, logger)) {
+        sink_map[appender_name] = sink;
+      }
     } else {
       sink_map[appender_name] = LoggerConfiguration::create_fallback_sink();
     }
@@ -204,12 +211,16 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
       std::string level_name = utils::StringUtils::trim(segment);
       if (first) {
         first = false;
-        auto opt_level = parse_log_level(level_name);
+        auto opt_level = utils::parse_log_level(level_name);
         if (opt_level) {
           level = *opt_level;
         }
       } else {
-        sinks.push_back(sink_map[level_name]);
+        if (auto it = sink_map.find(level_name); it != sink_map.end()) {
+          sinks.push_back(it->second);
+        } else {
+          logger->log_error("Couldn't find sink '%s'", level_name);
+        }
       }
     }
     std::shared_ptr<internal::LoggerNamespace> current_namespace = root_namespace;
@@ -233,8 +244,8 @@ std::shared_ptr<internal::LoggerNamespace> LoggerConfiguration::initialize_names
   return root_namespace;
 }
 
-std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
-                                                                std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present) {
+std::shared_ptr<spdlog::logger> LoggerConfiguration::get_logger(const std::shared_ptr<Logger> &logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                                const std::shared_ptr<spdlog::formatter> &formatter, bool remove_if_present) {
   std::shared_ptr<spdlog::logger> spdlogger = spdlog::get(name);
   if (spdlogger) {
     if (remove_if_present) {
@@ -313,6 +324,13 @@ void LoggerConfiguration::initializeCompression(const std::lock_guard<std::mutex
   if (compression_sink) {
     root_namespace_->sinks.push_back(compression_sink);
     root_namespace_->exported_sinks.push_back(compression_sink);
+  }
+}
+
+void LoggerConfiguration::initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id) {
+  std::lock_guard guard(mutex);
+  for (auto& sink : alert_sinks_) {
+    sink->initialize(controller, agent_id);
   }
 }
 

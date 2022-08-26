@@ -38,7 +38,7 @@
 #include "utils/tls/ExtendedKeyUsage.h"
 #include "io/validation.h"
 #include "../core/controller/ControllerService.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/Export.h"
 #include "utils/tls/CertificateUtils.h"
 

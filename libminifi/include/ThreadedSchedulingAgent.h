@@ -25,7 +25,7 @@
 #include <string>
 #include <chrono>
 #include "properties/Configure.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/Processor.h"
 #include "core/Repository.h"
 #include "core/ProcessContext.h"

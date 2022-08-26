@@ -29,7 +29,7 @@
 #include "core/repository/VolatileRepository.h"
 #include "properties/Configure.h"
 #include "core/Connectable.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "utils/GeneralUtils.h"
 
 namespace org {

@@ -27,7 +27,7 @@
 
 #include "core/CoreComponentState.h"
 #include "core/logging/Logger.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::utils {
 

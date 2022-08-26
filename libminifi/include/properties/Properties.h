@@ -49,7 +49,7 @@ class Properties {
   };
 
  public:
-  explicit Properties(const std::string& name = "");
+  explicit Properties(std::string name = "");
 
   virtual ~Properties() = default;
 

@@ -35,7 +35,7 @@
 #include "utils/ThreadPool.h"
 #include "utils/BackTrace.h"
 #include "core/Core.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "properties/Configure.h"
 #include "FlowFileRecord.h"
 #include "core/logging/Logger.h"

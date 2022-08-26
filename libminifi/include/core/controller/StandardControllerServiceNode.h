@@ -22,7 +22,7 @@
 
 #include "core/Core.h"
 #include "ControllerServiceNode.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/ProcessGroup.h"
 
 namespace org::apache::nifi::minifi::core::controller {

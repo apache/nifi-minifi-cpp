@@ -22,6 +22,7 @@
 #include <fstream>
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 #include "utils/file/FileUtils.h"
 #include "utils/Environment.h"
@@ -60,33 +61,51 @@ Identifier generateUUID() {
   return id_generator->generate();
 }
 
-class ManualClock : public timeutils::Clock {
+class ManualClock : public timeutils::SteadyClock {
  public:
-  [[nodiscard]] std::chrono::milliseconds timeSinceEpoch() const override { return time_; }
-  void advance(std::chrono::milliseconds elapsed_time) { time_ += elapsed_time; }
+  [[nodiscard]] std::chrono::milliseconds timeSinceEpoch() const override {
+    std::lock_guard lock(mtx_);
+    return time_;
+  }
 
- private:
-  std::chrono::milliseconds time_{0};
-};
+  [[nodiscard]] std::chrono::time_point<std::chrono::steady_clock> now() const override {
+    return std::chrono::steady_clock::time_point{timeSinceEpoch()};
+  }
 
-class ManualSteadyClock : public timeutils::SteadyClock {
- public:
-  std::chrono::milliseconds timeSinceEpoch() const override { return time_; }
   void advance(std::chrono::milliseconds elapsed_time) {
     if (elapsed_time.count() < 0) {
       throw std::logic_error("A steady clock can only be advanced forward");
     }
+    std::lock_guard lock(mtx_);
     time_ += elapsed_time;
+    for (auto* cv : cvs_) {
+      cv->notify_all();
+    }
   }
 
-  std::chrono::steady_clock::time_point now() const override {
-    return std::chrono::steady_clock::time_point{time_};
+  bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) override {
+    std::chrono::milliseconds now;
+    {
+      std::unique_lock lock(mtx_);
+      now = time_;
+      cvs_.insert(&cv);
+    }
+    cv.wait_for(lck, time - now, [&] {
+      now = timeSinceEpoch();
+      return now >= time || pred();
+    });
+    {
+      std::unique_lock lock(mtx_);
+      cvs_.erase(&cv);
+    }
+    return pred();
   }
 
  private:
+  mutable std::mutex mtx_;
+  std::unordered_set<std::condition_variable*> cvs_;
   std::chrono::milliseconds time_{0};
 };
-
 
 #ifdef WIN32
 // The tzdata location is set as a global variable in date-tz library

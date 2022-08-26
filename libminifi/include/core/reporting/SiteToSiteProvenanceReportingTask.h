@@ -27,7 +27,7 @@
 #include "core/ProcessSession.h"
 #include "RemoteProcessorGroupPort.h"
 #include "io/StreamFactory.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org::apache::nifi::minifi::core::reporting {
 

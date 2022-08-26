@@ -23,7 +23,7 @@
 #include <memory>
 #include <string>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "io/BaseStream.h"
 #include "FlowFileRecord.h"
 

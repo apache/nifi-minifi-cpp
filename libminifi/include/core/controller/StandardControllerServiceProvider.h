@@ -31,7 +31,7 @@
 #include "ControllerServiceNode.h"
 #include "StandardControllerServiceNode.h"
 #include "ControllerServiceProvider.h"
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 namespace org {
 namespace apache {

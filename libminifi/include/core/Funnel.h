@@ -20,7 +20,7 @@
 #include <string>
 #include <memory>
 
-#include "logging/LoggerConfiguration.h"
+#include "logging/LoggerFactory.h"
 #include "Processor.h"
 
 namespace org::apache::nifi::minifi::core {

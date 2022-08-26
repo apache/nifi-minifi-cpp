@@ -32,7 +32,7 @@
 #include <memory>
 #include <string>
 #include <limits>
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 
 #ifdef WIN32
 #include "Rpc.h"

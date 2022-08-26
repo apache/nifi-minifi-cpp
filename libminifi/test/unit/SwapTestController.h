@@ -166,10 +166,8 @@ struct VerifiedQueue {
     return result;
   }
 
-  VerifiedQueue(std::shared_ptr<minifi::SwapManager> swap_manager, std::unique_ptr<utils::timeutils::SteadyClock> clock)
-    : impl(std::move(swap_manager)) {
-    FlowFileQueueTestAccessor::get_clock_(impl) = std::move(clock);
-  }
+  explicit VerifiedQueue(std::shared_ptr<minifi::SwapManager> swap_manager)
+    : impl(std::move(swap_manager)) {}
 
   utils::FlowFileQueue impl;
   FlowFilePtrVec ref_;
@@ -181,9 +179,9 @@ class SwapTestController : public TestController {
     content_repo_ = std::make_shared<core::repository::VolatileContentRepository>();
     flow_repo_ = std::make_shared<SwappingFlowFileTestRepo>();
     flow_repo_->loadComponent(content_repo_);
-    auto clock = std::make_unique<utils::ManualSteadyClock>();
-    clock_ = clock.get();
-    queue_ = std::make_shared<VerifiedQueue>(std::static_pointer_cast<minifi::SwapManager>(flow_repo_), std::move(clock));
+    clock_ = std::make_shared<utils::ManualClock>();
+    utils::timeutils::setClock(clock_);
+    queue_ = std::make_shared<VerifiedQueue>(std::static_pointer_cast<minifi::SwapManager>(flow_repo_));
   }
 
   void setLimits(size_t min_size, size_t target_size, size_t max_size) {
@@ -235,6 +233,5 @@ class SwapTestController : public TestController {
   std::shared_ptr<SwappingFlowFileTestRepo> flow_repo_;
   std::shared_ptr<core::repository::VolatileContentRepository> content_repo_;
   std::shared_ptr<VerifiedQueue> queue_;
-  // owned by the queue_
-  utils::ManualSteadyClock* clock_;
+  std::shared_ptr<utils::ManualClock> clock_;
 };

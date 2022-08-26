@@ -25,16 +25,11 @@
 #include "core/logging/LoggerConfiguration.h"
 #include "properties/PropertiesFile.h"
 
-namespace org {
-namespace apache {
-namespace nifi {
-namespace minifi {
+namespace org::apache::nifi::minifi {
 
-#define TRACE_BUFFER_SIZE 512
-
-Properties::Properties(const std::string& name)
+Properties::Properties(std::string name)
     : logger_(core::logging::LoggerFactory<Properties>::getLogger()),
-    name_(name) {
+    name_(std::move(name)) {
 }
 
 // Get the config value
@@ -158,7 +153,4 @@ std::map<std::string, std::string> Properties::getProperties() const {
   return properties;
 }
 
-} /* namespace minifi */
-} /* namespace nifi */
-} /* namespace apache */
-} /* namespace org */
+}  // namespace org::apache::nifi::minifi

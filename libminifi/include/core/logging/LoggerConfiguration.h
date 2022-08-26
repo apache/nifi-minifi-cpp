@@ -25,6 +25,7 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <unordered_set>
 
 #include "spdlog/common.h"
 #include "spdlog/sinks/rotating_file_sink.h"
@@ -37,6 +38,8 @@
 #include "core/logging/Logger.h"
 #include "LoggerProperties.h"
 #include "internal/CompressionManager.h"
+#include "core/logging/LoggerFactory.h"
+#include "alert/AlertSink.h"
 
 class LoggerTestAccessor;
 
@@ -52,6 +55,8 @@ struct LoggerNamespace {
   // sinks made available to all descendants
   std::vector<std::shared_ptr<spdlog::sinks::sink>> exported_sinks;
   std::map<std::string, std::shared_ptr<LoggerNamespace>> children;
+
+  void forEachSink(const std::function<void(const std::shared_ptr<spdlog::sinks::sink>&)>& op) const;
 
   LoggerNamespace()
       : level(spdlog::level::off),
@@ -96,6 +101,8 @@ class LoggerConfiguration {
     return getCompressedLog(std::chrono::milliseconds{0}, flush);
   }
 
+  void initializeAlertSinks(core::controller::ControllerServiceProvider* controller, const std::shared_ptr<AgentIdentificationProvider>& agent_id);
+
   template<class Rep, class Period>
   static std::unique_ptr<io::InputStream> getCompressedLog(const std::chrono::duration<Rep, Period>& time, bool flush = false) {
     return getConfiguration().compression_manager_.getCompressedLog(time, flush);
@@ -109,9 +116,9 @@ class LoggerConfiguration {
   static const char *spdlog_default_pattern;
 
  protected:
-  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties);
-  static std::shared_ptr<spdlog::logger> get_logger(std::shared_ptr<Logger> logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
-                                                    std::shared_ptr<spdlog::formatter> formatter, bool remove_if_present = false);
+  static std::shared_ptr<internal::LoggerNamespace> initialize_namespaces(const std::shared_ptr<LoggerProperties> &logger_properties, const std::shared_ptr<Logger> &logger = {});
+  static std::shared_ptr<spdlog::logger> get_logger(const std::shared_ptr<Logger> &logger, const std::shared_ptr<internal::LoggerNamespace> &root_namespace, const std::string &name,
+                                                    const std::shared_ptr<spdlog::formatter> &formatter, bool remove_if_present = false);
 
  private:
   std::shared_ptr<Logger> getLogger(const std::string& name, const std::lock_guard<std::mutex>& lock);
@@ -149,24 +156,8 @@ class LoggerConfiguration {
   std::mutex mutex;
   std::shared_ptr<LoggerImpl> logger_ = nullptr;
   std::shared_ptr<LoggerControl> controller_;
+  std::unordered_set<std::shared_ptr<AlertSink>> alert_sinks_;
   bool shorten_names_;
-};
-
-template<typename T>
-class LoggerFactory {
- public:
-  /**
-   * Gets an initialized logger for the template class.
-   */
-  static std::shared_ptr<Logger> getLogger() {
-    static std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(core::getClassName<T>());
-    return logger;
-  }
-
-  static std::shared_ptr<Logger> getAliasedLogger(const std::string &alias) {
-    std::shared_ptr<Logger> logger = LoggerConfiguration::getConfiguration().getLogger(alias);
-    return logger;
-  }
 };
 
 }  // namespace org::apache::nifi::minifi::core::logging

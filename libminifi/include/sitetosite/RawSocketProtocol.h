@@ -32,7 +32,7 @@
 #include <utility>
 #include <vector>
 
-#include "core/logging/LoggerConfiguration.h"
+#include "core/logging/LoggerFactory.h"
 #include "core/ProcessContext.h"
 #include "core/ProcessSession.h"
 #include "core/Property.h"

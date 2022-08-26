@@ -29,6 +29,8 @@
 #include <optional>
 #include <functional>
 #include <algorithm>
+#include <condition_variable>
+#include <memory>
 
 // libc++ doesn't define operator<=> on durations, and apparently the operator rewrite rules don't automagically make one
 #if defined(_LIBCPP_VERSION) && _LIBCPP_VERSION <= 14000
@@ -70,6 +72,9 @@ class Clock {
  public:
   virtual ~Clock() = default;
   virtual std::chrono::milliseconds timeSinceEpoch() const = 0;
+  virtual bool wait_until(std::condition_variable& cv, std::unique_lock<std::mutex>& lck, std::chrono::milliseconds time, const std::function<bool()>& pred) {
+    return cv.wait_for(lck, time - timeSinceEpoch(), pred);
+  }
 };
 
 class SystemClock : public Clock {
@@ -89,6 +94,11 @@ class SteadyClock : public Clock {
     return std::chrono::steady_clock::now();
   }
 };
+
+std::shared_ptr<SteadyClock> getClock();
+
+// test-only utility to specify what clock to use
+void setClock(std::shared_ptr<SteadyClock> clock);
 
 inline std::string getTimeStr(std::chrono::system_clock::time_point tp) {
   std::ostringstream stream;

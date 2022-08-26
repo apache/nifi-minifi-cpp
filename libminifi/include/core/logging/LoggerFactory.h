@@ -19,40 +19,28 @@
 #pragma once
 
 #include <string>
-#include <array>
+#include <memory>
 
-#include "CivetServer.h"
+#include "core/logging/Logger.h"
+#include "core/Core.h"
 
-class ServerAwareHandler: public CivetHandler {
- protected:
-  void sleep_for(std::chrono::milliseconds time) {
-    std::unique_lock<std::mutex> lock(mutex_);
-    stop_signal_.wait_for(lock, time, [&] {return terminate_.load();});
-  }
+namespace org::apache::nifi::minifi::core::logging {
 
-  bool isServerRunning() const {
-    return !terminate_.load();
-  }
-
-  virtual std::string readPayload(struct mg_connection* conn) {
-    std::string response;
-    int readBytes;
-
-    std::array<char, 1024> buffer;
-    while ((readBytes = mg_read(conn, buffer.data(), buffer.size())) > 0) {
-      response.append(buffer.data(), readBytes);
-    }
-    return response;
-  }
-
+class LoggerFactoryBase {
  public:
-  void stop() {
-    terminate_ = true;
-    stop_signal_.notify_all();
-  }
-
- private:
-  std::mutex mutex_;
-  std::condition_variable stop_signal_;
-  std::atomic_bool terminate_{false};
+  static std::shared_ptr<Logger> getAliasedLogger(const std::string &alias);
 };
+
+template<typename T>
+class LoggerFactory : public LoggerFactoryBase {
+ public:
+  /**
+   * Gets an initialized logger for the template class.
+   */
+  static std::shared_ptr<Logger> getLogger() {
+    static std::shared_ptr<Logger> logger = getAliasedLogger(core::getClassName<T>());
+    return logger;
+  }
+};
+
+}  // namespace org::apache::nifi::minifi::core::logging
